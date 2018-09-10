@@ -1,0 +1,6 @@
+.idea
+.git
+*.iml
+kouta-temp-db/
+target/
+
