@@ -41,6 +41,11 @@
             <version>${scala.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-logging_2.12</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
         <!-- Http related dependencies -->
         <dependency>
             <groupId>org.scalatra</groupId>
@@ -107,6 +112,7 @@
             <artifactId>json4s-jackson_2.12</artifactId>
             <version>${json4s.version}</version>
         </dependency>
+
 
 
         <!--dependency>

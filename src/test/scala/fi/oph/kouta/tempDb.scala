@@ -1,6 +1,8 @@
 package fi.oph.kouta
 
-object TempDb {
+import fi.vm.sade.utils.slf4j.Logging
+
+object TempDb extends Logging {
 
   val port = new PortFromSystemPropertyOrFindFree("kouta-backend.db.port").chosenPort
   val dbName = "kouta"
@@ -23,10 +25,10 @@ object TempDb {
   def start() {
     readPid match {
       case Some(pid) => {
-        println(s"PostgreSQL pid $pid is found in pid file, not touching the database.")
+        logger.info(s"PostgreSQL pid $pid is found in pid file, not touching the database.")
       }
       case None => {
-        println(s"PostgreSQL pid file cannot be read, starting:")
+        logger.info(s"PostgreSQL pid file cannot be read, starting:")
         run(s"postgres --config_file=postgresql/postgresql.conf -D $dataDirectoryPath -p $port")
         if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(isAcceptingConnections)) {
           throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
@@ -43,16 +45,16 @@ object TempDb {
   def stop() {
     readPid match {
       case Some(pid) => {
-        println(s"Killing PostgreSQL process $pid")
+        logger.info(s"Killing PostgreSQL process $pid")
         runBlocking(s"kill -s SIGINT $pid")
         if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(() => readPid.isEmpty)) {
-          println(s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
+          logger.warn(s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
         }
       }
-      case None => println("No PostgreSQL pid found, not trying to stop it.")
+      case None => logger.warn("No PostgreSQL pid found, not trying to stop it.")
     }
     if (dataDirectoryFile.exists()) {
-      println(s"Nuking PostgreSQL data directory $dataDirectoryPath")
+      logger.warn(s"Nuking PostgreSQL data directory $dataDirectoryPath")
       FileUtils.forceDelete(dataDirectoryFile)
     }
   }
@@ -60,12 +62,12 @@ object TempDb {
   private def initDbDirectory() = {
 
     if (!dataDirectoryFile.isDirectory) {
-      println(s"PostgreSQL data directory $dataDirectoryPath does not exist, initing new database there.")
+      logger.info(s"PostgreSQL data directory $dataDirectoryPath does not exist, initing new database there.")
       Files.createDirectories(dataDirectoryFile.toPath)
       runBlocking(s"chmod 0700 $dataDirectoryPath")
       runBlocking(s"initdb -D $dataDirectoryPath --no-locale")
     }
-    println(s"Using PostgreSQL in port $port with data directory $dataDirectoryPath")
+    logger.info(s"Using PostgreSQL in port $port with data directory $dataDirectoryPath")
   }
 
   private def readPid: Option[Int] = {
