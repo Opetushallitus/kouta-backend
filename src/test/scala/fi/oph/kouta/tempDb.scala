@@ -1,6 +1,7 @@
 package fi.oph.kouta
 
 import fi.vm.sade.utils.slf4j.Logging
+import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
 
 object TempDb extends Logging {
 
