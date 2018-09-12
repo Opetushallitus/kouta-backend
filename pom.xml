@@ -21,9 +21,6 @@
         <slick.version>3.2.3</slick.version>
         <jdbc.version>42.1.4</jdbc.version><!-- TODO: Voiko päivittää uudempaan? -->
 
-        <!-- Json related properties -->
-        <json4s.version>3.5.2</json4s.version>
-
         <!-- Test properties -->
         <jetty.version>9.4.12.v20180830</jetty.version>
         <commons.io.version>2.6</commons.io.version>
@@ -33,6 +30,11 @@
 
         <plugin.maven-enforcer-plugin.version>3.0.0-M2</plugin.maven-enforcer-plugin.version>
     </properties>
+
+    <!--Huom! Lisää vain ylimmän tason riippuvudet!
+        Älä määritä mukana tulevien riippuvuuksien versioita tässä, vaan anna niiden tulla implisiittisesti.
+        Lisää exclusion vain niihin riippuvuuksiin, joista tulee eri versio kuin muista.
+        Näin pom.xml pysyy siistinä ja lyhyenä.-->
 
     <dependencies>
         <dependency>
@@ -50,6 +52,12 @@
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-utils_2.12</artifactId>
             <version>0.0.1-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Http related dependencies -->
@@ -61,6 +69,10 @@
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
                     <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-parser-combinators_2.12</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -78,8 +90,8 @@
                     <artifactId>scala-library</artifactId>
                 </exclusion>
                 <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-core_2.12</artifactId>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-parser-combinators_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -100,47 +112,37 @@
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick_2.12</artifactId>
             <version>${slick.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.typesafe</groupId>
+                    <artifactId>config</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick-hikaricp_2.12</artifactId>
             <version>${slick.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>${jdbc.version}</version>
         </dependency>
-
-        <!-- Json related dependencies -->
-        <dependency>
-            <groupId>org.json4s</groupId>
-            <artifactId>json4s-jackson_2.12</artifactId>
-            <version>${json4s.version}</version>
-        </dependency>
-
-
-
-        <!--dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-utils_2.11</artifactId>
-            <version>0.5.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency-->
-        <!--dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
-        </dependency-->
 
         <!-- Test dependencies -->
         <dependency>
