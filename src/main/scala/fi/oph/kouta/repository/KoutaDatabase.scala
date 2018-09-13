@@ -41,16 +41,16 @@ object KoutaDatabase extends Logging {
     hikariConfig.setJdbcUrl(settings.url)
     hikariConfig.setUsername(settings.username)
     hikariConfig.setPassword(settings.password)
-    //config.maxConnections.foreach(c.setMaximumPoolSize)
-    //config.minConnections.foreach(c.setMinimumIdle)
-    //config.registerMbeans.foreach(c.setRegisterMbeans)
-    //config.initializationFailTimeout.foreach(c.setInitializationFailTimeout)
-    //c.setLeakDetectionThreshold(config.leakDetectionThresholdMillis.getOrElse(c.getMaxLifetime))
-    //val maxConnections = config.numThreads.getOrElse(20)
+    settings.maxConnections.foreach(hikariConfig.setMaximumPoolSize)
+    settings.minConnections.foreach(hikariConfig.setMinimumIdle)
+    settings.registerMbeans.foreach(hikariConfig.setRegisterMbeans)
+    //settings.initializationFailTimeout.foreach(hikariConfig.setI)
+    //hikariConfig.setLeakDetectionThreshold(settings.leakDetectionThresholdMillis.getOrElse(settings.getMaxLifetime))
+    val maxConnections = settings.numThreads.getOrElse(20)
     val executor = AsyncExecutor("kouta", 10, 1000)
-    //logger.info(s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} ${ToStringBuilder.reflectionToString(c).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
-    //  s" and executor ${ToStringBuilder.reflectionToString(executor)}")
-
+    logger.info(s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
+      s"${ToStringBuilder.reflectionToString(hikariConfig).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
+      s" and executor ${ToStringBuilder.reflectionToString(executor)}")
 
     Database.forDataSource(new HikariDataSource(hikariConfig), maxConnections = Some(10), executor)
   }

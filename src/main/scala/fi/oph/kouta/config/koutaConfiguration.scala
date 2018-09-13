@@ -7,14 +7,26 @@ import fi.vm.sade.utils.slf4j.Logging
 case class KoutaDatabaseConfiguration(
   val url:String,
   val username:String,
-  val password:String
+  val password:String,
+  val numThreads:Option[Int],
+  val maxConnections:Option[Int],
+  val minConnections:Option[Int],
+  val registerMbeans:Option[Boolean],
+  val initializationFailTimeout:Option[Int],
+  val leakDetectionThresholdMillis:Option[Int]
 )
 
 case class KoutaConfiguration(config:TypesafeConfig) extends ApplicationSettings(config) {
   val databaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
     username = config.getString("kouta-backend.db.user"),
-    password = config.getString("kouta-backend.db.password")
+    password = config.getString("kouta-backend.db.password"),
+    numThreads = Option(config.getInt("kouta-backend.db.numThreads")),
+    maxConnections = Option(config.getInt("kouta-backend.db.maxConnections")),
+    minConnections = Option(config.getInt("kouta-backend.db.minConnections")),
+    registerMbeans = Option(config.getBoolean("kouta-backend.db.registerMbeans")),
+    initializationFailTimeout = Option(config.getInt("kouta-backend.db.initializationFailTimeout")),
+    leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis"))
   )
 }
 
