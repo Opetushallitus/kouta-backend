@@ -1,0 +1,12 @@
+kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
+kouta-backend.db.user={{host_postgresql_kouta_user}}
+kouta-backend.db.password={{host_postgresql_kouta_password}}
+kouta-backend.db.connectionPool=HikariCP
+kouta-backend.db.numThreads=10
+kouta-backend.db.maxConnections=50
+kouta-backend.db.minConnections=10
+kouta-backend.db.queueSize=10000
+kouta-backend.db.registerMbeans=true
+kouta-backend.db.initializationFailTimeout=1000
+kouta-backend.db.timeout=20 seconds
+kouta-backend.db.leakDetectionThresholdMillis=1800000

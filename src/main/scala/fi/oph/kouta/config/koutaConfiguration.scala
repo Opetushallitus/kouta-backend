@@ -1,0 +1,63 @@
+package fi.oph.kouta.config
+
+import com.typesafe.config.{Config => TypesafeConfig}
+import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
+import fi.vm.sade.utils.slf4j.Logging
+
+case class KoutaDatabaseConfiguration(
+  val url:String,
+  val username:String,
+  val password:String
+)
+
+case class KoutaConfiguration(config:TypesafeConfig) extends ApplicationSettings(config) {
+  val databaseConfiguration = KoutaDatabaseConfiguration(
+    url = config.getString("kouta-backend.db.url"),
+    username = config.getString("kouta-backend.db.user"),
+    password = config.getString("kouta-backend.db.password")
+  )
+}
+
+trait KoutaConfigurationConstants {
+  val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "konfo-backend.config-profile"
+  val SYSTEM_PROPERTY_NAME_TEMPLATE = "konfo-backend.template-file"
+
+  val CONFIG_PROFILE_DEFAULT = "default"
+  val CONFIG_PROFILE_TEMPLATE = "template"
+}
+
+object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstants {
+
+  val profile = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
+  logger.info(s"Using profile '${profile}'")
+
+  implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaConfiguration] {
+    override def parse(config: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(config)
+  }
+
+  val configuration: KoutaConfiguration = profile match {
+    case CONFIG_PROFILE_DEFAULT => loadOphConfiguration()
+    case CONFIG_PROFILE_TEMPLATE => loadTemplatedConfiguration()
+    case _ => throw new IllegalArgumentException(
+      s"Unknown profile '${profile}'! Cannot load oph-properties! Use either " +
+      s"'${CONFIG_PROFILE_DEFAULT}' or '${CONFIG_PROFILE_TEMPLATE}' profiles.")
+  }
+
+  def init() = {}
+
+  private def loadOphConfiguration(): KoutaConfiguration = {
+    val configFilePath = System.getProperty("user.home") + "/oph-configuration/kouta-backend.properties"
+
+    logger.info(s"Reading properties from '${configFilePath}'")
+    ApplicationSettingsLoader.loadSettings(configFilePath)
+  }
+
+  private def loadTemplatedConfiguration(overrideFromSystemProperties:Boolean = false): KoutaConfiguration = {
+    val templateFilePath = Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE)).getOrElse(
+      throw new IllegalArgumentException(s"Using 'template' profile but '${SYSTEM_PROPERTY_NAME_TEMPLATE}' " +
+        "system property is missing. Cannot create oph-properties!"))
+
+    logger.info(s"Reading template variables from '${templateFilePath}'")
+    ConfigTemplateProcessor.createSettings("kouta-backend", templateFilePath)
+  }
+}

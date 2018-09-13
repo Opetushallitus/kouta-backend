@@ -3,6 +3,8 @@ package fi.oph.kouta.repository
 import java.util.concurrent.TimeUnit
 
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.vm.sade.utils.slf4j.Logging
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.flywaydb.core.Flyway
 import slick.dbio.DBIO
@@ -11,19 +13,34 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-object KoutaDatabase {
+object KoutaDatabase extends Logging {
 
-  val flyway = new Flyway()
-  flyway.setDataSource(System.getProperty("kouta-backend.db.url"),
-                       System.getProperty("kouta-backend.db.user"),
-                       System.getProperty("kouta-backend.db.password"))
-  flyway.migrate()
+  val settings = KoutaConfigurationFactory.configuration.databaseConfiguration
 
-  val db = {
+  logger.warn(settings.username)
+
+  migrate()
+
+  val db = initDb()
+
+  def init() = {}
+
+  def runBlocking[R](operations: DBIO[R], timeout: Duration = Duration(10, TimeUnit.MINUTES)): R = {
+    Await.result(
+      db.run(operations.withStatementParameters(statementInit = st => st.setQueryTimeout(timeout.toSeconds.toInt))),
+      timeout + Duration(1, TimeUnit.SECONDS)
+    )
+  }
+
+  def destroy() = {
+    db.close()
+  }
+
+  private def initDb() = {
     val hikariConfig = new HikariConfig()
-    hikariConfig.setJdbcUrl(System.getProperty("kouta-backend.db.url"))
-    hikariConfig.setUsername(System.getProperty("kouta-backend.db.user"))
-    hikariConfig.setPassword(System.getProperty("kouta-backend.db.password"))
+    hikariConfig.setJdbcUrl(settings.url)
+    hikariConfig.setUsername(settings.username)
+    hikariConfig.setPassword(settings.password)
     //config.maxConnections.foreach(c.setMaximumPoolSize)
     //config.minConnections.foreach(c.setMinimumIdle)
     //config.registerMbeans.foreach(c.setRegisterMbeans)
@@ -38,10 +55,9 @@ object KoutaDatabase {
     Database.forDataSource(new HikariDataSource(hikariConfig), maxConnections = Some(10), executor)
   }
 
-  def runBlocking[R](operations: DBIO[R], timeout: Duration = Duration(10, TimeUnit.MINUTES)): R = {
-    Await.result(
-      db.run(operations.withStatementParameters(statementInit = st => st.setQueryTimeout(timeout.toSeconds.toInt))),
-      timeout + Duration(1, TimeUnit.SECONDS)
-    )
+  private def migrate() = {
+    val flyway = new Flyway()
+    flyway.setDataSource(settings.url, settings.username, settings.password)
+    flyway.migrate()
   }
 }

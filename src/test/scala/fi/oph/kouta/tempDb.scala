@@ -44,19 +44,22 @@ object TempDb extends Logging {
   }
 
   def stop() {
-    readPid match {
-      case Some(pid) => {
-        logger.info(s"Killing PostgreSQL process $pid")
-        runBlocking(s"kill -s SIGINT $pid")
-        if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(() => readPid.isEmpty)) {
-          logger.warn(s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
+    try {
+      readPid match {
+        case Some(pid) => {
+          logger.info(s"Killing PostgreSQL process $pid")
+          runBlocking(s"kill -s SIGINT $pid")
+          if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(() => readPid.isEmpty)) {
+            logger.warn(s"postgres in pid $pid did not stop gracefully after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
+          }
         }
+        case None => logger.warn("No PostgreSQL pid found, not trying to stop it.")
       }
-      case None => logger.warn("No PostgreSQL pid found, not trying to stop it.")
-    }
-    if (dataDirectoryFile.exists()) {
-      logger.warn(s"Nuking PostgreSQL data directory $dataDirectoryPath")
-      FileUtils.forceDelete(dataDirectoryFile)
+    } finally {
+      if (dataDirectoryFile.exists()) {
+        logger.warn(s"Nuking PostgreSQL data directory $dataDirectoryPath")
+        FileUtils.forceDelete(dataDirectoryFile)
+      }
     }
   }
 
