@@ -64,16 +64,22 @@ object Templates {
   import scala.io.Source
   import scala.util.{Try, Success, Failure}
 
-  def createTestTemplate(port:Int, deleteAutomaticly:Boolean = true) = Try(new PrintWriter(new File(TEST_TEMPLATE_FILE_PATH))) match {
+  def createTestTemplate(port:Int, deleteAutomatically:Boolean = true) = Try(new PrintWriter(new File(TEST_TEMPLATE_FILE_PATH))) match {
     case Failure(t) => throw t
     case Success(w) => try {
       Source.fromFile(DEFAULT_TEMPLATE_FILE_PATH)
         .getLines
-        .map(l => if(l.contains("host_postgresql_kouta_port")) s"host_postgresql_kouta_port: ${port}" else l)
+        .map(l => l match {
+          case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: ${port}"
+          case x if x.contains("host_postgresql_kouta_user") => "host_postgresql_kouta_user: oph"
+          case x if x.contains("host_postgresql_kouta_password") => "host_postgresql_kouta_password:"
+          case x if x.contains("host_postgresql_kouta") => "host_postgresql_kouta: localhost"
+          case x => x
+        })
         .foreach(l => w.println(l))
       w.flush
     } finally { w.close() }
-    if(deleteAutomaticly) {
+    if(deleteAutomatically) {
       Runtime.getRuntime.addShutdownHook(new Thread(() => Templates.deleteTestTemplate()))
     }
   }

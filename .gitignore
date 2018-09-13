@@ -3,4 +3,5 @@
 *.iml
 kouta-temp-db/
 target/
+embedded-jetty-vars.yml
 
