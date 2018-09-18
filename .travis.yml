@@ -21,7 +21,7 @@ script:
   - mvn install
 
   - mv target/kouta-backend-*.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
-  - cp -vr oph-configuration $DOCKER_BUILD_DIR/config/
+  - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
 
   - export BASE_IMAGE="base-legacy:0.1"
   - ./ci-tools/common/pull-image.sh
