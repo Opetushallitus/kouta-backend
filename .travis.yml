@@ -1,33 +1,34 @@
 sudo: required
 language: scala
 jdk:
-- oraclejdk8
+  - oraclejdk8
 services:
-- docker
+  - docker
 
 env:
   global:
-  # AWS_ACCESS_KEY_ID
-  - secure:
-  # AWS_SECRET_ACCESS_KEY
-  - secure:
+    # AWS_ACCESS_KEY_ID
+    - secure: "O8lhLbYpfhhtjMiN32FAPX5XyEV4UQp8sHLQkrNMecq3FhwqTOeKC55bqaaEvUDNM4OUWqIeOYa21J39UCjKp5XZsTH3PMTtCPhC45CfVAJXmj7ylIwFiXSmvU7MxLAK+XBQuEHfsl10q261zW8aPm5H37MmDoVAbC/ANIZ71627dSrsptaBbhzxAtMbpjTeCZBTVPHxSugK+zQd4sIlS+2BBSOW8fVok40Zot8c/vjzDG10aYPRvx9FXdxjtuFes9a3r54z+Xllc5+AMf6RsB+3iyGjNU8q3+LUgxoUNF9uUq8k0wqqDy893/qf8WJ0J11p4uKwCUpJs+ug0Eh/3JeJwpNKUVqi24ddocbvMV1c6bws6yXc4X1N3EllwN0mYDSX/BzT4WHwHTISFio3yGipPNWhobJuY5fHQQahYE1BQSBMD+2xA1Llmt+CmvrbPMg7LLy8wzYz/eRt8xkl5u/KOTd3l8oZXe2ogQ1Z4K3tdfUOwrl5apsKVQ6pME31Y2n9K2AqbPDywvlEu/rJA0TxVi8okkf/Qt6PliQ/sM6QkT5QmgT5locWi+ildqSBRHFIiXH2iOzw5NmtFapCaHbDFSvu3MxhAAURScVM3YRuZ7zXs2stGuK1mTsQzfzUYTSKqXyX41LFxf7XBMM8HxvhO8DLKfYP+JqHeQkrUic="
+    # AWS_SECRET_ACCESS_KEY
+    - secure: "O/BvMqfqJp79RTIswTOXGGeE9CfLydzVEEJ76bYE8NIEhmoxLhJy50hvzz8S8ksJyVY49ocVMqXY+SKLwf11i61OeKYFa9wuVSBnhb8pjbRVd5wohzxXALjc8YCLg7Ope800cO2Gc34eZcjGtby9EM6tE290PpT41OVo6Vw1PIqKzDNt4R37wsuIuhPcCJHk3DegWdAMfct3wIkqioTN+nNfEdQHPrq75OkeB7yS0vuiTtrkIqZ6yt2oO9YIN3TnEAJp+kStMLYFtqFYhmcFKlvJDYMBp6hN3CyYY5dwud8wc8D8ouzrTh7FFpJWttLGy4czelxXS+rRFwjIeVOSn4N1KjQ3Ob2nL+tGJczpBbGnh0WXpWLLDLyEnaZpD46dLPfZTFZad9307cG3RWOe/Kk5Nj8s0a8vtGAlfCmLRdMR7BM86UDU7hJxFIKTD97PqQIxv3/1060ZTCYc4quV1PGsxeL5BopPomfdte7fW8+DY7F1z5yUr/z2ylUcWpf3qnNTVq8kWQJXWp+4XmuG7nKDenCDQao+ZwdViQu0Yhc0u0pX53rHUBGvb+zJ1GlLH2AQBEaWqYGuHQpGqQy4gB6nV6bXMaxE0IvU/ibBObkyiTQ3OtpcwrxhPpp1zdxWo8MEGEO9Gp9ip3ysMkotmBbiMSrlWMTxyyBJykidj50="
 
 install:
-- git clone https://github.com/Opetushallitus/ci-tools.git
-- source ci-tools/common/setup-tools.sh
+  - git clone https://github.com/Opetushallitus/ci-tools.git
+  - source ci-tools/common/setup-tools.sh
+  - export ARTIFACT_NAME="kouta-backend"
 
 script:
-- mvn install
+  - mvn install
 
-- mv target/kouta-backend-*.jar $DOCKER_BUILD_DIR/artifact/kouta-backend.jar
-- cp -vr oph-configuration $DOCKER_BUILD_DIR/config/
+  - mv target/kouta-backend-*.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
+  - cp -vr oph-configuration $DOCKER_BUILD_DIR/config/
 
-- export BASE_IMAGE="base-legacy:0.1"
-- ./ci-tools/common/pull-image.sh
-- ./ci-tools/build/build-fatjar.sh kouta-backend
+  - export BASE_IMAGE="base-legacy:0.1"
+  - ./ci-tools/common/pull-image.sh
+  - ./ci-tools/build/build-fatjar.sh $ARTIFACT_NAME
 
 deploy:
   provider: script
-  script: ./ci-tools/build/upload-image.sh kouta-backend
+  script: ./ci-tools/build/upload-image.sh $ARTIFACT_NAME
   on:
     all_branches: true
