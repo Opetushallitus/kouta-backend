@@ -61,3 +61,23 @@ object KoutaDatabase extends Logging {
     flyway.migrate()
   }
 }
+
+import slick.jdbc.{GetResult, SetParameter}
+
+trait PgSetters {
+
+  implicit val pgStringArraySetter:SetParameter[List[String]] = SetParameter[List[String]] {
+    case (list, params) => params.setObject(list.toArray, java.sql.Types.ARRAY)
+  }
+
+}
+
+trait Extractable[T] {
+
+  val extractor:GetResult[T]
+
+  def extractArray[U](o: Object): List[U] = {
+    o.asInstanceOf[org.postgresql.jdbc.PgArray].getArray.asInstanceOf[Array[U]].toList
+  }
+
+}

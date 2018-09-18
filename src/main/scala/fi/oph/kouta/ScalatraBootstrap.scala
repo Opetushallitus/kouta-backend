@@ -1,7 +1,7 @@
 import fi.oph.kouta.config.{KoutaConfiguration, KoutaConfigurationFactory}
 import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.{KoutaBackendSwagger, SwaggerServlet}
-import fi.oph.kouta.servlet.KomoServlet
+import fi.oph.kouta.servlet.KoulutusServlet
 import fi.vm.sade.utils.slf4j.Logging
 import org.scalatra._
 import javax.servlet.ServletContext
@@ -16,7 +16,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
 
     implicit val swagger = new KoutaBackendSwagger
 
-    context.mount(new KomoServlet(), "/komo", "komo")
+    context.mount(new KoulutusServlet(), "/komo", "komo")
 
     context.mount(new SwaggerServlet, "/swagger")
 

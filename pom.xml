@@ -12,6 +12,10 @@
     <properties>
         <scala.version>2.12.6</scala.version>
 
+        <!-- Utility properties -->
+        <scala-utils.version>0.0.1-SNAPSHOT</scala-utils.version>
+        <json4s.version>3.5.2</json4s.version>
+
         <!-- Http related properties -->
         <scalatra.version>2.6.3</scalatra.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
@@ -19,7 +23,7 @@
         <!-- Database related properties -->
         <flyway.version>5.1.4</flyway.version>
         <slick.version>3.2.3</slick.version>
-        <jdbc.version>42.1.4</jdbc.version><!-- TODO: Voiko päivittää uudempaan? -->
+        <jdbc.version>42.2.5</jdbc.version>
 
         <!-- Test properties -->
         <jetty.version>9.4.12.v20180830</jetty.version>
@@ -43,26 +47,41 @@
             <version>${scala.version}</version>
         </dependency>
 
+        <!-- Utility properties -->
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-logging_2.12</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${scala-utils.version}</version>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-utils_2.12</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${scala-utils.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.apache.commons</groupId>
                     <artifactId>commons-lang3</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-json_2.12</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-jackson_2.12</artifactId>
+            <version>${json4s.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Http related dependencies -->
@@ -97,6 +116,10 @@
                 <exclusion>
                     <groupId>org.scala-lang.modules</groupId>
                     <artifactId>scala-parser-combinators_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>joda-time</groupId>
+                    <artifactId>joda-time</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
