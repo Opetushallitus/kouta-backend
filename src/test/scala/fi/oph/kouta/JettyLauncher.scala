@@ -18,8 +18,8 @@ object JettyLauncher extends Logging with KoutaConfigurationConstants {
     new JettyLauncher(System.getProperty("kouta-backend.port",JettyLauncher.DEFAULT_PORT).toInt).start.join
   }
 
-  private def setupWithEmbeddedPostgres() = {
-    logger.info("Starting Jetty with embedded PostgreSQL!")
+  def setupWithEmbeddedPostgres() = {
+    logger.info("Starting embedded PostgreSQL!")
     TempDb.start()
     Templates.createTestTemplate(TempDb.port)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)

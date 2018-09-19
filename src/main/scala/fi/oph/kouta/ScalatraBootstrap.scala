@@ -17,7 +17,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     implicit val swagger = new KoutaBackendSwagger
 
     context.mount(new HealthcheckServlet(), "/healthcheck", "healthcheck")
-    context.mount(new KoulutusServlet(), "/komo", "komo")
+    context.mount(new KoulutusServlet(), "/koulutus", "koulutus")
 
     context.mount(new SwaggerServlet, "/swagger")
   }

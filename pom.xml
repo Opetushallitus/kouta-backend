@@ -26,6 +26,8 @@
         <jdbc.version>42.2.5</jdbc.version>
 
         <!-- Test properties -->
+        <scala-test.version>3.2.0-SNAP10</scala-test.version>
+        <scalatra-scalatest.version>2.6.3</scalatra-scalatest.version>
         <jetty.version>9.4.12.v20180830</jetty.version>
         <commons.io.version>2.6</commons.io.version>
 
@@ -33,6 +35,7 @@
         <enforce.java.version>[1.8,)</enforce.java.version>
 
         <plugin.maven-enforcer-plugin.version>3.0.0-M2</plugin.maven-enforcer-plugin.version>
+        <plugin.scalatest-maven-plugin.version>2.0.0</plugin.scalatest-maven-plugin.version>
     </properties>
 
     <!--Huom! Lisää vain ylimmän tason riippuvudet!
@@ -174,6 +177,58 @@
 
         <!-- Test dependencies -->
         <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.12</artifactId>
+            <version>${scala-test.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-reflect</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatra</groupId>
+            <artifactId>scalatra-scalatest_2.12</artifactId>
+            <version>${scalatra-scalatest.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-webapp</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scalatest</groupId>
+                    <artifactId>scalatest_2.12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.scalacheck</groupId>
+            <artifactId>scalacheck_2.12</artifactId>
+            <version>1.14.0</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty.version}</version>
@@ -250,6 +305,33 @@
                             <goal>enforce</goal>
                         </goals>
                         <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- disable surefire -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <!-- enable scalatest -->
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>${plugin.scalatest-maven-plugin.version}</version>
+                <configuration>
+                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                    <junitxml>.</junitxml>
+                    <filereports>WDF TestSuite.txt</filereports>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

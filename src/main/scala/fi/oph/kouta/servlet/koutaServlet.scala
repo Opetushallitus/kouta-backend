@@ -8,12 +8,15 @@ import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerSupport}
 
 trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport {
-  override protected implicit def jsonFormats: Formats = DefaultFormats +
-    new EnumNameSerializer(Julkaisutila) + new EnumNameSerializer(Koulutustyyppi)
+  override protected implicit def jsonFormats: Formats = KoutaServlet.koutaFormats
 
   before() {
     contentType = formats("json")
   }
+}
+object KoutaServlet {
+  val koutaFormats: Formats = DefaultFormats +
+    new EnumNameSerializer(Julkaisutila) + new EnumNameSerializer(Koulutustyyppi)
 }
 
 class HealthcheckServlet(implicit val swagger:Swagger) extends KoutaServlet {
