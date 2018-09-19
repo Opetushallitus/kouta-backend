@@ -35,6 +35,7 @@
         <enforce.java.version>[1.8,)</enforce.java.version>
 
         <plugin.maven-enforcer-plugin.version>3.0.0-M2</plugin.maven-enforcer-plugin.version>
+        <plugin.maven-surefire-plugin.version>2.22.0</plugin.maven-surefire-plugin.version>
         <plugin.scalatest-maven-plugin.version>2.0.0</plugin.scalatest-maven-plugin.version>
     </properties>
 
@@ -257,7 +258,7 @@
     <repositories>
         <repository>
             <id>oph-sade-artifactory-snapshots</id>
-            <url>https://artifactory.oph.ware.fi/artifactory/oph-sade-snapshot-local</url>
+            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -267,14 +268,14 @@
         </repository>
         <repository>
             <id>oph-sade-artifactory-releases</id>
-            <url>https://artifactory.oph.ware.fi/artifactory/oph-sade-release-local</url>
+            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
         </repository>
         <repository>
             <id>ext-snapshot-local-artifactory-snapshots</id>
-            <url>https://artifactory.oph.ware.fi/artifactory/ext-snapshot-local</url>
+            <url>https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -312,6 +313,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>${plugin.maven-surefire-plugin.version}</version>
                 <configuration>
                     <skipTests>true</skipTests>
                 </configuration>
