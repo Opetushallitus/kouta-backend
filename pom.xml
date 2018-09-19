@@ -324,9 +324,7 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>${plugin.scalatest-maven-plugin.version}</version>
                 <configuration>
-                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-                    <junitxml>.</junitxml>
-                    <filereports>WDF TestSuite.txt</filereports>
+                    <membersOnlySuites>fi.oph.kouta.integration</membersOnlySuites>
                 </configuration>
                 <executions>
                     <execution>
