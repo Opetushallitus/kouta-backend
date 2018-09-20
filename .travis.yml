@@ -8,8 +8,20 @@ services:
   - docker
   - postgresql
 
+addons:
+  postgresql: "10"
+  apt:
+    packages:
+    - postgresql-10
+    - postgresql-client-10
+
+cache:
+  directories:
+  - $HOME/.m2
+
 env:
   global:
+    - PGPORT=5433
     # AWS_ACCESS_KEY_ID
     - secure: "O8lhLbYpfhhtjMiN32FAPX5XyEV4UQp8sHLQkrNMecq3FhwqTOeKC55bqaaEvUDNM4OUWqIeOYa21J39UCjKp5XZsTH3PMTtCPhC45CfVAJXmj7ylIwFiXSmvU7MxLAK+XBQuEHfsl10q261zW8aPm5H37MmDoVAbC/ANIZ71627dSrsptaBbhzxAtMbpjTeCZBTVPHxSugK+zQd4sIlS+2BBSOW8fVok40Zot8c/vjzDG10aYPRvx9FXdxjtuFes9a3r54z+Xllc5+AMf6RsB+3iyGjNU8q3+LUgxoUNF9uUq8k0wqqDy893/qf8WJ0J11p4uKwCUpJs+ug0Eh/3JeJwpNKUVqi24ddocbvMV1c6bws6yXc4X1N3EllwN0mYDSX/BzT4WHwHTISFio3yGipPNWhobJuY5fHQQahYE1BQSBMD+2xA1Llmt+CmvrbPMg7LLy8wzYz/eRt8xkl5u/KOTd3l8oZXe2ogQ1Z4K3tdfUOwrl5apsKVQ6pME31Y2n9K2AqbPDywvlEu/rJA0TxVi8okkf/Qt6PliQ/sM6QkT5QmgT5locWi+ildqSBRHFIiXH2iOzw5NmtFapCaHbDFSvu3MxhAAURScVM3YRuZ7zXs2stGuK1mTsQzfzUYTSKqXyX41LFxf7XBMM8HxvhO8DLKfYP+JqHeQkrUic="
     # AWS_SECRET_ACCESS_KEY
@@ -20,8 +32,13 @@ install:
   - source ci-tools/common/setup-tools.sh
   - export ARTIFACT_NAME="kouta-backend"
 
+before_script:
+  - DB_NAME=kouta
+  - psql -c "create database $DB_NAME;" -U postgres
+  - psql -d $DB_NAME -f postgresql/init_it_postgresql.sql
+
 script:
-  - mvn install
+  - mvn install -Dkouta-backend.test-postgres-port=5433
 
   - mv target/kouta-backend-*.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
   - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/

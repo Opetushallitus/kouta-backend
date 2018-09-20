@@ -36,7 +36,7 @@ object TempDb extends Logging {
         }
         runBlocking(s"dropdb -p $port --if-exists $dbName")
         runBlocking(s"createdb -p $port $dbName")
-        runBlocking(s"psql -h localhost -p $port -d $dbName -f postgresql/init_temp_postgresql.sql")
+        runBlocking(s"psql -h localhost -p $port -d $dbName -f postgresql/init_it_postgresql.sql")
 
         Runtime.getRuntime.addShutdownHook(new Thread(() => stop()))
       }

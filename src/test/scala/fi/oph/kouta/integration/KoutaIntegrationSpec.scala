@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.KoutaBackendSwagger
-import fi.oph.kouta.TestSetups.setupWithEmbeddedPostgres
+import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithPort}
 import org.json4s.Formats
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
@@ -13,6 +13,9 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec {
 
   override def beforeAll() = {
     super.beforeAll()
-    setupWithEmbeddedPostgres
+    Option(System.getProperty("kouta-backend.test-postgres-port")) match {
+      case Some(port) => setupWithPort(port.toInt)
+      case None => setupWithEmbeddedPostgres
+    }
   }
 }
