@@ -4,12 +4,14 @@ Uuden tarjonnan backend.
 
 ## Ajaminen lokaalisti
 
-Käynnistä Ideassa ```JettyLauncher```. Sovellus käynnistyy porttiin **8099** ja se käyttää embedded Postgres-kantaa.
+Käynnistä Ideassa ```EmbeddedJettyLauncher```. Sovellus käynnistyy porttiin **8099** ja se käyttää embedded Postgres-kantaa.
 Asetuksia voi muuttaa muokkaamalla ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
+
+Emebedded Postgres-kannan käyttäminen vaatii, että postgresql on asennettu koneelle.
 
 ##### Konfigurointi
 
-JettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
+EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
  
 | System property |   |
 | ----------------------------------- |:--------------------------------------------------:| 

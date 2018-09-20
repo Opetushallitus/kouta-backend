@@ -2,21 +2,21 @@ package fi.oph.kouta
 
 import fi.oph.kouta.config.KoutaConfigurationConstants
 import fi.vm.sade.utils.slf4j.Logging
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.webapp.WebAppContext
 
-object JettyLauncher extends Logging with KoutaConfigurationConstants {
+object EmbeddedJettyLauncher extends Logging {
 
-  private val DEFAULT_PORT = "8099"
+  val DEFAULT_PORT = "8099"
 
   def main(args: Array[String]) {
-
     System.getProperty("kouta-backend.embedded", "true") match {
-      case x if "false".equalsIgnoreCase(x) => setupWithoutEmbeddedPostgres()
-      case _ => setupWithEmbeddedPostgres()
+      case x if "false".equalsIgnoreCase(x) => TestSetups.setupWithoutEmbeddedPostgres()
+      case _ => TestSetups.setupWithEmbeddedPostgres()
     }
-    new JettyLauncher(System.getProperty("kouta-backend.port",JettyLauncher.DEFAULT_PORT).toInt).start.join
+    new JettyLauncher(System.getProperty("kouta-backend.port", DEFAULT_PORT).toInt).start.join
   }
+}
+
+object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupWithEmbeddedPostgres() = {
     logger.info("Starting embedded PostgreSQL!")
@@ -26,30 +26,17 @@ object JettyLauncher extends Logging with KoutaConfigurationConstants {
     System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
   }
 
-  private def setupWithoutEmbeddedPostgres() = {
+  def setupWithoutEmbeddedPostgres()=
     (Option(System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE)),
      Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))) match {
-      case (Some(CONFIG_PROFILE_TEMPLATE), None) => {
-        logger.info(s"Using default test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
-        System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
-      }
+      case (Some(CONFIG_PROFILE_TEMPLATE), None) => setupWithDefaultTestTemplateFile()
       case _ => Unit
-    }
   }
-}
 
-class JettyLauncher(val port:Int) {
-  val server = new Server(port)
-  val context = new WebAppContext()
-
-  context.setResourceBase("src/main/webapp")
-  context.setContextPath("/kouta-backend")
-  context.setDescriptor("src/main/webapp/WEB-INF/web.xml")
-  server.setHandler(context)
-
-  def start = {
-    server.start
-    server
+  def setupWithDefaultTestTemplateFile() = {
+    logger.info(s"Using default test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
+    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)
+    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
   }
 }
 

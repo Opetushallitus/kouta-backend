@@ -1,7 +1,8 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.{JettyLauncher, KoutaBackendSwagger}
+import fi.oph.kouta.KoutaBackendSwagger
+import fi.oph.kouta.TestSetups.setupWithEmbeddedPostgres
 import org.json4s.Formats
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
@@ -12,6 +13,6 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec {
 
   override def beforeAll() = {
     super.beforeAll()
-    JettyLauncher.setupWithEmbeddedPostgres
+    setupWithEmbeddedPostgres
   }
 }
