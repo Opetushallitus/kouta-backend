@@ -4,8 +4,10 @@ import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.KoutaBackendSwagger
 import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithPort}
 import org.json4s.Formats
+import org.scalatest.DoNotDiscover
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
+@DoNotDiscover
 class KoutaIntegrationSpec extends ScalatraFlatSpec {
 
   implicit val swagger = new KoutaBackendSwagger
