@@ -31,8 +31,8 @@ case class KoutaConfiguration(config:TypesafeConfig) extends ApplicationSettings
 }
 
 trait KoutaConfigurationConstants {
-  val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "konfo-backend.config-profile"
-  val SYSTEM_PROPERTY_NAME_TEMPLATE = "konfo-backend.template-file"
+  val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "kouta-backend.config-profile"
+  val SYSTEM_PROPERTY_NAME_TEMPLATE = "kouta-backend.template-file"
 
   val CONFIG_PROFILE_DEFAULT = "default"
   val CONFIG_PROFILE_TEMPLATE = "template"

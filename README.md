@@ -17,8 +17,8 @@ EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
 | ----------------------------------- |:--------------------------------------------------:| 
 | ```-Dkouta-backend.port=xxxx```     | Määrittää Jettyn portin (default 8099)             | 
 | ```-Dkouta-backend.embedded=xxxx``` | Käynnistetäänkö embedded PostgreSQL (default true) |
-| ```-Dkonfo-backend.profile=xxxx```  | Määrittää profiilin                                | 
-| ```-Dkonfo-backend.template=xxxx``` | Määrittää template-tiedoston polun                 |
+| ```-Dkouta-backend.profile=xxxx```  | Määrittää profiilin                                | 
+| ```-Dkouta-backend.template=xxxx``` | Määrittää template-tiedoston polun                 |
 
 * Jos embedded Postgres ei ole käytössä, profiili voi olla joko *default* tai *template*
     * ```default```-profiilissa ```oph-configuration``` luetaan käyttäjän kotihakemistosta
