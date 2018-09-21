@@ -44,7 +44,7 @@ before_script:
   - psql -d $DB_NAME -f postgresql/init_it_postgresql.sql
 
 script:
-  - mvn install -Dkouta-backend.test-postgres-port=${PGPORT}
+  - mvn install -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
 
   - mv target/kouta-backend-*.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
   - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
