@@ -7,15 +7,11 @@ import org.scalatra.{CorsSupport, Ok, ScalatraServlet}
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerSupport}
 
-trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with CorsSupport {
+trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport {
   override protected implicit def jsonFormats: Formats = KoutaServlet.koutaFormats
 
   before() {
     contentType = formats("json")
-  }
-
-  options("/*") {
-    response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"))
   }
 }
 
