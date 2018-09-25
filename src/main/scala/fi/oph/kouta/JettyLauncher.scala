@@ -3,9 +3,10 @@ package fi.oph.kouta
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import fi.vm.sade.utils.slf4j.Logging
+import org.eclipse.jetty.util.resource.Resource
 
 object JettyLauncher extends Logging {
-  val DEFAULT_PORT = "8080"
+  val DEFAULT_PORT = "8077"
 
   def main(args: Array[String]) {
     val port = System.getProperty("kouta-backend.port", DEFAULT_PORT).toInt
@@ -17,10 +18,9 @@ object JettyLauncher extends Logging {
 class JettyLauncher(val port:Int) {
   val server = new Server(port)
   val context = new WebAppContext()
-
-  context.setResourceBase("src/main/webapp")
+  context.setBaseResource(Resource.newClassPathResource("webapp"))
+  context.setDescriptor("WEB-INF/web.xml")
   context.setContextPath("/kouta-backend")
-  context.setDescriptor("src/main/webapp/WEB-INF/web.xml")
   server.setHandler(context)
 
   def start = {
