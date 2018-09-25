@@ -6,7 +6,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.eclipse.jetty.util.resource.Resource
 
 object JettyLauncher extends Logging {
-  val DEFAULT_PORT = "8077"
+  val DEFAULT_PORT = "8080"
 
   def main(args: Array[String]) {
     val port = System.getProperty("kouta-backend.port", DEFAULT_PORT).toInt
