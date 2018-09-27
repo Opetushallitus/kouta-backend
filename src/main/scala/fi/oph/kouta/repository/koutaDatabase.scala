@@ -9,9 +9,11 @@ import org.apache.commons.lang3.builder.ToStringBuilder
 import org.flywaydb.core.Flyway
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.Serializable
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success, Try}
 
 object KoutaDatabase extends Logging {
 
@@ -30,6 +32,13 @@ object KoutaDatabase extends Logging {
       db.run(operations.withStatementParameters(statementInit = st => st.setQueryTimeout(timeout.toSeconds.toInt))),
       timeout + Duration(1, TimeUnit.SECONDS)
     )
+  }
+
+  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS)): Either[Throwable, R] = {
+    Try(runBlocking(operations.transactionally.withTransactionIsolation(Serializable), timeout)) match {
+      case Success(r) => Right(r)
+      case Failure(t) => Left(t)
+    }
   }
 
   def destroy() = {
@@ -80,4 +89,14 @@ trait Extractable[T] {
     o.asInstanceOf[org.postgresql.jdbc.PgArray].getArray.asInstanceOf[Array[U]].toList
   }
 
+  def extractPGObject(o: Object): String = {
+    o.asInstanceOf[org.postgresql.util.PGobject].getValue
+  }
+
+  import fi.oph.kouta.domain.Kieli
+  def extractKielistys(o: Object): Map[Kieli.Kieli, String] = {
+    implicit val formats = fi.oph.kouta.servlet.KoutaServlet.koutaFormats
+    import org.json4s.jackson.Serialization.read
+    read[Map[Kieli.Kieli, String]](extractPGObject(o)).filter(p => p._2 != null)
+  }
 }
