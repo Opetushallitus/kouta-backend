@@ -8,7 +8,7 @@ object Koulutustyyppi extends Enumeration {
   val amm, kk, lk, muu = Value
 }
 
-case class Koulutus( oid:String,
+case class Koulutus( oid:Option[String],
                      johtaaTutkintoon:Boolean,
                      koulutustyyppi:Koulutustyyppi,
                      koulutusKoodiUri:String,

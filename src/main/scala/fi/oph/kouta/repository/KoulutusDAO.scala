@@ -10,10 +10,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object KoulutusDAO extends KoulutusDTOs with Logging {
 
   private def insertKoulutus(koulutus:Koulutus) = {
-    val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, _, _, muokkaaja) = koulutus
-    sqlu"""insert into koulutukset (oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, muokkaaja)
-             values ($oid, $johtaaTutkintoon, ${koulutustyyppi.toString}::koulutustyyppi,
-             $koulutusKoodiUri, ${tila.toString}::julkaisutila, $muokkaaja)"""
+    val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, _, _, muokkaaja) = koulutus
+    sql"""insert into koulutukset (johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, muokkaaja)
+             values ($johtaaTutkintoon, ${koulutustyyppi.toString}::koulutustyyppi,
+             $koulutusKoodiUri, ${tila.toString}::julkaisutila, $muokkaaja) returning oid""".as[String].headOption
   }
 
   private def insertKoulutuksenTekstit(koulutus:Koulutus) = {
@@ -31,12 +31,13 @@ object KoulutusDAO extends KoulutusDTOs with Logging {
   }
 
   def put(koulutus:Koulutus) = {
-    KoutaDatabase.runBlockingTransactionally(
-      insertKoulutus(koulutus).andThen(
-        insertKoulutuksenTekstit(koulutus)).andThen(
-          insertKoulutuksenTarjoajat(koulutus))) match {
-      case Left(t) => logger.error("FAILURE", t); throw t
-      case Right(x) => logger.error(x.toList.mkString(":")); x
+    KoutaDatabase.runBlockingTransactionally( for {
+      oid <- insertKoulutus(koulutus)
+      _ <- insertKoulutuksenTekstit(koulutus.copy(oid = oid))
+      _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
+    } yield (oid) ) match {
+      case Left(t) => throw t
+      case Right(oid) => oid
     }
   }
 

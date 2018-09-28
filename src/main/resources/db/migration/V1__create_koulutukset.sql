@@ -1,4 +1,4 @@
-SET client_encoding = 'UTF8';
+set client_encoding = 'UTF8';
 
 create type koulutustyyppi as enum (
   'amm',
@@ -15,8 +15,11 @@ create type julkaisutila as enum (
 );
 alter type julkaisutila owner to oph;
 
+create sequence koulutus_oid;
+alter sequence koulutus_oid owner to oph;
+
 create table koulutukset (
-  oid varchar primary key,
+  oid varchar primary key default '1.2.246.562.13.' || lpad(nextval('koulutus_oid')::text, 20, '0'),
   johtaa_tutkintoon boolean not null,
   tyyppi koulutustyyppi not null,
   koulutus_koodi_uri varchar not null,

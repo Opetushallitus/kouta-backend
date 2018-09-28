@@ -53,7 +53,7 @@ trait KoulutusDTOs {
 
   def koulutus(koulutus:KoulutusDTO, tekstit:Seq[KoulutuksenTekstitDTO], tarjoajat:Seq[KoulutuksenTarjoajatDTO]) =
     new Koulutus(
-      koulutus.oid,
+      Some(koulutus.oid),
       koulutus.johtaaTutkintoon,
       koulutus.koulutustyyppi,
       koulutus.koulutusKoodiUri,

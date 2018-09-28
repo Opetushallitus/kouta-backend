@@ -1,4 +1,4 @@
-CREATE TABLE koulutusten_tarjoajat (
+create table koulutusten_tarjoajat (
   koulutus_oid varchar references koulutukset (oid),
   tarjoaja_oid varchar not null,
   muokkaaja varchar not null,

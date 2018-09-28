@@ -39,8 +39,9 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Tallenna uusi koulutus"
     parameter bodyParam[Koulutus])) {
 
-    KoulutusService.put(parsedBody.extract[Koulutus])
-    Ok("message" -> "ok")
+    KoulutusService.put(parsedBody.extract[Koulutus]) match {
+      case oid => Ok("oid" -> oid.getOrElse(""))
+    }
   }
 }
 
