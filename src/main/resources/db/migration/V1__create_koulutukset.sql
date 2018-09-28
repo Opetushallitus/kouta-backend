@@ -9,9 +9,9 @@ create type koulutustyyppi as enum (
 alter type koulutustyyppi owner to oph;
 
 create type julkaisutila as enum (
-  'julkaisematta',
+  'tallennettu',
   'julkaistu',
-  'poistettu'
+  'arkistoitu'
 );
 alter type julkaisutila owner to oph;
 
@@ -20,12 +20,10 @@ create table koulutukset (
   johtaa_tutkintoon boolean not null,
   tyyppi koulutustyyppi not null,
   koulutus_koodi_uri varchar not null,
-  tila julkaisutila not null default 'julkaisematta',
-  tarjoajat varchar[],
+  tila julkaisutila not null default 'tallennettu',
   muokkaaja varchar not null,
   transaction_id bigint not null default txid_current(),
-  system_time tstzrange not null default tstzrange(now(), null, '[)'),
-  check (cardinality(tarjoajat) > 0)
+  system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
 alter table koulutukset owner to oph;
 
@@ -60,7 +58,6 @@ begin
       tyyppi,
       koulutus_koodi_uri,
       tila,
-      tarjoajat,
       muokkaaja,
       transaction_id,
       system_time
@@ -70,11 +67,10 @@ begin
                    old.tyyppi,
                    old.koulutus_koodi_uri,
                    old.tila,
-                   old.tarjoajat,
                    old.muokkaaja,
                    old.transaction_id,
                    tstzrange(lower(old.system_time), now(), '[)')
-                   );
+               );
   return null;
 end;
 $$ language plpgsql;

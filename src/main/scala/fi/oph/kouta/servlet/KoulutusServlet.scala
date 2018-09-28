@@ -32,6 +32,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
       "tila" -> ModelProperty(`type` = DataType.String, required = true),
       "tarjoajat" -> ModelProperty(`type` = DataType.GenList(DataType.String), required = true),
       "nimi" -> ModelProperty(`type` = DataType.GenMap(DataType.String), required = true),
+      "kuvaus" -> ModelProperty(`type` = DataType.GenMap(DataType.String), required = true),
       "muokkaaja" -> ModelProperty(`type` = DataType.String, required = true))))
 
   post("/", operation(apiOperation[Unit]("Tallenna uusi koulutus")

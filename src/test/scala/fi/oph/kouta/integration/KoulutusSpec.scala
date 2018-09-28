@@ -31,12 +31,12 @@ class KoulutusSpec extends KoutaIntegrationSpec {
 
   it should "store koulutus" in {
     val json = write(koulutus)
-    //println(json)
+    println(json)
     post("/koulutus", json.getBytes) {
       status should equal (200)
       get(s"/koulutus/${koulutus.oid}") {
         status should equal (200)
-        //println(body)
+        println(body)
         body should equal (json)
       }
     }

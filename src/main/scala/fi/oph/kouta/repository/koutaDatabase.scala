@@ -71,32 +71,10 @@ object KoutaDatabase extends Logging {
   }
 }
 
-import slick.jdbc.{GetResult, SetParameter}
-
-trait PgSetters {
-
-  implicit val pgStringArraySetter:SetParameter[List[String]] = SetParameter[List[String]] {
-    case (list, params) => params.setObject(list.toArray, java.sql.Types.ARRAY)
-  }
-
-}
+import slick.jdbc.GetResult
 
 trait Extractable[T] {
 
   val extractor:GetResult[T]
 
-  def extractArray[U](o: Object): List[U] = {
-    o.asInstanceOf[org.postgresql.jdbc.PgArray].getArray.asInstanceOf[Array[U]].toList
-  }
-
-  def extractPGObject(o: Object): String = {
-    o.asInstanceOf[org.postgresql.util.PGobject].getValue
-  }
-
-  import fi.oph.kouta.domain.Kieli
-  def extractKielistys(o: Object): Map[Kieli.Kieli, String] = {
-    implicit val formats = fi.oph.kouta.servlet.KoutaServlet.koutaFormats
-    import org.json4s.jackson.Serialization.read
-    read[Map[Kieli.Kieli, String]](extractPGObject(o)).filter(p => p._2 != null)
-  }
 }

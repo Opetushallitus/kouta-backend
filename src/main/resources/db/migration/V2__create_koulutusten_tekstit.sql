@@ -26,7 +26,7 @@ execute procedure set_temporal_columns();
 create or replace function update_koulutusten_tekstit_history() returns trigger as
 $$
 begin
-  insert into koulutukset_history (
+  insert into koulutusten_tekstit_history (
       koulutus_oid,
       kielikoodi,
       nimi,
@@ -37,12 +37,12 @@ begin
       ) values (
                    old.koulutus_oid,
                    old.kielikoodi,
-                   old.tyyppi,
                    old.nimi,
                    old.kuvaus,
+                   old.muokkaaja,
                    old.transaction_id,
                    tstzrange(lower(old.system_time), now(), '[)')
-                   );
+                );
   return null;
 end;
 $$ language plpgsql;

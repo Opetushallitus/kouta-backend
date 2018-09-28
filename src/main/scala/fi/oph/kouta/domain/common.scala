@@ -2,7 +2,7 @@ package fi.oph.kouta.domain
 
 object Julkaisutila extends Enumeration {
   type Julkaisutila = Value
-  val julkaisematta, julkaistu, poistettu = Value
+  val tallennettu, julkaistu, arkistoitu = Value
 }
 
 object Kieli extends Enumeration {
