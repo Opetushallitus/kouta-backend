@@ -17,7 +17,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
 
     KoulutusService.get(params("oid")) match {
       case None => NotFound("error" -> "Unknown koulutus oid")
-      case Some(k) => Ok(k)
+      case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
     }
   }
 
@@ -35,12 +35,21 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
       "kuvaus" -> ModelProperty(`type` = DataType.GenMap(DataType.String), required = true),
       "muokkaaja" -> ModelProperty(`type` = DataType.String, required = true))))
 
-  post("/", operation(apiOperation[Unit]("Tallenna uusi koulutus")
+  put("/", operation(apiOperation[Unit]("Tallenna uusi koulutus")
     summary "Tallenna uusi koulutus"
     parameter bodyParam[Koulutus])) {
 
     KoulutusService.put(parsedBody.extract[Koulutus]) match {
       case oid => Ok("oid" -> oid.getOrElse(""))
+    }
+  }
+
+  post("/", operation(apiOperation[Unit]("Muokkaa koulutusta")
+    summary "Muokkaa olemassa olevaa koulutusta"
+    parameter bodyParam[Koulutus])) {
+
+    KoulutusService.update(parsedBody.extract[Koulutus], getIfUnmodifiedSince) match {
+      case updated => Ok("updated" -> updated)
     }
   }
 }

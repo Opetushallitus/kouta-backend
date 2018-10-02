@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import java.time.Instant
+
 import fi.oph.kouta.domain.Julkaisutila.Julkaisutila
 import fi.oph.kouta.domain.Koulutustyyppi.Koulutustyyppi
 
@@ -8,7 +10,7 @@ object Koulutustyyppi extends Enumeration {
   val amm, kk, lk, muu = Value
 }
 
-case class Koulutus( oid:Option[String],
+case class Koulutus( oid:Option[String] = None,
                      johtaaTutkintoon:Boolean,
                      koulutustyyppi:Koulutustyyppi,
                      koulutusKoodiUri:String,
