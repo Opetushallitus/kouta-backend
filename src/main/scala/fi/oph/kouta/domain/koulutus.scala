@@ -1,7 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.Instant
-
 import fi.oph.kouta.domain.Julkaisutila.Julkaisutila
 import fi.oph.kouta.domain.Koulutustyyppi.Koulutustyyppi
 

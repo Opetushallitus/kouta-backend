@@ -5,6 +5,7 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
+import fi.oph.kouta.SwaggerModels
 import fi.oph.kouta.domain.{Julkaisutila, Kieli, Koulutustyyppi}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.JsonAST.JString
@@ -16,7 +17,7 @@ import org.scalatra.swagger.{Swagger, SwaggerSupport}
 
 import scala.util.{Failure, Try}
 
-trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging {
+trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with SwaggerModels {
   override protected implicit def jsonFormats: Formats = KoutaServlet.koutaFormats
 
   before() {
