@@ -24,6 +24,8 @@ create table koulutukset (
   tyyppi koulutustyyppi not null,
   koulutus_koodi_uri varchar not null,
   tila julkaisutila not null default 'tallennettu',
+  nimi jsonb not null,
+  metadata jsonb,
   muokkaaja varchar not null,
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
@@ -61,6 +63,8 @@ begin
       tyyppi,
       koulutus_koodi_uri,
       tila,
+      nimi,
+      metadata,
       muokkaaja,
       transaction_id,
       system_time
@@ -70,6 +74,8 @@ begin
                    old.tyyppi,
                    old.koulutus_koodi_uri,
                    old.tila,
+                   old.nimi,
+                   old.metadata,
                    old.muokkaaja,
                    old.transaction_id,
                    tstzrange(lower(old.system_time), now(), '[)')

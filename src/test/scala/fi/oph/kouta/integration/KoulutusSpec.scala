@@ -1,11 +1,10 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain.Julkaisutila._
-import fi.oph.kouta.domain.{Koulutus, Kieli}
+import fi.oph.kouta.domain.{Kieli, Koulutus, KoulutusMetadata}
 import fi.oph.kouta.domain.Koulutustyyppi._
 import fi.oph.kouta.servlet.KoulutusServlet
-
-import org.json4s.jackson.Serialization.{write, read}
+import org.json4s.jackson.Serialization.{read, write}
 
 class KoulutusSpec extends KoutaIntegrationSpec {
 
@@ -18,7 +17,7 @@ class KoulutusSpec extends KoutaIntegrationSpec {
     koulutusKoodiUri = "koulutus_123#1",
     tila = julkaistu,
     nimi = Map(Kieli.fi -> "nimi", Kieli.sv -> "nimi sv"),
-    kuvaus = Map(),
+    metadata = new KoulutusMetadata(),
     tarjoajat = List("1.2", "2.2", "3.2"),
     muokkaaja = "Mörkö Muokkaaja")
 
@@ -47,7 +46,7 @@ class KoulutusSpec extends KoutaIntegrationSpec {
   def getOk(oid:String, expected:Koulutus) = {
     get(s"/koulutus/$oid") {
       status should equal (200)
-      body should equal (write(expected))
+      read[Koulutus](body) should equal (expected)
       header.get("Last-Modified").get
     }
   }
@@ -107,8 +106,10 @@ class KoulutusSpec extends KoutaIntegrationSpec {
   it should "update koulutuksen tekstit ja tarjoajat" in {
     val oid = putOk(koulutus)
     val lastModified = getOk(oid, koulutus(oid))
-    val uusiKoulutus = koulutus(oid).copy(nimi = Map(Kieli.fi -> "kiva nimi", Kieli.sv -> "nimi sv", Kieli.en -> "nice name"),
-      kuvaus = Map(Kieli.fi -> "kuvaus", Kieli.en -> "description"), tarjoajat = List("2.2", "3.2", "4.2"))
+    val uusiKoulutus = koulutus(oid).copy(
+      nimi = Map(Kieli.fi -> "kiva nimi", Kieli.sv -> "nimi sv", Kieli.en -> "nice name"),
+      metadata = new KoulutusMetadata(Map(Kieli.fi -> "kuvaus", Kieli.en -> "description")),
+      tarjoajat = List("2.2", "3.2", "4.2"))
     updateOk(uusiKoulutus, lastModified, true)
     getOk(oid, uusiKoulutus)
   }

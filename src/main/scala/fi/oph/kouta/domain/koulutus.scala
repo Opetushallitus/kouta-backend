@@ -8,12 +8,14 @@ object Koulutustyyppi extends Enumeration {
   val amm, kk, lk, muu = Value
 }
 
-case class Koulutus( oid:Option[String] = None,
-                     johtaaTutkintoon:Boolean,
-                     koulutustyyppi:Koulutustyyppi,
-                     koulutusKoodiUri:String,
-                     tila:Julkaisutila,
-                     tarjoajat:List[String],
-                     nimi: Map[Kieli.Kieli, String],
-                     kuvaus: Map[Kieli.Kieli, String],
-                     muokkaaja:String)
+case class KoulutusMetadata(kuvaus:Map[Kieli.Kieli, String] = Map())
+
+case class Koulutus(oid:Option[String] = None,
+                    johtaaTutkintoon:Boolean,
+                    koulutustyyppi:Koulutustyyppi,
+                    koulutusKoodiUri:String,
+                    tila:Julkaisutila,
+                    tarjoajat:List[String],
+                    nimi: Map[Kieli.Kieli, String],
+                    metadata: KoulutusMetadata,
+                    muokkaaja:String)

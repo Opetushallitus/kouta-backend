@@ -6,19 +6,16 @@ import java.time.format.DateTimeFormatter
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
 import fi.oph.kouta.SwaggerModels
-import fi.oph.kouta.domain.{Julkaisutila, Kieli, Koulutustyyppi}
+import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
-import org.json4s.JsonAST.JString
-import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, MappingException}
-import org.json4s.ext.EnumNameSerializer
+import org.json4s.MappingException
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerSupport}
 
 import scala.util.{Failure, Try}
 
-trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with SwaggerModels {
-  override protected implicit def jsonFormats: Formats = KoutaServlet.koutaFormats
+trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with SwaggerModels with KoutaJsonFormats {
 
   before() {
     contentType = formats("json")
@@ -87,17 +84,6 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
       }
     }
   }
-}
-
-object KoutaServlet {
-  val kieliSerializer = new EnumNameSerializer(Kieli)
-  val koutaFormats: Formats = DefaultFormats +
-    new EnumNameSerializer(Julkaisutila) + new EnumNameSerializer(Koulutustyyppi) +
-    new CustomKeySerializer[Kieli.Kieli](formats => ( {
-      case s: String => Kieli.values.find(_.toString == s.toLowerCase).get
-    }, {
-      case k: Kieli.Kieli => k.toString
-    }))
 }
 
 class HealthcheckServlet(implicit val swagger:Swagger) extends KoutaServlet {

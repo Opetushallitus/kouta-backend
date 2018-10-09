@@ -1,16 +1,22 @@
 package fi.oph.kouta.repository.dto
 
 import fi.oph.kouta.domain.Julkaisutila.Julkaisutila
-import fi.oph.kouta.domain.{Julkaisutila, Kieli, Koulutus, Koulutustyyppi}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.Koulutustyyppi.Koulutustyyppi
+import fi.oph.kouta.util.KoutaJsonFormats
+import org.json4s.jackson.Serialization.{read, write}
 
-trait KoulutusDTOs {
+trait KoulutusDTOs extends KoutaJsonFormats {
+
+  def toJson(data:AnyRef) = write(data)
 
   case class KoulutusDTO(oid:String,
                          johtaaTutkintoon:Boolean,
                          koulutustyyppi:Koulutustyyppi,
                          koulutusKoodiUri:String,
                          tila:Julkaisutila,
+                         nimi: Map[Kieli.Kieli, String],
+                         metatieto: String,
                          muokkaaja:String)
 
   object KoulutusDTO extends fi.oph.kouta.repository.Extractable[KoulutusDTO] {
@@ -22,6 +28,8 @@ trait KoulutusDTOs {
         koulutustyyppi = Koulutustyyppi.withName(r.nextString),
         koulutusKoodiUri = r.nextString,
         tila = Julkaisutila.withName(r.nextString),
+        nimi = read[Map[Kieli.Kieli, String]](r.nextString),
+        metatieto = r.nextString(),
         muokkaaja = r.nextString))
   }
 
@@ -51,7 +59,7 @@ trait KoulutusDTOs {
         tarjoajaOid = r.nextString))
   }
 
-  def koulutus(koulutus:KoulutusDTO, tekstit:Seq[KoulutuksenTekstitDTO], tarjoajat:Seq[KoulutuksenTarjoajatDTO]) =
+  def koulutus(koulutus:KoulutusDTO, tarjoajat:Seq[KoulutuksenTarjoajatDTO]) =
     new Koulutus(
       Some(koulutus.oid),
       koulutus.johtaaTutkintoon,
@@ -59,8 +67,8 @@ trait KoulutusDTOs {
       koulutus.koulutusKoodiUri,
       koulutus.tila,
       tarjoajat.map(_.tarjoajaOid).toList,
-      tekstit.map(t => (t.kielikoodi, t.nimi)).filter(_._2 != null).toMap,
-      tekstit.map(t => (t.kielikoodi, t.kuvaus)).filter(_._2 != null).toMap,
+      koulutus.nimi,
+      read[KoulutusMetadata](koulutus.metatieto),
       koulutus.muokkaaja
     )
 }
