@@ -8,7 +8,6 @@ import org.scalatra.swagger._
 class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
 
   override val applicationDescription = "Koulutusten API"
-  registerModel(KoulutusModel)
 
   get("/:oid", operation(apiOperation[Koulutus]("Hae koulutus")
     summary "Hae koulutus"

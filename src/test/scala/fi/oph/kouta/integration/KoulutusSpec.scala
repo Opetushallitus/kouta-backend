@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain.Julkaisutila._
-import fi.oph.kouta.domain.{Kieli, Koulutus, KoulutusMetadata}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.Koulutustyyppi._
 import fi.oph.kouta.servlet.KoulutusServlet
 import org.json4s.jackson.Serialization.{read, write}
@@ -13,10 +13,10 @@ class KoulutusSpec extends KoutaIntegrationSpec {
   val koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
-    koulutustyyppi = amm,
+    koulutustyyppi = Amm,
     koulutusKoodiUri = "koulutus_123#1",
-    tila = julkaistu,
-    nimi = Map(Kieli.fi -> "nimi", Kieli.sv -> "nimi sv"),
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = new KoulutusMetadata(),
     tarjoajat = List("1.2", "2.2", "3.2"),
     muokkaaja = "Mörkö Muokkaaja")
@@ -73,8 +73,8 @@ class KoulutusSpec extends KoutaIntegrationSpec {
   it should "update koulutus" in {
     val oid = putOk(koulutus)
     val lastModified = getOk(oid, koulutus(oid))
-    updateOk(koulutus(oid, arkistoitu), lastModified)
-    getOk(oid, koulutus(oid, arkistoitu))
+    updateOk(koulutus(oid, Arkistoitu), lastModified)
+    getOk(oid, koulutus(oid, Arkistoitu))
   }
 
   it should "not update koulutus" in {
@@ -97,7 +97,7 @@ class KoulutusSpec extends KoutaIntegrationSpec {
     val oid = putOk(koulutus)
     val lastModified = getOk(oid, koulutus(oid))
     Thread.sleep(1500)
-    updateOk(koulutus(oid, arkistoitu), lastModified)
+    updateOk(koulutus(oid, Arkistoitu), lastModified)
     post("/koulutus", write(koulutus(oid)).getBytes, List(("If-Unmodified-Since", lastModified))) {
       status should equal (409)
     }
@@ -107,8 +107,8 @@ class KoulutusSpec extends KoutaIntegrationSpec {
     val oid = putOk(koulutus)
     val lastModified = getOk(oid, koulutus(oid))
     val uusiKoulutus = koulutus(oid).copy(
-      nimi = Map(Kieli.fi -> "kiva nimi", Kieli.sv -> "nimi sv", Kieli.en -> "nice name"),
-      metadata = new KoulutusMetadata(Map(Kieli.fi -> "kuvaus", Kieli.en -> "description")),
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      metadata = new KoulutusMetadata(Map(Fi -> "kuvaus", En -> "description")),
       tarjoajat = List("2.2", "3.2", "4.2"))
     updateOk(uusiKoulutus, lastModified, true)
     getOk(oid, uusiKoulutus)

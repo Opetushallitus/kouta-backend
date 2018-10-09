@@ -5,7 +5,6 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
-import fi.oph.kouta.SwaggerModels
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.MappingException
@@ -15,7 +14,7 @@ import org.scalatra.swagger.{Swagger, SwaggerSupport}
 
 import scala.util.{Failure, Try}
 
-trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with SwaggerModels with KoutaJsonFormats {
+trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with KoutaJsonFormats {
 
   before() {
     contentType = formats("json")

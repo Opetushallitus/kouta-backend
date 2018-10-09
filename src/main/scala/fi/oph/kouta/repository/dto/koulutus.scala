@@ -1,8 +1,6 @@
 package fi.oph.kouta.repository.dto
 
-import fi.oph.kouta.domain.Julkaisutila.Julkaisutila
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.Koulutustyyppi.Koulutustyyppi
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.{read, write}
 
@@ -15,7 +13,7 @@ trait KoulutusDTOs extends KoutaJsonFormats {
                          koulutustyyppi:Koulutustyyppi,
                          koulutusKoodiUri:String,
                          tila:Julkaisutila,
-                         nimi: Map[Kieli.Kieli, String],
+                         nimi: Map[Kieli, String],
                          metatieto: String,
                          muokkaaja:String)
 
@@ -28,13 +26,13 @@ trait KoulutusDTOs extends KoutaJsonFormats {
         koulutustyyppi = Koulutustyyppi.withName(r.nextString),
         koulutusKoodiUri = r.nextString,
         tila = Julkaisutila.withName(r.nextString),
-        nimi = read[Map[Kieli.Kieli, String]](r.nextString),
+        nimi = read[Map[Kieli, String]](r.nextString),
         metatieto = r.nextString(),
         muokkaaja = r.nextString))
   }
 
   case class KoulutuksenTekstitDTO(oid:String,
-                                   kielikoodi: Kieli.Kieli,
+                                   kielikoodi: Kieli,
                                    nimi: String,
                                    kuvaus: String)
 
