@@ -1,7 +1,8 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Julkaisutila, Kieli, Koulutustyyppi}
+import fi.oph.kouta.domain.{Julkaisutila, Kieli, Koulutustyyppi, Opetusaika}
 import org.json4s.JsonAST.JString
+import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
 
 trait KoutaJsonFormats {
@@ -20,5 +21,12 @@ trait KoutaJsonFormats {
       case s: String => Kieli.withName(s)
     }, {
       case k: Kieli => k.toString
+    })) +
+    new CustomSerializer[Opetusaika](formats => ( {
+      case JString(s) => Opetusaika.withName(s)
+    }, {
+      case j: Opetusaika => JString(j.toString)
     }))
+
+  def toJson(data:AnyRef) = write(data)
 }

@@ -8,7 +8,6 @@ import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import slick.dbio.DBIO
-import slick.jdbc.GetResult
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -20,8 +19,6 @@ trait KoulutusDAO {
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusDTOs with Logging {
-
-  implicit val getInstantOptionResult: GetResult[Option[Instant]] = GetResult(r => r.nextTimestampOption().map(_.toInstant))
 
   private def insertKoulutus(koulutus:Koulutus) = {
     val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja) = koulutus
@@ -59,7 +56,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusDTOs with Logging {
   def get(oid:String): Option[(Koulutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       x <- selectKoulutus(oid).as[KoulutusDTO].headOption
-      z <- selectKoulutuksenTarjoajat(oid).as[KoulutuksenTarjoajatDTO]
+      z <- selectKoulutuksenTarjoajat(oid).as[TarjoajaDTO]
       l <- selectLastModified(oid)
     } yield (x, z, l) ) match {
       case Left(t) => throw t

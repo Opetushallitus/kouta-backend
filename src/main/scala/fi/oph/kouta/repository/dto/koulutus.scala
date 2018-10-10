@@ -1,12 +1,9 @@
 package fi.oph.kouta.repository.dto
 
 import fi.oph.kouta.domain._
-import fi.oph.kouta.util.KoutaJsonFormats
-import org.json4s.jackson.Serialization.{read, write}
+import org.json4s.jackson.Serialization.{read}
 
-trait KoulutusDTOs extends KoutaJsonFormats {
-
-  def toJson(data:AnyRef) = write(data)
+trait KoulutusDTOs extends KoutaDTOBase {
 
   case class KoulutusDTO(oid:String,
                          johtaaTutkintoon:Boolean,
@@ -31,33 +28,7 @@ trait KoulutusDTOs extends KoutaJsonFormats {
         muokkaaja = r.nextString))
   }
 
-  case class KoulutuksenTekstitDTO(oid:String,
-                                   kielikoodi: Kieli,
-                                   nimi: String,
-                                   kuvaus: String)
-
-  object KoulutuksenTekstitDTO extends fi.oph.kouta.repository.Extractable[KoulutuksenTekstitDTO] {
-    import slick.jdbc.GetResult
-    implicit val extractor =
-      GetResult(r => KoulutuksenTekstitDTO(
-        oid = r.nextString,
-        kielikoodi = Kieli.withName(r.nextString),
-        nimi = r.nextString,
-        kuvaus = r.nextString))
-  }
-
-  case class KoulutuksenTarjoajatDTO(oid:String,
-                                     tarjoajaOid:String)
-
-  object KoulutuksenTarjoajatDTO extends fi.oph.kouta.repository.Extractable[KoulutuksenTarjoajatDTO] {
-    import slick.jdbc.GetResult
-    implicit val extractor =
-      GetResult(r => KoulutuksenTarjoajatDTO(
-        oid = r.nextString,
-        tarjoajaOid = r.nextString))
-  }
-
-  def koulutus(koulutus:KoulutusDTO, tarjoajat:Seq[KoulutuksenTarjoajatDTO]) =
+  def koulutus(koulutus:KoulutusDTO, tarjoajat:Seq[TarjoajaDTO]) =
     new Koulutus(
       Some(koulutus.oid),
       koulutus.johtaaTutkintoon,
