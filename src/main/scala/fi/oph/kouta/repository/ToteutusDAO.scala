@@ -4,7 +4,6 @@ import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain.Toteutus
-import fi.oph.kouta.repository.dto.ToteutusDTOs
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -17,7 +16,7 @@ trait ToteutusDAO {
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
 }
 
-object ToteutusDAO extends ToteutusDAO with ToteutusDTOs {
+object ToteutusDAO extends ToteutusDAO with ToteutusExtractors {
 
   private def insertToteutus(toteutus:Toteutus) = {
     val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja) = toteutus
@@ -53,13 +52,13 @@ object ToteutusDAO extends ToteutusDAO with ToteutusDTOs {
 
   override def get(oid: String): Option[(Toteutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
-      x <- selectToteutus(oid).as[ToteutusDTO].headOption
-      z <- selectToteutuksenTarjoajat(oid).as[TarjoajaDTO]
+      k <- selectToteutus(oid).as[Toteutus].headOption
+      t <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
       l <- selectLastModified(oid)
-    } yield (x, z, l) ) match {
+    } yield (k, t, l) ) match {
       case Left(t) => throw t
       case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(k), z, Some(l))) => Some((toteutus(k, z), l))
+      case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
     }
   }
 

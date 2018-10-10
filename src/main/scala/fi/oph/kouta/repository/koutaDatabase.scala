@@ -70,11 +70,3 @@ object KoutaDatabase extends Logging {
     flyway.migrate()
   }
 }
-
-import slick.jdbc.GetResult
-
-trait Extractable[T] {
-
-  val extractor:GetResult[T]
-
-}

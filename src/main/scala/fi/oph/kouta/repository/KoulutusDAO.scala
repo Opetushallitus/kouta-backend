@@ -1,7 +1,6 @@
 package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.{Koulutus}
-import fi.oph.kouta.repository.dto._
 import fi.vm.sade.utils.slf4j.Logging
 import slick.jdbc.PostgresProfile.api._
 import java.time.Instant
@@ -18,7 +17,7 @@ trait KoulutusDAO {
   def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean
 }
 
-object KoulutusDAO extends KoulutusDAO with KoulutusDTOs with Logging {
+object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with Logging {
 
   private def insertKoulutus(koulutus:Koulutus) = {
     val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja) = koulutus
@@ -55,13 +54,13 @@ object KoulutusDAO extends KoulutusDAO with KoulutusDTOs with Logging {
 
   def get(oid:String): Option[(Koulutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
-      x <- selectKoulutus(oid).as[KoulutusDTO].headOption
-      z <- selectKoulutuksenTarjoajat(oid).as[TarjoajaDTO]
+      k <- selectKoulutus(oid).as[Koulutus].headOption
+      t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
       l <- selectLastModified(oid)
-    } yield (x, z, l) ) match {
+    } yield (k, t, l) ) match {
       case Left(t) => throw t
       case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(k), z, Some(l))) => Some((koulutus(k, z), l))
+      case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
     }
   }
 
@@ -100,7 +99,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusDTOs with Logging {
             or metadata <> ${toJson(metatieto)}::jsonb)"""
   }
 
-  private def updatenKoulutuksenTarjoajat(koulutus: Koulutus) = {
+  private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja) = koulutus
     if(tarjoajat.size > 0) {
       val tarjoajatString = tarjoajat.map(s => s"'$s'").mkString(",")
@@ -120,7 +119,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusDTOs with Logging {
       case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
       case Some(time) => DBIO.successful(time)
     }).andThen(updateKoulutus(koulutus))
-      .zip(updatenKoulutuksenTarjoajat(koulutus))) match {
+      .zip(updateKoulutuksenTarjoajat(koulutus))) match {
       case Left(t) => throw t
       case Right((x, y)) => 0 < (x + y.sum)
     }
