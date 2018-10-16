@@ -9,7 +9,7 @@ object Opetusaika {
     case Iltaopetus.name => Iltaopetus
     case Paivaopetus.name => Paivaopetus
     case Viikonloppuopetus.name => Viikonloppuopetus
-    case x => throw new NoSuchElementException(x)
+    case x => throw new IllegalArgumentException(s"Unknown opetusaika ${x}")
   }
 }
 case object Iltaopetus extends Opetusaika { val name = "iltaopetus" }

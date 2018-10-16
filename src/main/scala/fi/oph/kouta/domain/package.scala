@@ -1,5 +1,7 @@
 package fi.oph.kouta
 
+import java.time.Instant
+
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä
 package object domain {
   type Kielistetty = Map[Kieli,String]
@@ -13,7 +15,7 @@ package object domain {
       case Tallennettu.name => Tallennettu
       case Julkaistu.name => Julkaistu
       case Arkistoitu.name => Arkistoitu
-      case x => throw new NoSuchElementException(x)
+      case x => throw new IllegalArgumentException(s"Unknown julkaisutila ${x}")
     }
   }
   case object Tallennettu extends Julkaisutila { val name = "tallennettu" }
@@ -29,7 +31,7 @@ package object domain {
       case Fi.koodi => Fi
       case Sv.koodi => Sv
       case En.koodi => En
-      case x => throw new NoSuchElementException(x)
+      case x => throw new IllegalArgumentException(s"Unknown kieli ${x}")
     }
   }
   case object Fi extends Kieli { val koodi = "fi" }
