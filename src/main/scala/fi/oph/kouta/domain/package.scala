@@ -48,7 +48,7 @@ package object domain {
       case Kk.name => Kk
       case Lk.name => Lk
       case Muu.name => Muu
-      case x => throw new NoSuchElementException(x)
+      case x => throw new IllegalArgumentException(s"Unknown koulutustyyppi ${x}")
     }
   }
   case object Amm extends Koulutustyyppi { val name = "amm" }

@@ -71,4 +71,21 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     updateHakuOk(uusiHaku, lastModified, true)
     getHakuOk(oid, uusiHaku) should not equal (lastModified)
   }
+
+  it should "store and update unfinished haku" in {
+    val unfinishedHaku = new Haku(muokkaaja = "Muikea Muokkaaja", organisaatio = "Muokkaajan organisaatio")
+    val oid = putHakuOk(unfinishedHaku)
+    val lastModified = getHakuOk(oid, unfinishedHaku.copy(oid = Some(oid)))
+    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(oid), organisaatio = "Muokkaajan toinen organisaatio")
+    updateHakuOk(newUnfinishedHaku, lastModified)
+    getHakuOk(oid, newUnfinishedHaku)
+  }
+
+  /*it should "validate julkaistu haku" in {
+    val unfinishedHaku = new Haku(muokkaaja = "Muikea Muokkaaja", organisaatio = "Muokkaajan organisaatio", tila = Julkaistu)
+    put("/haku", bytes(unfinishedHaku)) {
+      status should equal(400)
+      body should include ("Pakollisia tietoja puuttuu")
+    }
+  }*/
 }

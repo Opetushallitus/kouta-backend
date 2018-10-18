@@ -22,7 +22,7 @@ trait ToteutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
     opetus = Some(opetus),
     asiasanat = List("robotiikka"),
     ammattinimikkeet = List("koneinsinööri"),
-    yhteystieto = Yhteystieto(nimi = "Aku Ankka", puhelinnumero = Some("123")))
+    yhteystieto = Some(Yhteystieto(nimi = "Aku Ankka", puhelinnumero = Some("123"))))
 
   val toteutus = Toteutus(
     oid = None,
@@ -30,7 +30,7 @@ trait ToteutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
     tila = Julkaistu,
     tarjoajat = List("1.2.3.3", "1.2.3.4"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = ammMetatieto,
+    metadata = Some(ammMetatieto),
     muokkaaja = "Hirmu kiva muokkaaja")
 
   def toteutus(koulutusOid:String): Toteutus = toteutus.copy(koulutusOid = koulutusOid)

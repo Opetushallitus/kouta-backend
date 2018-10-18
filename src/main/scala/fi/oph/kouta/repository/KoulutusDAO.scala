@@ -22,9 +22,9 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with Logging {
   private def insertKoulutus(koulutus:Koulutus) = {
     val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja) = koulutus
     sql"""insert into koulutukset (johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata, muokkaaja)
-             values ($johtaaTutkintoon, ${koulutustyyppi.toString}::koulutustyyppi,
+             values ($johtaaTutkintoon, ${koulutustyyppi.map(_.toString)}::koulutustyyppi,
              $koulutusKoodiUri, ${tila.toString}::julkaisutila,
-             ${toJson(nimi)}::jsonb, ${toJson(metadata)}::jsonb, $muokkaaja) returning oid""".as[String].headOption
+             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja) returning oid""".as[String].headOption
   }
 
   private def insertKoulutuksenTarjoajat(koulutus:Koulutus) = {
@@ -84,19 +84,19 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with Logging {
     val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metatieto, muokkaaja) = koulutus
     sqlu"""update koulutukset set
               johtaa_tutkintoon = $johtaaTutkintoon,
-              tyyppi = ${koulutustyyppi.toString}::koulutustyyppi,
+              tyyppi = ${koulutustyyppi.map(_.toString)}::koulutustyyppi,
               koulutus_koodi_uri = $koulutusKoodiUri,
               tila = ${tila.toString}::julkaisutila,
-              nimi = ${toJson(nimi)}::jsonb,
-              metadata = ${toJson(metatieto)}::jsonb,
+              nimi = ${toJsonParam(nimi)}::jsonb,
+              metadata = ${toJsonParam(metatieto)}::jsonb,
               muokkaaja = $muokkaaja
             where oid = $oid
             and ( johtaa_tutkintoon <> $johtaaTutkintoon
-            or tyyppi <> ${koulutustyyppi.toString}::koulutustyyppi
+            or tyyppi <> ${koulutustyyppi.map(_.toString)}::koulutustyyppi
             or koulutus_koodi_uri <> $koulutusKoodiUri
             or tila <> ${tila.toString}::julkaisutila
-            or nimi <> ${toJson(nimi)}::jsonb
-            or metadata <> ${toJson(metatieto)}::jsonb)"""
+            or nimi <> ${toJsonParam(nimi)}::jsonb
+            or metadata <> ${toJsonParam(metatieto)}::jsonb)"""
   }
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {

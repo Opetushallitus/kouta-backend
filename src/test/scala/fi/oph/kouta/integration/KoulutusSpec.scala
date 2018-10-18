@@ -55,7 +55,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
     val lastModified = getKoulutusOk(oid, koulutus(oid))
     val uusiKoulutus = koulutus(oid).copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      metadata = new KoulutusMetadata(Map(Fi -> "kuvaus", En -> "description")),
+      metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", En -> "description"))),
       tarjoajat = List("2.2", "3.2", "4.2"))
     updateKoulutusOk(uusiKoulutus, lastModified, true)
     getKoulutusOk(oid, uusiKoulutus)
@@ -69,4 +69,21 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
     updateKoulutusOk(uusiKoulutus, lastModified, true)
     getKoulutusOk(oid, uusiKoulutus) should not equal (lastModified)
   }
+
+  it should "store and update unfinished koulutus" in {
+    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = "Muikea Muokkaaja")
+    val oid = putKoulutusOk(unfinishedKoulutus)
+    val lastModified = getKoulutusOk(oid, unfinishedKoulutus.copy(oid = Some(oid)))
+    val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(oid), johtaaTutkintoon = false)
+    updateKoulutusOk(newUnfinishedKoulutus, lastModified)
+    getKoulutusOk(oid, newUnfinishedKoulutus)
+  }
+
+  /*it should "validate julkaistu koulutus" in {
+    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = "Muikea Muokkaaja", tila = Julkaistu)
+    put("/koulutus", bytes(unfinishedKoulutus)) {
+      status should equal(400)
+      body should include ("Pakollisia tietoja puuttuu")
+    }
+  }*/
 }

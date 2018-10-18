@@ -1,6 +1,6 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.domain.{Arkistoitu, En, Fi, Sv}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 
 class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture {
@@ -66,7 +66,7 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     val lastModified = getToteutusOk(oid, thisToteutus)
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      metadata = thisToteutus.metadata.copy(kuvaus = Map(Fi -> "kuvaus", En -> "description")),
+      metadata = Some(thisToteutus.metadata.get.copy(kuvaus = Map(Fi -> "kuvaus", En -> "description"))),
       tarjoajat = List("2.2", "3.2", "4.2"))
     updateToteutusOk(uusiToteutus, lastModified, true)
     getToteutusOk(oid, uusiToteutus)
@@ -80,5 +80,15 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
     updateToteutusOk(uusiToteutus, lastModified, true)
     getToteutusOk(oid, uusiToteutus) should not equal (lastModified)
+  }
+
+  it should "store and update unfinished toteutus" in {
+    val unfinishedToteutus = new Toteutus(muokkaaja = "Muikea Muokkaaja", koulutusOid = koulutusOid)
+    val oid = putToteutusOk(unfinishedToteutus)
+    val lastModified = getToteutusOk(oid, unfinishedToteutus.copy(oid = Some(oid)))
+    val newKoulutusOid = putKoulutusOk(koulutus)
+    val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(oid), koulutusOid = newKoulutusOid)
+    updateToteutusOk(newUnfinishedToteutus, lastModified)
+    getToteutusOk(oid, newUnfinishedToteutus)
   }
 }

@@ -22,7 +22,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors {
     val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja) = toteutus
     sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja)
              values ($koulutusOid, ${tila.toString}::julkaisutila,
-             ${toJson(nimi)}::jsonb, ${toJson(metadata)}::jsonb, $muokkaaja) returning oid""".as[String].headOption
+             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja) returning oid""".as[String].headOption
   }
 
   private def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
@@ -82,14 +82,14 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors {
     sqlu"""update toteutukset set
               koulutus_oid = ${koulutusOid},
               tila = ${tila.toString}::julkaisutila,
-              nimi = ${toJson(nimi)}::jsonb,
-              metadata = ${toJson(metadata)}::jsonb,
+              nimi = ${toJsonParam(nimi)}::jsonb,
+              metadata = ${toJsonParam(metadata)}::jsonb,
               muokkaaja = $muokkaaja
             where oid = $oid
             and ( koulutus_oid <> $koulutusOid
             or tila <> ${tila.toString}::julkaisutila
-            or nimi <> ${toJson(nimi)}::jsonb
-            or metadata <> ${toJson(metadata)}::jsonb)"""
+            or nimi <> ${toJsonParam(nimi)}::jsonb
+            or metadata <> ${toJsonParam(metadata)}::jsonb)"""
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {

@@ -18,12 +18,11 @@ trait HakuDAO {
   def update(haku:Haku, notModifiedSince:Instant): Boolean
 }
   
-object HakuDAO extends HakuDAO with HakuExtractors{
+object HakuDAO extends HakuDAO with HakuExtractors {
 
   private def insertHaku(haku:Haku) = {
     val Haku(_, tila, nimi, hakutapa, tietojen_muuttaminen_paattyy, alkamiskausi, alkamisvuosi,
              kohdejoukko, kohdejoukon_tarkenne, metadata, organisaatio, _, muokkaaja) = haku
-    val tietojenMuuttaminen = tietojen_muuttaminen_paattyy.map(Timestamp.from).getOrElse(null)
     sql"""insert into haut ( tila,
                              nimi,
                              hakutapa,
@@ -36,14 +35,14 @@ object HakuDAO extends HakuDAO with HakuExtractors{
                              organisaatio,
                              muokkaaja
           ) values ( ${tila.toString}::julkaisutila,
-                     ${toJson(nimi)}::jsonb,
-                     ${hakutapa.map(_.toString).getOrElse(null)}::hakutapa,
-                     ${alkamiskausi.map(_.toString).getOrElse(null)}::alkamiskausi,
-                     ${alkamisvuosi.getOrElse(null)},
-                     ${kohdejoukko.getOrElse(null)},
-                     ${kohdejoukon_tarkenne.getOrElse(null)},
-                     $tietojenMuuttaminen,
-                     ${toJson(metadata)}::jsonb,
+                     ${toJsonParam(nimi)}::jsonb,
+                     ${hakutapa.map(_.toString)}::hakutapa,
+                     ${alkamiskausi.map(_.toString)}::alkamiskausi,
+                     ${alkamisvuosi},
+                     ${kohdejoukko},
+                     ${kohdejoukon_tarkenne},
+                     ${toTimestampParam(tietojen_muuttaminen_paattyy)},
+                     ${toJsonParam(metadata)}::jsonb,
                      $organisaatio,
                      $muokkaaja
           ) returning oid""".as[String].headOption
@@ -108,30 +107,30 @@ object HakuDAO extends HakuDAO with HakuExtractors{
   private def updateHaku(haku:Haku) = {
     val Haku(oid, tila, nimi, hakutapa, tietojen_muuttaminen_paattyy, alkamiskausi, alkamisvuosi,
     kohdejoukko, kohdejoukon_tarkenne, metadata, organisaatio, _, muokkaaja) = haku
-    val tietojenMuuttaminen = tietojen_muuttaminen_paattyy.map(Timestamp.from).getOrElse(null)
+    val tietojenMuuttaminen = toTimestampParam(tietojen_muuttaminen_paattyy)
     sqlu"""update haut set
-              hakutapa = ${hakutapa.map(_.toString).getOrElse(null)}::hakutapa,
-              alkamiskausi = ${alkamiskausi.map(_.toString).getOrElse(null)}::alkamiskausi,
-              alkamisvuosi = ${alkamisvuosi.getOrElse(null)},
-              kohdejoukko = ${kohdejoukko.getOrElse(null)},
-              kohdejoukon_tarkenne = ${kohdejoukon_tarkenne.getOrElse(null)},
+              hakutapa = ${hakutapa.map(_.toString)}::hakutapa,
+              alkamiskausi = ${alkamiskausi.map(_.toString)}::alkamiskausi,
+              alkamisvuosi = ${alkamisvuosi},
+              kohdejoukko = ${kohdejoukko},
+              kohdejoukon_tarkenne = ${kohdejoukon_tarkenne},
               tietojen_muuttaminen_paattyy = $tietojenMuuttaminen,
               organisaatio = $organisaatio,
               tila = ${tila.toString}::julkaisutila,
-              nimi = ${toJson(nimi)}::jsonb,
-              metadata = ${toJson(metadata)}::jsonb,
+              nimi = ${toJsonParam(nimi)}::jsonb,
+              metadata = ${toJsonParam(metadata)}::jsonb,
               muokkaaja = $muokkaaja
             where oid = $oid
-            and ( hakutapa <> ${hakutapa.map(_.toString).getOrElse(null)}::hakutapa
-            or alkamiskausi <> ${alkamiskausi.map(_.toString).getOrElse(null)}::alkamiskausi
-            or alkamisvuosi <> ${alkamisvuosi.getOrElse(null)}
-            or kohdejoukko <> ${kohdejoukko.getOrElse(null)}
-            or kohdejoukon_tarkenne <> ${kohdejoukon_tarkenne.getOrElse(null)}
+            and ( hakutapa <> ${hakutapa.map(_.toString)}::hakutapa
+            or alkamiskausi <> ${alkamiskausi.map(_.toString)}::alkamiskausi
+            or alkamisvuosi <> ${alkamisvuosi}
+            or kohdejoukko <> ${kohdejoukko}
+            or kohdejoukon_tarkenne <> ${kohdejoukon_tarkenne}
             or tietojen_muuttaminen_paattyy <> $tietojenMuuttaminen
             or organisaatio <> $organisaatio
             or tila <> ${tila.toString}::julkaisutila
-            or nimi <> ${toJson(nimi)}::jsonb
-            or metadata <> ${toJson(metadata)}::jsonb)"""
+            or nimi <> ${toJsonParam(nimi)}::jsonb
+            or metadata <> ${toJsonParam(metadata)}::jsonb)"""
   }
 
   private def updateHaunHakuajat(haku:Haku) = {
@@ -159,7 +158,7 @@ object HakuDAO extends HakuDAO with HakuExtractors{
     }).andThen(updateHaku(haku))
       .zip(updateHaunHakuajat(haku))) match {
       case Left(t) => throw t
-      case Right((x, y)) => {println(x); println(y); 0 < (x + y.sum)}
+      case Right((x, y)) => 0 < (x + y.sum)
     }
   }
 }

@@ -12,11 +12,11 @@ trait KoulutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
   val koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
-    koulutustyyppi = Amm,
-    koulutusKoodiUri = "koulutus_123#1",
+    koulutustyyppi = Some(Amm),
+    koulutusKoodiUri = Some("koulutus_123#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = new KoulutusMetadata(),
+    metadata = Some(new KoulutusMetadata()),
     tarjoajat = List("1.2", "2.2", "3.2"),
     muokkaaja = "Mörkö Muokkaaja")
 

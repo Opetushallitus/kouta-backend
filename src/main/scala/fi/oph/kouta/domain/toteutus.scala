@@ -30,12 +30,12 @@ case class ToteutusMetadata(kuvaus:Kielistetty = Map(),
                             opetus:Option[Opetus] = None,
                             asiasanat: List[String] = List(),
                             ammattinimikkeet: List[String] = List(),
-                            yhteystieto: Yhteystieto)
+                            yhteystieto: Option[Yhteystieto])
 
-case class Toteutus(oid:Option[String],
+case class Toteutus(oid:Option[String] = None,
                     koulutusOid:String,
-                    tila:Julkaisutila,
-                    tarjoajat:List[String],
-                    nimi: Kielistetty,
-                    metadata: ToteutusMetadata,
+                    tila:Julkaisutila = Tallennettu,
+                    tarjoajat:List[String] = List(),
+                    nimi: Kielistetty = Map(),
+                    metadata: Option[ToteutusMetadata] = None,
                     muokkaaja:String)

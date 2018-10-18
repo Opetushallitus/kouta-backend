@@ -1,5 +1,6 @@
 package fi.oph.kouta.repository
 
+import java.sql.Timestamp
 import java.time.{Instant, OffsetDateTime, ZoneId}
 
 import fi.oph.kouta.domain._
@@ -19,6 +20,13 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getHakuaikaResult: GetResult[Hakuaika] = GetResult(r => {
     new Hakuaika(r.nextString(), r.nextTimestamp.toInstant, r.nextTimestamp.toInstant)
   })
+
+  def toTimestampParam(value:Option[Instant]) = value.map(Timestamp.from).getOrElse(null)
+
+  def toJsonParam(value:AnyRef) = Option(toJson(value)) match {
+    case Some(s) if !s.isEmpty & !"{}".equals(s) => s
+    case _ => null
+  }
 }
 
 trait KoulutusExtractors extends ExtractorBase {
@@ -26,12 +34,12 @@ trait KoulutusExtractors extends ExtractorBase {
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
     oid = r.nextStringOption(),
     johtaaTutkintoon = r.nextBoolean,
-    koulutustyyppi = Koulutustyyppi.withName(r.nextString),
-    koulutusKoodiUri = r.nextString,
+    koulutustyyppi = r.nextStringOption.map(Koulutustyyppi.withName),
+    koulutusKoodiUri = r.nextStringOption,
     tila = Julkaisutila.withName(r.nextString),
     tarjoajat = List(),
-    nimi = read[Map[Kieli, String]](r.nextString),
-    metadata = read[KoulutusMetadata](r.nextString()),
+    nimi = r.nextStringOption.map(read[Map[Kieli, String]]).getOrElse(Map()),
+    metadata = r.nextStringOption.map(read[KoulutusMetadata]),
     muokkaaja = r.nextString))
 }
 
@@ -42,8 +50,8 @@ trait ToteutusExtractors extends ExtractorBase {
     koulutusOid = r.nextString,
     tila = Julkaisutila.withName(r.nextString),
     tarjoajat = List(),
-    nimi = read[Map[Kieli, String]](r.nextString),
-    metadata = read[ToteutusMetadata](r.nextString()),
+    nimi = r.nextStringOption.map(read[Map[Kieli, String]]).getOrElse(Map()),
+    metadata = r.nextStringOption.map(read[ToteutusMetadata]),
     muokkaaja = r.nextString
   ))
 }
@@ -53,7 +61,7 @@ trait HakuExtractors extends ExtractorBase {
   implicit val getHakuResult: GetResult[Haku] = GetResult(r => Haku(
     oid = r.nextStringOption,
     tila = Julkaisutila.withName(r.nextString),
-    nimi = read[Map[Kieli, String]](r.nextString),
+    nimi = r.nextStringOption.map(read[Map[Kieli, String]]).getOrElse(Map()),
     hakutapa = r.nextStringOption.map(Hakutapa.withName),
     tietojen_muuttaminen_paattyy = r.nextTimestampOption().map(_.toInstant),
     alkamiskausi = r.nextStringOption.map(Alkamiskausi.withName),
