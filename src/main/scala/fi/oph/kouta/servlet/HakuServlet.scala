@@ -6,9 +6,11 @@ import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
 
 class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
+  override val modelName: String = "Haku"
   override val applicationDescription = "Hakujen API"
 
   get("/:oid", operation(apiOperation[Haku]("Hae haku")
+    tags modelName
     summary "Hae haku"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
 
@@ -19,6 +21,7 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
   }
 
   put("/", operation(apiOperation[Unit]("Tallenna uusi haku")
+    tags modelName
     summary "Tallenna uusi haku"
     parameter bodyParam[Haku])) {
 
@@ -27,8 +30,9 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  post("/", operation(apiOperation[Unit]("Muokkaa hakuta")
-    summary "Muokkaa olemassa olevaa hakuta"
+  post("/", operation(apiOperation[Unit]("Muokkaa hakua")
+    tags modelName
+    summary "Muokkaa olemassa olevaa hakua"
     parameter bodyParam[Haku])) {
 
     HakuService.update(parsedBody.extract[Haku], getIfUnmodifiedSince) match {
@@ -36,4 +40,5 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
+  overrideModels()
 }

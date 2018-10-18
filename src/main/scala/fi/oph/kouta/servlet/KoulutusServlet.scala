@@ -6,10 +6,11 @@ import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
 
 class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
-
+  override val modelName = "Koulutus"
   override val applicationDescription = "Koulutusten API"
 
   get("/:oid", operation(apiOperation[Koulutus]("Hae koulutus")
+    tags modelName
     summary "Hae koulutus"
     parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
 
@@ -20,6 +21,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
   }
 
   put("/", operation(apiOperation[Unit]("Tallenna uusi koulutus")
+    tags modelName
     summary "Tallenna uusi koulutus"
     parameter bodyParam[Koulutus])) {
 
@@ -29,6 +31,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
   }
 
   post("/", operation(apiOperation[Unit]("Muokkaa koulutusta")
+    tags modelName
     summary "Muokkaa olemassa olevaa koulutusta"
     parameter bodyParam[Koulutus])) {
 
@@ -36,4 +39,6 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
       case updated => Ok("updated" -> updated)
     }
   }
+
+  overrideModels()
 }

@@ -13,6 +13,7 @@ object Hakutapa {
     case Erillishaku.name => Erillishaku
     case x => throw new IllegalArgumentException(s"Unknown hakutapa ${x}")
   }
+  def values() = List(Jatkuvahaku, Yhteishaku, Erillishaku)
 }
 case object Jatkuvahaku extends Hakutapa { val name = "jatkuvahaku" }
 case object Yhteishaku extends Hakutapa { val name = "yhteishaku" }
@@ -29,6 +30,7 @@ object Alkamiskausi {
     case Syksy.name => Syksy
     case x => throw new IllegalArgumentException(s"Unknown alkamiskausi ${x}")
   }
+  def values() = List(Kevät, Kesä, Syksy)
 }
 case object Kevät extends Alkamiskausi { val name = "kevät" }
 case object Kesä extends Alkamiskausi { val name = "kesä" }

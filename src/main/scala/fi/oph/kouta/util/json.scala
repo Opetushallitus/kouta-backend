@@ -9,6 +9,9 @@ import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
 
 trait KoutaJsonFormats {
+
+  val ISO_OFFSET_DATE_TIME_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("Europe/Helsinki"))
+
   implicit def jsonFormats: Formats = DefaultFormats +
     new CustomSerializer[Julkaisutila](formats => ( {
       case JString(s) => Julkaisutila.withName(s)
@@ -41,9 +44,9 @@ trait KoutaJsonFormats {
       case j: Alkamiskausi => JString(j.toString)
     })) +
     new CustomSerializer[Instant](formats => ({
-      case JString(i) => Instant.from(DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(i))
+      case JString(i) => Instant.from(ISO_OFFSET_DATE_TIME_FORMATTER.parse(i))
     }, {
-      case i: Instant => JString(DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("Europe/Helsinki")).format(i))
+      case i: Instant => JString(ISO_OFFSET_DATE_TIME_FORMATTER.format(i))
     }))
 
   def toJson(data:AnyRef) = write(data)

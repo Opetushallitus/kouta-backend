@@ -17,6 +17,7 @@ package object domain {
       case Arkistoitu.name => Arkistoitu
       case x => throw new IllegalArgumentException(s"Unknown julkaisutila ${x}")
     }
+    def values() = List(Tallennettu, Julkaistu, Arkistoitu)
   }
   case object Tallennettu extends Julkaisutila { val name = "tallennettu" }
   case object Julkaistu extends Julkaisutila { val name = "julkaistu" }
@@ -33,6 +34,7 @@ package object domain {
       case En.koodi => En
       case x => throw new IllegalArgumentException(s"Unknown kieli ${x}")
     }
+    def values = List(Fi, Sv, En)
   }
   case object Fi extends Kieli { val koodi = "fi" }
   case object Sv extends Kieli { val koodi = "sv" }
@@ -50,6 +52,7 @@ package object domain {
       case Muu.name => Muu
       case x => throw new IllegalArgumentException(s"Unknown koulutustyyppi ${x}")
     }
+    def values() = List(Amm, Kk, Lk, Muu)
   }
   case object Amm extends Koulutustyyppi { val name = "amm" }
   case object Kk extends Koulutustyyppi { val name = "kk" }

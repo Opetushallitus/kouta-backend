@@ -7,8 +7,10 @@ import org.scalatra.swagger.Swagger
 
 class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
   override val applicationDescription = "Koulutusten toteutusten API"
+  override val modelName = "Toteutus"
 
   get("/:oid", operation(apiOperation[Toteutus]("Hae toteutus")
+    tags modelName
     summary "Hae toteutus"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
 
@@ -19,6 +21,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
   }
 
   put("/", operation(apiOperation[Unit]("Tallenna uusi toteutus")
+    tags modelName
     summary "Tallenna uusi toteutus"
     parameter bodyParam[Toteutus])) {
 
@@ -28,6 +31,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
   }
 
   post("/", operation(apiOperation[Unit]("Muokkaa toteutusta")
+    tags modelName
     summary "Muokkaa olemassa olevaa toteutusta"
     parameter bodyParam[Toteutus])) {
 
@@ -35,4 +39,6 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
       case updated => Ok("updated" -> updated)
     }
   }
+
+  overrideModels()
 }

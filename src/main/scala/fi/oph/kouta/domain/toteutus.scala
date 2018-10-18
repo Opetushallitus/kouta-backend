@@ -11,6 +11,7 @@ object Opetusaika {
     case Viikonloppuopetus.name => Viikonloppuopetus
     case x => throw new IllegalArgumentException(s"Unknown opetusaika ${x}")
   }
+  def values() = List(Iltaopetus, Paivaopetus, Viikonloppuopetus)
 }
 case object Iltaopetus extends Opetusaika { val name = "iltaopetus" }
 case object Paivaopetus extends Opetusaika { val name = "päiväopetus" }
