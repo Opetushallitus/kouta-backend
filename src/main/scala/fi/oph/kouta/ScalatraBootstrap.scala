@@ -1,7 +1,7 @@
 import fi.oph.kouta.config.{KoutaConfiguration, KoutaConfigurationFactory}
 import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.{KoutaBackendSwagger, SwaggerServlet}
-import fi.oph.kouta.servlet.{HakuServlet, HealthcheckServlet, KoulutusServlet, ToteutusServlet}
+import fi.oph.kouta.servlet._
 import fi.vm.sade.utils.slf4j.Logging
 import org.scalatra._
 import javax.servlet.ServletContext

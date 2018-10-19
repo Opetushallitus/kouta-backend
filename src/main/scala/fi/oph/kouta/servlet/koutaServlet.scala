@@ -19,6 +19,7 @@ import scala.util.{Failure, Try}
 trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with KoutaJsonFormats {
 
   val modelName:String
+  val EXAMPLE_DATE_TIME = ISO_OFFSET_DATE_TIME_FORMATTER.format(Instant.EPOCH)
 
   before() {
     contentType = formats("json")
@@ -30,6 +31,7 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
     models.update(modelName, models(modelName).copy(properties = overrideEnumModels(models(modelName))))
     models.remove("Alkamiskausi")
     models.remove("Hakutapa")
+    models.remove("Hakulomaketyyppi")
     models.remove("Opetusaika")
     models.remove("Julkaisutila")
     models.remove("Koulutustyyppi")
@@ -43,6 +45,7 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
   private def overrideEnumModels(model:Model) = model.properties.map {
       case ("alkamiskausi", mp) => ("alkamiskausi", modelProperty(mp.position, Alkamiskausi.values().map(_.toString)))
       case ("hakutapa", mp) => ("hakutapa", modelProperty(mp.position, Hakutapa.values().map(_.toString)))
+      case ("hakulomaketyyppi", mp) => ("hakulomaketyyppi", modelProperty(mp.position, Hakulomaketyyppi.values().map(_.toString)))
       case ("opetusaika", mp) => ("opetusaika", modelProperty(mp.position, Opetusaika.values().map(_.toString)))
       case ("tila", mp) => ("tila", modelProperty(mp.position, Julkaisutila.values().map(_.toString)))
       case ("koulutustyyppi", mp) => ("koulutustyyppi", modelProperty(mp.position, Koulutustyyppi.values().map(_.toString)))
@@ -51,7 +54,7 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
     }
 
   private def overrideDatatypes(model:Model) = model.properties.map {
-    case (name, mp) if mp.`type`.name.equals("Instant") => (name, modelProperty(mp.position, List(ISO_OFFSET_DATE_TIME_FORMATTER.format(Instant.EPOCH))))
+    case (name, mp) if mp.`type`.name.equals("Instant") => (name, modelProperty(mp.position, List(EXAMPLE_DATE_TIME)))
     case (name, mp) if mp.`type`.name.equals("Map") => (name, ModelProperty(new ValueDataType("Kielistetty", None, Some("fi.oph.kouta.domain.Kielistetty")), mp.position))
     case p => p
     }

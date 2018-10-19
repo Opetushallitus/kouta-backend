@@ -21,27 +21,33 @@ trait HakuDAO {
 object HakuDAO extends HakuDAO with HakuExtractors {
 
   private def insertHaku(haku:Haku) = {
-    val Haku(_, tila, nimi, hakutapa, tietojen_muuttaminen_paattyy, alkamiskausi, alkamisvuosi,
-             kohdejoukko, kohdejoukon_tarkenne, metadata, organisaatio, _, muokkaaja) = haku
+    val Haku(_, tila, nimi, hakutapa, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi, alkamisvuosi,
+             kohdejoukko, kohdejoukon_tarkenne, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja) = haku
     sql"""insert into haut ( tila,
                              nimi,
                              hakutapa,
+                             hakukohteen_liittamisen_takaraja,
+                             hakukohteen_muokkaamisen_takaraja,
                              alkamiskausi,
                              alkamisvuosi,
                              kohdejoukko,
                              kohdejoukon_tarkenne,
-                             tietojen_muuttaminen_paattyy,
+                             hakulomaketyyppi,
+                             hakulomake,
                              metadata,
                              organisaatio,
                              muokkaaja
           ) values ( ${tila.toString}::julkaisutila,
                      ${toJsonParam(nimi)}::jsonb,
                      ${hakutapa.map(_.toString)}::hakutapa,
+                     ${toTimestampParam(hakukohteen_liittamisen_takaraja)},
+                     ${toTimestampParam(hakukohteen_muokkaamisen_takaraja)},
                      ${alkamiskausi.map(_.toString)}::alkamiskausi,
                      ${alkamisvuosi},
                      ${kohdejoukko},
                      ${kohdejoukon_tarkenne},
-                     ${toTimestampParam(tietojen_muuttaminen_paattyy)},
+                     ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
+                     ${hakulomake},
                      ${toJsonParam(metadata)}::jsonb,
                      $organisaatio,
                      $muokkaaja
@@ -49,7 +55,7 @@ object HakuDAO extends HakuDAO with HakuExtractors {
   }
 
   private def insertHakuajat(haku:Haku) = {
-    val Haku(oid, _, _, _, _, _, _, _, _, _, _, hakuajat, muokkaaja) = haku
+    val Haku(oid, _, _, _, _, _, _, _, _, _, _, _, _, _, hakuajat, muokkaaja) = haku
     DBIO.sequence(
       hakuajat.map(t => {
         val alkuaika = Timestamp.from(t.alkaa)
@@ -69,8 +75,8 @@ object HakuDAO extends HakuDAO with HakuExtractors {
   }
 
   private def selectHaku(oid:String) = {
-    sql"""select oid, tila, nimi, hakutapa, tietojen_muuttaminen_paattyy, alkamiskausi, alkamisvuosi,
-          kohdejoukko, kohdejoukon_tarkenne, metadata, organisaatio, muokkaaja from haut where oid = $oid"""
+    sql"""select oid, tila, nimi, hakutapa, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi, alkamisvuosi,
+          kohdejoukko, kohdejoukon_tarkenne, hakulomaketyyppi, hakulomake, metadata, organisaatio, muokkaaja from haut where oid = $oid"""
   }
 
   private def selectHaunHakuajat(oid:String) = {
@@ -105,16 +111,20 @@ object HakuDAO extends HakuDAO with HakuExtractors {
   }
 
   private def updateHaku(haku:Haku) = {
-    val Haku(oid, tila, nimi, hakutapa, tietojen_muuttaminen_paattyy, alkamiskausi, alkamisvuosi,
-    kohdejoukko, kohdejoukon_tarkenne, metadata, organisaatio, _, muokkaaja) = haku
-    val tietojenMuuttaminen = toTimestampParam(tietojen_muuttaminen_paattyy)
+    val Haku(oid, tila, nimi, hakutapa, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi, alkamisvuosi,
+    kohdejoukko, kohdejoukon_tarkenne, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja) = haku
+    val liittamisenTakaraja = toTimestampParam(hakukohteen_liittamisen_takaraja)
+    val muokkaamisenTakaraja = toTimestampParam(hakukohteen_muokkaamisen_takaraja)
     sqlu"""update haut set
               hakutapa = ${hakutapa.map(_.toString)}::hakutapa,
+              hakukohteen_liittamisen_takaraja = $liittamisenTakaraja,
+              hakukohteen_muokkaamisen_takaraja = $muokkaamisenTakaraja,
               alkamiskausi = ${alkamiskausi.map(_.toString)}::alkamiskausi,
               alkamisvuosi = ${alkamisvuosi},
               kohdejoukko = ${kohdejoukko},
               kohdejoukon_tarkenne = ${kohdejoukon_tarkenne},
-              tietojen_muuttaminen_paattyy = $tietojenMuuttaminen,
+              hakulomaketyyppi = ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
+              hakulomake = $hakulomake,
               organisaatio = $organisaatio,
               tila = ${tila.toString}::julkaisutila,
               nimi = ${toJsonParam(nimi)}::jsonb,
@@ -126,7 +136,10 @@ object HakuDAO extends HakuDAO with HakuExtractors {
             or alkamisvuosi <> ${alkamisvuosi}
             or kohdejoukko <> ${kohdejoukko}
             or kohdejoukon_tarkenne <> ${kohdejoukon_tarkenne}
-            or tietojen_muuttaminen_paattyy <> $tietojenMuuttaminen
+            or hakulomaketyyppi <> ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
+            or hakulomake <> $hakulomake
+            or hakukohteen_liittamisen_takaraja <> $liittamisenTakaraja
+            or hakukohteen_muokkaamisen_takaraja <> $muokkaamisenTakaraja
             or organisaatio <> $organisaatio
             or tila <> ${tila.toString}::julkaisutila
             or nimi <> ${toJsonParam(nimi)}::jsonb
@@ -134,7 +147,7 @@ object HakuDAO extends HakuDAO with HakuExtractors {
   }
 
   private def updateHaunHakuajat(haku:Haku) = {
-    val Haku(oid, _, _, _, _, _, _, _, _, _, _, hakuajat, muokkaaja) = haku
+    val Haku(oid, _, _, _, _, _, _, _, _, _, _, _, _, _, hakuajat, muokkaaja) = haku
     if(hakuajat.size > 0) {
       val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("Europe/Helsinki"))
       val hakuajatString = hakuajat.map(s => s"'[${formatter.format(s.alkaa)}, ${formatter.format(s.paattyy)})'").mkString(",")

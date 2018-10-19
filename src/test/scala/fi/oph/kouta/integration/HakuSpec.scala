@@ -57,6 +57,8 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val lastModified = getHakuOk(oid, haku(oid))
     val uusiHaku = haku(oid).copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      hakulomaketyyppi = Some(Ataru),
+      hakulomake = Some("http://ataru/kivahakulomake"),
       metadata = Some(new HakuMetadata(Some(new Yhteystieto("Aku Ankka")))),
       hakuajat = List(HaunHakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(12000))))
     updateHakuOk(uusiHaku, lastModified, true)

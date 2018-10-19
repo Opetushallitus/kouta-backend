@@ -43,6 +43,11 @@ trait KoutaJsonFormats {
     }, {
       case j: Alkamiskausi => JString(j.toString)
     })) +
+    new CustomSerializer[Hakulomaketyyppi](formats => ({
+      case JString(s) => Hakulomaketyyppi.withName(s)
+    }, {
+      case j: Hakulomaketyyppi => JString(j.toString)
+    })) +
     new CustomSerializer[Instant](formats => ({
       case JString(i) => Instant.from(ISO_OFFSET_DATE_TIME_FORMATTER.parse(i))
     }, {

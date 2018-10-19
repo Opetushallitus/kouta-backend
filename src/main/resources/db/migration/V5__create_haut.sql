@@ -1,14 +1,24 @@
 create type hakutapa as enum (
-  'jatkuvahaku',
+  'jatkuva haku',
   'erillishaku',
   'yhteishaku'
 );
+alter type hakutapa owner to oph;
 
 create type alkamiskausi as enum (
   'kevät',
   'kesä',
   'syksy'
 );
+alter type alkamiskausi owner to oph;
+
+create type hakulomaketyyppi as enum (
+  'ataru',
+  'haku-app',
+  'muu',
+  'ei sähköistä'
+);
+alter type hakulomaketyyppi owner to oph;
 
 create sequence haku_oid;
 alter sequence haku_oid owner to oph;
@@ -18,11 +28,14 @@ create table haut (
   tila julkaisutila not null default 'tallennettu',
   nimi jsonb,
   hakutapa hakutapa,
-  tietojen_muuttaminen_paattyy timestamp,
+  hakukohteen_liittamisen_takaraja timestamp,
+  hakukohteen_muokkaamisen_takaraja timestamp,
   alkamiskausi alkamiskausi,
   alkamisvuosi varchar(4),
   kohdejoukko varchar,
   kohdejoukon_tarkenne varchar,
+  hakulomaketyyppi hakulomaketyyppi,
+  hakulomake varchar,
   metadata jsonb,
   organisaatio varchar not null,
   muokkaaja varchar not null,
@@ -52,11 +65,14 @@ begin
       tila,
       nimi,
       hakutapa,
-      tietojen_muuttaminen_paattyy,
+      hakukohteen_liittamisen_takaraja,
+      hakukohteen_muokkaamisen_takaraja,
       alkamiskausi,
       alkamisvuosi,
       kohdejoukko,
       kohdejoukon_tarkenne,
+      hakulomaketyyppi,
+      hakulomake,
       organisaatio,
       metadata,
       muokkaaja,
@@ -67,11 +83,14 @@ begin
                    old.tila,
                    old.nimi,
                    old.hakutapa,
-                   old.tietojen_muuttaminen_paattyy,
+                   old.hakukohteen_liittamisen_takaraja,
+                   old.hakukohteen_muokkaamisen_takaraja,
                    old.alkamiskausi,
                    old.alkamisvuosi,
                    old.kohdejoukko,
                    old.kohdejoukon_tarkenne,
+                   old.hakulomaketyyppi,
+                   old.hakulomake,
                    old.organisaatio,
                    old.metadata,
                    old.muokkaaja,
