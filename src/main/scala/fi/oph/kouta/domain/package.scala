@@ -6,52 +6,42 @@ import java.time.Instant
 package object domain {
   type Kielistetty = Map[Kieli,String]
 
-  sealed trait Julkaisutila {
+  trait EnumType {
     def name:String
-    override def toString() = name
+    override def toString = name
   }
-  object Julkaisutila {
-    def withName(n:String): Julkaisutila = n match {
-      case Tallennettu.name => Tallennettu
-      case Julkaistu.name => Julkaistu
-      case Arkistoitu.name => Arkistoitu
-      case x => throw new IllegalArgumentException(s"Unknown julkaisutila ${x}")
-    }
+
+  trait Enum[T <: EnumType] {
+    def name:String
+    def values():List[T]
+    def withName(n:String):T = values().find(_.name.equals(n))
+      .getOrElse(throw new IllegalArgumentException(s"Unknown ${name} '${n}'"))
+  }
+
+  sealed trait Julkaisutila extends EnumType
+
+  object Julkaisutila extends Enum[Julkaisutila] {
+    override def name: String = "julkaisutila"
     def values() = List(Tallennettu, Julkaistu, Arkistoitu)
   }
   case object Tallennettu extends Julkaisutila { val name = "tallennettu" }
   case object Julkaistu extends Julkaisutila { val name = "julkaistu" }
   case object Arkistoitu extends Julkaisutila { val name = "arkistoitu" }
 
-  sealed trait Kieli {
-    def koodi:String
-    override def toString() = koodi
-  }
-  object Kieli {
-    def withName(n:String) = n match {
-      case Fi.koodi => Fi
-      case Sv.koodi => Sv
-      case En.koodi => En
-      case x => throw new IllegalArgumentException(s"Unknown kieli ${x}")
-    }
+  sealed trait Kieli extends EnumType
+
+  object Kieli extends Enum[Kieli] {
+    override def name: String = "kieli"
     def values = List(Fi, Sv, En)
   }
-  case object Fi extends Kieli { val koodi = "fi" }
-  case object Sv extends Kieli { val koodi = "sv" }
-  case object En extends Kieli { val koodi = "en" }
+  case object Fi extends Kieli { val name = "fi" }
+  case object Sv extends Kieli { val name = "sv" }
+  case object En extends Kieli { val name = "en" }
 
-  sealed trait Koulutustyyppi {
-    def name: String
-    override def toString() = name
-  }
-  object Koulutustyyppi {
-    def withName(n:String) = n match {
-      case Amm.name => Amm
-      case Kk.name => Kk
-      case Lk.name => Lk
-      case Muu.name => Muu
-      case x => throw new IllegalArgumentException(s"Unknown koulutustyyppi ${x}")
-    }
+  sealed trait Koulutustyyppi extends EnumType
+
+  object Koulutustyyppi extends Enum[Koulutustyyppi] {
+    override def name: String = "koulutustyyppi"
     def values() = List(Amm, Kk, Lk, Muu)
   }
   case object Amm extends Koulutustyyppi { val name = "amm" }

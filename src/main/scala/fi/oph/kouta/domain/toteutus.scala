@@ -1,16 +1,9 @@
 package fi.oph.kouta.domain
 
-sealed trait Opetusaika {
-  def name: String
-  override def toString() = name
-}
-object Opetusaika {
-  def withName(n:String) = n match {
-    case Iltaopetus.name => Iltaopetus
-    case Paivaopetus.name => Paivaopetus
-    case Viikonloppuopetus.name => Viikonloppuopetus
-    case x => throw new IllegalArgumentException(s"Unknown opetusaika ${x}")
-  }
+sealed trait Opetusaika extends EnumType
+
+object Opetusaika extends Enum[Opetusaika] {
+  override def name: String = "opetusaika"
   def values() = List(Iltaopetus, Paivaopetus, Viikonloppuopetus)
 }
 case object Iltaopetus extends Opetusaika { val name = "iltaopetus" }

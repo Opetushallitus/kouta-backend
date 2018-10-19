@@ -2,34 +2,18 @@ package fi.oph.kouta.domain
 
 import java.time.Instant
 
-sealed trait Hakutapa {
-  def name: String
-  override def toString() = name
-}
-object Hakutapa {
-  def withName(n:String) = n match {
-    case Jatkuvahaku.name => Jatkuvahaku
-    case Yhteishaku.name => Yhteishaku
-    case Erillishaku.name => Erillishaku
-    case x => throw new IllegalArgumentException(s"Unknown hakutapa ${x}")
-  }
+sealed trait Hakutapa extends EnumType
+object Hakutapa extends Enum[Hakutapa] {
+  override def name: String = "hakutapa"
   def values() = List(Jatkuvahaku, Yhteishaku, Erillishaku)
 }
 case object Jatkuvahaku extends Hakutapa { val name = "jatkuvahaku" }
 case object Yhteishaku extends Hakutapa { val name = "yhteishaku" }
 case object Erillishaku extends Hakutapa { val name = "erillishaku" }
 
-sealed trait Alkamiskausi {
-  def name: String
-  override def toString() = name
-}
-object Alkamiskausi {
-  def withName(n:String) = n match {
-    case Kevät.name => Kevät
-    case Kesä.name => Kesä
-    case Syksy.name => Syksy
-    case x => throw new IllegalArgumentException(s"Unknown alkamiskausi ${x}")
-  }
+sealed trait Alkamiskausi extends EnumType
+object Alkamiskausi extends Enum[Alkamiskausi] {
+  override def name: String = "alkamiskausi"
   def values() = List(Kevät, Kesä, Syksy)
 }
 case object Kevät extends Alkamiskausi { val name = "kevät" }
