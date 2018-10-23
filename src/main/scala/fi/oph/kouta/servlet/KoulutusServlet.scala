@@ -1,6 +1,8 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.domain.Koulutus
+import java.io
+
+import fi.oph.kouta.domain.{Julkaisutila, Koulutus, ListParams}
 import fi.oph.kouta.service.KoulutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
@@ -38,6 +40,16 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     KoulutusService.update(parsedBody.extract[Koulutus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
     }
+  }
+
+  get("/list", operation(apiOperation[List[Koulutus]]("Listaa koulutukset")
+    tags modelName
+    summary "Listaa koulutkset annetuilla hakuehdoilla"
+    parameter queryParam[String]("tila").description(s"Pilkulla erotettu lista tiloja ${Julkaisutila.values().mkString(",")}").optional
+    parameter queryParam[String]("tarjoaja").description(s"Pilkulla eroteltu lista organisaatioiden oideja.").optional)) {
+    val tilat = params.get("tila").map(_.split(',').map(Julkaisutila.withName).toList)
+    val tarjoajat = params.get("tarjoaja").map(_.split(',').toList)
+    Ok(KoulutusService.list(new ListParams(tilat.getOrElse(List()), tarjoajat.getOrElse(List()))))
   }
 
   overrideModels()

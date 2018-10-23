@@ -53,4 +53,9 @@ package object domain {
                          titteli:Kielistetty = Map(),
                          sahkoposti:Option[String] = None,
                          puhelinnumero:Option[String] = None)
+
+  case class ListParams(tilat:List[Julkaisutila] = List(),
+                        tarjoajat:List[String] = List())
+
+  case class ListResponse(oid:String, nimi: Kielistetty)
 }

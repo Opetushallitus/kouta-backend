@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.domain.Koulutus
+import fi.oph.kouta.domain.{Koulutus, ListParams, ListResponse}
 import fi.oph.kouta.repository.KoulutusDAO
 
 object KoulutusService {
@@ -12,4 +12,6 @@ object KoulutusService {
     def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean = KoulutusDAO.update(koulutus, notModifiedSince)
 
     def get(oid:String): Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
+
+    def list(params:ListParams):List[ListResponse] = KoulutusDAO.list(params)
 }

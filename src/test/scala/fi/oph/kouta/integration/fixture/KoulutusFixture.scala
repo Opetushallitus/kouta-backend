@@ -44,4 +44,13 @@ trait KoulutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
       updated(body) should equal (expectUpdate)
     }
   }
+
+  def listKoulutusOk(params:List[(String, String)], expectedOids:List[String]) = {
+    get("/koulutus/list", params) {
+      status should equal (200)
+      val result = read[List[ListResponse]](body).map(_.oid)
+      result should equal(expectedOids)
+      result
+    }
+  }
 }

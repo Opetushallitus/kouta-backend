@@ -1,12 +1,11 @@
 package fi.oph.kouta.repository
 
-import java.sql.Timestamp
-import java.time.{Instant, OffsetDateTime, ZoneId}
+import java.time.Instant
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.read
-import slick.jdbc.{GetResult, PositionedResult}
+import slick.jdbc._
 
 trait ExtractorBase extends KoutaJsonFormats {
 
@@ -21,12 +20,7 @@ trait ExtractorBase extends KoutaJsonFormats {
     new Hakuaika(r.nextString(), r.nextTimestamp.toInstant, r.nextTimestamp.toInstant)
   })
 
-  def toTimestampParam(value:Option[Instant]) = value.map(Timestamp.from).getOrElse(null)
-
-  def toJsonParam(value:AnyRef) = Option(toJson(value)) match {
-    case Some(s) if !s.isEmpty & !"{}".equals(s) => s
-    case _ => null
-  }
+  def extractKielistetty(json:Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
 }
 
 trait KoulutusExtractors extends ExtractorBase {
@@ -38,7 +32,7 @@ trait KoulutusExtractors extends ExtractorBase {
     koulutusKoodiUri = r.nextStringOption,
     tila = Julkaisutila.withName(r.nextString),
     tarjoajat = List(),
-    nimi = r.nextStringOption.map(read[Map[Kieli, String]]).getOrElse(Map()),
+    nimi = extractKielistetty(r.nextStringOption),
     metadata = r.nextStringOption.map(read[KoulutusMetadata]),
     muokkaaja = r.nextString))
 }
@@ -50,7 +44,7 @@ trait ToteutusExtractors extends ExtractorBase {
     koulutusOid = r.nextString,
     tila = Julkaisutila.withName(r.nextString),
     tarjoajat = List(),
-    nimi = r.nextStringOption.map(read[Map[Kieli, String]]).getOrElse(Map()),
+    nimi = extractKielistetty(r.nextStringOption),
     metadata = r.nextStringOption.map(read[ToteutusMetadata]),
     muokkaaja = r.nextString
   ))
@@ -61,7 +55,7 @@ trait HakuExtractors extends ExtractorBase {
   implicit val getHakuResult: GetResult[Haku] = GetResult(r => Haku(
     oid = r.nextStringOption,
     tila = Julkaisutila.withName(r.nextString),
-    nimi = r.nextStringOption.map(read[Map[Kieli, String]]).getOrElse(Map()),
+    nimi = extractKielistetty(r.nextStringOption),
     hakutapa = r.nextStringOption.map(Hakutapa.withName),
     hakukohteen_liittamisen_takaraja = r.nextTimestampOption().map(_.toInstant),
     hakukohteen_muokkaamisen_takaraja = r.nextTimestampOption().map(_.toInstant),

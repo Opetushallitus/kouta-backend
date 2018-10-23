@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.KoulutusFixture
+import org.json4s.jackson.Serialization.read
 
 class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
 
@@ -86,4 +87,17 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
       body should include ("Pakollisia tietoja puuttuu")
     }
   }*/
+
+  it should "search koulutuksia" in {
+    import slick.jdbc.PostgresProfile.api._
+    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
+    db.runBlocking(sqlu"""delete from koulutukset""")
+    val oid1 = putKoulutusOk(koulutus.copy(tarjoajat = List("5.5", "6.5")))
+    val oid2 = putKoulutusOk(koulutus.copy(tarjoajat = List("6.5"), tila = Tallennettu))
+    val oid3 = putKoulutusOk(koulutus.copy(tarjoajat = List("5.5"), tila = Tallennettu))
+    listKoulutusOk(List(("tila", "julkaistu"), ("tarjoaja", "6.5")), List(oid1))
+    listKoulutusOk(List(("tarjoaja", "5.5")), List(oid1, oid3))
+    listKoulutusOk(List(("tila", "tallennettu")), List(oid2, oid3))
+    listKoulutusOk(List(), List(oid1, oid2, oid3))
+  }
 }

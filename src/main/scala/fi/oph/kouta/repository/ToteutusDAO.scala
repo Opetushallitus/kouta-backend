@@ -16,7 +16,7 @@ trait ToteutusDAO {
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
 }
 
-object ToteutusDAO extends ToteutusDAO with ToteutusExtractors {
+object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
 
   private def insertToteutus(toteutus:Toteutus) = {
     val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja) = toteutus

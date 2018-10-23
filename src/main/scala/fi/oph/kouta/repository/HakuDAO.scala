@@ -18,7 +18,7 @@ trait HakuDAO {
   def update(haku:Haku, notModifiedSince:Instant): Boolean
 }
   
-object HakuDAO extends HakuDAO with HakuExtractors {
+object HakuDAO extends HakuDAO with HakuExtractors with SQLHelpers {
 
   private def insertHaku(haku:Haku) = {
     val Haku(_, tila, nimi, hakutapa, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi, alkamisvuosi,

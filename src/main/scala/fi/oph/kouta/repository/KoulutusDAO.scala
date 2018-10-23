@@ -1,7 +1,6 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.domain.{Koulutus}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.domain._
 import slick.jdbc.PostgresProfile.api._
 import java.time.Instant
 import java.util.ConcurrentModificationException
@@ -15,9 +14,10 @@ trait KoulutusDAO {
   def get(oid:String): Option[(Koulutus, Instant)]
   def getLastModified(oid:String): Option[Instant]
   def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean
+  def list(params:ListParams):List[ListResponse]
 }
 
-object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with Logging {
+object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
 
   private def insertKoulutus(koulutus:Koulutus) = {
     val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja) = koulutus
@@ -123,5 +123,19 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with Logging {
       case Left(t) => throw t
       case Right((x, y)) => 0 < (x + y.sum)
     }
+  }
+
+  private def joinTarjoajat(tarjoajat:List[String]) = Option(tarjoajat).filterNot(_.isEmpty).map(t =>
+    s"inner join koulutusten_tarjoajat t on k.oid = t.koulutus_oid and t.tarjoaja_oid in (${t.map(x => "?").mkString(",")}) ").getOrElse("")
+
+  private def whereTilat(tilat:List[Julkaisutila]) = Option(tilat).filterNot(_.isEmpty).map(t =>
+    s"where k.tila in (${t.map(x => "?::julkaisutila").mkString(",")}) ").getOrElse("")
+
+  def list(params:ListParams):List[ListResponse] = {
+    import java.sql.ResultSet
+    val sql = s"select k.oid, k.nimi from koulutukset k ${joinTarjoajat(params.tarjoajat)} ${whereTilat(params.tilat)}"
+    query[ListResponse](sql, params.tarjoajat.union( params.tilat.map(_.toString)).toArray, (r:ResultSet) => {
+      new ListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
+    })
   }
 }
