@@ -10,4 +10,5 @@ case class Koulutus(oid:Option[String] = None,
                     tarjoajat:List[String] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[KoulutusMetadata] = None,
-                    muokkaaja:String)
+                    muokkaaja:String,
+                    kielivalinta:Seq[Kieli] = Seq())

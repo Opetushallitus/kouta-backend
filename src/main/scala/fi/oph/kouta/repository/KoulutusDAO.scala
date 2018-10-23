@@ -20,15 +20,29 @@ trait KoulutusDAO {
 object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
 
   private def insertKoulutus(koulutus:Koulutus) = {
-    val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja) = koulutus
-    sql"""insert into koulutukset (johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata, muokkaaja)
-             values ($johtaaTutkintoon, ${koulutustyyppi.map(_.toString)}::koulutustyyppi,
-             $koulutusKoodiUri, ${tila.toString}::julkaisutila,
-             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja) returning oid""".as[String].headOption
+    val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja, kielivalinta) = koulutus
+    sql"""insert into koulutukset (
+            johtaa_tutkintoon,
+            tyyppi,
+            koulutus_koodi_uri,
+            tila,
+            nimi,
+            metadata,
+            muokkaaja,
+            kielivalinta)
+          values (
+            $johtaaTutkintoon,
+            ${koulutustyyppi.map(_.toString)}::koulutustyyppi,
+            $koulutusKoodiUri,
+            ${tila.toString}::julkaisutila,
+            ${toJsonParam(nimi)}::jsonb,
+            ${toJsonParam(metadata)}::jsonb,
+            $muokkaaja,
+            ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
   }
 
   private def insertKoulutuksenTarjoajat(koulutus:Koulutus) = {
-    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja) = koulutus
+    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
     DBIO.sequence( tarjoajat.map(t =>
       sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $t, $muokkaaja)"""))
@@ -45,7 +59,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
   }
 
   private def selectKoulutus(oid:String) = {
-    sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata, muokkaaja from koulutukset where oid = $oid"""
+    sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata, muokkaaja, kielivalinta from koulutukset where oid = $oid"""
   }
 
   private def selectKoulutuksenTarjoajat(oid:String) = {
@@ -81,7 +95,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
   }
 
   private def updateKoulutus(koulutus:Koulutus) = {
-    val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metatieto, muokkaaja) = koulutus
+    val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metatieto, muokkaaja, kielivalinta) = koulutus
     sqlu"""update koulutukset set
               johtaa_tutkintoon = $johtaaTutkintoon,
               tyyppi = ${koulutustyyppi.map(_.toString)}::koulutustyyppi,
@@ -89,18 +103,20 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
               tila = ${tila.toString}::julkaisutila,
               nimi = ${toJsonParam(nimi)}::jsonb,
               metadata = ${toJsonParam(metatieto)}::jsonb,
-              muokkaaja = $muokkaaja
+              muokkaaja = $muokkaaja,
+              kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
             and ( johtaa_tutkintoon <> $johtaaTutkintoon
             or tyyppi <> ${koulutustyyppi.map(_.toString)}::koulutustyyppi
             or koulutus_koodi_uri <> $koulutusKoodiUri
             or tila <> ${tila.toString}::julkaisutila
             or nimi <> ${toJsonParam(nimi)}::jsonb
-            or metadata <> ${toJsonParam(metatieto)}::jsonb)"""
+            or metadata <> ${toJsonParam(metatieto)}::jsonb
+            or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb)"""
   }
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
-    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja) = koulutus
+    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
     if(tarjoajat.size > 0) {
       val tarjoajatString = tarjoajat.map(s => s"'$s'").mkString(",")
       DBIO.sequence( tarjoajat.map(t =>

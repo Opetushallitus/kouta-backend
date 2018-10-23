@@ -52,6 +52,11 @@ trait KoutaJsonFormats {
       case JString(i) => Instant.from(ISO_OFFSET_DATE_TIME_FORMATTER.parse(i))
     }, {
       case i: Instant => JString(ISO_OFFSET_DATE_TIME_FORMATTER.format(i))
+    })) +
+    new CustomSerializer[Kieli](formats => ({
+      case JString(s) => Kieli.withName(s)
+    }, {
+      case k: Kieli => JString(k.toString)
     }))
 
   def toJson(data:AnyRef) = write(data)

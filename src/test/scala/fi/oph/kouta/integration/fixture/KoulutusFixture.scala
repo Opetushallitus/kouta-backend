@@ -18,7 +18,8 @@ trait KoulutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(new KoulutusMetadata()),
     tarjoajat = List("1.2", "2.2", "3.2"),
-    muokkaaja = "Mörkö Muokkaaja")
+    muokkaaja = "Mörkö Muokkaaja",
+    kielivalinta = List(Fi, Sv))
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(oid))
   def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(oid), tila = tila)

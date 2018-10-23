@@ -32,4 +32,5 @@ case class Toteutus(oid:Option[String] = None,
                     tarjoajat:List[String] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,
-                    muokkaaja:String)
+                    muokkaaja:String,
+                    kielivalinta:Seq[Kieli] = Seq())

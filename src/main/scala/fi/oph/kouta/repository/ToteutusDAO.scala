@@ -19,14 +19,14 @@ trait ToteutusDAO {
 object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
 
   private def insertToteutus(toteutus:Toteutus) = {
-    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja) = toteutus
-    sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja)
+    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
+    sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta)
              values ($koulutusOid, ${tila.toString}::julkaisutila,
-             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja) returning oid""".as[String].headOption
+             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja, ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
   }
 
   private def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
-    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja) = toteutus
+    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _) = toteutus
     DBIO.sequence( tarjoajat.map(t =>
       sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $t, $muokkaaja)"""))
@@ -43,7 +43,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
   }
 
   private def selectToteutus(oid:String) = {
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja from toteutukset where oid = $oid"""
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
   }
 
   private def selectToteutuksenTarjoajat(oid:String) = {
@@ -78,22 +78,24 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
   }
 
   private def updateToteutus(toteutus: Toteutus) = {
-    val Toteutus(oid, koulutusOid, tila, _, nimi, metadata, muokkaaja) = toteutus
+    val Toteutus(oid, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
     sqlu"""update toteutukset set
               koulutus_oid = ${koulutusOid},
               tila = ${tila.toString}::julkaisutila,
               nimi = ${toJsonParam(nimi)}::jsonb,
               metadata = ${toJsonParam(metadata)}::jsonb,
-              muokkaaja = $muokkaaja
+              muokkaaja = $muokkaaja,
+              kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
             and ( koulutus_oid <> $koulutusOid
             or tila <> ${tila.toString}::julkaisutila
             or nimi <> ${toJsonParam(nimi)}::jsonb
-            or metadata <> ${toJsonParam(metadata)}::jsonb)"""
+            or metadata <> ${toJsonParam(metadata)}::jsonb
+            or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb)"""
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
-    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja) = toteutus
+    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _) = toteutus
     if(tarjoajat.size > 0) {
       val tarjoajatString = tarjoajat.map(s => s"'$s'").mkString(",")
       DBIO.sequence( tarjoajat.map(t =>

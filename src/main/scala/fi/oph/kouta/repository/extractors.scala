@@ -21,6 +21,7 @@ trait ExtractorBase extends KoutaJsonFormats {
   })
 
   def extractKielistetty(json:Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
+  def extractKielivalinta(json:Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
 }
 
 trait KoulutusExtractors extends ExtractorBase {
@@ -34,7 +35,8 @@ trait KoulutusExtractors extends ExtractorBase {
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption),
     metadata = r.nextStringOption.map(read[KoulutusMetadata]),
-    muokkaaja = r.nextString))
+    muokkaaja = r.nextString,
+    kielivalinta = extractKielivalinta(r.nextStringOption)))
 }
 
 trait ToteutusExtractors extends ExtractorBase {
@@ -46,7 +48,8 @@ trait ToteutusExtractors extends ExtractorBase {
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption),
     metadata = r.nextStringOption.map(read[ToteutusMetadata]),
-    muokkaaja = r.nextString
+    muokkaaja = r.nextString,
+    kielivalinta = extractKielivalinta(r.nextStringOption)
   ))
 }
 
@@ -68,6 +71,7 @@ trait HakuExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[HakuMetadata]),
     organisaatio = r.nextString,
     hakuajat = List(),
-    muokkaaja = r.nextString
+    muokkaaja = r.nextString,
+    kielivalinta = extractKielivalinta(r.nextStringOption)
   ))
 }

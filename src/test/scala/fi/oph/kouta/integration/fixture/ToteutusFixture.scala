@@ -31,7 +31,8 @@ trait ToteutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
     tarjoajat = List("1.2.3.3", "1.2.3.4"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(ammMetatieto),
-    muokkaaja = "Hirmu kiva muokkaaja")
+    muokkaaja = "Hirmu kiva muokkaaja",
+    kielivalinta = Seq(Fi, Sv))
 
   def toteutus(koulutusOid:String): Toteutus = toteutus.copy(koulutusOid = koulutusOid)
   def toteutus(oid:String, koulutusOid:String): Toteutus = toteutus.copy(oid = Some(oid), koulutusOid = koulutusOid)

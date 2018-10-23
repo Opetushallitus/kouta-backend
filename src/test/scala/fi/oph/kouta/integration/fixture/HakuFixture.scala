@@ -25,7 +25,8 @@ trait HakuFixture extends CommonFixture { this: KoutaIntegrationSpec =>
     metadata = Some(HakuMetadata(yhteystieto = Some(new Yhteystieto(nimi = "Iines Ankka")))),
     hakuajat = List(HaunHakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(9000))),
     organisaatio = "1.2.3.4",
-    muokkaaja = "Harri Muokkaaja")
+    muokkaaja = "Harri Muokkaaja",
+    kielivalinta = Seq(Fi, Sv))
 
   def haku(oid:String): Haku = haku.copy(oid = Some(oid))
   def haku(oid:String, tila:Julkaisutila): Haku = haku.copy(oid = Some(oid), tila = tila)

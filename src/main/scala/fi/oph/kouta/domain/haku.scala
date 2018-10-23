@@ -48,5 +48,6 @@ case class Haku(oid:Option[String] = None,
                 metadata: Option[HakuMetadata] = None,
                 organisaatio: String,
                 hakuajat: List[HaunHakuaika] = List(),
-                muokkaaja:String)
+                muokkaaja:String,
+                kielivalinta:Seq[Kieli] = Seq())
 
