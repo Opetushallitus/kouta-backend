@@ -16,27 +16,27 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   }
 
   it should "store valintaperuste" in {
-    val id = putValintaperusteOk(valintaperuste)
-    getValintaperusteOk(id, valintaperuste(id))
+    val id = put(valintaperuste)
+    get(id, valintaperuste(id))
   }
 
   it should "update valintaperuste" in {
-    val id = putValintaperusteOk(valintaperuste)
-    val lastModified = getValintaperusteOk(id, valintaperuste(id))
-    updateValintaperusteOk(valintaperuste(id, Arkistoitu), lastModified)
-    getValintaperusteOk(id, valintaperuste(id, Arkistoitu))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(valintaperuste(id, Arkistoitu), lastModified)
+    get(id, valintaperuste(id, Arkistoitu))
   }
 
   it should "not update valintaperuste" in {
-    val id = putValintaperusteOk(valintaperuste)
-    val lastModified = getValintaperusteOk(id, valintaperuste(id))
-    updateValintaperusteOk(valintaperuste(id), lastModified, false)
-    getValintaperusteOk(id, valintaperuste(id)) should equal (lastModified)
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(valintaperuste(id), lastModified, false)
+    get(id, valintaperuste(id)) should equal (lastModified)
   }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
-    val id = putValintaperusteOk(valintaperuste)
-    val lastModified = getValintaperusteOk(id, valintaperuste(id))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     post("/valintaperuste", bytes(valintaperuste(id))) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
@@ -44,10 +44,10 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   }
 
   it should "fail update if modified in between get and update" in {
-    val id = putValintaperusteOk(valintaperuste)
-    val lastModified = getValintaperusteOk(id, valintaperuste(id))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     Thread.sleep(1500)
-    updateValintaperusteOk(valintaperuste(id, Arkistoitu), lastModified)
+    update(valintaperuste(id, Arkistoitu), lastModified)
     post("/valintaperuste", bytes(valintaperuste(id)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
@@ -55,11 +55,11 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
 
   it should "store and update unfinished valintaperuste" in {
     val unfinishedValintaperuste = new Valintaperuste(muokkaaja = "Muikea Muokkaaja", organisaatio = "Muokkaajan organisaatio")
-    val id = putValintaperusteOk(unfinishedValintaperuste)
-    val lastModified = getValintaperusteOk(id, unfinishedValintaperuste.copy(id = Some(id)))
+    val id = put(unfinishedValintaperuste)
+    val lastModified = get(id, unfinishedValintaperuste.copy(id = Some(id)))
     val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatio = "Muokkaajan toinen organisaatio")
-    updateValintaperusteOk(newUnfinishedValintaperuste, lastModified)
-    getValintaperusteOk(id, newUnfinishedValintaperuste)
+    update(newUnfinishedValintaperuste, lastModified)
+    get(id, newUnfinishedValintaperuste)
   }
 
   /*it should "validate julkaistu valintaperuste" in {

@@ -5,90 +5,91 @@ import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 
 class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture {
 
+  val path = "/toteutus"
   var koulutusOid = ""
 
   override def beforeAll() = {
     super.beforeAll()
-    koulutusOid = putKoulutusOk(koulutus)
+    koulutusOid = put(koulutus)
   }
 
   it should "return 404 if toteutus not found" in {
-    get("/toteutus/123") {
+    get(s"$ToteutusPath/123") {
       status should equal (404)
       body should include ("Unknown toteutus oid")
     }
   }
 
   it should "store toteutus" in {
-    val oid = putToteutusOk(toteutus(koulutusOid))
-    getToteutusOk(oid, toteutus(oid, koulutusOid))
+    val oid = put(toteutus(koulutusOid))
+    get(oid, toteutus(oid, koulutusOid))
   }
 
   it should "update toteutus" in {
-    val oid = putToteutusOk(toteutus(koulutusOid))
-    val lastModified = getToteutusOk(oid, toteutus(oid, koulutusOid))
-    updateToteutusOk(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
-    getToteutusOk(oid, toteutus(oid, koulutusOid, Arkistoitu))
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
+    get(oid, toteutus(oid, koulutusOid, Arkistoitu))
   }
 
   it should "not update koulutus" in {
-    val oid = putToteutusOk(toteutus(koulutusOid))
+    val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
-    val lastModified = getToteutusOk(oid, thisToteutus)
-    updateToteutusOk(thisToteutus, lastModified, false)
-    getToteutusOk(oid, thisToteutus)
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, false)
+    get(oid, thisToteutus)
   }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
-    val oid = putToteutusOk(toteutus(koulutusOid))
+    val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
-    val lastModified = getToteutusOk(oid, thisToteutus)
-    post("/toteutus", bytes(thisToteutus)) {
+    val lastModified = get(oid, thisToteutus)
+    post(ToteutusPath, bytes(thisToteutus)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
   }
 
   it should "fail update if modified in between get and update" in {
-    val oid = putToteutusOk(toteutus(koulutusOid))
+    val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
-    val lastModified = getToteutusOk(oid, thisToteutus)
+    val lastModified = get(oid, thisToteutus)
     Thread.sleep(1500)
-    updateToteutusOk(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
-    post("/toteutus", bytes(thisToteutus), List(("If-Unmodified-Since", lastModified))) {
+    update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
+    post(ToteutusPath, bytes(thisToteutus), List(("If-Unmodified-Since", lastModified))) {
       status should equal (409)
     }
   }
 
   it should "update toteutuksen nimi, metadata ja tarjoajat" in {
-    val oid = putToteutusOk(toteutus(koulutusOid))
+    val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
-    val lastModified = getToteutusOk(oid, thisToteutus)
+    val lastModified = get(oid, thisToteutus)
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       metadata = Some(thisToteutus.metadata.get.copy(kuvaus = Map(Fi -> "kuvaus", En -> "description"))),
       tarjoajat = List("2.2", "3.2", "4.2"))
-    updateToteutusOk(uusiToteutus, lastModified, true)
-    getToteutusOk(oid, uusiToteutus)
+    update(uusiToteutus, lastModified, true)
+    get(oid, uusiToteutus)
   }
 
   it should "delete all tarjoajat and read last modified from history" in {
-    val oid = putToteutusOk(toteutus(koulutusOid))
+    val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
-    val lastModified = getToteutusOk(oid, thisToteutus)
+    val lastModified = get(oid, thisToteutus)
     Thread.sleep(1500)
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
-    updateToteutusOk(uusiToteutus, lastModified, true)
-    getToteutusOk(oid, uusiToteutus) should not equal (lastModified)
+    update(uusiToteutus, lastModified, true)
+    get(oid, uusiToteutus) should not equal (lastModified)
   }
 
   it should "store and update unfinished toteutus" in {
     val unfinishedToteutus = new Toteutus(muokkaaja = "Muikea Muokkaaja", koulutusOid = koulutusOid)
-    val oid = putToteutusOk(unfinishedToteutus)
-    val lastModified = getToteutusOk(oid, unfinishedToteutus.copy(oid = Some(oid)))
-    val newKoulutusOid = putKoulutusOk(koulutus)
+    val oid = put(unfinishedToteutus)
+    val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(oid)))
+    val newKoulutusOid = put(koulutus)
     val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(oid), koulutusOid = newKoulutusOid)
-    updateToteutusOk(newUnfinishedToteutus, lastModified)
-    getToteutusOk(oid, newUnfinishedToteutus)
+    update(newUnfinishedToteutus, lastModified)
+    get(oid, newUnfinishedToteutus)
   }
 }

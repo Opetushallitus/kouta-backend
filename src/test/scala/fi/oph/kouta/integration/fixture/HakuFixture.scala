@@ -7,9 +7,11 @@ import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.HakuServlet
 import org.json4s.jackson.Serialization.read
 
-trait HakuFixture extends CommonFixture { this: KoutaIntegrationSpec =>
+trait HakuFixture { this: KoutaIntegrationSpec =>
 
-  addServlet(new HakuServlet(), "/haku")
+  val HakuPath = "/haku"
+
+  addServlet(new HakuServlet(), HakuPath)
   
   val haku = new Haku(
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
@@ -31,25 +33,8 @@ trait HakuFixture extends CommonFixture { this: KoutaIntegrationSpec =>
   def haku(oid:String): Haku = haku.copy(oid = Some(oid))
   def haku(oid:String, tila:Julkaisutila): Haku = haku.copy(oid = Some(oid), tila = tila)
 
-  def putHakuOk(haku:Haku) = {
-    put("/haku", bytes(haku)) {
-      status should equal(200)
-      oid(body)
-    }
-  }
-
-  def getHakuOk(oid:String, expected:Haku) = {
-    get(s"/haku/$oid") {
-      status should equal (200)
-      read[Haku](body) should equal (expected)
-      header.get("Last-Modified").get
-    }
-  }
-
-  def updateHakuOk(haku:Haku, lastModified:String, expectUpdate:Boolean = true) = {
-    post("/haku", bytes(haku), headersIfUnmodifiedSince(lastModified)) {
-      status should equal (200)
-      updated(body) should equal (expectUpdate)
-    }
-  }
+  def put(haku:Haku):String = put(HakuPath, haku, oid(_))
+  def get(oid:String, expected:Haku):String = get(HakuPath, oid, expected)
+  def update(haku:Haku, lastModified:String, expectUpdate:Boolean):Unit = update(HakuPath, haku, lastModified, expectUpdate)
+  def update(haku:Haku, lastModified:String):Unit = update(haku, lastModified, true)
 }

@@ -5,11 +5,12 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.ValintaperusteServlet
-import org.json4s.jackson.Serialization.read
 
-trait ValintaperusteFixture extends CommonFixture { this: KoutaIntegrationSpec =>
+trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
-  addServlet(new ValintaperusteServlet(), "/valintaperuste")
+  val ValintaperustePath = "/valintaperuste"
+
+  addServlet(new ValintaperusteServlet(), ValintaperustePath)
 
   val valintaperuste = new Valintaperuste(
     id = None,
@@ -24,25 +25,9 @@ trait ValintaperusteFixture extends CommonFixture { this: KoutaIntegrationSpec =
   def valintaperuste(id:UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
   def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
 
-  def putValintaperusteOk(valintaperuste:Valintaperuste) = {
-    put("/valintaperuste", bytes(valintaperuste)) {
-      status should equal(200)
-      id(body)
-    }
-  }
-
-  def getValintaperusteOk(id:UUID, expected:Valintaperuste) = {
-    get(s"/valintaperuste/$id") {
-      status should equal (200)
-      read[Valintaperuste](body) should equal (expected)
-      header.get("Last-Modified").get
-    }
-  }
-
-  def updateValintaperusteOk(valintaperuste:Valintaperuste, lastModified:String, expectUpdate:Boolean = true) = {
-    post("/valintaperuste", bytes(valintaperuste), headersIfUnmodifiedSince(lastModified)) {
-      status should equal (200)
-      updated(body) should equal (expectUpdate)
-    }
-  }
+  def put(valintaperuste:Valintaperuste):UUID = put(ValintaperustePath, valintaperuste, id(_))
+  def get(id:UUID, expected:Valintaperuste):String = get(ValintaperustePath, id, expected)
+  def update(valintaperuste:Valintaperuste, lastModified:String, expectUpdate:Boolean = true):Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
+  def update(valintaperuste:Valintaperuste, lastModified:String):Unit = update(valintaperuste, lastModified, true)
+  //def list: (List[(String, String)], List[IdListResponse]) => List[IdListResponse] = list(ValintaperustePath, _, _)
 }

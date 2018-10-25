@@ -5,9 +5,11 @@ import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.ToteutusServlet
 import org.json4s.jackson.Serialization.read
 
-trait ToteutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
+trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
-  addServlet(new ToteutusServlet(), "/toteutus")
+  val ToteutusPath = "/toteutus"
+
+  addServlet(new ToteutusServlet(), ToteutusPath)
 
   val opetus = Opetus(
     opetuskielet = List("fi"),
@@ -38,25 +40,8 @@ trait ToteutusFixture extends CommonFixture { this: KoutaIntegrationSpec =>
   def toteutus(oid:String, koulutusOid:String): Toteutus = toteutus.copy(oid = Some(oid), koulutusOid = koulutusOid)
   def toteutus(oid:String, koulutusOid:String, tila:Julkaisutila): Toteutus = toteutus.copy(oid = Some(oid), koulutusOid = koulutusOid, tila = tila)
 
-  def putToteutusOk(toteutus:Toteutus) = {
-    put("/toteutus", bytes(toteutus)) {
-      status should equal(200)
-      oid(body)
-    }
-  }
-
-  def getToteutusOk(oid:String, expected:Toteutus) = {
-    get(s"/toteutus/$oid") {
-      status should equal (200)
-      read[Toteutus](body) should equal (expected)
-      header.get("Last-Modified").get
-    }
-  }
-
-  def updateToteutusOk(toteutus:Toteutus, lastModified:String, expectUpdate:Boolean = true) = {
-    post("/toteutus", bytes(toteutus), headersIfUnmodifiedSince(lastModified)) {
-      status should equal (200)
-      updated(body) should equal (expectUpdate)
-    }
-  }
+  def put(toteutus:Toteutus):String = put(ToteutusPath, toteutus, oid(_))
+  def get(oid:String, expected:Toteutus): String = get(ToteutusPath, oid, expected)
+  def update(toteutus:Toteutus, lastModified:String, expectUpdate:Boolean): Unit = update(ToteutusPath, toteutus, lastModified, expectUpdate)
+  def update(toteutus:Toteutus, lastModified:String): Unit = update(toteutus, lastModified, true)
 }

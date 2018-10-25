@@ -1,6 +1,7 @@
 package fi.oph.kouta
 
 import java.time.Instant
+import java.util.UUID
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä
 package object domain {
@@ -57,5 +58,6 @@ package object domain {
   case class ListParams(tilat:List[Julkaisutila] = List(),
                         tarjoajat:List[String] = List())
 
-  case class ListResponse(oid:String, nimi: Kielistetty)
+  case class OidListResponse(oid:String, nimi: Kielistetty)
+  case class IdListResponse(id:UUID, nimi: Kielistetty)
 }

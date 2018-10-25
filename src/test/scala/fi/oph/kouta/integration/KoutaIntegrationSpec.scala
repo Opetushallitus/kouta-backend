@@ -2,15 +2,29 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.KoutaBackendSwagger
 import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithPort}
+import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.util.KoutaJsonFormats
+import org.json4s.jackson.Serialization.{read, write}
 import org.scalatest.DoNotDiscover
 import org.scalatra.test.scalatest.ScalatraFlatSpec
+
+import scala.reflect.Manifest
 
 @DoNotDiscover
 class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
 
   implicit val swagger = new KoutaBackendSwagger
+
+  def headersIfUnmodifiedSince(lastModified:String) = List(("If-Unmodified-Since", lastModified))
+
+  def bytes(o:AnyRef) = write(o).getBytes
+
+  def oid(body: String) = (read[Oid](body)).oid
+
+  def id(body: String) = (read[Id](body)).id
+
+  def updated(body: String) = read[Updated](body).updated
 
   override def beforeAll() = {
     super.beforeAll()
@@ -21,4 +35,46 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
   }
 
   lazy val db = KoutaDatabase
+
+  def put[E <: scala.AnyRef, R](path:String, entity:E, result:(String) => R ):R = {
+    put(path, bytes(entity)) {
+      status should equal(200)
+      result(body)
+    }
+  }
+
+  def get[E <: scala.AnyRef, I](path:String, id:I, expected:E)(implicit mf: Manifest[E]):String = {
+    get(s"$path/${id.toString}") {
+      status should equal (200)
+      read[E](body) should equal (expected)
+      header.get("Last-Modified").get
+    }
+  }
+
+  def update[E <: scala.AnyRef](path:String, entity:E, lastModified:String, expectUpdate:Boolean) = {
+    post(path, bytes(entity), headersIfUnmodifiedSince(lastModified)) {
+      status should equal (200)
+      updated(body) should equal (expectUpdate)
+    }
+  }
+
+  def list[R](path:String, params:List[(String, String)], expected:List[R])(implicit mf: Manifest[R]) = {
+    get(s"$path/list", params) {
+      status should equal (200)
+      val result = read[List[R]](body)
+      result should equal(expected)
+      result
+    }
+  }
+
+  def truncateDatabase() = {
+    import slick.jdbc.PostgresProfile.api._
+    db.runBlocking(sqlu"""delete from hakujen_hakuajat""")
+    db.runBlocking(sqlu"""delete from haut""")
+    db.runBlocking(sqlu"""delete from valintaperusteet""")
+    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat""")
+    db.runBlocking(sqlu"""delete from toteutukset""")
+    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
+    db.runBlocking(sqlu"""delete from koulutukset""")
+  }
 }

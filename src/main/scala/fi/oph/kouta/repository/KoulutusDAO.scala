@@ -14,7 +14,7 @@ trait KoulutusDAO {
   def get(oid:String): Option[(Koulutus, Instant)]
   def getLastModified(oid:String): Option[Instant]
   def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean
-  def list(params:ListParams):List[ListResponse]
+  def list(params:ListParams):List[OidListResponse]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
@@ -147,11 +147,11 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
   private def whereTilat(tilat:List[Julkaisutila]) = Option(tilat).filterNot(_.isEmpty).map(t =>
     s"where k.tila in (${t.map(x => "?::julkaisutila").mkString(",")}) ").getOrElse("")
 
-  def list(params:ListParams):List[ListResponse] = {
+  def list(params:ListParams):List[OidListResponse] = {
     import java.sql.ResultSet
     val sql = s"select k.oid, k.nimi from koulutukset k ${joinTarjoajat(params.tarjoajat)} ${whereTilat(params.tilat)}"
-    query[ListResponse](sql, params.tarjoajat.union( params.tilat.map(_.toString)).toArray, (r:ResultSet) => {
-      new ListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
+    query[OidListResponse](sql, params.tarjoajat.union( params.tilat.map(_.toString)).toArray, (r:ResultSet) => {
+      new OidListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
     })
   }
 }
