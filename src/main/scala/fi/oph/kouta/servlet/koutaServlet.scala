@@ -3,7 +3,7 @@ package fi.oph.kouta.servlet
 import java.text.ParseException
 import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import java.util.{ConcurrentModificationException, NoSuchElementException}
+import java.util.{ConcurrentModificationException, NoSuchElementException, UUID}
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -20,6 +20,7 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
 
   val modelName:String
   val EXAMPLE_DATE_TIME = ISO_OFFSET_DATE_TIME_FORMATTER.format(Instant.EPOCH)
+  val EXAMPLE_UUID = UUID.randomUUID().toString
 
   before() {
     contentType = formats("json")
@@ -51,6 +52,8 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
       case ("koulutustyyppi", mp) => ("koulutustyyppi", modelProperty(mp.position, Koulutustyyppi.values().map(_.toString)))
       case ("kieli", mp) => ("kieli", modelProperty(mp.position, Kieli.values.map(_.toString)))
       case ("kielivalinta", mp) => ("kielivalinta", ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
+      case ("id", mp) => ("id", modelProperty(mp.position, List(EXAMPLE_UUID)))
+      case ("kohde", mp) => ("kohde", modelProperty(mp.position, ValintaperusteenKohde.values().map(_.toString)))
       case p => p
     }
 

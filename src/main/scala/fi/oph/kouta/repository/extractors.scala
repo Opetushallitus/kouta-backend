@@ -1,6 +1,7 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
+import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -71,6 +72,21 @@ trait HakuExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[HakuMetadata]),
     organisaatio = r.nextString,
     hakuajat = List(),
+    muokkaaja = r.nextString,
+    kielivalinta = extractKielivalinta(r.nextStringOption)
+  ))
+}
+
+trait ValintaperusteExtractors extends ExtractorBase {
+
+  implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
+    id = r.nextStringOption.map(UUID.fromString),
+    tila = Julkaisutila.withName(r.nextString),
+    kohde = r.nextStringOption.map(ValintaperusteenKohde.withName),
+    nimi = extractKielistetty(r.nextStringOption),
+    onkoJulkinen = r.nextBoolean,
+    metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
+    organisaatio = r.nextString,
     muokkaaja = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)
   ))

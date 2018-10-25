@@ -2,6 +2,7 @@ package fi.oph.kouta.util
 
 import java.time.{Instant, ZoneId}
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 import fi.oph.kouta.domain._
 import org.json4s.JsonAST.JString
@@ -57,6 +58,16 @@ trait KoutaJsonFormats {
       case JString(s) => Kieli.withName(s)
     }, {
       case k: Kieli => JString(k.toString)
+    })) +
+    new CustomSerializer[UUID](formats => ({
+      case JString(s) => UUID.fromString(s)
+    }, {
+      case uuid: UUID => JString(uuid.toString)
+    }))+
+    new CustomSerializer[ValintaperusteenKohde](formats => ({
+      case JString(s) => ValintaperusteenKohde.withName(s)
+    }, {
+      case j: ValintaperusteenKohde => JString(j.toString)
     }))
 
   def toJson(data:AnyRef) = write(data)
