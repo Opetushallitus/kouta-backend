@@ -82,7 +82,9 @@ trait ValintaperusteExtractors extends ExtractorBase {
   implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
     id = r.nextStringOption.map(UUID.fromString),
     tila = Julkaisutila.withName(r.nextString),
-    kohde = r.nextStringOption.map(ValintaperusteenKohde.withName),
+    hakutapa = r.nextStringOption,
+    kohdejoukko = r.nextStringOption,
+    kohdejoukonTarkenne = r.nextStringOption,
     nimi = extractKielistetty(r.nextStringOption),
     onkoJulkinen = r.nextBoolean,
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),

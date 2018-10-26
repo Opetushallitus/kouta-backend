@@ -63,11 +63,6 @@ trait KoutaJsonFormats {
       case JString(s) => UUID.fromString(s)
     }, {
       case uuid: UUID => JString(uuid.toString)
-    }))+
-    new CustomSerializer[ValintaperusteenKohde](formats => ({
-      case JString(s) => ValintaperusteenKohde.withName(s)
-    }, {
-      case j: ValintaperusteenKohde => JString(j.toString)
     }))
 
   def toJson(data:AnyRef) = write(data)

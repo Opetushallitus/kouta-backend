@@ -8,7 +8,7 @@ import fi.oph.kouta.repository.ValintaperusteDAO
 
 object ValintaperusteService {
 
-  def put(valintaperuste:Valintaperuste): Option[UUID] = ValintaperusteDAO.put(valintaperuste.copy(Some(UUID.randomUUID())))
+  def put(valintaperuste:Valintaperuste): Option[UUID] = ValintaperusteDAO.put(valintaperuste.copy(id = Some(UUID.randomUUID())))
 
   def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean = ValintaperusteDAO.update(valintaperuste, notModifiedSince)
 

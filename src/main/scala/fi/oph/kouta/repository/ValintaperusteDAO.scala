@@ -18,11 +18,14 @@ trait ValintaperusteDAO {
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors with SQLHelpers {
   private def insertValintaperuste(valintaperuste: Valintaperuste) = {
-    val Valintaperuste(id, tila, kohde, nimi, onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
+    val Valintaperuste(id, tila, hakutapa, kohdejoukko, kohdejoukonTarkenne, nimi,
+                       onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""insert into valintaperusteet (
                      id,
                      tila,
-                     kohde,
+                     hakutapa,
+                     kohdejoukko,
+                     kohdejoukon_tarkenne,
                      nimi,
                      onkoJulkinen,
                      metadata,
@@ -32,7 +35,9 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
          ) values (
                      ${id.map(_.toString)}::uuid,
                      ${tila.toString}::julkaisutila,
-                     ${kohde.map(_.toString)}::valintaperusteenkohde,
+                     $hakutapa,
+                     $kohdejoukko,
+                     $kohdejoukonTarkenne,
                      ${toJsonParam(nimi)}::jsonb,
                      $onkoJulkinen,
                      ${toJsonParam(metadata)}::jsonb,
@@ -50,7 +55,8 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
   }
 
   private def selectValintaperuste(id:UUID) = {
-    sql"""select id, tila, kohde, nimi, onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta
+    sql"""select id, tila, hakutapa, kohdejoukko, kohdejoukon_tarkenne, nimi,
+                 onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta
           from valintaperusteet where id = ${id.toString}::uuid"""
   }
 
@@ -77,10 +83,13 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
   override def getLastModified(id: UUID): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(id) )
   
   private def updateValintaperuste(valintaperuste: Valintaperuste) = {
-    val Valintaperuste(id, tila, kohde, nimi, onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
+    val Valintaperuste(id, tila, hakutapa, kohdejoukko, kohdejoukonTarkenne, nimi,
+                       onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""update valintaperusteet set
                      tila = ${tila.toString}::julkaisutila,
-                     kohde = ${kohde.map(_.toString)}::valintaperusteenkohde,
+                     hakutapa = $hakutapa,
+                     kohdejoukko = $kohdejoukko,
+                     kohdejoukon_tarkenne = $kohdejoukonTarkenne,
                      nimi = ${toJsonParam(nimi)}::jsonb,
                      onkoJulkinen = $onkoJulkinen,
                      metadata = ${toJsonParam(metadata)}::jsonb,
@@ -89,7 +98,9 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
                      kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
            where id = ${id.map(_.toString)}::uuid
            and (tila <> ${tila.toString}::julkaisutila
-           or kohde <> ${kohde.map(_.toString)}::valintaperusteenkohde
+           or hakutapa <> $hakutapa
+           or kohdejoukko <> $kohdejoukko
+           or kohdejoukon_tarkenne <> $kohdejoukonTarkenne
            or nimi <> ${toJsonParam(nimi)}::jsonb
            or onkoJulkinen <> $onkoJulkinen
            or metadata <> ${toJsonParam(metadata)}::jsonb
@@ -110,20 +121,3 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
     }
   }
 }
-
-
-/*
-create table valintaperusteet(
-  id uuid not null,
-  tila julkaisutila not null default 'tallennettu',
-  kohde valintaperusteen_kohde not null,
-  nimi jsonb,
-  kielivalinta jsonb,
-  onkoJulkinen boolean not null default false,
-  metadata jsonb,
-  organisaatio varchar not null,
-  muokkaaja varchar not null,
-  transaction_id bigint not null default txid_current(),
-  system_time tstzrange not null default tstzrange(now(), null, '[)')
-);
- */

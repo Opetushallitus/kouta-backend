@@ -1,16 +1,9 @@
-create type valintaperusteenkohde as enum (
-  'kk yhteishaku',
-  'kk siirtohaku',
-  'amm',
-  'lk'
-  'muu kohde'
-);
-alter type valintaperusteenkohde owner to oph;
-
 create table valintaperusteet(
   id uuid primary key,
   tila julkaisutila not null default 'tallennettu',
-  kohde valintaperusteenkohde,
+  hakutapa varchar,
+  kohdejoukko varchar,
+  kohdejoukon_tarkenne varchar,
   nimi jsonb,
   kielivalinta jsonb,
   onkoJulkinen boolean not null default false,
@@ -42,7 +35,9 @@ begin
       id,
       tila,
       nimi,
-      kohde,
+      hakutapa,
+      kohdejoukko,
+      kohdejoukon_tarkenne,
       organisaatio,
       metadata,
       kielivalinta,
@@ -54,7 +49,9 @@ begin
                    old.id,
                    old.tila,
                    old.nimi,
-                   old.kohde,
+                   old.hakutapa,
+                   old.kohdejoukko,
+                   old.kohdejoukon_tarkenne,
                    old.organisaatio,
                    old.metadata,
                    old.kielivalinta,
