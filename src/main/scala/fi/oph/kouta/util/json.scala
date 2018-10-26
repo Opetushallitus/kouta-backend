@@ -29,21 +29,6 @@ trait KoutaJsonFormats {
     }, {
       case k: Kieli => k.toString
     })) +
-    new CustomSerializer[Opetusaika](formats => ( {
-      case JString(s) => Opetusaika.withName(s)
-    }, {
-      case j: Opetusaika => JString(j.toString)
-    })) +
-    new CustomSerializer[Hakutapa](formats => ( {
-      case JString(s) => Hakutapa.withName(s)
-    }, {
-      case j: Hakutapa => JString(j.toString)
-    })) +
-    new CustomSerializer[Alkamiskausi](formats => ( {
-      case JString(s) => Alkamiskausi.withName(s)
-    }, {
-      case j: Alkamiskausi => JString(j.toString)
-    })) +
     new CustomSerializer[Hakulomaketyyppi](formats => ({
       case JString(s) => Hakulomaketyyppi.withName(s)
     }, {

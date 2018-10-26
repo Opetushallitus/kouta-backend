@@ -1,17 +1,3 @@
-create type hakutapa as enum (
-  'jatkuva haku',
-  'erillishaku',
-  'yhteishaku'
-);
-alter type hakutapa owner to oph;
-
-create type alkamiskausi as enum (
-  'kevät',
-  'kesä',
-  'syksy'
-);
-alter type alkamiskausi owner to oph;
-
 create type hakulomaketyyppi as enum (
   'ataru',
   'haku-app',
@@ -27,13 +13,13 @@ create table haut (
   oid varchar primary key default '1.2.246.562.29.' || lpad(nextval('haku_oid')::text, 20, '0'),
   tila julkaisutila not null default 'tallennettu',
   nimi jsonb,
-  hakutapa hakutapa,
+  hakutapa_koodi_uri varchar,
   hakukohteen_liittamisen_takaraja timestamp,
   hakukohteen_muokkaamisen_takaraja timestamp,
-  alkamiskausi alkamiskausi,
+  alkamiskausi_koodi_uri varchar,
   alkamisvuosi varchar(4),
-  kohdejoukko varchar,
-  kohdejoukon_tarkenne varchar,
+  kohdejoukko_koodi_uri varchar,
+  kohdejoukon_tarkenne_koodi_uri varchar,
   hakulomaketyyppi hakulomaketyyppi,
   hakulomake varchar,
   metadata jsonb,
@@ -64,12 +50,12 @@ begin
       oid,
       tila,
       nimi,
-      hakutapa,
+      hakutapa_koodi_uri,
       hakukohteen_liittamisen_takaraja,
       hakukohteen_muokkaamisen_takaraja,
-      alkamiskausi,
+      alkamiskausi_koodi_uri,
       alkamisvuosi,
-      kohdejoukko,
+      kohdejoukko_koodi_uri,
       kohdejoukon_tarkenne,
       hakulomaketyyppi,
       hakulomake,
@@ -82,12 +68,12 @@ begin
                    old.oid,
                    old.tila,
                    old.nimi,
-                   old.hakutapa,
+                   old.hakutapa_koodi_uri,
                    old.hakukohteen_liittamisen_takaraja,
                    old.hakukohteen_muokkaamisen_takaraja,
-                   old.alkamiskausi,
+                   old.alkamiskausi_koodi_uri,
                    old.alkamisvuosi,
-                   old.kohdejoukko,
+                   old.kohdejoukko_koodi_uri,
                    old.kohdejoukon_tarkenne,
                    old.hakulomaketyyppi,
                    old.hakulomake,

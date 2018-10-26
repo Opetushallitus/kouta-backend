@@ -4,9 +4,9 @@ import java.util.UUID
 
 case class Valintaperuste(id:Option[UUID] = None,
                           tila:Julkaisutila = Tallennettu,
-                          hakutapa: Option[String] = None,
-                          kohdejoukko: Option[String] = None,
-                          kohdejoukonTarkenne: Option[String] = None,
+                          hakutapaKoodiUri: Option[String] = None,
+                          kohdejoukkoKoodiUri: Option[String] = None,
+                          kohdejoukonTarkenneKoodiUri: Option[String] = None,
                           nimi: Kielistetty = Map(),
                           onkoJulkinen: Boolean = false,
                           metadata: Option[ValintaperusteMetadata] = None,

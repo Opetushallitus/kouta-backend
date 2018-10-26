@@ -14,7 +14,7 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
   val opetus = Opetus(
     opetuskielet = List("fi"),
     lahiopetus = Some(true),
-    opetusajat = List(Iltaopetus, Viikonloppuopetus),
+    opetusajat = List("opetusaikakk_1#1", "opetusaikakk_2#1"),
     maksullisuus = None,
     kuvaus = Map())
 

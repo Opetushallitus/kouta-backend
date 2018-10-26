@@ -18,14 +18,14 @@ trait ValintaperusteDAO {
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors with SQLHelpers {
   private def insertValintaperuste(valintaperuste: Valintaperuste) = {
-    val Valintaperuste(id, tila, hakutapa, kohdejoukko, kohdejoukonTarkenne, nimi,
+    val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
                        onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""insert into valintaperusteet (
                      id,
                      tila,
-                     hakutapa,
-                     kohdejoukko,
-                     kohdejoukon_tarkenne,
+                     hakutapa_koodi_uri,
+                     kohdejoukko_koodi_uri,
+                     kohdejoukon_tarkenne_koodi_uri,
                      nimi,
                      onkoJulkinen,
                      metadata,
@@ -35,9 +35,9 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
          ) values (
                      ${id.map(_.toString)}::uuid,
                      ${tila.toString}::julkaisutila,
-                     $hakutapa,
-                     $kohdejoukko,
-                     $kohdejoukonTarkenne,
+                     $hakutapaKoodiUri,
+                     $kohdejoukkoKoodiUri,
+                     $kohdejoukonTarkenneKoodiUri,
                      ${toJsonParam(nimi)}::jsonb,
                      $onkoJulkinen,
                      ${toJsonParam(metadata)}::jsonb,
@@ -55,7 +55,7 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
   }
 
   private def selectValintaperuste(id:UUID) = {
-    sql"""select id, tila, hakutapa, kohdejoukko, kohdejoukon_tarkenne, nimi,
+    sql"""select id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
                  onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta
           from valintaperusteet where id = ${id.toString}::uuid"""
   }
@@ -83,13 +83,13 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
   override def getLastModified(id: UUID): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(id) )
   
   private def updateValintaperuste(valintaperuste: Valintaperuste) = {
-    val Valintaperuste(id, tila, hakutapa, kohdejoukko, kohdejoukonTarkenne, nimi,
+    val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
                        onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""update valintaperusteet set
                      tila = ${tila.toString}::julkaisutila,
-                     hakutapa = $hakutapa,
-                     kohdejoukko = $kohdejoukko,
-                     kohdejoukon_tarkenne = $kohdejoukonTarkenne,
+                     hakutapa_koodi_uri = $hakutapaKoodiUri,
+                     kohdejoukko_koodi_uri = $kohdejoukkoKoodiUri,
+                     kohdejoukon_tarkenne_koodi_uri = $kohdejoukonTarkenneKoodiUri,
                      nimi = ${toJsonParam(nimi)}::jsonb,
                      onkoJulkinen = $onkoJulkinen,
                      metadata = ${toJsonParam(metadata)}::jsonb,
@@ -98,9 +98,9 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteExtractors
                      kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
            where id = ${id.map(_.toString)}::uuid
            and (tila <> ${tila.toString}::julkaisutila
-           or hakutapa <> $hakutapa
-           or kohdejoukko <> $kohdejoukko
-           or kohdejoukon_tarkenne <> $kohdejoukonTarkenne
+           or hakutapa_koodi_uri <> $hakutapaKoodiUri
+           or kohdejoukko_koodi_uri <> $kohdejoukkoKoodiUri
+           or kohdejoukon_tarkenne_koodi_uri <> $kohdejoukonTarkenneKoodiUri
            or nimi <> ${toJsonParam(nimi)}::jsonb
            or onkoJulkinen <> $onkoJulkinen
            or metadata <> ${toJsonParam(metadata)}::jsonb

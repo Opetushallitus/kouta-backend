@@ -2,19 +2,11 @@ package fi.oph.kouta.domain
 
 sealed trait Opetusaika extends EnumType
 
-object Opetusaika extends Enum[Opetusaika] {
-  override def name: String = "opetusaika"
-  def values() = List(Iltaopetus, Paivaopetus, Viikonloppuopetus)
-}
-case object Iltaopetus extends Opetusaika { val name = "iltaopetus" }
-case object Paivaopetus extends Opetusaika { val name = "päiväopetus" }
-case object Viikonloppuopetus extends Opetusaika { val name = "viikonloppuopetus" }
-
 case class Osaamisala(koodiUri:String, linkki:Kielistetty = Map(), otsikko:Kielistetty = Map())
 case class Maksullisuus(maksullinen:Boolean, maksunMaara:Kielistetty = Map())
 case class Opetus(opetuskielet:List[String],
                   lahiopetus:Option[Boolean],
-                  opetusajat:List[Opetusaika],
+                  opetusajat:List[String],
                   maksullisuus:Option[Maksullisuus],
                   kuvaus: Kielistetty = Map())
 

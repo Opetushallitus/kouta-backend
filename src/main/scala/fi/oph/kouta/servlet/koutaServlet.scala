@@ -30,10 +30,7 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
 
   def overrideModels() = {
     models.update(modelName, models(modelName).copy(properties = overrideEnumModels(models(modelName))))
-    models.remove("Alkamiskausi")
-    models.remove("Hakutapa")
     models.remove("Hakulomaketyyppi")
-    models.remove("Opetusaika")
     models.remove("Julkaisutila")
     models.remove("Koulutustyyppi")
     models.remove("Kieli")
@@ -44,16 +41,12 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
   }
 
   private def overrideEnumModels(model:Model) = model.properties.map {
-      case ("alkamiskausi", mp) => ("alkamiskausi", modelProperty(mp.position, Alkamiskausi.values().map(_.toString)))
-      case ("hakutapa", mp) => ("hakutapa", modelProperty(mp.position, Hakutapa.values().map(_.toString)))
       case ("hakulomaketyyppi", mp) => ("hakulomaketyyppi", modelProperty(mp.position, Hakulomaketyyppi.values().map(_.toString)))
-      case ("opetusaika", mp) => ("opetusaika", modelProperty(mp.position, Opetusaika.values().map(_.toString)))
       case ("tila", mp) => ("tila", modelProperty(mp.position, Julkaisutila.values().map(_.toString)))
       case ("koulutustyyppi", mp) => ("koulutustyyppi", modelProperty(mp.position, Koulutustyyppi.values().map(_.toString)))
       case ("kieli", mp) => ("kieli", modelProperty(mp.position, Kieli.values.map(_.toString)))
       case ("kielivalinta", mp) => ("kielivalinta", ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
       case ("id", mp) => ("id", modelProperty(mp.position, List(EXAMPLE_UUID)))
-      case ("kohde", mp) => ("kohde", modelProperty(mp.position, ValintaperusteenKohde.values().map(_.toString)))
       case p => p
     }
 

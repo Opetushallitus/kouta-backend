@@ -21,17 +21,17 @@ trait HakuDAO {
 object HakuDAO extends HakuDAO with HakuExtractors with SQLHelpers {
 
   private def insertHaku(haku:Haku) = {
-    val Haku(_, tila, nimi, hakutapa, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi, alkamisvuosi,
-             kohdejoukko, kohdejoukon_tarkenne, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
+    val Haku(_, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
+             kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
     sql"""insert into haut ( tila,
                              nimi,
-                             hakutapa,
+                             hakutapa_koodi_uri,
                              hakukohteen_liittamisen_takaraja,
                              hakukohteen_muokkaamisen_takaraja,
-                             alkamiskausi,
+                             alkamiskausi_koodi_uri,
                              alkamisvuosi,
-                             kohdejoukko,
-                             kohdejoukon_tarkenne,
+                             kohdejoukko_koodi_uri,
+                             kohdejoukon_tarkenne_koodi_uri,
                              hakulomaketyyppi,
                              hakulomake,
                              metadata,
@@ -40,13 +40,13 @@ object HakuDAO extends HakuDAO with HakuExtractors with SQLHelpers {
                              kielivalinta
           ) values ( ${tila.toString}::julkaisutila,
                      ${toJsonParam(nimi)}::jsonb,
-                     ${hakutapa.map(_.toString)}::hakutapa,
-                     ${toTimestampParam(hakukohteen_liittamisen_takaraja)},
-                     ${toTimestampParam(hakukohteen_muokkaamisen_takaraja)},
-                     ${alkamiskausi.map(_.toString)}::alkamiskausi,
+                     ${hakutapaKoodiUri},
+                     ${toTimestampParam(hakukohteenLiittamisenTakaraja)},
+                     ${toTimestampParam(hakukohteenMuokkaamisenTakaraja)},
+                     ${alkamiskausiKoodiUri},
                      ${alkamisvuosi},
-                     ${kohdejoukko},
-                     ${kohdejoukon_tarkenne},
+                     ${kohdejoukkoKoodiUri},
+                     ${kohdejoukonTarkenneKoodiUri},
                      ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
                      ${hakulomake},
                      ${toJsonParam(metadata)}::jsonb,
@@ -77,8 +77,8 @@ object HakuDAO extends HakuDAO with HakuExtractors with SQLHelpers {
   }
 
   private def selectHaku(oid:String) = {
-    sql"""select oid, tila, nimi, hakutapa, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi, alkamisvuosi,
-          kohdejoukko, kohdejoukon_tarkenne, hakulomaketyyppi, hakulomake, metadata, organisaatio, muokkaaja, kielivalinta from haut where oid = $oid"""
+    sql"""select oid, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi_koodi_uri, alkamisvuosi,
+          kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake, metadata, organisaatio, muokkaaja, kielivalinta from haut where oid = $oid"""
   }
 
   private def selectHaunHakuajat(oid:String) = {
@@ -113,18 +113,18 @@ object HakuDAO extends HakuDAO with HakuExtractors with SQLHelpers {
   }
 
   private def updateHaku(haku:Haku) = {
-    val Haku(oid, tila, nimi, hakutapa, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi, alkamisvuosi,
-    kohdejoukko, kohdejoukon_tarkenne, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
-    val liittamisenTakaraja = toTimestampParam(hakukohteen_liittamisen_takaraja)
-    val muokkaamisenTakaraja = toTimestampParam(hakukohteen_muokkaamisen_takaraja)
+    val Haku(oid, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
+    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
+    val liittamisenTakaraja = toTimestampParam(hakukohteenLiittamisenTakaraja)
+    val muokkaamisenTakaraja = toTimestampParam(hakukohteenMuokkaamisenTakaraja)
     sqlu"""update haut set
-              hakutapa = ${hakutapa.map(_.toString)}::hakutapa,
+              hakutapa_koodi_uri = $hakutapaKoodiUri,
               hakukohteen_liittamisen_takaraja = $liittamisenTakaraja,
               hakukohteen_muokkaamisen_takaraja = $muokkaamisenTakaraja,
-              alkamiskausi = ${alkamiskausi.map(_.toString)}::alkamiskausi,
+              alkamiskausi_koodi_uri = $alkamiskausiKoodiUri,
               alkamisvuosi = ${alkamisvuosi},
-              kohdejoukko = ${kohdejoukko},
-              kohdejoukon_tarkenne = ${kohdejoukon_tarkenne},
+              kohdejoukko_koodi_uri = $kohdejoukkoKoodiUri,
+              kohdejoukon_tarkenne_koodi_uri = $kohdejoukonTarkenneKoodiUri,
               hakulomaketyyppi = ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
               hakulomake = $hakulomake,
               organisaatio = $organisaatio,
@@ -134,11 +134,11 @@ object HakuDAO extends HakuDAO with HakuExtractors with SQLHelpers {
               muokkaaja = $muokkaaja,
               kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
-            and ( hakutapa <> ${hakutapa.map(_.toString)}::hakutapa
-            or alkamiskausi <> ${alkamiskausi.map(_.toString)}::alkamiskausi
+            and ( hakutapa_koodi_uri <> $hakutapaKoodiUri
+            or alkamiskausi_koodi_uri <> $alkamiskausiKoodiUri
             or alkamisvuosi <> ${alkamisvuosi}
-            or kohdejoukko <> ${kohdejoukko}
-            or kohdejoukon_tarkenne <> ${kohdejoukon_tarkenne}
+            or kohdejoukko_koodi_uri <> $kohdejoukkoKoodiUri
+            or kohdejoukon_tarkenne_koodi_uri <> $kohdejoukonTarkenneKoodiUri
             or hakulomaketyyppi <> ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
             or hakulomake <> $hakulomake
             or hakukohteen_liittamisen_takaraja <> $liittamisenTakaraja
