@@ -65,6 +65,8 @@ package object domain {
                          sahkoposti:Option[String] = None,
                          puhelinnumero:Option[String] = None)
 
+  case class Hakuaika(alkaa:Instant, paattyy:Instant)
+
   case class ListParams(tilat:List[Julkaisutila] = List(),
                         tarjoajat:List[String] = List())
 

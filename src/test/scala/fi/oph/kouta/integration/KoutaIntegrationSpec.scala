@@ -69,6 +69,8 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
 
   def truncateDatabase() = {
     import slick.jdbc.PostgresProfile.api._
+    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
+    db.runBlocking(sqlu"""delete from hakukohteet""")
     db.runBlocking(sqlu"""delete from hakujen_hakuajat""")
     db.runBlocking(sqlu"""delete from haut""")
     db.runBlocking(sqlu"""delete from valintaperusteet""")

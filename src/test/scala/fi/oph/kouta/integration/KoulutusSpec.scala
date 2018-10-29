@@ -35,7 +35,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    post("/koulutus", bytes(koulutus(oid))) {
+    post(KoulutusPath, bytes(koulutus(oid))) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -46,7 +46,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
     update(koulutus(oid, Arkistoitu), lastModified)
-    post("/koulutus", bytes(koulutus(oid)), headersIfUnmodifiedSince(lastModified)) {
+    post(KoulutusPath, bytes(koulutus(oid)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
   }

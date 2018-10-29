@@ -5,7 +5,8 @@ import java.time.{Instant, ZoneId}
 import java.time.format.DateTimeFormatter
 import java.util.ConcurrentModificationException
 
-import fi.oph.kouta.domain.{Haku, HaunHakuaika}
+import fi.oph.kouta.domain
+import fi.oph.kouta.domain.{Haku, Hakuaika}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -93,7 +94,7 @@ object HakuDAO extends HakuDAO with HakuExtractors with SQLHelpers {
     } yield (h, a, l) ) match {
       case Left(t) => {t.printStackTrace(); throw t}
       case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(h), a, Some(l))) => Some((h.copy(hakuajat = a.map(x => HaunHakuaika(x.alkaa, x.paattyy)).toList), l))
+      case Right((Some(h), a, Some(l))) => Some((h.copy(hakuajat = a.map(x => domain.Hakuaika(x.alkaa, x.paattyy)).toList), l))
     }
   }
 

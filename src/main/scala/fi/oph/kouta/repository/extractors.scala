@@ -93,3 +93,28 @@ trait ValintaperusteExtractors extends ExtractorBase {
     kielivalinta = extractKielivalinta(r.nextStringOption)
   ))
 }
+
+trait HakukohdeExctractors extends ExtractorBase {
+
+  implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
+    oid = r.nextStringOption,
+    koulutusOid = r.nextString,
+    hakuOid = r.nextString,
+    tila = Julkaisutila.withName(r.nextString),
+    nimi = extractKielistetty(r.nextStringOption),
+    alkamiskausiKoodiUri = r.nextStringOption,
+    alkamisvuosi = r.nextStringOption,
+    hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
+    hakulomake = r.nextStringOption,
+    aloituspaikat = r.nextIntOption,
+    ensikertalaisenAloituspaikat = r.nextIntOption,
+    pohjakoulutusvaatimusKoodiUri = r.nextStringOption,
+    muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption),
+    toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption,
+    kaytetaanHaunAikataulua = r.nextBooleanOption,
+    valintaperuste = r.nextStringOption.map(UUID.fromString),
+    metadata = r.nextStringOption().map(read[HakukohdeMetadata]),
+    muokkaaja = r.nextString,
+    kielivalinta = extractKielivalinta(r.nextStringOption)
+  ))
+}

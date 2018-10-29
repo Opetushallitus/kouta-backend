@@ -60,7 +60,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
       hakulomaketyyppi = Some(Ataru),
       hakulomake = Some("http://ataru/kivahakulomake"),
       metadata = Some(new HakuMetadata(Some(new Yhteystieto("Aku Ankka")))),
-      hakuajat = List(HaunHakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(12000))))
+      hakuajat = List(Hakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(12000))))
     update(uusiHaku, lastModified, true)
     get(oid, uusiHaku)
   }

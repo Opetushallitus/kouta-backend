@@ -12,7 +12,7 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
   get("/:oid", operation(apiOperation[Haku]("Hae haku")
     tags modelName
     summary "Hae haku"
-    parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
+    parameter pathParam[String]("oid").description("Haun oid"))) {
 
     HakuService.get(params("oid")) match {
       case None => NotFound("error" -> "Unknown haku oid")

@@ -25,7 +25,7 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
     metadata = Some(HakuMetadata(yhteystieto = Some(new Yhteystieto(nimi = "Iines Ankka")))),
-    hakuajat = List(HaunHakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(9000))),
+    hakuajat = List(Hakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(9000))),
     organisaatio = "1.2.3.4",
     muokkaaja = "Harri Muokkaaja",
     kielivalinta = Seq(Fi, Sv))

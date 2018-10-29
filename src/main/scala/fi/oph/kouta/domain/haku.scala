@@ -2,7 +2,6 @@ package fi.oph.kouta.domain
 
 import java.time.Instant
 
-case class HaunHakuaika(alkaa:Instant, paattyy:Instant)
 case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None)
 
 case class Haku(oid:Option[String] = None,
@@ -19,7 +18,7 @@ case class Haku(oid:Option[String] = None,
                 hakulomake: Option[String] = None,
                 metadata: Option[HakuMetadata] = None,
                 organisaatio: String,
-                hakuajat: List[HaunHakuaika] = List(),
+                hakuajat: List[Hakuaika] = List(),
                 muokkaaja:String,
                 kielivalinta:Seq[Kieli] = Seq())
 

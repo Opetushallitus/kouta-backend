@@ -5,7 +5,6 @@ import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 
 class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture {
 
-  val path = "/toteutus"
   var koulutusOid = ""
 
   override def beforeAll() = {
