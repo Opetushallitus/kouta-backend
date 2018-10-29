@@ -16,21 +16,7 @@ trait ToteutusDAO {
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
 }
 
-object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
-
-  private def insertToteutus(toteutus:Toteutus) = {
-    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
-    sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta)
-             values ($koulutusOid, ${tila.toString}::julkaisutila,
-             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja, ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
-  }
-
-  private def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
-    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _) = toteutus
-    DBIO.sequence( tarjoajat.map(t =>
-      sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
-             values ($oid, $t, $muokkaaja)"""))
-  }
+object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def put(toteutus: Toteutus): Option[String] = {
     KoutaDatabase.runBlockingTransactionally( for {
@@ -40,14 +26,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
       case Left(t) => throw t
       case Right(oid) => oid
     }
-  }
-
-  private def selectToteutus(oid:String) = {
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
-  }
-
-  private def selectToteutuksenTarjoajat(oid:String) = {
-    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
   }
 
   override def get(oid: String): Option[(Toteutus, Instant)] = {
@@ -64,7 +42,42 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
 
   def getLastModified(oid:String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
 
-  private def selectLastModified(oid:String):DBIO[Option[Instant]] = {
+  override def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = {
+    KoutaDatabase.runBlockingTransactionally( selectLastModified(toteutus.oid.get).flatMap(_ match {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown toteutus oid ${toteutus.oid.get}"))
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut toteutusta ${toteutus.oid.get} samanaikaisesti"))
+      case Some(time) => DBIO.successful(time)
+    }).andThen(updateToteutus(toteutus))
+      .zip(updateToteutuksenTarjoajat(toteutus))) match {
+      case Left(t) => throw t
+      case Right((x, y)) => 0 < (x + y.sum)
+    }
+  }
+}
+
+sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
+
+  def selectToteutus(oid:String) =
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
+
+
+  def selectToteutuksenTarjoajat(oid:String) =
+    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
+
+  def insertToteutus(toteutus:Toteutus) = {
+    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
+    sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta)
+             values ($koulutusOid, ${tila.toString}::julkaisutila,
+             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja, ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
+  }
+
+  def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
+    DBIO.sequence( toteutus.tarjoajat.map(t =>
+      sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
+             values (${toteutus.oid}, $t, ${toteutus.muokkaaja})"""))
+  }
+
+  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(t.system_time)),
             max(lower(ta.system_time)),
@@ -77,7 +90,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
           where t.oid = $oid""".as[Option[Instant]].head
   }
 
-  private def updateToteutus(toteutus: Toteutus) = {
+  def updateToteutus(toteutus: Toteutus) = {
     val Toteutus(oid, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
     sqlu"""update toteutukset set
               koulutus_oid = ${koulutusOid},
@@ -94,7 +107,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
             or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb)"""
   }
 
-  private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
+  def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
     val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _) = toteutus
     if(tarjoajat.size > 0) {
       val tarjoajatString = tarjoajat.map(s => s"'$s'").mkString(",")
@@ -105,18 +118,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusExtractors with SQLHelpers {
         sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})""")
     } else {
       DBIO.sequence(List(sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""))
-    }
-  }
-
-  override def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(toteutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown toteutus oid ${toteutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut toteutusta ${toteutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateToteutus(toteutus))
-      .zip(updateToteutuksenTarjoajat(toteutus))) match {
-      case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
     }
   }
 }

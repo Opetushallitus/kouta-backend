@@ -44,7 +44,7 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
   def hakukohde(oid:String, koulutusOid:String, hakuOid:String, valintaperusteId:UUID, tila:Julkaisutila):Hakukohde = hakukohde.copy(
     oid = Some(oid), koulutusOid = koulutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId), tila = tila)
 
-  def put(haku:Hakukohde):String = put(HakukohdePath, haku, oid(_))
+  def put(hakukohde:Hakukohde):String = put(HakukohdePath, hakukohde, oid(_))
   def get(oid:String, expected:Hakukohde):String = get(HakukohdePath, oid, expected)
   def update(haku:Hakukohde, lastModified:String, expectUpdate:Boolean):Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
   def update(haku:Hakukohde, lastModified:String):Unit = update(haku, lastModified, true)

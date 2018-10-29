@@ -17,9 +17,55 @@ trait KoulutusDAO {
   def list(params:ListParams):List[OidListResponse]
 }
 
-object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
+object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
-  private def insertKoulutus(koulutus:Koulutus) = {
+  def put(koulutus:Koulutus): Option[String] = {
+    KoutaDatabase.runBlockingTransactionally( for {
+      oid <- insertKoulutus(koulutus)
+      _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
+    } yield (oid) ) match {
+      case Left(t) => throw t
+      case Right(oid) => oid
+    }
+  }
+
+  def get(oid:String): Option[(Koulutus, Instant)] = {
+    KoutaDatabase.runBlockingTransactionally( for {
+      k <- selectKoulutus(oid).as[Koulutus].headOption
+      t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
+      l <- selectLastModified(oid)
+    } yield (k, t, l) ) match {
+      case Left(t) => throw t
+      case Right((None, _, _)) | Right((_, _, None)) => None
+      case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+    }
+  }
+
+  def getLastModified(oid:String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
+
+  def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean = {
+    KoutaDatabase.runBlockingTransactionally( selectLastModified(koulutus.oid.get).flatMap(_ match {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown koulutus oid ${koulutus.oid.get}"))
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
+      case Some(time) => DBIO.successful(time)
+    }).andThen(updateKoulutus(koulutus))
+      .zip(updateKoulutuksenTarjoajat(koulutus))) match {
+      case Left(t) => throw t
+      case Right((x, y)) => 0 < (x + y.sum)
+    }
+  }
+
+  def list(params:ListParams):List[OidListResponse] = {
+    val sql = selectFromKoulutukset(params)
+    query[OidListResponse](sql, params.tarjoajat.union( params.tilat.map(_.toString)).toArray, (r:java.sql.ResultSet) => {
+      new OidListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
+    })
+  }
+}
+
+sealed trait KoulutusSQL extends KoulutusExtractors with SQLHelpers {
+
+  def insertKoulutus(koulutus:Koulutus) = {
     val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja, kielivalinta) = koulutus
     sql"""insert into koulutukset (
             johtaa_tutkintoon,
@@ -41,46 +87,22 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
             ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
   }
 
-  private def insertKoulutuksenTarjoajat(koulutus:Koulutus) = {
+  def insertKoulutuksenTarjoajat(koulutus:Koulutus) = {
     val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
     DBIO.sequence( tarjoajat.map(t =>
       sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $t, $muokkaaja)"""))
   }
 
-  def put(koulutus:Koulutus): Option[String] = {
-    KoutaDatabase.runBlockingTransactionally( for {
-      oid <- insertKoulutus(koulutus)
-      _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
-    } yield (oid) ) match {
-      case Left(t) => throw t
-      case Right(oid) => oid
-    }
-  }
-
-  private def selectKoulutus(oid:String) = {
+  def selectKoulutus(oid:String) = {
     sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata, muokkaaja, kielivalinta from koulutukset where oid = $oid"""
   }
 
-  private def selectKoulutuksenTarjoajat(oid:String) = {
+  def selectKoulutuksenTarjoajat(oid:String) = {
     sql"""select koulutus_oid, tarjoaja_oid from koulutusten_tarjoajat where koulutus_oid = $oid"""
   }
 
-  def get(oid:String): Option[(Koulutus, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally( for {
-      k <- selectKoulutus(oid).as[Koulutus].headOption
-      t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
-      l <- selectLastModified(oid)
-    } yield (k, t, l) ) match {
-      case Left(t) => throw t
-      case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
-    }
-  }
-
-  def getLastModified(oid:String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
-
-  private def selectLastModified(oid:String):DBIO[Option[Instant]] = {
+  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(k.system_time)),
             max(lower(ta.system_time)),
@@ -94,7 +116,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
           where k.oid = $oid""".as[Option[Instant]].head
   }
 
-  private def updateKoulutus(koulutus:Koulutus) = {
+  def updateKoulutus(koulutus:Koulutus) = {
     val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metatieto, muokkaaja, kielivalinta) = koulutus
     sqlu"""update koulutukset set
               johtaa_tutkintoon = $johtaaTutkintoon,
@@ -115,7 +137,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
             or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb)"""
   }
 
-  private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
+  def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
     if(tarjoajat.size > 0) {
       val tarjoajatString = tarjoajat.map(s => s"'$s'").mkString(",")
@@ -129,29 +151,11 @@ object KoulutusDAO extends KoulutusDAO with KoulutusExtractors with SQLHelpers {
     }
   }
 
-  def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(koulutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown koulutus oid ${koulutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateKoulutus(koulutus))
-      .zip(updateKoulutuksenTarjoajat(koulutus))) match {
-      case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
-    }
-  }
+  def selectFromKoulutukset(params:ListParams) = s"select k.oid, k.nimi from koulutukset k ${joinTarjoajat(params.tarjoajat)} ${whereTilat(params.tilat)}"
 
   private def joinTarjoajat(tarjoajat:List[String]) = Option(tarjoajat).filterNot(_.isEmpty).map(t =>
     s"inner join koulutusten_tarjoajat t on k.oid = t.koulutus_oid and t.tarjoaja_oid in (${t.map(x => "?").mkString(",")}) ").getOrElse("")
 
   private def whereTilat(tilat:List[Julkaisutila]) = Option(tilat).filterNot(_.isEmpty).map(t =>
     s"where k.tila in (${t.map(x => "?::julkaisutila").mkString(",")}) ").getOrElse("")
-
-  def list(params:ListParams):List[OidListResponse] = {
-    import java.sql.ResultSet
-    val sql = s"select k.oid, k.nimi from koulutukset k ${joinTarjoajat(params.tarjoajat)} ${whereTilat(params.tilat)}"
-    query[OidListResponse](sql, params.tarjoajat.union( params.tilat.map(_.toString)).toArray, (r:ResultSet) => {
-      new OidListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
-    })
-  }
 }
