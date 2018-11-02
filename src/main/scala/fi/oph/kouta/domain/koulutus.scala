@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.validation.Validatable
+
 case class KoulutusMetadata(kuvaus:Map[Kieli, String] = Map())
 
 case class Koulutus(oid:Option[String] = None,
@@ -11,4 +13,17 @@ case class Koulutus(oid:Option[String] = None,
                     nimi: Kielistetty = Map(),
                     metadata: Option[KoulutusMetadata] = None,
                     muokkaaja:String,
-                    kielivalinta:Seq[Kieli] = Seq())
+                    kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
+
+  override def validate() = for {
+    _ <- super.validate().right
+    _ <- validateKoulutusOid(oid).right
+    x <- validateIfTrue(Julkaistu == tila, () => for {
+      _ <- validateKoulutustyyppi(koulutustyyppi).right
+      _ <- validateTutkintoonjohtavuus(koulutustyyppi.get, johtaaTutkintoon).right
+      _ <- validateKoulutusKoodi(koulutusKoodiUri).right
+      y <- validateTarjoajat(tarjoajat).right
+    } yield y).right
+  } yield x
+
+}

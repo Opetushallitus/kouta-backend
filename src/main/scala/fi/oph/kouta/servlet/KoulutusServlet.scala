@@ -1,7 +1,5 @@
 package fi.oph.kouta.servlet
 
-import java.io
-
 import fi.oph.kouta.domain.{Julkaisutila, Koulutus, ListParams}
 import fi.oph.kouta.service.KoulutusService
 import org.scalatra.{NotFound, Ok}

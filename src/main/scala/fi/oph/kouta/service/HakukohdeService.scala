@@ -5,11 +5,11 @@ import java.time.Instant
 import fi.oph.kouta.domain.Hakukohde
 import fi.oph.kouta.repository.HakukohdeDAO
 
-object HakukohdeService {
+object HakukohdeService extends ValidatingService[Hakukohde] {
 
-  def put(haku:Hakukohde): Option[String] = HakukohdeDAO.put(haku)
+  def put(hakukohde:Hakukohde): Option[String] = withValidation(hakukohde, HakukohdeDAO.put(_))
 
-  def update(haku:Hakukohde, notModifiedSince:Instant): Boolean = HakukohdeDAO.update(haku, notModifiedSince)
+  def update(hakukohde:Hakukohde, notModifiedSince:Instant): Boolean = withValidation(hakukohde, HakukohdeDAO.update(_, notModifiedSince))
 
   def get(oid:String): Option[(Hakukohde, Instant)] = HakukohdeDAO.get(oid)
 }

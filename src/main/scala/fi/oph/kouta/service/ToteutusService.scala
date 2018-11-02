@@ -5,11 +5,11 @@ import java.time.Instant
 import fi.oph.kouta.domain.Toteutus
 import fi.oph.kouta.repository.ToteutusDAO
 
-object ToteutusService {
+object ToteutusService extends ValidatingService[Toteutus] {
 
-  def put(toteutus:Toteutus): Option[String] = ToteutusDAO.put(toteutus)
+  def put(toteutus:Toteutus): Option[String] = withValidation(toteutus, ToteutusDAO.put(_))
 
-  def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean = ToteutusDAO.update(toteutus, notModifiedSince)
+  def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean = withValidation(toteutus, ToteutusDAO.update(_, notModifiedSince))
 
   def get(oid:String): Option[(Toteutus, Instant)] = ToteutusDAO.get(oid)
 }

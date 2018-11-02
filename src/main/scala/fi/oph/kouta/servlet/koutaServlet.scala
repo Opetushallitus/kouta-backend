@@ -43,7 +43,7 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
   private def overrideEnumModels(model:Model) = model.properties.map {
       case ("hakulomaketyyppi", mp) => ("hakulomaketyyppi", modelProperty(mp.position, Hakulomaketyyppi.values().map(_.toString)))
       case ("tila", mp) => ("tila", modelProperty(mp.position, Julkaisutila.values().map(_.toString)))
-      case ("koulutustyyppi", mp) => ("koulutustyyppi", modelProperty(mp.position, Koulutustyyppi.values().map(_.toString)))
+      //case ("koulutustyyppi", mp) => ("koulutustyyppi", modelProperty(mp.position, Koulutustyyppi.values().map(_.toString)))
       case ("kieli", mp) => ("kieli", modelProperty(mp.position, Kieli.values.map(_.toString)))
       case ("kielivalinta", mp) => ("kielivalinta", ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
       case ("id", mp) => ("id", modelProperty(mp.position, List(EXAMPLE_UUID)))

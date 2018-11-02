@@ -4,8 +4,9 @@ import java.time.Instant
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.HakuFixture
+import fi.oph.kouta.validation.ValidationMessages
 
-class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
+class HakuSpec extends KoutaIntegrationSpec with HakuFixture with ValidationMessages {
 
   it should "return 404 if haku not found" in {
     get("/haku/123") {
@@ -75,19 +76,34 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = new Haku(muokkaaja = "Muikea Muokkaaja", organisaatio = "Muokkaajan organisaatio")
+    val unfinishedHaku = new Haku(muokkaaja = "9.9.9.9.9", organisaatio = "5.5.5")
     val oid = put(unfinishedHaku)
     val lastModified = get(oid, unfinishedHaku.copy(oid = Some(oid)))
-    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(oid), organisaatio = "Muokkaajan toinen organisaatio")
+    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(oid), organisaatio = "6.6.6")
     update(newUnfinishedHaku, lastModified)
     get(oid, newUnfinishedHaku)
   }
 
-  /*it should "validate julkaistu haku" in {
-    val unfinishedHaku = new Haku(muokkaaja = "Muikea Muokkaaja", organisaatio = "Muokkaajan organisaatio", tila = Julkaistu)
-    put("/haku", bytes(unfinishedHaku)) {
-      status should equal(400)
-      body should include ("Pakollisia tietoja puuttuu")
+  def addInvalidHakuaika(haku:Haku) = haku.copy(
+    hakuajat = List(Hakuaika(Instant.now().plusSeconds(9000), Instant.now().plusSeconds(3000))))
+
+  it should "validate new haku" in {
+    put(HakuPath, bytes(addInvalidHakuaika(haku)), List(jsonHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(InvalidHakuaika))
     }
-  }*/
+  }
+
+  it should "validate updated haku" in {
+    val oid = put(haku)
+    val lastModified = get(oid, haku(oid))
+    post(HakuPath, bytes(addInvalidHakuaika(haku(oid))), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(InvalidHakuaika))
+    }
+  }
 }

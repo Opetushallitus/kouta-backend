@@ -2,6 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
+import fi.oph.kouta.TestData.JulkaistuValintaperuste
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.ValintaperusteServlet
@@ -12,17 +13,7 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
   addServlet(new ValintaperusteServlet(), ValintaperustePath)
 
-  val valintaperuste = new Valintaperuste(
-    id = None,
-    tila = Julkaistu,
-    hakutapaKoodiUri = Some("hakutapa_01#1"),
-    kohdejoukkoKoodiUri = Some("kohdejoukko_02#2"),
-    kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
-    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = None,
-    organisaatio = "1.2.3.4",
-    muokkaaja = "Hassu Muokkaaja",
-    kielivalinta = List(Fi, Sv))
+  val valintaperuste = JulkaistuValintaperuste
 
   def valintaperuste(id:UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
   def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)

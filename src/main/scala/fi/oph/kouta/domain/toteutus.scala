@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.validation.Validatable
+
 sealed trait Opetusaika extends EnumType
 
 case class Osaamisala(koodiUri:String, linkki:Kielistetty = Map(), otsikko:Kielistetty = Map())
@@ -25,4 +27,15 @@ case class Toteutus(oid:Option[String] = None,
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,
                     muokkaaja:String,
-                    kielivalinta:Seq[Kieli] = Seq())
+                    kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
+
+  override def validate(): Either[String, Unit] = for {
+    _ <- super.validate().right
+    _ <- validateKoulutusOid(koulutusOid).right
+    _ <- validateToteutusOid(oid).right
+    x <- validateIfTrue(tila == Julkaistu, () => for {
+      y <- validateTarjoajat(tarjoajat).right
+    } yield y ).right
+  } yield x
+
+}

@@ -2,9 +2,9 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.KoulutusFixture
-import org.json4s.jackson.Serialization.read
+import fi.oph.kouta.validation.ValidationMessages
 
-class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
+class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ValidationMessages {
 
   it should "return 404 if koulutus not found" in {
     get("/koulutus/123") {
@@ -37,7 +37,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
     val lastModified = get(oid, koulutus(oid))
     post(KoulutusPath, bytes(koulutus(oid))) {
       status should equal (400)
-      body should include ("If-Unmodified-Since")
+      body should equal (errorBody("Otsake If-Unmodified-Since on pakollinen."))
     }
   }
 
@@ -55,8 +55,8 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
     val uusiKoulutus = koulutus(oid).copy(
+      kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", En -> "description"))),
       tarjoajat = List("2.2", "3.2", "4.2"))
     update(uusiKoulutus, lastModified, true)
     get(oid, uusiKoulutus)
@@ -72,7 +72,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = "Muikea Muokkaaja")
+    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = "5.4.3.2.1")
     val oid = put(unfinishedKoulutus)
     val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(oid)))
     val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(oid), johtaaTutkintoon = false)
@@ -80,13 +80,25 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture {
     get(oid, newUnfinishedKoulutus)
   }
 
-  /*it should "validate julkaistu koulutus" in {
-    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = "Muikea Muokkaaja", tila = Julkaistu)
-    put("/koulutus", bytes(unfinishedKoulutus)) {
-      status should equal(400)
-      body should include ("Pakollisia tietoja puuttuu")
+  it should "validate new koulutus" in {
+    put(KoulutusPath, bytes(koulutus.copy(koulutusKoodiUri = None)), List(jsonHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(MissingKoulutuskoodi))
     }
-  }*/
+  }
+
+  it should "validate updated koulutus" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    post(KoulutusPath, bytes(koulutus(oid).copy(koulutusKoodiUri = None)), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(MissingKoulutuskoodi))
+    }
+  }
 
   it should "list koulutukset" in {
     def r(oids:List[String]) = oids.map(OidListResponse(_, koulutus.nimi))

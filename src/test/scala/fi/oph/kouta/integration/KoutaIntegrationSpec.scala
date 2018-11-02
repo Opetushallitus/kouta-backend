@@ -16,7 +16,11 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
 
   implicit val swagger = new KoutaBackendSwagger
 
-  def headersIfUnmodifiedSince(lastModified:String) = List(("If-Unmodified-Since", lastModified))
+  def errorBody(expected:String):String = s"""{"error":"${expected}"}"""
+
+  def jsonHeader = ("Content-Type", "application/json; charset=utf-8")
+
+  def headersIfUnmodifiedSince(lastModified:String) = List(jsonHeader, ("If-Unmodified-Since", lastModified))
 
   def bytes(o:AnyRef) = write(o).getBytes
 
@@ -37,8 +41,10 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
   lazy val db = KoutaDatabase
 
   def put[E <: scala.AnyRef, R](path:String, entity:E, result:(String) => R ):R = {
-    put(path, bytes(entity)) {
-      status should equal(200)
+    put(path, bytes(entity), List(jsonHeader)) {
+      withClue(body) {
+        status should equal(200)
+      }
       result(body)
     }
   }

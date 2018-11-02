@@ -1,12 +1,13 @@
 package fi.oph.kouta.integration
 
-import java.time.Instant
 import java.util.UUID
 
+import fi.oph.kouta.TestData.MinValintaperuste
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
+import fi.oph.kouta.validation.ValidationMessages
 
-class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture {
+class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with ValidationMessages {
 
   it should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}") {
@@ -37,7 +38,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    post("/valintaperuste", bytes(valintaperuste(id))) {
+    post(ValintaperustePath, bytes(valintaperuste(id))) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -48,26 +49,38 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     val lastModified = get(id, valintaperuste(id))
     Thread.sleep(1500)
     update(valintaperuste(id, Arkistoitu), lastModified)
-    post("/valintaperuste", bytes(valintaperuste(id)), headersIfUnmodifiedSince(lastModified)) {
+    post(ValintaperustePath, bytes(valintaperuste(id)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
   }
 
   it should "store and update unfinished valintaperuste" in {
-    val unfinishedValintaperuste = new Valintaperuste(muokkaaja = "Muikea Muokkaaja", organisaatio = "Muokkaajan organisaatio")
+    val unfinishedValintaperuste = MinValintaperuste
     val id = put(unfinishedValintaperuste)
     val lastModified = get(id, unfinishedValintaperuste.copy(id = Some(id)))
-    val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatio = "Muokkaajan toinen organisaatio")
+    val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatio = "6.6.6.6.6")
     update(newUnfinishedValintaperuste, lastModified)
     get(id, newUnfinishedValintaperuste)
   }
 
-  /*it should "validate julkaistu valintaperuste" in {
-    val unfinishedValintaperuste = new Valintaperuste(muokkaaja = "Muikea Muokkaaja", organisaatio = "Muokkaajan organisaatio", tila = Julkaistu)
-    put("/valintaperuste", bytes(unfinishedValintaperuste)) {
-      status should equal(400)
-      body should include ("Pakollisia tietoja puuttuu")
+  it should "validate new valintaperuste" in {
+    put(ValintaperustePath, bytes(valintaperuste.copy(organisaatio = "saippua")), List(jsonHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(invalidOidMsg("saippua")))
     }
-  }*/
+  }
+
+  it should "validate updated valintaperuste" in {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    post(ValintaperustePath, bytes(valintaperuste(id).copy(organisaatio = "saippua")), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(invalidOidMsg("saippua")))
+    }
+  }
 
 }

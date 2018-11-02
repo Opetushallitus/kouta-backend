@@ -2,6 +2,10 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 
+import fi.oph.kouta.validation.{IsValid, Validatable}
+
+case class HakukohdeMetadata()
+
 case class Hakukohde(oid:Option[String] = None,
                      koulutusOid:String,
                      hakuOid:String,
@@ -21,6 +25,20 @@ case class Hakukohde(oid:Option[String] = None,
                      metadata: Option[HakukohdeMetadata] = None,
                      hakuajat: List[Hakuaika] = List(),
                      muokkaaja:String,
-                     kielivalinta:Seq[Kieli] = Seq())
+                     kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
-case class HakukohdeMetadata()
+  override def validate(): IsValid = for {
+    _ <- super.validate().right
+    _ <- validateHakukohdeOid(oid)
+    _ <- validateKoulutusOid(koulutusOid)
+    _ <- validateHakuOid(hakuOid)
+    x <- validateIfTrue(tila == Julkaistu, () => for {
+      _ <- validateKausiKoodi(alkamiskausiKoodiUri).right
+      _ <- validatePohjakoulutusvaatimusKoodi(pohjakoulutusvaatimusKoodiUri).right
+      _ <- validateAlkamisvuosi(alkamisvuosi).right
+      _ <- validateHakulomake(hakulomaketyyppi, hakulomake).right
+      y <- validateHakuajat(hakuajat).right
+    } yield y).right
+  } yield x
+}
+

@@ -5,9 +5,10 @@ import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture._
+import fi.oph.kouta.validation.ValidationMessages
 
 class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
-  with KoulutusFixture with ToteutusFixture with HakuFixture with ValintaperusteFixture {
+  with KoulutusFixture with ToteutusFixture with HakuFixture with ValintaperusteFixture with ValidationMessages {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null
@@ -94,12 +95,35 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
   }
 
   it should "store and update unfinished hakukohde" in {
-    val unfinishedHakukohde = new Hakukohde(muokkaaja = "Muikea Muokkaaja", koulutusOid = koulutusOid, hakuOid = hakuOid)
+    val unfinishedHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", koulutusOid = koulutusOid, hakuOid = hakuOid)
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(oid)))
     val newKoulutusOid = put(koulutus)
     val newUnfinishedHakukohde = unfinishedHakukohde.copy(oid = Some(oid), koulutusOid = newKoulutusOid)
     update(newUnfinishedHakukohde, lastModified)
     get(oid, newUnfinishedHakukohde)
+  }
+
+  def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
+    hakuajat = List(Hakuaika(Instant.now().plusSeconds(9000), Instant.now().plusSeconds(3000))))
+
+  it should "validate new hakukohde" in {
+    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(InvalidHakuaika))
+    }
+  }
+
+  it should "validate updated hakukohde" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    post(HakukohdePath, bytes(addInvalidHakuaika(tallennettuHakukohde(oid))), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(InvalidHakuaika))
+    }
   }
 }

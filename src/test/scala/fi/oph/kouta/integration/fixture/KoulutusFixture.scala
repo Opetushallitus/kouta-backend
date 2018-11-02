@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.KoulutusServlet
@@ -11,17 +12,7 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
 
   addServlet(new KoulutusServlet(), KoulutusPath)
 
-  val koulutus = Koulutus(
-    oid = None,
-    johtaaTutkintoon = true,
-    koulutustyyppi = Some(Amm),
-    koulutusKoodiUri = Some("koulutus_123#1"),
-    tila = Julkaistu,
-    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(new KoulutusMetadata()),
-    tarjoajat = List("1.2", "2.2", "3.2"),
-    muokkaaja = "Mörkö Muokkaaja",
-    kielivalinta = List(Fi, Sv))
+  val koulutus = TestData.AmmKoulutus
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(oid))
   def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(oid), tila = tila)

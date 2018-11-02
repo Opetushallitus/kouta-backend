@@ -2,8 +2,9 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.validation.ValidationMessages
 
-class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture {
+class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with ValidationMessages {
 
   var koulutusOid = ""
 
@@ -83,12 +84,32 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = "Muikea Muokkaaja", koulutusOid = koulutusOid)
+    val unfinishedToteutus = new Toteutus(muokkaaja = "5.4.3.2", koulutusOid = koulutusOid)
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(oid)))
     val newKoulutusOid = put(koulutus)
     val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(oid), koulutusOid = newKoulutusOid)
     update(newUnfinishedToteutus, lastModified)
     get(oid, newUnfinishedToteutus)
+  }
+
+  it should "validate new toteutus" in {
+    put(ToteutusPath, bytes(toteutus(koulutusOid).copy(tarjoajat = List("katkarapu"))), List(jsonHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(invalidTarjoajaOids(List("katkarapu"))))
+    }
+  }
+
+  it should "validate updated toteutus" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    post(ToteutusPath, bytes(toteutus(oid, koulutusOid).copy(tarjoajat = List("katkarapu"))), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (errorBody(invalidTarjoajaOids(List("katkarapu"))))
+    }
   }
 }
