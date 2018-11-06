@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class Hakukohde(oid:Option[String] = None,
-                     koulutusOid:String,
+                     toteutusOid:String,
                      hakuOid:String,
                      tila:Julkaisutila = Tallennettu,
                      nimi: Kielistetty = Map(),
@@ -35,7 +35,7 @@ case class Hakukohde(oid:Option[String] = None,
   override def validate(): IsValid = for {
     _ <- super.validate().right
     _ <- validateHakukohdeOid(oid)
-    _ <- validateKoulutusOid(koulutusOid)
+    _ <- validateToteutusOid(toteutusOid)
     _ <- validateHakuOid(hakuOid)
     x <- validateIfTrue(tila == Julkaistu, () => for {
       _ <- validateKausiKoodi(alkamiskausiKoodiUri).right

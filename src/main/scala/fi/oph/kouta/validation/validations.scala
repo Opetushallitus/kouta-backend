@@ -36,6 +36,9 @@ trait Validations extends ValidationMessages {
   def validateKoulutusOid(oid:String): IsValid = assertTrue(
     OidValidator.isKoulutusOid(oid), invalidKoulutusOidMsg(oid))
 
+  def validateToteutusOid(oid:String): IsValid = assertTrue(
+    OidValidator.isToteutusOid(oid), invalidToteutusOidMsg(oid))
+
   def validateHakuOid(oid:String): IsValid = assertTrue(
     OidValidator.isHakuOid(oid), invalidHakuOidMsg(oid))
 

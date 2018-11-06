@@ -15,14 +15,14 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
 
   val hakukohde = JulkaistuHakukohde
 
-  def hakukohde(koulutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
-    koulutusOid = koulutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId))
+  def hakukohde(toteutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
+    toteutusOid = toteutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId))
 
-  def hakukohde(oid:String, koulutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
-    oid = Some(oid), koulutusOid = koulutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId))
+  def hakukohde(oid:String, toteutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
+    oid = Some(oid), toteutusOid = toteutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId))
 
-  def hakukohde(oid:String, koulutusOid:String, hakuOid:String, valintaperusteId:UUID, tila:Julkaisutila):Hakukohde = hakukohde.copy(
-    oid = Some(oid), koulutusOid = koulutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId), tila = tila)
+  def hakukohde(oid:String, toteutusOid:String, hakuOid:String, valintaperusteId:UUID, tila:Julkaisutila):Hakukohde = hakukohde.copy(
+    oid = Some(oid), toteutusOid = toteutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId), tila = tila)
 
   def put(hakukohde:Hakukohde):String = put(HakukohdePath, hakukohde, oid(_))
   def get(oid:String, expected:Hakukohde):String = get(HakukohdePath, oid, expected)

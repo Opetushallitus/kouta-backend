@@ -121,7 +121,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
 
   def insertHakukohde(hakukohde:Hakukohde) = {
     sql"""insert into hakukohteet (
-            koulutus_oid,
+            toteutus_oid,
             haku_oid,
             tila,
             nimi,
@@ -144,7 +144,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
             muokkaaja,
             kielivalinta
           ) values (
-            ${hakukohde.koulutusOid},
+            ${hakukohde.toteutusOid},
             ${hakukohde.hakuOid},
             ${hakukohde.tila.toString}::julkaisutila,
             ${toJsonParam(hakukohde.nimi)}::jsonb,
@@ -171,7 +171,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
 
   def updateHakukohde(hakukohde:Hakukohde) = {
     sqlu"""update hakukohteet set
-              koulutus_oid = ${hakukohde.koulutusOid},
+              toteutus_oid = ${hakukohde.toteutusOid},
               haku_oid = ${hakukohde.hakuOid},
               tila = ${hakukohde.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(hakukohde.nimi)}::jsonb,
@@ -194,7 +194,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
               muokkaaja = ${hakukohde.muokkaaja},
               kielivalinta = ${toJsonParam(hakukohde.kielivalinta)}::jsonb
           where oid = ${hakukohde.oid}
-            and ( koulutus_oid is distinct from ${hakukohde.koulutusOid}
+            and ( toteutus_oid is distinct from ${hakukohde.toteutusOid}
             or haku_oid is distinct from ${hakukohde.hakuOid}
             or tila is distinct from ${hakukohde.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(hakukohde.nimi)}::jsonb
@@ -219,7 +219,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
 
   def selectHakukohde(oid:String) = {
     sql"""select oid,
-             koulutus_oid,
+             toteutus_oid,
              haku_oid,
              tila,
              nimi,

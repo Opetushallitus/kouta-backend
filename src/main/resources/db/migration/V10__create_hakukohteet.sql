@@ -7,7 +7,7 @@ alter type liitteen_toimitustapa owner to oph;
 
 create table hakukohteet (
   oid varchar primary key default '1.2.246.562.20.' || lpad(nextval('haku_oid')::text, 20, '0'),
-  koulutus_oid varchar not null references koulutukset(oid),
+  toteutus_oid varchar not null references toteutukset(oid),
   haku_oid varchar not null references haut(oid),
   tila julkaisutila not null default 'tallennettu',
   nimi jsonb,
@@ -53,7 +53,7 @@ $$
 begin
   insert into hakukohteet_history (
       oid,
-      koulutus_oid,
+      toteutus_oid,
       haku_oid,
       tila,
       nimi,
@@ -75,7 +75,7 @@ begin
       system_time
       ) values (
                  old.oid,
-                 old.koulutus_oid,
+                 old.toteutus_oid,
                  old.haku_oid,
                  old.tila,
                  old.nimi,

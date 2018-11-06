@@ -82,7 +82,7 @@ object TestData {
 
   val JulkaistuHakukohde = new Hakukohde(
     oid = None,
-    koulutusOid = "1.2.246.562.13.123",
+    toteutusOid = "1.2.246.562.17.123",
     hakuOid = "1.2.246.562.29.123",
     tila = Julkaistu,
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
@@ -108,7 +108,7 @@ object TestData {
     muokkaaja = "1.2.3.2.1",
     kielivalinta = Seq(Fi, Sv))
 
-  val MinHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", koulutusOid = "1.2.246.562.13.123", hakuOid = "1.2.246.562.29.123")
+  val MinHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", toteutusOid = "1.2.246.562.17.123", hakuOid = "1.2.246.562.29.123")
 
   val JulkaistuValintaperuste = new Valintaperuste(
     id = None,

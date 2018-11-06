@@ -98,7 +98,7 @@ trait HakukohdeExctractors extends ExtractorBase {
 
   implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
     oid = r.nextStringOption,
-    koulutusOid = r.nextString,
+    toteutusOid = r.nextString,
     hakuOid = r.nextString,
     tila = Julkaisutila.withName(r.nextString),
     nimi = extractKielistetty(r.nextStringOption),

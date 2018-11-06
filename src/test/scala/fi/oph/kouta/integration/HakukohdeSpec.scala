@@ -22,8 +22,8 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
     valintaperusteId = put(valintaperuste)
   }
 
-  lazy val uusiHakukohde = hakukohde(koulutusOid, hakuOid, valintaperusteId)
-  lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, koulutusOid, hakuOid, valintaperusteId))}
+  lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
+  lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))}
 
   def getIds(hakukohde:Hakukohde) = {
     import slick.jdbc.PostgresProfile.api._
@@ -105,11 +105,11 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
   }
 
   it should "store and update unfinished hakukohde" in {
-    val unfinishedHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", koulutusOid = koulutusOid, hakuOid = hakuOid)
+    val unfinishedHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", toteutusOid = toteutusOid, hakuOid = hakuOid)
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(oid)))
-    val newKoulutusOid = put(koulutus)
-    val newUnfinishedHakukohde = unfinishedHakukohde.copy(oid = Some(oid), koulutusOid = newKoulutusOid)
+    val newToteutusOid = put(toteutus(koulutusOid))
+    val newUnfinishedHakukohde = unfinishedHakukohde.copy(oid = Some(oid), toteutusOid = newToteutusOid)
     update(newUnfinishedHakukohde, lastModified)
     get(oid, newUnfinishedHakukohde)
   }
