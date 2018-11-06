@@ -1,6 +1,6 @@
 create table hakujen_hakuajat (
   haku_oid varchar not null references haut(oid),
-  hakuaika tstzrange not null,
+  hakuaika tsrange not null,
   muokkaaja varchar not null,
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)'),

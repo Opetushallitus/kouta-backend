@@ -61,16 +61,29 @@ package object domain {
   case object MuuHakulomake extends Hakulomaketyyppi { val name = "muu"}
   case object EiSähköistä extends Hakulomaketyyppi { val name = "ei sähköistä"}
 
-  case class Yhteystieto(nimi:String,
-                         titteli:Kielistetty = Map(),
-                         sahkoposti:Option[String] = None,
-                         puhelinnumero:Option[String] = None)
+  sealed trait LiitteenToimitustapa extends EnumType
+  object LiitteenToimitustapa extends Enum[LiitteenToimitustapa] {
+    override def name: String = "liitteen toimitusosoite"
+    def values() = List(Lomake, Hakijapalvelu, MuuOsoite)
+  }
+  case object Lomake extends LiitteenToimitustapa { val name = "lomake"}
+  case object Hakijapalvelu extends LiitteenToimitustapa { val name = "hakijapalvelu"}
+  case object MuuOsoite extends LiitteenToimitustapa { val name = "osoite"}
 
-  case class Hakuaika(alkaa:Instant, paattyy:Instant)
+  case class Yhteystieto(nimi:Kielistetty = Map(),
+                         titteli:Kielistetty = Map(),
+                         sahkoposti:Kielistetty = Map(),
+                         puhelinnumero:Kielistetty = Map())
+
+  case class Ajanjakso(alkaa:Instant, paattyy:Instant)
 
   case class ListParams(tilat:List[Julkaisutila] = List(),
                         tarjoajat:List[String] = List())
 
   case class OidListResponse(oid:String, nimi: Kielistetty)
   case class IdListResponse(id:UUID, nimi: Kielistetty)
+
+  case class Osoite(osoite:Kielistetty = Map(),
+                    postinumero:Option[String],
+                    postitoimipaikka:Kielistetty = Map())
 }

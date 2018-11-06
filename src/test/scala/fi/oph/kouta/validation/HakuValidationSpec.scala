@@ -3,7 +3,7 @@ package fi.oph.kouta.validation
 import java.time.Instant
 
 import fi.oph.kouta.TestData._
-import fi.oph.kouta.domain.{Fi, Haku, Hakuaika, Sv}
+import fi.oph.kouta.domain.{Fi, Haku, Ajanjakso, Sv}
 
 class HakuValidationSpec extends BaseValidationSpec[Haku] with ValidationMessages {
 
@@ -34,7 +34,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] with ValidationMessage
     assertLeft(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), invalidKohdejoukkoKoodi("kerttu"))
     assertLeft(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), invalidKohdejoukonTarkenneKoodi("tonttu"))
     assertLeft(max.copy(hakulomaketyyppi = None), MissingHakulomaketyyppi)
-    assertLeft(max.copy(hakuajat = List(Hakuaika(alkaa = Instant.now().plusSeconds(90000), paattyy = Instant.now.plusSeconds(9000)))), InvalidHakuaika)
+    assertLeft(max.copy(hakuajat = List(Ajanjakso(alkaa = Instant.now().plusSeconds(90000), paattyy = Instant.now.plusSeconds(9000)))), InvalidHakuaika)
 
   }
 

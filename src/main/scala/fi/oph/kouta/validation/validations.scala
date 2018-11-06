@@ -87,7 +87,7 @@ trait Validations extends ValidationMessages {
   def validateHakulomake(hakulomaketyyppi:Option[Hakulomaketyyppi], hakulomake:Option[String]): IsValid =
     assertOptionPresent(hakulomaketyyppi, MissingHakulomaketyyppi)
 
-  def validateHakuajat(hakuajat: List[Hakuaika]): IsValid = hakuajat.filterNot(TimeValidator.isValidHakuaika) match {
+  def validateHakuajat(hakuajat: List[Ajanjakso]): IsValid = hakuajat.filterNot(TimeValidator.isValidHakuaika) match {
     case x if x.isEmpty => Right()
     case x => Left(InvalidHakuaika)
   }

@@ -113,8 +113,28 @@ trait HakukohdeExctractors extends ExtractorBase {
     toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption,
     kaytetaanHaunAikataulua = r.nextBooleanOption,
     valintaperuste = r.nextStringOption.map(UUID.fromString),
-    metadata = r.nextStringOption().map(read[HakukohdeMetadata]),
+    liitteetOnkoSamaToimitusaika = r.nextBooleanOption(),
+    liitteetOnkoSamaToimitusosoite = r.nextBooleanOption(),
+    liitteidenPalautusaika = r.nextTimestampOption().map(_.toInstant),
+    liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
+    liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
     muokkaaja = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)
+  ))
+
+  implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
+    id = r.nextStringOption.map(UUID.fromString),
+    tyyppi = r.nextStringOption(),
+    tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List()),
+  ))
+
+  implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
+    id = r.nextStringOption.map(UUID.fromString),
+    tyyppi = r.nextStringOption(),
+    nimi = extractKielistetty(r.nextStringOption),
+    kuvaus = extractKielistetty(r.nextStringOption),
+    palautusaika = r.nextTimestampOption().map(_.toInstant),
+    toimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
+    toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
   ))
 }

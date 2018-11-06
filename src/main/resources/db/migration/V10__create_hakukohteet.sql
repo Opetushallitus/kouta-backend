@@ -1,3 +1,10 @@
+create type liitteen_toimitustapa as enum (
+  'lomake',
+  'hakijapalvelu',
+  'osoite'
+);
+alter type liitteen_toimitustapa owner to oph;
+
 create table hakukohteet (
   oid varchar primary key default '1.2.246.562.20.' || lpad(nextval('haku_oid')::text, 20, '0'),
   koulutus_oid varchar not null references koulutukset(oid),
@@ -15,6 +22,11 @@ create table hakukohteet (
   toinen_aste_onko_kaksoistutkinto boolean,
   kaytetaan_haun_aikataulua boolean,
   valintaperuste uuid references valintaperusteet (id),
+  liitteet_onko_sama_toimitusaika boolean,
+  liitteet_onko_sama_toimitusosoite boolean,
+  liitteiden_palautusaika timestamp without time zone,
+  liitteiden_toimitustapa liitteen_toimitustapa,
+  liitteiden_toimitusosoite jsonb,
   metadata jsonb,
   muokkaaja varchar not null,
   kielivalinta jsonb,

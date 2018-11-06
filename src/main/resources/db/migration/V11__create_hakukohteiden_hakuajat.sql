@@ -1,6 +1,6 @@
 create table hakukohteiden_hakuajat (
   hakukohde_oid varchar not null references hakukohteet(oid),
-  hakuaika tstzrange not null,
+  hakuaika tsrange not null,
   muokkaaja varchar not null,
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)'),

@@ -19,7 +19,7 @@ import scala.util.{Failure, Try}
 trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with KoutaJsonFormats {
 
   val modelName:String
-  val EXAMPLE_DATE_TIME = ISO_OFFSET_DATE_TIME_FORMATTER.format(Instant.EPOCH)
+  val EXAMPLE_DATE_TIME = ISO_LOCAL_DATE_TIME_FORMATTER.format(Instant.EPOCH)
   val EXAMPLE_UUID = UUID.randomUUID().toString
 
   before() {
@@ -33,7 +33,9 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
     models.remove("Hakulomaketyyppi")
     models.remove("Julkaisutila")
     models.remove("Koulutustyyppi")
+    models.remove("LiitteenToimitustapa")
     models.remove("Kieli")
+    models.remove("UUID")
     models.put("Kielistetty", new Model("Kielistetty", "Kielistetty", properties = Kieli.values.zipWithIndex.map { case (k, i) =>
       (k.toString, modelProperty(i+1, List(s"nimi ${k.toString}")))
     }))
@@ -46,6 +48,8 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
       //case ("koulutustyyppi", mp) => ("koulutustyyppi", modelProperty(mp.position, Koulutustyyppi.values().map(_.toString)))
       case ("kieli", mp) => ("kieli", modelProperty(mp.position, Kieli.values.map(_.toString)))
       case ("kielivalinta", mp) => ("kielivalinta", ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
+      case ("liitteidenToimitustapa", mp) => ("liitteidenToimitustapa", modelProperty(mp.position, LiitteenToimitustapa.values().map(_.toString)))
+      case ("toimitustapa", mp) => ("toimitustapa", modelProperty(mp.position, LiitteenToimitustapa.values().map(_.toString)))
       case ("id", mp) => ("id", modelProperty(mp.position, List(EXAMPLE_UUID)))
       case p => p
     }
@@ -53,6 +57,7 @@ trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonS
   private def overrideDatatypes(model:Model) = model.properties.map {
     case (name, mp) if mp.`type`.name.equals("Instant") => (name, modelProperty(mp.position, List(EXAMPLE_DATE_TIME)))
     case (name, mp) if mp.`type`.name.equals("Map") => (name, ModelProperty(new ValueDataType("Kielistetty", None, Some("fi.oph.kouta.domain.Kielistetty")), mp.position))
+    case (name, mp) if mp.`type`.name.equals("UUID") => (name, modelProperty(mp.position, List(EXAMPLE_UUID)))
     //case (name, mp) if mp.`type`.name.equals("Kieli") => (name, ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
     case p => p
     }

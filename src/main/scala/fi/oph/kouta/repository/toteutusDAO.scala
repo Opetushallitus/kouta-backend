@@ -53,6 +53,15 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case Right((x, y)) => 0 < (x + y.sum)
     }
   }
+
+  private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
+    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _) = toteutus
+    if(tarjoajat.size > 0) {
+      DBIO.sequence( tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
+    } else {
+      DBIO.sequence(List(deleteTarjoajat(oid)))
+    }
+  }
 }
 
 sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
@@ -100,24 +109,23 @@ sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
               muokkaaja = $muokkaaja,
               kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
-            and ( koulutus_oid <> $koulutusOid
-            or tila <> ${tila.toString}::julkaisutila
-            or nimi <> ${toJsonParam(nimi)}::jsonb
-            or metadata <> ${toJsonParam(metadata)}::jsonb
-            or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb)"""
+            and ( koulutus_oid is distinct from $koulutusOid
+            or tila is distinct from ${tila.toString}::julkaisutila
+            or nimi is distinct from ${toJsonParam(nimi)}::jsonb
+            or metadata is distinct from ${toJsonParam(metadata)}::jsonb
+            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb)"""
   }
 
-  def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
-    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _) = toteutus
-    if(tarjoajat.size > 0) {
-      val tarjoajatString = tarjoajat.map(s => s"'$s'").mkString(",")
-      DBIO.sequence( tarjoajat.map(t =>
-        sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
-             values ($oid, $t, $muokkaaja)
-             on conflict on constraint toteutusten_tarjoajat_pkey do nothing""") :+
-        sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})""")
-    } else {
-      DBIO.sequence(List(sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""))
-    }
+  def insertTarjoaja(oid:Option[String], tarjoaja:String, muokkaaja:String ) = {
+    sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
+             values ($oid, $tarjoaja, $muokkaaja)
+             on conflict on constraint toteutusten_tarjoajat_pkey do nothing"""
   }
+
+  def deleteTarjoajat(oid:Option[String], exclude:List[String]) = {
+    val tarjoajatString = exclude.map(s => s"'$s'").mkString(",")
+    sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})"""
+  }
+
+  def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
 }

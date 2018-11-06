@@ -3,6 +3,7 @@ package fi.oph.kouta.repository
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
 import java.time.Instant
 
+import fi.oph.kouta.domain.Ajanjakso
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.jdbc.PostgresProfile.api._
@@ -11,12 +12,14 @@ import scala.util.Try
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
-  def toTimestampParam(value:Option[Instant]) = value.map(Timestamp.from).getOrElse(null)
+  def formatTimestampParam(value:Option[Instant]) = value.map(ISO_LOCAL_DATE_TIME_FORMATTER.format).getOrElse(null)
 
   def toJsonParam(value:AnyRef) = Option(toJson(value)) match {
     case Some(s) if !s.isEmpty & !"{}".equals(s) => s
     case _ => null
   }
+
+  def toTsrangeString(a:Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
 
   //TODO: params:Array[AnyRef]
   def query[T](sql:String, params:Array[String], toResult:(ResultSet) => T): List[T] = {

@@ -111,16 +111,16 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with SQLHelpers 
                      muokkaaja = $muokkaaja,
                      kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
            where id = ${id.map(_.toString)}::uuid
-           and (tila <> ${tila.toString}::julkaisutila
-           or hakutapa_koodi_uri <> $hakutapaKoodiUri
-           or kohdejoukko_koodi_uri <> $kohdejoukkoKoodiUri
-           or kohdejoukon_tarkenne_koodi_uri <> $kohdejoukonTarkenneKoodiUri
-           or nimi <> ${toJsonParam(nimi)}::jsonb
-           or onkoJulkinen <> $onkoJulkinen
-           or metadata <> ${toJsonParam(metadata)}::jsonb
-           or organisaatio <> $organisaatio
-           or muokkaaja <> $muokkaaja
-           or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb
+           and (tila is distinct from ${tila.toString}::julkaisutila
+           or hakutapa_koodi_uri is distinct from $hakutapaKoodiUri
+           or kohdejoukko_koodi_uri is distinct from $kohdejoukkoKoodiUri
+           or kohdejoukon_tarkenne_koodi_uri is distinct from $kohdejoukonTarkenneKoodiUri
+           or nimi is distinct from ${toJsonParam(nimi)}::jsonb
+           or onkoJulkinen is distinct from $onkoJulkinen
+           or metadata is distinct from ${toJsonParam(metadata)}::jsonb
+           or organisaatio is distinct from $organisaatio
+           or muokkaaja is distinct from $muokkaaja
+           or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
          )"""
   }
 }

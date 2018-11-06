@@ -1,12 +1,10 @@
 package fi.oph.kouta.repository
 
-import java.sql.Timestamp
-import java.time.{Instant, ZoneId}
-import java.time.format.DateTimeFormatter
-import java.util.ConcurrentModificationException
+import java.time.{Instant}
+import java.util.{ConcurrentModificationException, UUID}
 
 import fi.oph.kouta.domain
-import fi.oph.kouta.domain.Hakukohde
+import fi.oph.kouta.domain.{Ajanjakso, Hakukohde, Liite, Valintakoe}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -25,21 +23,28 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     KoutaDatabase.runBlockingTransactionally( for {
       oid <- insertHakukohde(hakukohde)
       _ <- insertHakuajat(hakukohde.copy(oid = oid))
-    } yield (oid) ) match {
+      _ <- insertValintakokeet(hakukohde.copy(oid = oid))
+      x <- insertLiitteet(hakukohde.copy(oid = oid))
+    } yield (oid, x) ) match {
       case Left(t) => throw t
-      case Right(oid) => oid
+      case Right((oid, _)) => oid
     }
   }
 
   override def get(oid: String): Option[(Hakukohde, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       h <- selectHakukohde(oid)
-      a <- selectHaunHakuajat(oid)
+      a <- selectHakuajat(oid)
+      k <- selectValintakokeet(oid)
+      i <- selectLiitteet(oid)
       l <- selectLastModified(oid)
-    } yield (h, a, l) ) match {
+    } yield (h, a, k, i, l) ) match {
       case Left(t) => throw t
-      case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(h), a, Some(l))) => Some((h.copy(hakuajat = a.map(x => domain.Hakuaika(x.alkaa, x.paattyy)).toList), l))
+      case Right((None, _, _, _, _)) | Right((_, _, _, _, None)) => None
+      case Right((Some(h), a, k, i, Some(l))) => Some((h.copy(
+        hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
+        valintakokeet = k.toList,
+        liitteet = i.toList), l))
     }
   }
 
@@ -51,10 +56,43 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut hakukohdetta ${hakukohde.oid.get} samanaikaisesti"))
       case Some(time) => DBIO.successful(time)
     }).andThen(updateHakukohde(hakukohde))
-      .zip(updateHakuajat(hakukohde))) match {
+      .zip(updateHakuajat(hakukohde))
+      .zip(updateValintakokeet(hakukohde))
+      .zip(updateLiitteet(hakukohde))) match {
       case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
+      case Right((((a, b), c), d)) => 0 < (a + b.sum + c.sum + d.sum)
     }
+  }
+
+  def updateHakuajat(hakukohde:Hakukohde) = {
+    val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
+    if(hakuajat.size > 0) {
+      DBIO.sequence( hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat))
+    } else {
+      DBIO.sequence(List(deleteHakuajat(oid)))
+    }
+  }
+
+  def updateValintakokeet(hakukohde:Hakukohde) = {
+    val (oid, valintakokeet, muokkaaja) = (hakukohde.oid, hakukohde.valintakokeet, hakukohde.muokkaaja)
+    val (insert, update) = valintakokeet.partition(_.id.isEmpty)
+
+    val deleteSQL = if (update.size > 0) { deleteValintakokeet(oid, update.map(_.id.get)) } else { deleteValintakokeet(oid) }
+    val insertSQL = insert.map(v => insertValintakoe(oid, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
+    val updateSQL = update.map(v => updateValintakoe(oid, v, muokkaaja))
+
+    DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
+  }
+
+  def updateLiitteet(hakukohde:Hakukohde) = {
+    val (oid, liitteet, muokkaaja) = (hakukohde.oid, hakukohde.liitteet, hakukohde.muokkaaja)
+    val (insert, update) = liitteet.partition(_.id.isEmpty)
+
+    val deleteSQL = if (update.size > 0) { deleteLiitteet(oid, update.map(_.id.get)) } else { deleteLiitteet(oid) }
+    val insertSQL = insert.map(l => insertLiite(oid, l.copy(id = Some(UUID.randomUUID())), muokkaaja))
+    val updateSQL = update.map(v => updateLiite(oid, v, muokkaaja))
+
+    DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
   }
 }
 
@@ -63,13 +101,21 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
   def selectLastModified(oid:String):DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(ha.system_time)),
-            max(lower(hah.system_time)),
-            max(upper(hh.system_time)),
-            max(upper(hhh.system_time)))
+            max(lower(hh.system_time)),
+            max(lower(hv.system_time)),
+            max(lower(hl.system_time)),
+            max(upper(hah.system_time)),
+            max(upper(hhh.system_time)),
+            max(upper(hvh.system_time)),
+            max(upper(hlh.system_time)))
           from hakukohteet ha
           left join hakukohteet_history hah on ha.oid = hah.oid
           left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
           left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
+          left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid
+          left join hakukohteiden_valintakokeet_history hvh on ha.oid = hvh.hakukohde_oid
+          left join hakukohteiden_liitteet hl on ha.oid = hl.hakukohde_oid
+          left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
           where ha.oid = $oid""".as[Option[Instant]].head
   }
 
@@ -90,7 +136,11 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
             toinen_aste_onko_kaksoistutkinto,
             kaytetaan_haun_aikataulua,
             valintaperuste,
-            metadata,
+            liitteet_onko_sama_toimitusaika,
+            liitteet_onko_sama_toimitusosoite,
+            liitteiden_palautusaika,
+            liitteiden_toimitustapa,
+            liitteiden_toimitusosoite,
             muokkaaja,
             kielivalinta
           ) values (
@@ -109,7 +159,11 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
             ${hakukohde.toinenAsteOnkoKaksoistutkinto},
             ${hakukohde.kaytetaanHaunAikataulua},
             ${hakukohde.valintaperuste.map(_.toString)}::uuid,
-            ${toJsonParam(hakukohde.metadata)}::jsonb,
+            ${hakukohde.liitteetOnkoSamaToimitusaika},
+            ${hakukohde.liitteetOnkoSamaToimitusosoite},
+            ${formatTimestampParam(hakukohde.liitteidenPalautusaika)}::timestamp,
+            ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
+            ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
             ${hakukohde.muokkaaja},
             ${toJsonParam(hakukohde.kielivalinta)}::jsonb
           ) returning oid""".as[String].headOption
@@ -132,27 +186,35 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
               toinen_aste_onko_kaksoistutkinto = ${hakukohde.toinenAsteOnkoKaksoistutkinto},
               kaytetaan_haun_aikataulua = ${hakukohde.kaytetaanHaunAikataulua},
               valintaperuste = ${hakukohde.valintaperuste.map(_.toString)}::uuid,
-              metadata = ${toJsonParam(hakukohde.metadata)}::jsonb,
+              liitteet_onko_sama_toimitusaika = ${hakukohde.liitteetOnkoSamaToimitusaika},
+              liitteet_onko_sama_toimitusosoite = ${hakukohde.liitteetOnkoSamaToimitusosoite},
+              liitteiden_palautusaika = ${formatTimestampParam(hakukohde.liitteidenPalautusaika)}::timestamp,
+              liitteiden_toimitustapa = ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
+              liitteiden_toimitusosoite = ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
               muokkaaja = ${hakukohde.muokkaaja},
               kielivalinta = ${toJsonParam(hakukohde.kielivalinta)}::jsonb
           where oid = ${hakukohde.oid}
-            and ( koulutus_oid <> ${hakukohde.koulutusOid}
-            or haku_oid <> ${hakukohde.hakuOid}
-            or tila <> ${hakukohde.tila.toString}::julkaisutila
-            or nimi <> ${toJsonParam(hakukohde.nimi)}::jsonb
-            or alkamiskausi_koodi_uri <> ${hakukohde.alkamiskausiKoodiUri}
-            or alkamisvuosi <> ${hakukohde.alkamisvuosi}
-            or hakulomaketyyppi <> ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
-            or hakulomake <> ${hakukohde.hakulomake}
-            or aloituspaikat <> ${hakukohde.aloituspaikat}
-            or ensikertalaisen_aloituspaikat <> ${hakukohde.ensikertalaisenAloituspaikat}
-            or pohjakoulutusvaatimus_koodi_uri <> ${hakukohde.pohjakoulutusvaatimusKoodiUri}
-            or muu_pohjakoulutusvaatimus_kuvaus <> ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
-            or toinen_aste_onko_kaksoistutkinto <> ${hakukohde.toinenAsteOnkoKaksoistutkinto}
-            or kaytetaan_haun_aikataulua <> ${hakukohde.kaytetaanHaunAikataulua}
-            or valintaperuste <> ${hakukohde.valintaperuste.map(_.toString)}::uuid
-            or metadata <> ${toJsonParam(hakukohde.metadata)}::jsonb
-            or kielivalinta <> ${toJsonParam(hakukohde.kielivalinta)}::jsonb)"""
+            and ( koulutus_oid is distinct from ${hakukohde.koulutusOid}
+            or haku_oid is distinct from ${hakukohde.hakuOid}
+            or tila is distinct from ${hakukohde.tila.toString}::julkaisutila
+            or nimi is distinct from ${toJsonParam(hakukohde.nimi)}::jsonb
+            or alkamiskausi_koodi_uri is distinct from ${hakukohde.alkamiskausiKoodiUri}
+            or alkamisvuosi is distinct from ${hakukohde.alkamisvuosi}
+            or hakulomaketyyppi is distinct from ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
+            or hakulomake is distinct from ${hakukohde.hakulomake}
+            or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
+            or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
+            or pohjakoulutusvaatimus_koodi_uri is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUri}
+            or muu_pohjakoulutusvaatimus_kuvaus is distinct from ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
+            or toinen_aste_onko_kaksoistutkinto is distinct from ${hakukohde.toinenAsteOnkoKaksoistutkinto}
+            or kaytetaan_haun_aikataulua is distinct from ${hakukohde.kaytetaanHaunAikataulua}
+            or valintaperuste is distinct from ${hakukohde.valintaperuste.map(_.toString)}::uuid
+            or liitteet_onko_sama_toimitusaika is distinct from ${hakukohde.liitteetOnkoSamaToimitusaika}
+            or liitteet_onko_sama_toimitusosoite is distinct from ${hakukohde.liitteetOnkoSamaToimitusosoite}
+            or liitteiden_palautusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenPalautusaika)}::timestamp
+            or liitteiden_toimitustapa is distinct from ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa
+            or liitteiden_toimitusosoite is distinct from ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb
+            or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb)"""
   }
 
   def selectHakukohde(oid:String) = {
@@ -172,34 +234,133 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
              toinen_aste_onko_kaksoistutkinto,
              kaytetaan_haun_aikataulua,
              valintaperuste,
-             metadata,
+             liitteet_onko_sama_toimitusaika,
+             liitteet_onko_sama_toimitusosoite,
+             liitteiden_palautusaika,
+             liitteiden_toimitustapa,
+             liitteiden_toimitusosoite,
              muokkaaja,
              kielivalinta from hakukohteet where oid = $oid""".as[Hakukohde].headOption
   }
 
   def insertHakuajat(hakukohde:Hakukohde) = {
     DBIO.sequence(
-      hakukohde.hakuajat.map(t => (
+      hakukohde.hakuajat.map(t =>
         sqlu"""insert into hakukohteiden_hakuajat (hakukohde_oid, hakuaika, muokkaaja)
-               values (${hakukohde.oid}, tstzrange(${Timestamp.from(t.alkaa)}, ${Timestamp.from(t.paattyy)}, '[)'), ${hakukohde.oid})""")))
+               values (${hakukohde.oid}, tsrange(${formatTimestampParam(Some(t.alkaa))}::timestamp, 
+                                                 ${formatTimestampParam(Some(t.paattyy))}::timestamp, '[)'), ${hakukohde.muokkaaja})"""))
   }
 
-  def selectHaunHakuajat(oid:String) = {
+  def insertValintakokeet(hakukohde:Hakukohde) = {
+    DBIO.sequence(
+      hakukohde.valintakokeet.map(k => insertValintakoe(hakukohde.oid, k.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja)))
+  }
+
+  def insertValintakoe(oid:Option[String], valintakoe:Valintakoe, muokkaaja:String) = {
+    sqlu"""insert into hakukohteiden_valintakokeet (id, hakukohde_oid, tyyppi, tilaisuudet, muokkaaja)
+               values (${valintakoe.id.map(_.toString)}::uuid, ${oid}, ${valintakoe.tyyppi}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, ${muokkaaja})"""
+  }
+
+  def insertLiitteet(hakukohde:Hakukohde) = {
+    DBIO.sequence(
+      hakukohde.liitteet.map(l => insertLiite(hakukohde.oid, l.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja)))
+  }
+
+  def insertLiite(oid:Option[String], liite:Liite, muokkaaja:String) = {
+      sqlu"""insert into hakukohteiden_liitteet (
+                id,
+                hakukohde_oid,
+                tyyppi,
+                nimi,
+                kuvaus,
+                palautusaika,
+                toimitustapa,
+                toimitusosoite,
+                muokkaaja
+             ) values (
+                ${liite.id.map(_.toString)}::uuid,
+                ${oid},
+                ${liite.tyyppi},
+                ${toJsonParam(liite.nimi)}::jsonb,
+                ${toJsonParam(liite.kuvaus)}::jsonb,
+                ${formatTimestampParam(liite.palautusaika)}::timestamp,
+                ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa,
+                ${toJsonParam(liite.toimitusosoite)}::jsonb,
+                ${muokkaaja})"""
+  }
+
+  def selectHakuajat(oid:String) = {
     sql"""select hakukohde_oid, lower(hakuaika), upper(hakuaika) from hakukohteiden_hakuajat where hakukohde_oid = $oid""".as[Hakuaika]
   }
 
-  def updateHakuajat(hakukohde:Hakukohde) = {
-    val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
-    if(hakuajat.size > 0) {
-      val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("Europe/Helsinki"))
-      val hakuajatString = hakuajat.map(s => s"'[${formatter.format(s.alkaa)}, ${formatter.format(s.paattyy)})'").mkString(",")
-      DBIO.sequence( hakuajat.map(t => {
-        sqlu"""insert into hakukohteiden_hakuajat (hakukohde_oid, hakuaika, muokkaaja)
-               values ($oid, tstzrange(${Timestamp.from(t.alkaa)}, ${Timestamp.from(t.paattyy)}, '[)'), $muokkaaja)
+  def selectValintakokeet(oid:String) = {
+    sql"""select id, tyyppi, tilaisuudet from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
+  }
+
+  def selectLiitteet(oid:String) = {
+    sql"""select id, tyyppi, nimi, kuvaus, palautusaika, toimitustapa, toimitusosoite
+          from hakukohteiden_liitteet where hakukohde_oid = $oid""".as[Liite]
+  }
+
+  def insertHakuaika(oid:Option[String], hakuaika:Ajanjakso, muokkaaja:String) = {
+    sqlu"""insert into hakukohteiden_hakuajat (hakukohde_oid, hakuaika, muokkaaja)
+               values ($oid, tsrange(${formatTimestampParam(Some(hakuaika.alkaa))}::timestamp, 
+                                     ${formatTimestampParam(Some(hakuaika.paattyy))}::timestamp, '[)'), $muokkaaja)
                on conflict on constraint hakukohteiden_hakuajat_pkey do nothing"""
-      }) :+ sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid and hakuaika not in (#${hakuajatString})""")
-    } else {
-      DBIO.sequence(List(sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid"""))
-    }
+  }
+
+  def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]) = {
+    sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid and hakuaika not in (#${exclude.map(toTsrangeString).mkString(",")})"""
+  }
+
+  def deleteHakuajat(oid:Option[String]) = {
+    sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid"""
+  }
+
+  def deleteValintakokeet(oid:Option[String], exclude:List[UUID]) = {
+    val idString = exclude.map(x => s"'${x.toString}'").mkString(",")
+    sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid and id not in (#${idString})"""
+  }
+
+  def updateValintakoe(oid:Option[String], valintakoe:Valintakoe, muokkaaja:String) = {
+    sqlu"""update hakukohteiden_valintakokeet set
+              tyyppi = ${valintakoe.tyyppi},
+              tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
+              muokkaaja = ${muokkaaja}
+           where hakukohde_oid = $oid and id = ${valintakoe.id.map(_.toString)}::uuid and (
+              tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
+              tyyppi is distinct from ${valintakoe.tyyppi})"""
+  }
+
+  def deleteValintakokeet(oid:Option[String]) = {
+    sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid"""
+  }
+
+  def deleteLiitteet(oid:Option[String]) = {
+    sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid"""
+  }
+
+  def deleteLiitteet(oid:Option[String], exclude:List[UUID]) = {
+    val idString = exclude.map(x => s"'${x.toString}'").mkString(",")
+    sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${idString})"""
+  }
+
+  def updateLiite(oid:Option[String], liite:Liite, muokkaaja:String) = {
+    sqlu"""update hakukohteiden_liitteet set
+                tyyppi = ${liite.tyyppi},
+                nimi = ${toJsonParam(liite.nimi)}::jsonb,
+                kuvaus = ${toJsonParam(liite.kuvaus)}::jsonb,
+                palautusaika = ${formatTimestampParam(liite.palautusaika)}::timestamp,
+                toimitustapa = ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa,
+                toimitusosoite = ${toJsonParam(liite.toimitusosoite)}::jsonb,
+                muokkaaja = ${muokkaaja}
+              where id = ${liite.id.map(_.toString)}::uuid
+                and hakukohde_oid = ${oid}
+                and ( tyyppi is distinct from ${liite.tyyppi}
+                      or nimi is distinct from ${toJsonParam(liite.nimi)}::jsonb
+                      or kuvaus is distinct from ${toJsonParam(liite.kuvaus)}::jsonb
+                      or palautusaika is distinct from ${formatTimestampParam(liite.palautusaika)}::timestamp
+                      or toimitustapa is distinct from ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa
+                      or toimitusosoite is distinct from ${toJsonParam(liite.toimitusosoite)}::jsonb)"""
   }
 }

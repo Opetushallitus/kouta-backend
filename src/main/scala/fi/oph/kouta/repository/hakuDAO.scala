@@ -1,12 +1,10 @@
 package fi.oph.kouta.repository
 
-import java.sql.Timestamp
-import java.time.{Instant, ZoneId}
-import java.time.format.DateTimeFormatter
+import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain
-import fi.oph.kouta.domain.{Haku, Hakuaika}
+import fi.oph.kouta.domain.{Ajanjakso, Haku}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -39,7 +37,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
     } yield (h, a, l) ) match {
       case Left(t) => {t.printStackTrace(); throw t}
       case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(h), a, Some(l))) => Some((h.copy(hakuajat = a.map(x => domain.Hakuaika(x.alkaa, x.paattyy)).toList), l))
+      case Right((Some(h), a, Some(l))) => Some((h.copy(hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList), l))
     }
   }
 
@@ -81,8 +79,8 @@ sealed trait HakuSQL extends HakuExtractors with SQLHelpers {
           ) values ( ${tila.toString}::julkaisutila,
                      ${toJsonParam(nimi)}::jsonb,
                      ${hakutapaKoodiUri},
-                     ${toTimestampParam(hakukohteenLiittamisenTakaraja)},
-                     ${toTimestampParam(hakukohteenMuokkaamisenTakaraja)},
+                     ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp,
+                     ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp,
                      ${alkamiskausiKoodiUri},
                      ${alkamisvuosi},
                      ${kohdejoukkoKoodiUri},
@@ -100,7 +98,11 @@ sealed trait HakuSQL extends HakuExtractors with SQLHelpers {
     DBIO.sequence(
       haku.hakuajat.map(t =>
         sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
-             values (${haku.oid}, tstzrange(${Timestamp.from(t.alkaa)}, ${Timestamp.from(t.paattyy)}, '[)'), ${haku.muokkaaja})"""))
+               values (
+                ${haku.oid},
+                tsrange(${formatTimestampParam(Some(t.alkaa))}::timestamp,
+                        ${formatTimestampParam(Some(t.paattyy))}::timestamp, '[)'),
+                ${haku.muokkaaja})"""))
   }
 
   def selectHaku(oid:String) = {
@@ -128,12 +130,10 @@ sealed trait HakuSQL extends HakuExtractors with SQLHelpers {
   def updateHaku(haku:Haku) = {
     val Haku(oid, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
     kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
-    val liittamisenTakaraja = toTimestampParam(hakukohteenLiittamisenTakaraja)
-    val muokkaamisenTakaraja = toTimestampParam(hakukohteenMuokkaamisenTakaraja)
     sqlu"""update haut set
               hakutapa_koodi_uri = $hakutapaKoodiUri,
-              hakukohteen_liittamisen_takaraja = $liittamisenTakaraja,
-              hakukohteen_muokkaamisen_takaraja = $muokkaamisenTakaraja,
+              hakukohteen_liittamisen_takaraja = ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp,
+              hakukohteen_muokkaamisen_takaraja = ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp,
               alkamiskausi_koodi_uri = $alkamiskausiKoodiUri,
               alkamisvuosi = ${alkamisvuosi},
               kohdejoukko_koodi_uri = $kohdejoukkoKoodiUri,
@@ -147,31 +147,39 @@ sealed trait HakuSQL extends HakuExtractors with SQLHelpers {
               muokkaaja = $muokkaaja,
               kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
-            and ( hakutapa_koodi_uri <> $hakutapaKoodiUri
-            or alkamiskausi_koodi_uri <> $alkamiskausiKoodiUri
-            or alkamisvuosi <> ${alkamisvuosi}
-            or kohdejoukko_koodi_uri <> $kohdejoukkoKoodiUri
-            or kohdejoukon_tarkenne_koodi_uri <> $kohdejoukonTarkenneKoodiUri
-            or hakulomaketyyppi <> ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
-            or hakulomake <> $hakulomake
-            or hakukohteen_liittamisen_takaraja <> $liittamisenTakaraja
-            or hakukohteen_muokkaamisen_takaraja <> $muokkaamisenTakaraja
-            or organisaatio <> $organisaatio
-            or tila <> ${tila.toString}::julkaisutila
-            or nimi <> ${toJsonParam(nimi)}::jsonb
-            or metadata <> ${toJsonParam(metadata)}::jsonb
-            or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb)"""
+            and ( hakutapa_koodi_uri is distinct from $hakutapaKoodiUri
+            or alkamiskausi_koodi_uri is distinct from $alkamiskausiKoodiUri
+            or alkamisvuosi is distinct from ${alkamisvuosi}
+            or kohdejoukko_koodi_uri is distinct from $kohdejoukkoKoodiUri
+            or kohdejoukon_tarkenne_koodi_uri is distinct from $kohdejoukonTarkenneKoodiUri
+            or hakulomaketyyppi is distinct from ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
+            or hakulomake is distinct from $hakulomake
+            or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp
+            or hakukohteen_muokkaamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp
+            or organisaatio is distinct from $organisaatio
+            or tila is distinct from ${tila.toString}::julkaisutila
+            or nimi is distinct from ${toJsonParam(nimi)}::jsonb
+            or metadata is distinct from ${toJsonParam(metadata)}::jsonb
+            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb)"""
+  }
+
+  def insertHakuaika(oid:Option[String], hakuaika:Ajanjakso, muokkaaja:String) = {
+    sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
+               values ($oid, tsrange(${formatTimestampParam(Some(hakuaika.alkaa))}::timestamp,
+                                     ${formatTimestampParam(Some(hakuaika.paattyy))}::timestamp, '[)'), $muokkaaja)
+               on conflict on constraint hakujen_hakuajat_pkey do nothing"""}
+
+  def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]) = {
+    sqlu"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${exclude.map(toTsrangeString).mkString(",")})"""
   }
 
   def updateHaunHakuajat(haku:Haku) = {
     val (oid, hakuajat, muokkaaja) = (haku.oid, haku.hakuajat, haku.muokkaaja)
     if(hakuajat.size > 0) {
-      val formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("Europe/Helsinki"))
-      val hakuajatString = hakuajat.map(s => s"'[${formatter.format(s.alkaa)}, ${formatter.format(s.paattyy)})'").mkString(",")
-      DBIO.sequence( hakuajat.map(t => sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
-               values ($oid, tstzrange(${Timestamp.from(t.alkaa)}, ${Timestamp.from(t.paattyy)}, '[)'), $muokkaaja)
-               on conflict on constraint hakujen_hakuajat_pkey do nothing"""
-      ) :+ sqlu"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${hakuajatString})""")
+      val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
+      val deleteSQL = deleteHakuajat(oid, hakuajat)
+
+      DBIO.sequence( insertSQL :+ deleteSQL)
     } else {
       DBIO.sequence(List(sqlu"""delete from hakujen_hakuajat where haku_oid = $oid"""))
     }

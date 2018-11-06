@@ -1,7 +1,6 @@
 package fi.oph.kouta.integration
 
-import java.time.Instant
-
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.validation.ValidationMessages
@@ -60,8 +59,8 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with ValidationMess
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
       hakulomake = Some("http://ataru/kivahakulomake"),
-      metadata = Some(new HakuMetadata(Some(new Yhteystieto("Aku Ankka")))),
-      hakuajat = List(Hakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(12000))))
+      metadata = Some(new HakuMetadata(Some(TestData.Yhteystieto1))),
+      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
     update(uusiHaku, lastModified, true)
     get(oid, uusiHaku)
   }
@@ -85,7 +84,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with ValidationMess
   }
 
   def addInvalidHakuaika(haku:Haku) = haku.copy(
-    hakuajat = List(Hakuaika(Instant.now().plusSeconds(9000), Instant.now().plusSeconds(3000))))
+    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
   it should "validate new haku" in {
     put(HakuPath, bytes(addInvalidHakuaika(haku)), List(jsonHeader)) {
@@ -105,5 +104,21 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with ValidationMess
       }
       body should equal (errorBody(InvalidHakuaika))
     }
+  }
+
+  it should "update haun päivämäärät" in {
+    val pvmHaku = haku.copy(
+      hakukohteenLiittamisenTakaraja = Some(TestData.inFuture(50000)),
+      hakukohteenMuokkaamisenTakaraja = None)
+    val oid = put(pvmHaku)
+    val lastModified = get(oid, pvmHaku.copy(oid = Some(oid)))
+
+    val updatedPvmHaku = haku.copy(
+      oid = Some(oid),
+      hakukohteenMuokkaamisenTakaraja = Some(TestData.inFuture(50000)),
+      hakukohteenLiittamisenTakaraja = None)
+
+    update(updatedPvmHaku, lastModified)
+    get(oid, updatedPvmHaku)
   }
 }

@@ -11,7 +11,7 @@ import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Format
 
 trait KoutaJsonFormats {
 
-  val ISO_OFFSET_DATE_TIME_FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.of("Europe/Helsinki"))
+  val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm").withZone(ZoneId.of("Europe/Helsinki"))
 
   implicit def jsonFormats: Formats = DefaultFormats +
     new CustomSerializer[Julkaisutila](formats => ( {
@@ -35,9 +35,9 @@ trait KoutaJsonFormats {
       case j: Hakulomaketyyppi => JString(j.toString)
     })) +
     new CustomSerializer[Instant](formats => ({
-      case JString(i) => Instant.from(ISO_OFFSET_DATE_TIME_FORMATTER.parse(i))
+      case JString(i) => Instant.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
     }, {
-      case i: Instant => JString(ISO_OFFSET_DATE_TIME_FORMATTER.format(i))
+      case i: Instant => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
     })) +
     new CustomSerializer[Kieli](formats => ({
       case JString(s) => Kieli.withName(s)
@@ -48,6 +48,11 @@ trait KoutaJsonFormats {
       case JString(s) => UUID.fromString(s)
     }, {
       case uuid: UUID => JString(uuid.toString)
+    })) +
+    new CustomSerializer[LiitteenToimitustapa](formats => ({
+      case JString(s) => LiitteenToimitustapa.withName(s)
+    }, {
+      case j: LiitteenToimitustapa => JString(j.toString)
     }))
 
   def toJson(data:AnyRef) = write(data)

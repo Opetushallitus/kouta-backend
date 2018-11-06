@@ -32,7 +32,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
     assertLeft(max.copy(alkamisvuosi = Some("2017")),invalidAlkamisvuosi("2017"))
     assertLeft(max.copy(hakulomaketyyppi = None), MissingHakulomaketyyppi)
     assertLeft(max.copy(pohjakoulutusvaatimusKoodiUri = Some("hessu")), invalidPohjakoulutusvaatimusKoodi("hessu"))
-    assertLeft(max.copy(hakuajat = List(Hakuaika(alkaa = Instant.now().plusSeconds(90000), paattyy = Instant.now.plusSeconds(9000)))), InvalidHakuaika)
+    assertLeft(max.copy(hakuajat = List(Ajanjakso(alkaa = Instant.now().plusSeconds(90000), paattyy = Instant.now.plusSeconds(9000)))), InvalidHakuaika)
   }
 
   it should "pass valid julkaistu hakukohde" in {

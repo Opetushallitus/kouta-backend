@@ -3,6 +3,7 @@ package fi.oph.kouta.integration
 import java.time.Instant
 import java.util.UUID
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.validation.ValidationMessages
@@ -22,7 +23,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
   }
 
   lazy val uusiHakukohde = hakukohde(koulutusOid, hakuOid, valintaperusteId)
-  lazy val tallennettuHakukohde: String => Hakukohde = hakukohde(_, koulutusOid, hakuOid, valintaperusteId)
+  lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, koulutusOid, hakuOid, valintaperusteId))}
+
+  def getIds(hakukohde:Hakukohde) = {
+    import slick.jdbc.PostgresProfile.api._
+    hakukohde.copy(
+    liitteet = hakukohde.liitteet.map(l => l.copy(id = db.runBlocking(
+      sql"""select id from hakukohteiden_liitteet where hakukohde_oid = ${hakukohde.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString))),
+    valintakokeet = hakukohde.valintakokeet.map(l => l.copy(id = db.runBlocking(
+      sql"""select id from hakukohteiden_valintakokeet where hakukohde_oid = ${hakukohde.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString))),
+  )}
 
   it should "return 404 if hakukohde not found" in {
     get(s"$HakukohdePath/123") {
@@ -80,7 +90,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
       hakulomake = Some("http://ataru/kivahakulomake"),
-      hakuajat = List(Hakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(12000))))
+      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
     update(muokattuHakukohde, lastModified, true)
     get(oid, muokattuHakukohde)
   }
@@ -105,7 +115,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
   }
 
   def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
-    hakuajat = List(Hakuaika(Instant.now().plusSeconds(9000), Instant.now().plusSeconds(3000))))
+    hakuajat = List(Ajanjakso(Instant.now().plusSeconds(9000), Instant.now().plusSeconds(3000))))
 
   it should "validate new hakukohde" in {
     put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader)) {
@@ -125,5 +135,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
       }
       body should equal (errorBody(InvalidHakuaika))
     }
+  }
+
+  it should "update hakukohteen liitteet ja valintakokeet" in {
+    val oid = put(uusiHakukohde)
+    val tallennettu = tallennettuHakukohde(oid)
+    val lastModified = get(oid, tallennettu)
+    val muokattuHakukohde = tallennettu.copy(
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppi = Some("tyyyyppi"))),
+      liitteet = tallennettu.liitteet.map(_.copy(palautusaika = Some(TestData.now()))))
+    update(muokattuHakukohde, lastModified, true)
+    get(oid, getIds(muokattuHakukohde))
   }
 }

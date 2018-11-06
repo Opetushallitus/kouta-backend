@@ -3,7 +3,7 @@ package fi.oph.kouta.validation
 import java.time.{ LocalDate}
 import java.util.regex.Pattern
 
-import fi.oph.kouta.domain.Hakuaika
+import fi.oph.kouta.domain.Ajanjakso
 
 object OidValidator {
   val KoulutusOidPrefix = "1.2.246.562.13."
@@ -39,7 +39,7 @@ object TimeValidator {
   private val VuosiPattern = Pattern.compile("""\d{4}""")
 
   def isValidAlkamisvuosi(s:String) = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
-  def isValidHakuaika(hakuaika:Hakuaika) = hakuaika.alkaa.isBefore(hakuaika.paattyy)
+  def isValidHakuaika(hakuaika:Ajanjakso) = hakuaika.alkaa.isBefore(hakuaika.paattyy)
 
 }
 

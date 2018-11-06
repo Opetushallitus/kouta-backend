@@ -1,6 +1,7 @@
 package fi.oph.kouta.service
 
 import java.time.Instant
+import java.util.UUID
 
 import fi.oph.kouta.domain.Hakukohde
 import fi.oph.kouta.repository.HakukohdeDAO

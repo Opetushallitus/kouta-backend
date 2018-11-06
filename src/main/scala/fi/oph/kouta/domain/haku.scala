@@ -20,7 +20,7 @@ case class Haku(oid:Option[String] = None,
                 hakulomake: Option[String] = None,
                 metadata: Option[HakuMetadata] = None,
                 organisaatio: String,
-                hakuajat: List[Hakuaika] = List(),
+                hakuajat: List[Ajanjakso] = List(),
                 muokkaaja:String,
                 kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 

@@ -1,10 +1,9 @@
 package fi.oph.kouta.domain
 
+import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.validation.{IsValid, Validatable}
-
-case class HakukohdeMetadata()
 
 case class Hakukohde(oid:Option[String] = None,
                      koulutusOid:String,
@@ -22,8 +21,14 @@ case class Hakukohde(oid:Option[String] = None,
                      toinenAsteOnkoKaksoistutkinto: Option[Boolean] = None,
                      kaytetaanHaunAikataulua: Option[Boolean] = None,
                      valintaperuste: Option[UUID] = None,
-                     metadata: Option[HakukohdeMetadata] = None,
-                     hakuajat: List[Hakuaika] = List(),
+                     liitteetOnkoSamaToimitusaika: Option[Boolean] = None,
+                     liitteetOnkoSamaToimitusosoite: Option[Boolean] = None,
+                     liitteidenPalautusaika: Option[Instant] = None,
+                     liitteidenToimitustapa: Option[LiitteenToimitustapa] = None,
+                     liitteidenToimitusosoite: Option[LiitteenToimitusosoite] = None,
+                     liitteet: List[Liite] = List(),
+                     valintakokeet: List[Valintakoe] = List(),
+                     hakuajat: List[Ajanjakso] = List(),
                      muokkaaja:String,
                      kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
@@ -42,3 +47,21 @@ case class Hakukohde(oid:Option[String] = None,
   } yield x
 }
 
+case class Valintakoe(id:Option[UUID] = None,
+                      tyyppi:Option[String] = None,
+                      tilaisuudet:List[Valintakoetilaisuus])
+
+case class Valintakoetilaisuus(osoite:Option[Osoite],
+                               aika:Option[Ajanjakso] = None,
+                               lisatietoja:Kielistetty = Map())
+
+case class Liite(id:Option[UUID] = None,
+                 tyyppi:Option[String],
+                 nimi: Kielistetty = Map(),
+                 kuvaus: Kielistetty = Map(),
+                 palautusaika: Option[Instant] = None,
+                 toimitustapa: Option[LiitteenToimitustapa] = None,
+                 toimitusosoite: Option[LiitteenToimitusosoite] = None)
+
+case class LiitteenToimitusosoite(osoite:Osoite,
+                                  sahkoposti:Option[String] = None)

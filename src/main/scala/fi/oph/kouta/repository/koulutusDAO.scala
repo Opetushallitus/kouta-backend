@@ -61,6 +61,15 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       new OidListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
     })
   }
+
+  private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
+    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
+    if(tarjoajat.size > 0) {
+      DBIO.sequence( tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
+    } else {
+      DBIO.sequence(List(deleteTarjoajat(oid)))
+    }
+  }
 }
 
 sealed trait KoulutusSQL extends KoulutusExtractors with SQLHelpers {
@@ -109,10 +118,9 @@ sealed trait KoulutusSQL extends KoulutusExtractors with SQLHelpers {
             max(upper(kh.system_time)),
             max(upper(tah.system_time)))
           from koulutukset k
-
           left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
           left join koulutukset_history kh on k.oid = kh.oid
-           left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+          left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
           where k.oid = $oid""".as[Option[Instant]].head
   }
 
@@ -128,28 +136,27 @@ sealed trait KoulutusSQL extends KoulutusExtractors with SQLHelpers {
               muokkaaja = $muokkaaja,
               kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
-            and ( johtaa_tutkintoon <> $johtaaTutkintoon
-            or tyyppi <> ${koulutustyyppi.map(_.toString)}::koulutustyyppi
-            or koulutus_koodi_uri <> $koulutusKoodiUri
-            or tila <> ${tila.toString}::julkaisutila
-            or nimi <> ${toJsonParam(nimi)}::jsonb
-            or metadata <> ${toJsonParam(metatieto)}::jsonb
-            or kielivalinta <> ${toJsonParam(kielivalinta)}::jsonb)"""
+            and ( johtaa_tutkintoon is distinct from $johtaaTutkintoon
+            or tyyppi is distinct from ${koulutustyyppi.map(_.toString)}::koulutustyyppi
+            or koulutus_koodi_uri is distinct from $koulutusKoodiUri
+            or tila is distinct from ${tila.toString}::julkaisutila
+            or nimi is distinct from ${toJsonParam(nimi)}::jsonb
+            or metadata is distinct from ${toJsonParam(metatieto)}::jsonb
+            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb)"""
   }
 
-  def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
-    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
-    if(tarjoajat.size > 0) {
-      val tarjoajatString = tarjoajat.map(s => s"'$s'").mkString(",")
-      DBIO.sequence( tarjoajat.map(t =>
-        sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
-             values ($oid, $t, $muokkaaja)
-             on conflict on constraint koulutusten_tarjoajat_pkey do nothing""") :+
-        sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})""")
-    } else {
-      DBIO.sequence(List(sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""))
-    }
+  def insertTarjoaja(oid:Option[String], tarjoaja:String, muokkaaja:String ) = {
+    sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
+             values ($oid, $tarjoaja, $muokkaaja)
+             on conflict on constraint koulutusten_tarjoajat_pkey do nothing"""
   }
+
+  def deleteTarjoajat(oid:Option[String], exclude:List[String]) = {
+    val tarjoajatString = exclude.map(s => s"'$s'").mkString(",")
+    sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})"""
+  }
+
+  def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
   def selectFromKoulutukset(params:ListParams) = s"select k.oid, k.nimi from koulutukset k ${joinTarjoajat(params.tarjoajat)} ${whereTilat(params.tilat)}"
 

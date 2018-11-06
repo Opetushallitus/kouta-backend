@@ -1,10 +1,50 @@
 package fi.oph.kouta
 
-import java.time.Instant
+import java.time.{Instant, LocalTime}
+import java.time.temporal.{ChronoUnit, TemporalUnit}
 
 import fi.oph.kouta.domain._
+import org.joda.time.Seconds
 
 object TestData {
+
+  def now() = Instant.now().truncatedTo(ChronoUnit.MINUTES)
+  def inFuture(s:Long = 500) = Instant.now.plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
+
+  val Osoite1 = Osoite(
+    osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"),
+    postinumero = Some("12345"),
+    postitoimipaikka = Map(Fi -> "Kaupunki", Sv -> "SV kaupunki"))
+
+  val Yhteystieto1 = Yhteystieto(
+    nimi = Map(Fi -> "Aku Ankka", Sv -> "Aku Ankka"),
+    puhelinnumero = Map(Fi -> "123", Sv -> "123"))
+
+  val Liite1 = Liite(
+    id = None,
+    tyyppi = Some("moi"),
+    nimi = Map(Fi -> "liite 1 Fi", Sv -> "liite 1 Sv"),
+    kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
+    palautusaika = Some(inFuture()),
+    toimitustapa = Some(Hakijapalvelu),
+    toimitusosoite = None)
+
+  val Liite2 = Liite(
+    id = None,
+    tyyppi = Some("terve"),
+    nimi = Map(Fi -> "liite 2 Fi", Sv -> "liite 2 Sv"),
+    kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
+    palautusaika = None,
+    toimitustapa = Some(MuuOsoite),
+    toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))))
+
+  val Valintakoe1 = Valintakoe(
+    id = None,
+    tyyppi = Some("heippa"),
+    tilaisuudet = List(Valintakoetilaisuus(
+      osoite = Some(Osoite1),
+      aika = Some(Ajanjakso(alkaa = now(), paattyy = inFuture())),
+      lisatietoja = Map(Fi -> "lisätietieto fi", Sv -> "lisätieto sv"))))
 
   val AmmKoulutus = Koulutus(
     oid = None,
@@ -24,16 +64,16 @@ object TestData {
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
     tila = Julkaistu,
     hakutapaKoodiUri = Some("hakutapa_03#1"),
-    hakukohteenLiittamisenTakaraja = Some(Instant.now()),
-    hakukohteenMuokkaamisenTakaraja = Some(Instant.now()),
+    hakukohteenLiittamisenTakaraja = Some(inFuture()),
+    hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2019"),
     kohdejoukkoKoodiUri = Some("kohdejoukko_05#11"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
-    metadata = Some(HakuMetadata(yhteystieto = Some(new Yhteystieto(nimi = "Iines Ankka")))),
-    hakuajat = List(Hakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(9000))),
+    metadata = Some(HakuMetadata(Some(Yhteystieto1))),
+    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     organisaatio = "1.2.3.4",
     muokkaaja = "5.4.3.2.1",
     kielivalinta = Seq(Fi, Sv))
@@ -57,8 +97,14 @@ object TestData {
     toinenAsteOnkoKaksoistutkinto = None,
     kaytetaanHaunAikataulua = Some(false),
     valintaperuste = None,
-    metadata = None,
-    hakuajat = List(Hakuaika(alkaa = Instant.now(), paattyy = Instant.now.plusSeconds(9000))),
+    liitteetOnkoSamaToimitusaika = Some(true),
+    liitteetOnkoSamaToimitusosoite = Some(false),
+    liitteidenPalautusaika = Some(inFuture()),
+    liitteidenToimitustapa = None,
+    liitteidenToimitusosoite = None,
+    liitteet = List(Liite1, Liite2),
+    valintakokeet = List(Valintakoe1),
+    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     muokkaaja = "1.2.3.2.1",
     kielivalinta = Seq(Fi, Sv))
 
@@ -91,7 +137,7 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List("robotiikka"),
     ammattinimikkeet = List("koneinsinööri"),
-    yhteystieto = Some(Yhteystieto(nimi = "Aku Ankka", puhelinnumero = Some("123"))))
+    yhteystieto = Some(Yhteystieto1))
 
   val JulkaistuAmmToteutus = Toteutus(
     oid = None,
