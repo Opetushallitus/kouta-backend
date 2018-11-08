@@ -115,7 +115,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
   }
 
   def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
-    hakuajat = List(Ajanjakso(Instant.now().plusSeconds(9000), Instant.now().plusSeconds(3000))))
+    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
   it should "validate new hakukohde" in {
     put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader)) {
@@ -143,7 +143,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
       valintakokeet = List(TestData.Valintakoe1.copy(tyyppi = Some("tyyyyppi"))),
-      liitteet = tallennettu.liitteet.map(_.copy(palautusaika = Some(TestData.now()))))
+      liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.now()))))
     update(muokattuHakukohde, lastModified, true)
     get(oid, getIds(muokattuHakukohde))
   }

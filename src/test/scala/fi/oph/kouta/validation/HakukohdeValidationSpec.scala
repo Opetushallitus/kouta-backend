@@ -2,6 +2,7 @@ package fi.oph.kouta.validation
 
 import java.time.Instant
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 
@@ -31,7 +32,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
     assertLeft(max.copy(alkamisvuosi = Some("20180")), validationMsg("20180"))
     assertLeft(max.copy(alkamisvuosi = Some("2017")), validationMsg("2017"))
     assertLeft(max.copy(pohjakoulutusvaatimusKoodiUri = Some("hessu")), validationMsg("hessu"))
-    assertLeft(max.copy(hakuajat = List(Ajanjakso(alkaa = Instant.now().plusSeconds(90000), paattyy = Instant.now.plusSeconds(9000)))), InvalidHakuaika)
+    assertLeft(max.copy(hakuajat = List(Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000)))), InvalidHakuaika)
   }
 
   it should "pass valid julkaistu hakukohde" in {
@@ -39,7 +40,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
   }
 
   it should "return multiple error messages" in {
-    assertLeft(max.copy(aloituspaikat = Some(-1), liitteetOnkoSamaToimitusaika = Some(true), liitteidenPalautusaika = None),
-      List(notNegativeMsg("aloituspaikat"), missingMsg("liitteiden palautusaika")))
+    assertLeft(max.copy(aloituspaikat = Some(-1), liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None),
+      List(notNegativeMsg("aloituspaikat"), missingMsg("liitteiden toimitusaika")))
   }
 }

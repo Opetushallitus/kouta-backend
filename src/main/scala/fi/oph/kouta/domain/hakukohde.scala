@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain
 
-import java.time.Instant
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.validation.{IsValid, Validatable}
@@ -23,7 +23,7 @@ case class Hakukohde(oid:Option[String] = None,
                      valintaperuste: Option[UUID] = None,
                      liitteetOnkoSamaToimitusaika: Option[Boolean] = None,
                      liitteetOnkoSamaToimitusosoite: Option[Boolean] = None,
-                     liitteidenPalautusaika: Option[Instant] = None,
+                     liitteidenToimitusaika: Option[LocalDateTime] = None,
                      liitteidenToimitustapa: Option[LiitteenToimitustapa] = None,
                      liitteidenToimitusosoite: Option[LiitteenToimitusosoite] = None,
                      liitteet: List[Liite] = List(),
@@ -44,8 +44,8 @@ case class Hakukohde(oid:Option[String] = None,
      validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
      validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
      validateIfTrue(tila == Julkaistu, () => and(
-       validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, () => assertNotOptional(liitteidenPalautusaika, "liitteiden palautusaika"))),
-       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusosoite, "liitteiden palautusaika")))
+       validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusaika, "liitteiden toimitusaika"))),
+       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusosoite, "liitteiden toimitusaika")))
     ))
   )
 }
@@ -62,7 +62,7 @@ case class Liite(id:Option[UUID] = None,
                  tyyppi:Option[String],
                  nimi: Kielistetty = Map(),
                  kuvaus: Kielistetty = Map(),
-                 palautusaika: Option[Instant] = None,
+                 toimitusaika: Option[LocalDateTime] = None,
                  toimitustapa: Option[LiitteenToimitustapa] = None,
                  toimitusosoite: Option[LiitteenToimitusosoite] = None)
 

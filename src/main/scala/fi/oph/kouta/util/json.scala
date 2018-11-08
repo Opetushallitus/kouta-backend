@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import java.time.{Instant, ZoneId}
+import java.time.{Instant, LocalDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -11,7 +11,7 @@ import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Format
 
 trait KoutaJsonFormats {
 
-  val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm").withZone(ZoneId.of("Europe/Helsinki"))
+  val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
   implicit def jsonFormats: Formats = DefaultFormats +
     new CustomSerializer[Julkaisutila](formats => ( {
@@ -34,10 +34,10 @@ trait KoutaJsonFormats {
     }, {
       case j: Hakulomaketyyppi => JString(j.toString)
     })) +
-    new CustomSerializer[Instant](formats => ({
-      case JString(i) => Instant.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
+    new CustomSerializer[LocalDateTime](formats => ({
+      case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
     }, {
-      case i: Instant => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
+      case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
     })) +
     new CustomSerializer[Kieli](formats => ({
       case JString(s) => Kieli.withName(s)

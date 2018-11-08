@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
@@ -10,8 +10,8 @@ case class Haku(oid:Option[String] = None,
                 tila:Julkaisutila = Tallennettu,
                 nimi: Kielistetty = Map(),
                 hakutapaKoodiUri: Option[String] = None,
-                hakukohteenLiittamisenTakaraja: Option[Instant] = None,
-                hakukohteenMuokkaamisenTakaraja: Option[Instant] = None,
+                hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
+                hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
                 alkamiskausiKoodiUri: Option[String] = None,
                 alkamisvuosi: Option[String] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,

@@ -1,6 +1,6 @@
 package fi.oph.kouta
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 import java.util.regex.Pattern
 
@@ -75,7 +75,7 @@ package object domain {
                          sahkoposti:Kielistetty = Map(),
                          puhelinnumero:Kielistetty = Map())
 
-  case class Ajanjakso(alkaa:Instant, paattyy:Instant)
+  case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
   case class ListParams(tilat:List[Julkaisutila] = List(),
                         tarjoajat:List[String] = List())

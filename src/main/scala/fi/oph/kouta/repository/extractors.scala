@@ -1,6 +1,6 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 import fi.oph.kouta.domain._
@@ -11,14 +11,14 @@ import slick.jdbc._
 trait ExtractorBase extends KoutaJsonFormats {
 
   case class Tarjoaja(oid:String, tarjoajaOid:String)
-  case class Hakuaika(oid:String, alkaa:Instant, paattyy:Instant)
+  case class Hakuaika(oid:String, alkaa:LocalDateTime, paattyy:LocalDateTime)
 
   implicit val getInstantOptionResult: GetResult[Option[Instant]] = GetResult(r => r.nextTimestampOption().map(_.toInstant))
 
   implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => new Tarjoaja(r.nextString, r.nextString))
 
   implicit val getHakuaikaResult: GetResult[Hakuaika] = GetResult(r => {
-    new Hakuaika(r.nextString(), r.nextTimestamp.toInstant, r.nextTimestamp.toInstant)
+    new Hakuaika(r.nextString(), r.nextTimestamp.toLocalDateTime, r.nextTimestamp.toLocalDateTime)
   })
 
   def extractKielistetty(json:Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
@@ -61,8 +61,8 @@ trait HakuExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString),
     nimi = extractKielistetty(r.nextStringOption),
     hakutapaKoodiUri = r.nextStringOption,
-    hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toInstant),
-    hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toInstant),
+    hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
+    hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     alkamiskausiKoodiUri = r.nextStringOption,
     alkamisvuosi = r.nextStringOption,
     kohdejoukkoKoodiUri = r.nextStringOption,
@@ -115,7 +115,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     valintaperuste = r.nextStringOption.map(UUID.fromString),
     liitteetOnkoSamaToimitusaika = r.nextBooleanOption(),
     liitteetOnkoSamaToimitusosoite = r.nextBooleanOption(),
-    liitteidenPalautusaika = r.nextTimestampOption().map(_.toInstant),
+    liitteidenToimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
     liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
     muokkaaja = r.nextString,
@@ -133,7 +133,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     tyyppi = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption),
     kuvaus = extractKielistetty(r.nextStringOption),
-    palautusaika = r.nextTimestampOption().map(_.toInstant),
+    toimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
     toimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
   ))

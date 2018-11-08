@@ -138,7 +138,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
             valintaperuste,
             liitteet_onko_sama_toimitusaika,
             liitteet_onko_sama_toimitusosoite,
-            liitteiden_palautusaika,
+            liitteiden_toimitusaika,
             liitteiden_toimitustapa,
             liitteiden_toimitusosoite,
             muokkaaja,
@@ -161,7 +161,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
             ${hakukohde.valintaperuste.map(_.toString)}::uuid,
             ${hakukohde.liitteetOnkoSamaToimitusaika},
             ${hakukohde.liitteetOnkoSamaToimitusosoite},
-            ${formatTimestampParam(hakukohde.liitteidenPalautusaika)}::timestamp,
+            ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
             ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
             ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
             ${hakukohde.muokkaaja},
@@ -188,7 +188,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
               valintaperuste = ${hakukohde.valintaperuste.map(_.toString)}::uuid,
               liitteet_onko_sama_toimitusaika = ${hakukohde.liitteetOnkoSamaToimitusaika},
               liitteet_onko_sama_toimitusosoite = ${hakukohde.liitteetOnkoSamaToimitusosoite},
-              liitteiden_palautusaika = ${formatTimestampParam(hakukohde.liitteidenPalautusaika)}::timestamp,
+              liitteiden_toimitusaika = ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
               liitteiden_toimitustapa = ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
               liitteiden_toimitusosoite = ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
               muokkaaja = ${hakukohde.muokkaaja},
@@ -211,7 +211,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
             or valintaperuste is distinct from ${hakukohde.valintaperuste.map(_.toString)}::uuid
             or liitteet_onko_sama_toimitusaika is distinct from ${hakukohde.liitteetOnkoSamaToimitusaika}
             or liitteet_onko_sama_toimitusosoite is distinct from ${hakukohde.liitteetOnkoSamaToimitusosoite}
-            or liitteiden_palautusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenPalautusaika)}::timestamp
+            or liitteiden_toimitusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp
             or liitteiden_toimitustapa is distinct from ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa
             or liitteiden_toimitusosoite is distinct from ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb)"""
@@ -236,7 +236,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
              valintaperuste,
              liitteet_onko_sama_toimitusaika,
              liitteet_onko_sama_toimitusosoite,
-             liitteiden_palautusaika,
+             liitteiden_toimitusaika,
              liitteiden_toimitustapa,
              liitteiden_toimitusosoite,
              muokkaaja,
@@ -273,7 +273,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
                 tyyppi,
                 nimi,
                 kuvaus,
-                palautusaika,
+                toimitusaika,
                 toimitustapa,
                 toimitusosoite,
                 muokkaaja
@@ -283,7 +283,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
                 ${liite.tyyppi},
                 ${toJsonParam(liite.nimi)}::jsonb,
                 ${toJsonParam(liite.kuvaus)}::jsonb,
-                ${formatTimestampParam(liite.palautusaika)}::timestamp,
+                ${formatTimestampParam(liite.toimitusaika)}::timestamp,
                 ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa,
                 ${toJsonParam(liite.toimitusosoite)}::jsonb,
                 ${muokkaaja})"""
@@ -298,7 +298,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
   }
 
   def selectLiitteet(oid:String) = {
-    sql"""select id, tyyppi, nimi, kuvaus, palautusaika, toimitustapa, toimitusosoite
+    sql"""select id, tyyppi, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
           from hakukohteiden_liitteet where hakukohde_oid = $oid""".as[Liite]
   }
 
@@ -350,7 +350,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
                 tyyppi = ${liite.tyyppi},
                 nimi = ${toJsonParam(liite.nimi)}::jsonb,
                 kuvaus = ${toJsonParam(liite.kuvaus)}::jsonb,
-                palautusaika = ${formatTimestampParam(liite.palautusaika)}::timestamp,
+                toimitusaika = ${formatTimestampParam(liite.toimitusaika)}::timestamp,
                 toimitustapa = ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa,
                 toimitusosoite = ${toJsonParam(liite.toimitusosoite)}::jsonb,
                 muokkaaja = ${muokkaaja}
@@ -359,7 +359,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
                 and ( tyyppi is distinct from ${liite.tyyppi}
                       or nimi is distinct from ${toJsonParam(liite.nimi)}::jsonb
                       or kuvaus is distinct from ${toJsonParam(liite.kuvaus)}::jsonb
-                      or palautusaika is distinct from ${formatTimestampParam(liite.palautusaika)}::timestamp
+                      or toimitusaika is distinct from ${formatTimestampParam(liite.toimitusaika)}::timestamp
                       or toimitustapa is distinct from ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa
                       or toimitusosoite is distinct from ${toJsonParam(liite.toimitusosoite)}::jsonb)"""
   }

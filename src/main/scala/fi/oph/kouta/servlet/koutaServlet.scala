@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import java.text.ParseException
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.{Instant, LocalDateTime, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.{ConcurrentModificationException, NoSuchElementException, UUID}
 
@@ -20,7 +20,7 @@ import scala.util.{Failure, Try}
 trait KoutaServlet extends ScalatraServlet with SwaggerSupport with JacksonJsonSupport with Logging with KoutaJsonFormats {
 
   val modelName:String
-  val EXAMPLE_DATE_TIME = ISO_LOCAL_DATE_TIME_FORMATTER.format(Instant.EPOCH)
+  val EXAMPLE_DATE_TIME = ISO_LOCAL_DATE_TIME_FORMATTER.format(LocalDateTime.MIN)
   val EXAMPLE_UUID = UUID.randomUUID().toString
 
   before() {

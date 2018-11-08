@@ -1,7 +1,7 @@
 package fi.oph.kouta.repository
 
 import java.sql.{PreparedStatement, ResultSet, Timestamp}
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 
 import fi.oph.kouta.domain.Ajanjakso
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -12,7 +12,7 @@ import scala.util.Try
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
-  def formatTimestampParam(value:Option[Instant]) = value.map(ISO_LOCAL_DATE_TIME_FORMATTER.format).getOrElse(null)
+  def formatTimestampParam(value:Option[LocalDateTime]) = value.map(ISO_LOCAL_DATE_TIME_FORMATTER.format).getOrElse(null)
 
   def toJsonParam(value:AnyRef) = Option(toJson(value)) match {
     case Some(s) if !s.isEmpty & !"{}".equals(s) => s

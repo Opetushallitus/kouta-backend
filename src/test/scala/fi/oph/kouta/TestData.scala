@@ -1,15 +1,14 @@
 package fi.oph.kouta
 
-import java.time.{Instant, LocalTime}
-import java.time.temporal.{ChronoUnit, TemporalUnit}
+import java.time.{LocalDateTime}
+import java.time.temporal.{ChronoUnit}
 
 import fi.oph.kouta.domain._
-import org.joda.time.Seconds
 
 object TestData {
 
-  def now() = Instant.now().truncatedTo(ChronoUnit.MINUTES)
-  def inFuture(s:Long = 500) = Instant.now.plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
+  def now() = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+  def inFuture(s:Long = 500) = LocalDateTime.now().plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
 
   val Osoite1 = Osoite(
     osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"),
@@ -25,7 +24,7 @@ object TestData {
     tyyppi = Some("moi"),
     nimi = Map(Fi -> "liite 1 Fi", Sv -> "liite 1 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
-    palautusaika = Some(inFuture()),
+    toimitusaika = Some(inFuture()),
     toimitustapa = Some(Hakijapalvelu),
     toimitusosoite = None)
 
@@ -34,7 +33,7 @@ object TestData {
     tyyppi = Some("terve"),
     nimi = Map(Fi -> "liite 2 Fi", Sv -> "liite 2 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
-    palautusaika = None,
+    toimitusaika = None,
     toimitustapa = Some(MuuOsoite),
     toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))))
 
@@ -99,7 +98,7 @@ object TestData {
     valintaperuste = None,
     liitteetOnkoSamaToimitusaika = Some(true),
     liitteetOnkoSamaToimitusosoite = Some(false),
-    liitteidenPalautusaika = Some(inFuture()),
+    liitteidenToimitusaika = Some(inFuture()),
     liitteidenToimitustapa = None,
     liitteidenToimitusosoite = None,
     liitteet = List(Liite1, Liite2),
