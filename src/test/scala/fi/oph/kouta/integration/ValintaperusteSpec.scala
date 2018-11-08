@@ -5,9 +5,9 @@ import java.util.UUID
 import fi.oph.kouta.TestData.MinValintaperuste
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
-import fi.oph.kouta.validation.ValidationMessages
+import fi.oph.kouta.validation.Validations
 
-class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with ValidationMessages {
+class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with Validations {
 
   it should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}") {
@@ -68,7 +68,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(invalidOidMsg("saippua")))
+      body should equal (validateErrorBody(validationMsg("saippua")))
     }
   }
 
@@ -79,7 +79,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(invalidOidMsg("saippua")))
+      body should equal (validateErrorBody(validationMsg("saippua")))
     }
   }
 

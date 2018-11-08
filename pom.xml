@@ -377,7 +377,7 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>${plugin.scalatest-maven-plugin.version}</version>
                 <configuration>
-                    <membersOnlySuites>fi.oph.kouta.integration</membersOnlySuites>
+                    <membersOnlySuites>fi.oph.kouta.integration, fi.oph.kouta.validation</membersOnlySuites>
                     <stdout>T</stdout>
                 </configuration>
                 <executions>

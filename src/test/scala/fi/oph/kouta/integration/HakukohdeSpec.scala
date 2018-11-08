@@ -6,10 +6,10 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture._
-import fi.oph.kouta.validation.ValidationMessages
+import fi.oph.kouta.validation.Validations
 
 class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
-  with KoulutusFixture with ToteutusFixture with HakuFixture with ValintaperusteFixture with ValidationMessages {
+  with KoulutusFixture with ToteutusFixture with HakuFixture with ValintaperusteFixture with Validations {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null
@@ -122,7 +122,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(InvalidHakuaika))
     }
   }
 
@@ -133,7 +133,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(InvalidHakuaika))
     }
   }
 

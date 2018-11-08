@@ -24,20 +24,22 @@ case class Haku(oid:Option[String] = None,
                 muokkaaja:String,
                 kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
-  override def validate(): IsValid = for {
-    _ <- super.validate().right
-    _ <- validateHakuOid(oid).right
-    _ <- validateOid(organisaatio).right
-    x <- validateIfTrue(tila == Julkaistu, () => for {
-      _ <- validateHakutapaKoodi(hakutapaKoodiUri).right
-      _ <- validateKausiKoodi(alkamiskausiKoodiUri).right
-      _ <- validateAlkamisvuosi(alkamisvuosi).right
-      _ <- validateKohdejoukkoKoodi(kohdejoukkoKoodiUri).right
-      _ <- validateKohdejoukonTarkenneKoodi(kohdejoukonTarkenneKoodiUri).right
-      _ <- validateHakulomake(hakulomaketyyppi, hakulomake).right
-      y <- validateHakuajat(hakuajat).right
-    } yield y).right
-  } yield x
-
+  override def validate(): IsValid = and (
+     super.validate(),
+     validateIfDefined[String](oid, assertMatch(_, HakuOidPattern)),
+     assertMatch(organisaatio, OidPattern),
+     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
+     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
+     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
+     validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
+     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
+     validateHakuajat(hakuajat),
+     validateIfTrue(tila == Julkaistu, () => and (
+       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
+       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
+       assertNotOptional(kohdejoukonTarkenneKoodiUri, "kohdejoukonTarkenneKoodiUri"),
+       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")
+     ))
+  )
 }
 

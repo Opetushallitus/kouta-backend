@@ -2,9 +2,9 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
-import fi.oph.kouta.validation.ValidationMessages
+import fi.oph.kouta.validation.Validations
 
-class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with ValidationMessages {
+class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with Validations {
 
   var koulutusOid = ""
 
@@ -98,7 +98,7 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(invalidTarjoajaOids(List("katkarapu"))))
+      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu"))))
     }
   }
 
@@ -109,7 +109,7 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(invalidTarjoajaOids(List("katkarapu"))))
+      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu"))))
     }
   }
 }

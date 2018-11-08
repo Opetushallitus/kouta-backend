@@ -3,7 +3,7 @@ package fi.oph.kouta.validation
 import fi.oph.kouta.TestData.{JulkaistuValintaperuste, MinValintaperuste}
 import fi.oph.kouta.domain._
 
-class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] with ValidationMessages {
+class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] with Validations {
 
   val max = JulkaistuValintaperuste
   val min = MinValintaperuste
@@ -12,7 +12,7 @@ class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] w
     assertLeft(max.copy(kielivalinta = Seq()), MissingKielivalinta)
     assertLeft(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
     assertLeft(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    assertLeft(max.copy(muokkaaja = "moikka"), invalidOidMsg("moikka"))
+    assertLeft(max.copy(muokkaaja = "moikka"), validationMsg("moikka"))
   }
 
   it should "pass imcomplete valintaperuste if not julkaistu" in {
@@ -20,13 +20,18 @@ class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] w
   }
 
   it should "fail if julkaistu valintaperuste is invalid" in {
-    assertLeft(max.copy(hakutapaKoodiUri = Some("korppi")), invalidHakutapaKoodi("korppi"))
-    assertLeft(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), invalidKohdejoukkoKoodi("kerttu"))
-    assertLeft(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), invalidKohdejoukonTarkenneKoodi("tonttu"))
+    assertLeft(max.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
+    assertLeft(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
+    assertLeft(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
   }
 
   it should "pass valid julkaistu valintaperuste" in {
     assertRight(max)
+  }
+
+  it should "return multiple error messages" in {
+    assertLeft(max.copy(hakutapaKoodiUri = None, kohdejoukkoKoodiUri = None),
+      List(missingMsg("hakutapaKoodiUri"), missingMsg("kohdejoukkoKoodiUri")))
   }
 }
 

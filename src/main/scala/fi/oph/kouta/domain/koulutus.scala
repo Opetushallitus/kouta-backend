@@ -15,15 +15,14 @@ case class Koulutus(oid:Option[String] = None,
                     muokkaaja:String,
                     kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
-  override def validate() = for {
-    _ <- super.validate().right
-    _ <- validateKoulutusOid(oid).right
-    x <- validateIfTrue(Julkaistu == tila, () => for {
-      _ <- validateKoulutustyyppi(koulutustyyppi).right
-      _ <- validateTutkintoonjohtavuus(koulutustyyppi.get, johtaaTutkintoon).right
-      _ <- validateKoulutusKoodi(koulutusKoodiUri).right
-      y <- validateTarjoajat(tarjoajat).right
-    } yield y).right
-  } yield x
-
+  override def validate() = {
+    and(super.validate(),
+        validateIfDefined[String](oid, assertMatch(_, KoulutusOidPattern)),
+        validateOidList(tarjoajat),
+        validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern)),
+        validateIfTrue(Julkaistu == tila, () => and(
+          assertNotOptional(koulutustyyppi, "koulutustyyppi"),
+          validateIfDefined[Koulutustyyppi](koulutustyyppi, (k) => assertTrue(k == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(k.toString))),
+          assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"))))
+  }
 }

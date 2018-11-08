@@ -32,19 +32,22 @@ case class Hakukohde(oid:Option[String] = None,
                      muokkaaja:String,
                      kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
-  override def validate(): IsValid = for {
-    _ <- super.validate().right
-    _ <- validateHakukohdeOid(oid)
-    _ <- validateToteutusOid(toteutusOid)
-    _ <- validateHakuOid(hakuOid)
-    x <- validateIfTrue(tila == Julkaistu, () => for {
-      _ <- validateKausiKoodi(alkamiskausiKoodiUri).right
-      _ <- validatePohjakoulutusvaatimusKoodi(pohjakoulutusvaatimusKoodiUri).right
-      _ <- validateAlkamisvuosi(alkamisvuosi).right
-      _ <- validateHakulomake(hakulomaketyyppi, hakulomake).right
-      y <- validateHakuajat(hakuajat).right
-    } yield y).right
-  } yield x
+  override def validate(): IsValid = and(
+     super.validate(),
+     validateIfDefined[String](oid, assertMatch(_, HakukohdeOidPattern)),
+     assertMatch(toteutusOid, ToteutusOidPattern),
+     assertMatch(hakuOid, HakuOidPattern),
+     validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
+     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
+     validateHakuajat(hakuajat),
+     validateIfDefined[String](pohjakoulutusvaatimusKoodiUri, assertMatch(_, PohjakoulutusvaatimusKoodiPattern)),
+     validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
+     validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
+     validateIfTrue(tila == Julkaistu, () => and(
+       validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, () => assertNotOptional(liitteidenPalautusaika, "liitteiden palautusaika"))),
+       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusosoite, "liitteiden palautusaika")))
+    ))
+  )
 }
 
 case class Valintakoe(id:Option[UUID] = None,

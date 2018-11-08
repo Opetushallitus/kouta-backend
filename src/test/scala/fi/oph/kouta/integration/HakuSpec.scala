@@ -3,9 +3,9 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.HakuFixture
-import fi.oph.kouta.validation.ValidationMessages
+import fi.oph.kouta.validation.Validations
 
-class HakuSpec extends KoutaIntegrationSpec with HakuFixture with ValidationMessages {
+class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
 
   it should "return 404 if haku not found" in {
     get("/haku/123") {
@@ -91,7 +91,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with ValidationMess
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(InvalidHakuaika))
     }
   }
 
@@ -102,7 +102,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with ValidationMess
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(InvalidHakuaika))
     }
   }
 

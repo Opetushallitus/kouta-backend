@@ -1,136 +1,76 @@
 package fi.oph.kouta.validation
 
+import java.time.LocalDate
+import java.util.regex.Pattern
+
 import fi.oph.kouta.domain._
 
-trait Validations extends ValidationMessages {
+trait Validations {
 
-  def assertTrue(b:Boolean, msg:String): IsValid = Either.cond(b, (), msg)
+  def validationMsg(value:String) = s"'${value}' ei ole validi"
+  def missingMsg(name:String) = s"Pakollinen tieto '$name' puuttuu"
+  def invalidOidsMsg(oids:Seq[String]) = s"Arvot [${oids.mkString(",")}] eivät ole valideja oideja"
+  def notNegativeMsg(name:String) = s"'$name' ei voi olla negatiivinen"
+  def invalidKielistetty(field:String, values:Seq[Kieli]) = s"Kielistetystä kentästä $field puuttuu arvo kielillä [${values.mkString(",")}]"
+  def invalidTutkintoonjohtavuus(tyyppi:String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
+
+  val KoulutusKoodiPattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
+  val HakutapaKoodiPattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
+  val KausiKoodiPattern = Pattern.compile("""kausi_\w{1}#\d{1,2}""")
+  val KohdejoukkoKoodiPattern = Pattern.compile("""kohdejoukko_\d+#\d{1,2}""")
+  val KohdejoukonTarkenneKoodiPattern = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
+  val PohjakoulutusvaatimusKoodiPattern = Pattern.compile("""pohjakoulutusvaatimus_\d+#\d{1,2}""")
+
+  val KoulutusOidPattern = Pattern.compile("""^1\.2\.246\.562\.13.+[\d]$""")
+  val ToteutusOidPattern = Pattern.compile("""^1\.2\.246\.562\.17.+[\d]$""")
+  val HakukohdeOidPattern = Pattern.compile("""^1\.2\.246\.562\.20.+[\d]$""")
+  val HakuOidPattern = Pattern.compile("""^1\.2\.246\.562\.29.+[\d]$""")
+  val OidPattern = Pattern.compile("""^[\d][\d\.]+[\d]$""")
+
+  val VuosiPattern = Pattern.compile("""\d{4}""")
+
+  val MissingKielivalinta = "Kielivalinta puuttuu"
+  val InvalidHakuaika = "Hakuaika on virheellinen"
+  val MissingTarjoajat = "Tarjoajat puuttuvat"
+
+  def toLeft(msg:String) = Left(List(msg))
+
+  def assertTrue(b:Boolean, msg:String): IsValid = Either.cond(b, (), List(msg))
+  def assertNotNegative(i:Int, name:String): IsValid = assertTrue(i >= 0, notNegativeMsg(name))
   def assertOption[E](o:Option[E], f:(E) => Boolean, msg:String, optional:Boolean = true): IsValid = assertTrue(o.map(f).getOrElse(optional), msg)
   def assertOptionPresent[E](o:Option[E], msg:String): IsValid = assertTrue(o.isDefined, msg)
+  def assertMatch(value:String, pattern:Pattern): IsValid = assertTrue(pattern.matcher(value).matches(), validationMsg(value))
+  def assertNotOptional[T](value:Option[T], name:String): IsValid = assertTrue(value.isDefined, missingMsg(name))
 
-  def findInvalidOids(l:Seq[String]): Seq[String] = l.filter(!OidValidator.isOid(_))
-
-  def findPuuttuvatKielet(kielivalinta:Seq[Kieli], k:Kielistetty):Seq[Kieli] = {
-    kielivalinta.diff(k.keySet.toSeq).union(
-      k.filter{case (kieli, arvo) => arvo.isEmpty}.keySet.toSeq
-    )
-  }
-
-  def validateKielistetty(kielivalinta:Seq[Kieli], k:Kielistetty, msg:String): IsValid =
-    findPuuttuvatKielet(kielivalinta, k) match {
-      case x if !x.isEmpty => Left(invalidKielistetty(msg, x))
-      case _ => Right()
-    }
-
-  def validateKoulutusKoodi(koulutusKoodiUri:Option[String]): IsValid = koulutusKoodiUri match {
-    case None => Left(MissingKoulutuskoodi)
-    case Some(x) if !KoodiValidator.isKoulutusKoodi(x) => Left(invalidKoulutuskoodi(x))
-    case _ => Right()
-  }
-
-  def validateTarjoajat(tarjoajat:Seq[String]): IsValid = findInvalidOids(tarjoajat) match {
-    case x if !x.isEmpty => Left(invalidTarjoajaOids(x))
-    case _ => Right()
-  }
-
-  def validateKoulutusOid(oid:String): IsValid = assertTrue(
-    OidValidator.isKoulutusOid(oid), invalidKoulutusOidMsg(oid))
-
-  def validateToteutusOid(oid:String): IsValid = assertTrue(
-    OidValidator.isToteutusOid(oid), invalidToteutusOidMsg(oid))
-
-  def validateHakuOid(oid:String): IsValid = assertTrue(
-    OidValidator.isHakuOid(oid), invalidHakuOidMsg(oid))
-
-  def validateKoulutusKoodi(k:String): IsValid =
-    assertTrue(KoodiValidator.isKoulutusKoodi(k), invalidKoulutuskoodi(k))
-
-  def validateHakutapaKoodi(k:Option[String], optional:Boolean = false): IsValid =
-    assertOption(k, KoodiValidator.isHakutapaKoodi, invalidHakutapaKoodi(k.getOrElse("")), optional)
-
-  def validateKausiKoodi(k:Option[String], optional:Boolean = false): IsValid =
-    assertOption(k, KoodiValidator.isKausiKoodi, invalidKausiKoodi(k.getOrElse("")), optional)
-
-  def validateKohdejoukkoKoodi(k:Option[String], optional:Boolean = false): IsValid =
-    assertOption(k, KoodiValidator.isKohdejoukkoKoodi, invalidKohdejoukkoKoodi(k.getOrElse("")), optional)
-
-  def validateKohdejoukonTarkenneKoodi(k:Option[String], optional:Boolean = false): IsValid =
-    assertOption(k, KoodiValidator.isKohdejoukonTarkenneKoodi, invalidKohdejoukonTarkenneKoodi(k.getOrElse("")), optional)
-
-  def validatePohjakoulutusvaatimusKoodi(k:Option[String], optional:Boolean = false): IsValid =
-    assertOption(k, KoodiValidator.isPohjakoulutusvaatimusKoodi, invalidPohjakoulutusvaatimusKoodi(k.getOrElse("")), optional)
-
-  def validateKielivalinta(kielivalinta:Seq[Kieli]): IsValid =
-    assertTrue(kielivalinta.size > 0, MissingKielivalinta)
-
-  def validateOid(oid:String): IsValid = assertTrue(
-    OidValidator.isOid(oid), invalidOidMsg(oid))
-
-  def validateOid(oid:Option[String]): IsValid = assertOption(
-    oid, OidValidator.isOid(_), invalidOidMsg(oid.getOrElse("")))
-
-  def validateKoulutusOid(oid:Option[String]): IsValid = assertOption(
-    oid, OidValidator.isKoulutusOid(_), invalidKoulutusOidMsg(oid.getOrElse("")))
-
-  def validateToteutusOid(oid:Option[String]): IsValid = assertOption(
-    oid, OidValidator.isToteutusOid(_), invalidToteutusOidMsg(oid.getOrElse("")))
-
-  def validateHakukohdeOid(oid:Option[String]): IsValid = assertOption(
-    oid, OidValidator.isHakukohdeOid(_), invalidHakukohdeOidMsg(oid.getOrElse("")))
-
-  def validateHakuOid(oid:Option[String]): IsValid = assertOption(
-    oid, OidValidator.isHakuOid(_), invalidHakuOidMsg(oid.getOrElse("")))
-
-  def validateMuokkaaja(muokkaaja:String): IsValid = assertTrue(
-    OidValidator.isOid(muokkaaja), invalidOidMsg(muokkaaja))
-
-  def validateAlkamisvuosi(alkamisvuosi:Option[String]): IsValid = assertOption(
-    alkamisvuosi, TimeValidator.isValidAlkamisvuosi(_), invalidAlkamisvuosi(alkamisvuosi.getOrElse("")), true)
-
-  def validateHakulomake(hakulomaketyyppi:Option[Hakulomaketyyppi], hakulomake:Option[String]): IsValid =
-    assertOptionPresent(hakulomaketyyppi, MissingHakulomaketyyppi)
-
-  def validateHakuajat(hakuajat: List[Ajanjakso]): IsValid = hakuajat.filterNot(TimeValidator.isValidHakuaika) match {
-    case x if x.isEmpty => Right()
-    case x => Left(InvalidHakuaika)
-  }
-
-  def validateTutkintoonjohtavuus(tyyppi:Koulutustyyppi, johtaaTutkintoon:Boolean): IsValid = assertTrue(
-    tyyppi == Muu || johtaaTutkintoon, invalidTutkintoonjohtavuus(tyyppi.toString))
+  def validateIfDefined[T](value:Option[T], f:T => IsValid):IsValid = value.map(f(_)).getOrElse(Right())
 
   def validateIfTrue(b:Boolean, f:() => IsValid): IsValid = b match {
     case true => f()
     case _ => Right()
   }
 
-  def validateKoulutustyyppi(koulutustyyppi:Option[Koulutustyyppi]): IsValid =
-    assertOptionPresent(koulutustyyppi, MissingKoulutustyyppi)
+  def findInvalidOids(l:Seq[String]): Seq[String] = l.filter(!OidPattern.matcher(_).matches())
+  def validateOidList(values:Seq[String]):IsValid = findInvalidOids(values) match {
+    case x if !x.isEmpty => toLeft(invalidOidsMsg(x))
+    case _ => Right()
+  }
+
+  def findPuuttuvatKielet(kielivalinta:Seq[Kieli], k:Kielistetty):Seq[Kieli] = {
+    kielivalinta.diff(k.keySet.toSeq).union(
+      k.filter{case (kieli, arvo) => arvo.isEmpty}.keySet.toSeq)}
+
+  def validateKielistetty(kielivalinta:Seq[Kieli], k:Kielistetty, msg:String): IsValid =
+    findPuuttuvatKielet(kielivalinta, k) match {
+      case x if !x.isEmpty => toLeft(invalidKielistetty(msg, x))
+      case _ => Right()
+    }
+
+  def isValidHakuaika(hakuaika:Ajanjakso) = hakuaika.alkaa.isBefore(hakuaika.paattyy)
+  def validateHakuajat(hakuajat: List[Ajanjakso]): IsValid = hakuajat.filterNot(isValidHakuaika) match {
+    case x if x.isEmpty => Right()
+    case x => toLeft(InvalidHakuaika)
+  }
+
+  def isValidAlkamisvuosi(s:String) = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
+  def validateAlkamisvuosi(alkamisvuosi:String) = assertTrue(isValidAlkamisvuosi(alkamisvuosi), validationMsg(alkamisvuosi))
 }
-
-trait ValidationMessages {
-  def invalidKoulutusOidMsg(oid:String) = s"${oid} ei ole validi koulutuksen oid"
-  def invalidToteutusOidMsg(oid:String) = s"${oid} ei ole validi toteutuksen oid"
-  def invalidHakukohdeOidMsg(oid:String) = s"${oid} ei ole validi hakukohteen oid"
-  def invalidHakuOidMsg(oid:String) = s"${oid} ei ole validi haun oid"
-  def invalidOidMsg(oid:String) = s"${oid} ei ole validi oid"
-
-  def invalidKielistetty(field:String, values:Seq[Kieli]) = s"Kielistetystä kentästä $field puuttuu arvo kielillä [${values.mkString(",")}]"
-  def invalidTutkintoonjohtavuus(tyyppi:String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
-  def invalidTarjoajaOids(oids:Seq[String]) = s"Tarjoaja oidit [${oids.mkString(",")}] eivät ole valideja oideja"
-  def invalidAlkamisvuosi(vuosi:String) = s"Alkamisvuosi $vuosi on virheellinen"
-
-  def invalidKoulutuskoodi(koodi:String) = s"${koodi} ei ole validi koulutuskoodi"
-  def invalidHakutapaKoodi(koodi:String) = s"${koodi} ei ole validi hakutapakoodi"
-  def invalidKausiKoodi(koodi:String) = s"${koodi} ei ole validi kausikoodi"
-  def invalidKohdejoukkoKoodi(koodi:String) = s"${koodi} ei ole validi kohdejoukkokoodi"
-  def invalidKohdejoukonTarkenneKoodi(koodi:String) = s"${koodi} ei ole validi kohdejoukon tarkenne -koodi"
-  def invalidPohjakoulutusvaatimusKoodi(koodi:String) = s"${koodi} ei ole validi pohjakoulutusvaatimuskoodi"
-
-  val MissingKielivalinta = "Kielivalinta puuttuu"
-  val MissingKoulutustyyppi = "Koulutustyyppi puuttuu julkaistavalta koulutukselta"
-  val MissingKoulutuskoodi = "Julkaistulla koulutuksella pitää olla koulutuskoodi"
-  val KuvausNotAccepted = "Ammatillisella koulutuksella ei saa olla kuvausta"
-  val MissingHakulomaketyyppi = "Hakulomaketyyppi puuttuu"
-  val InvalidHakuaika = "Hakuaika on virheellinen"
-}
-

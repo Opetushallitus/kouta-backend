@@ -2,9 +2,9 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.KoulutusFixture
-import fi.oph.kouta.validation.ValidationMessages
+import fi.oph.kouta.validation.Validations
 
-class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ValidationMessages {
+class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Validations {
 
   it should "return 404 if koulutus not found" in {
     get("/koulutus/123") {
@@ -85,7 +85,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Valida
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(MissingKoulutuskoodi))
+      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
   }
 
@@ -96,7 +96,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Valida
       withClue(body) {
         status should equal(400)
       }
-      body should equal (errorBody(MissingKoulutuskoodi))
+      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
   }
 

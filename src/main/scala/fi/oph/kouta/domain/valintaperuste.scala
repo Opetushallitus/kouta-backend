@@ -18,13 +18,16 @@ case class Valintaperuste(id:Option[UUID] = None,
                           muokkaaja:String,
                           kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithId with Validatable {
 
-  override def validate(): IsValid = for {
-    _ <- super.validate().right
-    _ <- validateOid(organisaatio)
-    x <- validateIfTrue(Julkaistu == tila, () => for {
-      _ <- validateHakutapaKoodi(hakutapaKoodiUri).right
-      _ <- validateKohdejoukkoKoodi(kohdejoukkoKoodiUri).right
-      y <- validateKohdejoukonTarkenneKoodi(kohdejoukonTarkenneKoodiUri).right
-    } yield y).right
-  } yield x
+  override def validate(): IsValid = and(
+     super.validate(),
+     assertMatch(organisaatio, OidPattern),
+     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
+     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
+     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
+     validateIfTrue(Julkaistu == tila, () => and(
+       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
+       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
+       assertNotOptional(kohdejoukonTarkenneKoodiUri, "kohdejoukonTarkenneKoodiUri"),
+     ))
+  )
 }

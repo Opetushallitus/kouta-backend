@@ -18,6 +18,10 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
 
   def errorBody(expected:String):String = s"""{"error":"${expected}"}"""
 
+  def validateErrorBody(expected:List[String]):String = s"""[${expected.map(s => s""""$s"""").mkString(",")}]"""
+
+  def validateErrorBody(expected:String):String = validateErrorBody(List(expected))
+
   def jsonHeader = ("Content-Type", "application/json; charset=utf-8")
 
   def headersIfUnmodifiedSince(lastModified:String) = List(jsonHeader, ("If-Unmodified-Since", lastModified))
