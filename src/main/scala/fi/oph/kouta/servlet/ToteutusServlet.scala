@@ -40,5 +40,5 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  overrideModels()
+  prettifySwaggerModels()
 }

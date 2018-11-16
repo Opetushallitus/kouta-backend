@@ -40,5 +40,5 @@ class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  overrideModels()
+  prettifySwaggerModels()
 }

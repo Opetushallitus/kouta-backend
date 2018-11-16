@@ -50,5 +50,5 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     Ok(KoulutusService.list(new ListParams(tilat.getOrElse(List()), tarjoajat.getOrElse(List()))))
   }
 
-  overrideModels()
+  prettifySwaggerModels()
 }
