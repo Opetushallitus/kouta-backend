@@ -138,3 +138,5 @@ trait HakukohdeExctractors extends ExtractorBase {
     toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
   ))
 }
+
+trait KeywordExtractors extends ExtractorBase
