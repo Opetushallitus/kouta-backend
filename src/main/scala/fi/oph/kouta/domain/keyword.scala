@@ -12,13 +12,11 @@ package object keyword {
   case object Asiasana extends KeywordType { val name = "asiasana" }
   case object Ammattinimike extends KeywordType { val name = "ammattinimike" }
 
+  type Keyword = (Kieli, String)
+
   case class KeywordSearch(term:String,
                            kieli:Kieli,
                            `type`:KeywordType,
                            limit:Int)
-
-  case class Keywords(keywords:List[String],
-                      kieli:Kieli,
-                      `type`:KeywordType)
 }
 

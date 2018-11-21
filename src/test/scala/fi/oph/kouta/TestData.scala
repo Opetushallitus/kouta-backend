@@ -134,8 +134,8 @@ object TestData {
     kuvaus = Map(),
     osaamisalat = List(Osaamisala("osaamisala_koodi_uri#1")),
     opetus = Some(ToteutuksenOpetus),
-    asiasanat = List("robotiikka"),
-    ammattinimikkeet = List("koneinsinööri"),
+    asiasanat = List((Fi, "robotiikka"), (Fi, "robottiautomatiikka")),
+    ammattinimikkeet = List((Fi, "insinööri"), (Fi, "koneinsinööri")),
     yhteystieto = Some(Yhteystieto1))
 
   val JulkaistuAmmToteutus = Toteutus(

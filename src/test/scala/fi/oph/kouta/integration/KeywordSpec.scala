@@ -1,19 +1,23 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.integration.fixture.KeywordFixture
+import fi.oph.kouta.domain.{Fi, ToteutusMetadata}
+import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import org.scalatest.BeforeAndAfterEach
 
-class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with BeforeAndAfterEach {
+class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with KoulutusFixture with ToteutusFixture with BeforeAndAfterEach {
 
-  lazy val initData = {
-    storeAsiasanat()
-    storeAmmattinimikkeet()
-    true
+  var koulutusOid = ""
+
+  override def beforeAll() = {
+    super.beforeAll()
+    koulutusOid = put(koulutus)
   }
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    initData
+    deleteAsiasanat()
+    storeAsiasanat()
+    storeAmmattinimikkeet()
   }
 
   it should "search asiasanat" in {
@@ -21,7 +25,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with BeforeAn
   }
 
   it should "search ammattinimikkeet" in {
-    searchAmattinimikkeet("lääk", List("lääkäri", "yleislääkäri"))
+    searchAmmattinimikkeet("lääk", List("lääkäri", "yleislääkäri"))
   }
 
   it should "search asiasanat with given kieli" in {
@@ -29,7 +33,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with BeforeAn
   }
 
   it should "search ammattinimikkeet with given kieli" in {
-    searchAmattinimikkeet("lääk", List("lääkäri_sv", "yleislääkäri_sv"), List(("kieli", "sv")))
+    searchAmmattinimikkeet("lääk", List("lääkäri_sv", "yleislääkäri_sv"), List(("kieli", "sv")))
   }
 
   it should "limit asiasana result to 15 by default" in {
@@ -37,7 +41,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with BeforeAn
   }
 
   it should "limit ammattinimike result to 15 by default" in {
-    searchAmattinimikkeet("i", ammattinimikkeet.map(_.toLowerCase).take(15))
+    searchAmmattinimikkeet("i", ammattinimikkeet.map(_.toLowerCase).take(15))
   }
 
   it should "limit asiasana result by given value" in {
@@ -45,7 +49,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with BeforeAn
   }
 
   it should "limit ammattinimike result by given value" in {
-    searchAmattinimikkeet("mies", List("perämies", "putkimies"), List(("limit", "2")))
+    searchAmmattinimikkeet("mies", List("perämies", "putkimies"), List(("limit", "2")))
   }
 
   it should "order asiasana search correctly" in {
@@ -53,6 +57,46 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with BeforeAn
   }
 
   it should "order ammattinimike search correctly" in {
-    searchAmattinimikkeet("pa", List("pappi", "kippari", "kuppari"))
+    searchAmmattinimikkeet("pa", List("pappi", "kippari", "kuppari"))
+  }
+
+  it should "store ammattinimikkeet ja asiasanat in toteutus" in {
+    searchAsiasanat("robo", List())
+    searchAmmattinimikkeet("insinööri", List())
+    put(toteutus(koulutusOid))
+    searchAsiasanat("robo", toteutus.metadata.get.asiasanat.map(_._2))
+    searchAmmattinimikkeet("insinööri", toteutus.metadata.get.ammattinimikkeet.map(_._2))
+  }
+
+  it should "update ammattinimikkeet ja asiasanat in toteutus" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(ToteutusMetadata(
+      asiasanat = List((Fi, "robotti")),
+      ammattinimikkeet = List((Fi, "robotti-insinööri"))
+    )))
+    update(updatedToteutus, lastModified)
+    searchAsiasanat("robo", List("robotiikka", "robotti", "robottiautomatiikka"))
+    searchAmmattinimikkeet("insinööri", List("insinööri", "koneinsinööri", "robotti-insinööri"))
+  }
+
+  it should "not mind if ammattinimike exists" in {
+    import slick.jdbc.PostgresProfile.api._
+    val value = ammattinimikkeet.head.toLowerCase
+    db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
+    post(AmmattinimikePath, bytes(List(value))) {
+      status should equal(200)
+    }
+    db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
+  }
+
+  it should "not mind if asiasana exists" in {
+    import slick.jdbc.PostgresProfile.api._
+    val value = asiasanat.head.toLowerCase
+    db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)
+    post(AsiasanaPath, bytes(List(value))) {
+      status should equal(200)
+    }
+    db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)
   }
 }

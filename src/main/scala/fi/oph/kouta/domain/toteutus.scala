@@ -16,9 +16,9 @@ case class Opetus(opetuskielet:List[String],
 case class ToteutusMetadata(kuvaus:Kielistetty = Map(),
                             osaamisalat:List[Osaamisala] = List(),
                             opetus:Option[Opetus] = None,
-                            asiasanat: List[String] = List(),
-                            ammattinimikkeet: List[String] = List(),
-                            yhteystieto: Option[Yhteystieto])
+                            asiasanat: List[(Kieli, String)] = List(),
+                            ammattinimikkeet: List[(Kieli, String)] = List(),
+                            yhteystieto: Option[Yhteystieto] = None)
 
 case class Toteutus(oid:Option[String] = None,
                     koulutusOid:String,

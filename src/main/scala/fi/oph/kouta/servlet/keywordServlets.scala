@@ -1,9 +1,9 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana, KeywordSearch, Keywords}
+import fi.oph.kouta.domain.keyword._
 import fi.oph.kouta.domain.{Fi, Kieli}
 import fi.oph.kouta.service.KeywordService._
-import org.scalatra.{Ok, Params}
+import org.scalatra.{Ok}
 import org.scalatra.swagger.Swagger
 
 import scala.util.Try
@@ -28,7 +28,8 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     parameter bodyParam[List[String]]
     parameter queryParam[Kieli]("kieli").description("Kieli"))) {
 
-    Ok(store(parseAsiasanaStore()))
+    val kieli = parseKieliParam("kieli", Fi)
+    Ok(store(Asiasana, bodyToKeywords(kieli)))
   }
 
   private def parseAsiasanaSearch(): KeywordSearch = KeywordSearch(
@@ -36,11 +37,6 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     parseKieliParam("kieli", Fi),
     Asiasana,
     parseIntParam("limit", 15))
-
-  private def parseAsiasanaStore(): Keywords = Keywords(
-    parsedBody.extract[List[String]],
-    parseKieliParam("kieli", Fi),
-    Asiasana)
 }
 
 class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet {
@@ -63,13 +59,9 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
     parameter bodyParam[List[String]]
     parameter queryParam[Kieli]("kieli").description("Kieli"))) {
 
-    Ok(store(parseAmmattinimikeStore()))
+    val kieli = parseKieliParam("kieli", Fi)
+    Ok(store(Ammattinimike, bodyToKeywords(kieli)))
   }
-
-  def parseAmmattinimikeStore(): Keywords = Keywords(
-    parsedBody.extract[List[String]],
-    parseKieliParam("kieli", Fi),
-    Ammattinimike)
 
   def parseAmmattinimikeSearch(): KeywordSearch = KeywordSearch(
     params("term"),
@@ -85,4 +77,7 @@ sealed trait KeywordServlet extends KoutaServlet {
 
   def parseIntParam(name:String, default:Int = 15): Int =
     params.get(name).flatMap(l => Try(l.toInt).toOption).getOrElse(default)
+
+  def bodyToKeywords(kieli:Kieli) =
+    parsedBody.extract[List[String]].map((kieli, _))
 }

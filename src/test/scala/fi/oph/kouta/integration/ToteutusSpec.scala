@@ -1,10 +1,10 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
-import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 
-class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with Validations {
+class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
 
   var koulutusOid = ""
 

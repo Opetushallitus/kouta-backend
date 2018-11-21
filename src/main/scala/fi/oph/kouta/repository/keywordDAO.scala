@@ -1,12 +1,14 @@
 package fi.oph.kouta.repository
 
+import fi.oph.kouta.domain.Kieli
 import fi.oph.kouta.domain.keyword._
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
 trait KeywordDAO {
   def search(search:KeywordSearch): List[String]
-  def put(keywords:Keywords): Int
+  def put(`type`:KeywordType, keywords:List[Keyword]): Int
+  def insert(`type`:KeywordType, keywords:List[Keyword]): DBIO[List[Int]]
 }
 
 object KeywordDAO extends KeywordDAO with KeywordSQL {
@@ -18,13 +20,16 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
       case (l1, l2) => l1.union(l2).distinct.take(search.limit).toList
     }
 
-  override def put(keywords:Keywords): Int =
+  override def put(`type`:KeywordType, keywords:List[Keyword]): Int =
     KoutaDatabase.runBlockingTransactionally(
-      insertKeywords(keywords)
+      insertKeywords(`type`, keywords)
     ) match {
       case Left(t) => throw t
       case Right(i) => i.sum
     }
+
+  override def insert(`type`: KeywordType, keywords: List[(Kieli, String)]): DBIO[List[Int]] =
+    insertKeywords(`type`, keywords)
 }
 
 sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
@@ -50,12 +55,12 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
           limit ${search.limit} """.as[String]
   }
 
-  def insertKeywords(keywords:Keywords) = {
-    val (field, table) = fieldAndTable(keywords.`type`)
+  def insertKeywords(`type`:KeywordType, keywords:List[Keyword]) = {
+    val (field, table) = fieldAndTable(`type`)
     val pkey = s"${table}_pkey"
-    DBIO.sequence(keywords.keywords.map(k =>
+    DBIO.sequence(keywords.map{case (kieli, keyword) =>
       sqlu"""insert into #$table (#$field, kieli)
-             values (${k.toLowerCase}, ${keywords.kieli.toString}::kieli)
-             on conflict on constraint #$pkey do nothing""" ))
+             values (${keyword.toLowerCase}, ${kieli.toString}::kieli)
+             on conflict on constraint #$pkey do nothing""" })
   }
 }

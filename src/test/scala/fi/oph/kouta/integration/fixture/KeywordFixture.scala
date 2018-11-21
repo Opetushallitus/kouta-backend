@@ -75,7 +75,7 @@ trait KeywordFixture { this:KoutaIntegrationSpec =>
     }
   }
 
-  def searchAmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List()) = {
+  def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List()) = {
     get(s"$AmmattinimikePath/search/$term${paramString(params)}" ) {
       status should equal(200)
       read[List[String]](body) should equal(expected)
