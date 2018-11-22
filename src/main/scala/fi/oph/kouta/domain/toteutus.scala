@@ -1,5 +1,6 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 sealed trait Opetusaika extends EnumType
@@ -16,9 +17,9 @@ case class Opetus(opetuskielet:List[String],
 case class ToteutusMetadata(kuvaus:Kielistetty = Map(),
                             osaamisalat:List[Osaamisala] = List(),
                             opetus:Option[Opetus] = None,
-                            asiasanat: List[String] = List(),
-                            ammattinimikkeet: List[String] = List(),
-                            yhteystieto: Option[Yhteystieto])
+                            asiasanat: List[Keyword] = List(),
+                            ammattinimikkeet: List[Keyword] = List(),
+                            yhteystieto: Option[Yhteystieto] = None)
 
 case class Toteutus(oid:Option[String] = None,
                     koulutusOid:String,

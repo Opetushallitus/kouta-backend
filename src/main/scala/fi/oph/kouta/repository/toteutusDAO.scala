@@ -4,6 +4,7 @@ import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain.Toteutus
+import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -22,6 +23,8 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     KoutaDatabase.runBlockingTransactionally( for {
       oid <- insertToteutus(toteutus)
       _ <- insertToteutuksenTarjoajat(toteutus.copy(oid = oid))
+      _ <- insertAmmattinimikkeet(toteutus)
+      _ <- insertAsiasanat(toteutus)
     } yield (oid) ) match {
       case Left(t) => throw t
       case Right(oid) => oid
@@ -48,9 +51,11 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut toteutusta ${toteutus.oid.get} samanaikaisesti"))
       case Some(time) => DBIO.successful(time)
     }).andThen(updateToteutus(toteutus))
-      .zip(updateToteutuksenTarjoajat(toteutus))) match {
+      .zip(updateToteutuksenTarjoajat(toteutus))
+      .zip(insertAsiasanat(toteutus))
+      .zip(insertAmmattinimikkeet(toteutus))) match {
       case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
+      case Right((((x, y), _), _)) => 0 < (x + y.sum)
     }
   }
 
@@ -62,6 +67,12 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       DBIO.sequence(List(deleteTarjoajat(oid)))
     }
   }
+
+  private def insertAmmattinimikkeet(toteutus:Toteutus) =
+    KeywordDAO.insert(Ammattinimike, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(List()))
+
+  private def insertAsiasanat(toteutus:Toteutus) =
+    KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
 }
 
 sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {

@@ -7,7 +7,7 @@ import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.{read, write}
 import org.scalatest.DoNotDiscover
-import org.scalatra.test.scalatest.ScalatraFlatSpec
+import org.scalatra.test.scalatest.{ScalatraFlatSpec, ScalatraFreeSpec}
 
 import scala.reflect.Manifest
 
@@ -15,6 +15,10 @@ import scala.reflect.Manifest
 class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
 
   implicit val swagger = new KoutaBackendSwagger
+
+  def paramString(params:List[(String,String)]) =
+    if( params.isEmpty ) ""
+    else s"""?${params.map(p => s"${p._1}=${p._2}").mkString("&")}"""
 
   def errorBody(expected:String):String = s"""{"error":"${expected}"}"""
 
@@ -90,5 +94,12 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
     db.runBlocking(sqlu"""delete from toteutukset""")
     db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
     db.runBlocking(sqlu"""delete from koulutukset""")
+    deleteAsiasanat()
+  }
+
+  def deleteAsiasanat() = {
+    import slick.jdbc.PostgresProfile.api._
+    db.runBlocking(sqlu"""delete from asiasanat""")
+    db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 }
