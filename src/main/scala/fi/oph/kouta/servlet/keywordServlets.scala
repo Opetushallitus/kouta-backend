@@ -16,7 +16,7 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     tags modelName
     summary "Hae asiasanoja"
     parameter pathParam[String]("term").description("Hakutermi")
-    parameter queryParam[Kieli]("kieli").description("Kieli")
+    parameter queryParam[String]("kieli").description("fi/en/sv")
     parameter queryParam[Int]("limit").description("Asiasanojen määrä (default = 15)"))) {
 
     Ok(search(parseAsiasanaSearch()))
@@ -26,7 +26,7 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     tags modelName
     summary "Tallenna asiasanoja"
     parameter bodyParam[List[String]]
-    parameter queryParam[Kieli]("kieli").description("Kieli"))) {
+    parameter queryParam[String]("kieli").description("fi/sv/en"))) {
 
     val kieli = parseKieliParam("kieli", Fi)
     Ok(store(Asiasana, bodyToKeywords(kieli)))
@@ -47,7 +47,7 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
     tags modelName
     summary "Hae ammattinimikkeitä"
     parameter pathParam[String]("term").description("Hakutermi")
-    parameter queryParam[Kieli]("kieli").description("Kieli")
+    parameter queryParam[String]("kieli").description("fi/sv/en")
     parameter queryParam[Int]("limit").description("Asiasanojen määrä (default = 15)"))) {
 
     Ok(search(parseAmmattinimikeSearch()))
@@ -57,7 +57,7 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
     tags modelName
     summary "Tallenna ammattinimikkeitä"
     parameter bodyParam[List[String]]
-    parameter queryParam[Kieli]("kieli").description("Kieli"))) {
+    parameter queryParam[String]("kieli").description("fi/sv/en"))) {
 
     val kieli = parseKieliParam("kieli", Fi)
     Ok(store(Ammattinimike, bodyToKeywords(kieli)))
@@ -79,5 +79,5 @@ sealed trait KeywordServlet extends KoutaServlet {
     params.get(name).flatMap(l => Try(l.toInt).toOption).getOrElse(default)
 
   def bodyToKeywords(kieli:Kieli) =
-    parsedBody.extract[List[String]].map((kieli, _))
+    parsedBody.extract[List[String]].map(Keyword(kieli, _))
 }

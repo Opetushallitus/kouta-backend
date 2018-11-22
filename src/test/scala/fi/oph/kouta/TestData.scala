@@ -1,9 +1,10 @@
 package fi.oph.kouta
 
-import java.time.{LocalDateTime}
-import java.time.temporal.{ChronoUnit}
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.keyword.Keyword
 
 object TestData {
 
@@ -134,8 +135,8 @@ object TestData {
     kuvaus = Map(),
     osaamisalat = List(Osaamisala("osaamisala_koodi_uri#1")),
     opetus = Some(ToteutuksenOpetus),
-    asiasanat = List((Fi, "robotiikka"), (Fi, "robottiautomatiikka")),
-    ammattinimikkeet = List((Fi, "insinööri"), (Fi, "koneinsinööri")),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     yhteystieto = Some(Yhteystieto1))
 
   val JulkaistuAmmToteutus = Toteutus(

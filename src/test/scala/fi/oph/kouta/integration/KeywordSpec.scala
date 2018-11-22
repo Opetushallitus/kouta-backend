@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.{Fi, ToteutusMetadata}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import org.scalatest.BeforeAndAfterEach
@@ -64,16 +65,16 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with Koulutus
     searchAsiasanat("robo", List())
     searchAmmattinimikkeet("insinööri", List())
     put(toteutus(koulutusOid))
-    searchAsiasanat("robo", toteutus.metadata.get.asiasanat.map(_._2))
-    searchAmmattinimikkeet("insinööri", toteutus.metadata.get.ammattinimikkeet.map(_._2))
+    searchAsiasanat("robo", toteutus.metadata.get.asiasanat.map(_.arvo))
+    searchAmmattinimikkeet("insinööri", toteutus.metadata.get.ammattinimikkeet.map(_.arvo))
   }
 
   it should "update ammattinimikkeet ja asiasanat in toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(ToteutusMetadata(
-      asiasanat = List((Fi, "robotti")),
-      ammattinimikkeet = List((Fi, "robotti-insinööri"))
+      asiasanat = List(Keyword(Fi, "robotti")),
+      ammattinimikkeet = List(Keyword(Fi, "robotti-insinööri"))
     )))
     update(updatedToteutus, lastModified)
     searchAsiasanat("robo", List("robotiikka", "robotti", "robottiautomatiikka"))

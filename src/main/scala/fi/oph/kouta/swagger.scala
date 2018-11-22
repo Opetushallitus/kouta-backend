@@ -66,6 +66,10 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
     models.put("Kielistetty", new Model("Kielistetty", "Kielistetty", properties = Kieli.values.zipWithIndex.map { case (k, i) =>
       (k.toString, modelProperty(i+1, List(s"nimi ${k.toString}")))
     }))
+    models.put("Keyword", new Model("Keyword", "Keyword", properties = List(
+      ("kieli", modelProperty(0, Kieli.values().map(_.toString))),
+      ("arvo", ModelProperty(DataType.String, 1))
+    )))
   }
 
   private def prettifyDatatypes(model:Model) = model.properties.map {

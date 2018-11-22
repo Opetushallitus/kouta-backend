@@ -28,7 +28,7 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
       case Right(i) => i.sum
     }
 
-  override def insert(`type`: KeywordType, keywords: List[(Kieli, String)]): DBIO[List[Int]] =
+  override def insert(`type`: KeywordType, keywords: List[Keyword]): DBIO[List[Int]] =
     insertKeywords(`type`, keywords)
 }
 
@@ -58,7 +58,7 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
   def insertKeywords(`type`:KeywordType, keywords:List[Keyword]) = {
     val (field, table) = fieldAndTable(`type`)
     val pkey = s"${table}_pkey"
-    DBIO.sequence(keywords.map{case (kieli, keyword) =>
+    DBIO.sequence(keywords.map{case Keyword(kieli, keyword) =>
       sqlu"""insert into #$table (#$field, kieli)
              values (${keyword.toLowerCase}, ${kieli.toString}::kieli)
              on conflict on constraint #$pkey do nothing""" })
