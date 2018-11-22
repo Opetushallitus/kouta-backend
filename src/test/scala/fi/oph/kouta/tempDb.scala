@@ -35,7 +35,7 @@ object TempDb extends Logging {
           throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
         }
         runBlocking(s"dropdb -p $port --if-exists $dbName")
-        runBlocking(s"createdb -p $port $dbName")
+        runBlocking(s"createdb -E UTF8 --lc-collate C --lc-ctype C -p $port $dbName")
         runBlocking(s"psql -h localhost -p $port -d $dbName -f postgresql/init_it_postgresql.sql")
 
         Runtime.getRuntime.addShutdownHook(new Thread(() => stop()))
@@ -69,7 +69,7 @@ object TempDb extends Logging {
       logger.info(s"PostgreSQL data directory $dataDirectoryPath does not exist, initing new database there.")
       Files.createDirectories(dataDirectoryFile.toPath)
       runBlocking(s"chmod 0700 $dataDirectoryPath")
-      runBlocking(s"initdb -D $dataDirectoryPath --no-locale")
+      runBlocking(s"initdb -D $dataDirectoryPath -E UTF8 --lc-collate C --lc-ctype C")
     }
     logger.info(s"Using PostgreSQL in port $port with data directory $dataDirectoryPath")
   }
