@@ -5,7 +5,4 @@ kouta-temp-db/
 target/
 embedded-jetty-vars.yml
 
-**/Modification*
-src/main/resources/db/migration/V12__create_hakukohteiden_liitteet.sql
-src/main/resources/db/migration/V13__create_hakukohteiden_valintakokeet.sql
 kouta_backend.sql
