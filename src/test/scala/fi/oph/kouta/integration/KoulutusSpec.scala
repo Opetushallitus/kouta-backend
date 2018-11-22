@@ -1,10 +1,11 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
-import fi.oph.kouta.integration.fixture.KoulutusFixture
+import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
+import org.json4s.jackson.Serialization.read
 
-class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Validations {
+class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with Validations {
 
   it should "return 404 if koulutus not found" in {
     get("/koulutus/123") {
@@ -110,5 +111,18 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Valida
     list(List(("tarjoaja", "5.5")), r(List(oid1, oid3)))
     list(List(("tila", "tallennettu")), r(List(oid2, oid3)))
     list(List(), r(List(oid1, oid2, oid3)))
+  }
+
+  it should "return all toteutuksen related to koulutus" in {
+    val oid = put(koulutus)
+    val t1 = put(toteutus(oid))
+    val t2 = put(toteutus(oid))
+    val t3 = put(toteutus(oid))
+    get(s"$KoulutusPath/$oid/toteutukset") {
+      status should equal (200)
+      read[List[Toteutus]](body) should contain theSameElementsAs(List(
+        toteutus(t1, oid), toteutus(t2, oid), toteutus(t3, oid)
+      ))
+    }
   }
 }

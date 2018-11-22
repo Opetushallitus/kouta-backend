@@ -15,6 +15,7 @@ trait ToteutusDAO {
   def get(oid:String): Option[(Toteutus, Instant)]
   def getLastModified(oid:String): Option[Instant]
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
+  def getByKoulutusOid(oid:String): List[Toteutus]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -73,6 +74,20 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   private def insertAsiasanat(toteutus:Toteutus) =
     KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
+
+  override def getByKoulutusOid(oid: String): List[Toteutus] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        toteutukset <- selectToteutuksetByKoulutusOid(oid).as[Toteutus]
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
+      } yield (toteutukset, tarjoajat) ) match {
+        case Left(t) => throw t
+        case Right((toteutukset, tarjoajat)) => {
+          toteutukset.map(t =>
+            t.copy(tarjoajat = tarjoajat.filter(_.oid == t.oid.get).map(_.tarjoajaOid).toList)).toList
+        }
+      }
+  }
 }
 
 sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
@@ -80,9 +95,16 @@ sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
   def selectToteutus(oid:String) =
     sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
 
+  def selectToteutuksetByKoulutusOid(oid:String) =
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where koulutus_oid = $oid"""
 
   def selectToteutuksenTarjoajat(oid:String) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
+
+  def selectToteutustenTarjoajat(oids:List[String]) = {
+    val toteustusOids = oids.map(s => s"'$s'").mkString(",")
+    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${toteustusOids})"""
+  }
 
   def insertToteutus(toteutus:Toteutus) = {
     val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
