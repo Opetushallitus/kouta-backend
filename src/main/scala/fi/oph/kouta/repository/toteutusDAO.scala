@@ -10,10 +10,9 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait ToteutusDAO {
+trait ToteutusDAO extends EntityModificationDAO[String] {
   def put(toteutus:Toteutus):Option[String]
   def get(oid:String): Option[(Toteutus, Instant)]
-  def getLastModified(oid:String): Option[Instant]
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
   def getByKoulutusOid(oid:String): List[Toteutus]
 }
@@ -43,8 +42,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
     }
   }
-
-  def getLastModified(oid:String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
 
   override def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = {
     KoutaDatabase.runBlockingTransactionally( selectLastModified(toteutus.oid.get).flatMap(_ match {
@@ -88,9 +85,40 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
         }
       }
   }
+
+  override def listModifiedSince(since:Instant):Seq[String] =
+    KoutaDatabase.runBlocking(selectModifiedSince(since))
 }
 
-sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
+trait ToteutusModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
+
+  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
+    sql"""select greatest(
+            max(lower(t.system_time)),
+            max(lower(ta.system_time)),
+            max(upper(th.system_time)),
+            max(upper(tah.system_time)))
+          from toteutukset t
+          left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
+          left join toteutukset_history th on t.oid = th.oid
+          left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
+          where t.oid = $oid""".as[Option[Instant]].head
+  }
+
+  def selectModifiedSince(since:Instant): DBIO[Seq[String]] = {
+    sql"""select oid from toteutukset where $since < lower(system_time)
+          union
+          select oid from toteutukset_history where $since <@ system_time
+          union
+          select toteutus_oid from toteutusten_tarjoajat where $since < lower(system_time)
+          union
+          select toteutus_oid from toteutusten_tarjoajat_history where $since <@ system_time""".as[String]
+  }
+
+}
+
+sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   def selectToteutus(oid:String) =
     sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
@@ -117,19 +145,6 @@ sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
     DBIO.sequence( toteutus.tarjoajat.map(t =>
       sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values (${toteutus.oid}, $t, ${toteutus.muokkaaja})"""))
-  }
-
-  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(t.system_time)),
-            max(lower(ta.system_time)),
-            max(upper(th.system_time)),
-            max(upper(tah.system_time)))
-          from toteutukset t
-          left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-          left join toteutukset_history th on t.oid = th.oid
-          left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
-          where t.oid = $oid""".as[Option[Instant]].head
   }
 
   def updateToteutus(toteutus: Toteutus) = {

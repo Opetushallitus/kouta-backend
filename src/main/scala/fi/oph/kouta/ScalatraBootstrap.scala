@@ -25,6 +25,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context.mount(new AsiasanaServlet(), "/asiasana", "asiasana")
     context.mount(new AmmattinimikeServlet(), "/ammattinimike", "ammattinimike")
 
+    context.mount(new AnythingServlet(), "/anything", "anything")
     context.mount(new SwaggerServlet, "/swagger")
   }
 

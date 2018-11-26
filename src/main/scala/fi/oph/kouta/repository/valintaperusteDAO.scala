@@ -9,10 +9,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import fi.oph.kouta.domain.Valintaperuste
 import slick.dbio.DBIO
 
-trait ValintaperusteDAO {
+trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def put(valintaperuste:Valintaperuste):Option[UUID]
   def get(id:UUID): Option[(Valintaperuste, Instant)]
-  def getLastModified(id:UUID): Option[Instant]
   def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean
 }
 
@@ -48,7 +47,26 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
   }
 }
 
-sealed trait ValintaperusteSQL extends ValintaperusteExtractors with SQLHelpers {
+sealed trait ValintaperusteModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
+
+  def selectModifiedSince(since:Instant): DBIO[Seq[UUID]] = {
+    sql"""select id from valintaperusteet where $since < lower(system_time)
+          union
+          select id from valintaperusteet_history where $since <@ system_time""".as[UUID]
+  }
+
+  def selectLastModified(id:UUID):DBIO[Option[Instant]] = {
+    sql"""select greatest(
+            max(lower(vp.system_time)),
+            max(upper(vph.system_time)))
+          from valintaperusteet vp
+          left join valintaperusteet_history vph on vp.id = vph.id
+          where vp.id = ${id.toString}::uuid""".as[Option[Instant]].head
+  }
+}
+
+sealed trait ValintaperusteSQL extends ValintaperusteExtractors with ValintaperusteModificationSQL with SQLHelpers {
 
   def insertValintaperuste(valintaperuste: Valintaperuste) = {
     val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
@@ -84,17 +102,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with SQLHelpers 
     sql"""select id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
                  onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta
           from valintaperusteet where id = ${id.toString}::uuid"""
-
-
-  def selectLastModified(id:UUID):DBIO[Option[Instant]] =
-    sql"""select greatest(
-            max(lower(vp.system_time)),
-            max(upper(vph.system_time)))
-          from valintaperusteet vp
-          left join valintaperusteet_history vph on vp.id = vph.id
-          where vp.id = ${id.toString}::uuid""".as[Option[Instant]].head
-
-  def getLastModified(id: UUID): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(id) )
 
   def updateValintaperuste(valintaperuste: Valintaperuste) = {
     val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,

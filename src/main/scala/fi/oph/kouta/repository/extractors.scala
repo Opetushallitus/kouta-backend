@@ -23,6 +23,10 @@ trait ExtractorBase extends KoutaJsonFormats {
 
   def extractKielistetty(json:Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
   def extractKielivalinta(json:Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
+
+  implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
+    UUID.fromString(r.nextString())
+  })
 }
 
 trait KoulutusExtractors extends ExtractorBase {

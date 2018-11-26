@@ -9,3 +9,8 @@ package object fixture {
   case class Updated(updated:Boolean)
 
 }
+
+import fi.oph.kouta.integration.fixture._
+trait EverythingFixture extends KoulutusFixture with ToteutusFixture with HakuFixture
+  with HakukohdeFixture with ValintaperusteFixture { this: KoutaIntegrationSpec =>
+}

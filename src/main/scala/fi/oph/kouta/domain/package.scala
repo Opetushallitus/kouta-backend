@@ -86,4 +86,10 @@ package object domain {
   case class Osoite(osoite:Kielistetty = Map(),
                     postinumero:Option[String],
                     postitoimipaikka:Kielistetty = Map())
+
+  case class ListEverything(koulutukset:Seq[String] = Seq(),
+                            toteutukset:Seq[String] = Seq(),
+                            haut:Seq[String] = Seq(),
+                            hakukohteet:Seq[String] = Seq(),
+                            valintaperusteet:Seq[UUID] = Seq())
 }

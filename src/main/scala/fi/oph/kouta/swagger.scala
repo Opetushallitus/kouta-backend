@@ -30,8 +30,8 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
 
   private def modelProperty(position:Int, values:List[String]) = ModelProperty(DataType.String, position, required = false, description = Some(values.mkString("/")))
 
-  def prettifySwaggerModels() = {
-    models.update(modelName, models(modelName).copy(properties = prettifyEnumModels(models(modelName))))
+  def prettifySwaggerModels(model:String = modelName) = {
+    models.update(model, models(model).copy(properties = prettifyEnumModels(models(model))))
     removeRedundantModels()
     prettifyKielistetty()
     models.foreach(m => models.update(m._1, m._2.copy(properties = prettifyDatatypes(m._2))))
@@ -59,6 +59,7 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
     case ("liitteidenToimitustapa", mp) => ("liitteidenToimitustapa", modelProperty(mp.position, LiitteenToimitustapa.values().map(_.toString)))
     case ("toimitustapa", mp) => ("toimitustapa", modelProperty(mp.position, LiitteenToimitustapa.values().map(_.toString)))
     case ("id", mp) => ("id", modelProperty(mp.position, List(EXAMPLE_UUID)))
+    case ("valintaperusteet", mp) => ("valintaperusteet", ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(EXAMPLE_UUID)))
     case p => p
   }
 

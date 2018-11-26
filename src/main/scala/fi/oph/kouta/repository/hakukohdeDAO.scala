@@ -10,10 +10,9 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait HakukohdeDAO {
+trait HakukohdeDAO extends EntityModificationDAO[String] {
   def put(hakukohde:Hakukohde):Option[String]
   def get(oid:String): Option[(Hakukohde, Instant)]
-  def getLastModified(oid:String): Option[Instant]
   def update(haku:Hakukohde, notModifiedSince:Instant): Boolean
 }
 
@@ -47,8 +46,6 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
         liitteet = i.toList), l))
     }
   }
-
-  override def getLastModified(oid: String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
 
   override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean = {
     KoutaDatabase.runBlockingTransactionally( selectLastModified(hakukohde.oid.get).flatMap(_ match {
@@ -96,7 +93,26 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   }
 }
 
-sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
+sealed trait HakukohdeModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
+
+  def selectModifiedSince(since:Instant): DBIO[Seq[String]] = {
+    sql"""select oid from hakukohteet where ${since} < lower(system_time)
+          union
+          select oid from hakukohteet_history where $since <@ system_time
+          union
+          select hakukohde_oid from hakukohteiden_hakuajat where ${since} < lower(system_time)
+          union
+          select hakukohde_oid from hakukohteiden_hakuajat_history where $since <@ system_time
+          union
+          select hakukohde_oid from hakukohteiden_valintakokeet where ${since} < lower(system_time)
+          union
+          select hakukohde_oid from hakukohteiden_valintakokeet_history where $since <@ system_time
+          union
+          select hakukohde_oid from hakukohteiden_liitteet where ${since} < lower(system_time)
+          union
+          select hakukohde_oid from hakukohteiden_liitteet_history where $since <@ system_time""".as[String]
+  }
 
   def selectLastModified(oid:String):DBIO[Option[Instant]] = {
     sql"""select greatest(
@@ -118,6 +134,9 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
           left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
           where ha.oid = $oid""".as[Option[Instant]].head
   }
+}
+
+sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
 
   def insertHakukohde(hakukohde:Hakukohde) = {
     sql"""insert into hakukohteet (

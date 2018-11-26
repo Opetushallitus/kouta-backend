@@ -1,15 +1,12 @@
 package fi.oph.kouta.integration
 
-import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
-import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.validation.Validations
 
-class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
-  with KoulutusFixture with ToteutusFixture with HakuFixture with ValintaperusteFixture with Validations {
+class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null

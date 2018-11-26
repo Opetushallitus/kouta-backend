@@ -10,10 +10,9 @@ import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait HakuDAO {
+trait HakuDAO extends EntityModificationDAO[String] {
   def put(haku:Haku):Option[String]
   def get(oid:String): Option[(Haku, Instant)]
-  def getLastModified(oid:String): Option[Instant]
   def update(haku:Haku, notModifiedSince:Instant): Boolean
 }
   
@@ -41,8 +40,6 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }
   }
 
-  def getLastModified(oid:String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
-
   override def update(haku: Haku, notModifiedSince: Instant): Boolean = {
     KoutaDatabase.runBlockingTransactionally( selectLastModified(haku.oid.get).flatMap(_ match {
       case None => DBIO.failed(new NoSuchElementException(s"Unknown haku oid ${haku.oid.get}"))
@@ -56,7 +53,34 @@ object HakuDAO extends HakuDAO with HakuSQL {
   }
 }
 
-sealed trait HakuSQL extends HakuExtractors with SQLHelpers {
+trait HakuModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
+
+  def selectModifiedSince(since:Instant): DBIO[Seq[String]] = {
+    sql"""select oid from haut where ${since} < lower(system_time)
+          union
+          select oid from haut_history where ${since} <@ system_time
+          union
+          select haku_oid from hakujen_hakuajat where ${since} < lower(system_time)
+          union
+          select haku_oid from hakujen_hakuajat_history where ${since} <@ system_time""".as[String]
+  }
+
+  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
+    sql"""select greatest(
+            max(lower(ha.system_time)),
+            max(lower(hah.system_time)),
+            max(upper(hh.system_time)),
+            max(upper(hhh.system_time)))
+          from haut ha
+          left join haut_history hah on ha.oid = hah.oid
+          left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
+          left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
+          where ha.oid = $oid""".as[Option[Instant]].head
+  }
+}
+
+sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers {
 
   def insertHaku(haku:Haku) = {
     val Haku(_, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
@@ -112,19 +136,6 @@ sealed trait HakuSQL extends HakuExtractors with SQLHelpers {
 
   def selectHaunHakuajat(oid:String) = {
     sql"""select haku_oid, lower(hakuaika), upper(hakuaika) from hakujen_hakuajat where haku_oid = $oid"""
-  }
-
-  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(ha.system_time)),
-            max(lower(hah.system_time)),
-            max(upper(hh.system_time)),
-            max(upper(hhh.system_time)))
-          from haut ha
-          left join haut_history hah on ha.oid = hah.oid
-          left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
-          left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
-          where ha.oid = $oid""".as[Option[Instant]].head
   }
 
   def updateHaku(haku:Haku) = {

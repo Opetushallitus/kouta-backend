@@ -1,11 +1,12 @@
 package fi.oph.kouta.repository
 
-import java.sql.{PreparedStatement, ResultSet, Timestamp}
-import java.time.{Instant, LocalDateTime}
+import java.sql.{JDBCType, PreparedStatement, ResultSet, Timestamp}
+import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 
 import fi.oph.kouta.domain.Ajanjakso
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
+import slick.jdbc.{PositionedParameters, SetParameter}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.util.Try
@@ -20,6 +21,12 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   }
 
   def toTsrangeString(a:Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
+
+  implicit object SetInstant extends SetParameter[Instant] {
+    def apply(v: Instant, pp: PositionedParameters): Unit = {
+      pp.setObject(OffsetDateTime.ofInstant(v, ZoneId.of("Europe/Helsinki")), JDBCType.TIMESTAMP_WITH_TIMEZONE.getVendorTypeNumber)
+    }
+  }
 
   //TODO: params:Array[AnyRef]
   def query[T](sql:String, params:Array[String], toResult:(ResultSet) => T): List[T] = {
