@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.domain.{Julkaisutila, Koulutus, ListParams, Toteutus}
-import fi.oph.kouta.service.{KoulutusService, ToteutusService}
+import fi.oph.kouta.service.KoulutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
 

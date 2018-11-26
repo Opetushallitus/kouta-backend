@@ -1,6 +1,5 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.domain.Kieli
 import fi.oph.kouta.domain.keyword._
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._

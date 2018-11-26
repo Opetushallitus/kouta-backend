@@ -1,8 +1,7 @@
 package fi.oph.kouta
 
-import java.time.{Instant, LocalDateTime}
+import java.time.LocalDateTime
 import java.util.UUID
-import java.util.regex.Pattern
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä
 package object domain {

@@ -1,6 +1,6 @@
 package fi.oph.kouta.servlet
 
-import java.net.{URLDecoder}
+import java.net.URLDecoder
 
 import fi.oph.kouta.domain.ListEverything
 import fi.oph.kouta.service.ModificationService

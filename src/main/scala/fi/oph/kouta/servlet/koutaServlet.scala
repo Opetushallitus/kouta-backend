@@ -1,19 +1,17 @@
 package fi.oph.kouta.servlet
 
 import java.text.ParseException
-import java.time.{Instant, LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.{ConcurrentModificationException, NoSuchElementException, UUID}
 
 import fi.oph.kouta.PrettySwaggerSupport
-import fi.oph.kouta.domain._
 import fi.oph.kouta.service.KoutaValidationException
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.MappingException
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger._
 
 import scala.util.{Failure, Try}
