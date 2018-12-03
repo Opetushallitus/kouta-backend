@@ -3,15 +3,16 @@ package fi.oph.kouta.domain
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-sealed trait Opetusaika extends EnumType
+case class Osaamisala(koodi:String, linkki:Kielistetty = Map(), otsikko:Kielistetty = Map())
+case class Osio(otsikko:Kielistetty, teksti:Kielistetty)
 
-case class Osaamisala(koodiUri:String, linkki:Kielistetty = Map(), otsikko:Kielistetty = Map())
-case class Maksullisuus(maksullinen:Boolean, maksunMaara:Kielistetty = Map())
 case class Opetus(opetuskielet:List[String],
-                  lahiopetus:Option[Boolean],
-                  opetusajat:List[String],
-                  maksullisuus:Option[Maksullisuus],
-                  kuvaus: Kielistetty = Map())
+                  opetusaikaKoodiUri:Option[String],
+                  opetustapaKoodiUri:Option[String],
+                  onkoMaksullinen: Option[Boolean],
+                  maksunMaara: Kielistetty = Map(),
+                  kuvaus: Kielistetty = Map(),
+                  osiot: List[Osio] = List())
 
 
 case class ToteutusMetadata(kuvaus:Kielistetty = Map(),

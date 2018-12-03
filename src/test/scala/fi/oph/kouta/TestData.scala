@@ -131,11 +131,17 @@ object TestData {
   val MinValintaperuste = new Valintaperuste(muokkaaja = "7.7.7.7.7", organisaatioOid = "1.2.1.2")
 
   val ToteutuksenOpetus = Opetus(
-    opetuskielet = List("fi"),
-    lahiopetus = Some(true),
-    opetusajat = List("opetusaikakk_1#1", "opetusaikakk_2#1"),
-    maksullisuus = None,
-    kuvaus = Map())
+    opetuskielet = List("kieli_fi#1"),
+    opetusaikaKoodiUri = Some("opetusaikakk_1#1"),
+    opetustapaKoodiUri = Some("opetuspaikkakk_1#1"),
+    onkoMaksullinen = Some(true),
+    maksunMaara = Map(Fi -> "200,50 euroa", Sv -> "200,50 euro"),
+    kuvaus = Map(Fi -> "Kuvaus fi", Sv -> "Kuvaus sv"),
+    osiot = List(
+      Osio(otsikko = Map(Fi -> "Opintojen rakenne", Sv -> "Rakenne sv"),
+           teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
+      Osio(otsikko = Map(Fi -> "Sisältö", Sv -> "Sisältö sv"),
+           teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))))
 
   val AmmToteutuksenMetatieto = ToteutusMetadata(
     kuvaus = Map(),
