@@ -163,8 +163,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def deleteTarjoajat(oid:Option[String], exclude:List[String]) = {
-    val tarjoajatString = exclude.map(s => s"'$s'").mkString(",")
-    sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})"""
+    sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid and tarjoaja_oid not in (#${createInParams(exclude)})"""
   }
 
   def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""

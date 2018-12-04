@@ -181,7 +181,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                on conflict on constraint hakujen_hakuajat_pkey do nothing"""}
 
   def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]) = {
-    sqlu"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${exclude.map(toTsrangeString).mkString(",")})"""
+    sqlu"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)})"""
   }
 
   def updateHaunHakuajat(haku:Haku) = {

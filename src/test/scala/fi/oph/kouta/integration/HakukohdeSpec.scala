@@ -144,4 +144,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     update(muokattuHakukohde, lastModified, true)
     get(oid, getIds(muokattuHakukohde))
   }
+
+  it should "delete all hakuajat, litteet ja valintakokeet nicely" in {
+    val oid = put(uusiHakukohde)
+    val tallennettu = tallennettuHakukohde(oid)
+    val lastModified = get(oid, tallennettu)
+    val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List())
+    update(muokattuHakukohde, lastModified, true)
+    get(oid, muokattuHakukohde)
+  }
 }

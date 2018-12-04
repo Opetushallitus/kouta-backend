@@ -121,4 +121,11 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
     update(updatedPvmHaku, lastModified)
     get(oid, updatedPvmHaku)
   }
+
+  it should "delete all hakuajat if none is given" in {
+    val oid = put(haku)
+    val lastModified = get(oid, haku(oid))
+    update(haku(oid).copy(hakuajat = List()), lastModified)
+    get(oid, haku(oid).copy(hakuajat = List()))
+  }
 }

@@ -1,12 +1,13 @@
 package fi.oph.kouta.repository
 
-import java.time.{Instant}
+import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.{Ajanjakso, Hakukohde, Liite, Valintakoe}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.sql.SqlAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -328,8 +329,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
                on conflict on constraint hakukohteiden_hakuajat_pkey do nothing"""
   }
 
-  def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]) = {
-    sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid and hakuaika not in (#${exclude.map(toTsrangeString).mkString(",")})"""
+  def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]): SqlAction[Int, NoStream, Effect] = {
+    sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)})"""
   }
 
   def deleteHakuajat(oid:Option[String]) = {
@@ -337,8 +338,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def deleteValintakokeet(oid:Option[String], exclude:List[UUID]) = {
-    val idString = exclude.map(x => s"'${x.toString}'").mkString(",")
-    sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid and id not in (#${idString})"""
+    sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid and id not in (#${createInParams(exclude.map(_.toString))})"""
   }
 
   def updateValintakoe(oid:Option[String], valintakoe:Valintakoe, muokkaaja:String) = {
@@ -360,8 +360,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def deleteLiitteet(oid:Option[String], exclude:List[UUID]) = {
-    val idString = exclude.map(x => s"'${x.toString}'").mkString(",")
-    sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${idString})"""
+    sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${createInParams(exclude.map(_.toString))})"""
   }
 
   def updateLiite(oid:Option[String], liite:Liite, muokkaaja:String) = {

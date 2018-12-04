@@ -125,4 +125,12 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
       ))
     }
   }
+
+  it should "return empty result if koulutus has no toteutukset" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid/toteutukset") {
+      status should equal (200)
+      read[List[Toteutus]](body) should contain theSameElementsAs(List())
+    }
+  }
 }

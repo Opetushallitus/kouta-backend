@@ -13,6 +13,9 @@ import scala.util.Try
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
+  def createInParams(x:Seq[String]) = if(x.isEmpty) s"''" else x.map(s => s"'$s'").mkString(",")
+  def createRangeInParams(x:Seq[Ajanjakso]) = if(x.isEmpty) s"''" else x.map(s => s"${toTsrangeString(s)}").mkString(",")
+
   def formatTimestampParam(value:Option[LocalDateTime]) = value.map(ISO_LOCAL_DATE_TIME_FORMATTER.format).getOrElse(null)
 
   def toJsonParam(value:AnyRef) = Option(toJson(value)) match {

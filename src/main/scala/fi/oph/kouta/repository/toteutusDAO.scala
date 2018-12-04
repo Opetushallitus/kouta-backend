@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.Toteutus
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.SQLActionBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -130,8 +131,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
   def selectToteutustenTarjoajat(oids:List[String]) = {
-    val toteustusOids = oids.map(s => s"'$s'").mkString(",")
-    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${toteustusOids})"""
+    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createInParams(oids)})"""
   }
 
   def insertToteutus(toteutus:Toteutus) = {
@@ -171,8 +171,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def deleteTarjoajat(oid:Option[String], exclude:List[String]) = {
-    val tarjoajatString = exclude.map(s => s"'$s'").mkString(",")
-    sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})"""
+    sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${createInParams(exclude)})"""
   }
 
   def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
