@@ -52,7 +52,7 @@ case class Hakukohde(oid:Option[String] = None,
 
 case class Valintakoe(id:Option[UUID] = None,
                       tyyppi:Option[String] = None,
-                      tilaisuudet:List[Valintakoetilaisuus])
+                      tilaisuudet:List[Valintakoetilaisuus] = List())
 
 case class Valintakoetilaisuus(osoite:Option[Osoite],
                                aika:Option[Ajanjakso] = None,

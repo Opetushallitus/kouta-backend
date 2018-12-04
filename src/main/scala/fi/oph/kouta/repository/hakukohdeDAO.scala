@@ -1,19 +1,19 @@
 package fi.oph.kouta.repository
 
-import java.time.{Instant}
+import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.{Ajanjakso, Hakukohde, Liite, Valintakoe}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.sql.SqlAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait HakukohdeDAO {
+trait HakukohdeDAO extends EntityModificationDAO[String] {
   def put(hakukohde:Hakukohde):Option[String]
   def get(oid:String): Option[(Hakukohde, Instant)]
-  def getLastModified(oid:String): Option[Instant]
   def update(haku:Hakukohde, notModifiedSince:Instant): Boolean
 }
 
@@ -47,8 +47,6 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
         liitteet = i.toList), l))
     }
   }
-
-  override def getLastModified(oid: String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
 
   override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean = {
     KoutaDatabase.runBlockingTransactionally( selectLastModified(hakukohde.oid.get).flatMap(_ match {
@@ -96,7 +94,26 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   }
 }
 
-sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
+sealed trait HakukohdeModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
+
+  def selectModifiedSince(since:Instant): DBIO[Seq[String]] = {
+    sql"""select oid from hakukohteet where ${since} < lower(system_time)
+          union
+          select oid from hakukohteet_history where $since <@ system_time
+          union
+          select hakukohde_oid from hakukohteiden_hakuajat where ${since} < lower(system_time)
+          union
+          select hakukohde_oid from hakukohteiden_hakuajat_history where $since <@ system_time
+          union
+          select hakukohde_oid from hakukohteiden_valintakokeet where ${since} < lower(system_time)
+          union
+          select hakukohde_oid from hakukohteiden_valintakokeet_history where $since <@ system_time
+          union
+          select hakukohde_oid from hakukohteiden_liitteet where ${since} < lower(system_time)
+          union
+          select hakukohde_oid from hakukohteiden_liitteet_history where $since <@ system_time""".as[String]
+  }
 
   def selectLastModified(oid:String):DBIO[Option[Instant]] = {
     sql"""select greatest(
@@ -118,6 +135,9 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
           left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
           where ha.oid = $oid""".as[Option[Instant]].head
   }
+}
+
+sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
 
   def insertHakukohde(hakukohde:Hakukohde) = {
     sql"""insert into hakukohteet (
@@ -309,8 +329,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
                on conflict on constraint hakukohteiden_hakuajat_pkey do nothing"""
   }
 
-  def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]) = {
-    sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid and hakuaika not in (#${exclude.map(toTsrangeString).mkString(",")})"""
+  def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]): SqlAction[Int, NoStream, Effect] = {
+    sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)})"""
   }
 
   def deleteHakuajat(oid:Option[String]) = {
@@ -318,8 +338,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
   }
 
   def deleteValintakokeet(oid:Option[String], exclude:List[UUID]) = {
-    val idString = exclude.map(x => s"'${x.toString}'").mkString(",")
-    sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid and id not in (#${idString})"""
+    sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid and id not in (#${createInParams(exclude.map(_.toString))})"""
   }
 
   def updateValintakoe(oid:Option[String], valintakoe:Valintakoe, muokkaaja:String) = {
@@ -341,8 +360,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeExctractors {
   }
 
   def deleteLiitteet(oid:Option[String], exclude:List[UUID]) = {
-    val idString = exclude.map(x => s"'${x.toString}'").mkString(",")
-    sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${idString})"""
+    sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${createInParams(exclude.map(_.toString))})"""
   }
 
   def updateLiite(oid:Option[String], liite:Liite, muokkaaja:String) = {

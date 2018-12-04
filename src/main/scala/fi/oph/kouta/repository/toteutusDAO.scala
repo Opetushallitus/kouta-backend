@@ -7,14 +7,15 @@ import fi.oph.kouta.domain.Toteutus
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.SQLActionBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait ToteutusDAO {
+trait ToteutusDAO extends EntityModificationDAO[String] {
   def put(toteutus:Toteutus):Option[String]
   def get(oid:String): Option[(Toteutus, Instant)]
-  def getLastModified(oid:String): Option[Instant]
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
+  def getByKoulutusOid(oid:String): List[Toteutus]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -42,8 +43,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
     }
   }
-
-  def getLastModified(oid:String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
 
   override def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = {
     KoutaDatabase.runBlockingTransactionally( selectLastModified(toteutus.oid.get).flatMap(_ match {
@@ -73,29 +72,27 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   private def insertAsiasanat(toteutus:Toteutus) =
     KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
+
+  override def getByKoulutusOid(oid: String): List[Toteutus] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        toteutukset <- selectToteutuksetByKoulutusOid(oid).as[Toteutus]
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
+      } yield (toteutukset, tarjoajat) ) match {
+        case Left(t) => throw t
+        case Right((toteutukset, tarjoajat)) => {
+          toteutukset.map(t =>
+            t.copy(tarjoajat = tarjoajat.filter(_.oid == t.oid.get).map(_.tarjoajaOid).toList)).toList
+        }
+      }
+  }
+
+  override def listModifiedSince(since:Instant):Seq[String] =
+    KoutaDatabase.runBlocking(selectModifiedSince(since))
 }
 
-sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
-
-  def selectToteutus(oid:String) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
-
-
-  def selectToteutuksenTarjoajat(oid:String) =
-    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
-
-  def insertToteutus(toteutus:Toteutus) = {
-    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
-    sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta)
-             values ($koulutusOid, ${tila.toString}::julkaisutila,
-             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja, ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
-  }
-
-  def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
-    DBIO.sequence( toteutus.tarjoajat.map(t =>
-      sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
-             values (${toteutus.oid}, $t, ${toteutus.muokkaaja})"""))
-  }
+trait ToteutusModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
 
   def selectLastModified(oid:String):DBIO[Option[Instant]] = {
     sql"""select greatest(
@@ -108,6 +105,46 @@ sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
           left join toteutukset_history th on t.oid = th.oid
           left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
           where t.oid = $oid""".as[Option[Instant]].head
+  }
+
+  def selectModifiedSince(since:Instant): DBIO[Seq[String]] = {
+    sql"""select oid from toteutukset where $since < lower(system_time)
+          union
+          select oid from toteutukset_history where $since <@ system_time
+          union
+          select toteutus_oid from toteutusten_tarjoajat where $since < lower(system_time)
+          union
+          select toteutus_oid from toteutusten_tarjoajat_history where $since <@ system_time""".as[String]
+  }
+
+}
+
+sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
+
+  def selectToteutus(oid:String) =
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
+
+  def selectToteutuksetByKoulutusOid(oid:String) =
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where koulutus_oid = $oid"""
+
+  def selectToteutuksenTarjoajat(oid:String) =
+    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
+
+  def selectToteutustenTarjoajat(oids:List[String]) = {
+    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createInParams(oids)})"""
+  }
+
+  def insertToteutus(toteutus:Toteutus) = {
+    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
+    sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta)
+             values ($koulutusOid, ${tila.toString}::julkaisutila,
+             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja, ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
+  }
+
+  def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
+    DBIO.sequence( toteutus.tarjoajat.map(t =>
+      sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
+             values (${toteutus.oid}, $t, ${toteutus.muokkaaja})"""))
   }
 
   def updateToteutus(toteutus: Toteutus) = {
@@ -134,8 +171,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with SQLHelpers {
   }
 
   def deleteTarjoajat(oid:Option[String], exclude:List[String]) = {
-    val tarjoajatString = exclude.map(s => s"'$s'").mkString(",")
-    sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})"""
+    sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${createInParams(exclude)})"""
   }
 
   def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""

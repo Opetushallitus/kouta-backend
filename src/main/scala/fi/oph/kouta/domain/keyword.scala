@@ -1,7 +1,5 @@
 package fi.oph.kouta.domain
 
-import scala.util.Try
-
 package object keyword {
 
   sealed trait KeywordType extends EnumType

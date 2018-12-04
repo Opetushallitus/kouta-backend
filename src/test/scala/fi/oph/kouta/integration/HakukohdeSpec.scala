@@ -1,15 +1,12 @@
 package fi.oph.kouta.integration
 
-import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
-import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.validation.Validations
 
-class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
-  with KoulutusFixture with ToteutusFixture with HakuFixture with ValintaperusteFixture with Validations {
+class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null
@@ -146,5 +143,14 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture
       liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.now()))))
     update(muokattuHakukohde, lastModified, true)
     get(oid, getIds(muokattuHakukohde))
+  }
+
+  it should "delete all hakuajat, litteet ja valintakokeet nicely" in {
+    val oid = put(uusiHakukohde)
+    val tallennettu = tallennettuHakukohde(oid)
+    val lastModified = get(oid, tallennettu)
+    val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List())
+    update(muokattuHakukohde, lastModified, true)
+    get(oid, muokattuHakukohde)
   }
 }

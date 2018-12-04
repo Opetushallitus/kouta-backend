@@ -9,17 +9,16 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait KoulutusDAO {
+trait KoulutusDAO extends EntityModificationDAO[String] {
   def put(koulutus:Koulutus):Option[String]
   def get(oid:String): Option[(Koulutus, Instant)]
-  def getLastModified(oid:String): Option[Instant]
   def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean
   def list(params:ListParams):List[OidListResponse]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
-  def put(koulutus:Koulutus): Option[String] = {
+  override def put(koulutus:Koulutus): Option[String] = {
     KoutaDatabase.runBlockingTransactionally( for {
       oid <- insertKoulutus(koulutus)
       _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
@@ -29,7 +28,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  def get(oid:String): Option[(Koulutus, Instant)] = {
+  override def get(oid:String): Option[(Koulutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       k <- selectKoulutus(oid).as[Koulutus].headOption
       t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
@@ -41,9 +40,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  def getLastModified(oid:String): Option[Instant] = KoutaDatabase.runBlocking( selectLastModified(oid) )
-
-  def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean = {
+  override def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean = {
     KoutaDatabase.runBlockingTransactionally( selectLastModified(koulutus.oid.get).flatMap(_ match {
       case None => DBIO.failed(new NoSuchElementException(s"Unknown koulutus oid ${koulutus.oid.get}"))
       case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
@@ -55,13 +52,6 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  def list(params:ListParams):List[OidListResponse] = {
-    val sql = selectFromKoulutukset(params)
-    query[OidListResponse](sql, params.tarjoajat.union( params.tilat.map(_.toString)).toArray, (r:java.sql.ResultSet) => {
-      new OidListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
-    })
-  }
-
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
     if(tarjoajat.size > 0) {
@@ -70,9 +60,43 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       DBIO.sequence(List(deleteTarjoajat(oid)))
     }
   }
+
+  override def list(params:ListParams):List[OidListResponse] = {
+    val sql = selectFromKoulutukset(params)
+    query[OidListResponse](sql, params.tarjoajat.union( params.tilat.map(_.toString)).toArray, (r:java.sql.ResultSet) => {
+      new OidListResponse(r.getString(1), extractKielistetty(Option(r.getString(2))))
+    })
+  }
 }
 
-sealed trait KoulutusSQL extends KoulutusExtractors with SQLHelpers {
+sealed trait KoulutusModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
+
+  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
+    sql"""select greatest(
+            max(lower(k.system_time)),
+            max(lower(ta.system_time)),
+            max(upper(kh.system_time)),
+            max(upper(tah.system_time)))
+          from koulutukset k
+          left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
+          left join koulutukset_history kh on k.oid = kh.oid
+          left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+          where k.oid = $oid""".as[Option[Instant]].head
+  }
+
+  def selectModifiedSince(since:Instant): DBIO[Seq[String]] = {
+    sql"""select oid from koulutukset where $since < lower(system_time)
+          union
+          select oid from koulutukset_history where $since <@ system_time
+          union
+          select koulutus_oid from koulutusten_tarjoajat where $since < lower(system_time)
+          union
+          select koulutus_oid from koulutusten_tarjoajat_history where $since <@ system_time""".as[String]
+  }
+}
+
+sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL with SQLHelpers {
 
   def insertKoulutus(koulutus:Koulutus) = {
     val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja, kielivalinta) = koulutus
@@ -111,19 +135,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with SQLHelpers {
     sql"""select koulutus_oid, tarjoaja_oid from koulutusten_tarjoajat where koulutus_oid = $oid"""
   }
 
-  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(k.system_time)),
-            max(lower(ta.system_time)),
-            max(upper(kh.system_time)),
-            max(upper(tah.system_time)))
-          from koulutukset k
-          left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-          left join koulutukset_history kh on k.oid = kh.oid
-          left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
-          where k.oid = $oid""".as[Option[Instant]].head
-  }
-
   def updateKoulutus(koulutus:Koulutus) = {
     val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metatieto, muokkaaja, kielivalinta) = koulutus
     sqlu"""update koulutukset set
@@ -152,8 +163,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with SQLHelpers {
   }
 
   def deleteTarjoajat(oid:Option[String], exclude:List[String]) = {
-    val tarjoajatString = exclude.map(s => s"'$s'").mkString(",")
-    sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid and tarjoaja_oid not in (#${tarjoajatString})"""
+    sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid and tarjoaja_oid not in (#${createInParams(exclude)})"""
   }
 
   def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""

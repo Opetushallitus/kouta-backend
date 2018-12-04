@@ -94,6 +94,18 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
     db.runBlocking(sqlu"""delete from toteutukset""")
     db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
     db.runBlocking(sqlu"""delete from koulutukset""")
+
+    db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet_history""")
+    db.runBlocking(sqlu"""delete from hakukohteiden_liitteet_history""")
+    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat_history""")
+    db.runBlocking(sqlu"""delete from hakukohteet_history""")
+    db.runBlocking(sqlu"""delete from hakujen_hakuajat_history""")
+    db.runBlocking(sqlu"""delete from haut_history""")
+    db.runBlocking(sqlu"""delete from valintaperusteet_history""")
+    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat_history""")
+    db.runBlocking(sqlu"""delete from toteutukset_history""")
+    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
+    db.runBlocking(sqlu"""delete from koulutukset_history""")
     deleteAsiasanat()
   }
 

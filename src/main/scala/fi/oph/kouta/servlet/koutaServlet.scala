@@ -1,19 +1,17 @@
 package fi.oph.kouta.servlet
 
 import java.text.ParseException
-import java.time.{Instant, LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.{ConcurrentModificationException, NoSuchElementException, UUID}
 
 import fi.oph.kouta.PrettySwaggerSupport
-import fi.oph.kouta.domain._
 import fi.oph.kouta.service.KoutaValidationException
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.MappingException
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger.DataType.{ContainerDataType, ValueDataType}
 import org.scalatra.swagger._
 
 import scala.util.{Failure, Try}
@@ -29,6 +27,10 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.ofInstant(instant, ZoneId.of("GMT")))
   }
 
+  protected def parseHttpDate(string: String): Instant = {
+    Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(string))
+  }
+
   protected def createLastModifiedHeader(instant: Instant): String = {
     //- system_time range in database is of form ["2017-02-28 13:40:02.442277+02",)
     //- RFC-1123 date-time format used in headers has no millis
@@ -37,12 +39,12 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     renderHttpDate(instant.truncatedTo(java.time.temporal.ChronoUnit.SECONDS).plusSeconds(1))
   }
 
-  val sample = renderHttpDate(Instant.EPOCH)
+  val SampleHttpDate = renderHttpDate(Instant.EPOCH)
   protected def parseIfUnmodifiedSince: Option[Instant] = request.headers.get("If-Unmodified-Since") match {
     case Some(s) =>
-      Try(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(s))) match {
+      Try(parseHttpDate(s)) match {
         case x if x.isSuccess => Some(x.get)
-        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta If-Unmodified-Since muodossa $sample.", e)
+        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta If-Unmodified-Since muodossa $SampleHttpDate.", e)
       }
     case None => None
   }
