@@ -84,7 +84,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def insertHaku(haku:Haku) = {
     val Haku(_, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
-    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
+    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatioOid, _, muokkaaja, kielivalinta) = haku
     sql"""insert into haut ( tila,
                              nimi,
                              hakutapa_koodi_uri,
@@ -97,7 +97,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              hakulomaketyyppi,
                              hakulomake,
                              metadata,
-                             organisaatio,
+                             organisaatio_oid,
                              muokkaaja,
                              kielivalinta
           ) values ( ${tila.toString}::julkaisutila,
@@ -112,7 +112,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                      ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
                      ${hakulomake},
                      ${toJsonParam(metadata)}::jsonb,
-                     $organisaatio,
+                     $organisaatioOid,
                      $muokkaaja,
                      ${toJsonParam(kielivalinta)}::jsonb
           ) returning oid""".as[String].headOption
@@ -131,7 +131,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def selectHaku(oid:String) = {
     sql"""select oid, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi_koodi_uri, alkamisvuosi,
-          kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake, metadata, organisaatio, muokkaaja, kielivalinta from haut where oid = $oid"""
+          kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake, metadata, organisaatio_oid, muokkaaja, kielivalinta from haut where oid = $oid"""
   }
 
   def selectHaunHakuajat(oid:String) = {
@@ -140,7 +140,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def updateHaku(haku:Haku) = {
     val Haku(oid, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
-    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
+    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatioOid, _, muokkaaja, kielivalinta) = haku
     sqlu"""update haut set
               hakutapa_koodi_uri = $hakutapaKoodiUri,
               hakukohteen_liittamisen_takaraja = ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp,
@@ -151,7 +151,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
               kohdejoukon_tarkenne_koodi_uri = $kohdejoukonTarkenneKoodiUri,
               hakulomaketyyppi = ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
               hakulomake = $hakulomake,
-              organisaatio = $organisaatio,
+              organisaatio_oid = $organisaatioOid,
               tila = ${tila.toString}::julkaisutila,
               nimi = ${toJsonParam(nimi)}::jsonb,
               metadata = ${toJsonParam(metadata)}::jsonb,
@@ -167,7 +167,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or hakulomake is distinct from $hakulomake
             or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp
             or hakukohteen_muokkaamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp
-            or organisaatio is distinct from $organisaatio
+            or organisaatio_oid is distinct from $organisaatioOid
             or tila is distinct from ${tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(metadata)}::jsonb

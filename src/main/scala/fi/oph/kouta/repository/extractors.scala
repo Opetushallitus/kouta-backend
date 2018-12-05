@@ -41,6 +41,7 @@ trait KoulutusExtractors extends ExtractorBase {
     nimi = extractKielistetty(r.nextStringOption),
     metadata = r.nextStringOption.map(read[KoulutusMetadata]),
     muokkaaja = r.nextString,
+    organisaatioOid = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)))
 }
 
@@ -54,6 +55,7 @@ trait ToteutusExtractors extends ExtractorBase {
     nimi = extractKielistetty(r.nextStringOption),
     metadata = r.nextStringOption.map(read[ToteutusMetadata]),
     muokkaaja = r.nextString,
+    organisaatioOid = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)
   ))
 }
@@ -74,7 +76,7 @@ trait HakuExtractors extends ExtractorBase {
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
     hakulomake = r.nextStringOption(),
     metadata = r.nextStringOption().map(read[HakuMetadata]),
-    organisaatio = r.nextString,
+    organisaatioOid = r.nextString,
     hakuajat = List(),
     muokkaaja = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)
@@ -92,7 +94,7 @@ trait ValintaperusteExtractors extends ExtractorBase {
     nimi = extractKielistetty(r.nextStringOption),
     onkoJulkinen = r.nextBoolean,
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
-    organisaatio = r.nextString,
+    organisaatioOid = r.nextString,
     muokkaaja = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)
   ))
@@ -123,6 +125,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
     muokkaaja = r.nextString,
+    organisaatioOid = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)
   ))
 

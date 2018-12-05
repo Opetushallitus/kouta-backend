@@ -30,6 +30,7 @@ case class Hakukohde(oid:Option[String] = None,
                      valintakokeet: List[Valintakoe] = List(),
                      hakuajat: List[Ajanjakso] = List(),
                      muokkaaja:String,
+                     organisaatioOid:String,
                      kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
   override def validate(): IsValid = and(

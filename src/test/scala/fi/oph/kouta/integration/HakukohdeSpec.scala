@@ -102,7 +102,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
   }
 
   it should "store and update unfinished hakukohde" in {
-    val unfinishedHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", toteutusOid = toteutusOid, hakuOid = hakuOid)
+    val unfinishedHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", toteutusOid = toteutusOid, hakuOid = hakuOid, organisaatioOid = "1.2")
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(oid)))
     val newToteutusOid = put(toteutus(koulutusOid))

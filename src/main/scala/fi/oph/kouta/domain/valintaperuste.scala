@@ -14,13 +14,12 @@ case class Valintaperuste(id:Option[UUID] = None,
                           nimi: Kielistetty = Map(),
                           onkoJulkinen: Boolean = false,
                           metadata: Option[ValintaperusteMetadata] = None,
-                          organisaatio: String,
+                          organisaatioOid: String,
                           muokkaaja:String,
                           kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithId with Validatable {
 
   override def validate(): IsValid = and(
      super.validate(),
-     assertMatch(organisaatio, OidPattern),
      validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
      validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
      validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),

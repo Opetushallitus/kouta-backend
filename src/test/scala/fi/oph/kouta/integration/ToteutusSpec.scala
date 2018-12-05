@@ -84,7 +84,7 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = "5.4.3.2", koulutusOid = koulutusOid)
+    val unfinishedToteutus = new Toteutus(muokkaaja = "5.4.3.2", koulutusOid = koulutusOid, organisaatioOid = "1.2")
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(oid)))
     val newKoulutusOid = put(koulutus)

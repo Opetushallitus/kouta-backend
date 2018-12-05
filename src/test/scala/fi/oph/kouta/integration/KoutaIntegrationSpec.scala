@@ -76,7 +76,7 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
     get(s"$path/list", params) {
       status should equal (200)
       val result = read[List[R]](body)
-      result should equal(expected)
+      result should contain theSameElementsAs (expected)
       result
     }
   }

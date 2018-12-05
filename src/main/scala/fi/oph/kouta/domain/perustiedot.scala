@@ -9,9 +9,11 @@ sealed trait Perustiedot extends Validatable {
   val nimi: Kielistetty
   val muokkaaja:String
   val kielivalinta:Seq[Kieli]
+  val organisaatioOid:String
 
   def validate(): IsValid = and(
     assertMatch(muokkaaja, OidPattern),
+    assertMatch(organisaatioOid, OidPattern),
     validateIfTrue(tila == Julkaistu, () => and(
       assertTrue(kielivalinta.size > 0, MissingKielivalinta),
       validateKielistetty(kielivalinta, nimi, "nimi")

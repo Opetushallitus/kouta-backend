@@ -70,7 +70,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def insertValintaperuste(valintaperuste: Valintaperuste) = {
     val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
-    onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
+    onkoJulkinen, metadata, organisaatioOid, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""insert into valintaperusteet (
                      id,
                      tila,
@@ -80,7 +80,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      nimi,
                      onkoJulkinen,
                      metadata,
-                     organisaatio,
+                     organisaatio_oid,
                      muokkaaja,
                      kielivalinta
          ) values (
@@ -92,7 +92,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      ${toJsonParam(nimi)}::jsonb,
                      $onkoJulkinen,
                      ${toJsonParam(metadata)}::jsonb,
-                     $organisaatio,
+                     $organisaatioOid,
                      $muokkaaja,
                      ${toJsonParam(kielivalinta)}::jsonb
          )"""
@@ -100,12 +100,12 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def selectValintaperuste(id:UUID) =
     sql"""select id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
-                 onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta
+                 onkoJulkinen, metadata, organisaatio_oid, muokkaaja, kielivalinta
           from valintaperusteet where id = ${id.toString}::uuid"""
 
   def updateValintaperuste(valintaperuste: Valintaperuste) = {
     val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
-    onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
+    onkoJulkinen, metadata, organisaatioOid, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""update valintaperusteet set
                      tila = ${tila.toString}::julkaisutila,
                      hakutapa_koodi_uri = $hakutapaKoodiUri,
@@ -114,7 +114,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      nimi = ${toJsonParam(nimi)}::jsonb,
                      onkoJulkinen = $onkoJulkinen,
                      metadata = ${toJsonParam(metadata)}::jsonb,
-                     organisaatio = $organisaatio,
+                     organisaatio_oid = $organisaatioOid,
                      muokkaaja = $muokkaaja,
                      kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
            where id = ${id.map(_.toString)}::uuid
@@ -125,7 +125,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            or nimi is distinct from ${toJsonParam(nimi)}::jsonb
            or onkoJulkinen is distinct from $onkoJulkinen
            or metadata is distinct from ${toJsonParam(metadata)}::jsonb
-           or organisaatio is distinct from $organisaatio
+           or organisaatio_oid is distinct from $organisaatioOid
            or muokkaaja is distinct from $muokkaaja
            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
          )"""

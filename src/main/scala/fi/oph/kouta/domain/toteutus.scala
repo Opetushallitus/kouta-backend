@@ -28,6 +28,7 @@ case class Toteutus(oid:Option[String] = None,
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,
                     muokkaaja:String,
+                    organisaatioOid:String,
                     kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
   override def validate():IsValid = and(

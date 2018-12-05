@@ -56,9 +56,10 @@ object TestData {
     metadata = Some(new KoulutusMetadata()),
     tarjoajat = List("1.2", "2.2", "3.2"),
     muokkaaja = "5.5.5",
+    organisaatioOid = "1.2",
     kielivalinta = List(Fi, Sv))
 
-  val MinKoulutus = Koulutus(johtaaTutkintoon = false, muokkaaja = "1.2.3")
+  val MinKoulutus = Koulutus(johtaaTutkintoon = false, muokkaaja = "1.2.3", organisaatioOid = "1.2")
 
   val JulkaistuHaku = new Haku(
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
@@ -74,11 +75,11 @@ object TestData {
     hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
-    organisaatio = "1.2.3.4",
+    organisaatioOid = "1.2.3.4",
     muokkaaja = "5.4.3.2.1",
     kielivalinta = Seq(Fi, Sv))
 
-  val MinHaku = new Haku(muokkaaja = "9.9.9.9.9", organisaatio = "5.5.5")
+  val MinHaku = new Haku(muokkaaja = "9.9.9.9.9", organisaatioOid = "5.5.5")
 
   val JulkaistuHakukohde = new Hakukohde(
     oid = None,
@@ -106,9 +107,14 @@ object TestData {
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     muokkaaja = "1.2.3.2.1",
+    organisaatioOid = "1.2",
     kielivalinta = Seq(Fi, Sv))
 
-  val MinHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", toteutusOid = "1.2.246.562.17.123", hakuOid = "1.2.246.562.29.123")
+  val MinHakukohde = new Hakukohde(
+    muokkaaja = "7.7.7.7",
+    organisaatioOid = "1.2",
+    toteutusOid = "1.2.246.562.17.123",
+    hakuOid = "1.2.246.562.29.123")
 
   val JulkaistuValintaperuste = new Valintaperuste(
     id = None,
@@ -118,11 +124,11 @@ object TestData {
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = None,
-    organisaatio = "1.2.3.4",
+    organisaatioOid = "1.2.3.4",
     muokkaaja = "2.1.2.1.2",
     kielivalinta = List(Fi, Sv))
 
-  val MinValintaperuste = new Valintaperuste(muokkaaja = "7.7.7.7.7", organisaatio = "1.2.1.2")
+  val MinValintaperuste = new Valintaperuste(muokkaaja = "7.7.7.7.7", organisaatioOid = "1.2.1.2")
 
   val ToteutuksenOpetus = Opetus(
     opetuskielet = List("fi"),
@@ -147,7 +153,11 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
     muokkaaja = "1.2.3.4",
+    organisaatioOid = "1.2",
     kielivalinta = Seq(Fi, Sv))
 
-  val MinToteutus = new Toteutus(muokkaaja = "5.4.3.2", koulutusOid = "1.2.246.562.13.123")
+  val MinToteutus = new Toteutus(
+    muokkaaja = "5.4.3.2",
+    organisaatioOid = "1.2",
+    koulutusOid = "1.2.246.562.13.123")
 }

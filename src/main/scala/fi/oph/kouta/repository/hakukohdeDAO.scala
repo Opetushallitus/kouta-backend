@@ -162,6 +162,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             liitteiden_toimitustapa,
             liitteiden_toimitusosoite,
             muokkaaja,
+            organisaatio_oid,
             kielivalinta
           ) values (
             ${hakukohde.toteutusOid},
@@ -185,6 +186,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
             ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
             ${hakukohde.muokkaaja},
+            ${hakukohde.organisaatioOid},
             ${toJsonParam(hakukohde.kielivalinta)}::jsonb
           ) returning oid""".as[String].headOption
   }
@@ -212,6 +214,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               liitteiden_toimitustapa = ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
               liitteiden_toimitusosoite = ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
               muokkaaja = ${hakukohde.muokkaaja},
+              organisaatio_oid = ${hakukohde.organisaatioOid},
               kielivalinta = ${toJsonParam(hakukohde.kielivalinta)}::jsonb
           where oid = ${hakukohde.oid}
             and ( toteutus_oid is distinct from ${hakukohde.toteutusOid}
@@ -234,7 +237,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or liitteiden_toimitusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp
             or liitteiden_toimitustapa is distinct from ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa
             or liitteiden_toimitusosoite is distinct from ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb)"""
+            or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb
+            or organisaatio_oid is distinct from ${hakukohde.organisaatioOid})"""
   }
 
   def selectHakukohde(oid:String) = {
@@ -260,6 +264,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              liitteiden_toimitustapa,
              liitteiden_toimitusosoite,
              muokkaaja,
+             organisaatio_oid,
              kielivalinta from hakukohteet where oid = $oid""".as[Hakukohde].headOption
   }
 

@@ -53,7 +53,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   }
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
-    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
+    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _, _) = koulutus
     if(tarjoajat.size > 0) {
       DBIO.sequence( tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
     } else {
@@ -99,7 +99,7 @@ sealed trait KoulutusModificationSQL extends SQLHelpers {
 sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL with SQLHelpers {
 
   def insertKoulutus(koulutus:Koulutus) = {
-    val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja, kielivalinta) = koulutus
+    val Koulutus(_, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metadata, muokkaaja, organisaatioOid, kielivalinta) = koulutus
     sql"""insert into koulutukset (
             johtaa_tutkintoon,
             tyyppi,
@@ -108,6 +108,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             nimi,
             metadata,
             muokkaaja,
+            organisaatio_oid,
             kielivalinta)
           values (
             $johtaaTutkintoon,
@@ -117,18 +118,21 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${toJsonParam(nimi)}::jsonb,
             ${toJsonParam(metadata)}::jsonb,
             $muokkaaja,
+            $organisaatioOid,
             ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
   }
 
   def insertKoulutuksenTarjoajat(koulutus:Koulutus) = {
-    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _) = koulutus
+    val Koulutus(oid, _, _, _, _, tarjoajat, _, _, muokkaaja, _, _) = koulutus
     DBIO.sequence( tarjoajat.map(t =>
       sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $t, $muokkaaja)"""))
   }
 
   def selectKoulutus(oid:String) = {
-    sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata, muokkaaja, kielivalinta from koulutukset where oid = $oid"""
+    sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila,
+                 nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta
+          from koulutukset where oid = $oid"""
   }
 
   def selectKoulutuksenTarjoajat(oid:String) = {
@@ -136,7 +140,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def updateKoulutus(koulutus:Koulutus) = {
-    val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metatieto, muokkaaja, kielivalinta) = koulutus
+    val Koulutus(oid, johtaaTutkintoon, koulutustyyppi, koulutusKoodiUri, tila, _, nimi, metatieto, muokkaaja, organisaatioOid, kielivalinta) = koulutus
     sqlu"""update koulutukset set
               johtaa_tutkintoon = $johtaaTutkintoon,
               tyyppi = ${koulutustyyppi.map(_.toString)}::koulutustyyppi,
@@ -145,6 +149,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               nimi = ${toJsonParam(nimi)}::jsonb,
               metadata = ${toJsonParam(metatieto)}::jsonb,
               muokkaaja = $muokkaaja,
+              organisaatio_oid = $organisaatioOid,
               kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
             and ( johtaa_tutkintoon is distinct from $johtaaTutkintoon
@@ -153,7 +158,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or tila is distinct from ${tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(metatieto)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb)"""
+            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
+            or organisaatio_oid is distinct from $organisaatioOid)"""
   }
 
   def insertTarjoaja(oid:Option[String], tarjoaja:String, muokkaaja:String ) = {

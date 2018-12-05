@@ -58,13 +58,13 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     val unfinishedValintaperuste = MinValintaperuste
     val id = put(unfinishedValintaperuste)
     val lastModified = get(id, unfinishedValintaperuste.copy(id = Some(id)))
-    val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatio = "6.6.6.6.6")
+    val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatioOid = "6.6.6.6.6")
     update(newUnfinishedValintaperuste, lastModified)
     get(id, newUnfinishedValintaperuste)
   }
 
   it should "validate new valintaperuste" in {
-    put(ValintaperustePath, bytes(valintaperuste.copy(organisaatio = "saippua")), List(jsonHeader)) {
+    put(ValintaperustePath, bytes(valintaperuste.copy(organisaatioOid = "saippua")), List(jsonHeader)) {
       withClue(body) {
         status should equal(400)
       }
@@ -75,7 +75,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   it should "validate updated valintaperuste" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    post(ValintaperustePath, bytes(valintaperuste(id).copy(organisaatio = "saippua")), headersIfUnmodifiedSince(lastModified)) {
+    post(ValintaperustePath, bytes(valintaperuste(id).copy(organisaatioOid = "saippua")), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }

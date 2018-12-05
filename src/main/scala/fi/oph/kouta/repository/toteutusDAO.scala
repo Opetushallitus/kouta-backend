@@ -59,7 +59,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
-    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _) = toteutus
+    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _) = toteutus
     if(tarjoajat.size > 0) {
       DBIO.sequence( tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
     } else {
@@ -122,10 +122,10 @@ trait ToteutusModificationSQL extends SQLHelpers {
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   def selectToteutus(oid:String) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where oid = $oid"""
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta from toteutukset where oid = $oid"""
 
   def selectToteutuksetByKoulutusOid(oid:String) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta from toteutukset where koulutus_oid = $oid"""
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta from toteutukset where koulutus_oid = $oid"""
 
   def selectToteutuksenTarjoajat(oid:String) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
@@ -135,10 +135,24 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def insertToteutus(toteutus:Toteutus) = {
-    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
-    sql"""insert into toteutukset (koulutus_oid, tila, nimi, metadata, muokkaaja, kielivalinta)
-             values ($koulutusOid, ${tila.toString}::julkaisutila,
-             ${toJsonParam(nimi)}::jsonb, ${toJsonParam(metadata)}::jsonb, $muokkaaja, ${toJsonParam(kielivalinta)}::jsonb) returning oid""".as[String].headOption
+    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, organisaatioOid, kielivalinta) = toteutus
+    sql"""insert into toteutukset (
+            koulutus_oid,
+            tila,
+            nimi,
+            metadata,
+            muokkaaja,
+            organisaatio_oid,
+            kielivalinta
+          ) values (
+            $koulutusOid,
+            ${tila.toString}::julkaisutila,
+            ${toJsonParam(nimi)}::jsonb,
+            ${toJsonParam(metadata)}::jsonb,
+            $muokkaaja,
+            $organisaatioOid,
+            ${toJsonParam(kielivalinta)}::jsonb
+          ) returning oid""".as[String].headOption
   }
 
   def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
@@ -148,20 +162,22 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def updateToteutus(toteutus: Toteutus) = {
-    val Toteutus(oid, koulutusOid, tila, _, nimi, metadata, muokkaaja, kielivalinta) = toteutus
+    val Toteutus(oid, koulutusOid, tila, _, nimi, metadata, muokkaaja, organisaatioOid, kielivalinta) = toteutus
     sqlu"""update toteutukset set
               koulutus_oid = ${koulutusOid},
               tila = ${tila.toString}::julkaisutila,
               nimi = ${toJsonParam(nimi)}::jsonb,
               metadata = ${toJsonParam(metadata)}::jsonb,
               muokkaaja = $muokkaaja,
+              organisaatio_oid = $organisaatioOid,
               kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
             where oid = $oid
             and ( koulutus_oid is distinct from $koulutusOid
             or tila is distinct from ${tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(metadata)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb)"""
+            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
+            or organisaatio_oid is distinct from $organisaatioOid )"""
   }
 
   def insertTarjoaja(oid:Option[String], tarjoaja:String, muokkaaja:String ) = {

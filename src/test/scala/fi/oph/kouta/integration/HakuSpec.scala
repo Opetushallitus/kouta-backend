@@ -75,10 +75,10 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = new Haku(muokkaaja = "9.9.9.9.9", organisaatio = "5.5.5")
+    val unfinishedHaku = new Haku(muokkaaja = "9.9.9.9.9", organisaatioOid = "5.5.5")
     val oid = put(unfinishedHaku)
     val lastModified = get(oid, unfinishedHaku.copy(oid = Some(oid)))
-    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(oid), organisaatio = "6.6.6")
+    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(oid), organisaatioOid = "6.6.6")
     update(newUnfinishedHaku, lastModified)
     get(oid, newUnfinishedHaku)
   }
