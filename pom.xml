@@ -79,6 +79,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-properties_2.12</artifactId>
+            <version>${scala-utils.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.json4s</groupId>
             <artifactId>json4s-jackson_2.12</artifactId>
             <version>${json4s.version}</version>
