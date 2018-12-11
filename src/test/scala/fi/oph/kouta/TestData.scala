@@ -18,7 +18,9 @@ object TestData {
 
   val Yhteystieto1 = Yhteystieto(
     nimi = Map(Fi -> "Aku Ankka", Sv -> "Aku Ankka"),
-    puhelinnumero = Map(Fi -> "123", Sv -> "123"))
+    puhelinnumero = Map(Fi -> "123", Sv -> "123"),
+    sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"),
+    titteli = Map(Fi -> "titteli", Sv -> "titteli sv"))
 
   val Liite1 = Liite(
     id = None,
@@ -40,7 +42,7 @@ object TestData {
 
   val Valintakoe1 = Valintakoe(
     id = None,
-    tyyppi = Some("heippa"),
+    tyyppi = Some("valintakokeentyyppi_1#1"),
     tilaisuudet = List(Valintakoetilaisuus(
       osoite = Some(Osoite1),
       aika = Some(Ajanjakso(alkaa = now(), paattyy = inFuture())),
@@ -53,7 +55,7 @@ object TestData {
     koulutusKoodiUri = Some("koulutus_123456#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(new KoulutusMetadata()),
+    metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))),
     tarjoajat = List("1.2", "2.2", "3.2"),
     muokkaaja = "5.5.5",
     organisaatioOid = "1.2",
@@ -86,7 +88,7 @@ object TestData {
     toteutusOid = "1.2.246.562.17.123",
     hakuOid = "1.2.246.562.29.123",
     tila = Julkaistu,
-    nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
+    nimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2019"),
     hakulomaketyyppi = Some(EiSähköistä),
@@ -145,7 +147,9 @@ object TestData {
 
   val AmmToteutuksenMetatieto = ToteutusMetadata(
     kuvaus = Map(),
-    osaamisalat = List(Osaamisala("osaamisala_koodi_uri#1")),
+    osaamisalat = List(Osaamisala("osaamisala_koodi_uri#1",
+      linkki = Map(Fi -> "http://osaamisala/linkki/fi", Sv -> "http://osaamisala/linkki/sv"),
+      otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
