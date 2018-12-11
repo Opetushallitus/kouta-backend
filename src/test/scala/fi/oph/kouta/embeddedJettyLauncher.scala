@@ -18,7 +18,7 @@ object EmbeddedJettyLauncher extends Logging {
 
 object TestSetups extends Logging with KoutaConfigurationConstants {
 
-  def setupWithPort(port:Int) = {
+  def setupWithTemplate(port:Int) = {
     logger.info(s"Setting up test template with Postgres port ${port}")
     Templates.createTestTemplate(port)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)
@@ -28,7 +28,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
   def setupWithEmbeddedPostgres() = {
     logger.info("Starting embedded PostgreSQL!")
     TempDb.start()
-    setupWithPort(TempDb.port)
+    setupWithTemplate(TempDb.port)
   }
 
   def setupWithoutEmbeddedPostgres()=
