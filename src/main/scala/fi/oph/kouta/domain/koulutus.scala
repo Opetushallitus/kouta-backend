@@ -12,6 +12,7 @@ case class Koulutus(oid:Option[String] = None,
                     tarjoajat:List[String] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[KoulutusMetadata] = None,
+                    julkinen: Boolean = false,
                     muokkaaja:String,
                     organisaatioOid:String,
                     kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {

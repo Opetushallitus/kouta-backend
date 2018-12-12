@@ -1,6 +1,6 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.domain.{Julkaisutila, Koulutus, ListParams, Toteutus}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.service.KoulutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
@@ -40,14 +40,14 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[Koulutus]]("Listaa koulutukset")
+  get("/list", operation(apiOperation[List[OidListItem]]("Listaa kaikki koulutukset, joihin käyttäjällä on oikeudet")
     tags modelName
-    summary "Listaa koulutukset annetuilla hakuehdoilla"
-    parameter queryParam[String]("tila").description(s"Pilkulla erotettu lista tiloja ${Julkaisutila.values().mkString(",")}").optional
-    parameter queryParam[String]("tarjoaja").description(s"Pilkulla eroteltu lista organisaatioiden oideja.").optional)) {
-    val tilat = params.get("tila").map(_.split(',').map(Julkaisutila.withName).toList)
-    val tarjoajat = params.get("tarjoaja").map(_.split(',').toList)
-    Ok(KoulutusService.list(new ListParams(tilat.getOrElse(List()), tarjoajat.getOrElse(List()))))
+    summary "Listaa kaikki koulutukset, joihin käyttäjällä on oikeudet"
+    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+    params.get("organisaatioOid") match {
+      case None => NotFound()
+      case Some(oid) => Ok(KoulutusService.list(oid))
+    }
   }
 
   get("/:oid/toteutukset", operation(apiOperation[List[Toteutus]]("Palauttaa koulutuksen kaikki toteutukset")

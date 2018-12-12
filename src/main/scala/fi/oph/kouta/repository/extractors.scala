@@ -27,6 +27,13 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
     UUID.fromString(r.nextString())
   })
+
+  implicit val getOidListItem: GetResult[OidListItem] = GetResult(r => OidListItem(
+    oid = r.nextString(),
+    nimi = extractKielistetty(r.nextStringOption),
+    tila = Julkaisutila.withName(r.nextString),
+    organisaatioOid = r.nextString()
+  ))
 }
 
 trait KoulutusExtractors extends ExtractorBase {
@@ -40,6 +47,7 @@ trait KoulutusExtractors extends ExtractorBase {
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption),
     metadata = r.nextStringOption.map(read[KoulutusMetadata]),
+    julkinen = r.nextBoolean(),
     muokkaaja = r.nextString,
     organisaatioOid = r.nextString,
     kielivalinta = extractKielivalinta(r.nextStringOption)))

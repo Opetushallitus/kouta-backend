@@ -76,11 +76,8 @@ package object domain {
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
-  case class ListParams(tilat:List[Julkaisutila] = List(),
-                        tarjoajat:List[String] = List())
-
-  case class OidListResponse(oid:String, nimi: Kielistetty)
-  case class IdListResponse(id:UUID, nimi: Kielistetty)
+  case class OidListItem(oid:String, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String)
+  case class IdListItem(id:UUID, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String)
 
   case class Osoite(osoite:Kielistetty = Map(),
                     postinumero:Option[String],

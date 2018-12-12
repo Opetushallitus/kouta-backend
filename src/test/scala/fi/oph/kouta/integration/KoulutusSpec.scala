@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.ServiceMocks
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
@@ -99,18 +100,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
       }
       body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
-  }
-
-  it should "list koulutukset" in {
-    def r(oids:List[String]) = oids.map(OidListResponse(_, koulutus.nimi))
-    truncateDatabase()
-    val oid1 = put(koulutus.copy(tarjoajat = List("5.5", "6.5")))
-    val oid2 = put(koulutus.copy(tarjoajat = List("6.5"), tila = Tallennettu))
-    val oid3 = put(koulutus.copy(tarjoajat = List("5.5"), tila = Tallennettu))
-    list(List(("tila", "julkaistu"), ("tarjoaja", "6.5")), r(List(oid1)))
-    list(List(("tarjoaja", "5.5")), r(List(oid1, oid3)))
-    list(List(("tila", "tallennettu")), r(List(oid2, oid3)))
-    list(List(), r(List(oid1, oid2, oid3)))
   }
 
   it should "return all toteutuksen related to koulutus" in {

@@ -7,7 +7,7 @@ import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.{read, write}
 import org.scalatest.DoNotDiscover
-import org.scalatra.test.scalatest.{ScalatraFlatSpec}
+import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import scala.reflect.Manifest
 
@@ -74,12 +74,19 @@ class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
     }
   }
 
-  def list[R](path:String, params:List[(String, String)], expected:List[R])(implicit mf: Manifest[R]) = {
+  def list[R](path:String, params:Map[String, String], expected:List[R])(implicit mf: Manifest[R]) = {
     get(s"$path/list", params) {
       status should equal (200)
       val result = read[List[R]](body)
       result should contain theSameElementsAs (expected)
       result
+    }
+  }
+
+  def list(path:String, params:Map[String, String], expectedStatus:Int) = {
+    get(s"$path/list", params) {
+      status should equal (expectedStatus)
+      body
     }
   }
 

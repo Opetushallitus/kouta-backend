@@ -22,5 +22,4 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
   def update(koulutus:Koulutus, lastModified:String, expectUpdate:Boolean):Unit = update(KoulutusPath, koulutus, lastModified, expectUpdate)
   def update(koulutus:Koulutus, lastModified:String):Unit = update(koulutus, lastModified, true)
 
-  def list(params:List[(String, String)], expected:List[OidListResponse]):List[OidListResponse] = list(KoulutusPath, params, expected)
 }
