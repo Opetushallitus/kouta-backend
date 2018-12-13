@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.ConcurrentModificationException
 
-import fi.oph.kouta.domain.Toteutus
+import fi.oph.kouta.domain.{OidListItem, Toteutus}
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -15,7 +15,9 @@ trait ToteutusDAO extends EntityModificationDAO[String] {
   def put(toteutus:Toteutus):Option[String]
   def get(oid:String): Option[(Toteutus, Instant)]
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
-  def getByKoulutusOid(oid:String): List[Toteutus]
+  def getByKoulutusOid(oid:String): Seq[Toteutus]
+
+  def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -73,7 +75,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   private def insertAsiasanat(toteutus:Toteutus) =
     KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
 
-  override def getByKoulutusOid(oid: String): List[Toteutus] = {
+  override def getByKoulutusOid(oid: String): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
         toteutukset <- selectToteutuksetByKoulutusOid(oid).as[Toteutus]
@@ -82,13 +84,16 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
         case Left(t) => throw t
         case Right((toteutukset, tarjoajat)) => {
           toteutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid == t.oid.get).map(_.tarjoajaOid).toList)).toList
+            t.copy(tarjoajat = tarjoajat.filter(_.oid == t.oid.get).map(_.tarjoajaOid).toList))
         }
       }
   }
 
   override def listModifiedSince(since:Instant):Seq[String] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
+
+  override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
@@ -191,4 +196,10 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
+
+  def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
+    sql"""select oid, nimi, tila, organisaatio_oid
+          from toteutukset
+          where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[OidListItem]
+  }
 }

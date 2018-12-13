@@ -3,11 +3,12 @@ package fi.oph.kouta.repository
 import java.sql.{JDBCType, PreparedStatement, ResultSet, Timestamp}
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 
-import fi.oph.kouta.domain.Ajanjakso
+import fi.oph.kouta.domain.{Ajanjakso, OidListItem}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.jdbc.{PositionedParameters, SetParameter}
 import slick.jdbc.PostgresProfile.api._
+import slick.sql.SqlStreamingAction
 
 import scala.util.Try
 
@@ -31,7 +32,7 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
     }
   }
 
-  //TODO: params:Array[AnyRef]
+  /*TODO: params:Array[AnyRef]
   def query[T](sql:String, params:Array[String], toResult:(ResultSet) => T): List[T] = {
     KoutaDatabase.runBlocking(SimpleDBIO { session =>
       var statement:Option[PreparedStatement] = None
@@ -56,5 +57,5 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
         Try(statement.foreach(_.close))
       }
     })
-  }
+  }*/
 }

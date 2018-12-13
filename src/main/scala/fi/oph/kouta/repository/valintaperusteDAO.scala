@@ -6,13 +6,15 @@ import java.util.{ConcurrentModificationException, UUID}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import fi.oph.kouta.domain.Valintaperuste
+import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
 import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def put(valintaperuste:Valintaperuste):Option[UUID]
   def get(id:UUID): Option[(Valintaperuste, Instant)]
   def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean
+
+  def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[IdListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -45,6 +47,9 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       case Right(x) => 0 < x
     }
   }
+
+  override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[IdListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 }
 
 sealed trait ValintaperusteModificationSQL extends SQLHelpers {
@@ -129,5 +134,11 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            or muokkaaja is distinct from $muokkaaja
            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
          )"""
+  }
+
+  def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
+    sql"""select id, nimi, tila, organisaatio_oid
+          from valintaperusteet
+          where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[IdListItem]
   }
 }

@@ -12,7 +12,7 @@ import org.scalatra.test.scalatest.ScalatraFlatSpec
 import scala.reflect.Manifest
 
 @DoNotDiscover
-class KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with KoutaJsonFormats {
 
   implicit val swagger = new KoutaBackendSwagger
 

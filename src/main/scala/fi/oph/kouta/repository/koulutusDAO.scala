@@ -14,7 +14,7 @@ trait KoulutusDAO extends EntityModificationDAO[String] {
   def get(oid:String): Option[(Koulutus, Instant)]
   def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[String]):List[OidListItem]
+  def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -62,8 +62,8 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[String]): List[OidListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids)).toList
+  override def listByOrganisaatioOids(organisaatioOids: Seq[String]): Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -153,8 +153,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or tyyppi is distinct from ${koulutus.koulutustyyppi.map(_.toString)}::koulutustyyppi
             or koulutus_koodi_uri is distinct from ${koulutus.koulutusKoodiUri}
             or tila is distinct from ${koulutus.tila.toString}::julkaisutila
-            or nimi is distinct from ${toJsonParam(koulutus.nimi)}::jsonb,
-            or julkinen is ditict from ${koulutus.julkinen},
+            or nimi is distinct from ${toJsonParam(koulutus.nimi)}::jsonb
+            or julkinen is distinct from ${koulutus.julkinen}
             or metadata is distinct from ${toJsonParam(koulutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(koulutus.kielivalinta)}::jsonb
             or organisaatio_oid is distinct from ${koulutus.organisaatioOid})"""

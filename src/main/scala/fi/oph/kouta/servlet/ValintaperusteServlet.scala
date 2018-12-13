@@ -2,7 +2,7 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.Valintaperuste
+import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
 import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -39,6 +39,16 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
 
     ValintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
+    }
+  }
+
+  get("/list", operation(apiOperation[List[IdListItem]]("Listaa kaikki valintaperusteet, joihin käyttäjällä on oikeudet")
+    tags modelName
+    summary "Listaa kaikki valintaperusteet, joihin käyttäjällä on oikeudet"
+    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+    params.get("organisaatioOid") match {
+      case None => NotFound()
+      case Some(oid) => Ok(ValintaperusteService.list(oid))
     }
   }
 

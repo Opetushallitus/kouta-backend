@@ -4,7 +4,8 @@ import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain
-import fi.oph.kouta.domain.{Ajanjakso, Haku}
+import fi.oph.kouta.domain.{Ajanjakso, Haku, OidListItem}
+import fi.oph.kouta.repository.ToteutusDAO.selectByOrganisaatioOids
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -14,6 +15,8 @@ trait HakuDAO extends EntityModificationDAO[String] {
   def put(haku:Haku):Option[String]
   def get(oid:String): Option[(Haku, Instant)]
   def update(haku:Haku, notModifiedSince:Instant): Boolean
+
+  def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem]
 }
   
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -51,6 +54,9 @@ object HakuDAO extends HakuDAO with HakuSQL {
       case Right((x, y)) => 0 < (x + y.sum)
     }
   }
+
+  override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids)).toList
 }
 
 trait HakuModificationSQL extends SQLHelpers {
@@ -194,5 +200,11 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     } else {
       DBIO.sequence(List(sqlu"""delete from hakujen_hakuajat where haku_oid = $oid"""))
     }
+  }
+
+  def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
+    sql"""select oid, nimi, tila, organisaatio_oid
+          from haut
+          where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[OidListItem]
   }
 }

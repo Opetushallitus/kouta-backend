@@ -1,6 +1,6 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.domain.Haku
+import fi.oph.kouta.domain.{Haku, OidListItem}
 import fi.oph.kouta.service.HakuService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -37,6 +37,16 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
 
     HakuService.update(parsedBody.extract[Haku], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
+    }
+  }
+
+  get("/list", operation(apiOperation[List[OidListItem]]("Listaa kaikki haut, joihin käyttäjällä on oikeudet")
+    tags modelName
+    summary "Listaa kaikki haut, joihin käyttäjällä on oikeudet"
+    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+    params.get("organisaatioOid") match {
+      case None => NotFound()
+      case Some(oid) => Ok(HakuService.list(oid))
     }
   }
 
