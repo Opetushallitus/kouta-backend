@@ -137,7 +137,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
-    sql"""select id, nimi, tila, organisaatio_oid
+    sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from valintaperusteet
           where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[IdListItem]
   }

@@ -33,14 +33,15 @@ sealed trait ServiceMocks extends Logging {
 
   protected def getMockPath(key:String) = urlProperties.map(p => new java.net.URL(p.url(key)).getPath).getOrElse("/")
 
-  protected def getJsonResourceAsString(filename:String) = Source.fromInputStream(
+  protected def responseFromResource(filename:String) = Source.fromInputStream(
     getClass().getClassLoader().getResourceAsStream(s"data/$filename.json")).mkString
 
-  protected def organisaationServiceParams(oid:String) = Map(
+  protected def organisaationServiceParams(oid:String, skipParents:Boolean) = Map(
     "oid" -> oid,
     "aktiiviset" -> "true",
     "suunnitellut" -> "true",
-    "lakkautetut" -> "false")
+    "lakkautetut" -> "false",
+    "skipParents" -> s"$skipParents")
 
   protected def mockGet(key:String, params:Map[String,String], responseString:String) = {
     import scala.collection.JavaConverters._
@@ -60,10 +61,11 @@ trait OrganisaatioServiceMock extends ServiceMocks {
 
   val EmptyOrganisaatioResponse = s"""{ "numHits": 0, "organisaatiot": []}"""
   def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid"}]}"""
+  lazy val DefaultResponse = responseFromResource("organisaatio")
 
-  def mockOrganisaatioServiceFromResource(oid:String, filename:String = "organisaatio") =
-    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), getJsonResourceAsString(filename))
+  def mockGetAllParentAndChildOidsFlat(oid:String, response:String = DefaultResponse) =
+    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid, false), response)
 
-  def mockOrganisaatioService(oid:String, response:String) =
-    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), response)
+  def mockGetAllChildOidsFlat(oid:String, response:String = DefaultResponse) =
+    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid, true), response)
 }

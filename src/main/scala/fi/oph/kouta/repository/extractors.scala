@@ -1,6 +1,7 @@
 package fi.oph.kouta.repository
 
-import java.time.{Instant, LocalDateTime}
+import java.sql.Timestamp
+import java.time.{Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 
 import fi.oph.kouta.domain._
@@ -23,6 +24,7 @@ trait ExtractorBase extends KoutaJsonFormats {
 
   def extractKielistetty(json:Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
   def extractKielivalinta(json:Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
+  def extractModified(timestamp:Timestamp) = LocalDateTime.ofInstant(timestamp.toInstant, ZoneId.of("Europe/Helsinki"))
 
   implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
     UUID.fromString(r.nextString())
@@ -32,14 +34,18 @@ trait ExtractorBase extends KoutaJsonFormats {
     oid = r.nextString(),
     nimi = extractKielistetty(r.nextStringOption),
     tila = Julkaisutila.withName(r.nextString),
-    organisaatioOid = r.nextString()
+    organisaatioOid = r.nextString(),
+    muokkaaja = r.nextString(),
+    modified = extractModified(r.nextTimestamp())
   ))
 
   implicit val getIdListItem: GetResult[IdListItem] = GetResult(r => IdListItem(
     id = UUID.fromString(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption),
     tila = Julkaisutila.withName(r.nextString),
-    organisaatioOid = r.nextString()
+    organisaatioOid = r.nextString(),
+    muokkaaja = r.nextString(),
+    modified = extractModified(r.nextTimestamp())
   ))
 }
 

@@ -173,7 +173,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
   def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from koulutukset
           where organisaatio_oid in (#${createInParams(organisaatioOids)})
           or julkinen = ${true}""".as[OidListItem]

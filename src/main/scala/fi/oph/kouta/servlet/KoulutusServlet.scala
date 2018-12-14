@@ -40,22 +40,33 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[OidListItem]]("Listaa kaikki koulutukset, joihin käyttäjällä on oikeudet")
+  get("/list", operation(apiOperation[List[OidListItem]]("Listaa käytettävissä olevat koulutukset")
     tags modelName
-    summary "Listaa kaikki koulutukset, joihin käyttäjällä on oikeudet"
-    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+    summary "Listaa niiden koulutusten perustiedot, joita organisaatio voi käyttää"
+    parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
     params.get("organisaatioOid") match {
       case None => NotFound()
       case Some(oid) => Ok(KoulutusService.list(oid))
     }
   }
 
-  get("/:oid/toteutukset", operation(apiOperation[List[Toteutus]]("Palauttaa koulutuksen kaikki toteutukset")
+  get("/:oid/toteutukset", operation(apiOperation[List[Toteutus]]("Hae koulutuksen kaikki toteutukset")
     tags modelName
-    summary "Palauttaa koulutuksen kaikki toteutukset"
+    summary "Palauttaa koulutuksen kaikki toteutukset esim. indeksointia varten"
     parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
 
     Ok(KoulutusService.toteutukset(params("oid")))
+  }
+
+  get("/:oid/toteutukset/list", operation(apiOperation[List[Toteutus]]("Listaa koulutuksen toteutukset")
+    tags modelName
+    summary "Listaa niiden koulutukseen kuuluvien toteutusten perustiedot, joihin organisaatiolla on oikeus"
+    parameter pathParam[String]("oid").description("Koulutuksen oid")
+    parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
+    params.get("organisaatioOid") match {
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(KoulutusService.listToteutukset(params("oid"), organisaatioOid))
+    }
   }
 
   prettifySwaggerModels()

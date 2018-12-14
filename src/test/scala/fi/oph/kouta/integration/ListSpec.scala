@@ -19,9 +19,15 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   override def beforeAll() = {
     super.beforeAll()
     startServiceMocking()
-    List(parentOid, childOid, grandchildOid).foreach(mockOrganisaatioServiceFromResource(_))
-    mockOrganisaatioService(lonelyOid, singleOidOrganisaatioResponse(lonelyOid))
-    mockOrganisaatioService(unknownOid, EmptyOrganisaatioResponse)
+
+    List(parentOid, childOid, grandchildOid).foreach(mockGetAllParentAndChildOidsFlat(_))
+    mockGetAllParentAndChildOidsFlat(lonelyOid, singleOidOrganisaatioResponse(lonelyOid))
+    mockGetAllParentAndChildOidsFlat(unknownOid, EmptyOrganisaatioResponse)
+
+    mockGetAllChildOidsFlat(parentOid)
+    mockGetAllChildOidsFlat(grandchildOid, singleOidOrganisaatioResponse(grandchildOid))
+    mockGetAllChildOidsFlat(unknownOid, EmptyOrganisaatioResponse)
+
     createTestData()
   }
 
@@ -101,5 +107,18 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
   it should "return 404 if oid not given" in {
     list(ValintaperustePath, Map[String,String](), 404)
+  }
+
+  "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> parentOid), List(t1, t2, t3))
+  }
+  it should "not list toteutukset for parent organizations" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> grandchildOid), List(t3))
+  }
+  it should "return forbidden if organisaatio oid is unknown" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> unknownOid), 403)
+  }
+  it should "return 404 if organisaatio oid not given" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), 404)
   }
 }

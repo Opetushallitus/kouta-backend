@@ -13,5 +13,6 @@ object ToteutusService extends ValidatingService[Toteutus] with AuthorizationSer
 
   def get(oid:String): Option[(Toteutus, Instant)] = ToteutusDAO.get(oid)
 
-  def list(organisaatioOid:String):Seq[OidListItem] = withAuthorizedOrganizationOids(organisaatioOid, ToteutusDAO.listByOrganisaatioOids)
+  def list(organisaatioOid:String):Seq[OidListItem] =
+    withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ToteutusDAO.listByOrganisaatioOids)
 }

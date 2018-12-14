@@ -9,11 +9,16 @@ object KoulutusService extends ValidatingService[Koulutus] with AuthorizationSer
 
     def put(koulutus:Koulutus): Option[String] = withValidation(koulutus, KoulutusDAO.put(_))
 
-    def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean = withValidation(koulutus, KoulutusDAO.update(_, notModifiedSince))
+    def update(koulutus:Koulutus, notModifiedSince:Instant): Boolean =
+        withValidation(koulutus, KoulutusDAO.update(_, notModifiedSince))
 
     def get(oid:String): Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
 
-    def list(organisaatioOid:String):Seq[OidListItem] = withAuthorizedOrganizationOids(organisaatioOid, KoulutusDAO.listByOrganisaatioOids)
+    def list(organisaatioOid:String):Seq[OidListItem] =
+        withAuthorizedChildAndParentOrganizationOids(organisaatioOid, KoulutusDAO.listByOrganisaatioOids)
 
     def toteutukset(oid:String): Seq[Toteutus] = ToteutusDAO.getByKoulutusOid(oid)
+
+    def listToteutukset(oid:String, organisaatioOid:String):Seq[OidListItem] =
+        withAuthorizedChildOrganizationOids(organisaatioOid, ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _))
 }

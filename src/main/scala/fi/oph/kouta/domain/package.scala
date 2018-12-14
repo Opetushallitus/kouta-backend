@@ -1,6 +1,6 @@
 package fi.oph.kouta
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä
@@ -76,8 +76,8 @@ package object domain {
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
-  case class OidListItem(oid:String, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String)
-  case class IdListItem(id:UUID, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String)
+  case class OidListItem(oid:String, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String, muokkaaja:String, modified:LocalDateTime)
+  case class IdListItem(id:UUID, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String, muokkaaja:String, modified:LocalDateTime)
 
   case class Osoite(osoite:Kielistetty = Map(),
                     postinumero:Option[String],

@@ -203,7 +203,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from haut
           where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[OidListItem]
   }

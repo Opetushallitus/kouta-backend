@@ -13,5 +13,5 @@ object HakuService extends ValidatingService[Haku] with AuthorizationService {
 
   def get(oid:String): Option[(Haku, Instant)] = HakuDAO.get(oid)
 
-  def list(organisaatioOid:String):Seq[OidListItem] = withAuthorizedOrganizationOids(organisaatioOid, HakuDAO.listByOrganisaatioOids)
+  def list(organisaatioOid:String):Seq[OidListItem] = withAuthorizedChildAndParentOrganizationOids(organisaatioOid, HakuDAO.listByOrganisaatioOids)
 }

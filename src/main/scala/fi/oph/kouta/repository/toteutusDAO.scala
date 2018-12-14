@@ -7,7 +7,6 @@ import fi.oph.kouta.domain.{OidListItem, Toteutus}
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
-import slick.jdbc.SQLActionBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -15,9 +14,10 @@ trait ToteutusDAO extends EntityModificationDAO[String] {
   def put(toteutus:Toteutus):Option[String]
   def get(oid:String): Option[(Toteutus, Instant)]
   def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
-  def getByKoulutusOid(oid:String): Seq[Toteutus]
+  def getByKoulutusOid(koulutusOid:String): Seq[Toteutus]
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem]
+  def listByOrganisaatioOids(organisaatioOids:Seq[String]): Seq[OidListItem]
+  def listByKoulutusOidAndOrganisaatioOids(koulutusOid:String, organisaatioOids:Seq[String]): Seq[OidListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -75,10 +75,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   private def insertAsiasanat(toteutus:Toteutus) =
     KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
 
-  override def getByKoulutusOid(oid: String): Seq[Toteutus] = {
+  override def getByKoulutusOid(koulutusOid: String): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        toteutukset <- selectToteutuksetByKoulutusOid(oid).as[Toteutus]
+        toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
         tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
       } yield (toteutukset, tarjoajat) ) match {
         case Left(t) => throw t
@@ -94,6 +94,9 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+
+  override def listByKoulutusOidAndOrganisaatioOids(koulutusOid:String, organisaatioOids:Seq[String]): Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
@@ -198,8 +201,15 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def deleteTarjoajat(oid:Option[String]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
   def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
           where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[OidListItem]
+  }
+
+  def selectByKoulutusOidAndOrganisaatioOids(koulutusOid:String, organisaatioOids:Seq[String]) = {
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from toteutukset
+          where organisaatio_oid in (#${createInParams(organisaatioOids)})
+          and koulutus_oid = $koulutusOid""".as[OidListItem]
   }
 }

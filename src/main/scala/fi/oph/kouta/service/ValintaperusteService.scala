@@ -14,6 +14,7 @@ object ValintaperusteService extends ValidatingService[Valintaperuste] with Auth
 
   def get(id:UUID): Option[(Valintaperuste, Instant)] = ValintaperusteDAO.get(id)
 
-  def list(organisaatioOid:String):Seq[IdListItem] = withAuthorizedOrganizationOids(organisaatioOid, ValintaperusteDAO.listByOrganisaatioOids)
+  def list(organisaatioOid:String):Seq[IdListItem] =
+    withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.listByOrganisaatioOids)
 
 }

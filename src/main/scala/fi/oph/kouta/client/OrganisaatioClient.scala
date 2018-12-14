@@ -9,18 +9,22 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
 
   val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
-  def getAllParentAndChildOidsFlat(oid:String):Seq[String] = {
-    get(
-      urlProperties.url("organisaatio-service.organisaatio.hierarkia",
-        toQueryParams(
-          "oid" -> oid,
-          "aktiiviset" -> "true",
-          "suunnitellut" -> "true",
-          "lakkautetut" -> "false"
-      )),
-      (r) => oids(parse(r).extract[OrganisaatioResponse].organisaatiot)
-    )
-  }
+  private def queryParams(oid:String, skipParents:Boolean) =
+    toQueryParams(
+      "oid" -> oid,
+      "aktiiviset" -> "true",
+      "suunnitellut" -> "true",
+      "lakkautetut" -> "false",
+      "skipParents" -> s"$skipParents")
+
+  private def getHierarkiaFlat(oid:String, skipParents:Boolean) = get(
+    urlProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid, skipParents)),
+    (r) => oids(parse(r).extract[OrganisaatioResponse].organisaatiot))
+
+
+  def getAllParentAndChildOidsFlat(oid:String):Seq[String] = getHierarkiaFlat(oid, false)
+
+  def getAllChildOidsFlat(oid:String):Seq[String] = getHierarkiaFlat(oid, true)
 
   case class OrganisaatioResponse(numHits:Int, organisaatiot:List[OidAndChildren])
 

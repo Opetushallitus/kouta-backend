@@ -15,8 +15,14 @@ case class KoutaValidationException(errorMessages:List[String]) extends RuntimeE
 
 trait AuthorizationService {
 
-  def withAuthorizedOrganizationOids[R](oid:String, f:(Seq[String]) => R) =
+  def withAuthorizedChildAndParentOrganizationOids[R](oid:String, f:(Seq[String]) => R) =
     OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
+      case oids if oids.isEmpty => throw new KoutaAuthorizationFailedException(oid)
+      case oids => f(oids)
+    }
+
+  def withAuthorizedChildOrganizationOids[R](oid:String, f:(Seq[String]) => R) =
+    OrganisaatioClient.getAllChildOidsFlat(oid) match {
       case oids if oids.isEmpty => throw new KoutaAuthorizationFailedException(oid)
       case oids => f(oids)
     }
