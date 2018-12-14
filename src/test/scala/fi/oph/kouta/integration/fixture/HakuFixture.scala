@@ -20,4 +20,13 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
   def get(oid:String, expected:Haku):String = get(HakuPath, oid, expected)
   def update(haku:Haku, lastModified:String, expectUpdate:Boolean):Unit = update(HakuPath, haku, lastModified, expectUpdate)
   def update(haku:Haku, lastModified:String):Unit = update(haku, lastModified, true)
+
+  def haku(tila:Julkaisutila, organisaatioOid:String): Haku =
+    haku.copy(organisaatioOid = organisaatioOid, tila = tila)
+
+  def addToList(haku:Haku) = {
+    val oid = put(haku)
+    val modified = readModifiedByOid(oid, "haut")
+    toOidListItem(oid, haku, modified)
+  }
 }

@@ -1,18 +1,15 @@
 package fi.oph.kouta.integration
 
-import java.util.UUID
-
-import fi.oph.kouta.ServiceMocks._
+import fi.oph.kouta.OrganisaatioServiceMock
 import fi.oph.kouta.domain._
 
-class ListSpec extends KoutaIntegrationSpec with EverythingFixture {
+class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {
 
-  val oid1 = "1.2.246.562.10.594252633210"
-  val oid2 = "1.2.246.562.10.81934895871"
-  val oid3 = "1.2.246.562.10.67603619189"
-  val oid4 = "1.2.246.562.10.99999999999"
-  val oid5 = "1.2.246.562.10.99999999998"
-  val oid6 = "1.2.246.562.10.99999999997"
+  val parentOid = "1.2.246.562.10.594252633210"
+  val childOid = "1.2.246.562.10.81934895871"
+  val grandchildOid = "1.2.246.562.10.67603619189"
+  val lonelyOid = "1.2.246.562.10.99999999999"
+  val unknownOid = "1.2.246.562.10.99999999998"
 
   var k1, k2, k3, k4, k5:OidListItem = null
   var t1, t2, t3, t4:OidListItem = null
@@ -21,100 +18,86 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture {
 
   override def beforeAll() = {
     super.beforeAll()
-    List(oid1, oid2, oid3).foreach(mockOrganisaatioServiceFromResource(_))
-    mockOrganisaatioService(oid4, singleOidOrganisaatioResponse(oid4))
-    mockOrganisaatioService(oid5, EmptyOrganisaatioResponse)
+    startServiceMocking()
+    List(parentOid, childOid, grandchildOid).foreach(mockOrganisaatioServiceFromResource(_))
+    mockOrganisaatioService(lonelyOid, singleOidOrganisaatioResponse(lonelyOid))
+    mockOrganisaatioService(unknownOid, EmptyOrganisaatioResponse)
     createTestData()
   }
 
   override def afterAll() = {
     super.afterAll()
-    stopServiceMocks()
+    stopServiceMocking()
     truncateDatabase()
   }
 
   def createTestData() = {
-    def let[T,R](v:T)(f:(T)=>R) = f(v)
-
-    def k = (j:Boolean, oid:String, t:Julkaisutila) => koulutus.copy(julkinen = j, organisaatioOid = oid, tila = t)
-    def t = (koid:String, oid:String, t:Julkaisutila) => toteutus.copy(koulutusOid = koid, organisaatioOid = oid, tila = t)
-    def h = (oid:String, t:Julkaisutila) => haku.copy(organisaatioOid = oid, tila = t)
-    def v = (oid:String, t:Julkaisutila) => valintaperuste.copy(organisaatioOid = oid, tila = t)
-
-    def r(oid:String, e:Perustiedot) = new OidListItem(oid, e.nimi, e.tila, e.organisaatioOid)
-    def idr(id:UUID, e:Perustiedot) = new IdListItem(id, e.nimi, e.tila, e.organisaatioOid)
-
-    def createK(j:Boolean, oid:String, t:Julkaisutila) = let(k(j, oid, t)) { (k:Koulutus) => r(put(k), k) }
-    def createT(koid:String, oid:String, tila:Julkaisutila) = let(t(koid, oid, tila)) { (t:Toteutus) => r(put(t), t)}
-    def createH(oid:String, t:Julkaisutila) = let(h(oid, t)) { (h:Haku) => r(put(h), h)}
-    def createV(oid:String, t:Julkaisutila) = let(v(oid, t)) { (v:Valintaperuste) => idr(put(v), v)}
-
-    k1 = createK(false, oid1, Julkaistu)
-    k2 = createK(false, oid2, Arkistoitu)
-    k3 = createK(false, oid3, Tallennettu)
-    k4 = createK(false, oid4, Julkaistu)
-    k5 = createK(true, oid4, Julkaistu)
-    t1 = createT(k1.oid, oid1, Julkaistu)
-    t2 = createT(k2.oid, oid2, Arkistoitu)
-    t3 = createT(k3.oid, oid3, Tallennettu)
-    t4 = createT(k4.oid, oid4, Julkaistu)
-    h1 = createH(oid1, Julkaistu)
-    h2 = createH(oid2, Arkistoitu)
-    h3 = createH(oid3, Tallennettu)
-    h4 = createH(oid4, Julkaistu)
-    v1 = createV(oid1, Julkaistu)
-    v2 = createV(oid2, Arkistoitu)
-    v3 = createV(oid3, Tallennettu)
-    v4 = createV(oid4, Julkaistu)
+    k1 = addToList(koulutus(false, parentOid, Julkaistu))
+    k2 = addToList(koulutus(false, childOid, Arkistoitu))
+    k3 = addToList(koulutus(false, grandchildOid, Tallennettu))
+    k4 = addToList(koulutus(false, lonelyOid, Julkaistu))
+    k5 = addToList(koulutus(true, lonelyOid, Julkaistu))
+    t1 = addToList(toteutus(k1.oid, Julkaistu, parentOid))
+    t2 = addToList(toteutus(k1.oid, Arkistoitu, childOid))
+    t3 = addToList(toteutus(k1.oid, Tallennettu, grandchildOid))
+    t4 = addToList(toteutus(k4.oid, Julkaistu, lonelyOid))
+    h1 = addToList(haku(Julkaistu, parentOid))
+    h2 = addToList(haku(Arkistoitu, childOid))
+    h3 = addToList(haku(Tallennettu, grandchildOid))
+    h4 = addToList(haku(Julkaistu, lonelyOid))
+    v1 = addToList(valintaperuste(Julkaistu, parentOid))
+    v2 = addToList(valintaperuste(Arkistoitu, childOid))
+    v3 = addToList(valintaperuste(Tallennettu, grandchildOid))
+    v4 = addToList(valintaperuste(Julkaistu, lonelyOid))
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
-    list(KoulutusPath, Map("organisaatioOid" -> oid2), List(k1, k2, k3, k5))
+    list(KoulutusPath, Map("organisaatioOid" -> childOid), List(k1, k2, k3, k5))
   }
   it should "list all koulutukset for authorized organizations 2" in {
-    list(KoulutusPath, Map("organisaatioOid" -> oid4), List(k4, k5))
+    list(KoulutusPath, Map("organisaatioOid" -> lonelyOid), List(k4, k5))
   }
   it should "return forbidden if oid is unknown" in {
-    list(KoulutusPath, Map("organisaatioOid" -> oid5), 403)
+    list(KoulutusPath, Map("organisaatioOid" -> unknownOid), 403)
   }
   it should "return 404 if oid not given" in {
     list(KoulutusPath, Map[String,String](), 404)
   }
 
   "Toteutus list" should "list all toteutukset for authorized organizations" in {
-    list(ToteutusPath, Map("organisaatioOid" -> oid2), List(t1, t2, t3))
+    list(ToteutusPath, Map("organisaatioOid" -> childOid), List(t1, t2, t3))
   }
   it should "list all toteutukset for authorized organizations 2" in {
-    list(ToteutusPath, Map("organisaatioOid" -> oid4), List(t4))
+    list(ToteutusPath, Map("organisaatioOid" -> lonelyOid), List(t4))
   }
   it should "return forbidden if oid is unknown" in {
-    list(ToteutusPath, Map("organisaatioOid" -> oid5), 403)
+    list(ToteutusPath, Map("organisaatioOid" -> unknownOid), 403)
   }
   it should "return 404 if oid not given" in {
     list(ToteutusPath, Map[String,String](), 404)
   }
 
   "Haku list" should "list all haut for authorized organizations" in {
-    list(HakuPath, Map("organisaatioOid" -> oid2), List(h1, h2, h3))
+    list(HakuPath, Map("organisaatioOid" -> childOid), List(h1, h2, h3))
   }
   it should "list all haut for authorized organizations 2" in {
-    list(HakuPath, Map("organisaatioOid" -> oid4), List(h4))
+    list(HakuPath, Map("organisaatioOid" -> lonelyOid), List(h4))
   }
   it should "return forbidden if oid is unknown" in {
-    list(HakuPath, Map("organisaatioOid" -> oid5), 403)
+    list(HakuPath, Map("organisaatioOid" -> unknownOid), 403)
   }
   it should "return 404 if oid not given" in {
     list(HakuPath, Map[String,String](), 404)
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> oid2), List(v1, v2, v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> childOid), List(v1, v2, v3))
   }
   it should "list all valintaperustekuvaukset for authorized organizations 2" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> oid4), List(v4))
+    list(ValintaperustePath, Map("organisaatioOid" -> lonelyOid), List(v4))
   }
   it should "return forbidden if oid is unknown" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> oid5), 403)
+    list(ValintaperustePath, Map("organisaatioOid" -> unknownOid), 403)
   }
   it should "return 404 if oid not given" in {
     list(ValintaperustePath, Map[String,String](), 404)

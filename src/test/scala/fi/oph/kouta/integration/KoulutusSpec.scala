@@ -1,6 +1,5 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.ServiceMocks
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations

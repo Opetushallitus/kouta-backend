@@ -23,4 +23,15 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
   def get(oid:String, expected:Toteutus): String = get(ToteutusPath, oid, expected)
   def update(toteutus:Toteutus, lastModified:String, expectUpdate:Boolean): Unit = update(ToteutusPath, toteutus, lastModified, expectUpdate)
   def update(toteutus:Toteutus, lastModified:String): Unit = update(toteutus, lastModified, true)
+
+
+
+  def toteutus(koulutusOid:String, tila:Julkaisutila, organisaatioOid:String): Toteutus =
+    toteutus.copy(koulutusOid = koulutusOid, organisaatioOid = organisaatioOid, tila = tila)
+
+  def addToList(toteutus:Toteutus) = {
+    val oid = put(toteutus)
+    val modified = readModifiedByOid(oid, "toteutukset")
+    toOidListItem(oid, toteutus, modified)
+  }
 }

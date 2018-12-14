@@ -1,8 +1,8 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.ServiceMocks._
+import fi.oph.kouta.OrganisaatioServiceMock
 
-class OrganisaatioClientSpec extends KoutaClientSpec {
+class OrganisaatioClientSpec extends KoutaClientSpec with OrganisaatioServiceMock {
 
   "OrganisaatioClient" should "return flat list of parent and child organisations" in {
     mockOrganisaatioServiceFromResource("1.2.246.562.10.594252633210")

@@ -4,19 +4,23 @@ import fi.oph.kouta.{ServiceMocks, TestSetups}
 import org.scalatest.{BeforeAndAfterEach, DoNotDiscover}
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-
 @DoNotDiscover
-class KoutaClientSpec extends ScalatraFlatSpec with BeforeAndAfterEach {
+trait KoutaClientSpec extends ScalatraFlatSpec with BeforeAndAfterEach { this: ServiceMocks =>
 
   TestSetups.setupWithTemplate(1234)
 
+  override def beforeAll() = {
+    super.beforeAll()
+    startServiceMocking()
+  }
+
   override def afterAll() = {
     super.afterAll()
-    ServiceMocks.stopServiceMocks()
+    stopServiceMocking()
   }
 
   override def afterEach {
     super.afterEach()
-    ServiceMocks.resetServiceMocks()
+    clearServiceMocks()
   }
 }

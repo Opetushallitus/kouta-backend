@@ -22,4 +22,14 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
   def update(koulutus:Koulutus, lastModified:String, expectUpdate:Boolean):Unit = update(KoulutusPath, koulutus, lastModified, expectUpdate)
   def update(koulutus:Koulutus, lastModified:String):Unit = update(koulutus, lastModified, true)
 
+
+
+  def koulutus(julkinen:Boolean, organisaatioOid:String, tila:Julkaisutila):Koulutus =
+    koulutus.copy(julkinen = julkinen, organisaatioOid = organisaatioOid, tila = tila)
+
+  def addToList(koulutus:Koulutus) = {
+    val oid = put(koulutus)
+    val modified = readModifiedByOid(oid, "koulutukset")
+    toOidListItem(oid, koulutus, modified)
+  }
 }
