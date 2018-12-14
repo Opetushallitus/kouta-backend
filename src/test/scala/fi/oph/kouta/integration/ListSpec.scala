@@ -5,9 +5,6 @@ import fi.oph.kouta.domain._
 
 class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {
 
-  val parentOid = "1.2.246.562.10.594252633210"
-  val childOid = "1.2.246.562.10.81934895871"
-  val grandchildOid = "1.2.246.562.10.67603619189"
   val lonelyOid = "1.2.246.562.10.99999999999"
   val unknownOid = "1.2.246.562.10.99999999998"
 
@@ -20,13 +17,9 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     super.beforeAll()
     startServiceMocking()
 
-    List(parentOid, childOid, grandchildOid).foreach(mockGetAllParentAndChildOidsFlat(_))
-    mockGetAllParentAndChildOidsFlat(lonelyOid, singleOidOrganisaatioResponse(lonelyOid))
-    mockGetAllParentAndChildOidsFlat(unknownOid, EmptyOrganisaatioResponse)
-
-    mockGetAllChildOidsFlat(parentOid)
-    mockGetAllChildOidsFlat(grandchildOid, singleOidOrganisaatioResponse(grandchildOid))
-    mockGetAllChildOidsFlat(unknownOid, EmptyOrganisaatioResponse)
+    List(ParentOid, ChildOid, GrandChildOid).foreach(mockOrganisaatioResponse(_))
+    mockOrganisaatioResponse(lonelyOid, singleOidOrganisaatioResponse(lonelyOid))
+    mockOrganisaatioResponse(unknownOid, NotFoundOrganisaatioResponse)
 
     createTestData()
   }
@@ -38,27 +31,27 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   def createTestData() = {
-    k1 = addToList(koulutus(false, parentOid, Julkaistu))
-    k2 = addToList(koulutus(false, childOid, Arkistoitu))
-    k3 = addToList(koulutus(false, grandchildOid, Tallennettu))
+    k1 = addToList(koulutus(false, ParentOid, Julkaistu))
+    k2 = addToList(koulutus(false, ChildOid, Arkistoitu))
+    k3 = addToList(koulutus(false, GrandChildOid, Tallennettu))
     k4 = addToList(koulutus(false, lonelyOid, Julkaistu))
     k5 = addToList(koulutus(true, lonelyOid, Julkaistu))
-    t1 = addToList(toteutus(k1.oid, Julkaistu, parentOid))
-    t2 = addToList(toteutus(k1.oid, Arkistoitu, childOid))
-    t3 = addToList(toteutus(k1.oid, Tallennettu, grandchildOid))
+    t1 = addToList(toteutus(k1.oid, Julkaistu, ParentOid))
+    t2 = addToList(toteutus(k1.oid, Arkistoitu, ChildOid))
+    t3 = addToList(toteutus(k1.oid, Tallennettu, GrandChildOid))
     t4 = addToList(toteutus(k4.oid, Julkaistu, lonelyOid))
-    h1 = addToList(haku(Julkaistu, parentOid))
-    h2 = addToList(haku(Arkistoitu, childOid))
-    h3 = addToList(haku(Tallennettu, grandchildOid))
+    h1 = addToList(haku(Julkaistu, ParentOid))
+    h2 = addToList(haku(Arkistoitu, ChildOid))
+    h3 = addToList(haku(Tallennettu, GrandChildOid))
     h4 = addToList(haku(Julkaistu, lonelyOid))
-    v1 = addToList(valintaperuste(Julkaistu, parentOid))
-    v2 = addToList(valintaperuste(Arkistoitu, childOid))
-    v3 = addToList(valintaperuste(Tallennettu, grandchildOid))
+    v1 = addToList(valintaperuste(Julkaistu, ParentOid))
+    v2 = addToList(valintaperuste(Arkistoitu, ChildOid))
+    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid))
     v4 = addToList(valintaperuste(Julkaistu, lonelyOid))
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
-    list(KoulutusPath, Map("organisaatioOid" -> childOid), List(k1, k2, k3, k5))
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid), List(k1, k2, k3, k5))
   }
   it should "list all koulutukset for authorized organizations 2" in {
     list(KoulutusPath, Map("organisaatioOid" -> lonelyOid), List(k4, k5))
@@ -71,7 +64,7 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Toteutus list" should "list all toteutukset for authorized organizations" in {
-    list(ToteutusPath, Map("organisaatioOid" -> childOid), List(t1, t2, t3))
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid), List(t1, t2, t3))
   }
   it should "list all toteutukset for authorized organizations 2" in {
     list(ToteutusPath, Map("organisaatioOid" -> lonelyOid), List(t4))
@@ -84,7 +77,7 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Haku list" should "list all haut for authorized organizations" in {
-    list(HakuPath, Map("organisaatioOid" -> childOid), List(h1, h2, h3))
+    list(HakuPath, Map("organisaatioOid" -> ChildOid), List(h1, h2, h3))
   }
   it should "list all haut for authorized organizations 2" in {
     list(HakuPath, Map("organisaatioOid" -> lonelyOid), List(h4))
@@ -97,7 +90,7 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> childOid), List(v1, v2, v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid), List(v1, v2, v3))
   }
   it should "list all valintaperustekuvaukset for authorized organizations 2" in {
     list(ValintaperustePath, Map("organisaatioOid" -> lonelyOid), List(v4))
@@ -110,10 +103,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> parentOid), List(t1, t2, t3))
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid), List(t1, t2, t3))
   }
   it should "not list toteutukset for parent organizations" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> grandchildOid), List(t3))
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> GrandChildOid), List(t3))
   }
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> unknownOid), 403)

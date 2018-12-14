@@ -36,12 +36,11 @@ sealed trait ServiceMocks extends Logging {
   protected def responseFromResource(filename:String) = Source.fromInputStream(
     getClass().getClassLoader().getResourceAsStream(s"data/$filename.json")).mkString
 
-  protected def organisaationServiceParams(oid:String, skipParents:Boolean) = Map(
+  protected def organisaationServiceParams(oid:String) = Map(
     "oid" -> oid,
     "aktiiviset" -> "true",
     "suunnitellut" -> "true",
-    "lakkautetut" -> "false",
-    "skipParents" -> s"$skipParents")
+    "lakkautetut" -> "false")
 
   protected def mockGet(key:String, params:Map[String,String], responseString:String) = {
     import scala.collection.JavaConverters._
@@ -59,13 +58,18 @@ sealed trait ServiceMocks extends Logging {
 
 trait OrganisaatioServiceMock extends ServiceMocks {
 
-  val EmptyOrganisaatioResponse = s"""{ "numHits": 0, "organisaatiot": []}"""
-  def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid"}]}"""
+  val OphOid = "1.2.246.562.10.00000000001"
+  val ParentOid = "1.2.246.562.10.594252633210"
+  val ChildOid = "1.2.246.562.10.81934895871"
+  val EvilChildOid = "1.2.246.562.10.66634895871"
+  val GrandChildOid = "1.2.246.562.10.67603619189"
+  val EvilGrandChildOid = "1.2.246.562.10.66603619189"
+  val EvilCousin = "1.2.246.562.10.66634895666"
+
+  val NotFoundOrganisaatioResponse = s"""{ "numHits": 0, "organisaatiot": []}"""
+  def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid", "parentOidPath": "$oid/$OphOid", "children" : []}]}"""
   lazy val DefaultResponse = responseFromResource("organisaatio")
 
-  def mockGetAllParentAndChildOidsFlat(oid:String, response:String = DefaultResponse) =
-    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid, false), response)
-
-  def mockGetAllChildOidsFlat(oid:String, response:String = DefaultResponse) =
-    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid, true), response)
+  def mockOrganisaatioResponse(oid:String, response:String = DefaultResponse) =
+    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), response)
 }

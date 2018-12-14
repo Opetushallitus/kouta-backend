@@ -5,13 +5,27 @@ import fi.oph.kouta.OrganisaatioServiceMock
 class OrganisaatioClientSpec extends KoutaClientSpec with OrganisaatioServiceMock {
 
   "OrganisaatioClient" should "return flat list of parent and child organisations" in {
-    mockGetAllParentAndChildOidsFlat("1.2.246.562.10.594252633210")
-    OrganisaatioClient.getAllParentAndChildOidsFlat("1.2.246.562.10.594252633210") should contain theSameElementsAs(
-      List("1.2.246.562.10.594252633210", "1.2.246.562.10.81934895871", "1.2.246.562.10.67603619189"))
+    mockOrganisaatioResponse(ParentOid)
+    OrganisaatioClient.getAllParentAndChildOidsFlat(ParentOid) should contain theSameElementsAs(
+      List(OphOid, ParentOid, ChildOid, EvilChildOid, EvilCousin, GrandChildOid, EvilGrandChildOid))
   }
-  it should "return empty list with unknown oid" in {
-    mockGetAllParentAndChildOidsFlat("1.2.3", EmptyOrganisaatioResponse)
+  it should "not return organizations in different branches when returning parent and child organisations" in {
+    mockOrganisaatioResponse(GrandChildOid)
+    OrganisaatioClient.getAllParentAndChildOidsFlat(GrandChildOid) should contain theSameElementsAs(
+      List(OphOid, ParentOid, ChildOid, GrandChildOid))
+  }
+  it should "return empty list with unknown oid when requesting parent and children" in {
+    mockOrganisaatioResponse("1.2.3", NotFoundOrganisaatioResponse)
     OrganisaatioClient.getAllParentAndChildOidsFlat("1.2.3") should contain theSameElementsAs(List())
+  }
+  it should "return flat list of child organisations" in {
+    mockOrganisaatioResponse(ChildOid)
+    OrganisaatioClient.getAllChildOidsFlat(ChildOid) should contain theSameElementsAs(
+      List(ChildOid, GrandChildOid, EvilGrandChildOid))
+  }
+  it should "return empty list with unknown oid when requesting children" in {
+    mockOrganisaatioResponse("1.2.3", NotFoundOrganisaatioResponse)
+    OrganisaatioClient.getAllChildOidsFlat("1.2.3") should contain theSameElementsAs(List())
   }
 
 }
