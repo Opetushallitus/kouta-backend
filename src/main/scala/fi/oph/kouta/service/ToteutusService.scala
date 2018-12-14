@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.domain.{OidListItem, Toteutus}
-import fi.oph.kouta.repository.ToteutusDAO
+import fi.oph.kouta.repository.{HakuDAO, ToteutusDAO}
 
 object ToteutusService extends ValidatingService[Toteutus] with AuthorizationService {
 
@@ -15,4 +15,7 @@ object ToteutusService extends ValidatingService[Toteutus] with AuthorizationSer
 
   def list(organisaatioOid:String):Seq[OidListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ToteutusDAO.listByOrganisaatioOids)
+
+  def listHaut(oid:String):Seq[OidListItem] =
+    HakuDAO.listByToteutusOid(oid)
 }

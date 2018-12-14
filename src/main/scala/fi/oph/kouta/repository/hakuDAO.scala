@@ -17,6 +17,7 @@ trait HakuDAO extends EntityModificationDAO[String] {
   def update(haku:Haku, notModifiedSince:Instant): Boolean
 
   def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem]
+  def listByToteutusOid(toteutusOid:String):Seq[OidListItem]
 }
   
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -57,6 +58,9 @@ object HakuDAO extends HakuDAO with HakuSQL {
 
   override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids)).toList
+
+  override def listByToteutusOid(toteutusOid:String):Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid)).toList
 }
 
 trait HakuModificationSQL extends SQLHelpers {
@@ -206,5 +210,13 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from haut
           where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[OidListItem]
+  }
+
+  def selectByToteutusOid(toteutusOid:String) = {
+    sql"""select haut.oid, haut.nimi, haut.tila, haut.organisaatio_oid, haut.muokkaaja, lower(haut.system_time)
+          from haut
+          inner join hakukohteet on hakukohteet.haku_oid = haut.oid
+          inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
+          where toteutukset.oid = $toteutusOid""".as[OidListItem]
   }
 }

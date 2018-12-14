@@ -48,6 +48,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     v2 = addToList(valintaperuste(Arkistoitu, ChildOid))
     v3 = addToList(valintaperuste(Tallennettu, GrandChildOid))
     v4 = addToList(valintaperuste(Julkaistu, lonelyOid))
+
+    put(hakukohde(t1.oid, h1.oid, v1.id))
+    put(hakukohde(t2.oid, h1.oid, v1.id))
+    put(hakukohde(t1.oid, h2.oid, v1.id))
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
@@ -113,5 +117,9 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
   it should "return 404 if organisaatio oid not given" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), 404)
+  }
+
+  "Toteutuksen haut list" should "list all haut related to this toteutus" in {
+    list(s"$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2))
   }
 }
