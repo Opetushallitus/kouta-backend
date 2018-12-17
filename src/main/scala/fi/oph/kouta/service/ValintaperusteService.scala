@@ -17,4 +17,6 @@ object ValintaperusteService extends ValidatingService[Valintaperuste] with Auth
   def list(organisaatioOid:String):Seq[IdListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.listByOrganisaatioOids)
 
+  def listByHaunKohdejoukko(organisaatioOid:String, hakuOid:String):Seq[IdListItem] =
+    withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.ListByOrganisaatioOidAndHaunKohdejoukko(_, hakuOid))
 }

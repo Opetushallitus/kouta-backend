@@ -42,13 +42,15 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[IdListItem]]("Listaa kaikki valintaperusteet, joihin käyttäjällä on oikeudet")
+  get("/list", operation(apiOperation[List[IdListItem]]("Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet")
     tags modelName
-    summary "Listaa kaikki valintaperusteet, joihin käyttäjällä on oikeudet"
-    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
-    params.get("organisaatioOid") match {
-      case None => NotFound()
-      case Some(oid) => Ok(ValintaperusteService.list(oid))
+    summary "Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet. Listaa voidaan rajata myös haun oidilla, jolloin kuvaukset rajataan haun kohdejoukoun perusteella."
+    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)")
+    parameter queryParam[String]("hakuOid").description(s"Haun oid"))) {
+    ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
+      case (None, _) => NotFound()
+      case (Some(oid), None) => Ok(ValintaperusteService.list(oid))
+      case (Some(oid), Some(hakuOid)) => Ok(ValintaperusteService.listByHaunKohdejoukko(oid, hakuOid))
     }
   }
 

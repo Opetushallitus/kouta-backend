@@ -15,6 +15,7 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean
 
   def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[IdListItem]
+  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[String], hakuOid:String):Seq[IdListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -50,6 +51,9 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
 
   override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[IdListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+
+  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[String], hakuOid:String):Seq[IdListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids, hakuOid))
 }
 
 sealed trait ValintaperusteModificationSQL extends SQLHelpers {
@@ -140,5 +144,14 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from valintaperusteet
           where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[IdListItem]
+  }
+
+  def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids:Seq[String], hakuOid:String) = {
+    sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, lower(v.system_time)
+          from valintaperusteet v
+          inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
+          and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
+          where h.oid = $hakuOid
+          and v.organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[IdListItem]
   }
 }

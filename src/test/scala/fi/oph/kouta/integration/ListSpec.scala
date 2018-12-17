@@ -43,11 +43,11 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     t4 = addToList(toteutus(k4.oid, Julkaistu, LonelyOid))
     h1 = addToList(haku(Julkaistu, ParentOid))
     h2 = addToList(haku(Arkistoitu, ChildOid))
-    h3 = addToList(haku(Tallennettu, GrandChildOid))
+    h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("kohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
     v1 = addToList(valintaperuste(Julkaistu, ParentOid))
     v2 = addToList(valintaperuste(Arkistoitu, ChildOid))
-    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid))
+    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("kohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     v4 = addToList(valintaperuste(Julkaistu, LonelyOid))
 
     hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
@@ -100,6 +100,12 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
   it should "list all valintaperustekuvaukset for authorized organizations 2" in {
     list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid), List(v4))
+  }
+  it should "list all valintaperustekuvaukset that can be joined to given haku" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h2.oid), List(v1, v2))
+  }
+  it should "list all valinteperustekuvaukset that can be joiden to given haku even when kohdejoukko is null" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h3.oid), List(v3))
   }
   it should "return forbidden if oid is unknown" in {
     list(ValintaperustePath, Map("organisaatioOid" -> UnknownOid), 403)

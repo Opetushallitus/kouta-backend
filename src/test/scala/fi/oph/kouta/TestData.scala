@@ -71,7 +71,7 @@ object TestData {
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2019"),
-    kohdejoukkoKoodiUri = Some("kohdejoukko_05#11"),
+    kohdejoukkoKoodiUri = Some("kohdejoukko_02#2"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
