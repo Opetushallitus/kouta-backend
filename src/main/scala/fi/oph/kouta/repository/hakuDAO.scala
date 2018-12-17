@@ -57,10 +57,10 @@ object HakuDAO extends HakuDAO with HakuSQL {
   }
 
   override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[OidListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids)).toList
+    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
   override def listByToteutusOid(toteutusOid:String):Seq[OidListItem] =
-    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid)).toList
+    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
 }
 
 trait HakuModificationSQL extends SQLHelpers {

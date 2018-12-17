@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
 
 import fi.oph.kouta.domain
-import fi.oph.kouta.domain.{Ajanjakso, Hakukohde, Liite, Valintakoe}
+import fi.oph.kouta.domain._
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 import slick.sql.SqlAction
@@ -15,6 +15,8 @@ trait HakukohdeDAO extends EntityModificationDAO[String] {
   def put(hakukohde:Hakukohde):Option[String]
   def get(oid:String): Option[(Hakukohde, Instant)]
   def update(haku:Hakukohde, notModifiedSince:Instant): Boolean
+
+  def listByHakuOidAndOrganisaatioOids(hakuOid:String, organisaatioOids:Seq[String]):Seq[OidListItem]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -62,7 +64,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     }
   }
 
-  def updateHakuajat(hakukohde:Hakukohde) = {
+  private def updateHakuajat(hakukohde:Hakukohde) = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
     if(hakuajat.size > 0) {
       DBIO.sequence( hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat))
@@ -71,7 +73,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     }
   }
 
-  def updateValintakokeet(hakukohde:Hakukohde) = {
+  private def updateValintakokeet(hakukohde:Hakukohde) = {
     val (oid, valintakokeet, muokkaaja) = (hakukohde.oid, hakukohde.valintakokeet, hakukohde.muokkaaja)
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
 
@@ -82,7 +84,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
   }
 
-  def updateLiitteet(hakukohde:Hakukohde) = {
+  private def updateLiitteet(hakukohde:Hakukohde) = {
     val (oid, liitteet, muokkaaja) = (hakukohde.oid, hakukohde.liitteet, hakukohde.muokkaaja)
     val (insert, update) = liitteet.partition(_.id.isEmpty)
 
@@ -92,6 +94,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
     DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
   }
+
+  override def listByHakuOidAndOrganisaatioOids(hakuOid:String, organisaatioOids:Seq[String]):Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByHakuOidAndOrganisaatioOids(hakuOid, organisaatioOids))
 }
 
 sealed trait HakukohdeModificationSQL extends SQLHelpers {
@@ -385,5 +390,12 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
                       or toimitusaika is distinct from ${formatTimestampParam(liite.toimitusaika)}::timestamp
                       or toimitustapa is distinct from ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa
                       or toimitusosoite is distinct from ${toJsonParam(liite.toimitusosoite)}::jsonb)"""
+  }
+
+  def selectByHakuOidAndOrganisaatioOids(hakuOid:String, organisaatioOids:Seq[String]) = {
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from hakukohteet
+          where organisaatio_oid in (#${createInParams(organisaatioOids)})
+          and haku_oid = $hakuOid""".as[OidListItem]
   }
 }

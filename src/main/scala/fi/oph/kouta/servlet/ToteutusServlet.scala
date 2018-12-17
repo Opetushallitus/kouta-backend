@@ -1,6 +1,6 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.domain.{Julkaisutila, OidListItem, Toteutus}
+import fi.oph.kouta.domain.{OidListItem, Toteutus}
 import fi.oph.kouta.service.ToteutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -50,7 +50,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/:oid/haut/list", operation(apiOperation[List[Toteutus]]("Listaa toteutukseen liitetyt haut")
+  get("/:oid/haut/list", operation(apiOperation[List[OidListItem]]("Listaa toteutukseen liitetyt haut")
     tags modelName
     summary "Listaa toteutukseen liitetyt haut"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {

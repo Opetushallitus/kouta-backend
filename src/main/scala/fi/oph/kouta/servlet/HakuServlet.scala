@@ -50,5 +50,16 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
+  get("/:oid/hakukohteet/list", operation(apiOperation[List[OidListItem]]("Listaa hakuun liitetyt hakukohteet")
+    tags modelName
+    summary "Listaa niiden hakuun liitettyjen hakukohteiden perustiedot, joihin organisaatiolla on oikeus"
+    parameter pathParam[String]("oid").description("Haun oid")
+    parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
+    params.get("organisaatioOid") match {
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(HakuService.listHakukohteet(params("oid"), organisaatioOid))
+    }
+  }
+
   prettifySwaggerModels()
 }

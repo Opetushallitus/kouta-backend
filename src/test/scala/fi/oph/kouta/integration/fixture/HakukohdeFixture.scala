@@ -28,4 +28,14 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
   def get(oid:String, expected:Hakukohde):String = get(HakukohdePath, oid, expected)
   def update(haku:Hakukohde, lastModified:String, expectUpdate:Boolean):Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
   def update(haku:Hakukohde, lastModified:String):Unit = update(haku, lastModified, true)
+
+
+  def hakukohde(toteutusOid:String, hakuOid:String, valintaperusteId:UUID, organisaatioOid:String):Hakukohde = hakukohde.copy(
+    toteutusOid = toteutusOid, hakuOid = hakuOid, valintaperuste = Some(valintaperusteId), organisaatioOid = organisaatioOid)
+
+  def addToList(hakukohde:Hakukohde) = {
+    val oid = put(hakukohde)
+    val modified = readModifiedByOid(oid, "hakukohteet")
+    toOidListItem(oid, hakukohde, modified)
+  }
 }
