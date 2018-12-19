@@ -6,6 +6,7 @@ import fi.oph.kouta.KoutaBackendSwagger
 import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.util.KoutaJsonFormats
+import org.json4s.jackson.Serialization.read
 import org.scalatest.DoNotDiscover
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
@@ -24,7 +25,15 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   }
 }
 
-sealed trait HttpSpec extends KoutaJsonFormats{ this: ScalatraFlatSpec =>
+sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
+  val DebugJson = false
+
+  def debugJson[E <: AnyRef](body: String)(implicit mf: Manifest[E]) = {
+    if(DebugJson) {
+      import org.json4s.jackson.Serialization.writePretty
+      println(writePretty[E](read[E](body)))
+    }
+  }
 
   import org.json4s.jackson.Serialization.{read, write}
 
@@ -63,8 +72,7 @@ sealed trait HttpSpec extends KoutaJsonFormats{ this: ScalatraFlatSpec =>
   def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit mf: Manifest[E]): String = {
     get(s"$path/${id.toString}") {
       status should equal(200)
-      /*import org.json4s.jackson.Serialization.writePretty
-      println(writePretty(read[E](body)))*/
+      debugJson(body)
       read[E](body) should equal(expected)
       header.get("Last-Modified").get
     }
