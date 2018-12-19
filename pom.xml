@@ -9,6 +9,8 @@
     <version>0.1-SNAPSHOT</version>
     <name>kouta-backend</name>
 
+    <!-- TODO: dependencyManagement käyttöön? -->
+
     <properties>
         <scala.version>2.12.6</scala.version>
 
