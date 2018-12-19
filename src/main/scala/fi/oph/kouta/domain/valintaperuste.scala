@@ -7,8 +7,8 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class ValintaperusteMetadata()
 
-case class Valintaperuste(id:Option[UUID] = None,
-                          tila:Julkaisutila = Tallennettu,
+case class Valintaperuste(id: Option[UUID] = None,
+                          tila: Julkaisutila = Tallennettu,
                           hakutapaKoodiUri: Option[String] = None,
                           kohdejoukkoKoodiUri: Option[String] = None,
                           kohdejoukonTarkenneKoodiUri: Option[String] = None,
@@ -16,8 +16,8 @@ case class Valintaperuste(id:Option[UUID] = None,
                           onkoJulkinen: Boolean = false,
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,
-                          muokkaaja:UserOid,
-                          kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithId with Validatable {
+                          muokkaaja: UserOid,
+                          kielivalinta: Seq[Kieli] = Seq()) extends PerustiedotWithId with Validatable {
 
   override def validate(): IsValid = and(
      super.validate(),

@@ -9,15 +9,15 @@ import fi.oph.kouta.repository.ValintaperusteDAO
 
 object ValintaperusteService extends ValidatingService[Valintaperuste] with AuthorizationService {
 
-  def put(valintaperuste:Valintaperuste): Option[UUID] = withValidation(valintaperuste, (v) => ValintaperusteDAO.put(v.copy(id = Some(UUID.randomUUID()))))
+  def put(valintaperuste: Valintaperuste): Option[UUID] = withValidation(valintaperuste, (v) => ValintaperusteDAO.put(v.copy(id = Some(UUID.randomUUID()))))
 
-  def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean = withValidation(valintaperuste, ValintaperusteDAO.update(_, notModifiedSince))
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean = withValidation(valintaperuste, ValintaperusteDAO.update(_, notModifiedSince))
 
-  def get(id:UUID): Option[(Valintaperuste, Instant)] = ValintaperusteDAO.get(id)
+  def get(id: UUID): Option[(Valintaperuste, Instant)] = ValintaperusteDAO.get(id)
 
-  def list(organisaatioOid:OrganisaatioOid):Seq[IdListItem] =
+  def list(organisaatioOid: OrganisaatioOid): Seq[IdListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.listByOrganisaatioOids)
 
-  def listByHaunKohdejoukko(organisaatioOid:OrganisaatioOid, hakuOid:HakuOid):Seq[IdListItem] =
+  def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid): Seq[IdListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.ListByOrganisaatioOidAndHaunKohdejoukko(_, hakuOid))
 }

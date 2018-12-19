@@ -13,24 +13,24 @@ import slick.jdbc.PostgresProfile.api._
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
-  def createOidInParams(x:Seq[Oid]) = x.find(!_.isValid()) match {
+  def createOidInParams(x: Seq[Oid]) = x.find(!_.isValid()) match {
     case None if x.isEmpty => s"''"
     case Some(i) => throw new IllegalArgumentException(s"$i ei ole validi oid.")
     case None => x.map(s => s"'$s'").mkString(",")
   }
 
-  def createUUIDInParams(x:Seq[UUID]) = if( x.isEmpty) s"''" else x.map(s => s"'${s.toString}'").mkString(",")
+  def createUUIDInParams(x: Seq[UUID]) = if( x.isEmpty) s"''" else x.map(s => s"'${s.toString}'").mkString(",")
 
-  def createRangeInParams(x:Seq[Ajanjakso]) = if(x.isEmpty) s"''" else x.map(s => s"${toTsrangeString(s)}").mkString(",")
+  def createRangeInParams(x: Seq[Ajanjakso]) = if(x.isEmpty) s"''" else x.map(s => s"${toTsrangeString(s)}").mkString(",")
 
-  def formatTimestampParam(value:Option[LocalDateTime]) = value.map(ISO_LOCAL_DATE_TIME_FORMATTER.format).getOrElse(null)
+  def formatTimestampParam(value: Option[LocalDateTime]) = value.map(ISO_LOCAL_DATE_TIME_FORMATTER.format).getOrElse(null)
 
-  def toJsonParam(value:AnyRef) = Option(toJson(value)) match {
+  def toJsonParam(value: AnyRef) = Option(toJson(value)) match {
     case Some(s) if !s.isEmpty & !"{}".equals(s) => s
     case _ => null
   }
 
-  def toTsrangeString(a:Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
+  def toTsrangeString(a: Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
 
   implicit object SetInstant extends SetParameter[Instant] {
     def apply(v: Instant, pp: PositionedParameters): Unit = {

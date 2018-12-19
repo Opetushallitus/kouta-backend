@@ -7,8 +7,8 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None)
 
-case class Haku(oid:Option[HakuOid] = None,
-                tila:Julkaisutila = Tallennettu,
+case class Haku(oid: Option[HakuOid] = None,
+                tila: Julkaisutila = Tallennettu,
                 nimi: Kielistetty = Map(),
                 hakutapaKoodiUri: Option[String] = None,
                 hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
@@ -22,8 +22,8 @@ case class Haku(oid:Option[HakuOid] = None,
                 metadata: Option[HakuMetadata] = None,
                 organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
-                muokkaaja:UserOid,
-                kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
+                muokkaaja: UserOid,
+                kielivalinta: Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
   override def validate(): IsValid = and (
      super.validate(),

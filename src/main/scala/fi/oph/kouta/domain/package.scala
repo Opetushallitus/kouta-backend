@@ -71,23 +71,23 @@ package object domain {
   case object Hakijapalvelu extends LiitteenToimitustapa { val name = "hakijapalvelu"}
   case object MuuOsoite extends LiitteenToimitustapa { val name = "osoite"}
 
-  case class Yhteystieto(nimi:Kielistetty = Map(),
-                         titteli:Kielistetty = Map(),
-                         sahkoposti:Kielistetty = Map(),
-                         puhelinnumero:Kielistetty = Map())
+  case class Yhteystieto(nimi: Kielistetty = Map(),
+                         titteli: Kielistetty = Map(),
+                         sahkoposti: Kielistetty = Map(),
+                         puhelinnumero: Kielistetty = Map())
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
-  case class OidListItem(oid:Oid, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:OrganisaatioOid, muokkaaja:UserOid, modified:LocalDateTime)
-  case class IdListItem(id:UUID, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:OrganisaatioOid, muokkaaja:UserOid, modified:LocalDateTime)
+  case class OidListItem(oid: Oid, nimi: Kielistetty, tila: Julkaisutila, organisaatioOid: OrganisaatioOid, muokkaaja: UserOid, modified: LocalDateTime)
+  case class IdListItem(id: UUID, nimi: Kielistetty, tila: Julkaisutila, organisaatioOid: OrganisaatioOid, muokkaaja: UserOid, modified: LocalDateTime)
 
-  case class Osoite(osoite:Kielistetty = Map(),
-                    postinumero:Option[String],
-                    postitoimipaikka:Kielistetty = Map())
+  case class Osoite(osoite: Kielistetty = Map(),
+                    postinumero: Option[String],
+                    postitoimipaikka: Kielistetty = Map())
 
-  case class ListEverything(koulutukset:Seq[KoulutusOid] = Seq(),
-                            toteutukset:Seq[ToteutusOid] = Seq(),
-                            haut:Seq[HakuOid] = Seq(),
-                            hakukohteet:Seq[HakukohdeOid] = Seq(),
-                            valintaperusteet:Seq[UUID] = Seq())
+  case class ListEverything(koulutukset: Seq[KoulutusOid] = Seq(),
+                            toteutukset: Seq[ToteutusOid] = Seq(),
+                            haut: Seq[HakuOid] = Seq(),
+                            hakukohteet: Seq[HakukohdeOid] = Seq(),
+                            valintaperusteet: Seq[UUID] = Seq())
 }

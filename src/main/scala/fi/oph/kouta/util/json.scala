@@ -11,7 +11,6 @@ import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
 
 trait KoutaJsonFormats {
-
   val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
   implicit def jsonFormats: Formats = DefaultFormats +

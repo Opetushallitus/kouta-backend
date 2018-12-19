@@ -17,7 +17,7 @@ case class KoutaDatabaseConfiguration(
   val leakDetectionThresholdMillis:Option[Int]
 )
 
-case class KoutaConfiguration(config:TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
+case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
     username = config.getString("kouta-backend.db.user"),
@@ -65,7 +65,7 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
     ApplicationSettingsLoader.loadSettings(configFilePath)
   }
 
-  private def loadTemplatedConfiguration(overrideFromSystemProperties:Boolean = false): KoutaConfiguration = {
+  private def loadTemplatedConfiguration(overrideFromSystemProperties: Boolean = false): KoutaConfiguration = {
     val templateFilePath = Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE)).getOrElse(
       throw new IllegalArgumentException(s"Using 'template' profile but '${SYSTEM_PROPERTY_NAME_TEMPLATE}' " +
         "system property is missing. Cannot create oph-properties!"))

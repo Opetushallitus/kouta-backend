@@ -6,11 +6,11 @@ import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 sealed trait Perustiedot extends Validatable {
-  val tila:Julkaisutila
+  val tila: Julkaisutila
   val nimi: Kielistetty
-  val muokkaaja:UserOid
-  val kielivalinta:Seq[Kieli]
-  val organisaatioOid:OrganisaatioOid
+  val muokkaaja: UserOid
+  val kielivalinta: Seq[Kieli]
+  val organisaatioOid: OrganisaatioOid
 
   def validate(): IsValid = and(
     assertValid(muokkaaja),
@@ -22,7 +22,7 @@ sealed trait Perustiedot extends Validatable {
 }
 
 abstract class PerustiedotWithOid extends Perustiedot with Validatable {
-  val oid:Option[Oid]
+  val oid: Option[Oid]
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -31,7 +31,7 @@ abstract class PerustiedotWithOid extends Perustiedot with Validatable {
 }
 
 abstract class PerustiedotWithId extends Perustiedot with Validatable {
-  val id:Option[UUID]
+  val id: Option[UUID]
 
   override def validate(): IsValid = super.validate()
 }

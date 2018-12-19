@@ -71,13 +71,12 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
 }
 
 sealed trait KeywordServlet extends KoutaServlet {
-
-  def parseKieliParam(name:String, default:Kieli = Fi): Kieli =
+  def parseKieliParam(name: String, default: Kieli = Fi): Kieli =
     params.get(name).map(Kieli.withName).getOrElse(default)
 
-  def parseIntParam(name:String, default:Int = 15): Int =
+  def parseIntParam(name: String, default: Int = 15): Int =
     params.get(name).flatMap(l => Try(l.toInt).toOption).getOrElse(default)
 
-  def bodyToKeywords(kieli:Kieli) =
+  def bodyToKeywords(kieli: Kieli) =
     parsedBody.extract[List[String]].map(Keyword(kieli, _))
 }

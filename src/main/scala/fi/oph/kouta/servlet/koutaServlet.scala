@@ -62,7 +62,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     s"""Error ${request.getMethod} ${request.getContextPath} => ${msgBody}"""
   }
 
-  def badRequest(t:Throwable) = {
+  def badRequest(t: Throwable) = {
     logger.warn(errorMsgFromRequest(), t)
     BadRequest("error" -> t.getMessage)
   }

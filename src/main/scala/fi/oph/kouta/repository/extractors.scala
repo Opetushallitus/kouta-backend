@@ -11,9 +11,8 @@ import org.json4s.jackson.Serialization.read
 import slick.jdbc._
 
 trait ExtractorBase extends KoutaJsonFormats {
-
-  case class Tarjoaja(oid:GenericOid, tarjoajaOid:OrganisaatioOid)
-  case class Hakuaika(oid:GenericOid, alkaa:LocalDateTime, paattyy:LocalDateTime)
+  case class Tarjoaja(oid: GenericOid, tarjoajaOid: OrganisaatioOid)
+  case class Hakuaika(oid: GenericOid, alkaa: LocalDateTime, paattyy: LocalDateTime)
 
   implicit val getKoulutusOidResult: GetResult[KoulutusOid] = GetResult(r => KoulutusOid(r.nextString()))
   implicit val getToteutusOidResult: GetResult[ToteutusOid] = GetResult(r => ToteutusOid(r.nextString()))
@@ -28,9 +27,9 @@ trait ExtractorBase extends KoutaJsonFormats {
     new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp.toLocalDateTime, r.nextTimestamp.toLocalDateTime)
   })
 
-  def extractKielistetty(json:Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
-  def extractKielivalinta(json:Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
-  def extractModified(timestamp:Timestamp) = LocalDateTime.ofInstant(timestamp.toInstant, ZoneId.of("Europe/Helsinki"))
+  def extractKielistetty(json: Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
+  def extractKielivalinta(json: Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
+  def extractModified(timestamp: Timestamp): LocalDateTime = LocalDateTime.ofInstant(timestamp.toInstant, ZoneId.of("Europe/Helsinki"))
 
   implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
     UUID.fromString(r.nextString())
@@ -56,7 +55,6 @@ trait ExtractorBase extends KoutaJsonFormats {
 }
 
 trait KoulutusExtractors extends ExtractorBase {
-
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
     oid = r.nextStringOption().map(KoulutusOid(_)),
     johtaaTutkintoon = r.nextBoolean,
@@ -73,7 +71,6 @@ trait KoulutusExtractors extends ExtractorBase {
 }
 
 trait ToteutusExtractors extends ExtractorBase {
-
   implicit val getToteutusResult: GetResult[Toteutus] = GetResult(r => Toteutus(
     oid = r.nextStringOption.map(ToteutusOid(_)),
     koulutusOid = KoulutusOid(r.nextString),
@@ -88,7 +85,6 @@ trait ToteutusExtractors extends ExtractorBase {
 }
 
 trait HakuExtractors extends ExtractorBase {
-
   implicit val getHakuResult: GetResult[Haku] = GetResult(r => Haku(
     oid = r.nextStringOption.map(HakuOid(_)),
     tila = Julkaisutila.withName(r.nextString),
@@ -111,7 +107,6 @@ trait HakuExtractors extends ExtractorBase {
 }
 
 trait ValintaperusteExtractors extends ExtractorBase {
-
   implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
     id = r.nextStringOption.map(UUID.fromString),
     tila = Julkaisutila.withName(r.nextString),
@@ -128,7 +123,6 @@ trait ValintaperusteExtractors extends ExtractorBase {
 }
 
 trait HakukohdeExctractors extends ExtractorBase {
-
   implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
     oid = r.nextStringOption.map(HakukohdeOid(_)),
     toteutusOid = ToteutusOid(r.nextString),

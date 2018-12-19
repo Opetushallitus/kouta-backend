@@ -11,12 +11,12 @@ import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
 import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
-  def put(valintaperuste:Valintaperuste):Option[UUID]
-  def get(id:UUID): Option[(Valintaperuste, Instant)]
-  def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean
+  def put(valintaperuste: Valintaperuste): Option[UUID]
+  def get(id: UUID): Option[(Valintaperuste, Instant)]
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[IdListItem]
-  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[OrganisaatioOid], hakuOid:HakuOid):Seq[IdListItem]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem]
+  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -50,23 +50,23 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[IdListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[OrganisaatioOid], hakuOid:HakuOid):Seq[IdListItem] =
+  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids, hakuOid))
 }
 
 sealed trait ValintaperusteModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
-  def selectModifiedSince(since:Instant): DBIO[Seq[UUID]] = {
+  def selectModifiedSince(since: Instant): DBIO[Seq[UUID]] = {
     sql"""select id from valintaperusteet where $since < lower(system_time)
           union
           select id from valintaperusteet_history where $since <@ system_time""".as[UUID]
   }
 
-  def selectLastModified(id:UUID):DBIO[Option[Instant]] = {
+  def selectLastModified(id: UUID): DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(vp.system_time)),
             max(upper(vph.system_time)))
@@ -108,7 +108,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
          )"""
   }
 
-  def selectValintaperuste(id:UUID) =
+  def selectValintaperuste(id: UUID) =
     sql"""select id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
                  onkoJulkinen, metadata, organisaatio_oid, muokkaaja, kielivalinta
           from valintaperusteet where id = ${id.toString}::uuid"""
@@ -141,13 +141,13 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
          )"""
   }
 
-  def selectByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]) = {
+  def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from valintaperusteet
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
   }
 
-  def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids:Seq[OrganisaatioOid], hakuOid:HakuOid) = {
+  def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid) = {
     sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, lower(v.system_time)
           from valintaperusteet v
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri

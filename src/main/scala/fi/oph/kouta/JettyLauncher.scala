@@ -15,7 +15,7 @@ object JettyLauncher extends Logging {
   }
 }
 
-class JettyLauncher(val port:Int) {
+class JettyLauncher(val port: Int) {
   val server = new Server(port)
   val context = new WebAppContext()
   context.setBaseResource(Resource.newClassPathResource("webapp"))

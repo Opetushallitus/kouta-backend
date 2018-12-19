@@ -8,9 +8,9 @@ import fi.oph.kouta.repository.HakukohdeDAO
 
 object HakukohdeService extends ValidatingService[Hakukohde] {
 
-  def put(hakukohde:Hakukohde): Option[HakukohdeOid] = withValidation(hakukohde, HakukohdeDAO.put(_))
+  def put(hakukohde: Hakukohde): Option[HakukohdeOid] = withValidation(hakukohde, HakukohdeDAO.put(_))
 
-  def update(hakukohde:Hakukohde, notModifiedSince:Instant): Boolean = withValidation(hakukohde, HakukohdeDAO.update(_, notModifiedSince))
+  def update(hakukohde: Hakukohde, notModifiedSince:Instant): Boolean = withValidation(hakukohde, HakukohdeDAO.update(_, notModifiedSince))
 
-  def get(oid:HakukohdeOid): Option[(Hakukohde, Instant)] = HakukohdeDAO.get(oid)
+  def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = HakukohdeDAO.get(oid)
 }

@@ -7,6 +7,6 @@ import fi.oph.kouta.repository.ModificationDAO
 
 object ModificationService {
 
-  def getModifiedSince(modifiedSince:Instant): ListEverything = ModificationDAO.listModifiedSince(modifiedSince)
+  def getModifiedSince(modifiedSince: Instant): ListEverything = ModificationDAO.listModifiedSince(modifiedSince)
 
 }

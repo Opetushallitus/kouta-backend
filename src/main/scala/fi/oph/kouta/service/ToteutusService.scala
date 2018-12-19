@@ -8,15 +8,15 @@ import fi.oph.kouta.repository.{HakuDAO, ToteutusDAO}
 
 object ToteutusService extends ValidatingService[Toteutus] with AuthorizationService {
 
-  def put(toteutus:Toteutus): Option[ToteutusOid] = withValidation(toteutus, ToteutusDAO.put(_))
+  def put(toteutus: Toteutus): Option[ToteutusOid] = withValidation(toteutus, ToteutusDAO.put(_))
 
-  def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean = withValidation(toteutus, ToteutusDAO.update(_, notModifiedSince))
+  def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = withValidation(toteutus, ToteutusDAO.update(_, notModifiedSince))
 
-  def get(oid:ToteutusOid): Option[(Toteutus, Instant)] = ToteutusDAO.get(oid)
+  def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = ToteutusDAO.get(oid)
 
-  def list(organisaatioOid:OrganisaatioOid):Seq[OidListItem] =
+  def list(organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ToteutusDAO.listByOrganisaatioOids)
 
-  def listHaut(oid:ToteutusOid):Seq[OidListItem] =
+  def listHaut(oid: ToteutusOid): Seq[OidListItem] =
     HakuDAO.listByToteutusOid(oid)
 }

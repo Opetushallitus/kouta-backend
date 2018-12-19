@@ -12,13 +12,13 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
-  def put(toteutus:Toteutus):Option[ToteutusOid]
-  def get(oid:ToteutusOid): Option[(Toteutus, Instant)]
-  def update(toteutus:Toteutus, notModifiedSince:Instant): Boolean
-  def getByKoulutusOid(koulutusOid:KoulutusOid): Seq[Toteutus]
+  def put(toteutus: Toteutus): Option[ToteutusOid]
+  def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
+  def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean
+  def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]): Seq[OidListItem]
-  def listByKoulutusOidAndOrganisaatioOids(koulutusOid:KoulutusOid, organisaatioOids:Seq[OrganisaatioOid]): Seq[OidListItem]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
+  def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -70,10 +70,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     }
   }
 
-  private def insertAmmattinimikkeet(toteutus:Toteutus) =
+  private def insertAmmattinimikkeet(toteutus: Toteutus) =
     KeywordDAO.insert(Ammattinimike, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(List()))
 
-  private def insertAsiasanat(toteutus:Toteutus) =
+  private def insertAsiasanat(toteutus: Toteutus) =
     KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
 
   override def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
@@ -90,20 +90,20 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       }
   }
 
-  override def listModifiedSince(since:Instant):Seq[ToteutusOid] =
+  override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
-  override def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[OidListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def listByKoulutusOidAndOrganisaatioOids(koulutusOid:KoulutusOid, organisaatioOids:Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
-  def selectLastModified(oid:ToteutusOid):DBIO[Option[Instant]] = {
+  def selectLastModified(oid: ToteutusOid): DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(t.system_time)),
             max(lower(ta.system_time)),
@@ -116,7 +116,7 @@ trait ToteutusModificationSQL extends SQLHelpers {
           where t.oid = $oid""".as[Option[Instant]].head
   }
 
-  def selectModifiedSince(since:Instant): DBIO[Seq[ToteutusOid]] = {
+  def selectModifiedSince(since: Instant): DBIO[Seq[ToteutusOid]] = {
     sql"""select oid from toteutukset where $since < lower(system_time)
           union
           select oid from toteutukset_history where $since <@ system_time
@@ -130,20 +130,20 @@ trait ToteutusModificationSQL extends SQLHelpers {
 
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
-  def selectToteutus(oid:ToteutusOid) =
+  def selectToteutus(oid: ToteutusOid) =
     sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta from toteutukset where oid = $oid"""
 
-  def selectToteutuksetByKoulutusOid(oid:KoulutusOid) =
+  def selectToteutuksetByKoulutusOid(oid: KoulutusOid) =
     sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta from toteutukset where koulutus_oid = $oid"""
 
-  def selectToteutuksenTarjoajat(oid:ToteutusOid) =
+  def selectToteutuksenTarjoajat(oid: ToteutusOid) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
-  def selectToteutustenTarjoajat(oids:List[ToteutusOid]) = {
+  def selectToteutustenTarjoajat(oids: List[ToteutusOid]) = {
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createOidInParams(oids)})"""
   }
 
-  def insertToteutus(toteutus:Toteutus) = {
+  def insertToteutus(toteutus: Toteutus) = {
     val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, organisaatioOid, kielivalinta) = toteutus
     sql"""insert into toteutukset (
             koulutus_oid,
@@ -164,7 +164,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           ) returning oid""".as[ToteutusOid].headOption
   }
 
-  def insertToteutuksenTarjoajat(toteutus:Toteutus) = {
+  def insertToteutuksenTarjoajat(toteutus: Toteutus) = {
     DBIO.sequence( toteutus.tarjoajat.map(t =>
       sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values (${toteutus.oid}, $t, ${toteutus.muokkaaja})"""))
@@ -189,25 +189,25 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             or organisaatio_oid is distinct from $organisaatioOid )"""
   }
 
-  def insertTarjoaja(oid:Option[ToteutusOid], tarjoaja:OrganisaatioOid, muokkaaja:UserOid ) = {
+  def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid ) = {
     sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
              on conflict on constraint toteutusten_tarjoajat_pkey do nothing"""
   }
 
-  def deleteTarjoajat(oid:Option[ToteutusOid], exclude:List[OrganisaatioOid]) = {
+  def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]) = {
     sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
   }
 
-  def deleteTarjoajat(oid:Option[ToteutusOid]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
+  def deleteTarjoajat(oid: Option[ToteutusOid]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
-  def selectByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]) = {
+  def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[OidListItem]
   }
 
-  def selectByKoulutusOidAndOrganisaatioOids(koulutusOid:KoulutusOid, organisaatioOids:Seq[OrganisaatioOid]) = {
+  def selectByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
