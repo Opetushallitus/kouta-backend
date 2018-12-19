@@ -2,6 +2,7 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData.{JulkaistuValintaperuste, MinValintaperuste}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.UserOid
 
 class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] with Validations {
 
@@ -12,7 +13,7 @@ class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] w
     assertLeft(max.copy(kielivalinta = Seq()), MissingKielivalinta)
     assertLeft(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
     assertLeft(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    assertLeft(max.copy(muokkaaja = "moikka"), validationMsg("moikka"))
+    assertLeft(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
   }
 
   it should "pass imcomplete valintaperuste if not julkaistu" in {

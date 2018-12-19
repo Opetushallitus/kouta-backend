@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 import java.util.UUID
 
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
 import fi.oph.kouta.repository.ValintaperusteDAO
 
@@ -14,9 +15,9 @@ object ValintaperusteService extends ValidatingService[Valintaperuste] with Auth
 
   def get(id:UUID): Option[(Valintaperuste, Instant)] = ValintaperusteDAO.get(id)
 
-  def list(organisaatioOid:String):Seq[IdListItem] =
+  def list(organisaatioOid:OrganisaatioOid):Seq[IdListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.listByOrganisaatioOids)
 
-  def listByHaunKohdejoukko(organisaatioOid:String, hakuOid:String):Seq[IdListItem] =
+  def listByHaunKohdejoukko(organisaatioOid:OrganisaatioOid, hakuOid:HakuOid):Seq[IdListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.ListByOrganisaatioOidAndHaunKohdejoukko(_, hakuOid))
 }

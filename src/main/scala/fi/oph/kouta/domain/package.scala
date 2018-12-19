@@ -3,6 +3,8 @@ package fi.oph.kouta
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
+import fi.oph.kouta.domain.oid._
+
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä
 package object domain {
   type Kielistetty = Map[Kieli,String]
@@ -76,16 +78,16 @@ package object domain {
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
-  case class OidListItem(oid:String, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String, muokkaaja:String, modified:LocalDateTime)
-  case class IdListItem(id:UUID, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:String, muokkaaja:String, modified:LocalDateTime)
+  case class OidListItem(oid:Oid, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:OrganisaatioOid, muokkaaja:UserOid, modified:LocalDateTime)
+  case class IdListItem(id:UUID, nimi: Kielistetty, tila:Julkaisutila, organisaatioOid:OrganisaatioOid, muokkaaja:UserOid, modified:LocalDateTime)
 
   case class Osoite(osoite:Kielistetty = Map(),
                     postinumero:Option[String],
                     postitoimipaikka:Kielistetty = Map())
 
-  case class ListEverything(koulutukset:Seq[String] = Seq(),
-                            toteutukset:Seq[String] = Seq(),
-                            haut:Seq[String] = Seq(),
-                            hakukohteet:Seq[String] = Seq(),
+  case class ListEverything(koulutukset:Seq[KoulutusOid] = Seq(),
+                            toteutukset:Seq[ToteutusOid] = Seq(),
+                            haut:Seq[HakuOid] = Seq(),
+                            hakukohteet:Seq[HakukohdeOid] = Seq(),
                             valintaperusteet:Seq[UUID] = Seq())
 }

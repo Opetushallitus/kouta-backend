@@ -5,6 +5,7 @@ import java.time.temporal.ChronoUnit
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
+import fi.oph.kouta.domain.oid._
 
 object TestData {
 
@@ -56,12 +57,12 @@ object TestData {
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))),
-    tarjoajat = List("1.2", "2.2", "3.2"),
-    muokkaaja = "5.5.5",
-    organisaatioOid = "1.2",
+    tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
+    muokkaaja = UserOid("5.5.5"),
+    organisaatioOid = OrganisaatioOid("1.2"),
     kielivalinta = List(Fi, Sv))
 
-  val MinKoulutus = Koulutus(johtaaTutkintoon = false, muokkaaja = "1.2.3", organisaatioOid = "1.2")
+  val MinKoulutus = Koulutus(johtaaTutkintoon = false, muokkaaja = UserOid("1.2.3"), organisaatioOid = OrganisaatioOid("1.2"))
 
   val JulkaistuHaku = new Haku(
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
@@ -77,16 +78,16 @@ object TestData {
     hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
-    organisaatioOid = "1.2.3.4",
-    muokkaaja = "5.4.3.2.1",
+    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    muokkaaja = UserOid("5.4.3.2.1"),
     kielivalinta = Seq(Fi, Sv))
 
-  val MinHaku = new Haku(muokkaaja = "9.9.9.9.9", organisaatioOid = "5.5.5")
+  val MinHaku = new Haku(muokkaaja = UserOid("9.9.9.9.9"), organisaatioOid = OrganisaatioOid("5.5.5"))
 
   val JulkaistuHakukohde = new Hakukohde(
     oid = None,
-    toteutusOid = "1.2.246.562.17.123",
-    hakuOid = "1.2.246.562.29.123",
+    toteutusOid = ToteutusOid("1.2.246.562.17.123"),
+    hakuOid = HakuOid("1.2.246.562.29.123"),
     tila = Julkaistu,
     nimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
@@ -108,15 +109,15 @@ object TestData {
     liitteet = List(Liite1, Liite2),
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
-    muokkaaja = "1.2.3.2.1",
-    organisaatioOid = "1.2",
+    muokkaaja = UserOid("1.2.3.2.1"),
+    organisaatioOid = OrganisaatioOid("1.2"),
     kielivalinta = Seq(Fi, Sv))
 
   val MinHakukohde = new Hakukohde(
-    muokkaaja = "7.7.7.7",
-    organisaatioOid = "1.2",
-    toteutusOid = "1.2.246.562.17.123",
-    hakuOid = "1.2.246.562.29.123")
+    muokkaaja = UserOid("7.7.7.7"),
+    organisaatioOid = OrganisaatioOid("1.2"),
+    toteutusOid = ToteutusOid("1.2.246.562.17.123"),
+    hakuOid = HakuOid("1.2.246.562.29.123"))
 
   val JulkaistuValintaperuste = new Valintaperuste(
     id = None,
@@ -126,11 +127,11 @@ object TestData {
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = None,
-    organisaatioOid = "1.2.3.4",
-    muokkaaja = "2.1.2.1.2",
+    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    muokkaaja = UserOid("2.1.2.1.2"),
     kielivalinta = List(Fi, Sv))
 
-  val MinValintaperuste = new Valintaperuste(muokkaaja = "7.7.7.7.7", organisaatioOid = "1.2.1.2")
+  val MinValintaperuste = new Valintaperuste(muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"))
 
   val ToteutuksenOpetus = Opetus(
     opetuskielet = List("kieli_fi#1"),
@@ -157,17 +158,17 @@ object TestData {
 
   val JulkaistuAmmToteutus = Toteutus(
     oid = None,
-    koulutusOid = "1.2.246.562.13.123",
+    koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     tila = Julkaistu,
-    tarjoajat = List("1.2.3.3", "1.2.3.4"),
+    tarjoajat = List("1.2.3.3", "1.2.3.4").map(OrganisaatioOid),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
-    muokkaaja = "1.2.3.4",
-    organisaatioOid = "1.2",
+    muokkaaja = UserOid("1.2.3.4"),
+    organisaatioOid = OrganisaatioOid("1.2"),
     kielivalinta = Seq(Fi, Sv))
 
   val MinToteutus = new Toteutus(
-    muokkaaja = "5.4.3.2",
-    organisaatioOid = "1.2",
-    koulutusOid = "1.2.246.562.13.123")
+    muokkaaja = UserOid("5.4.3.2"),
+    organisaatioOid = OrganisaatioOid("1.2"),
+    koulutusOid = KoulutusOid("1.2.246.562.13.123"))
 }

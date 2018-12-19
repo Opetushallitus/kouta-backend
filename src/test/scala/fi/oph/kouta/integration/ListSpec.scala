@@ -37,10 +37,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     k3 = addToList(koulutus(false, GrandChildOid, Tallennettu))
     k4 = addToList(koulutus(false, LonelyOid, Julkaistu))
     k5 = addToList(koulutus(true, LonelyOid, Julkaistu))
-    t1 = addToList(toteutus(k1.oid, Julkaistu, ParentOid))
-    t2 = addToList(toteutus(k1.oid, Arkistoitu, ChildOid))
-    t3 = addToList(toteutus(k1.oid, Tallennettu, GrandChildOid))
-    t4 = addToList(toteutus(k4.oid, Julkaistu, LonelyOid))
+    t1 = addToList(toteutus(k1.oid.toString, Julkaistu, ParentOid))
+    t2 = addToList(toteutus(k1.oid.toString, Arkistoitu, ChildOid))
+    t3 = addToList(toteutus(k1.oid.toString, Tallennettu, GrandChildOid))
+    t4 = addToList(toteutus(k4.oid.toString, Julkaistu, LonelyOid))
     h1 = addToList(haku(Julkaistu, ParentOid))
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("kohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
@@ -50,10 +50,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("kohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     v4 = addToList(valintaperuste(Julkaistu, LonelyOid))
 
-    hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
-    hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid))
-    hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid))
-    hk4 = addToList(hakukohde(t4.oid, h1.oid, v1.id, LonelyOid))
+    hk1 = addToList(hakukohde(t1.oid.toString, h1.oid.toString, v1.id, ParentOid))
+    hk2 = addToList(hakukohde(t2.oid.toString, h1.oid.toString, v1.id, ChildOid))
+    hk3 = addToList(hakukohde(t1.oid.toString, h2.oid.toString, v1.id, GrandChildOid))
+    hk4 = addToList(hakukohde(t4.oid.toString, h1.oid.toString, v1.id, LonelyOid))
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
@@ -102,10 +102,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid), List(v4))
   }
   it should "list all valintaperustekuvaukset that can be joined to given haku" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h2.oid), List(v1, v2))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h2.oid.toString), List(v1, v2))
   }
   it should "list all valinteperustekuvaukset that can be joiden to given haku even when kohdejoukko is null" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h3.oid), List(v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h3.oid.toString), List(v3))
   }
   it should "return forbidden if oid is unknown" in {
     list(ValintaperustePath, Map("organisaatioOid" -> UnknownOid), 403)

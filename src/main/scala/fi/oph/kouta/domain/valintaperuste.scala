@@ -2,6 +2,7 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class ValintaperusteMetadata()
@@ -14,8 +15,8 @@ case class Valintaperuste(id:Option[UUID] = None,
                           nimi: Kielistetty = Map(),
                           onkoJulkinen: Boolean = false,
                           metadata: Option[ValintaperusteMetadata] = None,
-                          organisaatioOid: String,
-                          muokkaaja:String,
+                          organisaatioOid: OrganisaatioOid,
+                          muokkaaja:UserOid,
                           kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithId with Validatable {
 
   override def validate(): IsValid = and(

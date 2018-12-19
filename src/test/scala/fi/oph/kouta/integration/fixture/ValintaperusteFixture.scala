@@ -4,6 +4,7 @@ import java.util.UUID
 
 import fi.oph.kouta.TestData.JulkaistuValintaperuste
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.ValintaperusteServlet
 
@@ -25,7 +26,7 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
   //def list: (List[(String, String)], List[IdListResponse]) => List[IdListResponse] = list(ValintaperustePath, _, _)
 
   def valintaperuste(tila:Julkaisutila, organisaatioOid:String): Valintaperuste =
-    valintaperuste.copy(organisaatioOid = organisaatioOid, tila = tila)
+    valintaperuste.copy(organisaatioOid = OrganisaatioOid(organisaatioOid), tila = tila)
 
   def addToList(valintaperuste:Valintaperuste) = {
     val id = put(valintaperuste)

@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
@@ -58,7 +59,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     val uusiKoulutus = koulutus(oid).copy(
       kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      tarjoajat = List("2.2", "3.2", "4.2"))
+      tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
     update(uusiKoulutus, lastModified, true)
     get(oid, uusiKoulutus)
   }
@@ -73,10 +74,10 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = "5.4.3.2.1", organisaatioOid = "1.2")
+    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = UserOid("5.4.3.2.1"), organisaatioOid = OrganisaatioOid("1.2"))
     val oid = put(unfinishedKoulutus)
-    val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(oid)))
-    val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(oid), johtaaTutkintoon = false)
+    val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid)), johtaaTutkintoon = false)
     update(newUnfinishedKoulutus, lastModified)
     get(oid, newUnfinishedKoulutus)
   }

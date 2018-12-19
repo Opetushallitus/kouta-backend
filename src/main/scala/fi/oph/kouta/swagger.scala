@@ -48,6 +48,14 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
     models.remove("LocalDate")
     models.remove("LocalDateTime")
     models.remove("LocalTime")
+    models.remove("HakuOid")
+    models.remove("HakukohdeOid")
+    models.remove("KoulutusOid")
+    models.remove("ToteutusOid")
+    models.remove("UserOid")
+    models.remove("OrganisaatioOid")
+    models.remove("GenericOid")
+    models.remove("Oid")
   }
 
   private def prettifyEnumModels(model:Model) = model.properties.map {
@@ -77,6 +85,13 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
     case (name, mp) if mp.`type`.name.equals("Instant") => (name, modelProperty(mp.position, List(EXAMPLE_DATE_TIME)))
     case (name, mp) if mp.`type`.name.equals("Map") => (name, ModelProperty(new ValueDataType("Kielistetty", None, Some("fi.oph.kouta.domain.Kielistetty")), mp.position))
     case (name, mp) if mp.`type`.name.equals("UUID") => (name, modelProperty(mp.position, List(EXAMPLE_UUID)))
+    case (name, mp) if mp.`type`.name.equals("KoulutusOid") => (name, modelProperty(mp.position, List("1.2.246.562.13.123456")))
+    case (name, mp) if mp.`type`.name.equals("ToteutusOid") => (name, modelProperty(mp.position, List("1.2.246.562.17.123456")))
+    case (name, mp) if mp.`type`.name.equals("HakuOid") => (name, modelProperty(mp.position, List("1.2.246.562.29.123456")))
+    case (name, mp) if mp.`type`.name.equals("HakukohdeOid") => (name, modelProperty(mp.position, List("1.2.246.562.20.123456")))
+    case (name, mp) if mp.`type`.name.equals("UserOid") => (name, modelProperty(mp.position, List("1.2.246.123.123.123456")))
+    case (name, mp) if mp.`type`.name.equals("OrganisaatioOid") => (name, modelProperty(mp.position, List("1.2.246.123.123.123456")))
+    case (name, mp) if mp.`type`.name.equals("Oid") => (name, modelProperty(mp.position, List("1.2.246.123.123.123456")))
     //case (name, mp) if mp.`type`.name.equals("Kieli") => (name, ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
     case p => p
   }

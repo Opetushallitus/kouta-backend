@@ -3,6 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
 
+import fi.oph.kouta.domain.oid._
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -14,8 +15,8 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def get(id:UUID): Option[(Valintaperuste, Instant)]
   def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[IdListItem]
-  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[String], hakuOid:String):Seq[IdListItem]
+  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[IdListItem]
+  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[OrganisaatioOid], hakuOid:HakuOid):Seq[IdListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -49,10 +50,10 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids:Seq[String]):Seq[IdListItem] =
+  override def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[IdListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[String], hakuOid:String):Seq[IdListItem] =
+  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids:Seq[OrganisaatioOid], hakuOid:HakuOid):Seq[IdListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids, hakuOid))
 }
 
@@ -140,18 +141,18 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
          )"""
   }
 
-  def selectByOrganisaatioOids(organisaatioOids:Seq[String]) = {
+  def selectByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]) = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from valintaperusteet
-          where organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[IdListItem]
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
   }
 
-  def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids:Seq[String], hakuOid:String) = {
+  def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids:Seq[OrganisaatioOid], hakuOid:HakuOid) = {
     sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, lower(v.system_time)
           from valintaperusteet v
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
           and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and v.organisaatio_oid in (#${createInParams(organisaatioOids)})""".as[IdListItem]
+          and v.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
   }
 }

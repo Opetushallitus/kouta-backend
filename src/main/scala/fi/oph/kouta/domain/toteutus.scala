@@ -1,6 +1,7 @@
 package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.keyword.Keyword
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class Osaamisala(koodi:String, linkki:Kielistetty = Map(), otsikko:Kielistetty = Map())
@@ -22,20 +23,20 @@ case class ToteutusMetadata(kuvaus:Kielistetty = Map(),
                             ammattinimikkeet: List[Keyword] = List(),
                             yhteystieto: Option[Yhteystieto] = None)
 
-case class Toteutus(oid:Option[String] = None,
-                    koulutusOid:String,
+case class Toteutus(oid:Option[ToteutusOid] = None,
+                    koulutusOid:KoulutusOid,
                     tila:Julkaisutila = Tallennettu,
-                    tarjoajat:List[String] = List(),
+                    tarjoajat:List[OrganisaatioOid] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,
-                    muokkaaja:String,
-                    organisaatioOid:String,
+                    muokkaaja:UserOid,
+                    organisaatioOid:OrganisaatioOid,
                     kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
   override def validate():IsValid = and(
      super.validate(),
-     assertMatch(koulutusOid, KoulutusOidPattern),
-     validateIfDefined[String](oid, assertMatch(_, ToteutusOidPattern)),
+     assertValid(koulutusOid),
+     validateIfDefined[ToteutusOid](oid, assertValid(_)),
      validateOidList(tarjoajat)
   )
 }

@@ -2,6 +2,7 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
 import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.{NotFound, Ok}
@@ -49,8 +50,8 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     parameter queryParam[String]("hakuOid").description(s"Haun oid"))) {
     ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
       case (None, _) => NotFound()
-      case (Some(oid), None) => Ok(ValintaperusteService.list(oid))
-      case (Some(oid), Some(hakuOid)) => Ok(ValintaperusteService.listByHaunKohdejoukko(oid, hakuOid))
+      case (Some(oid), None) => Ok(ValintaperusteService.list(OrganisaatioOid(oid)))
+      case (Some(oid), Some(hakuOid)) => Ok(ValintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid)))
     }
   }
 

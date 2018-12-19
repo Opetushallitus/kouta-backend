@@ -5,6 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 
 class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validations {
 
@@ -12,11 +13,11 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
   val min = MinHakukohde
 
   it should "fail if perustiedot is invalid" in {
-    assertLeft(max.copy(oid = Some("moikka")), validationMsg("moikka"))
+    assertLeft(max.copy(oid = Some(HakukohdeOid("moikka"))), validationMsg("moikka"))
     assertLeft(max.copy(kielivalinta = Seq()), MissingKielivalinta)
     assertLeft(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
     assertLeft(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    assertLeft(max.copy(muokkaaja = "moikka"), validationMsg("moikka"))
+    assertLeft(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
   }
 
   it should "pass imcomplete hakukohde if not julkaistu" in {
@@ -24,7 +25,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
   }
 
   it should "fail if hakukohde oid is invalid" in {
-    assertLeft(min.copy(oid = Some("1.2.3")), validationMsg("1.2.3"))
+    assertLeft(min.copy(oid = Some(HakukohdeOid("1.2.3"))), validationMsg("1.2.3"))
   }
 
   it should "fail if julkaistu hakukohde is invalid" in {

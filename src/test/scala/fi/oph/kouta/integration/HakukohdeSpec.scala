@@ -4,9 +4,11 @@ import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.validation.Validations
 
-class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations {
+class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations with SQLHelpers {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null
@@ -102,11 +104,11 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
   }
 
   it should "store and update unfinished hakukohde" in {
-    val unfinishedHakukohde = new Hakukohde(muokkaaja = "7.7.7.7", toteutusOid = toteutusOid, hakuOid = hakuOid, organisaatioOid = "1.2")
+    val unfinishedHakukohde = new Hakukohde(muokkaaja = UserOid("7.7.7.7"), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), organisaatioOid = OrganisaatioOid("1.2"))
     val oid = put(unfinishedHakukohde)
-    val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(oid)))
+    val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid))))
     val newToteutusOid = put(toteutus(koulutusOid))
-    val newUnfinishedHakukohde = unfinishedHakukohde.copy(oid = Some(oid), toteutusOid = newToteutusOid)
+    val newUnfinishedHakukohde = unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(newToteutusOid))
     update(newUnfinishedHakukohde, lastModified)
     get(oid, newUnfinishedHakukohde)
   }
