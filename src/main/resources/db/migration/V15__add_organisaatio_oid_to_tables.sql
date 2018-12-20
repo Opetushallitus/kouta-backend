@@ -1,9 +1,11 @@
-alter table koulutukset add column organisaatio_oid varchar not null;
+alter table koulutukset add column organisaatio_oid varchar not null default '1.2.246.562.10.81934895871';
 alter table koulutukset_history add column organisaatio_oid varchar not null;
 alter table toteutukset add column organisaatio_oid varchar not null;
 alter table toteutukset_history add column organisaatio_oid varchar not null;
 alter table hakukohteet add column organisaatio_oid varchar not null;
 alter table hakukohteet_history add column organisaatio_oid varchar not null;
+
+alter table koulutukset alter column organisaatio_oid drop default;
 
 alter table haut rename column organisaatio to organisaatio_oid;
 alter table haut_history rename column organisaatio to organisaatio_oid;
