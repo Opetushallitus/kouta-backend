@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 
@@ -68,7 +69,7 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       metadata = Some(thisToteutus.metadata.get.copy(kuvaus = Map(Fi -> "kuvaus", En -> "description"))),
-      tarjoajat = List("2.2", "3.2", "4.2"))
+      tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
     update(uusiToteutus, lastModified, true)
     get(oid, uusiToteutus)
   }
@@ -84,32 +85,32 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = "5.4.3.2", koulutusOid = koulutusOid)
+    val unfinishedToteutus = new Toteutus(muokkaaja = UserOid("5.4.3.2"), koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = OrganisaatioOid("1.2"))
     val oid = put(unfinishedToteutus)
-    val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(oid)))
+    val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
     val newKoulutusOid = put(koulutus)
-    val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(oid), koulutusOid = newKoulutusOid)
+    val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(newKoulutusOid))
     update(newUnfinishedToteutus, lastModified)
     get(oid, newUnfinishedToteutus)
   }
 
   it should "validate new toteutus" in {
-    put(ToteutusPath, bytes(toteutus(koulutusOid).copy(tarjoajat = List("katkarapu"))), List(jsonHeader)) {
+    put(ToteutusPath, bytes(toteutus(koulutusOid).copy(tarjoajat = List("katkarapu").map(OrganisaatioOid))), List(jsonHeader)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu"))))
+      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
     }
   }
 
   it should "validate updated toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
-    post(ToteutusPath, bytes(toteutus(oid, koulutusOid).copy(tarjoajat = List("katkarapu"))), headersIfUnmodifiedSince(lastModified)) {
+    post(ToteutusPath, bytes(toteutus(oid, koulutusOid).copy(tarjoajat = List("katkarapu").map(OrganisaatioOid))), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu"))))
+      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
     }
   }
 }

@@ -27,12 +27,12 @@ object ModificationDAO extends ModificationDAO {
 
 trait EntityModificationDAO[T] {
 
-  def getLastModified(id:T): Option[Instant] =
+  def getLastModified(id: T): Option[Instant] =
     KoutaDatabase.runBlocking(selectLastModified(id))
 
-  def listModifiedSince(since:Instant):Seq[T] =
+  def listModifiedSince(since: Instant): Seq[T] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
-  def selectLastModified(id:T):DBIO[Option[Instant]]
-  def selectModifiedSince(since:Instant): DBIO[Seq[T]]
+  def selectLastModified(id: T): DBIO[Option[Instant]]
+  def selectModifiedSince(since: Instant): DBIO[Seq[T]]
 }

@@ -2,7 +2,8 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.Valintaperuste
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
+import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
 import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -42,6 +43,17 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  prettifySwaggerModels()
+  get("/list", operation(apiOperation[List[IdListItem]]("Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet")
+    tags modelName
+    summary "Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet. Listaa voidaan rajata myös haun oidilla, jolloin kuvaukset rajataan haun kohdejoukoun perusteella."
+    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)")
+    parameter queryParam[String]("hakuOid").description(s"Haun oid"))) {
+    ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
+      case (None, _) => NotFound()
+      case (Some(oid), None) => Ok(ValintaperusteService.list(OrganisaatioOid(oid)))
+      case (Some(oid), Some(hakuOid)) => Ok(ValintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid)))
+    }
+  }
 
+  prettifySwaggerModels()
 }

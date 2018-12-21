@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
@@ -58,7 +59,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     val uusiKoulutus = koulutus(oid).copy(
       kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      tarjoajat = List("2.2", "3.2", "4.2"))
+      tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
     update(uusiKoulutus, lastModified, true)
     get(oid, uusiKoulutus)
   }
@@ -73,10 +74,10 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = "5.4.3.2.1")
+    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = UserOid("5.4.3.2.1"), organisaatioOid = OrganisaatioOid("1.2"))
     val oid = put(unfinishedKoulutus)
-    val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(oid)))
-    val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(oid), johtaaTutkintoon = false)
+    val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid)), johtaaTutkintoon = false)
     update(newUnfinishedKoulutus, lastModified)
     get(oid, newUnfinishedKoulutus)
   }
@@ -99,18 +100,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
       }
       body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
-  }
-
-  it should "list koulutukset" in {
-    def r(oids:List[String]) = oids.map(OidListResponse(_, koulutus.nimi))
-    truncateDatabase()
-    val oid1 = put(koulutus.copy(tarjoajat = List("5.5", "6.5")))
-    val oid2 = put(koulutus.copy(tarjoajat = List("6.5"), tila = Tallennettu))
-    val oid3 = put(koulutus.copy(tarjoajat = List("5.5"), tila = Tallennettu))
-    list(List(("tila", "julkaistu"), ("tarjoaja", "6.5")), r(List(oid1)))
-    list(List(("tarjoaja", "5.5")), r(List(oid1, oid3)))
-    list(List(("tila", "tallennettu")), r(List(oid2, oid3)))
-    list(List(), r(List(oid1, oid2, oid3)))
   }
 
   it should "return all toteutuksen related to koulutus" in {

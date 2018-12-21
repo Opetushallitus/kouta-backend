@@ -5,9 +5,9 @@ import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
 trait KeywordDAO {
-  def search(search:KeywordSearch): List[String]
-  def put(`type`:KeywordType, keywords:List[Keyword]): Int
-  def insert(`type`:KeywordType, keywords:List[Keyword]): DBIO[List[Int]]
+  def search(search: KeywordSearch): List[String]
+  def put(`type`: KeywordType, keywords: List[Keyword]): Int
+  def insert(`type`: KeywordType, keywords: List[Keyword]): DBIO[List[Int]]
 }
 
 object KeywordDAO extends KeywordDAO with KeywordSQL {
@@ -19,7 +19,7 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
       case (l1, l2) => l1.union(l2).distinct.take(search.limit).toList
     }
 
-  override def put(`type`:KeywordType, keywords:List[Keyword]): Int =
+  override def put(`type`: KeywordType, keywords: List[Keyword]): Int =
     KoutaDatabase.runBlockingTransactionally(
       insertKeywords(`type`, keywords)
     ) match {
@@ -33,7 +33,7 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
 
 sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
 
-  private def fieldAndTable(`type`:KeywordType) = `type` match {
+  private def fieldAndTable(`type`: KeywordType) = `type` match {
     case Ammattinimike => ("ammattinimike", "ammattinimikkeet")
     case Asiasana => ("asiasana", "asiasanat")
     case _ => ???
@@ -45,7 +45,7 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
   def searchKeywordsByMatch(search: KeywordSearch) =
     searchKeywords(search)(s"%${search.term}%")
 
-  private def searchKeywords(search: KeywordSearch)(like:String) = {
+  private def searchKeywords(search: KeywordSearch)(like: String) = {
     val (field, table) = fieldAndTable(search.`type`)
     sql"""select #$field from #$table
           where kieli = ${search.kieli.toString}::kieli
@@ -54,7 +54,7 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
           limit ${search.limit} """.as[String]
   }
 
-  def insertKeywords(`type`:KeywordType, keywords:List[Keyword]) = {
+  def insertKeywords(`type`: KeywordType, keywords: List[Keyword]) = {
     val (field, table) = fieldAndTable(`type`)
     val pkey = s"${table}_pkey"
     DBIO.sequence(keywords.map{case Keyword(kieli, keyword) =>

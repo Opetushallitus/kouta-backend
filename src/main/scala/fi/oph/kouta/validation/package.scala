@@ -6,7 +6,7 @@ package object validation {
   trait Validatable extends Validations {
     def validate():IsValid
 
-    def and(validations:IsValid*):IsValid = validations collect { case Left(msgList) => msgList } match {
+    def and(validations: IsValid*): IsValid = validations collect { case Left(msgList) => msgList } match {
       case l if l.isEmpty => Right()
       case l => Left(l.flatten.distinct.toList)
     }

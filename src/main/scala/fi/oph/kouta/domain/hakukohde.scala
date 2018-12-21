@@ -3,12 +3,13 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-case class Hakukohde(oid:Option[String] = None,
-                     toteutusOid:String,
-                     hakuOid:String,
-                     tila:Julkaisutila = Tallennettu,
+case class Hakukohde(oid: Option[HakukohdeOid] = None,
+                     toteutusOid: ToteutusOid,
+                     hakuOid: HakuOid,
+                     tila: Julkaisutila = Tallennettu,
                      nimi: Kielistetty = Map(),
                      alkamiskausiKoodiUri: Option[String] = None,
                      alkamisvuosi: Option[String] = None,
@@ -29,14 +30,15 @@ case class Hakukohde(oid:Option[String] = None,
                      liitteet: List[Liite] = List(),
                      valintakokeet: List[Valintakoe] = List(),
                      hakuajat: List[Ajanjakso] = List(),
-                     muokkaaja:String,
-                     kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
+                     muokkaaja: UserOid,
+                     organisaatioOid: OrganisaatioOid,
+                     kielivalinta: Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
   override def validate(): IsValid = and(
      super.validate(),
-     validateIfDefined[String](oid, assertMatch(_, HakukohdeOidPattern)),
-     assertMatch(toteutusOid, ToteutusOidPattern),
-     assertMatch(hakuOid, HakuOidPattern),
+     validateIfDefined[HakukohdeOid](oid, assertValid(_)),
+     assertValid(toteutusOid),
+     assertValid(hakuOid),
      validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
      validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
      validateHakuajat(hakuajat),
@@ -50,21 +52,21 @@ case class Hakukohde(oid:Option[String] = None,
   )
 }
 
-case class Valintakoe(id:Option[UUID] = None,
-                      tyyppi:Option[String] = None,
-                      tilaisuudet:List[Valintakoetilaisuus] = List())
+case class Valintakoe(id: Option[UUID] = None,
+                      tyyppi: Option[String] = None,
+                      tilaisuudet: List[Valintakoetilaisuus] = List())
 
-case class Valintakoetilaisuus(osoite:Option[Osoite],
-                               aika:Option[Ajanjakso] = None,
-                               lisatietoja:Kielistetty = Map())
+case class Valintakoetilaisuus(osoite: Option[Osoite],
+                               aika: Option[Ajanjakso] = None,
+                               lisatietoja: Kielistetty = Map())
 
-case class Liite(id:Option[UUID] = None,
-                 tyyppi:Option[String],
+case class Liite(id: Option[UUID] = None,
+                 tyyppi: Option[String],
                  nimi: Kielistetty = Map(),
                  kuvaus: Kielistetty = Map(),
                  toimitusaika: Option[LocalDateTime] = None,
                  toimitustapa: Option[LiitteenToimitustapa] = None,
                  toimitusosoite: Option[LiitteenToimitusosoite] = None)
 
-case class LiitteenToimitusosoite(osoite:Osoite,
-                                  sahkoposti:Option[String] = None)
+case class LiitteenToimitusosoite(osoite: Osoite,
+                                  sahkoposti: Option[String] = None)

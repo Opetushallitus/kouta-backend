@@ -22,15 +22,14 @@ class KoutaBackendSwagger extends Swagger(
 class SwaggerServlet(implicit val swagger: Swagger) extends ScalatraServlet with JacksonSwaggerBase
 
 trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
-
   val EXAMPLE_DATE_TIME = ISO_LOCAL_DATE_TIME_FORMATTER.format(LocalDateTime.MIN)
   val EXAMPLE_UUID = UUID.randomUUID().toString
 
-  val modelName:String
+  val modelName: String
 
-  private def modelProperty(position:Int, values:List[String]) = ModelProperty(DataType.String, position, required = false, description = Some(values.mkString("/")))
+  private def modelProperty(position: Int, values: List[String]) = ModelProperty(DataType.String, position, required = false, description = Some(values.mkString("/")))
 
-  def prettifySwaggerModels(model:String = modelName) = {
+  def prettifySwaggerModels(model: String = modelName) = {
     models.update(model, models(model).copy(properties = prettifyEnumModels(models(model))))
     removeRedundantModels()
     prettifyKielistetty()
@@ -48,9 +47,17 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
     models.remove("LocalDate")
     models.remove("LocalDateTime")
     models.remove("LocalTime")
+    models.remove("HakuOid")
+    models.remove("HakukohdeOid")
+    models.remove("KoulutusOid")
+    models.remove("ToteutusOid")
+    models.remove("UserOid")
+    models.remove("OrganisaatioOid")
+    models.remove("GenericOid")
+    models.remove("Oid")
   }
 
-  private def prettifyEnumModels(model:Model) = model.properties.map {
+  private def prettifyEnumModels(model: Model) = model.properties.map {
     case ("hakulomaketyyppi", mp) => ("hakulomaketyyppi", modelProperty(mp.position, Hakulomaketyyppi.values().map(_.toString)))
     case ("tila", mp) => ("tila", modelProperty(mp.position, Julkaisutila.values().map(_.toString)))
     //case ("koulutustyyppi", mp) => ("koulutustyyppi", modelProperty(mp.position, Koulutustyyppi.values().map(_.toString)))
@@ -73,10 +80,17 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
     )))
   }
 
-  private def prettifyDatatypes(model:Model) = model.properties.map {
+  private def prettifyDatatypes(model: Model) = model.properties.map {
     case (name, mp) if mp.`type`.name.equals("Instant") => (name, modelProperty(mp.position, List(EXAMPLE_DATE_TIME)))
     case (name, mp) if mp.`type`.name.equals("Map") => (name, ModelProperty(new ValueDataType("Kielistetty", None, Some("fi.oph.kouta.domain.Kielistetty")), mp.position))
     case (name, mp) if mp.`type`.name.equals("UUID") => (name, modelProperty(mp.position, List(EXAMPLE_UUID)))
+    case (name, mp) if mp.`type`.name.equals("KoulutusOid") => (name, modelProperty(mp.position, List("1.2.246.562.13.123456")))
+    case (name, mp) if mp.`type`.name.equals("ToteutusOid") => (name, modelProperty(mp.position, List("1.2.246.562.17.123456")))
+    case (name, mp) if mp.`type`.name.equals("HakuOid") => (name, modelProperty(mp.position, List("1.2.246.562.29.123456")))
+    case (name, mp) if mp.`type`.name.equals("HakukohdeOid") => (name, modelProperty(mp.position, List("1.2.246.562.20.123456")))
+    case (name, mp) if mp.`type`.name.equals("UserOid") => (name, modelProperty(mp.position, List("1.2.246.123.123.123456")))
+    case (name, mp) if mp.`type`.name.equals("OrganisaatioOid") => (name, modelProperty(mp.position, List("1.2.246.123.123.123456")))
+    case (name, mp) if mp.`type`.name.equals("Oid") => (name, modelProperty(mp.position, List("1.2.246.123.123.123456")))
     //case (name, mp) if mp.`type`.name.equals("Kieli") => (name, ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
     case p => p
   }

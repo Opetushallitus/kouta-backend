@@ -1,6 +1,7 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
+import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
 
@@ -16,7 +17,7 @@ case class KoutaDatabaseConfiguration(
   val leakDetectionThresholdMillis:Option[Int]
 )
 
-case class KoutaConfiguration(config:TypesafeConfig) extends ApplicationSettings(config) {
+case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
     username = config.getString("kouta-backend.db.user"),
@@ -43,10 +44,6 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
   val profile = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
   logger.info(s"Using profile '${profile}'")
 
-  implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaConfiguration] {
-    override def parse(config: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(config)
-  }
-
   val configuration: KoutaConfiguration = profile match {
     case CONFIG_PROFILE_DEFAULT => loadOphConfiguration()
     case CONFIG_PROFILE_TEMPLATE => loadTemplatedConfiguration()
@@ -60,14 +57,25 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
   private def loadOphConfiguration(): KoutaConfiguration = {
     val configFilePath = System.getProperty("user.home") + "/oph-configuration/kouta-backend.properties"
 
+    implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaConfiguration] {
+      override def parse(config: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(config, new OphProperties(configFilePath))
+    }
+
     logger.info(s"Reading properties from '${configFilePath}'")
     ApplicationSettingsLoader.loadSettings(configFilePath)
   }
 
-  private def loadTemplatedConfiguration(overrideFromSystemProperties:Boolean = false): KoutaConfiguration = {
+  private def loadTemplatedConfiguration(overrideFromSystemProperties: Boolean = false): KoutaConfiguration = {
     val templateFilePath = Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE)).getOrElse(
       throw new IllegalArgumentException(s"Using 'template' profile but '${SYSTEM_PROPERTY_NAME_TEMPLATE}' " +
         "system property is missing. Cannot create oph-properties!"))
+
+    implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaConfiguration] {
+      override def parse(c: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(c,
+        new OphProperties("src/test/resources/kouta-backend.properties") {
+          addDefault("host.virkailija", c.getString("host.virkailija"))
+        })
+    }
 
     logger.info(s"Reading template variables from '${templateFilePath}'")
     ConfigTemplateProcessor.createSettings("kouta-backend", templateFilePath)

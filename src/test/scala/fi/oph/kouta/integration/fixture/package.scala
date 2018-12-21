@@ -1,6 +1,10 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
 import java.util.UUID
+
+import fi.oph.kouta.domain.oid.GenericOid
+import fi.oph.kouta.domain.{IdListItem, OidListItem, Perustiedot}
 
 package object fixture {
 
@@ -8,6 +12,11 @@ package object fixture {
   case class Id(id:UUID)
   case class Updated(updated:Boolean)
 
+  def toOidListItem(oid:String, e:Perustiedot, modified:LocalDateTime) =
+    new OidListItem(GenericOid(oid), e.nimi, e.tila, e.organisaatioOid, e.muokkaaja, modified)
+
+  def toIdListItem(id:UUID, e:Perustiedot, modified:LocalDateTime) =
+    new IdListItem(id, e.nimi, e.tila, e.organisaatioOid, e.muokkaaja, modified)
 }
 
 import fi.oph.kouta.integration.fixture._

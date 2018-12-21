@@ -1,7 +1,9 @@
 package fi.oph.kouta
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID
+
+import fi.oph.kouta.domain.oid._
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä
 package object domain {
@@ -69,26 +71,23 @@ package object domain {
   case object Hakijapalvelu extends LiitteenToimitustapa { val name = "hakijapalvelu"}
   case object MuuOsoite extends LiitteenToimitustapa { val name = "osoite"}
 
-  case class Yhteystieto(nimi:Kielistetty = Map(),
-                         titteli:Kielistetty = Map(),
-                         sahkoposti:Kielistetty = Map(),
-                         puhelinnumero:Kielistetty = Map())
+  case class Yhteystieto(nimi: Kielistetty = Map(),
+                         titteli: Kielistetty = Map(),
+                         sahkoposti: Kielistetty = Map(),
+                         puhelinnumero: Kielistetty = Map())
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
-  case class ListParams(tilat:List[Julkaisutila] = List(),
-                        tarjoajat:List[String] = List())
+  case class OidListItem(oid: Oid, nimi: Kielistetty, tila: Julkaisutila, organisaatioOid: OrganisaatioOid, muokkaaja: UserOid, modified: LocalDateTime)
+  case class IdListItem(id: UUID, nimi: Kielistetty, tila: Julkaisutila, organisaatioOid: OrganisaatioOid, muokkaaja: UserOid, modified: LocalDateTime)
 
-  case class OidListResponse(oid:String, nimi: Kielistetty)
-  case class IdListResponse(id:UUID, nimi: Kielistetty)
+  case class Osoite(osoite: Kielistetty = Map(),
+                    postinumero: Option[String],
+                    postitoimipaikka: Kielistetty = Map())
 
-  case class Osoite(osoite:Kielistetty = Map(),
-                    postinumero:Option[String],
-                    postitoimipaikka:Kielistetty = Map())
-
-  case class ListEverything(koulutukset:Seq[String] = Seq(),
-                            toteutukset:Seq[String] = Seq(),
-                            haut:Seq[String] = Seq(),
-                            hakukohteet:Seq[String] = Seq(),
-                            valintaperusteet:Seq[UUID] = Seq())
+  case class ListEverything(koulutukset: Seq[KoulutusOid] = Seq(),
+                            toteutukset: Seq[ToteutusOid] = Seq(),
+                            haut: Seq[HakuOid] = Seq(),
+                            hakukohteet: Seq[HakukohdeOid] = Seq(),
+                            valintaperusteet: Seq[UUID] = Seq())
 }

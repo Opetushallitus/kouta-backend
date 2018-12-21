@@ -3,16 +3,20 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
 
+import fi.oph.kouta.domain.oid._
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import fi.oph.kouta.domain.Valintaperuste
+import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
 import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
-  def put(valintaperuste:Valintaperuste):Option[UUID]
-  def get(id:UUID): Option[(Valintaperuste, Instant)]
-  def update(valintaperuste:Valintaperuste, notModifiedSince:Instant): Boolean
+  def put(valintaperuste: Valintaperuste): Option[UUID]
+  def get(id: UUID): Option[(Valintaperuste, Instant)]
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean
+
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem]
+  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -45,18 +49,24 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       case Right(x) => 0 < x
     }
   }
+
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+
+  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids, hakuOid))
 }
 
 sealed trait ValintaperusteModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
-  def selectModifiedSince(since:Instant): DBIO[Seq[UUID]] = {
+  def selectModifiedSince(since: Instant): DBIO[Seq[UUID]] = {
     sql"""select id from valintaperusteet where $since < lower(system_time)
           union
           select id from valintaperusteet_history where $since <@ system_time""".as[UUID]
   }
 
-  def selectLastModified(id:UUID):DBIO[Option[Instant]] = {
+  def selectLastModified(id: UUID): DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(vp.system_time)),
             max(upper(vph.system_time)))
@@ -70,7 +80,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def insertValintaperuste(valintaperuste: Valintaperuste) = {
     val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
-    onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
+    onkoJulkinen, metadata, organisaatioOid, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""insert into valintaperusteet (
                      id,
                      tila,
@@ -80,7 +90,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      nimi,
                      onkoJulkinen,
                      metadata,
-                     organisaatio,
+                     organisaatio_oid,
                      muokkaaja,
                      kielivalinta
          ) values (
@@ -92,20 +102,20 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      ${toJsonParam(nimi)}::jsonb,
                      $onkoJulkinen,
                      ${toJsonParam(metadata)}::jsonb,
-                     $organisaatio,
+                     $organisaatioOid,
                      $muokkaaja,
                      ${toJsonParam(kielivalinta)}::jsonb
          )"""
   }
 
-  def selectValintaperuste(id:UUID) =
+  def selectValintaperuste(id: UUID) =
     sql"""select id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
-                 onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta
+                 onkoJulkinen, metadata, organisaatio_oid, muokkaaja, kielivalinta
           from valintaperusteet where id = ${id.toString}::uuid"""
 
   def updateValintaperuste(valintaperuste: Valintaperuste) = {
     val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
-    onkoJulkinen, metadata, organisaatio, muokkaaja, kielivalinta) = valintaperuste
+    onkoJulkinen, metadata, organisaatioOid, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""update valintaperusteet set
                      tila = ${tila.toString}::julkaisutila,
                      hakutapa_koodi_uri = $hakutapaKoodiUri,
@@ -114,7 +124,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      nimi = ${toJsonParam(nimi)}::jsonb,
                      onkoJulkinen = $onkoJulkinen,
                      metadata = ${toJsonParam(metadata)}::jsonb,
-                     organisaatio = $organisaatio,
+                     organisaatio_oid = $organisaatioOid,
                      muokkaaja = $muokkaaja,
                      kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
            where id = ${id.map(_.toString)}::uuid
@@ -125,9 +135,24 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            or nimi is distinct from ${toJsonParam(nimi)}::jsonb
            or onkoJulkinen is distinct from $onkoJulkinen
            or metadata is distinct from ${toJsonParam(metadata)}::jsonb
-           or organisaatio is distinct from $organisaatio
+           or organisaatio_oid is distinct from $organisaatioOid
            or muokkaaja is distinct from $muokkaaja
            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
          )"""
+  }
+
+  def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
+    sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from valintaperusteet
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
+  }
+
+  def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid) = {
+    sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, lower(v.system_time)
+          from valintaperusteet v
+          inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
+          and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
+          where h.oid = $hakuOid
+          and v.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
   }
 }

@@ -8,6 +8,7 @@ import java.util.UUID
 
 import fi.oph.kouta.TestData.inFuture
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.servlet.AnythingServlet
 import org.json4s.jackson.Serialization.read
 
@@ -70,10 +71,10 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
   }
 
   def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5")), timestampAfterInserts)
+  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
   def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i)).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInToteutusTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5")), timestampAfterInserts)
+  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
   def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInHakuTable(i: Int) = update(haku(hakuOids(i), Arkistoitu), timestampAfterInserts)
   def updateInHakuHakuajatTable(i: Int) = update(haku(hakuOids(i)).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(5000)))), timestampAfterInserts)
@@ -90,10 +91,10 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
     get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded") {
       status should be(200)
       val result = read[ListEverything](body)
-      result.koulutukset should contain theSameElementsAs (List(koulutusOids(0), koulutusOids(1), koulutusOids(2)))
-      result.toteutukset should contain theSameElementsAs (List(toteutusOids(3), toteutusOids(4), toteutusOids(5)))
-      result.haut should contain theSameElementsAs (List(hakuOids(6), hakuOids(7)))
-      result.hakukohteet should contain theSameElementsAs (List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)))
+      result.koulutukset should contain theSameElementsAs (List(koulutusOids(0), koulutusOids(1), koulutusOids(2)).map(KoulutusOid))
+      result.toteutukset should contain theSameElementsAs (List(toteutusOids(3), toteutusOids(4), toteutusOids(5)).map(ToteutusOid))
+      result.haut should contain theSameElementsAs (List(hakuOids(6), hakuOids(7)).map(HakuOid))
+      result.hakukohteet should contain theSameElementsAs (List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)).map(HakukohdeOid))
       result.valintaperusteet should contain theSameElementsAs (List(valintaperusteIds(12)))
     }
   }
@@ -105,10 +106,10 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
     get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded") {
       status should be(200)
       val result = read[ListEverything](body)
-      result.koulutukset should contain theSameElementsAs (koulutusOids)
-      result.toteutukset should contain theSameElementsAs (toteutusOids)
-      result.haut should contain theSameElementsAs (hakuOids)
-      result.hakukohteet should contain theSameElementsAs (hakukohdeOids)
+      result.koulutukset should contain theSameElementsAs (koulutusOids).map(KoulutusOid)
+      result.toteutukset should contain theSameElementsAs (toteutusOids).map(ToteutusOid)
+      result.haut should contain theSameElementsAs (hakuOids).map(HakuOid)
+      result.hakukohteet should contain theSameElementsAs (hakukohdeOids).map(HakukohdeOid)
       result.valintaperusteet should contain theSameElementsAs (valintaperusteIds)
     }
   }

@@ -1,6 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.domain.Hakukohde
+import fi.oph.kouta.domain.oid.HakukohdeOid
 import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -14,7 +15,7 @@ class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
     summary "Hae hakukohde"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
 
-    HakukohdeService.get(params("oid")) match {
+    HakukohdeService.get(HakukohdeOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown hakukohde oid")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
     }

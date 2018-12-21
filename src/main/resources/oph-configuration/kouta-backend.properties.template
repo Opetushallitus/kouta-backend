@@ -10,3 +10,5 @@ kouta-backend.db.registerMbeans=true
 kouta-backend.db.initializationFailTimeout=1000
 kouta-backend.db.timeoutSeconds=20
 kouta-backend.db.leakDetectionThresholdMillis=1800000
+host.virkailija={{host_virkailija}}
+organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/hierarkia/hae

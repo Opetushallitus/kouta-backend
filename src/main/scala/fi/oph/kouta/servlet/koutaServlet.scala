@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter
 import java.util.{ConcurrentModificationException, NoSuchElementException, UUID}
 
 import fi.oph.kouta.PrettySwaggerSupport
-import fi.oph.kouta.service.KoutaValidationException
+import fi.oph.kouta.service.{KoutaAuthorizationFailedException, KoutaValidationException}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.MappingException
@@ -62,7 +62,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     s"""Error ${request.getMethod} ${request.getContextPath} => ${msgBody}"""
   }
 
-  def badRequest(t:Throwable) = {
+  def badRequest(t: Throwable) = {
     logger.warn(errorMsgFromRequest(), t)
     BadRequest("error" -> t.getMessage)
   }
@@ -72,10 +72,10 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       t match {
         /*case e: AuthenticationFailedException =>
           logger.warn("authentication failed", e)
-          Unauthorized("error" -> "Unauthorized")
-        case e: AuthorizationFailedException =>
+          Unauthorized("error" -> "Unauthorized")*/
+        case e: KoutaAuthorizationFailedException =>
           logger.warn("authorization failed", e)
-          Forbidden("error" -> "Forbidden")*/
+          Forbidden("error" -> s"Forbidden ${e.oid}")
         case e: KoutaValidationException => BadRequest(e.errorMessages.distinct)
         case e: IllegalStateException =>  badRequest(t)
         case e: IllegalArgumentException => badRequest(t)

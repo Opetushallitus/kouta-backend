@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.validation.Validations
 
@@ -75,10 +76,10 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = new Haku(muokkaaja = "9.9.9.9.9", organisaatio = "5.5.5")
+    val unfinishedHaku = new Haku(muokkaaja = UserOid("9.9.9.9.9"), organisaatioOid = OrganisaatioOid("5.5.5"))
     val oid = put(unfinishedHaku)
-    val lastModified = get(oid, unfinishedHaku.copy(oid = Some(oid)))
-    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(oid), organisaatio = "6.6.6")
+    val lastModified = get(oid, unfinishedHaku.copy(oid = Some(HakuOid(oid))))
+    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = OrganisaatioOid("6.6.6"))
     update(newUnfinishedHaku, lastModified)
     get(oid, newUnfinishedHaku)
   }
@@ -111,10 +112,10 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
       hakukohteenLiittamisenTakaraja = Some(TestData.inFuture(50000)),
       hakukohteenMuokkaamisenTakaraja = None)
     val oid = put(pvmHaku)
-    val lastModified = get(oid, pvmHaku.copy(oid = Some(oid)))
+    val lastModified = get(oid, pvmHaku.copy(oid = Some(HakuOid(oid))))
 
     val updatedPvmHaku = haku.copy(
-      oid = Some(oid),
+      oid = Some(HakuOid(oid)),
       hakukohteenMuokkaamisenTakaraja = Some(TestData.inFuture(50000)),
       hakukohteenLiittamisenTakaraja = None)
 

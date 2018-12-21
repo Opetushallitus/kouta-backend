@@ -2,12 +2,13 @@ package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None)
 
-case class Haku(oid:Option[String] = None,
-                tila:Julkaisutila = Tallennettu,
+case class Haku(oid: Option[HakuOid] = None,
+                tila: Julkaisutila = Tallennettu,
                 nimi: Kielistetty = Map(),
                 hakutapaKoodiUri: Option[String] = None,
                 hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
@@ -19,15 +20,14 @@ case class Haku(oid:Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                 hakulomake: Option[String] = None,
                 metadata: Option[HakuMetadata] = None,
-                organisaatio: String,
+                organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
-                muokkaaja:String,
-                kielivalinta:Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
+                muokkaaja: UserOid,
+                kielivalinta: Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
 
   override def validate(): IsValid = and (
      super.validate(),
-     validateIfDefined[String](oid, assertMatch(_, HakuOidPattern)),
-     assertMatch(organisaatio, OidPattern),
+     validateIfDefined[HakuOid](oid, assertValid(_)),
      validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
      validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
      validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),

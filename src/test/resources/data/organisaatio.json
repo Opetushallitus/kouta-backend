@@ -1,0 +1,103 @@
+{
+    "numHits": 3,
+    "organisaatiot": [
+        {
+            "aliOrganisaatioMaara": 1,
+            "alkuPvm": 791676000000,
+            "children": [
+                {
+                    "aliOrganisaatioMaara": 13,
+                    "alkuPvm": 1136066400000,
+                    "children": [
+                        {
+                            "aliOrganisaatioMaara": 0,
+                            "alkuPvm": 1343768400000,
+                            "children": [],
+                            "kieletUris": [
+                                "oppilaitoksenopetuskieli_1#1"
+                            ],
+                            "kotipaikkaUri": "kunta_398",
+                            "match": true,
+                            "nimi": {
+                                "fi": "Koulutuskeskus Salpaus,  Lahti, Jokimaa"
+                            },
+                            "oid": "1.2.246.562.10.67603619189",
+                            "organisaatiotyypit": [
+                                "organisaatiotyyppi_03"
+                            ],
+                            "parentOid": "1.2.246.562.10.81934895871",
+                            "parentOidPath": "1.2.246.562.10.67603619189/1.2.246.562.10.81934895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001",
+                            "status": "AKTIIVINEN",
+                            "toimipistekoodi": "1005326"
+                        },
+                        {
+                            "nimi": {
+                                "fi": "Evil grandchild"
+                            },
+                            "children": [],
+                            "oid": "1.2.246.562.10.66603619189",
+                            "parentOid": "1.2.246.562.10.81934895871",
+                            "parentOidPath": "1.2.246.562.10.66603619189/1.2.246.562.10.81934895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001",
+                            "status": "AKTIIVINEN"
+                        }
+                    ],
+                    "kieletUris": [
+                        "oppilaitoksenopetuskieli_1#1"
+                    ],
+                    "kotipaikkaUri": "kunta_398",
+                    "match": true,
+                    "nimi": {
+                        "fi": "Koulutuskeskus Salpaus"
+                    },
+                    "oid": "1.2.246.562.10.81934895871",
+                    "oppilaitosKoodi": "10053",
+                    "oppilaitostyyppi": "oppilaitostyyppi_21#1",
+                    "organisaatiotyypit": [
+                        "organisaatiotyyppi_02"
+                    ],
+                    "parentOid": "1.2.246.562.10.594252633210",
+                    "parentOidPath": "1.2.246.562.10.81934895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001",
+                    "status": "AKTIIVINEN",
+                    "toimipistekoodi": "10053"
+                },
+                {
+                    "nimi": {
+                        "fi": "Evil child"
+                    },
+                    "children": [
+                        {
+                            "nimi": {
+                                "fi": "Evil cousin"
+                            },
+                            "oid": "1.2.246.562.10.66634895666",
+                            "parentOid": "1.2.246.562.10.66634895871",
+                            "parentOidPath": "1.2.246.562.10.66634895666/1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001",
+                            "status": "AKTIIVINEN"
+                        }
+                    ],
+                    "oid": "1.2.246.562.10.66634895871",
+                    "parentOid": "1.2.246.562.10.594252633210",
+                    "parentOidPath": "1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001",
+                    "status": "AKTIIVINEN"
+                }
+            ],
+            "kieletUris": [
+                "oppilaitoksenopetuskieli_1#1"
+            ],
+            "kotipaikkaUri": "kunta_398",
+            "match": true,
+            "nimi": {
+                "fi": "Koulutuskeskus Salpaus -kuntayhtym\u00e4"
+            },
+            "oid": "1.2.246.562.10.594252633210",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_01"
+            ],
+            "parentOid": "1.2.246.562.10.00000000001",
+            "parentOidPath": "1.2.246.562.10.594252633210/1.2.246.562.10.00000000001",
+            "status": "AKTIIVINEN",
+            "toimipistekoodi": "",
+            "ytunnus": "0993644-6"
+        }
+    ]
+}

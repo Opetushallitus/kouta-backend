@@ -4,21 +4,26 @@ import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain
-import fi.oph.kouta.domain.{Ajanjakso, Haku}
+import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.{Ajanjakso, Haku, OidListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait HakuDAO extends EntityModificationDAO[String] {
-  def put(haku:Haku):Option[String]
-  def get(oid:String): Option[(Haku, Instant)]
-  def update(haku:Haku, notModifiedSince:Instant): Boolean
+trait HakuDAO extends EntityModificationDAO[HakuOid] {
+  def put(haku: Haku): Option[HakuOid]
+  def get(oid: HakuOid): Option[(Haku, Instant)]
+  def update(haku: Haku, notModifiedSince: Instant): Boolean
+
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
+  def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem]
 }
   
 object HakuDAO extends HakuDAO with HakuSQL {
 
-  override def put(haku: Haku): Option[String] = {
+  override def put(haku: Haku): Option[HakuOid] = {
     KoutaDatabase.runBlockingTransactionally( for {
       oid <- insertHaku(haku)
       _ <- insertHakuajat(haku.copy(oid = oid))
@@ -28,7 +33,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }
   }
 
-  override def get(oid: String): Option[(Haku, Instant)] = {
+  override def get(oid: HakuOid): Option[(Haku, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       h <- selectHaku(oid).as[Haku].headOption
       a <- selectHaunHakuajat(oid).as[Hakuaika]
@@ -51,22 +56,28 @@ object HakuDAO extends HakuDAO with HakuSQL {
       case Right((x, y)) => 0 < (x + y.sum)
     }
   }
+
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+
+  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
 }
 
 trait HakuModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
-  def selectModifiedSince(since:Instant): DBIO[Seq[String]] = {
+  def selectModifiedSince(since: Instant): DBIO[Seq[HakuOid]] = {
     sql"""select oid from haut where ${since} < lower(system_time)
           union
           select oid from haut_history where ${since} <@ system_time
           union
           select haku_oid from hakujen_hakuajat where ${since} < lower(system_time)
           union
-          select haku_oid from hakujen_hakuajat_history where ${since} <@ system_time""".as[String]
+          select haku_oid from hakujen_hakuajat_history where ${since} <@ system_time""".as[HakuOid]
   }
 
-  def selectLastModified(oid:String):DBIO[Option[Instant]] = {
+  def selectLastModified(oid: HakuOid): DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(ha.system_time)),
             max(lower(hah.system_time)),
@@ -82,9 +93,9 @@ trait HakuModificationSQL extends SQLHelpers {
 
 sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers {
 
-  def insertHaku(haku:Haku) = {
+  def insertHaku(haku: Haku) = {
     val Haku(_, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
-    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
+    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatioOid, _, muokkaaja, kielivalinta) = haku
     sql"""insert into haut ( tila,
                              nimi,
                              hakutapa_koodi_uri,
@@ -97,7 +108,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              hakulomaketyyppi,
                              hakulomake,
                              metadata,
-                             organisaatio,
+                             organisaatio_oid,
                              muokkaaja,
                              kielivalinta
           ) values ( ${tila.toString}::julkaisutila,
@@ -112,13 +123,13 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                      ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
                      ${hakulomake},
                      ${toJsonParam(metadata)}::jsonb,
-                     $organisaatio,
+                     $organisaatioOid,
                      $muokkaaja,
                      ${toJsonParam(kielivalinta)}::jsonb
-          ) returning oid""".as[String].headOption
+          ) returning oid""".as[HakuOid].headOption
   }
 
-  def insertHakuajat(haku:Haku) = {
+  def insertHakuajat(haku: Haku) = {
     DBIO.sequence(
       haku.hakuajat.map(t =>
         sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
@@ -129,18 +140,18 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                 ${haku.muokkaaja})"""))
   }
 
-  def selectHaku(oid:String) = {
+  def selectHaku(oid: HakuOid) = {
     sql"""select oid, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi_koodi_uri, alkamisvuosi,
-          kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake, metadata, organisaatio, muokkaaja, kielivalinta from haut where oid = $oid"""
+          kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake, metadata, organisaatio_oid, muokkaaja, kielivalinta from haut where oid = $oid"""
   }
 
-  def selectHaunHakuajat(oid:String) = {
+  def selectHaunHakuajat(oid: HakuOid) = {
     sql"""select haku_oid, lower(hakuaika), upper(hakuaika) from hakujen_hakuajat where haku_oid = $oid"""
   }
 
-  def updateHaku(haku:Haku) = {
+  def updateHaku(haku: Haku) = {
     val Haku(oid, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
-    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatio, _, muokkaaja, kielivalinta) = haku
+    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatioOid, _, muokkaaja, kielivalinta) = haku
     sqlu"""update haut set
               hakutapa_koodi_uri = $hakutapaKoodiUri,
               hakukohteen_liittamisen_takaraja = ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp,
@@ -151,7 +162,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
               kohdejoukon_tarkenne_koodi_uri = $kohdejoukonTarkenneKoodiUri,
               hakulomaketyyppi = ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
               hakulomake = $hakulomake,
-              organisaatio = $organisaatio,
+              organisaatio_oid = $organisaatioOid,
               tila = ${tila.toString}::julkaisutila,
               nimi = ${toJsonParam(nimi)}::jsonb,
               metadata = ${toJsonParam(metadata)}::jsonb,
@@ -167,24 +178,24 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or hakulomake is distinct from $hakulomake
             or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp
             or hakukohteen_muokkaamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp
-            or organisaatio is distinct from $organisaatio
+            or organisaatio_oid is distinct from $organisaatioOid
             or tila is distinct from ${tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb)"""
   }
 
-  def insertHakuaika(oid:Option[String], hakuaika:Ajanjakso, muokkaaja:String) = {
+  def insertHakuaika(oid: Option[HakuOid], hakuaika: Ajanjakso, muokkaaja: UserOid) = {
     sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
                values ($oid, tsrange(${formatTimestampParam(Some(hakuaika.alkaa))}::timestamp,
                                      ${formatTimestampParam(Some(hakuaika.paattyy))}::timestamp, '[)'), $muokkaaja)
                on conflict on constraint hakujen_hakuajat_pkey do nothing"""}
 
-  def deleteHakuajat(oid:Option[String], exclude:List[Ajanjakso]) = {
+  def deleteHakuajat(oid: Option[HakuOid], exclude: List[Ajanjakso]) = {
     sqlu"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)})"""
   }
 
-  def updateHaunHakuajat(haku:Haku) = {
+  def updateHaunHakuajat(haku: Haku) = {
     val (oid, hakuajat, muokkaaja) = (haku.oid, haku.hakuajat, haku.muokkaaja)
     if(hakuajat.size > 0) {
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
@@ -194,5 +205,19 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     } else {
       DBIO.sequence(List(sqlu"""delete from hakujen_hakuajat where haku_oid = $oid"""))
     }
+  }
+
+  def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from haut
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[OidListItem]
+  }
+
+  def selectByToteutusOid(toteutusOid: ToteutusOid) = {
+    sql"""select haut.oid, haut.nimi, haut.tila, haut.organisaatio_oid, haut.muokkaaja, lower(haut.system_time)
+          from haut
+          inner join hakukohteet on hakukohteet.haku_oid = haut.oid
+          inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
+          where toteutukset.oid = $toteutusOid""".as[OidListItem]
   }
 }

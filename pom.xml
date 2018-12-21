@@ -9,6 +9,8 @@
     <version>0.1-SNAPSHOT</version>
     <name>kouta-backend</name>
 
+    <!-- TODO: dependencyManagement käyttöön? -->
+
     <properties>
         <scala.version>2.12.6</scala.version>
 
@@ -77,6 +79,11 @@
                     <artifactId>jackson-core</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-properties_2.12</artifactId>
+            <version>${scala-utils.version}</version>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
@@ -254,6 +261,46 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-netty</artifactId>
+            <version>5.5.0</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.findbugs</groupId>
+                    <artifactId>jsr305</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>joda-time</groupId>
+                    <artifactId>joda-time</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <repositories>
@@ -377,7 +424,7 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>${plugin.scalatest-maven-plugin.version}</version>
                 <configuration>
-                    <membersOnlySuites>fi.oph.kouta.integration, fi.oph.kouta.validation</membersOnlySuites>
+                    <membersOnlySuites>fi.oph.kouta.integration, fi.oph.kouta.validation, fi.oph.kouta.client</membersOnlySuites>
                     <stdout>T</stdout>
                 </configuration>
                 <executions>

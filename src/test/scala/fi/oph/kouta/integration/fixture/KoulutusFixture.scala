@@ -2,6 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.KoulutusServlet
 import org.json4s.jackson.Serialization.read
@@ -14,13 +15,22 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
 
   val koulutus = TestData.AmmKoulutus
 
-  def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(oid))
-  def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(oid), tila = tila)
+  def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
+  def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
 
   def put(koulutus:Koulutus):String = put(KoulutusPath, koulutus, oid(_))
   def get(oid:String, expected:Koulutus):String = get(KoulutusPath, oid, expected)
   def update(koulutus:Koulutus, lastModified:String, expectUpdate:Boolean):Unit = update(KoulutusPath, koulutus, lastModified, expectUpdate)
   def update(koulutus:Koulutus, lastModified:String):Unit = update(koulutus, lastModified, true)
 
-  def list(params:List[(String, String)], expected:List[OidListResponse]):List[OidListResponse] = list(KoulutusPath, params, expected)
+
+
+  def koulutus(julkinen:Boolean, organisaatioOid:String, tila:Julkaisutila):Koulutus =
+    koulutus.copy(julkinen = julkinen, organisaatioOid = OrganisaatioOid(organisaatioOid), tila = tila)
+
+  def addToList(koulutus:Koulutus) = {
+    val oid = put(koulutus)
+    val modified = readModifiedByOid(oid, "koulutukset")
+    toOidListItem(oid, koulutus, modified)
+  }
 }
