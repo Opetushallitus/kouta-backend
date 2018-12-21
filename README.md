@@ -25,6 +25,10 @@ EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
     * ```template```-profiilissa asetukset rakennetaan .yml-templaten pohjalta
 * Template-tiedoston polku on oletuksena ```'/src/test/resources/dev-vars.yml'``` 
 
+### Testidatan generointi
+
+Lokaaliin kouta-backendiin saa generoitua testidataa ajamalla ```TestDataGenerator```.
+
 ### Swagger
 
 [http://localhost:8099/kouta-backend/swagger/index.html](http://localhost:8099/kouta-backend/swagger/index.html)
