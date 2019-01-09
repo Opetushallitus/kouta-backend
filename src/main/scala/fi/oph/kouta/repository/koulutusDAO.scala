@@ -129,7 +129,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def selectKoulutus(oid: KoulutusOid) = {
     sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila,
-                 nimi, metadata, julkinen, muokkaaja, organisaatio_oid, kielivalinta
+                 nimi, metadata, julkinen, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
           from koulutukset where oid = $oid"""
   }
 

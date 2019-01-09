@@ -271,7 +271,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              liitteiden_toimitusosoite,
              muokkaaja,
              organisaatio_oid,
-             kielivalinta from hakukohteet where oid = $oid""".as[Hakukohde].headOption
+             kielivalinta,
+             lower(system_time) from hakukohteet where oid = $oid""".as[Hakukohde].headOption
   }
 
   def insertHakuajat(hakukohde: Hakukohde) = {

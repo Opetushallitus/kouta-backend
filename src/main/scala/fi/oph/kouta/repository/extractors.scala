@@ -67,7 +67,8 @@ trait KoulutusExtractors extends ExtractorBase {
     julkinen = r.nextBoolean(),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption)))
+    kielivalinta = extractKielivalinta(r.nextStringOption),
+    modified = Some(extractModified(r.nextTimestamp()))))
 }
 
 trait ToteutusExtractors extends ExtractorBase {
@@ -80,7 +81,8 @@ trait ToteutusExtractors extends ExtractorBase {
     metadata = r.nextStringOption.map(read[ToteutusMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption)
+    kielivalinta = extractKielivalinta(r.nextStringOption),
+    modified = Some(extractModified(r.nextTimestamp()))
   ))
 }
 
@@ -102,7 +104,8 @@ trait HakuExtractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     hakuajat = List(),
     muokkaaja = UserOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption)
+    kielivalinta = extractKielivalinta(r.nextStringOption),
+    modified = Some(extractModified(r.nextTimestamp()))
   ))
 }
 
@@ -118,7 +121,8 @@ trait ValintaperusteExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption)
+    kielivalinta = extractKielivalinta(r.nextStringOption),
+    modified = Some(extractModified(r.nextTimestamp()))
   ))
 }
 
@@ -147,7 +151,8 @@ trait HakukohdeExctractors extends ExtractorBase {
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption)
+    kielivalinta = extractKielivalinta(r.nextStringOption),
+    modified = Some(extractModified(r.nextTimestamp()))
   ))
 
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(

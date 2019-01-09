@@ -74,7 +74,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = UserOid("5.4.3.2.1"), organisaatioOid = OrganisaatioOid("1.2"))
+    val unfinishedKoulutus = new Koulutus(johtaaTutkintoon = true, muokkaaja = UserOid("5.4.3.2.1"), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
     val oid = put(unfinishedKoulutus)
     val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
     val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid)), johtaaTutkintoon = false)
@@ -110,7 +110,9 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     get(s"$KoulutusPath/$oid/toteutukset") {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List(
-        toteutus(t1, oid), toteutus(t2, oid), toteutus(t3, oid)
+        toteutus(t1, oid).copy(modified = Some(readModifiedByOid(t1, "toteutukset"))),
+        toteutus(t2, oid).copy(modified = Some(readModifiedByOid(t2, "toteutukset"))),
+        toteutus(t3, oid).copy(modified = Some(readModifiedByOid(t3, "toteutukset")))
       ))
     }
   }

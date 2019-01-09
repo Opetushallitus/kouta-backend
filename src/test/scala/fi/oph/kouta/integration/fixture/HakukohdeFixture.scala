@@ -7,6 +7,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.HakukohdeServlet
+import org.scalactic.Equality
 
 trait HakukohdeFixture { this: KoutaIntegrationSpec =>
 
@@ -26,7 +27,7 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
     oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), tila = tila)
 
   def put(hakukohde:Hakukohde):String = put(HakukohdePath, hakukohde, oid(_))
-  def get(oid:String, expected:Hakukohde):String = get(HakukohdePath, oid, expected)
+  def get(oid:String, expected:Hakukohde):String = get(HakukohdePath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "hakukohteet"))))
   def update(haku:Hakukohde, lastModified:String, expectUpdate:Boolean):Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
   def update(haku:Hakukohde, lastModified:String):Unit = update(haku, lastModified, true)
 

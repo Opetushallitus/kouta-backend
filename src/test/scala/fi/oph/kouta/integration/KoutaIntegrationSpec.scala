@@ -4,9 +4,11 @@ import java.util.UUID
 
 import fi.oph.kouta.KoutaBackendSwagger
 import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.domain.{Perustiedot, Toteutus}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.read
+import org.scalactic.Equality
 import org.scalatest.DoNotDiscover
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
@@ -69,7 +71,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
-  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit mf: Manifest[E]): String = {
+  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
     get(s"$path/${id.toString}") {
       status should equal(200)
       debugJson(body)

@@ -24,6 +24,8 @@ object TestDataGenerator extends KoutaJsonFormats {
   val KoulutusCount = 50
   val DebugOids = false
 
+  val userOid = "1.2.246.562.24.62301161440"
+
   def main(args: Array[String]) {
     println(s"Generating test data to path $KoutaBackendPath")
     println(s"Koulutus count = $KoulutusCount")
@@ -83,7 +85,8 @@ object TestDataGenerator extends KoutaJsonFormats {
     tila = shuffle(Julkaisutila.values()).head,
     julkinen = (i%4 == 0),
     organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
-    tarjoajat = List(OrganisaatioOid(organisaatioOid(i)))
+    tarjoajat = List(OrganisaatioOid(organisaatioOid(i))),
+    muokkaaja = UserOid(userOid)
   )
 
   def toteutus(koulutusOid: String, i: Int, j: Int) = JulkaistuAmmToteutus.copy(
@@ -91,7 +94,8 @@ object TestDataGenerator extends KoutaJsonFormats {
     tila = shuffle(Julkaisutila.values()).head,
     koulutusOid = KoulutusOid(koulutusOid),
     organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
-    tarjoajat = getTarjoajat(i)
+    tarjoajat = getTarjoajat(i),
+    muokkaaja = UserOid(userOid)
   )
 
   def haku(i: Int) = JulkaistuHaku.copy(
