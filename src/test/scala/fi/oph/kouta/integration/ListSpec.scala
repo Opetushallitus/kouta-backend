@@ -131,6 +131,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     list(s"$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2))
   }
 
+  "Toteutukseen liitetyt hakukohteet" should "list all hakukohteet mapped to given toteutus" in {
+    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3))
+  }
+
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid), List(hk1, hk2))
   }

@@ -53,7 +53,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
 
   get("/:oid/toteutukset", operation(apiOperation[List[Toteutus]]("Hae koulutuksen kaikki toteutukset")
     tags modelName
-    summary "Palauttaa koulutuksen kaikki toteutukset esim. indeksointia varten"
+    summary "Palauttaa koulutuksen kaikki toteutukset indeksointia varten"
     parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
 
     Ok(KoulutusService.toteutukset(KoulutusOid(params("oid"))))

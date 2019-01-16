@@ -58,5 +58,13 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     Ok(ToteutusService.listHaut(ToteutusOid(params("oid"))))
   }
 
+  get("/:oid/hakukohteet/list", operation(apiOperation[List[OidListItem]]("Listaa toteutukseen liitetyt hakukohteet")
+    tags modelName
+    summary "Listaa toteutukseen liitetyt hakukohteet"
+    parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
+
+    Ok(ToteutusService.listHakukohteet(ToteutusOid(params("oid"))))
+  }
+
   prettifySwaggerModels()
 }
