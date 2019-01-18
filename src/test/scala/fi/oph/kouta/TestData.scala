@@ -55,7 +55,7 @@ object TestData {
     oid = None,
     johtaaTutkintoon = true,
     koulutustyyppi = Some(Amm),
-    koulutusKoodiUri = Some("koulutus_123456#1"),
+    koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))),

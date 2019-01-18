@@ -55,9 +55,9 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Listaa niiden hakuun liitettyjen hakukohteiden perustiedot, joihin organisaatiolla on oikeus"
     parameter pathParam[String]("oid").description("Haun oid")
-    parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
+    parameter queryParam[String]("organisaatioOid").description("Organisaation oid"))) {
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => Ok(HakuService.listHakukohteet(HakuOid(params("oid")))) //TODO: Vain oph/indeksoija saa nähdä kaiken. Koskee myös muiden servletien vastaavia rajapintoja.
       case Some(organisaatioOid) => Ok(HakuService.listHakukohteet(HakuOid(params("oid")), organisaatioOid))
     }
   }

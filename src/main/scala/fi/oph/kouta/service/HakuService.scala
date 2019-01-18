@@ -19,4 +19,7 @@ object HakuService extends ValidatingService[Haku] with AuthorizationService {
 
   def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, HakukohdeDAO.listByHakuOidAndOrganisaatioOids(hakuOid, _))
+
+  def listHakukohteet(hakuOid: HakuOid): Seq[OidListItem] =
+    HakukohdeDAO.listByHakuOid(hakuOid)
 }

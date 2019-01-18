@@ -18,6 +18,7 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def update(haku: Hakukohde, notModifiedSince: Instant): Boolean
 
   def listByToteutusOid(oid: ToteutusOid): Seq[OidListItem]
+  def listByHakuOid(hakuOid: HakuOid): Seq[OidListItem]
   def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
 }
 
@@ -99,6 +100,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   override def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByHakuOidAndOrganisaatioOids(hakuOid, organisaatioOids))
+
+  override def listByHakuOid(hakuOid: HakuOid): Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByHakuOid(hakuOid))
 
   override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
@@ -403,6 +407,12 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           from hakukohteet
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
           and haku_oid = $hakuOid""".as[OidListItem]
+  }
+
+  def selectByHakuOid(hakuOid: HakuOid) = {
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from hakukohteet
+          where haku_oid = $hakuOid""".as[OidListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
