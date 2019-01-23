@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{Hakutieto, Koulutus, OidListItem, Toteutus}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 
 object KoulutusService extends ValidatingService[Koulutus] with AuthorizationService {
@@ -15,7 +15,7 @@ object KoulutusService extends ValidatingService[Koulutus] with AuthorizationSer
 
     def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
 
-    def list(organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
+    def list(organisaatioOid: OrganisaatioOid): Seq[KoulutusListItem] =
         withAuthorizedChildAndParentOrganizationOids(organisaatioOid, KoulutusDAO.listByOrganisaatioOids)
 
     def toteutukset(oid: KoulutusOid, vainJulkaistut: Option[Boolean] = None): Seq[Toteutus] = vainJulkaistut match {
@@ -29,6 +29,6 @@ object KoulutusService extends ValidatingService[Koulutus] with AuthorizationSer
     def listToteutukset(oid: KoulutusOid): Seq[OidListItem] =
         ToteutusDAO.listByKoulutusOid(oid)
 
-    def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
+    def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid): Seq[ToteutusListItem] =
         withAuthorizedChildOrganizationOids(organisaatioOid, ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _))
 }

@@ -32,3 +32,10 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"))))
   }
 }
+
+case class KoulutusListItem(oid: KoulutusOid,
+                            nimi: Kielistetty,
+                            tila: Julkaisutila,
+                            organisaatioOid: OrganisaatioOid,
+                            muokkaaja: UserOid,
+                            modified: LocalDateTime) extends OidListItem

@@ -29,6 +29,6 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
   def addToList(haku:Haku) = {
     val oid = put(haku)
     val modified = readModifiedByOid(oid, "haut")
-    toOidListItem(oid, haku, modified)
+    new HakuListItem(HakuOid(oid), haku.nimi, haku.tila, haku.organisaatioOid, haku.muokkaaja, modified)
   }
 }

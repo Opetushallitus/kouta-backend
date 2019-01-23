@@ -5,7 +5,7 @@ import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Haku, OidListItem}
+import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 import slick.sql.SqlStreamingAction
@@ -17,8 +17,8 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def get(oid: HakuOid): Option[(Haku, Instant)]
   def update(haku: Haku, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
-  def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
+  def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
 }
   
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -57,10 +57,10 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem] =
+  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
 }
 
@@ -206,7 +206,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from haut
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[OidListItem]
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[HakuListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
@@ -214,6 +214,6 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
           from haut
           inner join hakukohteet on hakukohteet.haku_oid = haut.oid
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
-          where toteutukset.oid = $toteutusOid""".as[OidListItem]
+          where toteutukset.oid = $toteutusOid""".as[HakuListItem]
   }
 }

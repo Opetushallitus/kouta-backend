@@ -8,7 +8,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
-import slick.sql.{SqlAction, SqlStreamingAction}
+import slick.sql.SqlAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -17,9 +17,9 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)]
   def update(haku: Hakukohde, notModifiedSince: Instant): Boolean
 
-  def listByToteutusOid(oid: ToteutusOid): Seq[OidListItem]
-  def listByHakuOid(hakuOid: HakuOid): Seq[OidListItem]
-  def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
+  def listByToteutusOid(oid: ToteutusOid): Seq[HakukohdeListItem]
+  def listByHakuOid(hakuOid: HakuOid): Seq[HakukohdeListItem]
+  def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -98,13 +98,13 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
   }
 
-  override def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByHakuOidAndOrganisaatioOids(hakuOid, organisaatioOids))
 
-  override def listByHakuOid(hakuOid: HakuOid): Seq[OidListItem] =
+  override def listByHakuOid(hakuOid: HakuOid): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByHakuOid(hakuOid))
 
-  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem] =
+  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
 }
 
@@ -403,21 +403,21 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-          and haku_oid = $hakuOid""".as[OidListItem]
+          and haku_oid = $hakuOid""".as[HakukohdeListItem]
   }
 
   def selectByHakuOid(hakuOid: HakuOid) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
-          where haku_oid = $hakuOid""".as[OidListItem]
+          where haku_oid = $hakuOid""".as[HakukohdeListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
-          where toteutus_oid = $toteutusOid""".as[OidListItem]
+          where toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
   }
 }

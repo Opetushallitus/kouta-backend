@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.oid._
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
+import fi.oph.kouta.domain.{IdListItem, Valintaperuste, ValintaperusteListItem}
 import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
@@ -15,8 +15,8 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem]
-  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem]
+  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -50,10 +50,10 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem] =
+  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids, hakuOid))
 }
 
@@ -140,7 +140,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from valintaperusteet
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ValintaperusteListItem]
   }
 
   def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid) = {
@@ -149,6 +149,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
           and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and v.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
+          and v.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ValintaperusteListItem]
   }
 }

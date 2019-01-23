@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{Haku, OidListItem}
+import fi.oph.kouta.domain.{Haku, HakuListItem, HakukohdeListItem, OidListItem}
 import fi.oph.kouta.service.HakuService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -41,7 +41,7 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[OidListItem]]("Listaa kaikki haut, joihin käyttäjällä on oikeudet")
+  get("/list", operation(apiOperation[List[HakuListItem]]("Listaa kaikki haut, joihin käyttäjällä on oikeudet")
     tags modelName
     summary "Listaa kaikki haut, joihin käyttäjällä on oikeudet"
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
@@ -51,7 +51,7 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/:oid/hakukohteet/list", operation(apiOperation[List[OidListItem]]("Listaa hakuun liitetyt hakukohteet")
+  get("/:oid/hakukohteet/list", operation(apiOperation[List[HakukohdeListItem]]("Listaa hakuun liitetyt hakukohteet")
     tags modelName
     summary "Listaa niiden hakuun liitettyjen hakukohteiden perustiedot, joihin organisaatiolla on oikeus"
     parameter pathParam[String]("oid").description("Haun oid")

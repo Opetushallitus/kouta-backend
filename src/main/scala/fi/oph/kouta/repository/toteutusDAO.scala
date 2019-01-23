@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.ConcurrentModificationException
 
-import fi.oph.kouta.domain.{OidListItem, Toteutus}
+import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid._
 import slick.dbio.DBIO
@@ -18,9 +18,9 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
 
   def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
-  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
-  def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[OidListItem]
-  def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
+  def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
+  def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -109,13 +109,13 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[OidListItem] =
+  override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem] =
     KoutaDatabase.runBlocking(selectByKoulutusOid(koulutusOid))
 
-  override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
     KoutaDatabase.runBlocking(selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
 }
 
@@ -229,21 +229,21 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def deleteTarjoajat(oid: Option[ToteutusOid]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[OidListItem]
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOid(koulutusOid: KoulutusOid) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
-          where koulutus_oid = $koulutusOid""".as[OidListItem]
+          where koulutus_oid = $koulutusOid""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-          and koulutus_oid = $koulutusOid""".as[OidListItem]
+          and koulutus_oid = $koulutusOid""".as[ToteutusListItem]
   }
 }

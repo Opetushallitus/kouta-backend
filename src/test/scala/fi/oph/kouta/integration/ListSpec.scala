@@ -8,11 +8,11 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   val LonelyOid = "1.2.246.562.10.99999999999"
   val UnknownOid = "1.2.246.562.10.99999999998"
 
-  var k1, k2, k3, k4, k5:OidListItem = null
-  var t1, t2, t3, t4:OidListItem = null
-  var h1, h2, h3, h4:OidListItem = null
-  var v1, v2, v3, v4:IdListItem = null
-  var hk1, hk2, hk3, hk4:OidListItem = null
+  var k1, k2, k3, k4, k5 :KoulutusListItem = null
+  var t1, t2, t3, t4     :ToteutusListItem = null
+  var h1, h2, h3, h4     :HakuListItem = null
+  var v1, v2, v3, v4     :ValintaperusteListItem = null
+  var hk1, hk2, hk3, hk4 :HakukohdeListItem = null
 
   override def beforeAll() = {
     super.beforeAll()

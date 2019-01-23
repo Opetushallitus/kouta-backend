@@ -69,3 +69,10 @@ case class ValintaperusteKielitaitovaatimus(kieliKoodiUri: Option[String] = None
 
 case class ValintaperusteMetadata(valintatavat: Seq[Valintatapa],
                                   kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus])
+
+case class ValintaperusteListItem(id: UUID,
+                                  nimi: Kielistetty,
+                                  tila: Julkaisutila,
+                                  organisaatioOid: OrganisaatioOid,
+                                  muokkaaja: UserOid,
+                                  modified: LocalDateTime) extends IdListItem

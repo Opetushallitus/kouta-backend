@@ -13,7 +13,7 @@ trait Validations {
   def notNegativeMsg(name:String) = s"'$name' ei voi olla negatiivinen"
   def invalidKielistetty(field:String, values:Seq[Kieli]) = s"Kielistetystä kentästä $field puuttuu arvo kielillä [${values.mkString(",")}]"
   def invalidTutkintoonjohtavuus(tyyppi:String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
-  
+
   //Don't use vals! They might appear to Swagger randomly
   def KoulutusKoodiPattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   def HakutapaKoodiPattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")

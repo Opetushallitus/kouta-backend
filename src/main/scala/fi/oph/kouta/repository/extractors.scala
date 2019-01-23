@@ -34,24 +34,6 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
     UUID.fromString(r.nextString())
   })
-
-  implicit val getOidListItem: GetResult[OidListItem] = GetResult(r => OidListItem(
-    oid = GenericOid(r.nextString()),
-    nimi = extractKielistetty(r.nextStringOption),
-    tila = Julkaisutila.withName(r.nextString),
-    organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
-  ))
-
-  implicit val getIdListItem: GetResult[IdListItem] = GetResult(r => IdListItem(
-    id = UUID.fromString(r.nextString()),
-    nimi = extractKielistetty(r.nextStringOption),
-    tila = Julkaisutila.withName(r.nextString),
-    organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
-  ))
 }
 
 trait KoulutusExtractors extends ExtractorBase {
@@ -69,6 +51,15 @@ trait KoulutusExtractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption),
     modified = Some(extractModified(r.nextTimestamp()))))
+
+  implicit val getKoulutusListItem: GetResult[KoulutusListItem] = GetResult(r => KoulutusListItem(
+    oid = KoulutusOid(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption),
+    tila = Julkaisutila.withName(r.nextString),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
+  ))
 }
 
 trait ToteutusExtractors extends ExtractorBase {
@@ -83,6 +74,16 @@ trait ToteutusExtractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption),
     modified = Some(extractModified(r.nextTimestamp()))
+  ))
+
+  implicit val getToteutusListItemResult: GetResult[ToteutusListItem] = GetResult(r => ToteutusListItem(
+    oid = ToteutusOid(r.nextString),
+    koulutusOid = KoulutusOid(r.nextString),
+    nimi = extractKielistetty(r.nextStringOption),
+    tila = Julkaisutila.withName(r.nextString),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
   ))
 }
 
@@ -107,6 +108,15 @@ trait HakuExtractors extends ExtractorBase {
     kielivalinta = extractKielivalinta(r.nextStringOption),
     modified = Some(extractModified(r.nextTimestamp()))
   ))
+
+  implicit val getHakuListItem: GetResult[HakuListItem] = GetResult(r => HakuListItem(
+    oid = HakuOid(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption),
+    tila = Julkaisutila.withName(r.nextString),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
+  ))
 }
 
 trait ValintaperusteExtractors extends ExtractorBase {
@@ -123,6 +133,15 @@ trait ValintaperusteExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption),
     modified = Some(extractModified(r.nextTimestamp()))
+  ))
+
+  implicit val getValintaperusteListItemResult: GetResult[ValintaperusteListItem] = GetResult(r => ValintaperusteListItem(
+    id = UUID.fromString(r.nextString),
+    nimi = extractKielistetty(r.nextStringOption),
+    tila = Julkaisutila.withName(r.nextString),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
   ))
 }
 
@@ -153,6 +172,18 @@ trait HakukohdeExctractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption),
     modified = Some(extractModified(r.nextTimestamp()))
+  ))
+
+  implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] = GetResult(r => HakukohdeListItem(
+    oid = HakukohdeOid(r.nextString),
+    toteutusOid = ToteutusOid(r.nextString),
+    hakuOid = HakuOid(r.nextString),
+    valintaperusteId = r.nextStringOption.map(UUID.fromString),
+    nimi = extractKielistetty(r.nextStringOption),
+    tila = Julkaisutila.withName(r.nextString),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
   ))
 
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(

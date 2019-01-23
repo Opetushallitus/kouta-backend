@@ -71,3 +71,13 @@ case class Liite(id: Option[UUID] = None,
 
 case class LiitteenToimitusosoite(osoite: Osoite,
                                   sahkoposti: Option[String] = None)
+
+case class HakukohdeListItem(oid: HakukohdeOid,
+                             toteutusOid: ToteutusOid,
+                             hakuOid: HakuOid,
+                             valintaperusteId: Option[UUID],
+                             nimi: Kielistetty,
+                             tila: Julkaisutila,
+                             organisaatioOid: OrganisaatioOid,
+                             muokkaaja: UserOid,
+                             modified: LocalDateTime) extends OidListItem

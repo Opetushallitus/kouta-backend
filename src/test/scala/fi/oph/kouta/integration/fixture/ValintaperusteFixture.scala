@@ -32,6 +32,7 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
   def addToList(valintaperuste:Valintaperuste) = {
     val id = put(valintaperuste)
     val modified = readModifiedById(id, "valintaperusteet")
-    toIdListItem(id, valintaperuste, modified)
+    new ValintaperusteListItem(id, valintaperuste.nimi, valintaperuste.tila,
+      valintaperuste.organisaatioOid, valintaperuste.muokkaaja, modified)
   }
 }

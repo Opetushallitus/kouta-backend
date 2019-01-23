@@ -46,3 +46,11 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
      validateOidList(tarjoajat)
   )
 }
+
+case class ToteutusListItem(oid: ToteutusOid,
+                            koulutusOid: KoulutusOid,
+                            nimi: Kielistetty,
+                            tila: Julkaisutila,
+                            organisaatioOid: OrganisaatioOid,
+                            muokkaaja: UserOid,
+                            modified: LocalDateTime) extends OidListItem

@@ -15,7 +15,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[OidListItem]
+  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[KoulutusListItem]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -63,7 +63,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 }
 
@@ -177,6 +177,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from koulutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-          or julkinen = ${true}""".as[OidListItem]
+          or julkinen = ${true}""".as[KoulutusListItem]
   }
 }

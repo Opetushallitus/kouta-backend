@@ -41,7 +41,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[OidListItem]]("Listaa käytettävissä olevat koulutukset")
+  get("/list", operation(apiOperation[List[KoulutusListItem]]("Listaa käytettävissä olevat koulutukset")
     tags modelName
     summary "Listaa niiden koulutusten perustiedot, joita organisaatio voi käyttää"
     parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
@@ -59,7 +59,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     Ok(KoulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").map(_.toBoolean)))
   }
 
-  get("/:oid/toteutukset/list", operation(apiOperation[List[OidListItem]]("Listaa koulutuksen toteutukset")
+  get("/:oid/toteutukset/list", operation(apiOperation[List[ToteutusListItem]]("Listaa koulutuksen toteutukset")
     tags modelName
     summary "Listaa niiden koulutukseen kuuluvien toteutusten perustiedot, joihin organisaatiolla on oikeus"
     parameter pathParam[String]("oid").description("Koulutuksen oid")

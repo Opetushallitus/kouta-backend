@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{OidListItem, Toteutus}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.service.ToteutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -41,7 +41,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[OidListItem]]("Listaa kaikki toteutukset, joihin käyttäjällä on oikeudet")
+  get("/list", operation(apiOperation[List[ToteutusListItem]]("Listaa kaikki toteutukset, joihin käyttäjällä on oikeudet")
     tags modelName
     summary "Listaa kaikki toteutukset, joihin käyttäjällä on oikeudet"
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
@@ -51,14 +51,14 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/:oid/haut/list", operation(apiOperation[List[OidListItem]]("Listaa toteutukseen liitetyt haut")
+  get("/:oid/haut/list", operation(apiOperation[List[HakuListItem]]("Listaa toteutukseen liitetyt haut")
     tags modelName
     summary "Listaa toteutukseen liitetyt haut"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
     Ok(ToteutusService.listHaut(ToteutusOid(params("oid"))))
   }
 
-  get("/:oid/hakukohteet/list", operation(apiOperation[List[OidListItem]]("Listaa toteutukseen liitetyt hakukohteet")
+  get("/:oid/hakukohteet/list", operation(apiOperation[List[HakukohdeListItem]]("Listaa toteutukseen liitetyt hakukohteet")
     tags modelName
     summary "Listaa toteutukseen liitetyt hakukohteet"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {

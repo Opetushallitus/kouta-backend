@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{Haku, OidListItem}
+import fi.oph.kouta.domain.{Haku, HakuListItem, HakukohdeListItem, OidListItem}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 
 object HakuService extends ValidatingService[Haku] with AuthorizationService {
@@ -14,12 +14,12 @@ object HakuService extends ValidatingService[Haku] with AuthorizationService {
 
   def get(oid: HakuOid): Option[(Haku, Instant)] = HakuDAO.get(oid)
 
-  def list(organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
+  def list(organisaatioOid: OrganisaatioOid): Seq[HakuListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, HakuDAO.listByOrganisaatioOids)
 
-  def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
+  def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, HakukohdeDAO.listByHakuOidAndOrganisaatioOids(hakuOid, _))
 
-  def listHakukohteet(hakuOid: HakuOid): Seq[OidListItem] =
+  def listHakukohteet(hakuOid: HakuOid): Seq[HakukohdeListItem] =
     HakukohdeDAO.listByHakuOid(hakuOid)
 }

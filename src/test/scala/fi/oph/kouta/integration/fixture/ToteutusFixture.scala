@@ -34,6 +34,7 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
   def addToList(toteutus:Toteutus) = {
     val oid = put(toteutus)
     val modified = readModifiedByOid(oid, "toteutukset")
-    toOidListItem(oid, toteutus, modified)
+    new ToteutusListItem(ToteutusOid(oid), toteutus.koulutusOid, toteutus.nimi, toteutus.tila,
+      toteutus.organisaatioOid, toteutus.muokkaaja, modified)
   }
 }
