@@ -17,7 +17,9 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean
   def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
 
+  def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
   def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
+  def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[OidListItem]
   def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
 }
 
@@ -90,11 +92,28 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       }
   }
 
+  override def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        toteutukset <- selectJulkaistutToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
+      } yield (toteutukset, tarjoajat) ) match {
+      case Left(t) => throw t
+      case Right((toteutukset, tarjoajat)) => {
+        toteutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
+      }
+    }
+  }
+
   override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+
+  override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[OidListItem] =
+    KoutaDatabase.runBlocking(selectByKoulutusOid(koulutusOid))
 
   override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
     KoutaDatabase.runBlocking(selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
@@ -131,10 +150,20 @@ trait ToteutusModificationSQL extends SQLHelpers {
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   def selectToteutus(oid: ToteutusOid) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time) from toteutukset where oid = $oid"""
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
+          from toteutukset
+          where oid = $oid"""
 
   def selectToteutuksetByKoulutusOid(oid: KoulutusOid) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time) from toteutukset where koulutus_oid = $oid"""
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
+          from toteutukset
+          where koulutus_oid = $oid"""
+
+  def selectJulkaistutToteutuksetByKoulutusOid(oid: KoulutusOid) =
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
+          from toteutukset
+          where koulutus_oid = $oid
+          and tila = 'julkaistu'::julkaisutila"""
 
   def selectToteutuksenTarjoajat(oid: ToteutusOid) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
@@ -203,6 +232,12 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[OidListItem]
+  }
+
+  def selectByKoulutusOid(koulutusOid: KoulutusOid) = {
+    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from toteutukset
+          where koulutus_oid = $koulutusOid""".as[OidListItem]
   }
 
   def selectByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]) = {

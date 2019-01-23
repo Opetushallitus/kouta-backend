@@ -123,8 +123,8 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> UnknownOid), 403)
   }
-  it should "return 404 if organisaatio oid not given" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), 404)
+  it should "return all toteutukset if organisaatio oid not given" in { //TODO: oikeudet
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), List(t1, t2, t3))
   }
 
   "Toteutukseen liitetyt haut" should "list all haut mapped to given toteutus" in {

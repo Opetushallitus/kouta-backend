@@ -3,8 +3,8 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{Koulutus, OidListItem, Toteutus}
-import fi.oph.kouta.repository.{KoulutusDAO, ToteutusDAO}
+import fi.oph.kouta.domain.{Hakutieto, Koulutus, OidListItem, Toteutus}
+import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 
 object KoulutusService extends ValidatingService[Koulutus] with AuthorizationService {
 
@@ -18,7 +18,16 @@ object KoulutusService extends ValidatingService[Koulutus] with AuthorizationSer
     def list(organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
         withAuthorizedChildAndParentOrganizationOids(organisaatioOid, KoulutusDAO.listByOrganisaatioOids)
 
-    def toteutukset(oid: KoulutusOid): Seq[Toteutus] = ToteutusDAO.getByKoulutusOid(oid)
+    def toteutukset(oid: KoulutusOid, vainJulkaistut: Option[Boolean] = None): Seq[Toteutus] = vainJulkaistut match {
+        case Some(true) => ToteutusDAO.getJulkaistutByKoulutusOid(oid)
+        case _ => ToteutusDAO.getByKoulutusOid(oid)
+    }
+
+    def hakutiedot(oid: KoulutusOid): Seq[Hakutieto] =
+        HakutietoDAO.getByKoulutusOid(oid)
+
+    def listToteutukset(oid: KoulutusOid): Seq[OidListItem] =
+        ToteutusDAO.listByKoulutusOid(oid)
 
     def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
         withAuthorizedChildOrganizationOids(organisaatioOid, ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _))

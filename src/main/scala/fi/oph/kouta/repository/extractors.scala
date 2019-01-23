@@ -172,4 +172,38 @@ trait HakukohdeExctractors extends ExtractorBase {
   ))
 }
 
+trait HakutietoExtractors extends ExtractorBase {
+
+  implicit val getHakutietoHakuResult: GetResult[(ToteutusOid, HakutietoHaku)] = GetResult(r =>
+    ( ToteutusOid(r.nextString), HakutietoHaku(
+      hakuOid = HakuOid(r.nextString),
+      nimi = extractKielistetty(r.nextStringOption),
+      hakutapaKoodiUri = r.nextStringOption,
+      alkamiskausiKoodiUri = r.nextStringOption,
+      alkamisvuosi = r.nextStringOption,
+      hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
+      hakulomake = r.nextStringOption(),
+      organisaatioOid = OrganisaatioOid(r.nextString()),
+      hakuajat = List(),
+      muokkaaja = UserOid(r.nextString()),
+      modified = Some(extractModified(r.nextTimestamp())),
+      hakukohteet = Seq())))
+
+  implicit val getHakutietoHakukohdeResult: GetResult[(ToteutusOid, HakuOid, HakutietoHakukohde)] = GetResult(r =>
+    ( ToteutusOid(r.nextString()), HakuOid(r.nextString()), HakutietoHakukohde(
+      hakukohdeOid = HakukohdeOid(r.nextString),
+      nimi = extractKielistetty(r.nextStringOption),
+      alkamiskausiKoodiUri = r.nextStringOption,
+      alkamisvuosi = r.nextStringOption,
+      hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
+      hakulomake = r.nextStringOption(),
+      aloituspaikat = r.nextIntOption(),
+      ensikertalaisenAloituspaikat = r.nextIntOption(),
+      kaytetaanHaunAikataulua = r.nextBooleanOption(),
+      organisaatioOid = OrganisaatioOid(r.nextString()),
+      hakuajat = List(),
+      muokkaaja = UserOid(r.nextString()),
+      modified = Some(extractModified(r.nextTimestamp())))))
+}
+
 trait KeywordExtractors extends ExtractorBase
