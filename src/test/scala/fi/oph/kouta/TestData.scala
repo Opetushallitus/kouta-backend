@@ -96,7 +96,7 @@ object TestData {
     hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
     aloituspaikat = Some(2),
     ensikertalaisenAloituspaikat = Some(1),
-    pohjakoulutusvaatimusKoodiUri = Some("pohjakoulutusvaatimus_01#2"),
+    pohjakoulutusvaatimusKoodiUri = Some("pohjakoulutusvaatimustoinenaste_01#2"),
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
     kaytetaanHaunAikataulua = Some(false),

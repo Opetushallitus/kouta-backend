@@ -19,7 +19,7 @@ trait Validations {
   val KausiKoodiPattern = Pattern.compile("""kausi_\w{1}#\d{1,2}""")
   val KohdejoukkoKoodiPattern = Pattern.compile("""kohdejoukko_\d+#\d{1,2}""")
   val KohdejoukonTarkenneKoodiPattern = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
-  val PohjakoulutusvaatimusKoodiPattern = Pattern.compile("""pohjakoulutusvaatimus_\d+#\d{1,2}""")
+  val PohjakoulutusvaatimusKoodiPattern = Pattern.compile("""pohjakoulutusvaatimustoinenaste_\d+#\d{1,2}""")
 
   val VuosiPattern = Pattern.compile("""\d{4}""")
 
