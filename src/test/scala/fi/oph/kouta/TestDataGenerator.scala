@@ -1,5 +1,7 @@
 package fi.oph.kouta
 
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import fi.oph.kouta.EmbeddedJettyLauncher.DEFAULT_PORT
@@ -12,16 +14,21 @@ import org.json4s.jackson.Serialization.{read, write}
 import scalaj.http.Http
 
 import scala.util.Random.shuffle
-import fi.oph.kouta.TestData._
+import fi.oph.kouta.TestData.{inFuture, now, _}
+import fi.oph.kouta.domain.keyword.Keyword
 
 /* Generate random test data to local kouta-backend */
 object TestDataGenerator extends KoutaJsonFormats {
+
+  def inPast() = LocalDateTime.now().minusWeeks(2).truncatedTo(ChronoUnit.MINUTES)
+  def now() = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+  def inFuture() = LocalDateTime.now().plusWeeks(2).truncatedTo(ChronoUnit.MINUTES)
 
   val KoutaBackendPath = System.getProperty(
     "test-data-generator.path",
     s"http://localhost:${System.getProperty("kouta-backend.port", DEFAULT_PORT)}/kouta-backend")
 
-  val KoulutusCount = 50
+  val KoulutusCount = 500
   val DebugOids = false
 
   val userOid = "1.2.246.562.24.62301161440"
@@ -81,7 +88,11 @@ object TestDataGenerator extends KoutaJsonFormats {
   }
 
   def koulutus(i: Int) = AmmKoulutus.copy(
-    nimi = Map(Fi -> s"Koulutus $i", Sv -> s"Koulutus $i sv"),
+    nimi = shuffle(List[Kielistetty](Map(Fi -> s"Koulutus $i", Sv -> s"Koulutus $i sv"),
+                                     Map(Fi -> s"Humanistinen koulutus $i", Sv -> s"Humanistinen koulutus $i sv"),
+                                     Map(Fi -> s"Psykologian perustutkinto $i", Sv -> s"Psykologian perustutkinto $i sv"),
+                                     Map(Fi -> s"Autoalan perustutkinto $i", Sv -> s"Autoaland perustutkinto $i sv"),
+                                     Map(Fi -> s"Lääketieteen koulutus $i", Sv -> s"Lääketieteen koulutus $i sv"))).head,
     tila = shuffle(Julkaisutila.values()).head,
     julkinen = (i%4 == 0),
     organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
@@ -89,18 +100,27 @@ object TestDataGenerator extends KoutaJsonFormats {
     muokkaaja = UserOid(userOid)
   )
 
+  def updateAsiasanat(metadata: ToteutusMetadata): ToteutusMetadata = {
+    metadata.copy(
+      asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka"), Keyword(Fi, "musiikkioppilaitokset"),  Keyword(Fi, "hevoset"), Keyword(Fi, "psykologia")),
+      ammattinimikkeet = List(Keyword(Fi, "automaatioinsinööri"), Keyword(Fi, "koneinsinööri"), Keyword(Fi, "muusikko"), Keyword(Fi, "psykologi"), Keyword(Fi, "hevonen"))
+    )
+  }
+
   def toteutus(koulutusOid: String, i: Int, j: Int) = JulkaistuAmmToteutus.copy(
     nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
     tila = shuffle(Julkaisutila.values()).head,
     koulutusOid = KoulutusOid(koulutusOid),
     organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
     tarjoajat = getTarjoajat(i),
-    muokkaaja = UserOid(userOid)
+    muokkaaja = UserOid(userOid),
+    metadata = Some(updateAsiasanat(JulkaistuAmmToteutus.metadata.get))
   )
 
   def haku(i: Int) = JulkaistuHaku.copy(
     nimi = Map(Fi -> s"Haku $i", Sv -> s"Haku $i sv"),
     tila = shuffle(Julkaisutila.values()).head,
+    hakuajat = List(Ajanjakso(alkaa = inPast(), paattyy = inFuture())),
     organisaatioOid = OrganisaatioOid(organisaatioOid(i))
   )
 
@@ -110,6 +130,8 @@ object TestDataGenerator extends KoutaJsonFormats {
     toteutusOid = ToteutusOid(toteutusOid),
     hakuOid = HakuOid(hakuOid),
     valintaperusteId = Some(UUID.fromString(valintaperusteId)),
+    hakuajat = shuffle(List(List(Ajanjakso(alkaa = inPast(), paattyy = now())), List(Ajanjakso(alkaa = inPast(), paattyy = inFuture())))).head,
+    kaytetaanHaunAikataulua = shuffle(List(Some(false), Some(true))).head,
     organisaatioOid = getTarjoajat(i)(k)
   )
 
