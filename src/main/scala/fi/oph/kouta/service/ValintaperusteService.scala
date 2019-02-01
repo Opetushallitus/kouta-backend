@@ -4,8 +4,8 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{IdListItem, Valintaperuste, ValintaperusteListItem}
-import fi.oph.kouta.repository.ValintaperusteDAO
+import fi.oph.kouta.domain.{HakukohdeListItem, IdListItem, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 
 object ValintaperusteService extends ValidatingService[Valintaperuste] with AuthorizationService {
 
@@ -20,4 +20,7 @@ object ValintaperusteService extends ValidatingService[Valintaperuste] with Auth
 
   def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid): Seq[ValintaperusteListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.ListByOrganisaatioOidAndHaunKohdejoukko(_, hakuOid))
+
+  def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem] =
+    HakukohdeDAO.listByValintaperusteId(valintaperusteId)
 }

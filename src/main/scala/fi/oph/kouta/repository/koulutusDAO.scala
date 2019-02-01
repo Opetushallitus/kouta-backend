@@ -15,7 +15,8 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]):Seq[KoulutusListItem]
+  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]) :Seq[KoulutusListItem]
+  def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -65,6 +66,9 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+
+  override def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem] =
+    KoutaDatabase.runBlocking(selectByHakuOid(hakuOid))
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -178,5 +182,13 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           from koulutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
           or julkinen = ${true}""".as[KoulutusListItem]
+  }
+
+  def selectByHakuOid(hakuOid: HakuOid) = {
+    sql"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, lower(k.system_time)
+          from koulutukset k
+          inner join toteutukset t on k.oid = t.koulutus_oid
+          inner join hakukohteet h on t.oid = h.toteutus_oid
+          where h.haku_oid = ${hakuOid.toString}""".as[KoulutusListItem]
   }
 }

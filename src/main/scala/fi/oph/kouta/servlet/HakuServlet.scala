@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{Haku, HakuListItem, HakukohdeListItem, OidListItem}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.service.HakuService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -60,6 +60,13 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
       case None => Ok(HakuService.listHakukohteet(HakuOid(params("oid")))) //TODO: Vain oph/indeksoija saa nähdä kaiken. Koskee myös muiden servletien vastaavia rajapintoja.
       case Some(organisaatioOid) => Ok(HakuService.listHakukohteet(HakuOid(params("oid")), organisaatioOid))
     }
+  }
+  get("/:oid/koulutukset/list", operation(apiOperation[List[KoulutusListItem]]("Listaa hakuun liittyvät koulutukset")
+    tags modelName
+    summary "Listaa hakuun liittyvät koulutukset"
+    parameter pathParam[String]("oid").description("Haun oid"))) {
+
+    Ok(HakuService.listKoulutukset(HakuOid(params("oid"))))
   }
 
   prettifySwaggerModels()

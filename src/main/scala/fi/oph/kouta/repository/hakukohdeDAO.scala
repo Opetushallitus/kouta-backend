@@ -20,6 +20,7 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByToteutusOid(oid: ToteutusOid): Seq[HakukohdeListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[HakukohdeListItem]
   def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
+  def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -106,6 +107,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
+
+  override def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem] =
+    KoutaDatabase.runBlocking(selectByValintaperusteId(valintaperusteId))
 }
 
 sealed trait HakukohdeModificationSQL extends SQLHelpers {
@@ -419,5 +423,11 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
           where toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
+  }
+
+  def selectByValintaperusteId(valintaperusteId: UUID) = {
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from hakukohteet
+          where valintaperuste = ${valintaperusteId.toString}::uuid""".as[HakukohdeListItem]
   }
 }

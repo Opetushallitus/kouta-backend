@@ -114,6 +114,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     list(ValintaperustePath, Map[String,String](), 404)
   }
 
+  "Valintaperustetta käyttävät hakukohteet list" should "list all hakukohteet using given valintaperuste id" in {
+    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
+  }
+
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid), List(t1, t2, t3))
   }
@@ -149,5 +153,9 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
   it should "return all if organisaatio oid not given" in { //TODO: OIKEUDET!
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), List(hk1, hk2, hk4))
+  }
+
+  "Hakuun kuuluvat koulutukset" should "list all koulutukset mapped to given haku by hakukohde" in {
+    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), List(k1, k4))
   }
 }
