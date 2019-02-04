@@ -102,7 +102,7 @@ object TestData {
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
     kaytetaanHaunAikataulua = Some(false),
-    valintaperuste = None,
+    valintaperusteId = None,
     liitteetOnkoSamaToimitusaika = Some(true),
     liitteetOnkoSamaToimitusosoite = Some(false),
     liitteidenToimitusaika = Some(inFuture()),

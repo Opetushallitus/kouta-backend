@@ -17,13 +17,13 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
   val hakukohde = JulkaistuHakukohde
 
   def hakukohde(toteutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
-    toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperuste = Some(valintaperusteId))
+    toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId))
 
   def hakukohde(oid:String, toteutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
-    oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperuste = Some(valintaperusteId))
+    oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId))
 
   def hakukohde(oid:String, toteutusOid:String, hakuOid:String, valintaperusteId:UUID, tila:Julkaisutila):Hakukohde = hakukohde.copy(
-    oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperuste = Some(valintaperusteId), tila = tila)
+    oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), tila = tila)
 
   def put(hakukohde:Hakukohde):String = put(HakukohdePath, hakukohde, oid(_))
   def get(oid:String, expected:Hakukohde):String = get(HakukohdePath, oid, expected)
@@ -32,7 +32,7 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
 
 
   def hakukohde(toteutusOid:String, hakuOid:String, valintaperusteId:UUID, organisaatioOid:String):Hakukohde = hakukohde.copy(
-    toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperuste = Some(valintaperusteId), organisaatioOid = OrganisaatioOid(organisaatioOid))
+    toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), organisaatioOid = OrganisaatioOid(organisaatioOid))
 
   def addToList(hakukohde:Hakukohde) = {
     val oid = put(hakukohde)
