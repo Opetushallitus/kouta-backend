@@ -198,12 +198,15 @@ object TestData {
   val MinValintaperuste = new Valintaperuste(muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"))
 
   val ToteutuksenOpetus = Opetus(
-    opetuskielet = List("kieli_fi#1"),
+    opetuskieliKoodiUrit = Seq("kieli_fi#1"),
+    opetuskieletKuvaus = Map(Fi -> "Kielikuvaus fi", Sv -> "Kielikuvaus sv"),
     opetusaikaKoodiUri = Some("opetusaikakk_1#1"),
-    opetustapaKoodiUri = Some("opetuspaikkakk_1#1"),
+    opetusaikaKuvaus = Map(Fi -> "Opetusaikakuvaus fi", Sv -> "Opetusaikakuvaus sv"),
+    opetustapaKoodiUrit = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
+    opetustapaKuvaus = Map(Fi -> "Opetustapakuvaus fi", Sv -> "Opetustapakuvaus sv"),
     onkoMaksullinen = Some(true),
+    maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Map(Fi -> "200,50 euroa", Sv -> "200,50 euro"),
-    kuvaus = Map(Fi -> "Kuvaus fi", Sv -> "Kuvaus sv"),
     osiot = List(
       Osio(otsikko = Map(Fi -> "Opintojen rakenne", Sv -> "Rakenne sv"),
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
