@@ -18,7 +18,7 @@ trait Validations {
   def KoulutusKoodiPattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   def HakutapaKoodiPattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
   def KausiKoodiPattern = Pattern.compile("""kausi_\w{1}#\d{1,2}""")
-  def KohdejoukkoKoodiPattern = Pattern.compile("""kohdejoukko_\d+#\d{1,2}""")
+  def KohdejoukkoKoodiPattern = Pattern.compile("""haunkohdejoukko_\d+#\d{1,2}""")
   def KohdejoukonTarkenneKoodiPattern = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
   def PohjakoulutusvaatimusKoodiPattern = Pattern.compile("""pohjakoulutusvaatimustoinenaste_\w+#\d{1,2}""")
   def ValintatapajonoKoodiPattern = Pattern.compile("""valintatapajono_\w{2}\d{1,2}""")
