@@ -14,19 +14,20 @@ trait Validations {
   def invalidKielistetty(field:String, values:Seq[Kieli]) = s"Kielistetystä kentästä $field puuttuu arvo kielillä [${values.mkString(",")}]"
   def invalidTutkintoonjohtavuus(tyyppi:String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
 
-  val KoulutusKoodiPattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
-  val HakutapaKoodiPattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
-  val KausiKoodiPattern = Pattern.compile("""kausi_\w{1}#\d{1,2}""")
-  val KohdejoukkoKoodiPattern = Pattern.compile("""kohdejoukko_\d+#\d{1,2}""")
-  val KohdejoukonTarkenneKoodiPattern = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
-  val PohjakoulutusvaatimusKoodiPattern = Pattern.compile("""pohjakoulutusvaatimustoinenaste_\w+#\d{1,2}""")
-  val ValintatapajonoKoodiPattern = Pattern.compile("""valintatapajono_\w{2}\d{1,2}""")
+  //Don't use vals! They might appear to Swagger randomly
+  def KoulutusKoodiPattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
+  def HakutapaKoodiPattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
+  def KausiKoodiPattern = Pattern.compile("""kausi_\w{1}#\d{1,2}""")
+  def KohdejoukkoKoodiPattern = Pattern.compile("""kohdejoukko_\d+#\d{1,2}""")
+  def KohdejoukonTarkenneKoodiPattern = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
+  def PohjakoulutusvaatimusKoodiPattern = Pattern.compile("""pohjakoulutusvaatimustoinenaste_\w+#\d{1,2}""")
+  def ValintatapajonoKoodiPattern = Pattern.compile("""valintatapajono_\w{2}\d{1,2}""")
 
-  val VuosiPattern = Pattern.compile("""\d{4}""")
+  def VuosiPattern = Pattern.compile("""\d{4}""")
 
-  val MissingKielivalinta = "Kielivalinta puuttuu"
-  val InvalidHakuaika = "Hakuaika on virheellinen"
-  val MissingTarjoajat = "Tarjoajat puuttuvat"
+  def MissingKielivalinta = "Kielivalinta puuttuu"
+  def InvalidHakuaika = "Hakuaika on virheellinen"
+  def MissingTarjoajat = "Tarjoajat puuttuvat"
 
   def toLeft(msg: String) = Left(List(msg))
 
