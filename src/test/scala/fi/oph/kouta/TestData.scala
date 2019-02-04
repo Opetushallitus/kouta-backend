@@ -22,7 +22,8 @@ object TestData {
     nimi = Map(Fi -> "Aku Ankka", Sv -> "Aku Ankka"),
     puhelinnumero = Map(Fi -> "123", Sv -> "123"),
     sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"),
-    titteli = Map(Fi -> "titteli", Sv -> "titteli sv"))
+    titteli = Map(Fi -> "titteli", Sv -> "titteli sv"),
+    wwwSivu = Map(Fi -> "http://opintopolku.fi", Sv -> "http://studieinfo.fi"))
 
   val Liite1 = Liite(
     id = None,
