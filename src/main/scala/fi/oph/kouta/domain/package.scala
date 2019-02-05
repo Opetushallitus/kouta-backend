@@ -74,7 +74,8 @@ package object domain {
   case class Yhteystieto(nimi: Kielistetty = Map(),
                          titteli: Kielistetty = Map(),
                          sahkoposti: Kielistetty = Map(),
-                         puhelinnumero: Kielistetty = Map())
+                         puhelinnumero: Kielistetty = Map(),
+                         wwwSivu: Kielistetty = Map())
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 

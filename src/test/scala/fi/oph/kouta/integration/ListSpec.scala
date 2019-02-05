@@ -43,11 +43,11 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     t4 = addToList(toteutus(k4.oid.toString, Julkaistu, LonelyOid))
     h1 = addToList(haku(Julkaistu, ParentOid))
     h2 = addToList(haku(Arkistoitu, ChildOid))
-    h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("kohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
+    h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
     v1 = addToList(valintaperuste(Julkaistu, ParentOid))
     v2 = addToList(valintaperuste(Arkistoitu, ChildOid))
-    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("kohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
+    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     v4 = addToList(valintaperuste(Julkaistu, LonelyOid))
 
     hk1 = addToList(hakukohde(t1.oid.toString, h1.oid.toString, v1.id, ParentOid))

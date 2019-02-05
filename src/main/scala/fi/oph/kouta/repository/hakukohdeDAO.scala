@@ -161,7 +161,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             muu_pohjakoulutusvaatimus_kuvaus,
             toinen_aste_onko_kaksoistutkinto,
             kaytetaan_haun_aikataulua,
-            valintaperuste,
+            valintaperuste_id,
             liitteet_onko_sama_toimitusaika,
             liitteet_onko_sama_toimitusosoite,
             liitteiden_toimitusaika,
@@ -185,7 +185,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
             ${hakukohde.toinenAsteOnkoKaksoistutkinto},
             ${hakukohde.kaytetaanHaunAikataulua},
-            ${hakukohde.valintaperuste.map(_.toString)}::uuid,
+            ${hakukohde.valintaperusteId.map(_.toString)}::uuid,
             ${hakukohde.liitteetOnkoSamaToimitusaika},
             ${hakukohde.liitteetOnkoSamaToimitusosoite},
             ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
@@ -213,7 +213,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               muu_pohjakoulutusvaatimus_kuvaus = ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
               toinen_aste_onko_kaksoistutkinto = ${hakukohde.toinenAsteOnkoKaksoistutkinto},
               kaytetaan_haun_aikataulua = ${hakukohde.kaytetaanHaunAikataulua},
-              valintaperuste = ${hakukohde.valintaperuste.map(_.toString)}::uuid,
+              valintaperuste_id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid,
               liitteet_onko_sama_toimitusaika = ${hakukohde.liitteetOnkoSamaToimitusaika},
               liitteet_onko_sama_toimitusosoite = ${hakukohde.liitteetOnkoSamaToimitusosoite},
               liitteiden_toimitusaika = ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
@@ -237,7 +237,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or muu_pohjakoulutusvaatimus_kuvaus is distinct from ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
             or toinen_aste_onko_kaksoistutkinto is distinct from ${hakukohde.toinenAsteOnkoKaksoistutkinto}
             or kaytetaan_haun_aikataulua is distinct from ${hakukohde.kaytetaanHaunAikataulua}
-            or valintaperuste is distinct from ${hakukohde.valintaperuste.map(_.toString)}::uuid
+            or valintaperuste_id is distinct from ${hakukohde.valintaperusteId.map(_.toString)}::uuid
             or liitteet_onko_sama_toimitusaika is distinct from ${hakukohde.liitteetOnkoSamaToimitusaika}
             or liitteet_onko_sama_toimitusosoite is distinct from ${hakukohde.liitteetOnkoSamaToimitusosoite}
             or liitteiden_toimitusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp
@@ -263,7 +263,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              muu_pohjakoulutusvaatimus_kuvaus,
              toinen_aste_onko_kaksoistutkinto,
              kaytetaan_haun_aikataulua,
-             valintaperuste,
+             valintaperuste_id,
              liitteet_onko_sama_toimitusaika,
              liitteet_onko_sama_toimitusosoite,
              liitteiden_toimitusaika,

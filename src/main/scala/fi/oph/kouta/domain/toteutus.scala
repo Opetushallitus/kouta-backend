@@ -7,12 +7,15 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
 case class Osaamisala(koodi: String, linkki: Kielistetty = Map(), otsikko: Kielistetty = Map())
 case class Osio(otsikko: Kielistetty, teksti: Kielistetty)
 
-case class Opetus(opetuskielet: List[String],
+case class Opetus(opetuskieliKoodiUrit: Seq[String],
+                  opetuskieletKuvaus: Kielistetty = Map(),
                   opetusaikaKoodiUri: Option[String],
-                  opetustapaKoodiUri: Option[String],
+                  opetusaikaKuvaus: Kielistetty = Map(),
+                  opetustapaKoodiUrit: Seq[String],
+                  opetustapaKuvaus: Kielistetty = Map(),
                   onkoMaksullinen: Option[Boolean],
+                  maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Kielistetty = Map(),
-                  kuvaus: Kielistetty = Map(),
                   osiot: List[Osio] = List())
 
 

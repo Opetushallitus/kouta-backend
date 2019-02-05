@@ -105,7 +105,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     tila = shuffle(Julkaisutila.values()).head,
     toteutusOid = ToteutusOid(toteutusOid),
     hakuOid = HakuOid(hakuOid),
-    valintaperuste = Some(UUID.fromString(valintaperusteId)),
+    valintaperusteId = Some(UUID.fromString(valintaperusteId)),
     organisaatioOid = getTarjoajat(i)(k)
   )
 

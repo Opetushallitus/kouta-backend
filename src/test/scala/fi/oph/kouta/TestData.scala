@@ -2,6 +2,7 @@ package fi.oph.kouta
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
@@ -21,7 +22,8 @@ object TestData {
     nimi = Map(Fi -> "Aku Ankka", Sv -> "Aku Ankka"),
     puhelinnumero = Map(Fi -> "123", Sv -> "123"),
     sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"),
-    titteli = Map(Fi -> "titteli", Sv -> "titteli sv"))
+    titteli = Map(Fi -> "titteli", Sv -> "titteli sv"),
+    wwwSivu = Map(Fi -> "http://opintopolku.fi", Sv -> "http://studieinfo.fi"))
 
   val Liite1 = Liite(
     id = None,
@@ -72,7 +74,7 @@ object TestData {
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2019"),
-    kohdejoukkoKoodiUri = Some("kohdejoukko_02#2"),
+    kohdejoukkoKoodiUri = Some("haunkohdejoukko_02#2"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
@@ -100,7 +102,7 @@ object TestData {
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
     kaytetaanHaunAikataulua = Some(false),
-    valintaperuste = None,
+    valintaperusteId = None,
     liitteetOnkoSamaToimitusaika = Some(true),
     liitteetOnkoSamaToimitusosoite = Some(false),
     liitteidenToimitusaika = Some(inFuture()),
@@ -119,14 +121,77 @@ object TestData {
     toteutusOid = ToteutusOid("1.2.246.562.17.123"),
     hakuOid = HakuOid("1.2.246.562.29.123"))
 
+  val Taulukko1 = new Taulukko(
+    id = None,
+    nimi = Map(Fi -> "Taulukko 1", Sv -> "Taulukko 1 sv"),
+    rows = Seq(
+      new Row(index = 0, isHeader = true, columns = Seq(
+        Column(index = 0, text = Map(Fi -> "Otsikko", Sv -> "Otsikko sv")),
+        Column(index = 1, text = Map(Fi -> "Otsikko 2", Sv -> "Otsikko 2 sv")))),
+      new Row(index = 1, isHeader = false, columns = Seq(
+        Column(index = 0, text = Map(Fi -> "Tekstiä", Sv -> "Tekstiä sv")),
+        Column(index = 1, text = Map(Fi -> "Tekstiä 2", Sv -> "Tekstiä 2 sv"))))))
+
+  val Taulukko2 = new Taulukko(
+    id = None,
+    nimi = Map(Fi -> "Taulukko 2", Sv -> "Taulukko 2 sv"),
+    rows = Seq(
+      new Row(index = 0, isHeader = true, columns = Seq(
+        Column(index = 0, text = Map(Fi -> "Otsikko", Sv -> "Otsikko sv")),
+        Column(index = 1, text = Map(Fi -> "Otsikko 2", Sv -> "Otsikko 2 sv")))),
+      new Row(index = 1, isHeader = false, columns = Seq(
+        Column(index = 0, text = Map(Fi -> "Tekstiä", Sv -> "Tekstiä sv")),
+        Column(index = 1, text = Map(Fi -> "Tekstiä 2", Sv -> "Tekstiä 2 sv"))))))
+
+  val Valintatapa1 = new Valintatapa(valintatapaKoodiUri = Some("valintatapajono_av#1"),
+                                     kuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv"),
+                                     taulukot = Seq(Taulukko1, Taulukko2),
+                                     kaytaMuuntotaulukkoa = false,
+                                     kynnysehto = Map(Fi -> "kynnysehto fi", Sv -> "kynnysehto sv"),
+                                     enimmaispisteet = Some(201.15),
+                                     vahimmaispisteet = Some(182.1))
+
+  val Valintatapa2 = new Valintatapa(valintatapaKoodiUri = Some("valintatapajono_tv#1"),
+                                     kuvaus = Map(Fi -> "kuvaus 2 fi", Sv -> "kuvaus 2 sv"),
+                                     taulukot = Seq(Taulukko2),
+                                     kaytaMuuntotaulukkoa = true,
+                                     kynnysehto = Map(Fi -> "kynnysehto fi", Sv -> "kynnysehto sv"),
+                                     enimmaispisteet = Some(18.1),
+                                     vahimmaispisteet = Some(10.1))
+
+  val Kielitaitovaatimus1 = new ValintaperusteKielitaitovaatimus(
+    kieliKoodiUri = Some("kieli_en#1"),
+    kielitaidonVoiOsoittaa = Seq(
+      new Kielitaito(kielitaitoKoodiUri = Some("jokukoodiuri_kk#1") ),
+      new Kielitaito(kielitaitoKoodiUri = Some("jokukoodiuri_muu#1"), lisatieto = Map( Fi -> "muu", Sv -> "muu sv"))),
+    vaatimukset = Seq(
+      new Kielitaitovaatimus(
+        kielitaitovaatimusKoodiUri = Some("koodiuri_yl#1"),
+        kielitaitovaatimusKuvaukset = Seq(new KielitaitovaatimusKuvaus(
+          kielitaitovaatimusKuvausKoodiUri = Some("koodiUri_read#1"),
+          kielitaitovaatimusTaso = Some("1")))),
+      new Kielitaitovaatimus(
+        kielitaitovaatimusKoodiUri = Some("koodiuri_toefl#1"),
+        kielitaitovaatimusKuvaukset = Seq(
+          new KielitaitovaatimusKuvaus(
+            kielitaitovaatimusKuvausKoodiUri = Some("koodiUri_read#1"),
+            kielitaitovaatimusTaso = Some("A")),
+          new KielitaitovaatimusKuvaus(
+            kielitaitovaatimusKuvausKoodiUri = Some("koodiUri_write#1"),
+            kielitaitovaatimusTaso = Some("A"))))))
+
+  val valintaperusteMetadata = new ValintaperusteMetadata(
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    kielitaitovaatimukset = Seq(Kielitaitovaatimus1))
+
   val JulkaistuValintaperuste = new Valintaperuste(
     id = None,
     tila = Julkaistu,
     hakutapaKoodiUri = Some("hakutapa_01#1"),
-    kohdejoukkoKoodiUri = Some("kohdejoukko_02#2"),
+    kohdejoukkoKoodiUri = Some("haunkohdejoukko_02#2"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = None,
+    metadata = Some(valintaperusteMetadata),
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
     muokkaaja = UserOid("2.1.2.1.2"),
     kielivalinta = List(Fi, Sv))
@@ -134,12 +199,15 @@ object TestData {
   val MinValintaperuste = new Valintaperuste(muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"))
 
   val ToteutuksenOpetus = Opetus(
-    opetuskielet = List("kieli_fi#1"),
+    opetuskieliKoodiUrit = Seq("kieli_fi#1"),
+    opetuskieletKuvaus = Map(Fi -> "Kielikuvaus fi", Sv -> "Kielikuvaus sv"),
     opetusaikaKoodiUri = Some("opetusaikakk_1#1"),
-    opetustapaKoodiUri = Some("opetuspaikkakk_1#1"),
+    opetusaikaKuvaus = Map(Fi -> "Opetusaikakuvaus fi", Sv -> "Opetusaikakuvaus sv"),
+    opetustapaKoodiUrit = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
+    opetustapaKuvaus = Map(Fi -> "Opetustapakuvaus fi", Sv -> "Opetustapakuvaus sv"),
     onkoMaksullinen = Some(true),
+    maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Map(Fi -> "200,50 euroa", Sv -> "200,50 euro"),
-    kuvaus = Map(Fi -> "Kuvaus fi", Sv -> "Kuvaus sv"),
     osiot = List(
       Osio(otsikko = Map(Fi -> "Opintojen rakenne", Sv -> "Rakenne sv"),
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),

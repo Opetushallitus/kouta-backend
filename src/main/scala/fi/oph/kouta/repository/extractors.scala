@@ -139,7 +139,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption),
     toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption,
     kaytetaanHaunAikataulua = r.nextBooleanOption,
-    valintaperuste = r.nextStringOption.map(UUID.fromString),
+    valintaperusteId = r.nextStringOption.map(UUID.fromString),
     liitteetOnkoSamaToimitusaika = r.nextBooleanOption(),
     liitteetOnkoSamaToimitusosoite = r.nextBooleanOption(),
     liitteidenToimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
