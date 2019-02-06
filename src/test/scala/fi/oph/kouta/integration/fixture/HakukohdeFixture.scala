@@ -38,7 +38,7 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
   def addToList(hakukohde:Hakukohde) = {
     val oid = put(hakukohde)
     val modified = readModifiedByOid(oid, "hakukohteet")
-    new HakukohdeListItem(HakukohdeOid(oid), hakukohde.toteutusOid, hakukohde.hakuOid, hakukohde.valintaperuste,
+    new HakukohdeListItem(HakukohdeOid(oid), hakukohde.toteutusOid, hakukohde.hakuOid, hakukohde.valintaperusteId,
       hakukohde.nimi, hakukohde.tila, hakukohde.organisaatioOid, hakukohde.muokkaaja, modified)
   }
 }

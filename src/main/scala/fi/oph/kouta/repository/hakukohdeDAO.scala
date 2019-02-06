@@ -407,27 +407,27 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste_id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
           and haku_oid = $hakuOid""".as[HakukohdeListItem]
   }
 
   def selectByHakuOid(hakuOid: HakuOid) = {
-    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste_id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
           where haku_oid = $hakuOid""".as[HakukohdeListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
-    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste_id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
           where toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
   }
 
   def selectByValintaperusteId(valintaperusteId: UUID) = {
-    sql"""select oid, toteutus_oid, haku_oid, valintaperuste, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, toteutus_oid, haku_oid, valintaperuste_id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from hakukohteet
-          where valintaperuste = ${valintaperusteId.toString}::uuid""".as[HakukohdeListItem]
+          where valintaperuste_id = ${valintaperusteId.toString}::uuid""".as[HakukohdeListItem]
   }
 }
