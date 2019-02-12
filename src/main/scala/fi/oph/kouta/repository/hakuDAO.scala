@@ -193,7 +193,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def updateHaunHakuajat(haku: Haku) = {
     val (oid, hakuajat, muokkaaja) = (haku.oid, haku.hakuajat, haku.muokkaaja)
-    if(hakuajat.size > 0) {
+    if(hakuajat.nonEmpty) {
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
       val deleteSQL = deleteHakuajat(oid, hakuajat)
 

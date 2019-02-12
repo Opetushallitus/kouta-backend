@@ -57,7 +57,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
-    if(tarjoajat.size > 0) {
+    if(tarjoajat.nonEmpty) {
       DBIO.sequence( tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
     } else {
       DBIO.sequence(List(deleteTarjoajat(oid)))

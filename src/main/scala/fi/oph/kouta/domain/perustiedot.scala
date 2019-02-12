@@ -18,7 +18,7 @@ sealed trait Perustiedot extends Validatable {
     assertValid(muokkaaja),
     assertValid(organisaatioOid),
     validateIfTrue(tila == Julkaistu, () => and(
-      assertTrue(kielivalinta.size > 0, MissingKielivalinta),
+      assertTrue(kielivalinta.nonEmpty, MissingKielivalinta),
       validateKielistetty(kielivalinta, nimi, "nimi")
     )))
 }

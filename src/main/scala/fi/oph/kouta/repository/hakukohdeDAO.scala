@@ -70,7 +70,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   private def updateHakuajat(hakukohde: Hakukohde) = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
-    if(hakuajat.size > 0) {
+    if(hakuajat.nonEmpty) {
       DBIO.sequence( hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat))
     } else {
       DBIO.sequence(List(deleteHakuajat(oid)))
@@ -81,7 +81,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val (oid, valintakokeet, muokkaaja) = (hakukohde.oid, hakukohde.valintakokeet, hakukohde.muokkaaja)
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
 
-    val deleteSQL = if (update.size > 0) { deleteValintakokeet(oid, update.map(_.id.get)) } else { deleteValintakokeet(oid) }
+    val deleteSQL = if (update.nonEmpty) { deleteValintakokeet(oid, update.map(_.id.get)) } else { deleteValintakokeet(oid) }
     val insertSQL = insert.map(v => insertValintakoe(oid, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(oid, v, muokkaaja))
 
@@ -92,7 +92,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val (oid, liitteet, muokkaaja) = (hakukohde.oid, hakukohde.liitteet, hakukohde.muokkaaja)
     val (insert, update) = liitteet.partition(_.id.isEmpty)
 
-    val deleteSQL = if (update.size > 0) { deleteLiitteet(oid, update.map(_.id.get)) } else { deleteLiitteet(oid) }
+    val deleteSQL = if (update.nonEmpty) { deleteLiitteet(oid, update.map(_.id.get)) } else { deleteLiitteet(oid) }
     val insertSQL = insert.map(l => insertLiite(oid, l.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateLiite(oid, v, muokkaaja))
 

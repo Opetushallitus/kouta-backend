@@ -21,10 +21,10 @@ trait ExtractorBase extends KoutaJsonFormats {
 
   implicit val getInstantOptionResult: GetResult[Option[Instant]] = GetResult(r => r.nextTimestampOption().map(_.toInstant))
 
-  implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => new Tarjoaja(GenericOid(r.nextString), OrganisaatioOid(r.nextString)))
+  implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => new Tarjoaja(GenericOid(r.nextString()), OrganisaatioOid(r.nextString())))
 
   implicit val getHakuaikaResult: GetResult[Hakuaika] = GetResult(r => {
-    new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp.toLocalDateTime, r.nextTimestamp.toLocalDateTime)
+    new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestamp().toLocalDateTime)
   })
 
   def extractKielistetty(json: Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
@@ -39,23 +39,23 @@ trait ExtractorBase extends KoutaJsonFormats {
 trait KoulutusExtractors extends ExtractorBase {
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
     oid = r.nextStringOption().map(KoulutusOid(_)),
-    johtaaTutkintoon = r.nextBoolean,
-    koulutustyyppi = r.nextStringOption.map(Koulutustyyppi.withName),
-    koulutusKoodiUri = r.nextStringOption,
-    tila = Julkaisutila.withName(r.nextString),
+    johtaaTutkintoon = r.nextBoolean(),
+    koulutustyyppi = r.nextStringOption().map(Koulutustyyppi.withName),
+    koulutusKoodiUri = r.nextStringOption(),
+    tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
-    nimi = extractKielistetty(r.nextStringOption),
-    metadata = r.nextStringOption.map(read[KoulutusMetadata]),
+    nimi = extractKielistetty(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[KoulutusMetadata]),
     julkinen = r.nextBoolean(),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(extractModified(r.nextTimestamp()))))
 
   implicit val getKoulutusListItem: GetResult[KoulutusListItem] = GetResult(r => KoulutusListItem(
     oid = KoulutusOid(r.nextString()),
-    nimi = extractKielistetty(r.nextStringOption),
-    tila = Julkaisutila.withName(r.nextString),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
@@ -64,23 +64,23 @@ trait KoulutusExtractors extends ExtractorBase {
 
 trait ToteutusExtractors extends ExtractorBase {
   implicit val getToteutusResult: GetResult[Toteutus] = GetResult(r => Toteutus(
-    oid = r.nextStringOption.map(ToteutusOid(_)),
-    koulutusOid = KoulutusOid(r.nextString),
-    tila = Julkaisutila.withName(r.nextString),
+    oid = r.nextStringOption().map(ToteutusOid(_)),
+    koulutusOid = KoulutusOid(r.nextString()),
+    tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
-    nimi = extractKielistetty(r.nextStringOption),
-    metadata = r.nextStringOption.map(read[ToteutusMetadata]),
+    nimi = extractKielistetty(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[ToteutusMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(extractModified(r.nextTimestamp()))
   ))
 
   implicit val getToteutusListItemResult: GetResult[ToteutusListItem] = GetResult(r => ToteutusListItem(
-    oid = ToteutusOid(r.nextString),
-    koulutusOid = KoulutusOid(r.nextString),
-    nimi = extractKielistetty(r.nextStringOption),
-    tila = Julkaisutila.withName(r.nextString),
+    oid = ToteutusOid(r.nextString()),
+    koulutusOid = KoulutusOid(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
@@ -89,30 +89,30 @@ trait ToteutusExtractors extends ExtractorBase {
 
 trait HakuExtractors extends ExtractorBase {
   implicit val getHakuResult: GetResult[Haku] = GetResult(r => Haku(
-    oid = r.nextStringOption.map(HakuOid(_)),
-    tila = Julkaisutila.withName(r.nextString),
-    nimi = extractKielistetty(r.nextStringOption),
-    hakutapaKoodiUri = r.nextStringOption,
+    oid = r.nextStringOption().map(HakuOid(_)),
+    tila = Julkaisutila.withName(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    hakutapaKoodiUri = r.nextStringOption(),
     hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
-    alkamiskausiKoodiUri = r.nextStringOption,
-    alkamisvuosi = r.nextStringOption,
-    kohdejoukkoKoodiUri = r.nextStringOption,
-    kohdejoukonTarkenneKoodiUri = r.nextStringOption,
+    alkamiskausiKoodiUri = r.nextStringOption(),
+    alkamisvuosi = r.nextStringOption(),
+    kohdejoukkoKoodiUri = r.nextStringOption(),
+    kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
     hakulomake = r.nextStringOption(),
     metadata = r.nextStringOption().map(read[HakuMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     hakuajat = List(),
     muokkaaja = UserOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(extractModified(r.nextTimestamp()))
   ))
 
   implicit val getHakuListItem: GetResult[HakuListItem] = GetResult(r => HakuListItem(
     oid = HakuOid(r.nextString()),
-    nimi = extractKielistetty(r.nextStringOption),
-    tila = Julkaisutila.withName(r.nextString),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
@@ -121,24 +121,24 @@ trait HakuExtractors extends ExtractorBase {
 
 trait ValintaperusteExtractors extends ExtractorBase {
   implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
-    id = r.nextStringOption.map(UUID.fromString),
-    tila = Julkaisutila.withName(r.nextString),
-    hakutapaKoodiUri = r.nextStringOption,
-    kohdejoukkoKoodiUri = r.nextStringOption,
-    kohdejoukonTarkenneKoodiUri = r.nextStringOption,
-    nimi = extractKielistetty(r.nextStringOption),
-    onkoJulkinen = r.nextBoolean,
+    id = r.nextStringOption().map(UUID.fromString),
+    tila = Julkaisutila.withName(r.nextString()),
+    hakutapaKoodiUri = r.nextStringOption(),
+    kohdejoukkoKoodiUri = r.nextStringOption(),
+    kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
+    nimi = extractKielistetty(r.nextStringOption()),
+    onkoJulkinen = r.nextBoolean(),
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(extractModified(r.nextTimestamp()))
   ))
 
   implicit val getValintaperusteListItemResult: GetResult[ValintaperusteListItem] = GetResult(r => ValintaperusteListItem(
-    id = UUID.fromString(r.nextString),
-    nimi = extractKielistetty(r.nextStringOption),
-    tila = Julkaisutila.withName(r.nextString),
+    id = UUID.fromString(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
@@ -147,22 +147,22 @@ trait ValintaperusteExtractors extends ExtractorBase {
 
 trait HakukohdeExctractors extends ExtractorBase {
   implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
-    oid = r.nextStringOption.map(HakukohdeOid(_)),
-    toteutusOid = ToteutusOid(r.nextString),
-    hakuOid = HakuOid(r.nextString),
-    tila = Julkaisutila.withName(r.nextString),
-    nimi = extractKielistetty(r.nextStringOption),
-    alkamiskausiKoodiUri = r.nextStringOption,
-    alkamisvuosi = r.nextStringOption,
+    oid = r.nextStringOption().map(HakukohdeOid(_)),
+    toteutusOid = ToteutusOid(r.nextString()),
+    hakuOid = HakuOid(r.nextString()),
+    tila = Julkaisutila.withName(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    alkamiskausiKoodiUri = r.nextStringOption(),
+    alkamisvuosi = r.nextStringOption(),
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
-    hakulomake = r.nextStringOption,
-    aloituspaikat = r.nextIntOption,
-    ensikertalaisenAloituspaikat = r.nextIntOption,
-    pohjakoulutusvaatimusKoodiUri = r.nextStringOption,
-    muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption),
-    toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption,
-    kaytetaanHaunAikataulua = r.nextBooleanOption,
-    valintaperusteId = r.nextStringOption.map(UUID.fromString),
+    hakulomake = r.nextStringOption(),
+    aloituspaikat = r.nextIntOption(),
+    ensikertalaisenAloituspaikat = r.nextIntOption(),
+    pohjakoulutusvaatimusKoodiUri = r.nextStringOption(),
+    muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption()),
+    toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption(),
+    kaytetaanHaunAikataulua = r.nextBooleanOption(),
+    valintaperusteId = r.nextStringOption().map(UUID.fromString),
     liitteetOnkoSamaToimitusaika = r.nextBooleanOption(),
     liitteetOnkoSamaToimitusosoite = r.nextBooleanOption(),
     liitteidenToimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
@@ -170,33 +170,33 @@ trait HakukohdeExctractors extends ExtractorBase {
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    kielivalinta = extractKielivalinta(r.nextStringOption),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(extractModified(r.nextTimestamp()))
   ))
 
   implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] = GetResult(r => HakukohdeListItem(
-    oid = HakukohdeOid(r.nextString),
-    toteutusOid = ToteutusOid(r.nextString),
-    hakuOid = HakuOid(r.nextString),
-    valintaperusteId = r.nextStringOption.map(UUID.fromString),
-    nimi = extractKielistetty(r.nextStringOption),
-    tila = Julkaisutila.withName(r.nextString),
+    oid = HakukohdeOid(r.nextString()),
+    toteutusOid = ToteutusOid(r.nextString()),
+    hakuOid = HakuOid(r.nextString()),
+    valintaperusteId = r.nextStringOption().map(UUID.fromString),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
   ))
 
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
-    id = r.nextStringOption.map(UUID.fromString),
+    id = r.nextStringOption().map(UUID.fromString),
     tyyppi = r.nextStringOption(),
     tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List()),
   ))
 
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
-    id = r.nextStringOption.map(UUID.fromString),
+    id = r.nextStringOption().map(UUID.fromString),
     tyyppi = r.nextStringOption(),
-    nimi = extractKielistetty(r.nextStringOption),
-    kuvaus = extractKielistetty(r.nextStringOption),
+    nimi = extractKielistetty(r.nextStringOption()),
+    kuvaus = extractKielistetty(r.nextStringOption()),
     toimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
     toimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
@@ -206,26 +206,26 @@ trait HakukohdeExctractors extends ExtractorBase {
 trait HakutietoExtractors extends ExtractorBase {
 
   implicit val getHakutietoHakuResult: GetResult[(ToteutusOid, HakutietoHaku)] = GetResult(r =>
-    ( ToteutusOid(r.nextString), HakutietoHaku(
-      hakuOid = HakuOid(r.nextString),
-      nimi = extractKielistetty(r.nextStringOption),
-      hakutapaKoodiUri = r.nextStringOption,
-      alkamiskausiKoodiUri = r.nextStringOption,
-      alkamisvuosi = r.nextStringOption,
+    ( ToteutusOid(r.nextString()), HakutietoHaku(
+      hakuOid = HakuOid(r.nextString()),
+      nimi = extractKielistetty(r.nextStringOption()),
+      hakutapaKoodiUri = r.nextStringOption(),
+      alkamiskausiKoodiUri = r.nextStringOption(),
+      alkamisvuosi = r.nextStringOption(),
       hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
       hakulomake = r.nextStringOption(),
       organisaatioOid = OrganisaatioOid(r.nextString()),
-      hakuajat = List(),
+      hakuajat = Seq(),
       muokkaaja = UserOid(r.nextString()),
       modified = Some(extractModified(r.nextTimestamp())),
       hakukohteet = Seq())))
 
   implicit val getHakutietoHakukohdeResult: GetResult[(ToteutusOid, HakuOid, HakutietoHakukohde)] = GetResult(r =>
     ( ToteutusOid(r.nextString()), HakuOid(r.nextString()), HakutietoHakukohde(
-      hakukohdeOid = HakukohdeOid(r.nextString),
-      nimi = extractKielistetty(r.nextStringOption),
-      alkamiskausiKoodiUri = r.nextStringOption,
-      alkamisvuosi = r.nextStringOption,
+      hakukohdeOid = HakukohdeOid(r.nextString()),
+      nimi = extractKielistetty(r.nextStringOption()),
+      alkamiskausiKoodiUri = r.nextStringOption(),
+      alkamisvuosi = r.nextStringOption(),
       hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
       hakulomake = r.nextStringOption(),
       aloituspaikat = r.nextIntOption(),

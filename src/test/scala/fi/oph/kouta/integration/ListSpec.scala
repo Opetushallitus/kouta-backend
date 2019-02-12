@@ -1,7 +1,8 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.OrganisaatioServiceMock
+import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import fi.oph.kouta.domain._
+import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {
 
@@ -157,5 +158,46 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
 
   "Hakuun kuuluvat koulutukset" should "list all koulutukset mapped to given haku by hakukohde" in {
     list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), List(k1, k4))
+  }
+
+  //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
+  "Koulutukset hakutiedot" should "return all hakutiedot related to koulutus" in {
+    get(s"$KoulutusPath/${k1.oid}/hakutiedot") {
+      status should equal(200)
+      //debugJson[List[Hakutieto]](body)
+
+      TestData.JulkaistuHaku.hakutapaKoodiUri
+
+      val expected = List(Hakutieto(
+        toteutusOid = t1.oid,
+        haut = Seq(HakutietoHaku(
+          hakuOid = h1.oid,
+          nimi = h1.nimi,
+          hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
+          alkamiskausiKoodiUri = TestData.JulkaistuHaku.alkamiskausiKoodiUri,
+          alkamisvuosi = TestData.JulkaistuHaku.alkamisvuosi,
+          hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
+          hakulomake = TestData.JulkaistuHaku.hakulomake,
+          organisaatioOid = h1.organisaatioOid,
+          hakuajat = TestData.JulkaistuHaku.hakuajat,
+          muokkaaja = h1.muokkaaja,
+          modified = Some(h1.modified),
+          hakukohteet = Seq(HakutietoHakukohde(
+            hakukohdeOid = hk1.oid,
+            nimi = hk1.nimi,
+            alkamiskausiKoodiUri = TestData.JulkaistuHakukohde.alkamiskausiKoodiUri,
+            alkamisvuosi = TestData.JulkaistuHakukohde.alkamisvuosi,
+            hakulomaketyyppi = TestData.JulkaistuHakukohde.hakulomaketyyppi,
+            hakulomake = TestData.JulkaistuHakukohde.hakulomake,
+            aloituspaikat = TestData.JulkaistuHakukohde.aloituspaikat,
+            ensikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.ensikertalaisenAloituspaikat,
+            kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
+            hakuajat = TestData.JulkaistuHakukohde.hakuajat,
+            muokkaaja = hk1.muokkaaja,
+            organisaatioOid = hk1.organisaatioOid,
+            modified = Some(hk1.modified)))))))
+
+      read[List[Hakutieto]](body) should equal(expected)
+    }
   }
 }

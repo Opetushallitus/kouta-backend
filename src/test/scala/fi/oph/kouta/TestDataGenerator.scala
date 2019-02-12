@@ -14,7 +14,7 @@ import org.json4s.jackson.Serialization.{read, write}
 import scalaj.http.Http
 
 import scala.util.Random.shuffle
-import fi.oph.kouta.TestData.{inFuture, now, _}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain.keyword.Keyword
 
 /* Generate random test data to local kouta-backend */

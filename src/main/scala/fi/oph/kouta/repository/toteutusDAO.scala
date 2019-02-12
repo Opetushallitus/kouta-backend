@@ -65,7 +65,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
     val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _, _) = toteutus
-    if(tarjoajat.size > 0) {
+    if(tarjoajat.nonEmpty) {
       DBIO.sequence( tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
     } else {
       DBIO.sequence(List(deleteTarjoajat(oid)))
