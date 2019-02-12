@@ -29,7 +29,7 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
 
     def mapHakuajat[A <: Oid](hakuajat: Seq[Hakuaika], f: GenericOid => A): Map[A, Seq[Ajanjakso]] =
       hakuajat.groupBy(h => f(h.oid))
-        .mapValues(_.map(a => Ajanjakso(a.alkaa, a.paattyy)).toList)
+        .mapValues(_.map(a => Ajanjakso(a.alkaa, a.paattyy)))
 
     val hakujenHakuajatMap = mapHakuajat[HakuOid](hakujenHakuajat, (oid: GenericOid) => HakuOid(oid.toString))
     val hakukohteidenHakuajatMap = mapHakuajat[HakukohdeOid](hakukohteidenHakuajat, (oid: GenericOid) => HakukohdeOid(oid.toString))
@@ -37,14 +37,14 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
     val hakukohdeMap = hakukohteet
       .groupBy { case (toteutusOid, hakuOid, _) => (toteutusOid, hakuOid) }
       .mapValues(_.map { case (_, _, hakukohde) =>
-        hakukohde.copy(hakuajat = hakukohteidenHakuajatMap.getOrElse(hakukohde.hakukohdeOid, Seq()).toList)
+        hakukohde.copy(hakuajat = hakukohteidenHakuajatMap.getOrElse(hakukohde.hakukohdeOid, Seq()))
       })
 
     val hakuMap = haut
       .groupBy { case (toteutusOid, _) => toteutusOid }
       .mapValues(_.map { case (toteutusOid, haku) =>
         haku.copy(
-          hakuajat = hakujenHakuajatMap.getOrElse(haku.hakuOid, Seq()).toList,
+          hakuajat = hakujenHakuajatMap.getOrElse(haku.hakuOid, Seq()),
           hakukohteet = hakukohdeMap.getOrElse((toteutusOid, haku.hakuOid), Seq())
         )
       })
