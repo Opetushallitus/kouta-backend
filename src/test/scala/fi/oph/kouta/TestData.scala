@@ -58,7 +58,11 @@ object TestData {
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))),
+    metadata = Some(new KoulutusMetadata(
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      lisatiedot = Seq(
+        Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
+          teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
     muokkaaja = UserOid("5.5.5"),
     organisaatioOid = OrganisaatioOid("1.2"),
@@ -214,10 +218,13 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Map(Fi -> "200,50 euroa", Sv -> "200,50 euro"),
-    osiot = List(
-      Osio(otsikko = Map(Fi -> "Opintojen rakenne", Sv -> "Rakenne sv"),
+    alkamiskausiKoodiUri = Some("kausi_k#1"),
+    alkamisvuosi = Some("2020"),
+    alkamisaikaKuvaus = Map(Fi -> "Aikakuvaus fi", Sv -> "Aikakuvaus sv"),
+    lisatiedot = Seq(
+      Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_2#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
-      Osio(otsikko = Map(Fi -> "Sisältö", Sv -> "Sisältö sv"),
+      Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_1#1",
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))))
 
   val AmmToteutuksenMetatieto = ToteutusMetadata(

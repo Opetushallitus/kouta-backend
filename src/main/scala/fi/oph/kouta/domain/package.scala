@@ -97,6 +97,8 @@ package object domain {
     val modified: LocalDateTime
   }
 
+  case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty)
+
   case class Osoite(osoite: Kielistetty = Map(),
                     postinumero: Option[String],
                     postitoimipaikka: Kielistetty = Map())

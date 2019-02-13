@@ -7,7 +7,6 @@ import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserO
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class Osaamisala(koodi: String, linkki: Kielistetty = Map(), otsikko: Kielistetty = Map())
-case class Osio(otsikko: Kielistetty, teksti: Kielistetty)
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   opetuskieletKuvaus: Kielistetty = Map(),
@@ -18,7 +17,10 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   onkoMaksullinen: Option[Boolean],
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Kielistetty = Map(),
-                  osiot: List[Osio] = List())
+                  alkamiskausiKoodiUri: Option[String] = None,
+                  alkamisvuosi: Option[String] = None,
+                  alkamisaikaKuvaus: Kielistetty = Map(),
+                  lisatiedot: Seq[Lisatieto] = Seq())
 
 
 case class ToteutusMetadata(kuvaus: Kielistetty = Map(),
