@@ -38,7 +38,6 @@ case class Haku(oid: Option[HakuOid] = None,
      validateIfTrue(tila == Julkaistu, () => and (
        assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
        assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-       assertNotOptional(kohdejoukonTarkenneKoodiUri, "kohdejoukonTarkenneKoodiUri"),
        assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")
      ))
   )
