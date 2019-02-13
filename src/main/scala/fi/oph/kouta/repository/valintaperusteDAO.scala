@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.oid._
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
+import fi.oph.kouta.domain.{IdListItem, Valintaperuste, ValintaperusteListItem}
 import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
@@ -15,8 +15,8 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem]
-  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem]
+  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -50,10 +50,10 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[IdListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[IdListItem] =
+  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids, hakuOid))
 }
 
@@ -79,8 +79,6 @@ sealed trait ValintaperusteModificationSQL extends SQLHelpers {
 sealed trait ValintaperusteSQL extends ValintaperusteExtractors with ValintaperusteModificationSQL with SQLHelpers {
 
   def insertValintaperuste(valintaperuste: Valintaperuste) = {
-    val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
-    onkoJulkinen, metadata, organisaatioOid, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""insert into valintaperusteet (
                      id,
                      tila,
@@ -94,57 +92,55 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      muokkaaja,
                      kielivalinta
          ) values (
-                     ${id.map(_.toString)}::uuid,
-                     ${tila.toString}::julkaisutila,
-                     $hakutapaKoodiUri,
-                     $kohdejoukkoKoodiUri,
-                     $kohdejoukonTarkenneKoodiUri,
-                     ${toJsonParam(nimi)}::jsonb,
-                     $onkoJulkinen,
-                     ${toJsonParam(metadata)}::jsonb,
-                     $organisaatioOid,
-                     $muokkaaja,
-                     ${toJsonParam(kielivalinta)}::jsonb
+                     ${valintaperuste.id.map(_.toString)}::uuid,
+                     ${valintaperuste.tila.toString}::julkaisutila,
+                     ${valintaperuste.hakutapaKoodiUri},
+                     ${valintaperuste.kohdejoukkoKoodiUri},
+                     ${valintaperuste.kohdejoukonTarkenneKoodiUri},
+                     ${toJsonParam(valintaperuste.nimi)}::jsonb,
+                     ${valintaperuste.onkoJulkinen},
+                     ${toJsonParam(valintaperuste.metadata)}::jsonb,
+                     ${valintaperuste.organisaatioOid},
+                     ${valintaperuste.muokkaaja},
+                     ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
          )"""
   }
 
   def selectValintaperuste(id: UUID) =
     sql"""select id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
-                 onkoJulkinen, metadata, organisaatio_oid, muokkaaja, kielivalinta
+                 onkoJulkinen, metadata, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time)
           from valintaperusteet where id = ${id.toString}::uuid"""
 
   def updateValintaperuste(valintaperuste: Valintaperuste) = {
-    val Valintaperuste(id, tila, hakutapaKoodiUri, kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, nimi,
-    onkoJulkinen, metadata, organisaatioOid, muokkaaja, kielivalinta) = valintaperuste
     sqlu"""update valintaperusteet set
-                     tila = ${tila.toString}::julkaisutila,
-                     hakutapa_koodi_uri = $hakutapaKoodiUri,
-                     kohdejoukko_koodi_uri = $kohdejoukkoKoodiUri,
-                     kohdejoukon_tarkenne_koodi_uri = $kohdejoukonTarkenneKoodiUri,
-                     nimi = ${toJsonParam(nimi)}::jsonb,
-                     onkoJulkinen = $onkoJulkinen,
-                     metadata = ${toJsonParam(metadata)}::jsonb,
-                     organisaatio_oid = $organisaatioOid,
-                     muokkaaja = $muokkaaja,
-                     kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
-           where id = ${id.map(_.toString)}::uuid
-           and (tila is distinct from ${tila.toString}::julkaisutila
-           or hakutapa_koodi_uri is distinct from $hakutapaKoodiUri
-           or kohdejoukko_koodi_uri is distinct from $kohdejoukkoKoodiUri
-           or kohdejoukon_tarkenne_koodi_uri is distinct from $kohdejoukonTarkenneKoodiUri
-           or nimi is distinct from ${toJsonParam(nimi)}::jsonb
-           or onkoJulkinen is distinct from $onkoJulkinen
-           or metadata is distinct from ${toJsonParam(metadata)}::jsonb
-           or organisaatio_oid is distinct from $organisaatioOid
-           or muokkaaja is distinct from $muokkaaja
-           or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
+                     tila = ${valintaperuste.tila.toString}::julkaisutila,
+                     hakutapa_koodi_uri = ${valintaperuste.hakutapaKoodiUri},
+                     kohdejoukko_koodi_uri = ${valintaperuste.kohdejoukkoKoodiUri},
+                     kohdejoukon_tarkenne_koodi_uri = ${valintaperuste.kohdejoukonTarkenneKoodiUri},
+                     nimi = ${toJsonParam(valintaperuste.nimi)}::jsonb,
+                     onkoJulkinen = ${valintaperuste.onkoJulkinen},
+                     metadata = ${toJsonParam(valintaperuste.metadata)}::jsonb,
+                     organisaatio_oid = ${valintaperuste.organisaatioOid},
+                     muokkaaja = ${valintaperuste.muokkaaja},
+                     kielivalinta = ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
+           where id = ${valintaperuste.id.map(_.toString)}::uuid
+           and (tila is distinct from ${valintaperuste.tila.toString}::julkaisutila
+           or hakutapa_koodi_uri is distinct from ${valintaperuste.hakutapaKoodiUri}
+           or kohdejoukko_koodi_uri is distinct from ${valintaperuste.kohdejoukkoKoodiUri}
+           or kohdejoukon_tarkenne_koodi_uri is distinct from ${valintaperuste.kohdejoukonTarkenneKoodiUri}
+           or nimi is distinct from ${toJsonParam(valintaperuste.nimi)}::jsonb
+           or onkoJulkinen is distinct from ${valintaperuste.onkoJulkinen}
+           or metadata is distinct from ${toJsonParam(valintaperuste.metadata)}::jsonb
+           or organisaatio_oid is distinct from ${valintaperuste.organisaatioOid}
+           or muokkaaja is distinct from ${valintaperuste.muokkaaja}
+           or kielivalinta is distinct from ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
          )"""
   }
 
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from valintaperusteet
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ValintaperusteListItem]
   }
 
   def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid) = {
@@ -153,6 +149,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
           and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and v.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[IdListItem]
+          and v.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ValintaperusteListItem]
   }
 }

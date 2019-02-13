@@ -1,18 +1,19 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.OrganisaatioServiceMock
+import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import fi.oph.kouta.domain._
+import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {
 
   val LonelyOid = "1.2.246.562.10.99999999999"
   val UnknownOid = "1.2.246.562.10.99999999998"
 
-  var k1, k2, k3, k4, k5:OidListItem = null
-  var t1, t2, t3, t4:OidListItem = null
-  var h1, h2, h3, h4:OidListItem = null
-  var v1, v2, v3, v4:IdListItem = null
-  var hk1, hk2, hk3, hk4:OidListItem = null
+  var k1, k2, k3, k4, k5 :KoulutusListItem = null
+  var t1, t2, t3, t4     :ToteutusListItem = null
+  var h1, h2, h3, h4     :HakuListItem = null
+  var v1, v2, v3, v4     :ValintaperusteListItem = null
+  var hk1, hk2, hk3, hk4 :HakukohdeListItem = null
 
   override def beforeAll() = {
     super.beforeAll()
@@ -114,6 +115,10 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     list(ValintaperustePath, Map[String,String](), 404)
   }
 
+  "Valintaperustetta käyttävät hakukohteet list" should "list all hakukohteet using given valintaperuste id" in {
+    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
+  }
+
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid), List(t1, t2, t3))
   }
@@ -123,12 +128,16 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> UnknownOid), 403)
   }
-  it should "return 404 if organisaatio oid not given" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), 404)
+  it should "return all toteutukset if organisaatio oid not given" in { //TODO: oikeudet
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), List(t1, t2, t3))
   }
 
   "Toteutukseen liitetyt haut" should "list all haut mapped to given toteutus" in {
     list(s"$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2))
+  }
+
+  "Toteutukseen liitetyt hakukohteet" should "list all hakukohteet mapped to given toteutus" in {
+    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3))
   }
 
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {
@@ -143,7 +152,52 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> UnknownOid), 403)
   }
-  it should "return 404 if organisaatio oid not given" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), 404)
+  it should "return all if organisaatio oid not given" in { //TODO: OIKEUDET!
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), List(hk1, hk2, hk4))
+  }
+
+  "Hakuun kuuluvat koulutukset" should "list all koulutukset mapped to given haku by hakukohde" in {
+    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), List(k1, k4))
+  }
+
+  //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
+  "Koulutukset hakutiedot" should "return all hakutiedot related to koulutus" in {
+    get(s"$KoulutusPath/${k1.oid}/hakutiedot") {
+      status should equal(200)
+      //debugJson[List[Hakutieto]](body)
+
+      TestData.JulkaistuHaku.hakutapaKoodiUri
+
+      val expected = List(Hakutieto(
+        toteutusOid = t1.oid,
+        haut = Seq(HakutietoHaku(
+          hakuOid = h1.oid,
+          nimi = h1.nimi,
+          hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
+          alkamiskausiKoodiUri = TestData.JulkaistuHaku.alkamiskausiKoodiUri,
+          alkamisvuosi = TestData.JulkaistuHaku.alkamisvuosi,
+          hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
+          hakulomake = TestData.JulkaistuHaku.hakulomake,
+          organisaatioOid = h1.organisaatioOid,
+          hakuajat = TestData.JulkaistuHaku.hakuajat,
+          muokkaaja = h1.muokkaaja,
+          modified = Some(h1.modified),
+          hakukohteet = Seq(HakutietoHakukohde(
+            hakukohdeOid = hk1.oid,
+            nimi = hk1.nimi,
+            alkamiskausiKoodiUri = TestData.JulkaistuHakukohde.alkamiskausiKoodiUri,
+            alkamisvuosi = TestData.JulkaistuHakukohde.alkamisvuosi,
+            hakulomaketyyppi = TestData.JulkaistuHakukohde.hakulomaketyyppi,
+            hakulomake = TestData.JulkaistuHakukohde.hakulomake,
+            aloituspaikat = TestData.JulkaistuHakukohde.aloituspaikat,
+            ensikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.ensikertalaisenAloituspaikat,
+            kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
+            hakuajat = TestData.JulkaistuHakukohde.hakuajat,
+            muokkaaja = hk1.muokkaaja,
+            organisaatioOid = hk1.organisaatioOid,
+            modified = Some(hk1.modified)))))))
+
+      read[List[Hakutieto]](body) should equal(expected)
+    }
   }
 }

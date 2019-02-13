@@ -1,5 +1,6 @@
 package fi.oph.kouta.domain
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
@@ -15,7 +16,8 @@ case class Valintaperuste(id: Option[UUID] = None,
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
-                          kielivalinta: Seq[Kieli] = Seq()) extends PerustiedotWithId with Validatable {
+                          kielivalinta: Seq[Kieli] = Seq(),
+                          modified: Option[LocalDateTime]) extends PerustiedotWithId with Validatable {
 
   override def validate(): IsValid = and(
      super.validate(),
@@ -67,3 +69,10 @@ case class ValintaperusteKielitaitovaatimus(kieliKoodiUri: Option[String] = None
 
 case class ValintaperusteMetadata(valintatavat: Seq[Valintatapa],
                                   kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus])
+
+case class ValintaperusteListItem(id: UUID,
+                                  nimi: Kielistetty,
+                                  tila: Julkaisutila,
+                                  organisaatioOid: OrganisaatioOid,
+                                  muokkaaja: UserOid,
+                                  modified: LocalDateTime) extends IdListItem

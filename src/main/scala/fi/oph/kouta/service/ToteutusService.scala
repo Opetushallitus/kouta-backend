@@ -3,8 +3,8 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{OidListItem, Toteutus}
-import fi.oph.kouta.repository.{HakuDAO, ToteutusDAO}
+import fi.oph.kouta.domain._
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
 
 object ToteutusService extends ValidatingService[Toteutus] with AuthorizationService {
 
@@ -14,9 +14,12 @@ object ToteutusService extends ValidatingService[Toteutus] with AuthorizationSer
 
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = ToteutusDAO.get(oid)
 
-  def list(organisaatioOid: OrganisaatioOid): Seq[OidListItem] =
+  def list(organisaatioOid: OrganisaatioOid): Seq[ToteutusListItem] =
     withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ToteutusDAO.listByOrganisaatioOids)
 
-  def listHaut(oid: ToteutusOid): Seq[OidListItem] =
+  def listHaut(oid: ToteutusOid): Seq[HakuListItem] =
     HakuDAO.listByToteutusOid(oid)
+
+  def listHakukohteet(oid: ToteutusOid): Seq[HakukohdeListItem] =
+    HakukohdeDAO.listByToteutusOid(oid)
 }

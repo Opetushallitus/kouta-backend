@@ -2,7 +2,7 @@ package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid.{HakuOid, Oid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None)
@@ -23,7 +23,8 @@ case class Haku(oid: Option[HakuOid] = None,
                 organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
                 muokkaaja: UserOid,
-                kielivalinta: Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
+                kielivalinta: Seq[Kieli] = Seq(),
+                modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable {
 
   override def validate(): IsValid = and (
      super.validate(),
@@ -43,3 +44,9 @@ case class Haku(oid: Option[HakuOid] = None,
   )
 }
 
+case class HakuListItem(oid: HakuOid,
+                        nimi: Kielistetty,
+                        tila: Julkaisutila,
+                        organisaatioOid: OrganisaatioOid,
+                        muokkaaja: UserOid,
+                        modified: LocalDateTime) extends OidListItem

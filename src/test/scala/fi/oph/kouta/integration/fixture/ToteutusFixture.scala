@@ -5,6 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.ToteutusServlet
+import org.scalactic.Equality
 
 trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
@@ -21,7 +22,7 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
   def toteutus(oid:String, koulutusOid:String, tila:Julkaisutila): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), tila = tila)
 
   def put(toteutus:Toteutus):String = put(ToteutusPath, toteutus, oid(_))
-  def get(oid:String, expected:Toteutus): String = get(ToteutusPath, oid, expected)
+  def get(oid:String, expected:Toteutus): String = get(ToteutusPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "toteutukset"))))
   def update(toteutus:Toteutus, lastModified:String, expectUpdate:Boolean): Unit = update(ToteutusPath, toteutus, lastModified, expectUpdate)
   def update(toteutus:Toteutus, lastModified:String): Unit = update(toteutus, lastModified, true)
 
@@ -33,6 +34,7 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
   def addToList(toteutus:Toteutus) = {
     val oid = put(toteutus)
     val modified = readModifiedByOid(oid, "toteutukset")
-    toOidListItem(oid, toteutus, modified)
+    new ToteutusListItem(ToteutusOid(oid), toteutus.koulutusOid, toteutus.nimi, toteutus.tila,
+      toteutus.organisaatioOid, toteutus.muokkaaja, modified)
   }
 }

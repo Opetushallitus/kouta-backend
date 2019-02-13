@@ -79,8 +79,23 @@ package object domain {
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
-  case class OidListItem(oid: Oid, nimi: Kielistetty, tila: Julkaisutila, organisaatioOid: OrganisaatioOid, muokkaaja: UserOid, modified: LocalDateTime)
-  case class IdListItem(id: UUID, nimi: Kielistetty, tila: Julkaisutila, organisaatioOid: OrganisaatioOid, muokkaaja: UserOid, modified: LocalDateTime)
+  abstract class OidListItem {
+    val oid: Oid
+    val nimi: Kielistetty
+    val tila: Julkaisutila
+    val organisaatioOid: OrganisaatioOid
+    val muokkaaja: UserOid
+    val modified: LocalDateTime
+  }
+
+  abstract class IdListItem {
+    val id: UUID
+    val nimi: Kielistetty
+    val tila: Julkaisutila
+    val organisaatioOid: OrganisaatioOid
+    val muokkaaja: UserOid
+    val modified: LocalDateTime
+  }
 
   case class Osoite(osoite: Kielistetty = Map(),
                     postinumero: Option[String],

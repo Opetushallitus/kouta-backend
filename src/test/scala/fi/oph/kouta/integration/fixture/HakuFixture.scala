@@ -5,6 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.HakuServlet
+import org.scalactic.Equality
 
 trait HakuFixture { this: KoutaIntegrationSpec =>
 
@@ -18,7 +19,7 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
   def haku(oid:String, tila:Julkaisutila): Haku = haku.copy(oid = Some(HakuOid(oid)), tila = tila)
 
   def put(haku:Haku):String = put(HakuPath, haku, oid(_))
-  def get(oid:String, expected:Haku):String = get(HakuPath, oid, expected)
+  def get(oid:String, expected:Haku):String = get(HakuPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "haut"))))
   def update(haku:Haku, lastModified:String, expectUpdate:Boolean):Unit = update(HakuPath, haku, lastModified, expectUpdate)
   def update(haku:Haku, lastModified:String):Unit = update(haku, lastModified, true)
 
@@ -28,6 +29,6 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
   def addToList(haku:Haku) = {
     val oid = put(haku)
     val modified = readModifiedByOid(oid, "haut")
-    toOidListItem(oid, haku, modified)
+    new HakuListItem(HakuOid(oid), haku.nimi, haku.tila, haku.organisaatioOid, haku.muokkaaja, modified)
   }
 }

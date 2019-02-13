@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import java.time.LocalDateTime
+
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.Validatable
 
@@ -16,7 +18,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     julkinen: Boolean = false,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
-                    kielivalinta: Seq[Kieli] = Seq()) extends PerustiedotWithOid with Validatable {
+                    kielivalinta: Seq[Kieli] = Seq(),
+                    modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable {
 
   override def validate() = {
     and(super.validate(),
@@ -29,3 +32,10 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"))))
   }
 }
+
+case class KoulutusListItem(oid: KoulutusOid,
+                            nimi: Kielistetty,
+                            tila: Julkaisutila,
+                            organisaatioOid: OrganisaatioOid,
+                            muokkaaja: UserOid,
+                            modified: LocalDateTime) extends OidListItem

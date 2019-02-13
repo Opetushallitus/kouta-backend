@@ -41,7 +41,7 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[OidListItem]]("Listaa käytettävissä olevat koulutukset")
+  get("/list", operation(apiOperation[List[KoulutusListItem]]("Listaa käytettävissä olevat koulutukset")
     tags modelName
     summary "Listaa niiden koulutusten perustiedot, joita organisaatio voi käyttää"
     parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
@@ -53,21 +53,28 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
 
   get("/:oid/toteutukset", operation(apiOperation[List[Toteutus]]("Hae koulutuksen kaikki toteutukset")
     tags modelName
-    summary "Palauttaa koulutuksen kaikki toteutukset esim. indeksointia varten"
-    parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
-
-    Ok(KoulutusService.toteutukset(KoulutusOid(params("oid"))))
+    summary "Palauttaa koulutuksen kaikki toteutukset indeksointia varten"
+    parameter pathParam[String]("oid").description("Koulutuksen oid")
+    parameter queryParam[Boolean]("vainJulkaistut").description("Palautetaanko vain julkaistut toteutukset").defaultValue(false))) {
+    Ok(KoulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").map(_.toBoolean)))
   }
 
-  get("/:oid/toteutukset/list", operation(apiOperation[List[OidListItem]]("Listaa koulutuksen toteutukset")
+  get("/:oid/toteutukset/list", operation(apiOperation[List[ToteutusListItem]]("Listaa koulutuksen toteutukset")
     tags modelName
     summary "Listaa niiden koulutukseen kuuluvien toteutusten perustiedot, joihin organisaatiolla on oikeus"
     parameter pathParam[String]("oid").description("Koulutuksen oid")
-    parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
+    parameter queryParam[String]("organisaatioOid").description("Organisaation oid"))) {
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => Ok(KoulutusService.listToteutukset(KoulutusOid(params("oid")))) //TODO: Vain oph/indeksoija saa hakea kaiken
       case Some(organisaatioOid) => Ok(KoulutusService.listToteutukset(KoulutusOid(params("oid")), organisaatioOid))
     }
+  }
+
+  get("/:oid/hakutiedot", operation(apiOperation[List[Hakutieto]]("Hae koulutuksen kaikki hakutiedot")
+    tags modelName
+    summary "Palauttaa koulutuksen kaikki julkaistut hakutiedot indeksointia varten"
+    parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
+    Ok(KoulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
 
   prettifySwaggerModels()

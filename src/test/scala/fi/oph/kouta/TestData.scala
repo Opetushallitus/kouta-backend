@@ -55,16 +55,17 @@ object TestData {
     oid = None,
     johtaaTutkintoon = true,
     koulutustyyppi = Some(Amm),
-    koulutusKoodiUri = Some("koulutus_123456#1"),
+    koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))),
     tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
     muokkaaja = UserOid("5.5.5"),
     organisaatioOid = OrganisaatioOid("1.2"),
-    kielivalinta = List(Fi, Sv))
+    kielivalinta = List(Fi, Sv),
+    modified = None)
 
-  val MinKoulutus = Koulutus(johtaaTutkintoon = false, muokkaaja = UserOid("1.2.3"), organisaatioOid = OrganisaatioOid("1.2"))
+  val MinKoulutus = Koulutus(johtaaTutkintoon = false, muokkaaja = UserOid("1.2.3"), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
 
   val JulkaistuHaku = new Haku(
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
@@ -82,9 +83,10 @@ object TestData {
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
     muokkaaja = UserOid("5.4.3.2.1"),
-    kielivalinta = Seq(Fi, Sv))
+    kielivalinta = Seq(Fi, Sv),
+    modified = None)
 
-  val MinHaku = new Haku(muokkaaja = UserOid("9.9.9.9.9"), organisaatioOid = OrganisaatioOid("5.5.5"))
+  val MinHaku = new Haku(muokkaaja = UserOid("9.9.9.9.9"), organisaatioOid = OrganisaatioOid("5.5.5"), modified = None)
 
   val JulkaistuHakukohde = new Hakukohde(
     oid = None,
@@ -113,13 +115,15 @@ object TestData {
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     muokkaaja = UserOid("1.2.3.2.1"),
     organisaatioOid = OrganisaatioOid("1.2"),
-    kielivalinta = Seq(Fi, Sv))
+    kielivalinta = Seq(Fi, Sv),
+    modified = None)
 
   val MinHakukohde = new Hakukohde(
     muokkaaja = UserOid("7.7.7.7"),
     organisaatioOid = OrganisaatioOid("1.2"),
     toteutusOid = ToteutusOid("1.2.246.562.17.123"),
-    hakuOid = HakuOid("1.2.246.562.29.123"))
+    hakuOid = HakuOid("1.2.246.562.29.123"),
+    modified = None)
 
   val Taulukko1 = new Taulukko(
     id = None,
@@ -194,9 +198,10 @@ object TestData {
     metadata = Some(valintaperusteMetadata),
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
     muokkaaja = UserOid("2.1.2.1.2"),
-    kielivalinta = List(Fi, Sv))
+    kielivalinta = List(Fi, Sv),
+    modified = None)
 
-  val MinValintaperuste = new Valintaperuste(muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"))
+  val MinValintaperuste = new Valintaperuste(muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"), modified = None)
 
   val ToteutuksenOpetus = Opetus(
     opetuskieliKoodiUrit = Seq("kieli_fi#1"),
@@ -233,10 +238,12 @@ object TestData {
     metadata = Some(AmmToteutuksenMetatieto),
     muokkaaja = UserOid("1.2.3.4"),
     organisaatioOid = OrganisaatioOid("1.2"),
-    kielivalinta = Seq(Fi, Sv))
+    kielivalinta = Seq(Fi, Sv),
+    modified = None)
 
   val MinToteutus = new Toteutus(
     muokkaaja = UserOid("5.4.3.2"),
     organisaatioOid = OrganisaatioOid("1.2"),
-    koulutusOid = KoulutusOid("1.2.246.562.13.123"))
+    koulutusOid = KoulutusOid("1.2.246.562.13.123"),
+    modified = None)
 }

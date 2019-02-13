@@ -1,5 +1,6 @@
 package fi.oph.kouta.domain
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, UserOid}
@@ -11,12 +12,13 @@ sealed trait Perustiedot extends Validatable {
   val muokkaaja: UserOid
   val kielivalinta: Seq[Kieli]
   val organisaatioOid: OrganisaatioOid
+  val modified: Option[LocalDateTime]
 
   def validate(): IsValid = and(
     assertValid(muokkaaja),
     assertValid(organisaatioOid),
     validateIfTrue(tila == Julkaistu, () => and(
-      assertTrue(kielivalinta.size > 0, MissingKielivalinta),
+      assertTrue(kielivalinta.nonEmpty, MissingKielivalinta),
       validateKielistetty(kielivalinta, nimi, "nimi")
     )))
 }

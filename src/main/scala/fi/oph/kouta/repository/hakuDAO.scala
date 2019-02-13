@@ -5,7 +5,7 @@ import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Haku, OidListItem}
+import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 import slick.sql.SqlStreamingAction
@@ -17,8 +17,8 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def get(oid: HakuOid): Option[(Haku, Instant)]
   def update(haku: Haku, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
-  def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
+  def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
 }
   
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -57,10 +57,10 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[OidListItem] =
+  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
 }
 
@@ -94,8 +94,6 @@ trait HakuModificationSQL extends SQLHelpers {
 sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers {
 
   def insertHaku(haku: Haku) = {
-    val Haku(_, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
-    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatioOid, _, muokkaaja, kielivalinta) = haku
     sql"""insert into haut ( tila,
                              nimi,
                              hakutapa_koodi_uri,
@@ -111,21 +109,21 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              organisaatio_oid,
                              muokkaaja,
                              kielivalinta
-          ) values ( ${tila.toString}::julkaisutila,
-                     ${toJsonParam(nimi)}::jsonb,
-                     ${hakutapaKoodiUri},
-                     ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp,
-                     ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp,
-                     ${alkamiskausiKoodiUri},
-                     ${alkamisvuosi},
-                     ${kohdejoukkoKoodiUri},
-                     ${kohdejoukonTarkenneKoodiUri},
-                     ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-                     ${hakulomake},
-                     ${toJsonParam(metadata)}::jsonb,
-                     $organisaatioOid,
-                     $muokkaaja,
-                     ${toJsonParam(kielivalinta)}::jsonb
+          ) values ( ${haku.tila.toString}::julkaisutila,
+                     ${toJsonParam(haku.nimi)}::jsonb,
+                     ${haku.hakutapaKoodiUri},
+                     ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
+                     ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp,
+                     ${haku.alkamiskausiKoodiUri},
+                     ${haku.alkamisvuosi},
+                     ${haku.kohdejoukkoKoodiUri},
+                     ${haku.kohdejoukonTarkenneKoodiUri},
+                     ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
+                     ${haku.hakulomake},
+                     ${toJsonParam(haku.metadata)}::jsonb,
+                     ${haku.organisaatioOid},
+                     ${haku.muokkaaja},
+                     ${toJsonParam(haku.kielivalinta)}::jsonb
           ) returning oid""".as[HakuOid].headOption
   }
 
@@ -142,7 +140,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def selectHaku(oid: HakuOid) = {
     sql"""select oid, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, alkamiskausi_koodi_uri, alkamisvuosi,
-          kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake, metadata, organisaatio_oid, muokkaaja, kielivalinta from haut where oid = $oid"""
+          kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake, metadata, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time) from haut where oid = $oid"""
   }
 
   def selectHaunHakuajat(oid: HakuOid) = {
@@ -150,39 +148,37 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def updateHaku(haku: Haku) = {
-    val Haku(oid, tila, nimi, hakutapaKoodiUri, hakukohteenLiittamisenTakaraja, hakukohteenMuokkaamisenTakaraja, alkamiskausiKoodiUri, alkamisvuosi,
-    kohdejoukkoKoodiUri, kohdejoukonTarkenneKoodiUri, hakulomaketyyppi, hakulomake, metadata, organisaatioOid, _, muokkaaja, kielivalinta) = haku
     sqlu"""update haut set
-              hakutapa_koodi_uri = $hakutapaKoodiUri,
-              hakukohteen_liittamisen_takaraja = ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp,
-              hakukohteen_muokkaamisen_takaraja = ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp,
-              alkamiskausi_koodi_uri = $alkamiskausiKoodiUri,
-              alkamisvuosi = ${alkamisvuosi},
-              kohdejoukko_koodi_uri = $kohdejoukkoKoodiUri,
-              kohdejoukon_tarkenne_koodi_uri = $kohdejoukonTarkenneKoodiUri,
-              hakulomaketyyppi = ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-              hakulomake = $hakulomake,
-              organisaatio_oid = $organisaatioOid,
-              tila = ${tila.toString}::julkaisutila,
-              nimi = ${toJsonParam(nimi)}::jsonb,
-              metadata = ${toJsonParam(metadata)}::jsonb,
-              muokkaaja = $muokkaaja,
-              kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
-            where oid = $oid
-            and ( hakutapa_koodi_uri is distinct from $hakutapaKoodiUri
-            or alkamiskausi_koodi_uri is distinct from $alkamiskausiKoodiUri
-            or alkamisvuosi is distinct from ${alkamisvuosi}
-            or kohdejoukko_koodi_uri is distinct from $kohdejoukkoKoodiUri
-            or kohdejoukon_tarkenne_koodi_uri is distinct from $kohdejoukonTarkenneKoodiUri
-            or hakulomaketyyppi is distinct from ${hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
-            or hakulomake is distinct from $hakulomake
-            or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenLiittamisenTakaraja)}::timestamp
-            or hakukohteen_muokkaamisen_takaraja is distinct from ${formatTimestampParam(hakukohteenMuokkaamisenTakaraja)}::timestamp
-            or organisaatio_oid is distinct from $organisaatioOid
-            or tila is distinct from ${tila.toString}::julkaisutila
-            or nimi is distinct from ${toJsonParam(nimi)}::jsonb
-            or metadata is distinct from ${toJsonParam(metadata)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb)"""
+              hakutapa_koodi_uri = ${haku.hakutapaKoodiUri},
+              hakukohteen_liittamisen_takaraja = ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
+              hakukohteen_muokkaamisen_takaraja = ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp,
+              alkamiskausi_koodi_uri = ${haku.alkamiskausiKoodiUri},
+              alkamisvuosi = ${haku.alkamisvuosi},
+              kohdejoukko_koodi_uri = ${haku.kohdejoukkoKoodiUri},
+              kohdejoukon_tarkenne_koodi_uri = ${haku.kohdejoukonTarkenneKoodiUri},
+              hakulomaketyyppi = ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
+              hakulomake = ${haku.hakulomake},
+              organisaatio_oid = ${haku.organisaatioOid},
+              tila = ${haku.tila.toString}::julkaisutila,
+              nimi = ${toJsonParam(haku.nimi)}::jsonb,
+              metadata = ${toJsonParam(haku.metadata)}::jsonb,
+              muokkaaja = ${haku.muokkaaja},
+              kielivalinta = ${toJsonParam(haku.kielivalinta)}::jsonb
+            where oid = ${haku.oid}
+            and ( hakutapa_koodi_uri is distinct from ${haku.hakutapaKoodiUri}
+            or alkamiskausi_koodi_uri is distinct from ${haku.alkamiskausiKoodiUri}
+            or alkamisvuosi is distinct from ${haku.alkamisvuosi}
+            or kohdejoukko_koodi_uri is distinct from ${haku.kohdejoukkoKoodiUri}
+            or kohdejoukon_tarkenne_koodi_uri is distinct from ${haku.kohdejoukonTarkenneKoodiUri}
+            or hakulomaketyyppi is distinct from ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
+            or hakulomake is distinct from ${haku.hakulomake}
+            or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp
+            or hakukohteen_muokkaamisen_takaraja is distinct from ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp
+            or organisaatio_oid is distinct from ${haku.organisaatioOid}
+            or tila is distinct from ${haku.tila.toString}::julkaisutila
+            or nimi is distinct from ${toJsonParam(haku.nimi)}::jsonb
+            or metadata is distinct from ${toJsonParam(haku.metadata)}::jsonb
+            or kielivalinta is distinct from ${toJsonParam(haku.kielivalinta)}::jsonb)"""
   }
 
   def insertHakuaika(oid: Option[HakuOid], hakuaika: Ajanjakso, muokkaaja: UserOid) = {
@@ -197,7 +193,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def updateHaunHakuajat(haku: Haku) = {
     val (oid, hakuajat, muokkaaja) = (haku.oid, haku.hakuajat, haku.muokkaaja)
-    if(hakuajat.size > 0) {
+    if(hakuajat.nonEmpty) {
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
       val deleteSQL = deleteHakuajat(oid, hakuajat)
 
@@ -210,7 +206,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from haut
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[OidListItem]
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[HakuListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
@@ -218,6 +214,6 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
           from haut
           inner join hakukohteet on hakukohteet.haku_oid = haut.oid
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
-          where toteutukset.oid = $toteutusOid""".as[OidListItem]
+          where toteutukset.oid = $toteutusOid""".as[HakuListItem]
   }
 }

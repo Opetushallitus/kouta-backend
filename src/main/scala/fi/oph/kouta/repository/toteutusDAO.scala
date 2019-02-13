@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.ConcurrentModificationException
 
-import fi.oph.kouta.domain.{OidListItem, Toteutus}
+import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid._
 import slick.dbio.DBIO
@@ -17,8 +17,10 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean
   def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
 
-  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
-  def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem]
+  def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
+  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
+  def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
+  def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -62,8 +64,8 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
-    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _) = toteutus
-    if(tarjoajat.size > 0) {
+    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _, _) = toteutus
+    if(tarjoajat.nonEmpty) {
       DBIO.sequence( tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
     } else {
       DBIO.sequence(List(deleteTarjoajat(oid)))
@@ -90,13 +92,30 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       }
   }
 
+  override def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        toteutukset <- selectJulkaistutToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
+      } yield (toteutukset, tarjoajat) ) match {
+      case Left(t) => throw t
+      case Right((toteutukset, tarjoajat)) => {
+        toteutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
+      }
+    }
+  }
+
   override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
 
-  override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[OidListItem] =
+  override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem] =
+    KoutaDatabase.runBlocking(selectByKoulutusOid(koulutusOid))
+
+  override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
     KoutaDatabase.runBlocking(selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
 }
 
@@ -131,10 +150,20 @@ trait ToteutusModificationSQL extends SQLHelpers {
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   def selectToteutus(oid: ToteutusOid) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta from toteutukset where oid = $oid"""
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
+          from toteutukset
+          where oid = $oid"""
 
   def selectToteutuksetByKoulutusOid(oid: KoulutusOid) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta from toteutukset where koulutus_oid = $oid"""
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
+          from toteutukset
+          where koulutus_oid = $oid"""
+
+  def selectJulkaistutToteutuksetByKoulutusOid(oid: KoulutusOid) =
+    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
+          from toteutukset
+          where koulutus_oid = $oid
+          and tila = 'julkaistu'::julkaisutila"""
 
   def selectToteutuksenTarjoajat(oid: ToteutusOid) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
@@ -144,7 +173,6 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def insertToteutus(toteutus: Toteutus) = {
-    val Toteutus(_, koulutusOid, tila, _, nimi, metadata, muokkaaja, organisaatioOid, kielivalinta) = toteutus
     sql"""insert into toteutukset (
             koulutus_oid,
             tila,
@@ -154,13 +182,13 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             organisaatio_oid,
             kielivalinta
           ) values (
-            $koulutusOid,
-            ${tila.toString}::julkaisutila,
-            ${toJsonParam(nimi)}::jsonb,
-            ${toJsonParam(metadata)}::jsonb,
-            $muokkaaja,
-            $organisaatioOid,
-            ${toJsonParam(kielivalinta)}::jsonb
+            ${toteutus.koulutusOid},
+            ${toteutus.tila.toString}::julkaisutila,
+            ${toJsonParam(toteutus.nimi)}::jsonb,
+            ${toJsonParam(toteutus.metadata)}::jsonb,
+            ${toteutus.muokkaaja},
+            ${toteutus.organisaatioOid},
+            ${toJsonParam(toteutus.kielivalinta)}::jsonb
           ) returning oid""".as[ToteutusOid].headOption
   }
 
@@ -171,22 +199,21 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def updateToteutus(toteutus: Toteutus) = {
-    val Toteutus(oid, koulutusOid, tila, _, nimi, metadata, muokkaaja, organisaatioOid, kielivalinta) = toteutus
     sqlu"""update toteutukset set
-              koulutus_oid = ${koulutusOid},
-              tila = ${tila.toString}::julkaisutila,
-              nimi = ${toJsonParam(nimi)}::jsonb,
-              metadata = ${toJsonParam(metadata)}::jsonb,
-              muokkaaja = $muokkaaja,
-              organisaatio_oid = $organisaatioOid,
-              kielivalinta = ${toJsonParam(kielivalinta)}::jsonb
-            where oid = $oid
-            and ( koulutus_oid is distinct from $koulutusOid
-            or tila is distinct from ${tila.toString}::julkaisutila
-            or nimi is distinct from ${toJsonParam(nimi)}::jsonb
-            or metadata is distinct from ${toJsonParam(metadata)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from $organisaatioOid )"""
+              koulutus_oid = ${toteutus.koulutusOid},
+              tila = ${toteutus.tila.toString}::julkaisutila,
+              nimi = ${toJsonParam(toteutus.nimi)}::jsonb,
+              metadata = ${toJsonParam(toteutus.metadata)}::jsonb,
+              muokkaaja = ${toteutus.muokkaaja},
+              organisaatio_oid = ${toteutus.organisaatioOid},
+              kielivalinta = ${toJsonParam(toteutus.kielivalinta)}::jsonb
+            where oid = ${toteutus.oid}
+            and ( koulutus_oid is distinct from ${toteutus.koulutusOid}
+            or tila is distinct from ${toteutus.tila.toString}::julkaisutila
+            or nimi is distinct from ${toJsonParam(toteutus.nimi)}::jsonb
+            or metadata is distinct from ${toJsonParam(toteutus.metadata)}::jsonb
+            or kielivalinta is distinct from ${toJsonParam(toteutus.kielivalinta)}::jsonb
+            or organisaatio_oid is distinct from ${toteutus.organisaatioOid} )"""
   }
 
   def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid ) = {
@@ -202,15 +229,21 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def deleteTarjoajat(oid: Option[ToteutusOid]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[OidListItem]
+          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ToteutusListItem]
+  }
+
+  def selectByKoulutusOid(koulutusOid: KoulutusOid) = {
+    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from toteutukset
+          where koulutus_oid = $koulutusOid""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-          and koulutus_oid = $koulutusOid""".as[OidListItem]
+          and koulutus_oid = $koulutusOid""".as[ToteutusListItem]
   }
 }

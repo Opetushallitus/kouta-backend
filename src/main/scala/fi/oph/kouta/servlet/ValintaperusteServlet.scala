@@ -3,7 +3,7 @@ package fi.oph.kouta.servlet
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{IdListItem, Valintaperuste}
+import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
@@ -43,7 +43,7 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     }
   }
 
-  get("/list", operation(apiOperation[List[IdListItem]]("Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet")
+  get("/list", operation(apiOperation[List[ValintaperusteListItem]]("Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet")
     tags modelName
     summary "Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet. Listaa voidaan rajata myös haun oidilla, jolloin kuvaukset rajataan haun kohdejoukoun perusteella."
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)")
@@ -53,6 +53,14 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
       case (Some(oid), None) => Ok(ValintaperusteService.list(OrganisaatioOid(oid)))
       case (Some(oid), Some(hakuOid)) => Ok(ValintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid)))
     }
+  }
+
+  get("/:id/hakukohteet/list", operation(apiOperation[List[HakukohdeListItem]]("Listaa kaikki hakukohteet, jotka käyttävät valintaperustetta")
+    tags modelName
+    summary "Listaa kaikki hakukohteet, jotka käyttävät annettua valintaperustekuvausta"
+    parameter pathParam[String]("id").description("Valintaperusteen UUID"))) {
+
+    Ok(ValintaperusteService.listByValintaperusteId(UUID.fromString(params("id"))))
   }
 
   prettifySwaggerModels()
