@@ -59,7 +59,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
     val uusiHaku = haku(oid).copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
-      hakulomake = Some("http://ataru/kivahakulomake"),
+      hakulomake = Map(Fi -> "http://ataru/kivahakulomake", Sv -> "http://ataru/kivahakulomake/sv", En -> "http://ataru/kivahakulomake/en"),
       metadata = Some(new HakuMetadata(Some(TestData.Yhteystieto1))),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
     update(uusiHaku, lastModified, true)

@@ -5,7 +5,8 @@ import java.time.LocalDateTime
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.Validatable
 
-case class KoulutusMetadata(kuvaus: Map[Kieli, String] = Map())
+case class KoulutusMetadata(kuvaus: Map[Kieli, String] = Map(),
+                            lisatiedot: Seq[Lisatieto] = Seq())
 
 case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,

@@ -190,7 +190,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${hakukohde.alkamiskausiKoodiUri},
             ${hakukohde.alkamisvuosi},
             ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-            ${hakukohde.hakulomake},
+            ${toJsonParam(hakukohde.hakulomake)}::jsonb,
             ${hakukohde.aloituspaikat},
             ${hakukohde.ensikertalaisenAloituspaikat},
             ${hakukohde.pohjakoulutusvaatimusKoodiUri},
@@ -218,7 +218,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               alkamiskausi_koodi_uri = ${hakukohde.alkamiskausiKoodiUri},
               alkamisvuosi = ${hakukohde.alkamisvuosi},
               hakulomaketyyppi = ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-              hakulomake = ${hakukohde.hakulomake},
+              hakulomake = ${toJsonParam(hakukohde.hakulomake)}::jsonb,
               aloituspaikat = ${hakukohde.aloituspaikat},
               ensikertalaisen_aloituspaikat = ${hakukohde.ensikertalaisenAloituspaikat},
               pohjakoulutusvaatimus_koodi_uri = ${hakukohde.pohjakoulutusvaatimusKoodiUri},
@@ -242,7 +242,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or alkamiskausi_koodi_uri is distinct from ${hakukohde.alkamiskausiKoodiUri}
             or alkamisvuosi is distinct from ${hakukohde.alkamisvuosi}
             or hakulomaketyyppi is distinct from ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
-            or hakulomake is distinct from ${hakukohde.hakulomake}
+            or hakulomake is distinct from ${toJsonParam(hakukohde.hakulomake)}::jsonb
             or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
             or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
             or pohjakoulutusvaatimus_koodi_uri is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUri}

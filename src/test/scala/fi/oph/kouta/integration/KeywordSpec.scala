@@ -25,8 +25,16 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with Koulutus
     searchAsiasanat("aa", List("aamu", "aarre", "kaipaa"))
   }
 
+  it should "search asiasanat ignore case" in {
+    searchAsiasanat("Aa", List("aamu", "aarre", "kaipaa"))
+  }
+
   it should "search ammattinimikkeet" in {
     searchAmmattinimikkeet("lääk", List("lääkäri", "yleislääkäri"))
+  }
+
+  it should "search ammattinimikkeet ignore case" in {
+    searchAmmattinimikkeet("Lääk", List("lääkäri", "yleislääkäri"))
   }
 
   it should "search asiasanat with given kieli" in {

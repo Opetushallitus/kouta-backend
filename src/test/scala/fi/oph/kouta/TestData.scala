@@ -58,7 +58,11 @@ object TestData {
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(new KoulutusMetadata(Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))),
+    metadata = Some(new KoulutusMetadata(
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      lisatiedot = Seq(
+        Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
+          teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
     muokkaaja = UserOid("5.5.5"),
     organisaatioOid = OrganisaatioOid("1.2"),
@@ -73,12 +77,13 @@ object TestData {
     hakutapaKoodiUri = Some("hakutapa_03#1"),
     hakukohteenLiittamisenTakaraja = Some(inFuture()),
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
+    ajastettuJulkaisu = Some(inFuture()),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2019"),
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_02#2"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     hakulomaketyyppi = Some(EiSähköistä),
-    hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
+    hakulomake = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
@@ -97,7 +102,7 @@ object TestData {
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2019"),
     hakulomaketyyppi = Some(EiSähköistä),
-    hakulomake = Some("Hakulomake tulostetaan ja toimitetaan postitse"),
+    hakulomake = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     aloituspaikat = Some(2),
     ensikertalaisenAloituspaikat = Some(1),
     pohjakoulutusvaatimusKoodiUri = Some("pohjakoulutusvaatimustoinenaste_01#2"),
@@ -213,10 +218,13 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Map(Fi -> "200,50 euroa", Sv -> "200,50 euro"),
-    osiot = List(
-      Osio(otsikko = Map(Fi -> "Opintojen rakenne", Sv -> "Rakenne sv"),
+    alkamiskausiKoodiUri = Some("kausi_k#1"),
+    alkamisvuosi = Some("2020"),
+    alkamisaikaKuvaus = Map(Fi -> "Aikakuvaus fi", Sv -> "Aikakuvaus sv"),
+    lisatiedot = Seq(
+      Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_2#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
-      Osio(otsikko = Map(Fi -> "Sisältö", Sv -> "Sisältö sv"),
+      Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_1#1",
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))))
 
   val AmmToteutuksenMetatieto = ToteutusMetadata(

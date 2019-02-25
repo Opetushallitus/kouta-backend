@@ -13,12 +13,13 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakutapaKoodiUri: Option[String] = None,
                 hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
                 hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
+                ajastettuJulkaisu: Option[LocalDateTime] = None,
                 alkamiskausiKoodiUri: Option[String] = None,
                 alkamisvuosi: Option[String] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,
                 kohdejoukonTarkenneKoodiUri: Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                hakulomake: Option[String] = None,
+                hakulomake: Kielistetty = Map(),
                 metadata: Option[HakuMetadata] = None,
                 organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
@@ -38,7 +39,6 @@ case class Haku(oid: Option[HakuOid] = None,
      validateIfTrue(tila == Julkaistu, () => and (
        assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
        assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-       assertNotOptional(kohdejoukonTarkenneKoodiUri, "kohdejoukonTarkenneKoodiUri"),
        assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")
      ))
   )

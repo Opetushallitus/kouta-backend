@@ -49,7 +49,7 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
     val (field, table) = fieldAndTable(search.`type`)
     sql"""select #$field from #$table
           where kieli = ${search.kieli.toString}::kieli
-          and #$field like $like
+          and #$field like ${like.toLowerCase}
           order by #$field asc
           limit ${search.limit} """.as[String]
   }
