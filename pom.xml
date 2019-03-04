@@ -533,7 +533,6 @@
                 <artifactId>scalatest-maven-plugin</artifactId>
                 <version>${plugin.scalatest-maven-plugin.version}</version>
                 <configuration>
-                    <membersOnlySuites>fi.oph.kouta.integration, fi.oph.kouta.validation, fi.oph.kouta.client, fi.oph.kouta.indexing</membersOnlySuites>
                     <stdout>T</stdout>
                 </configuration>
                 <executions>

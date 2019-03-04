@@ -1,9 +1,8 @@
 package fi.oph.kouta.validation
 
-import org.scalatest.{Assertion, DoNotDiscover}
+import org.scalatest.Assertion
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-@DoNotDiscover
 abstract class BaseValidationSpec[E <: Validatable] extends ScalatraFlatSpec {
 
   def assertRight(e:E) = e.validate() should equal (Right(()))
