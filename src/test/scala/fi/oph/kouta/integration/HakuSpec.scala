@@ -6,7 +6,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.validation.Validations
 
-class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
+class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations with KonfoIndexingQueues {
 
   it should "return 404 if haku not found" in {
     get("/haku/123") {

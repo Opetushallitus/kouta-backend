@@ -8,7 +8,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.validation.Validations
 
-class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations with SQLHelpers {
+class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations with SQLHelpers with KonfoIndexingQueues {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null

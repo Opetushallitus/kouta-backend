@@ -12,3 +12,5 @@ kouta-backend.db.timeoutSeconds=20
 kouta-backend.db.leakDetectionThresholdMillis=1800000
 host.virkailija={{host_virkailija}}
 organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/hierarkia/hae
+indexing.queue.priority={{indexing_queue}}
+indexing.queue.endpoint={{sqs_endpoint}}

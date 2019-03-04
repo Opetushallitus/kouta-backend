@@ -4,13 +4,22 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.indexing.IndexingService
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
 
 object ToteutusService extends ValidatingService[Toteutus] with AuthorizationService {
 
-  def put(toteutus: Toteutus): Option[ToteutusOid] = withValidation(toteutus, ToteutusDAO.put(_))
+  def put(toteutus: Toteutus): Option[ToteutusOid] = {
+    val oid = withValidation(toteutus, ToteutusDAO.put(_))
+    IndexingService.index(toteutus.copy(oid = oid))
+    oid
+  }
 
-  def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = withValidation(toteutus, ToteutusDAO.update(_, notModifiedSince))
+  def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = {
+    val updated = withValidation(toteutus, ToteutusDAO.update(_, notModifiedSince))
+    if (updated) IndexingService.index(toteutus)
+    updated
+  }
 
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = ToteutusDAO.get(oid)
 

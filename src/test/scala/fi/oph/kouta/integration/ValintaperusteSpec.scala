@@ -9,7 +9,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.validation.Validations
 
-class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with Validations {
+class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with Validations with KonfoIndexingQueues {
 
   it should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}") {

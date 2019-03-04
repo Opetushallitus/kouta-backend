@@ -4,14 +4,22 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.indexing.IndexingService
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 
 object KoulutusService extends ValidatingService[Koulutus] with AuthorizationService {
 
-    def put(koulutus: Koulutus): Option[KoulutusOid] = withValidation(koulutus, KoulutusDAO.put(_))
+    def put(koulutus: Koulutus): Option[KoulutusOid] = {
+        val oid = withValidation(koulutus, KoulutusDAO.put)
+        IndexingService.index(koulutus.copy(oid = oid))
+        oid
+    }
 
-    def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean =
-        withValidation(koulutus, KoulutusDAO.update(_, notModifiedSince))
+    def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean = {
+        val updated = withValidation(koulutus, KoulutusDAO.update(_, notModifiedSince))
+        if (updated) IndexingService.index(koulutus)
+        updated
+    }
 
     def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
 
