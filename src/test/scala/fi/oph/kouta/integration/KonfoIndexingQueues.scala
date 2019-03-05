@@ -5,7 +5,7 @@ import scala.util.Try
 
 import cloud.localstack.docker.LocalstackDocker.{INSTANCE => localstack}
 import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest
+import com.amazonaws.services.sqs.model.{Message, ReceiveMessageRequest}
 import io.atlassian.aws.sqs.SQSClient
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
@@ -46,15 +46,14 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
     super.afterEach()
   }
 
-  private lazy val sqs = {
+  lazy val sqs = {
     SQSClient.withEndpoint(localstack.getEndpointSQS)
   }
 
-  def receiveFromQueue(queue: String, deleteReceived: Boolean = false): Seq[String] = {
+  def receiveFromQueue(queue: String): Seq[Message] = {
     sqs.receiveMessage(new ReceiveMessageRequest(queue).withMaxNumberOfMessages(10))
       .getMessages
       .asScala
-      .map { _.getBody }
   }
 
   def getQueue(name: String): String = sqs.getQueueUrl(name).getQueueUrl

@@ -8,7 +8,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.validation.Validations
 
-class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations with SQLHelpers with KonfoIndexingQueues {
+class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations with SQLHelpers with KonfoIndexingQueues with EventuallyMessages {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null
@@ -155,5 +155,25 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List())
     update(muokattuHakukohde, lastModified, true)
     get(oid, muokattuHakukohde)
+  }
+
+  it should "send indexing message after creating hakukohde" in {
+    val oid = put(uusiHakukohde)
+    eventuallyIndexingMessages { _ should contain (s"""{"hakukohde":["$oid"]}""") }
+  }
+
+  it should "send indexing message after updating hakukohde" in {
+    val oid = put(uusiHakukohde)
+    eventuallyIndexingMessages { _ should contain (s"""{"hakukohde":["$oid"]}""") }
+
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    val muokattuHakukohde = tallennettuHakukohde(oid).copy(
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      hakulomaketyyppi = Some(Ataru),
+      hakulomake = Some("http://ataru/kivahakulomake"),
+      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
+    update(muokattuHakukohde, lastModified, true)
+
+    eventuallyIndexingMessages { _ should contain (s"""{"hakukohde":["$oid"]}""") }
   }
 }

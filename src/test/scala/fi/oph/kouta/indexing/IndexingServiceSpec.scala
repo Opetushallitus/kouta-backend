@@ -1,11 +1,12 @@
 package fi.oph.kouta.indexing
 
 import fi.oph.kouta.WaitIfFails
-import fi.oph.kouta.integration.{KonfoIndexingQueues, KoutaIntegrationSpec}
-import org.scalatest.concurrent.Eventually
+import fi.oph.kouta.integration.{EventuallyMessages, KonfoIndexingQueues, KoutaIntegrationSpec}
 import org.scalatest.time.SpanSugar
 
-class IndexingServiceSpec extends KoutaIntegrationSpec with KonfoIndexingQueues with Eventually with SpanSugar with WaitIfFails {
+class IndexingServiceSpec extends KoutaIntegrationSpec
+  with KonfoIndexingQueues with SpanSugar with WaitIfFails with EventuallyMessages {
+
   case class Foo(id: Option[String])
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = 3.seconds, interval = 500.microseconds)
@@ -16,9 +17,7 @@ class IndexingServiceSpec extends KoutaIntegrationSpec with KonfoIndexingQueues 
 
   "IndexingService.index[A]" should "send indexing message to SQS queue using Indexing type class" in {
     IndexingService.index(Foo(Some("foobar")))
-    eventually {
-      receiveFromQueue(indexingQueue) should contain ("""{"fooIndex":["foobar"]}""")
-    }
+    eventuallyIndexingMessages { _ should contain ("""{"fooIndex":["foobar"]}""") }
   }
 
   it should "not send indexing message to SQS if `indexId` return None" in {

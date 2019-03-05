@@ -257,6 +257,17 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.softwaremill.odelay</groupId>
+            <artifactId>odelay-core_2.12</artifactId>
+            <version>0.3.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <!-- override version because of conflicting versions in aws-scala -->
         <dependency>
             <groupId>org.scalaz</groupId>
