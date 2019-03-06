@@ -10,7 +10,7 @@ import org.scalatest.time.SpanSugar._
 trait EventuallyMessages extends Eventually {
   this: KonfoIndexingQueues with PatienceConfiguration =>
 
-  implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = 6.seconds, interval = 500.microseconds)
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = 3.seconds, interval = 100.microseconds)
 
   def eventuallyMessages(queue: String)
                         (check: Seq[String] => Assertion)

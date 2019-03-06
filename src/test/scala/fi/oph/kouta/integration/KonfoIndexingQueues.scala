@@ -46,12 +46,13 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
     super.afterEach()
   }
 
-  lazy val sqs = {
-    SQSClient.withEndpoint(localstack.getEndpointSQS)
-  }
+  lazy val sqs = SQSClient.withEndpoint(localstack.getEndpointSQS)
 
   def receiveFromQueue(queue: String): Seq[Message] = {
-    sqs.receiveMessage(new ReceiveMessageRequest(queue).withMaxNumberOfMessages(10))
+    sqs.receiveMessage(new ReceiveMessageRequest(queue)
+      .withMaxNumberOfMessages(10)
+      .withVisibilityTimeout(0)
+    )
       .getMessages
       .asScala
   }
