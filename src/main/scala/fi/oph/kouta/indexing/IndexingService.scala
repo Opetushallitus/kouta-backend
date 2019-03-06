@@ -22,8 +22,8 @@ object IndexingService extends Logging with Retry {
   }
 
   private def sendWithRetry(msg: String): Future[Unit] = {
-    retry("sending indexing message", delay = 1.second, retries = 3) { sendMessage(msg) }
+    retry(s"sending indexing message: '$msg'", delay = 1.second, retries = 3) { sendMessage(msg) }
   }
 
-  private def sendMessage(msg: String): Unit = sqs.sendMessage(priorityQueue, msg)
+  private def sendMessage(msg: String): Unit = { sqs.sendMessage(priorityQueue, msg) }
 }

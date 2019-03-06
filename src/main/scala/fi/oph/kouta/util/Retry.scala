@@ -9,7 +9,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import odelay.Delay
 
 trait Retry extends Logging {
-  def retry[T](actionName: String, delay: FiniteDuration, retries: Int)(op: => T): Future[T] = {
+  def retry[T](actionName: => String, delay: FiniteDuration, retries: Int)(op: => T): Future[T] = {
     Future { op } recoverWith {
       case t if retries > 0 =>
         logger.warn(s"Retrying '$actionName'. $t")
