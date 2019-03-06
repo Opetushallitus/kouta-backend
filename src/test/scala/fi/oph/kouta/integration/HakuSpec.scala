@@ -133,15 +133,15 @@ class HakuSpec extends KoutaIntegrationSpec
 
   it should "send indexing message after creating haku" in {
     val oid = put(haku)
-    eventuallyIndexingMessages { _ should contain (s"""{"haku":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
   }
 
   it should "send indexing message after updating haku" in {
     val oid = put(haku)
-    eventuallyIndexingMessages { _ should contain (s"""{"haku":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
 
     update(haku(oid, Arkistoitu), lastModified = get(oid, haku(oid)))
 
-    eventuallyIndexingMessages { _ should contain (s"""{"haku":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
   }
 }

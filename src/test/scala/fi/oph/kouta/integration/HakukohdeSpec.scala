@@ -159,12 +159,12 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
 
   it should "send indexing message after creating hakukohde" in {
     val oid = put(uusiHakukohde)
-    eventuallyIndexingMessages { _ should contain (s"""{"hakukohde":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
   }
 
   it should "send indexing message after updating hakukohde" in {
     val oid = put(uusiHakukohde)
-    eventuallyIndexingMessages { _ should contain (s"""{"hakukohde":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
 
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(
@@ -174,6 +174,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
     update(muokattuHakukohde, lastModified, true)
 
-    eventuallyIndexingMessages { _ should contain (s"""{"hakukohde":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
   }
 }

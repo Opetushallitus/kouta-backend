@@ -13,8 +13,8 @@ import fi.oph.kouta.indexing.Indexing._
 class IndexingSpec extends WordSpec with OptionValues {
   case class Foo(id: Option[String])
   implicit val fooIndexing: Indexing[Foo] = new Indexing[Foo] {
-    override def index(a: Foo): String = "fooIndex"
-    override def indexId(a: Foo): Option[String] = a.id
+    val index: String = "fooIndex"
+    def indexId(a: Foo): Option[String] = a.id
   }
 
   val haku = Haku(
@@ -63,19 +63,19 @@ class IndexingSpec extends WordSpec with OptionValues {
       }
 
       "given Haku" in {
-        ops.indexMessage(haku).value should be ("""{"haku":["haku.oid"]}""")
+        ops.indexMessage(haku).value should be ("""{"haut":["haku.oid"]}""")
       }
       "given Hakukohde" in {
-        ops.indexMessage(hakukohde).value should be ("""{"hakukohde":["hakukohde.oid"]}""")
+        ops.indexMessage(hakukohde).value should be ("""{"hakukohteet":["hakukohde.oid"]}""")
       }
       "given Koulutus" in {
-        ops.indexMessage(koulutus).value should be ("""{"koulutus":["koulutus.oid"]}""")
+        ops.indexMessage(koulutus).value should be ("""{"koulutukset":["koulutus.oid"]}""")
       }
       "given toteutus" in {
-        ops.indexMessage(toteutus).value should be ("""{"toteutus":["toteutus.oid"]}""")
+        ops.indexMessage(toteutus).value should be ("""{"toteutukset":["toteutus.oid"]}""")
       }
       "given Valintaperuste" in {
-        ops.indexMessage(valintaperuste).value should be (s"""{"valintaperuste":["${valintaperuste.id.get.toString}"]}""")
+        ops.indexMessage(valintaperuste).value should be (s"""{"valintaperusteet":["${valintaperuste.id.get.toString}"]}""")
       }
     }
     "return None if oid/id is None" when {
@@ -98,7 +98,6 @@ class IndexingSpec extends WordSpec with OptionValues {
       "given Valintaperuste" in {
         ops.indexMessage(valintaperuste.copy(id = None)) should be (None)
       }
-
     }
   }
 }

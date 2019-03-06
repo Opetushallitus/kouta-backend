@@ -11,8 +11,8 @@ class IndexingServiceSpec extends KoutaIntegrationSpec
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = 3.seconds, interval = 500.microseconds)
   implicit val fooIndexing: Indexing[Foo] = new Indexing[Foo] {
-    override def index(a: Foo): String = "fooIndex"
-    override def indexId(a: Foo): Option[String] = a.id
+    val index: String = "fooIndex"
+    def indexId(a: Foo): Option[String] = a.id
   }
 
   "IndexingService.index[A]" should "send indexing message to SQS queue using Indexing type class" in {

@@ -5,7 +5,7 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods.{compact, render}
 
 trait Indexing[A] {
-  def index(a: A): String = a.getClass.getSimpleName.toLowerCase
+  def index: String
   def indexId(a: A): Option[String]
 }
 
@@ -26,13 +26,23 @@ object Indexing {
 
   object ops {
     def indexMessage[A: Indexing](a: A): Option[String] = {
-      Indexing[A].indexId(a) map { oid => compact(render(Indexing[A].index(a) -> Seq(oid))) }
+      Indexing[A].indexId(a) map { oid => compact(render(Indexing[A].index -> Seq(oid))) }
     }
   }
 
-  implicit val hakuIndexing: Indexing[Haku] = new Indexing[Haku] with WithOidIndexing[Haku]
-  implicit val hakukohdeIndexing: Indexing[Hakukohde] = new Indexing[Hakukohde] with WithOidIndexing[Hakukohde]
-  implicit val koulutusIndexing: Indexing[Koulutus] = new Indexing[Koulutus] with WithOidIndexing[Koulutus]
-  implicit val toteutusIndexing: Indexing[Toteutus] = new Indexing[Toteutus] with WithOidIndexing[Toteutus]
-  implicit val valintaperusteIndexing: Indexing[Valintaperuste] = new Indexing[Valintaperuste] with WithIdIndexing[Valintaperuste]
+  implicit val hakuIndexing: Indexing[Haku] = new Indexing[Haku] with WithOidIndexing[Haku] {
+    val index: String = "haut"
+  }
+  implicit val hakukohdeIndexing: Indexing[Hakukohde] = new Indexing[Hakukohde] with WithOidIndexing[Hakukohde] {
+    val index: String = "hakukohteet"
+  }
+  implicit val koulutusIndexing: Indexing[Koulutus] = new Indexing[Koulutus] with WithOidIndexing[Koulutus] {
+    val index: String = "koulutukset"
+  }
+  implicit val toteutusIndexing: Indexing[Toteutus] = new Indexing[Toteutus] with WithOidIndexing[Toteutus] {
+    val index: String = "toteutukset"
+  }
+  implicit val valintaperusteIndexing: Indexing[Valintaperuste] = new Indexing[Valintaperuste] with WithIdIndexing[Valintaperuste] {
+    val index: String = "valintaperusteet"
+  }
 }

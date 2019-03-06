@@ -134,15 +134,15 @@ class KoulutusSpec extends KoutaIntegrationSpec
 
   it should "send indexing message after creating koulutus" in {
     val oid = put(koulutus)
-    eventuallyIndexingMessages { _ should contain (s"""{"koulutus":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
   }
 
   it should "send indexing message after updating koulutus" in {
     val oid = put(koulutus)
-    eventuallyIndexingMessages { _ should contain (s"""{"koulutus":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
 
     update(koulutus(oid, Arkistoitu), lastModified = get(oid, koulutus(oid)))
 
-    eventuallyIndexingMessages { _ should contain (s"""{"koulutus":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
   }
 }

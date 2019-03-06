@@ -93,15 +93,15 @@ class ValintaperusteSpec extends KoutaIntegrationSpec
 
   it should "send indexing message after creating valintaperuste" in {
     val oid = put(valintaperuste)
-    eventuallyIndexingMessages { _ should contain (s"""{"valintaperuste":["$oid"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$oid"]}""") }
   }
 
   it should "send indexing message after updating valintaperuste" in {
     val id = put(valintaperuste)
-    eventuallyIndexingMessages { _ should contain (s"""{"valintaperuste":["$id"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
 
     update(valintaperuste(id, Arkistoitu), lastModified = get(id, valintaperuste(id)))
 
-    eventuallyIndexingMessages { _ should contain (s"""{"valintaperuste":["$id"]}""") }
+    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
 }
