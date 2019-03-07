@@ -4,6 +4,7 @@ import fi.oph.kouta.WaitIfFails
 import fi.oph.kouta.integration.{EventuallyMessages, KonfoIndexingQueues, KoutaIntegrationSpec}
 import org.scalatest.time.SpanSugar
 
+@tags.RequiresDocker
 class IndexingServiceSpec extends KoutaIntegrationSpec
   with KonfoIndexingQueues with SpanSugar with WaitIfFails with EventuallyMessages {
 

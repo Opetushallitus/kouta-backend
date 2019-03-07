@@ -7,6 +7,7 @@ import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
+@tags.RequiresDocker
 class KoulutusSpec extends KoutaIntegrationSpec
   with KoulutusFixture with ToteutusFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 

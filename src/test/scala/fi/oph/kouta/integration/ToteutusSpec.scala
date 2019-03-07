@@ -6,6 +6,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 
+@tags.RequiresDocker
 class ToteutusSpec extends KoutaIntegrationSpec
   with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 

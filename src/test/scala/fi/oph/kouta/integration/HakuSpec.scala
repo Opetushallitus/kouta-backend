@@ -6,6 +6,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.validation.Validations
 
+@tags.RequiresDocker
 class HakuSpec extends KoutaIntegrationSpec
   with HakuFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 

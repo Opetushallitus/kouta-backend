@@ -9,6 +9,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.validation.Validations
 
+@tags.RequiresDocker
 class ValintaperusteSpec extends KoutaIntegrationSpec
   with ValintaperusteFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
