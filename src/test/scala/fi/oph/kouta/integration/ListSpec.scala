@@ -4,7 +4,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import org.json4s.jackson.Serialization.read
 
-class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {
+class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock with KonfoIndexingQueues {
 
   val LonelyOid = "1.2.246.562.10.99999999999"
   val UnknownOid = "1.2.246.562.10.99999999998"

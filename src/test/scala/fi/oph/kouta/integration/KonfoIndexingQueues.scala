@@ -25,20 +25,21 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
   override def beforeAll(): Unit = {
     super.beforeAll()
     localstack.startup(dockerConfig)
+    createAndVerifyQueues() // so if test creates data in beforeAll block we don't get errors from them
   }
 
   override def beforeEach(): Unit = {
-    def createAndVerifyQueues(): Unit = {
-      import org.scalatest.Matchers._
-
-      queueNames foreach { sqs.createQueue }
-
-      // there seems to be some random problem connecting to Localstack, verify and fail here
-      sqs.listQueues().getQueueUrls should have size queueNames.size
-    }
-
     super.beforeEach()
     createAndVerifyQueues()
+  }
+
+  private def createAndVerifyQueues(): Unit = {
+    import org.scalatest.Matchers._
+
+    queueNames foreach { sqs.createQueue }
+
+    // there seems to be some random problem connecting to Localstack, verify and fail here
+    sqs.listQueues().getQueueUrls should have size queueNames.size
   }
 
   override def afterAll(): Unit = {
