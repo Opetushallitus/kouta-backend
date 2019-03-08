@@ -5,7 +5,7 @@ import scala.util.Try
 
 import cloud.localstack.docker.LocalstackDocker.{INSTANCE => localstack}
 import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
-import com.amazonaws.services.sqs.model.{Message, ReceiveMessageRequest}
+import com.amazonaws.services.sqs.model.{Message, PurgeQueueRequest, ReceiveMessageRequest}
 import io.atlassian.aws.sqs.SQSClient
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
@@ -28,8 +28,17 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
   }
 
   override def beforeEach(): Unit = {
+    def createAndVerifyQueues(): Unit = {
+      import org.scalatest.Matchers._
+
+      queueNames foreach { sqs.createQueue }
+
+      // there seems to be some random problem connecting to Localstack, verify and fail here
+      sqs.listQueues().getQueueUrls should have size queueNames.size
+    }
+
     super.beforeEach()
-    queueNames foreach { sqs.createQueue }
+    createAndVerifyQueues()
   }
 
   override def afterAll(): Unit = {
@@ -41,7 +50,10 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
     queueNames foreach { q =>
       Try { sqs.getQueueUrl(q) }
         .map { _.getQueueUrl }
-        .map { sqs.deleteQueue }
+        .map { url =>
+          sqs.purgeQueue(new PurgeQueueRequest(url))
+          sqs.deleteQueue(url)
+        }
     }
     super.afterEach()
   }
