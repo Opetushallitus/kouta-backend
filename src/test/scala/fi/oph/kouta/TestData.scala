@@ -225,7 +225,12 @@ object TestData {
       Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_2#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
       Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_1#1",
-           teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))))
+           teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
+    onkoStipendia = Some(false),
+    onkoLukuvuosimaksua = Some(false),
+    stipendinMaara = Map(Fi -> "100 euroa", Sv -> "100 euro"),
+    lukuvuosimaksu = Map(Fi -> "200 euroa", Sv -> "200 euro")
+  )
 
   val AmmToteutuksenMetatieto = ToteutusMetadata(
     kuvaus = Map(),

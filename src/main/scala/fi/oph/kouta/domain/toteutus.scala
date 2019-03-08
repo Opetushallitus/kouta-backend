@@ -6,7 +6,13 @@ import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-case class Osaamisala(koodi: String, linkki: Kielistetty = Map(), otsikko: Kielistetty = Map())
+case class Osaamisala(
+                       koodi: String,
+                       linkki: Kielistetty = Map(),
+                       otsikko: Kielistetty = Map(),
+                       nimi: Kielistetty = Map(),
+                       kuvaus: Kielistetty = Map()
+                     )
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   opetuskieletKuvaus: Kielistetty = Map(),
@@ -20,7 +26,13 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   alkamiskausiKoodiUri: Option[String] = None,
                   alkamisvuosi: Option[String] = None,
                   alkamisaikaKuvaus: Kielistetty = Map(),
-                  lisatiedot: Seq[Lisatieto] = Seq())
+                  lisatiedot: Seq[Lisatieto] = Seq(),
+                  onkoLukuvuosimaksua: Option[Boolean],
+                  lukuvuosimaksu: Kielistetty = Map(),
+                  lukuvuosimaksuKuvaus: Kielistetty = Map(),
+                  onkoStipendia: Option[Boolean],
+                  stipendinMaara: Kielistetty = Map(),
+                  stipendinKuvaus: Kielistetty = Map())
 
 
 case class ToteutusMetadata(kuvaus: Kielistetty = Map(),
@@ -28,7 +40,10 @@ case class ToteutusMetadata(kuvaus: Kielistetty = Map(),
                             opetus: Option[Opetus] = None,
                             asiasanat: List[Keyword] = List(),
                             ammattinimikkeet: List[Keyword] = List(),
-                            yhteystieto: Option[Yhteystieto] = None)
+                            yhteystieto: Option[Yhteystieto] = None,
+                            alemmanKorkeakoulututkinnonOsaamisalat: List[Osaamisala] = List(),
+                            ylemmanKorkeakoulututkinnonOsaamisalat: List[Osaamisala] = List()
+                           )
 
 case class Toteutus(oid: Option[ToteutusOid] = None,
                     koulutusOid: KoulutusOid,
