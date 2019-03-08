@@ -5,11 +5,13 @@ import scala.util.Try
 
 import cloud.localstack.docker.LocalstackDocker.{INSTANCE => localstack}
 import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
+import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.{Message, PurgeQueueRequest, ReceiveMessageRequest}
 import io.atlassian.aws.sqs.SQSClient
+import org.scalatest.concurrent.PatienceConfiguration
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
-trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
+trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with PatienceConfiguration {
   this: Suite =>
 
   def dockerConfig: LocalstackDockerConfiguration = {
@@ -20,7 +22,8 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
   }
 
   private val queueNames: Seq[String] = Seq("konfoindeksoijapriority")
-  lazy val indexingQueue = getQueue("konfoindeksoijapriority")
+  lazy val indexingQueue: String = getQueue("konfoindeksoijapriority")
+  lazy val sqs: AmazonSQSClient = SQSClient.withEndpoint(localstack.getEndpointSQS)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -33,13 +36,21 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
     createAndVerifyQueues()
   }
 
-  private def createAndVerifyQueues(): Unit = {
-    import org.scalatest.Matchers._
+  private def createAndVerifyQueues(retry: Int = 3): Unit = {
+    try {
+      queueNames foreach { sqs.createQueue }
+      waitUntil("All queues are created.") {
+        queueNames forall { q => Try { sqs.getQueueUrl(q) }.isSuccess }
+      }
+    } catch {
+      case e: Exception if retry > 0 =>
+        // Localstack seems to be little bit unreliable and sometimes get Bad Gateway error, restart instance
+        localstack.stop()
+        localstack.startup(dockerConfig)
 
-    queueNames foreach { sqs.createQueue }
-
-    // there seems to be some random problem connecting to Localstack, verify and fail here
-    sqs.listQueues().getQueueUrls should have size queueNames.size
+        createAndVerifyQueues(retry - 1)
+      case e: Exception => throw new Exception(s"Failed to create test queues. ${e.getMessage}")
+    }
   }
 
   override def afterAll(): Unit = {
@@ -56,10 +67,20 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach {
           sqs.deleteQueue(url)
         }
     }
+    waitUntil("All queues are deleted") { sqs.listQueues.getQueueUrls.size == 0 }
+
     super.afterEach()
   }
 
-  lazy val sqs = SQSClient.withEndpoint(localstack.getEndpointSQS)
+  def waitUntil(message: String)(condition: => Boolean)(implicit patience: PatienceConfig): Unit = {
+    val end = System.currentTimeMillis + patience.timeout.millisPart
+    while (System.currentTimeMillis < end) {
+      if (condition) return
+      else Thread.sleep(patience.interval.millisPart)
+    }
+    throw new Exception(s"Waiting for condition failed. '$message' was not true in ${patience.timeout.millisPart} ms.")
+  }
+
 
   def receiveFromQueue(queue: String): Seq[Message] = {
     sqs.receiveMessage(new ReceiveMessageRequest(queue)
