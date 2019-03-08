@@ -2,12 +2,25 @@
 
 Uuden tarjonnan backend.
 
+## Testit
+
+Testit voi ajaa `mvn test` komennolla tai rajaamalla ajettavien testejä
+`mvn test -Dsuites="<testiluokan nimet pilkulla erotettuna>"`
+
+Testit vaativat että Docker on asennettuna ja Docker daemon on käynnissä.
+Nämä testit voi ohittaa komennolla `mvn test -DtagsToExclude="tags.RequiresDocker"`
+
 ## Ajaminen lokaalisti
 
 Käynnistä Ideassa ```EmbeddedJettyLauncher```. Sovellus käynnistyy porttiin **8099** ja se käyttää embedded Postgres-kantaa.
 Asetuksia voi muuttaa muokkaamalla ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
 
 Emebedded Postgres-kannan käyttäminen vaatii, että postgresql on asennettu koneelle.
+
+Indeksoinnin jonot saa lokaalisti käyttöön porttiin `localhost:4576` käynnistämällä
+Localstack Docker instanssin komennolla `tools/start_localstack` ja sammutettua
+`tools/stop_localstack` komennolla. Mikäli käytössä on lokaali `konfo-indeksoija` voi sen
+Localstack instanssia käyttää koska komennot ovat identtisiä.
 
 ##### Konfigurointi
 
