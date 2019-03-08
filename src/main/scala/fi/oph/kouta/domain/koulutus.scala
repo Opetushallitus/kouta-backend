@@ -6,7 +6,11 @@ import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.Validatable
 
 case class KoulutusMetadata(kuvaus: Map[Kieli, String] = Map(),
-                            lisatiedot: Seq[Lisatieto] = Seq())
+                            lisatiedot: Seq[Lisatieto] = Seq(),
+                            kuvauksenNimi: Map[Kieli, String] = Map(),
+                            tutkintonimikeKoodiUrit: List[String] = List(),
+                            opintojenLaajuusKoodiUri: Option[String] = None
+                           )
 
 case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,

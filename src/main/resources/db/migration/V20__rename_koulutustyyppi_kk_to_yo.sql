@@ -1,0 +1,1 @@
+alter type koulutustyyppi rename value 'kk' to 'yo';
