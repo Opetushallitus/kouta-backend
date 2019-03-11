@@ -234,7 +234,7 @@ object TestData {
 
   val AmmToteutuksenMetatieto = ToteutusMetadata(
     kuvaus = Map(),
-    osaamisalat = List(Osaamisala("osaamisala_koodi_uri#1",
+    osaamisalat = List(Osaamisala(Some("osaamisala_koodi_uri#1"),
       linkki = Map(Fi -> "http://osaamisala/linkki/fi", Sv -> "http://osaamisala/linkki/sv"),
       otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),

@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserO
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class Osaamisala(
-                       koodi: String,
+                       koodi: Option[String],
                        linkki: Kielistetty = Map(),
                        otsikko: Kielistetty = Map(),
                        nimi: Kielistetty = Map(),
