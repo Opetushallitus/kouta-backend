@@ -1,0 +1,488 @@
+package fi.oph.kouta.external
+
+import java.time.LocalDateTime
+import java.util.UUID
+
+import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.util.KoutaJsonFormats
+import org.json4s.jackson.Serialization.{read, write}
+import fi.oph.kouta.TestData
+import fi.oph.kouta.validation.Validatable
+
+import scala.collection.JavaConverters._
+
+object KoutaFixtureTool extends KoutaJsonFormats {
+
+  private var koulutukset:Map[String, Map[String, String]] = Map()
+  private var toteutukset:Map[String, Map[String, String]] = Map()
+  private var haut:Map[String, Map[String, String]] = Map()
+  private var hakukohteet:Map[String, Map[String, String]] = Map()
+  private var valintaperusteet:Map[String, Map[String, String]] = Map()
+
+  def addKoulutus(oid:String, jParams:java.util.Map[String, String]) = {
+    koulutukset += (oid -> jParams.asScala.toMap)
+  }
+
+  def updateKoulutus(oid:String, jParams:java.util.Map[String, String]) = {
+    koulutukset += (oid -> (koulutukset.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
+  }
+
+  def addToteutus(oid:String, jParams:java.util.Map[String, String]) = {
+    toteutukset += (oid -> jParams.asScala.toMap)
+  }
+
+  def updateToteutus(oid:String, jParams:java.util.Map[String, String]) = {
+    toteutukset += (oid -> (toteutukset.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
+  }
+
+  def addHaku(oid:String, jParams:java.util.Map[String, String]) = {
+    haut += (oid -> jParams.asScala.toMap)
+  }
+
+  def updateHaku(oid:String, jParams:java.util.Map[String, String]) = {
+    haut += (oid -> (haut.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
+  }
+
+  def addHakukohde(oid:String, jParams:java.util.Map[String, String]) = {
+    hakukohteet += (oid -> jParams.asScala.toMap)
+  }
+
+  def updateHakukohde(oid:String, jParams:java.util.Map[String, String]) = {
+    hakukohteet += (oid -> (hakukohteet.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
+  }
+
+  def addValintaperuste(id:String, jParams:java.util.Map[String, String]) = {
+    valintaperusteet += (id -> jParams.asScala.toMap)
+  }
+
+  def updateValintaperuste(id:String, jParams:java.util.Map[String, String]) = {
+    valintaperusteet += (id -> (valintaperusteet.getOrElse(id, Map()) ++ jParams.asScala.toMap))
+  }
+
+  def reset() = {
+    koulutukset = Map()
+    toteutukset = Map()
+    haut = Map()
+    hakukohteet = Map()
+    valintaperusteet = Map()
+  }
+
+  val KoulutusOidKey = "koulutusOid"
+  val ToteutusOidKey = "toteutusOid"
+  val HakuOidKey = "hakuOid"
+  val HakukohdeOidKey = "hakukohdeOid"
+  val JohtaaTutkintoonKey = "johtaaTutkintoon"
+  val KoulutustyyppiKey = "koulutustyyppi"
+  val KoulutusKoodiUriKey = "koulutusKoodiUri"
+  val TilaKey = "tila"
+  val TarjoajatKey = "tarjoajat"
+  val NimiKey = "nimi"
+  val JulkinenKey = "julkinen"
+  val MuokkaajaKey = "muokkaaja"
+  val OrganisaatioKey = "organisaatio"
+  val KielivalintaKey = "kielivalinta"
+  val ModifiedKey = "modified"
+  val HakutapaKoodiUriKey = "hakutapaKoodiUri"
+  val AlkamiskausiKoodiUriKey = "alkamiskausiKoodiUri"
+  val AlkamisvuosiKey = "alkamisvuosi"
+  val KohdejoukkoKoodiUriKey = "kohdejoukkoKoodiUri"
+  val KohdejoukonTarkenneKoodiUriKey = "kohdejoukonTarkenneKoodiUri"
+  val HakulomaketyyppiKey = "hakulomaketyyppi"
+  val HakulomakeKey = "hakulomake"
+  val HakukohteenLiittamisenTakarajaKey = "hakukohteenLiittamisenTakaraja"
+  val HakukohteenMuokkaamisenTakarajaKey = "hakukohteenMuokkaamisenTakaraja"
+  val HakuaikaAlkaaKey = "hakuaikaAlkaa"
+  val HakuaikaPaattyyKey = "hakuaikaPaattyy"
+  val AloituspaikatKey = "aloituspaikat"
+  val EnsikertalaisenAloituspaikatKey = "ensikertalaisenAloituspaikat"
+  val PohjakoulutusvaatimusKoodiUriKey = "pohjakoulutusvaatimusKoodiUri"
+  val ToinenAsteOnkoKaksoistutkintoKey = "toinenAsteOnkoKaksoistutkinto"
+  val KaytetaanHaunAikatauluaKey = "kaytetaanHaunAikataulua"
+  val ValintaperusteIdKey = "valintaperuste"
+  val LiitteetOnkoSamaToimitusaikaKey = "liitteetOnkoSamaToimitusaika"
+  val LiitteetOnkoSamaToimitusosoiteKey = "liitteetOnkoSamaToimitusosoite"
+  val LiitteidenToimitusaikaKey = "liitteidenToimitusaika"
+  val LiitteidenToimitustapaKey = "liitteidenToimitustapa"
+  val LiitteidenToimitusosoiteKey = "liitteidenToimitusosoite"
+  val LiitteetKey = "liitteet"
+  val ValintakokeetKey = "valintakokeet"
+  val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
+  val AjastettuJulkaisuKey = "ajastettuJulkaisu"
+  val MetadataKey = "metadata"
+
+  def formatModified(date:LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
+  def parseModified(date:String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
+
+  val DefaultKoulutus: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    JohtaaTutkintoonKey -> "true",
+    KoulutustyyppiKey -> Amm.name,
+    KoulutusKoodiUriKey -> "koulutus_371101#1",
+    TilaKey -> Julkaistu.name,
+    TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
+    NimiKey -> "nimi",
+    JulkinenKey -> "false",
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    MetadataKey -> write(TestData.AmmKoulutus.metadata))
+  )
+
+  val DefaultToteutus: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
+    NimiKey -> "nimi",
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    MetadataKey -> write(TestData.AmmToteutuksenMetatieto)
+  ))
+
+  val DefaultHaku: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    NimiKey -> "nimi",
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    HakutapaKoodiUriKey -> "hakutapa_03#1",
+    AlkamiskausiKoodiUriKey -> "kausi_k#1",
+    AlkamisvuosiKey -> "2020",
+    KohdejoukkoKoodiUriKey -> "haunkohdejoukko_02#2",
+    KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#11",
+    HakulomaketyyppiKey -> EiSähköistä.toString,
+    HakulomakeKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
+    HakukohteenLiittamisenTakarajaKey -> "2019-10-11T12:00",
+    HakukohteenMuokkaamisenTakarajaKey -> "2019-10-12T12:00",
+    HakuaikaAlkaaKey -> "2019-10-10T12:00",
+    HakuaikaPaattyyKey -> "2019-11-10T12:00",
+    MetadataKey -> write(TestData.JulkaistuHaku.metadata.get)
+  ))
+
+  val DefaultHakukohde: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    NimiKey -> "nimi",
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    AlkamiskausiKoodiUriKey -> "kausi_k#1",
+    AlkamisvuosiKey -> "2020",
+    HakulomaketyyppiKey -> EiSähköistä.toString,
+    HakulomakeKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
+    HakuaikaAlkaaKey -> "2019-10-10T12:00",
+    HakuaikaPaattyyKey -> "2019-11-10T12:00",
+    AloituspaikatKey -> "100",
+    EnsikertalaisenAloituspaikatKey -> "0",
+    PohjakoulutusvaatimusKoodiUriKey -> "pohjakoulutusvaatimustoinenaste_01#2",
+    ToinenAsteOnkoKaksoistutkintoKey -> "false",
+    KaytetaanHaunAikatauluaKey -> "false",
+    HakuaikaAlkaaKey -> "2020-10-10T12:00",
+    HakuaikaPaattyyKey -> "2020-11-10T12:00",
+    ValintaperusteIdKey -> UUID.randomUUID().toString,
+    LiitteetOnkoSamaToimitusaikaKey -> "true",
+    LiitteetOnkoSamaToimitusosoiteKey -> "false",
+    LiitteidenToimitusaikaKey -> "2020-10-13T12:00",
+    LiitteetKey -> write(List(TestData.Liite1.copy(id = Some(UUID.fromString("de7e733b-36a2-4d3f-ac71-32ccae96dc32")),
+                                                   toimitusaika = Some(parseModified("2019-02-05T09:58"))),
+                              TestData.Liite2.copy(id = Some(UUID.fromString("59b5a1c9-316b-4007-a14e-cc2b617bab46"))))),
+    ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
+      id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2019-02-05T09:49"), parseModified("2019-02-05T09:58")))))
+      )))
+  ))
+
+  val DefaultValintaperuste: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    NimiKey -> "nimi",
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    HakutapaKoodiUriKey -> "hakutapa_01#1",
+    KohdejoukkoKoodiUriKey -> "haunkohdejoukko_11#1",
+    KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
+    JulkinenKey -> "false",
+    MetadataKey -> write(TestData.JulkaistuValintaperuste.metadata)
+  ))
+
+  private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta map {k => (k, nimi + " " + k.toString)} toMap
+  private def toKielivalinta(params:Map[String, String]) = params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_))
+
+  private def toJsonIfValid[T <: Validatable](v :T): String = v.validate() match {
+    case Left(value) => throw new RuntimeException(s"""${value.mkString(", ")}""")
+    case Right(_) => toJson(v)
+  }
+
+  def getKoulutus(oid:String) = {
+    val params: Map[String, String] = koulutukset(oid)
+    val kielivalinta = toKielivalinta(params)
+    toJsonIfValid(Koulutus(
+      Some(KoulutusOid(oid)),
+      params(JohtaaTutkintoonKey).toBoolean,
+      Some(Koulutustyyppi.withName(params(KoulutustyyppiKey))),
+      Some(params(KoulutusKoodiUriKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,
+      toKielistetty(kielivalinta, params(NimiKey)),
+      params.get(MetadataKey).map(read[KoulutusMetadata]),
+      params(JulkinenKey).toBoolean,
+      UserOid(params(MuokkaajaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      kielivalinta,
+      Some(parseModified(params(ModifiedKey)))))
+  }
+
+  def getToteutus(oid:String) = toJsonIfValid(toteutus(oid))
+
+  private def toteutus(oid:String) = {
+    val params = toteutukset(oid)
+    val kielivalinta = toKielivalinta(params)
+    Toteutus(
+      Some(ToteutusOid(oid)),
+      KoulutusOid(params(KoulutusOidKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,
+      toKielistetty(kielivalinta, params(NimiKey)),
+      params.get(MetadataKey).map(read[ToteutusMetadata]),
+      UserOid(params(MuokkaajaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      kielivalinta,
+      Some(parseModified(params(ModifiedKey))))
+  }
+
+  def getHaku(oid:String) = {
+    val params = haut(oid)
+    val kielivalinta = toKielivalinta(params)
+    toJsonIfValid( Haku(
+      Some(HakuOid(oid)),
+      Julkaisutila.withName(params(TilaKey)),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Some(params(HakutapaKoodiUriKey)),
+      Some(parseModified(params(HakukohteenLiittamisenTakarajaKey))),
+      Some(parseModified(params(HakukohteenMuokkaamisenTakarajaKey))),
+      params.get(AjastettuJulkaisuKey).map(parseModified),
+      Some(params(AlkamiskausiKoodiUriKey)),
+      Some(params(AlkamisvuosiKey)),
+      Some(params(KohdejoukkoKoodiUriKey)),
+      Some(params(KohdejoukonTarkenneKoodiUriKey)),
+      Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
+      toKielistetty(kielivalinta, params(HakulomakeKey)),
+      params.get(MetadataKey).map(read[HakuMetadata]),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      UserOid(params(MuokkaajaKey)),
+      params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      Some(parseModified(params(ModifiedKey)))))
+  }
+
+  def getHakukohde(oid:String) = {
+    val params = hakukohteet(oid)
+    val kielivalinta = toKielivalinta(params)
+    toJsonIfValid( Hakukohde(
+      Some(HakukohdeOid(oid)),
+      ToteutusOid(params(ToteutusOidKey)),
+      HakuOid(params(HakuOidKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Some(params(AlkamiskausiKoodiUriKey)),
+      Some(params(AlkamisvuosiKey)),
+      Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
+      toKielistetty(kielivalinta, params(HakulomakeKey)),
+      Some(params(AloituspaikatKey).toInt),
+      Some(params(EnsikertalaisenAloituspaikatKey).toInt),
+      Some(params(PohjakoulutusvaatimusKoodiUriKey)),
+      params.get(MuuPohjakoulutusvaatimusKey).map(toKielistetty(kielivalinta, _)).getOrElse(Map()),
+      Some(params(ToinenAsteOnkoKaksoistutkintoKey).toBoolean),
+      Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
+      Some(UUID.fromString(params(ValintaperusteIdKey))),
+      Some(params(LiitteetOnkoSamaToimitusaikaKey).toBoolean),
+      Some(params(LiitteetOnkoSamaToimitusosoiteKey).toBoolean),
+      params.get(LiitteidenToimitusaikaKey).map(parseModified),
+      params.get(LiitteidenToimitustapaKey).map(LiitteenToimitustapa.withName),
+      params.get(LiitteidenToimitusosoiteKey).map(read[LiitteenToimitusosoite]),
+      params.get(LiitteetKey).map(read[List[Liite]]).getOrElse(List()),
+      params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      UserOid(params(MuokkaajaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      Some(parseModified(params(ModifiedKey)))))
+  }
+
+  def getValintaperuste(id:String) = {
+    val params = valintaperusteet(id)
+    val kielivalinta = toKielivalinta(params)
+    toJsonIfValid( Valintaperuste(
+      Some(UUID.fromString(id)),
+      Julkaisutila.withName(params(TilaKey)),
+      Some(params(HakutapaKoodiUriKey)),
+      Some(params(KohdejoukkoKoodiUriKey)),
+      Some(params(KohdejoukonTarkenneKoodiUriKey)),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      params(JulkinenKey).toBoolean,
+      params.get(MetadataKey).map(read[ValintaperusteMetadata]),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      Some(parseModified(params(ModifiedKey)))
+    ))
+  }
+
+  def getToteutuksetByKoulutus(koulutusOid: String, vainJulkaistut: Boolean) = {
+    toJson( toteutukset.filter {
+        case (_, params) => params(KoulutusOidKey) == koulutusOid && (!vainJulkaistut || params(TilaKey) == Julkaistu.name)
+      }.map {
+        case (oid, _) => toteutus(oid)
+      }
+    )
+  }
+
+  def listHakukohteetByHaku(hakuOid: String) = {
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => params(HakuOidKey) == hakuOid
+      }.map {
+        case (oid, _) => hakukohdeListItem(oid)
+      }
+    )
+  }
+
+  def listHautByToteutus(toteutusOid: String) = {
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => params(ToteutusOidKey) == toteutusOid
+      }.map {
+        case (_, params) => params(HakuOidKey)
+      }.toSeq.map(hakuListItem)
+    )
+  }
+
+  def listKoulutuksetByHaku(hakuOid: String) = {
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => params(HakuOidKey) == hakuOid
+      }.map {
+        case (_, params) => params(ToteutusOidKey)
+      }.map {
+        oid => koulutusListItem(toteutukset(oid)(KoulutusOidKey))
+      }
+    )
+  }
+
+  def getHakutiedotByKoulutus(koulutusOid: String) = {
+    toJson(
+      toteutukset
+        .filter { case (_, params) => params(KoulutusOidKey) == koulutusOid }
+        .map { case (oid, _) => {
+          Hakutieto(
+            ToteutusOid(oid),
+            hakukohteet
+              .filter  { case (_, params) => params(ToteutusOidKey) == oid }
+              .groupBy { case (_, params) => params(HakuOidKey) }
+              .map     { case (hakuOid, hakukohteet) =>
+                hakutietoHaku(hakuOid).copy(
+                  hakukohteet = hakukohteet.map { case (oid, _) => hakutietoHakukohde(oid) }.toSeq
+                )
+              }.toSeq
+          )
+        }
+      }
+    )
+  }
+
+  def getLastModified(since:String) = {
+    toJson(
+      ListEverything(
+        koulutukset.keySet.map(KoulutusOid).toSeq,
+        toteutukset.keySet.map(ToteutusOid).toSeq,
+        haut.keySet.map(HakuOid).toSeq,
+        hakukohteet.keySet.map(HakukohdeOid).toSeq,
+        valintaperusteet.keySet.map(UUID.fromString).toSeq,
+      )
+    )
+  }
+
+  private def hakukohdeListItem(oid:String) = {
+    val params = hakukohteet(oid)
+    val kielivalinta = toKielivalinta(params)
+    HakukohdeListItem(
+      HakukohdeOid(oid),
+      ToteutusOid(params(ToteutusOidKey)),
+      HakuOid(params(HakuOidKey)),
+      Some(UUID.fromString(params(ValintaperusteIdKey))),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      parseModified(params(ModifiedKey))
+    )
+  }
+
+  private def hakuListItem(oid: String) = {
+    val params = haut(oid)
+    val kielivalinta = toKielivalinta(params)
+    HakuListItem(
+      HakuOid(oid),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      parseModified(params(ModifiedKey))
+    )
+  }
+
+  private def koulutusListItem(oid:String) = {
+    val params = koulutukset(oid)
+    val kielivalinta = toKielivalinta(params)
+    KoulutusListItem(
+      KoulutusOid(oid),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      parseModified(params(ModifiedKey))
+    )
+  }
+
+  private def hakutietoHaku(oid:String) = {
+    val params = haut(oid)
+    val kielivalinta = toKielivalinta(params)
+    HakutietoHaku(
+      HakuOid(oid),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Some(params(HakutapaKoodiUriKey)),
+      Some(params(AlkamiskausiKoodiUriKey)),
+      Some(params(AlkamisvuosiKey)),
+      Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
+      toKielistetty(kielivalinta, params(HakulomakeKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      UserOid(params(MuokkaajaKey)),
+      Some(parseModified(params(ModifiedKey))),
+      List()
+    )
+  }
+
+  private def hakutietoHakukohde(oid:String) = {
+    val params = hakukohteet(oid)
+    val kielivalinta = toKielivalinta(params)
+    HakutietoHakukohde(
+      HakukohdeOid(oid),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Some(params(AlkamiskausiKoodiUriKey)),
+      Some(params(AlkamisvuosiKey)),
+      Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
+      toKielistetty(kielivalinta, params(HakulomakeKey)),
+      Some(params(AloituspaikatKey).toInt),
+      Some(params(EnsikertalaisenAloituspaikatKey).toInt),
+      Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      UserOid(params(MuokkaajaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      Some(parseModified(params(ModifiedKey)))
+    )
+  }
+}
