@@ -8,7 +8,7 @@ import fi.oph.kouta.validation.Validatable
 case class KoulutusMetadata(kuvaus: Map[Kieli, String] = Map(),
                             lisatiedot: Seq[Lisatieto] = Seq(),
                             kuvauksenNimi: Map[Kieli, String] = Map(),
-                            tutkintonimikeKoodiUrit: List[String] = List(),
+                            tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                             opintojenLaajuusKoodiUri: Option[String] = None
                            )
 

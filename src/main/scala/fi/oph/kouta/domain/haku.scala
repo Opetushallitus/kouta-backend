@@ -7,7 +7,7 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class HakuMetadata(
                          yhteystieto: Option[Yhteystieto] = None,
-                         tulevaisuudenAikataulu: List[Ajanjakso] = List()
+                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()
                        )
 
 case class Haku(oid: Option[HakuOid] = None,

@@ -16,21 +16,21 @@ case class Osaamisala(
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   opetuskieletKuvaus: Kielistetty = Map(),
-                  opetusaikaKoodiUri: Option[String],
+                  opetusaikaKoodiUri: Option[String] = None,
                   opetusaikaKuvaus: Kielistetty = Map(),
-                  opetustapaKoodiUrit: Seq[String],
+                  opetustapaKoodiUrit: Seq[String] = Seq(),
                   opetustapaKuvaus: Kielistetty = Map(),
-                  onkoMaksullinen: Option[Boolean],
+                  onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Kielistetty = Map(),
                   alkamiskausiKoodiUri: Option[String] = None,
                   alkamisvuosi: Option[String] = None,
                   alkamisaikaKuvaus: Kielistetty = Map(),
                   lisatiedot: Seq[Lisatieto] = Seq(),
-                  onkoLukuvuosimaksua: Option[Boolean],
+                  onkoLukuvuosimaksua: Option[Boolean] = Some(false),
                   lukuvuosimaksu: Kielistetty = Map(),
                   lukuvuosimaksuKuvaus: Kielistetty = Map(),
-                  onkoStipendia: Option[Boolean],
+                  onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Kielistetty = Map(),
                   stipendinKuvaus: Kielistetty = Map())
 
@@ -41,8 +41,8 @@ case class ToteutusMetadata(kuvaus: Kielistetty = Map(),
                             asiasanat: List[Keyword] = List(),
                             ammattinimikkeet: List[Keyword] = List(),
                             yhteystieto: Option[Yhteystieto] = None,
-                            alemmanKorkeakoulututkinnonOsaamisalat: List[Osaamisala] = List(),
-                            ylemmanKorkeakoulututkinnonOsaamisalat: List[Osaamisala] = List()
+                            alemmanKorkeakoulututkinnonOsaamisalat: Seq[Osaamisala] = Seq(),
+                            ylemmanKorkeakoulututkinnonOsaamisalat: Seq[Osaamisala] = Seq()
                            )
 
 case class Toteutus(oid: Option[ToteutusOid] = None,
