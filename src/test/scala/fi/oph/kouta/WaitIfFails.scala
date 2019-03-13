@@ -22,8 +22,8 @@ trait WaitIfFails {
         checkIfStillOk()
 
         // For first interval, we wake up every 1/10 of the interval.  This is mainly for optimization purpose.
-        if (duration < config.interval.totalNanos) Thread.sleep(initialInterval.millisPart, initialInterval.nanosPart)
-        else Thread.sleep(config.interval.millisPart, config.interval.nanosPart)
+        val sleepTime = if (duration < config.interval.totalNanos) initialInterval else config.interval
+        Thread.sleep(sleepTime.millisPart, sleepTime.nanosPart)
 
         tryTryAgain(attempt + 1)
       } else {

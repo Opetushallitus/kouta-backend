@@ -3,14 +3,14 @@ package fi.oph.kouta.indexing
 import java.time.LocalDateTime
 import java.util.UUID
 
-import org.scalatest.{OptionValues, WordSpec}
+import org.scalatest.{FlatSpec, OptionValues, WordSpec}
 import org.scalatest.Matchers._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.indexing.Indexing._
 
 
-class IndexingSpec extends WordSpec with OptionValues {
+class IndexingSpec extends FlatSpec with OptionValues {
   case class Foo(id: Option[String])
   implicit val fooIndexing: Indexing[Foo] = new Indexing[Foo] {
     val index: String = "fooIndex"
@@ -56,48 +56,41 @@ class IndexingSpec extends WordSpec with OptionValues {
     organisaatioOid = OrganisaatioOid("organisaatio.oid")
   )
 
-  "Indexing.ops.indexMessage" should {
-    "return indexing message" when {
-      "given test class with implementation" in {
-        ops.indexMessage(Foo(Some("foobar"))).value should be ("""{"fooIndex":["foobar"]}""")
-      }
+  "Indexing.ops.indexMessage" should "return indexing message when given test class with implementation" in {
+    ops.indexMessage(Foo(Some("foobar"))).value should be ("""{"fooIndex":["foobar"]}""")
+  }
+  it should "return indexing message when given Haku" in {
+    ops.indexMessage(haku).value should be ("""{"haut":["haku.oid"]}""")
+  }
+  it should "return indexing message given Hakukohde" in {
+    ops.indexMessage(hakukohde).value should be ("""{"hakukohteet":["hakukohde.oid"]}""")
+  }
+  it should "return indexing message given Koulutus" in {
+    ops.indexMessage(koulutus).value should be ("""{"koulutukset":["koulutus.oid"]}""")
+  }
+  it should "return indexing message given toteutus" in {
+    ops.indexMessage(toteutus).value should be ("""{"toteutukset":["toteutus.oid"]}""")
+  }
+  it should "return indexing message given Valintaperuste" in {
+    ops.indexMessage(valintaperuste).value should be (s"""{"valintaperusteet":["${valintaperuste.id.get.toString}"]}""")
+  }
 
-      "given Haku" in {
-        ops.indexMessage(haku).value should be ("""{"haut":["haku.oid"]}""")
-      }
-      "given Hakukohde" in {
-        ops.indexMessage(hakukohde).value should be ("""{"hakukohteet":["hakukohde.oid"]}""")
-      }
-      "given Koulutus" in {
-        ops.indexMessage(koulutus).value should be ("""{"koulutukset":["koulutus.oid"]}""")
-      }
-      "given toteutus" in {
-        ops.indexMessage(toteutus).value should be ("""{"toteutukset":["toteutus.oid"]}""")
-      }
-      "given Valintaperuste" in {
-        ops.indexMessage(valintaperuste).value should be (s"""{"valintaperusteet":["${valintaperuste.id.get.toString}"]}""")
-      }
-    }
-    "return None if oid/id is None" when {
-      "given test class with implementation" in {
-        ops.indexMessage(Foo(None)) should be (None)
-      }
-
-      "given Haku" in {
-        ops.indexMessage(haku.copy(oid = None)) should be (None)
-      }
-      "given Hakukohde" in {
-        ops.indexMessage(hakukohde.copy(oid = None)) should be (None)
-      }
-      "given Koulutus" in {
-        ops.indexMessage(koulutus.copy(oid = None)) should be (None)
-      }
-      "given toteutus" in {
-        ops.indexMessage(toteutus.copy(oid = None)) should be (None)
-      }
-      "given Valintaperuste" in {
-        ops.indexMessage(valintaperuste.copy(id = None)) should be (None)
-      }
-    }
+  it should "return None if oid/id is None when given test class with implementation" in {
+    ops.indexMessage(Foo(None)) should be (None)
+  }
+  it should "return None if oid/id is None when given Haku" in {
+    ops.indexMessage(haku.copy(oid = None)) should be (None)
+  }
+  it should "return None if oid/id is None when given Hakukohde" in {
+    ops.indexMessage(hakukohde.copy(oid = None)) should be (None)
+  }
+  it should "return None if oid/id is None when given Koulutus" in {
+    ops.indexMessage(koulutus.copy(oid = None)) should be (None)
+  }
+  it should "return None if oid/id is None when given toteutus" in {
+    ops.indexMessage(toteutus.copy(oid = None)) should be (None)
+  }
+  it should "return None if oid/id is None when given Valintaperuste" in {
+    ops.indexMessage(valintaperuste.copy(id = None)) should be (None)
   }
 }

@@ -1,6 +1,6 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData
+import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture

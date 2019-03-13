@@ -1,7 +1,7 @@
 package fi.oph.kouta.indexing
 
-import fi.oph.kouta.WaitIfFails
-import fi.oph.kouta.integration.{EventuallyMessages, KonfoIndexingQueues, KoutaIntegrationSpec}
+import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, WaitIfFails}
+import fi.oph.kouta.integration.KoutaIntegrationSpec
 import org.scalatest.time.SpanSugar
 
 @tags.RequiresDocker

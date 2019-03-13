@@ -1,4 +1,4 @@
-package fi.oph.kouta.integration
+package fi.oph.kouta
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -8,8 +8,11 @@ import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
 import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.{Message, PurgeQueueRequest, ReceiveMessageRequest}
 import io.atlassian.aws.sqs.SQSClient
-import org.scalatest.concurrent.PatienceConfiguration
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import org.scalactic.source.Position
+import org.scalatest.concurrent.{Eventually, PatienceConfiguration}
+import org.scalatest.enablers.Retrying
+import org.scalatest.time.SpanSugar._
+import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with PatienceConfiguration {
   this: Suite =>
@@ -86,10 +89,33 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
     sqs.receiveMessage(new ReceiveMessageRequest(queue)
       .withMaxNumberOfMessages(10)
       .withVisibilityTimeout(0)
-    )
-      .getMessages
-      .asScala
+    ).getMessages.asScala
   }
 
   def getQueue(name: String): String = sqs.getQueueUrl(name).getQueueUrl
+}
+
+
+trait EventuallyMessages extends Eventually {
+  this: KonfoIndexingQueues with PatienceConfiguration =>
+
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(timeout = 3.seconds, interval = 100.microseconds)
+
+  def eventuallyMessages(queue: String)
+                        (check: Seq[String] => Assertion)
+                        (implicit patienceConfig: PatienceConfig, retrying: Retrying[Assertion], pos: Position): Seq[String] = {
+    eventually {
+      val received = receiveFromQueue(queue)
+      val messages = received map { _.getBody }
+
+      check(messages)
+      received.map(_.getReceiptHandle).foreach(sqs.deleteMessage(queue, _))
+      messages
+    }
+  }
+
+  def eventuallyIndexingMessages(check: Seq[String] => Assertion)
+                                (implicit patienceConfig: PatienceConfig, retrying: Retrying[Assertion], pos: Position): Seq[String] = {
+    eventuallyMessages(indexingQueue)(check)(patienceConfig, retrying, pos)
+  }
 }
