@@ -7,19 +7,20 @@ import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, IdListItem, Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.indexing.IndexingService
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
+import fi.oph.kouta.util.WithSideEffect
 
-object ValintaperusteService extends ValidatingService[Valintaperuste] with AuthorizationService {
+object ValintaperusteService extends ValidatingService[Valintaperuste] with AuthorizationService with WithSideEffect {
 
   def put(valintaperuste: Valintaperuste): Option[UUID] = {
-    val uuid = withValidation(valintaperuste, v => ValintaperusteDAO.put(v.copy(id = Some(UUID.randomUUID))))
-    IndexingService.index(valintaperuste.copy(id=uuid))
-    uuid
+    withSideEffect(withValidation(valintaperuste, v => ValintaperusteDAO.put(v.copy(id = Some(UUID.randomUUID))))) {
+      case uuid => IndexingService.index(valintaperuste.copy(id=uuid))
+    }
   }
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean = {
-    val updated = withValidation(valintaperuste, ValintaperusteDAO.update(_, notModifiedSince))
-    if (updated) IndexingService.index(valintaperuste)
-    updated
+    withSideEffect(withValidation(valintaperuste, ValintaperusteDAO.update(_, notModifiedSince))) {
+      case true => IndexingService.index(valintaperuste)
+    }
   }
 
   def get(id: UUID): Option[(Valintaperuste, Instant)] = ValintaperusteDAO.get(id)

@@ -6,19 +6,20 @@ import fi.oph.kouta.domain.Hakukohde
 import fi.oph.kouta.domain.oid.HakukohdeOid
 import fi.oph.kouta.indexing.IndexingService
 import fi.oph.kouta.repository.HakukohdeDAO
+import fi.oph.kouta.util.WithSideEffect
 
-object HakukohdeService extends ValidatingService[Hakukohde] {
+object HakukohdeService extends ValidatingService[Hakukohde] with WithSideEffect {
 
   def put(hakukohde: Hakukohde): Option[HakukohdeOid] = {
-    val oid = withValidation(hakukohde, HakukohdeDAO.put)
-    IndexingService.index(hakukohde.copy(oid = oid))
-    oid
+    withSideEffect(withValidation(hakukohde, HakukohdeDAO.put)) {
+      case oid => IndexingService.index(hakukohde.copy(oid = oid))
+    }
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince:Instant): Boolean = {
-    val updated = withValidation(hakukohde, HakukohdeDAO.update(_, notModifiedSince))
-    if (updated) IndexingService.index(hakukohde)
-    updated
+    withSideEffect(withValidation(hakukohde, HakukohdeDAO.update(_, notModifiedSince))) {
+      case true => IndexingService.index(hakukohde)
+    }
   }
 
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = HakukohdeDAO.get(oid)
