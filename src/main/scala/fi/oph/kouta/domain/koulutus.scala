@@ -5,12 +5,24 @@ import java.time.LocalDateTime
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.Validatable
 
-case class KoulutusMetadata(kuvaus: Map[Kieli, String] = Map(),
-                            lisatiedot: Seq[Lisatieto] = Seq(),
-                            kuvauksenNimi: Map[Kieli, String] = Map(),
-                            tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                            opintojenLaajuusKoodiUri: Option[String] = None
-                           )
+sealed trait KoulutusMetadata {
+  val kuvaus: Map[Kieli, String]
+  val lisatiedot: Seq[Lisatieto]
+}
+
+trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
+  val tutkintonimikeKoodiUrit: Seq[String]
+  val opintojenLaajuusKoodiUri: Option[String]
+}
+
+case class AmmatillinenKoulutusMetadata(kuvaus: Map[Kieli, String] = Map(), lisatiedot: Seq[Lisatieto] = Seq()) extends KoulutusMetadata {
+}
+
+case class YliopistoKoulutusMetadata(kuvaus: Map[Kieli, String] = Map(), lisatiedot: Seq[Lisatieto] = Seq(), tutkintonimikeKoodiUrit: Seq[String] = Seq(), opintojenLaajuusKoodiUri: Option[String] = None) extends KorkeakoulutusKoulutusMetadata {
+}
+
+case class AmmattikorkeakouluKoulutusMetadata(kuvaus: Map[Kieli, String] = Map(), lisatiedot: Seq[Lisatieto] = Seq(), tutkintonimikeKoodiUrit: Seq[String] = Seq(), opintojenLaajuusKoodiUri: Option[String] = None) extends KorkeakoulutusKoulutusMetadata {
+}
 
 case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,

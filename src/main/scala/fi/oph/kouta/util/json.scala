@@ -6,14 +6,14 @@ import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import org.json4s.JsonAST.JString
+import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
 
 trait KoutaJsonFormats {
   val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
-  implicit def jsonFormats: Formats = DefaultFormats +
+  def genericFormats: Formats = DefaultFormats +
     new CustomSerializer[Julkaisutila](formats => ( {
       case JString(s) => Julkaisutila.withName(s)
     }, {
@@ -90,5 +90,26 @@ trait KoutaJsonFormats {
       case j: Oid => JString(j.toString)
     }))
 
+  implicit def jsonFormats: Formats = genericFormats +
+    new CustomSerializer[KoulutusMetadata](formats => ({
+      case s: JObject => {
+        implicit def formats = DefaultFormats
+
+        val JString(tyyppi) = (s \ "tyyppi")
+
+        val koulutustyyppi = Koulutustyyppi.withName(tyyppi)
+
+        koulutustyyppi match {
+          case Yo => s.extract[YliopistoKoulutusMetadata]
+          case Amm => s.extract[AmmatillinenKoulutusMetadata]
+          case Amk => s.extract[AmmattikorkeakouluKoulutusMetadata]
+          case _ => s.extract[KoulutusMetadata]
+        }
+      }
+    }, {
+      PartialFunction.empty
+    }))
+
   def toJson(data:AnyRef) = write(data)
 }
+

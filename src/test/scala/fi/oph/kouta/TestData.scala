@@ -58,7 +58,7 @@ object TestData {
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(new KoulutusMetadata(
+    metadata = Some(new AmmatillinenKoulutusMetadata(
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(
         Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
