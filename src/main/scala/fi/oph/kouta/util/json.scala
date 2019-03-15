@@ -8,7 +8,9 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization.write
-import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
+import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, Extraction}
+
+import scala.util.Try
 
 trait KoutaJsonFormats {
   val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
@@ -95,19 +97,22 @@ trait KoutaJsonFormats {
       case s: JObject => {
         implicit def formats = DefaultFormats
 
-        val JString(tyyppi) = (s \ "tyyppi")
-
-        val koulutustyyppi = Koulutustyyppi.withName(tyyppi)
-
-        koulutustyyppi match {
-          case Yo => s.extract[YliopistoKoulutusMetadata]
-          case Amm => s.extract[AmmatillinenKoulutusMetadata]
-          case Amk => s.extract[AmmattikorkeakouluKoulutusMetadata]
+        Try((s \ "tyyppi")).toOption.map {
+          case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
+          case _ => Some(Amm)
+        } match {
+          case Some(Yo) => s.extract[YliopistoKoulutusMetadata]
+          case Some(Amm) => s.extract[AmmatillinenKoulutusMetadata]
+          case Some(Amk) => s.extract[AmmattikorkeakouluKoulutusMetadata]
           case _ => s.extract[KoulutusMetadata]
         }
       }
     }, {
-      PartialFunction.empty
+      case j: KoulutusMetadata => {
+        implicit def formats = genericFormats
+
+        Extraction.decompose(j)
+      }
     }))
 
   def toJson(data:AnyRef) = write(data)
