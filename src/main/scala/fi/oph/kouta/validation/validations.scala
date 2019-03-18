@@ -41,6 +41,16 @@ trait Validations {
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(Right())
 
+  def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = {
+    val messages = values
+      .map(f(_))
+      .collect {
+        case Left(msgList) => msgList
+      }.flatten
+
+    Either.cond(messages.isEmpty, (), messages.toList)
+  }
+
   def validateIfTrue(b: Boolean, f: () => IsValid): IsValid = b match {
     case true => f()
     case _ => Right()
