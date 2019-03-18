@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
@@ -24,6 +25,11 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
   it should "store toteutus" in {
     val oid = put(toteutus(koulutusOid))
     get(oid, toteutus(oid, koulutusOid))
+  }
+
+  it should "store korkeakoulutus toteutus" in {
+    val oid = put(TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid)))
+    get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid)))
   }
 
   it should "update toteutus" in {
