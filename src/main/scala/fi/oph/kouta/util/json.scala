@@ -6,14 +6,24 @@ import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import org.json4s.JsonAST.JString
+import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization.write
-import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
+import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, Extraction}
 
-trait KoutaJsonFormats {
+import scala.util.Try
+
+trait KoutaJsonFormats extends DefaultKoutaJsonFormats {
+
+  implicit def jsonFormats: Formats = koutaJsonFormats
+
+  def toJson(data:AnyRef) = write(data)
+}
+
+sealed trait DefaultKoutaJsonFormats {
+
   val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
-  implicit def jsonFormats: Formats = DefaultFormats +
+  def genericKoutaFormats: Formats = DefaultFormats +
     new CustomSerializer[Julkaisutila](formats => ( {
       case JString(s) => Julkaisutila.withName(s)
     }, {
@@ -90,5 +100,45 @@ trait KoutaJsonFormats {
       case j: Oid => JString(j.toString)
     }))
 
-  def toJson(data:AnyRef) = write(data)
+  def koutaJsonFormats: Formats = genericKoutaFormats +
+    new CustomSerializer[KoulutusMetadata](formats => ({
+      case s: JObject => {
+        implicit def formats = genericKoutaFormats
+
+        Try((s \ "tyyppi")).toOption.map {
+          case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
+          case _ => Amm
+        } match {
+          case Some(Yo) => s.extract[YliopistoKoulutusMetadata]
+          case Some(Amm) => s.extract[AmmatillinenKoulutusMetadata]
+          case Some(Amk) => s.extract[AmmattikorkeakouluKoulutusMetadata]
+        }
+      }
+    }, {
+      case j: KoulutusMetadata => {
+        implicit def formats = genericKoutaFormats
+
+        Extraction.decompose(j)
+      }
+    })) +
+    new CustomSerializer[ToteutusMetadata](formats => ({
+      case s: JObject => {
+        implicit def formats = genericKoutaFormats
+
+        Try((s \ "tyyppi")).toOption.map {
+          case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
+          case _ => Amm
+        } match {
+          case Some(Yo) => s.extract[YliopistoToteutusMetadata]
+          case Some(Amm) => s.extract[AmmatillinenToteutusMetadata]
+          case Some(Amk) => s.extract[AmmattikorkeakouluToteutusMetadata]
+        }
+      }
+    }, {
+      case j: ToteutusMetadata => {
+        implicit def formats = genericKoutaFormats
+
+        Extraction.decompose(j)
+      }
+    }))
 }

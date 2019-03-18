@@ -45,12 +45,13 @@ package object domain {
 
   object Koulutustyyppi extends Enum[Koulutustyyppi] {
     override def name: String = "koulutustyyppi"
-    def values() = List(Amm, Kk, Lk, Muu)
+    def values() = List(Amm, Lk, Muu, Yo, Amk)
   }
   case object Amm extends Koulutustyyppi { val name = "amm" }
-  case object Kk extends Koulutustyyppi { val name = "kk" }
   case object Lk extends Koulutustyyppi { val name = "lk" }
   case object Muu extends Koulutustyyppi { val name = "muu" }
+  case object Yo extends Koulutustyyppi { val name = "yo" }
+  case object Amk extends Koulutustyyppi { val name = "amk" }
 
   sealed trait Hakulomaketyyppi extends EnumType
   object Hakulomaketyyppi extends Enum[Hakulomaketyyppi] {
