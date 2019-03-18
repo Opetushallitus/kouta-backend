@@ -6,13 +6,69 @@ import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-case class Osaamisala(
-                       koodi: Option[String],
-                       linkki: Kielistetty = Map(),
-                       otsikko: Kielistetty = Map(),
-                       nimi: Kielistetty = Map(),
-                       kuvaus: Kielistetty = Map()
-                     )
+sealed trait ToteutusMetadata {
+  val tyyppi: Koulutustyyppi
+  val kuvaus: Kielistetty
+  val opetus: Option[Opetus]
+  val asiasanat: List[Keyword]
+  val ammattinimikkeet: List[Keyword]
+  val yhteystieto: Option[Yhteystieto]
+}
+
+trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
+  val alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
+  val ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
+}
+
+trait Osaamisala {
+  val linkki: Kielistetty
+  val otsikko: Kielistetty
+}
+
+case class AmmatillinenOsaamisala(
+                                   koodi: Option[String],
+                                   linkki: Kielistetty = Map(),
+                                   otsikko: Kielistetty = Map(),
+                                 ) extends Osaamisala
+
+case class KorkeakouluOsaamisala(
+                                  nimi: Kielistetty = Map(),
+                                  kuvaus: Kielistetty = Map(),
+                                  linkki: Kielistetty = Map(),
+                                  otsikko: Kielistetty = Map()
+                                ) extends Osaamisala
+
+case class YliopistoToteutusMetadata(
+                                      tyyppi: Koulutustyyppi = Yo,
+                                      kuvaus: Kielistetty = Map(),
+                                      osaamisalat: List[Osaamisala] = List(),
+                                      opetus: Option[Opetus] = None,
+                                      asiasanat: List[Keyword] = List(),
+                                      ammattinimikkeet: List[Keyword] = List(),
+                                      yhteystieto: Option[Yhteystieto] = None,
+                                      alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
+                                      ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()
+                                    ) extends KorkeakoulutusToteutusMetadata
+
+case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
+                                              kuvaus: Kielistetty = Map(),
+                                              osaamisalat: List[Osaamisala] = List(),
+                                              opetus: Option[Opetus] = None,
+                                              asiasanat: List[Keyword] = List(),
+                                              ammattinimikkeet: List[Keyword] = List(),
+                                              yhteystieto: Option[Yhteystieto] = None,
+                                              alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
+                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()
+                                             ) extends KorkeakoulutusToteutusMetadata
+
+case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
+                                        kuvaus: Kielistetty = Map(),
+                                        osaamisalat: List[AmmatillinenOsaamisala] = List(),
+                                        opetus: Option[Opetus] = None,
+                                        asiasanat: List[Keyword] = List(),
+                                        ammattinimikkeet: List[Keyword] = List(),
+                                        yhteystieto: Option[Yhteystieto] = None,
+                                       ) extends ToteutusMetadata
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   opetuskieletKuvaus: Kielistetty = Map(),
@@ -33,17 +89,6 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Kielistetty = Map(),
                   stipendinKuvaus: Kielistetty = Map())
-
-
-case class ToteutusMetadata(kuvaus: Kielistetty = Map(),
-                            osaamisalat: List[Osaamisala] = List(),
-                            opetus: Option[Opetus] = None,
-                            asiasanat: List[Keyword] = List(),
-                            ammattinimikkeet: List[Keyword] = List(),
-                            yhteystieto: Option[Yhteystieto] = None,
-                            alemmanKorkeakoulututkinnonOsaamisalat: Seq[Osaamisala] = Seq(),
-                            ylemmanKorkeakoulututkinnonOsaamisalat: Seq[Osaamisala] = Seq()
-                           )
 
 case class Toteutus(oid: Option[ToteutusOid] = None,
                     koulutusOid: KoulutusOid,

@@ -100,7 +100,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     muokkaaja = UserOid(userOid)
   )
 
-  def updateAsiasanat(metadata: ToteutusMetadata): ToteutusMetadata = {
+  def updateAsiasanat(metadata: AmmatillinenToteutusMetadata): AmmatillinenToteutusMetadata = {
     metadata.copy(
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka"), Keyword(Fi, "musiikkioppilaitokset"),  Keyword(Fi, "hevoset"), Keyword(Fi, "psykologia")),
       ammattinimikkeet = List(Keyword(Fi, "automaatioinsinööri"), Keyword(Fi, "koneinsinööri"), Keyword(Fi, "muusikko"), Keyword(Fi, "psykologi"), Keyword(Fi, "hevonen"))
@@ -114,7 +114,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
     tarjoajat = getTarjoajat(i),
     muokkaaja = UserOid(userOid),
-    metadata = Some(updateAsiasanat(JulkaistuAmmToteutus.metadata.get))
+    metadata = Some(updateAsiasanat(JulkaistuAmmToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata]))
   )
 
   def haku(i: Int) = JulkaistuHaku.copy(

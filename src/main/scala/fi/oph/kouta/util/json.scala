@@ -121,5 +121,25 @@ sealed trait DefaultKoutaJsonFormats {
 
         Extraction.decompose(j)
       }
-    }))
+    })) + new CustomSerializer[ToteutusMetadata](formats => ({
+    case s: JObject => {
+      implicit def formats = genericKoutaFormats
+
+      Try((s \ "tyyppi")).toOption.map {
+        case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
+        case _ => Some(Amm)
+      } match {
+        case Some(Yo) => s.extract[YliopistoToteutusMetadata]
+        case Some(Amm) => s.extract[AmmatillinenToteutusMetadata]
+        case Some(Amk) => s.extract[AmmattikorkeakouluToteutusMetadata]
+        case _ => s.extract[ToteutusMetadata]
+      }
+    }
+  }, {
+    case j: ToteutusMetadata => {
+      implicit def formats = genericKoutaFormats
+
+      Extraction.decompose(j)
+    }
+  }))
 }

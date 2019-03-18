@@ -68,7 +68,7 @@ class ToteutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     val lastModified = get(oid, thisToteutus)
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      metadata = Some(thisToteutus.metadata.get.copy(kuvaus = Map(Fi -> "kuvaus", En -> "description"))),
+      metadata = Some(thisToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(kuvaus = Map(Fi -> "kuvaus", En -> "description"))),
       tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
     update(uusiToteutus, lastModified, true)
     get(oid, uusiToteutus)

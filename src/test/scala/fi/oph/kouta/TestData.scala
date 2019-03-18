@@ -232,9 +232,9 @@ object TestData {
     lukuvuosimaksu = Map(Fi -> "200 euroa", Sv -> "200 euro")
   )
 
-  val AmmToteutuksenMetatieto = ToteutusMetadata(
+  val AmmToteutuksenMetatieto = AmmatillinenToteutusMetadata(
     kuvaus = Map(),
-    osaamisalat = List(Osaamisala(Some("osaamisala_koodi_uri#1"),
+    osaamisalat = List(AmmatillinenOsaamisala(Some("osaamisala_koodi_uri#1"),
       linkki = Map(Fi -> "http://osaamisala/linkki/fi", Sv -> "http://osaamisala/linkki/sv"),
       otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),

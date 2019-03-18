@@ -12,6 +12,7 @@ sealed trait KoulutusMetadata {
 }
 
 trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
+  val kuvauksenNimi: Map[Kieli, String]
   val tutkintonimikeKoodiUrit: Seq[String]
   val opintojenLaajuusKoodiUri: Option[String]
 }
@@ -24,13 +25,15 @@ case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Map[Kieli, String] = Map(),
                                      lisatiedot: Seq[Lisatieto] = Seq(),
                                      tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                     opintojenLaajuusKoodiUri: Option[String] = None) extends KorkeakoulutusKoulutusMetadata
+                                     opintojenLaajuusKoodiUri: Option[String] = None,
+                                     kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Map[Kieli, String] = Map(),
                                               lisatiedot: Seq[Lisatieto] = Seq(),
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                              opintojenLaajuusKoodiUri: Option[String] = None) extends KorkeakoulutusKoulutusMetadata
+                                              opintojenLaajuusKoodiUri: Option[String] = None,
+                                              kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata
 
 case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,
