@@ -143,21 +143,21 @@ sealed trait DefaultKoutaJsonFormats {
     })) +
     new CustomSerializer[ValintatapaSisalto](implicit formats => ({
       case s: JObject =>
-        Try(s \ "tyyppi").map {
+        Try(s \ "tyyppi").collect {
           case JString(tyyppi) if tyyppi == "teksti" =>
-            Try(s \ "data").map {
-              case JString(teksti) => ValintatapaSisalto(tyyppi, ValintatapaSisaltoTeksti(teksti))
+            Try(s \ "data").collect {
+              case JString(teksti) => ValintatapaSisaltoTeksti(teksti)
             }.get
           case JString(tyyppi) if tyyppi == "taulukko"  =>
-            Try(s \ "data").map {
-              case taulukko: JObject => ValintatapaSisalto(tyyppi, taulukko.extract[Taulukko])
+            Try(s \ "data").collect {
+              case taulukko: JObject => taulukko.extract[Taulukko]
             }.get
-          //case _ => throw
         }.get
     }, {
-      case j: ValintatapaSisalto if j.tyyppi == "teksti" =>
-        JObject(List("tyyppi" -> JString("teksti"), "data" -> JString(j.data.asInstanceOf[ValintatapaSisaltoTeksti].teksti)))
-      case j: ValintatapaSisalto if j.tyyppi == "taulukko" =>
-        JObject(List("tyyppi" -> JString("taulukko"), "data" -> Extraction.decompose(j.data.asInstanceOf[Taulukko])))
+      case j: ValintatapaSisaltoTeksti =>
+        JObject(List("tyyppi" -> JString("teksti"), "data" -> JString(j.teksti)))
+      case j: Taulukko =>
+        implicit def formats: Formats = genericKoutaFormats
+        JObject(List("tyyppi" -> JString("taulukko"), "data" -> Extraction.decompose(j)))
     }))
 }

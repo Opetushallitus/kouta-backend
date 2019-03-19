@@ -6,8 +6,6 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-import scala.language.implicitConversions
-
 case class Valintaperuste(id: Option[UUID] = None,
                           tila: Julkaisutila = Tallennettu,
                           hakutapaKoodiUri: Option[String] = None,
@@ -33,22 +31,13 @@ case class Valintaperuste(id: Option[UUID] = None,
   )
 }
 
-sealed trait ValintatapaSisaltoData
-object ValintatapaSisaltoData {
-  implicit def data2Sisalto(data: ValintatapaSisaltoData): ValintatapaSisalto = data match {
-    case teksti: ValintatapaSisaltoTeksti => ValintatapaSisalto("teksti", teksti)
-    case taulukko: Taulukko => ValintatapaSisalto("taulukko", taulukko)
-  }
-}
-
-sealed case class ValintatapaSisalto(tyyppi: String, data: ValintatapaSisaltoData)
-
+sealed trait ValintatapaSisalto
 
 case class Taulukko(id: Option[UUID],
                     nimi: Kielistetty = Map(),
-                    rows: Seq[Row] = Seq()) extends ValintatapaSisaltoData
+                    rows: Seq[Row] = Seq()) extends ValintatapaSisalto
 
-case class ValintatapaSisaltoTeksti(teksti: String) extends ValintatapaSisaltoData
+case class ValintatapaSisaltoTeksti(teksti: String) extends ValintatapaSisalto
 
 case class Row(index: Int,
                isHeader: Boolean = false,
