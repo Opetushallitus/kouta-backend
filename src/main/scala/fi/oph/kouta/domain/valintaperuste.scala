@@ -6,6 +6,8 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
+import scala.language.implicitConversions
+
 case class Valintaperuste(id: Option[UUID] = None,
                           tila: Julkaisutila = Tallennettu,
                           hakutapaKoodiUri: Option[String] = None,
@@ -31,9 +33,22 @@ case class Valintaperuste(id: Option[UUID] = None,
   )
 }
 
+sealed trait ValintatapaSisaltoData
+object ValintatapaSisaltoData {
+  implicit def data2Sisalto(data: ValintatapaSisaltoData): ValintatapaSisalto = data match {
+    case teksti: ValintatapaSisaltoTeksti => ValintatapaSisalto("teksti", teksti)
+    case taulukko: Taulukko => ValintatapaSisalto("taulukko", taulukko)
+  }
+}
+
+sealed case class ValintatapaSisalto(tyyppi: String, data: ValintatapaSisaltoData)
+
+
 case class Taulukko(id: Option[UUID],
                     nimi: Kielistetty = Map(),
-                    rows: Seq[Row] = Seq())
+                    rows: Seq[Row] = Seq()) extends ValintatapaSisaltoData
+
+case class ValintatapaSisaltoTeksti(teksti: String) extends ValintatapaSisaltoData
 
 case class Row(index: Int,
                isHeader: Boolean = false,
@@ -42,9 +57,10 @@ case class Row(index: Int,
 case class Column(index: Int,
                   text: Kielistetty = Map())
 
-case class Valintatapa(valintatapaKoodiUri: Option[String] = None,
+case class Valintatapa(nimi: Kielistetty = Map(),
+                       valintatapaKoodiUri: Option[String] = None,
                        kuvaus: Kielistetty = Map(),
-                       taulukot: Seq[Taulukko],
+                       sisalto: Seq[ValintatapaSisalto],
                        kaytaMuuntotaulukkoa: Boolean = false,
                        kynnysehto: Kielistetty = Map(),
                        enimmaispisteet: Option[Double] = None,
@@ -68,7 +84,10 @@ case class ValintaperusteKielitaitovaatimus(kieliKoodiUri: Option[String] = None
                                             vaatimukset: Seq[Kielitaitovaatimus] = Seq())
 
 case class ValintaperusteMetadata(valintatavat: Seq[Valintatapa],
-                                  kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus])
+                                  kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
+                                  osaamistaustaKoodiUrit: Seq[String] = Seq(),
+                                  kuvaus: Kielistetty = Map(),
+                                 )
 
 case class ValintaperusteListItem(id: UUID,
                                   nimi: Kielistetty,

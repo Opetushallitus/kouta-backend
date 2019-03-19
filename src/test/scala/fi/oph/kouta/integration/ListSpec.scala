@@ -166,8 +166,6 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
       status should equal(200)
       //debugJson[List[Hakutieto]](body)
 
-      TestData.JulkaistuHaku.hakutapaKoodiUri
-
       val expected = List(Hakutieto(
         toteutusOid = t1.oid,
         haut = Seq(HakutietoHaku(

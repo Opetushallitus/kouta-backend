@@ -175,7 +175,7 @@ object TestData {
 
   val Valintatapa1 = new Valintatapa(valintatapaKoodiUri = Some("valintatapajono_av#1"),
                                      kuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv"),
-                                     taulukot = Seq(Taulukko1, Taulukko2),
+                                     sisalto = Seq(ValintatapaSisaltoTeksti("Sisaltoteksti"), Taulukko1, Taulukko2),
                                      kaytaMuuntotaulukkoa = false,
                                      kynnysehto = Map(Fi -> "kynnysehto fi", Sv -> "kynnysehto sv"),
                                      enimmaispisteet = Some(201.15),
@@ -183,7 +183,7 @@ object TestData {
 
   val Valintatapa2 = new Valintatapa(valintatapaKoodiUri = Some("valintatapajono_tv#1"),
                                      kuvaus = Map(Fi -> "kuvaus 2 fi", Sv -> "kuvaus 2 sv"),
-                                     taulukot = Seq(Taulukko2),
+                                     sisalto = Seq(ValintatapaSisaltoTeksti("Sisaltoteksti"), Taulukko2),
                                      kaytaMuuntotaulukkoa = true,
                                      kynnysehto = Map(Fi -> "kynnysehto fi", Sv -> "kynnysehto sv"),
                                      enimmaispisteet = Some(18.1),

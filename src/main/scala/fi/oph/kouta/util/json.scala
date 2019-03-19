@@ -8,7 +8,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization.write
-import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, Extraction}
+import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Extraction, Formats}
 
 import scala.util.Try
 
@@ -140,5 +140,24 @@ sealed trait DefaultKoutaJsonFormats {
 
         Extraction.decompose(j)
       }
+    })) +
+    new CustomSerializer[ValintatapaSisalto](implicit formats => ({
+      case s: JObject =>
+        Try(s \ "tyyppi").map {
+          case JString(tyyppi) if tyyppi == "teksti" =>
+            Try(s \ "data").map {
+              case JString(teksti) => ValintatapaSisalto(tyyppi, ValintatapaSisaltoTeksti(teksti))
+            }.get
+          case JString(tyyppi) if tyyppi == "taulukko"  =>
+            Try(s \ "data").map {
+              case taulukko: JObject => ValintatapaSisalto(tyyppi, taulukko.extract[Taulukko])
+            }.get
+          //case _ => throw
+        }.get
+    }, {
+      case j: ValintatapaSisalto if j.tyyppi == "teksti" =>
+        JObject(List("tyyppi" -> JString("teksti"), "data" -> JString(j.data.asInstanceOf[ValintatapaSisaltoTeksti].teksti)))
+      case j: ValintatapaSisalto if j.tyyppi == "taulukko" =>
+        JObject(List("tyyppi" -> JString("taulukko"), "data" -> Extraction.decompose(j.data.asInstanceOf[Taulukko])))
     }))
 }
