@@ -32,8 +32,8 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis"))
   )
   val indexingConfiguration = IndexingConfiguration(
-    config.getString("indexing.queue.priority"),
-    Option(config.getString("indexing.queue.endpoint"))
+    config.getString("kouta-backend.sqs.queue.priority"),
+    scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).toOption
   )
 }
 

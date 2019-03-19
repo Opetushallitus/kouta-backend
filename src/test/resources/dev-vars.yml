@@ -4,5 +4,5 @@ host_postgresql_kouta_port: 5432
 host_postgresql_kouta_user: oph
 host_postgresql_kouta_password:
 host_virkailija: virkailija.hahtuvaopintopolku.fi
-sqs_endpoint: http://localhost:4576
-indexing_queue: konfoindeksoijapriority
+kouta_backend_sqs_endpoint: http://localhost:4576
+kouta_backend_sqs_queue_priority: konfoindeksoijapriority
