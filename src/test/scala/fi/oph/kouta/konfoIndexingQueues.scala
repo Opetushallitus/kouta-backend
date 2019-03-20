@@ -2,17 +2,20 @@ package fi.oph.kouta
 
 import scala.collection.JavaConverters._
 import scala.util.Try
-
 import cloud.localstack.docker.LocalstackDocker.{INSTANCE => localstack}
 import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
 import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.{Message, PurgeQueueRequest, ReceiveMessageRequest}
 import io.atlassian.aws.sqs.SQSClient
+import org.scalactic.source
 import org.scalactic.source.Position
 import org.scalatest.concurrent.{Eventually, PatienceConfiguration}
 import org.scalatest.enablers.Retrying
+import org.scalatest.time.{Nanoseconds, Span}
 import org.scalatest.time.SpanSugar._
 import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+
+import scala.annotation.tailrec
 
 trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with PatienceConfiguration {
   this: Suite =>
@@ -41,9 +44,9 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
 
   private def createAndVerifyQueues(retry: Int = 3): Unit = {
     try {
-      queueNames foreach { sqs.createQueue }
+      queueNames.foreach(sqs.createQueue)
       waitUntil("All queues are created.") {
-        queueNames forall { q => Try { sqs.getQueueUrl(q) }.isSuccess }
+        queueNames.forall(q => Try(sqs.getQueueUrl(q)).isSuccess)
       }
     } catch {
       case e: Exception if retry > 0 =>
@@ -62,14 +65,14 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
   }
 
   override def afterEach(): Unit = {
-    queueNames foreach { q =>
-      Try { sqs.getQueueUrl(q) }
-        .map { _.getQueueUrl }
+    queueNames.foreach(q =>
+      Try(sqs.getQueueUrl(q))
+        .map(_.getQueueUrl)
         .map { url =>
           sqs.purgeQueue(new PurgeQueueRequest(url))
           sqs.deleteQueue(url)
         }
-    }
+    )
     waitUntil("All queues are deleted") { sqs.listQueues.getQueueUrls.size == 0 }
 
     super.afterEach()
@@ -106,7 +109,7 @@ trait EventuallyMessages extends Eventually {
                         (implicit patienceConfig: PatienceConfig, retrying: Retrying[Assertion], pos: Position): Seq[String] = {
     eventually {
       val received = receiveFromQueue(queue)
-      val messages = received map { _.getBody }
+      val messages = received.map(_.getBody)
 
       check(messages)
       received.map(_.getReceiptHandle).foreach(sqs.deleteMessage(queue, _))
@@ -117,5 +120,34 @@ trait EventuallyMessages extends Eventually {
   def eventuallyIndexingMessages(check: Seq[String] => Assertion)
                                 (implicit patienceConfig: PatienceConfig, retrying: Retrying[Assertion], pos: Position): Seq[String] = {
     eventuallyMessages(indexingQueue)(check)(patienceConfig, retrying, pos)
+  }
+}
+
+trait WaitIfFails {
+  this: PatienceConfiguration =>
+
+  def waitIfFails[T](fun: => T)(implicit config: PatienceConfig, pos: source.Position): T = {
+    val startNanos = System.nanoTime
+    val initialInterval = Span(config.interval.totalNanos * 0.1, Nanoseconds) // config.interval scaledBy 0.1
+
+    def checkIfStillOk(): T = fun
+
+    @tailrec
+    def tryTryAgain(attempt: Int): T = {
+      val duration = System.nanoTime - startNanos
+      if (duration < config.timeout.totalNanos) {
+        checkIfStillOk()
+
+        // For first interval, we wake up every 1/10 of the interval.  This is mainly for optimization purpose.
+        val sleepTime = if (duration < config.interval.totalNanos) initialInterval else config.interval
+        Thread.sleep(sleepTime.millisPart, sleepTime.nanosPart)
+
+        tryTryAgain(attempt + 1)
+      } else {
+        checkIfStillOk()
+      }
+    }
+
+    tryTryAgain(1)
   }
 }
