@@ -23,7 +23,12 @@ sealed trait DefaultKoutaJsonFormats {
 
   val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
-  def genericKoutaFormats: Formats = DefaultFormats
+  def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
+    koulutusMetadataSerializer,
+    toteutusMetadataSerializer,
+    valintatapaSisaltoSerializer)
+
+  private def genericKoutaFormats: Formats = DefaultFormats
     .addKeySerializers(Seq(kieliKeySerializer)) ++
     Seq(
       julkaisuTilaSerializer,
@@ -41,101 +46,37 @@ sealed trait DefaultKoutaJsonFormats {
       userOidSerializer,
       oidSerializer)
 
-  def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
-    koulutusMetadataSerializer,
-    toteutusMetadataSerializer,
-    valintatapaSisaltoSerializer)
-
-  private def kieliKeySerializer = new CustomKeySerializer[Kieli](_ => ({
+  private def kieliKeySerializer = new CustomKeySerializer[Kieli](_ => ( {
     case s: String => Kieli.withName(s)
   }, {
     case k: Kieli => k.toString
   }))
 
-  private def julkaisuTilaSerializer = new CustomSerializer[Julkaisutila](_ => ({
-      case JString(s) => Julkaisutila.withName(s)
+  private def stringSerializer[A: Manifest](construct: String => A) = new CustomSerializer[A](_ => ({
+      case JString(s) => construct(s)
     }, {
-      case j: Julkaisutila => JString(j.toString)
+      case a: A => JString(a.toString)
   }))
 
-  private def koulutusTyyppiSerializer = new CustomSerializer[Koulutustyyppi](_ => ({
-      case JString(s) => Koulutustyyppi.withName(s)
-    }, {
-      case j: Koulutustyyppi => JString(j.toString)
-  }))
-
-  private def hakulomaketyyppiSerializer = new CustomSerializer[Hakulomaketyyppi](_ => ({
-      case JString(s) => Hakulomaketyyppi.withName(s)
-    }, {
-      case j: Hakulomaketyyppi => JString(j.toString)
-  }))
+  private def julkaisuTilaSerializer:         CustomSerializer[Julkaisutila]         = stringSerializer(Julkaisutila.withName)
+  private def koulutusTyyppiSerializer:       CustomSerializer[Koulutustyyppi]       = stringSerializer(Koulutustyyppi.withName)
+  private def hakulomaketyyppiSerializer:     CustomSerializer[Hakulomaketyyppi]     = stringSerializer(Hakulomaketyyppi.withName)
+  private def kieliSerializer:                CustomSerializer[Kieli]                = stringSerializer(Kieli.withName)
+  private def uuidSerializer:                 CustomSerializer[UUID]                 = stringSerializer(UUID.fromString)
+  private def liitteenToimitustapaSerializer: CustomSerializer[LiitteenToimitustapa] = stringSerializer(LiitteenToimitustapa.withName)
+  private def hakuOidSerializer:              CustomSerializer[HakuOid]              = stringSerializer(HakuOid)
+  private def hakuKohdeOidSerializer:         CustomSerializer[HakukohdeOid]         = stringSerializer(HakukohdeOid)
+  private def koulutusOidSerializer:          CustomSerializer[KoulutusOid]          = stringSerializer(KoulutusOid)
+  private def toteutusOidSerializer:          CustomSerializer[ToteutusOid]          = stringSerializer(ToteutusOid)
+  private def organisaatioOidSerializer:      CustomSerializer[OrganisaatioOid]      = stringSerializer(OrganisaatioOid)
+  private def userOidSerializer:              CustomSerializer[UserOid]              = stringSerializer(UserOid)
+  private def oidSerializer:                  CustomSerializer[GenericOid]           = stringSerializer(GenericOid)
 
   private def localDateTimeSerializer = new CustomSerializer[LocalDateTime](_ => ({
       case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
     }, {
       case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
   }))
-
-  private def kieliSerializer = new CustomSerializer[Kieli](_ => ({
-      case JString(s) => Kieli.withName(s)
-    }, {
-      case k: Kieli => JString(k.toString)
-  }))
-
-  private def uuidSerializer = new CustomSerializer[UUID](_ => ({
-      case JString(s) => UUID.fromString(s)
-    }, {
-      case uuid: UUID => JString(uuid.toString)
-  }))
-
-  private def liitteenToimitustapaSerializer = new CustomSerializer[LiitteenToimitustapa](_ => ({
-      case JString(s) => LiitteenToimitustapa.withName(s)
-    }, {
-      case j: LiitteenToimitustapa => JString(j.toString)
-  }))
-
-  private def hakuOidSerializer = new CustomSerializer[HakuOid](_ => ({
-      case JString(s) => HakuOid(s)
-    }, {
-      case j: HakuOid => JString(j.toString)
-  }))
-
-  private def hakuKohdeOidSerializer = new CustomSerializer[HakukohdeOid](_ => ({
-      case JString(s) => HakukohdeOid(s)
-    }, {
-      case j: HakukohdeOid => JString(j.toString)
-  }))
-
-  private def koulutusOidSerializer = new CustomSerializer[KoulutusOid](_ => ({
-      case JString(s) => KoulutusOid(s)
-    }, {
-      case j: KoulutusOid => JString(j.toString)
-  }))
-
-  private def toteutusOidSerializer = new CustomSerializer[ToteutusOid](_ => ({
-      case JString(s) => ToteutusOid(s)
-    }, {
-      case j: ToteutusOid => JString(j.toString)
-  }))
-
-  private def organisaatioOidSerializer = new CustomSerializer[OrganisaatioOid](_ => ({
-      case JString(s) => OrganisaatioOid(s)
-    }, {
-      case j: OrganisaatioOid => JString(j.toString)
-  }))
-
-  private def userOidSerializer = new CustomSerializer[UserOid](_ => ({
-      case JString(s) => UserOid(s)
-    }, {
-      case j: UserOid => JString(j.toString)
-  }))
-
-  private def oidSerializer = new CustomSerializer[Oid](_ => ({
-      case JString(s) => GenericOid(s)
-    }, {
-      case j: Oid => JString(j.toString)
-    }))
-
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ => ({
     case s: JObject =>
