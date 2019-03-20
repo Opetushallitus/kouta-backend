@@ -16,148 +16,183 @@ trait KoutaJsonFormats extends DefaultKoutaJsonFormats {
 
   implicit def jsonFormats: Formats = koutaJsonFormats
 
-  def toJson(data:AnyRef) = write(data)
+  def toJson(data: AnyRef): String = write(data)
 }
 
 sealed trait DefaultKoutaJsonFormats {
 
-  val ISO_LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+  val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
 
-  def genericKoutaFormats: Formats = DefaultFormats +
-    new CustomSerializer[Julkaisutila](formats => ( {
+  def genericKoutaFormats: Formats = DefaultFormats
+    .addKeySerializers(Seq(kieliKeySerializer)) ++
+    Seq(
+      julkaisuTilaSerializer,
+      koulutusTyyppiSerializer,
+      hakulomaketyyppiSerializer,
+      localDateTimeSerializer,
+      kieliSerializer,
+      uuidSerializer,
+      liitteenToimitustapaSerializer,
+      hakuOidSerializer,
+      hakuKohdeOidSerializer,
+      koulutusOidSerializer,
+      toteutusOidSerializer,
+      organisaatioOidSerializer,
+      userOidSerializer,
+      oidSerializer)
+
+  def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
+    koulutusMetadataSerializer,
+    toteutusMetadataSerializer,
+    valintatapaSisaltoSerializer)
+
+  private def kieliKeySerializer = new CustomKeySerializer[Kieli](_ => ({
+    case s: String => Kieli.withName(s)
+  }, {
+    case k: Kieli => k.toString
+  }))
+
+  private def julkaisuTilaSerializer = new CustomSerializer[Julkaisutila](_ => ({
       case JString(s) => Julkaisutila.withName(s)
     }, {
       case j: Julkaisutila => JString(j.toString)
-    })) +
-    new CustomSerializer[Koulutustyyppi](formats => ( {
+  }))
+
+  private def koulutusTyyppiSerializer = new CustomSerializer[Koulutustyyppi](_ => ({
       case JString(s) => Koulutustyyppi.withName(s)
     }, {
       case j: Koulutustyyppi => JString(j.toString)
-    })) +
-    new CustomKeySerializer[Kieli](formats => ( {
-      case s: String => Kieli.withName(s)
-    }, {
-      case k: Kieli => k.toString
-    })) +
-    new CustomSerializer[Hakulomaketyyppi](formats => ({
+  }))
+
+  private def hakulomaketyyppiSerializer = new CustomSerializer[Hakulomaketyyppi](_ => ({
       case JString(s) => Hakulomaketyyppi.withName(s)
     }, {
       case j: Hakulomaketyyppi => JString(j.toString)
-    })) +
-    new CustomSerializer[LocalDateTime](formats => ({
+  }))
+
+  private def localDateTimeSerializer = new CustomSerializer[LocalDateTime](_ => ({
       case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
     }, {
       case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
-    })) +
-    new CustomSerializer[Kieli](formats => ({
+  }))
+
+  private def kieliSerializer = new CustomSerializer[Kieli](_ => ({
       case JString(s) => Kieli.withName(s)
     }, {
       case k: Kieli => JString(k.toString)
-    })) +
-    new CustomSerializer[UUID](formats => ({
+  }))
+
+  private def uuidSerializer = new CustomSerializer[UUID](_ => ({
       case JString(s) => UUID.fromString(s)
     }, {
       case uuid: UUID => JString(uuid.toString)
-    })) +
-    new CustomSerializer[LiitteenToimitustapa](formats => ({
+  }))
+
+  private def liitteenToimitustapaSerializer = new CustomSerializer[LiitteenToimitustapa](_ => ({
       case JString(s) => LiitteenToimitustapa.withName(s)
     }, {
       case j: LiitteenToimitustapa => JString(j.toString)
-    })) +
-    new CustomSerializer[HakuOid](formats => ({
+  }))
+
+  private def hakuOidSerializer = new CustomSerializer[HakuOid](_ => ({
       case JString(s) => HakuOid(s)
     }, {
       case j: HakuOid => JString(j.toString)
-    })) +
-    new CustomSerializer[HakukohdeOid](formats => ({
+  }))
+
+  private def hakuKohdeOidSerializer = new CustomSerializer[HakukohdeOid](_ => ({
       case JString(s) => HakukohdeOid(s)
     }, {
       case j: HakukohdeOid => JString(j.toString)
-    })) +
-    new CustomSerializer[KoulutusOid](formats => ({
+  }))
+
+  private def koulutusOidSerializer = new CustomSerializer[KoulutusOid](_ => ({
       case JString(s) => KoulutusOid(s)
     }, {
       case j: KoulutusOid => JString(j.toString)
-    })) +
-    new CustomSerializer[ToteutusOid](formats => ({
+  }))
+
+  private def toteutusOidSerializer = new CustomSerializer[ToteutusOid](_ => ({
       case JString(s) => ToteutusOid(s)
     }, {
       case j: ToteutusOid => JString(j.toString)
-    })) +
-    new CustomSerializer[OrganisaatioOid](formats => ({
+  }))
+
+  private def organisaatioOidSerializer = new CustomSerializer[OrganisaatioOid](_ => ({
       case JString(s) => OrganisaatioOid(s)
     }, {
       case j: OrganisaatioOid => JString(j.toString)
-    })) +
-    new CustomSerializer[UserOid](formats => ({
+  }))
+
+  private def userOidSerializer = new CustomSerializer[UserOid](_ => ({
       case JString(s) => UserOid(s)
     }, {
       case j: UserOid => JString(j.toString)
-    })) +
-    new CustomSerializer[Oid](formats => ({
+  }))
+
+  private def oidSerializer = new CustomSerializer[Oid](_ => ({
       case JString(s) => GenericOid(s)
     }, {
       case j: Oid => JString(j.toString)
     }))
 
-  def koutaJsonFormats: Formats = genericKoutaFormats +
-    new CustomSerializer[KoulutusMetadata](formats => ({
-      case s: JObject => {
-        implicit def formats = genericKoutaFormats
 
-        Try((s \ "tyyppi")).toOption.map {
+  private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ => ({
+    case s: JObject =>
+      implicit def formats: Formats = genericKoutaFormats
+
+      Try(s \ "tyyppi").toOption.collect {
           case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
-          case _ => Amm
-        } match {
-          case Some(Yo) => s.extract[YliopistoKoulutusMetadata]
-          case Some(Amm) => s.extract[AmmatillinenKoulutusMetadata]
-          case Some(Amk) => s.extract[AmmattikorkeakouluKoulutusMetadata]
-        }
+      }.getOrElse(Amm) match {
+        case Yo => s.extract[YliopistoKoulutusMetadata]
+        case Amm => s.extract[AmmatillinenKoulutusMetadata]
+        case Amk => s.extract[AmmattikorkeakouluKoulutusMetadata]
+        case kt => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
       }
     }, {
-      case j: KoulutusMetadata => {
-        implicit def formats = genericKoutaFormats
+    case j: KoulutusMetadata =>
+      implicit def formats: Formats = genericKoutaFormats
 
         Extraction.decompose(j)
-      }
-    })) +
-    new CustomSerializer[ToteutusMetadata](formats => ({
-      case s: JObject => {
-        implicit def formats = genericKoutaFormats
+  }))
 
-        Try((s \ "tyyppi")).toOption.map {
-          case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
-          case _ => Amm
-        } match {
-          case Some(Yo) => s.extract[YliopistoToteutusMetadata]
-          case Some(Amm) => s.extract[AmmatillinenToteutusMetadata]
-          case Some(Amk) => s.extract[AmmattikorkeakouluToteutusMetadata]
-        }
-      }
-    }, {
-      case j: ToteutusMetadata => {
-        implicit def formats = genericKoutaFormats
+  private def toteutusMetadataSerializer = new CustomSerializer[ToteutusMetadata](_ => ({
+    case s: JObject =>
+      implicit def formats: Formats = genericKoutaFormats
 
-        Extraction.decompose(j)
+      Try(s \ "tyyppi").toOption.collect {
+        case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
+      }.getOrElse(Amm) match {
+        case Yo => s.extract[YliopistoToteutusMetadata]
+        case Amm => s.extract[AmmatillinenToteutusMetadata]
+        case Amk => s.extract[AmmattikorkeakouluToteutusMetadata]
+        case kt => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
       }
-    })) +
-    new CustomSerializer[ValintatapaSisalto](implicit formats => ({
-      case s: JObject =>
-        Try(s \ "tyyppi").collect {
-          case JString(tyyppi) if tyyppi == "teksti" =>
-            Try(s \ "data").collect {
-              case JString(teksti) => ValintatapaSisaltoTeksti(teksti)
-            }.get
-          case JString(tyyppi) if tyyppi == "taulukko"  =>
-            Try(s \ "data").collect {
-              case taulukko: JObject => taulukko.extract[Taulukko]
-            }.get
-        }.get
-    }, {
-      case j: ValintatapaSisaltoTeksti =>
-        JObject(List("tyyppi" -> JString("teksti"), "data" -> JString(j.teksti)))
-      case j: Taulukko =>
-        implicit def formats: Formats = genericKoutaFormats
-        JObject(List("tyyppi" -> JString("taulukko"), "data" -> Extraction.decompose(j)))
-    }))
+  }, {
+    case j: ToteutusMetadata =>
+      implicit def formats: Formats = genericKoutaFormats
+
+      Extraction.decompose(j)
+  }))
+
+  private def valintatapaSisaltoSerializer = new CustomSerializer[ValintatapaSisalto](implicit formats => ({
+    case s: JObject =>
+      Try(s \ "tyyppi").collect {
+        case JString(tyyppi) if tyyppi == "teksti" =>
+          Try(s \ "data").collect {
+            case JString(teksti) => ValintatapaSisaltoTeksti(teksti)
+          }.get
+        case JString(tyyppi) if tyyppi == "taulukko" =>
+          Try(s \ "data").collect {
+            case taulukko: JObject => taulukko.extract[Taulukko]
+          }.get
+      }.get
+  }, {
+    case j: ValintatapaSisaltoTeksti =>
+      JObject(List("tyyppi" -> JString("teksti"), "data" -> JString(j.teksti)))
+    case j: Taulukko =>
+      implicit def formats: Formats = genericKoutaFormats
+
+      JObject(List("tyyppi" -> JString("taulukko"), "data" -> Extraction.decompose(j)))
+  }))
 }
