@@ -158,7 +158,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakukohteenMuokkaamisenTakarajaKey -> "2019-10-12T12:00",
     HakuaikaAlkaaKey -> "2019-10-10T12:00",
     HakuaikaPaattyyKey -> "2019-11-10T12:00",
-    MetadataKey -> write(TestData.JulkaistuHaku.metadata.get)
+    MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
+      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = parseModified("2022-10-10T12:00"), paattyy = parseModified("2022-12-10T12:00")))
+    ))
   ))
 
   val DefaultHakukohde: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
