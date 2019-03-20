@@ -27,8 +27,8 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
       .build()
   }
 
-  private val queueNames: Seq[String] = Seq("konfoindeksoijapriority")
-  lazy val indexingQueue: String = getQueue("konfoindeksoijapriority")
+  private val queueNames: Seq[String] = Seq("konfoIndeksoijaPriority")
+  lazy val indexingQueue: String = getQueue("konfoIndeksoijaPriority")
   lazy val sqs: AmazonSQSClient = SQSClient.withEndpoint(localstack.getEndpointSQS)
 
   override def beforeAll(): Unit = {
