@@ -362,6 +362,16 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  def listHakukohteetByToteutus(toteutusOid: String) = {
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => params(ToteutusOidKey) == toteutusOid
+      }.map {
+        case (oid, _) => oid
+      }.toSeq.map(hakukohdeListItem)
+    )
+  }
+
   def listKoulutuksetByHaku(hakuOid: String) = {
     toJson(
       hakukohteet.filter {
