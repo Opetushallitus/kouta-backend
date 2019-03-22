@@ -12,11 +12,19 @@ object EmbeddedJettyLauncher extends Logging {
       case x if "false".equalsIgnoreCase(x) => TestSetups.setupWithoutEmbeddedPostgres()
       case _ => TestSetups.setupWithEmbeddedPostgres()
     }
+    TestSetups.setupAwsKeysForSqs()
     new JettyLauncher(System.getProperty("kouta-backend.port", DEFAULT_PORT).toInt).start.join
   }
 }
 
 object TestSetups extends Logging with KoutaConfigurationConstants {
+
+  def setupAwsKeysForSqs() = {
+    if(!Option(System.getProperty("aws.accessKeyId", null)).isDefined) {
+      System.setProperty("aws.accessKeyId", "testAccessKeyId")
+      System.setProperty("aws.secretKey", "testSecretKey")
+    }
+  }
 
   def setupWithTemplate(port:Int) = {
     logger.info(s"Setting up test template with Postgres port ${port}")

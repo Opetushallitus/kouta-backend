@@ -568,6 +568,16 @@
                 <version>${plugin.scalatest-maven-plugin.version}</version>
                 <configuration>
                     <stdout>T</stdout>
+                    <!--systemProperties>
+                        <property>
+                            <name>aws.accessKeyId</name>
+                            <value>testAccessKeyId</value>
+                        </property>
+                        <property>
+                            <name>aws.secretKey</name>
+                            <value>testSecretKey</value>
+                        </property>
+                    </systemProperties-->
                 </configuration>
                 <executions>
                     <execution>
