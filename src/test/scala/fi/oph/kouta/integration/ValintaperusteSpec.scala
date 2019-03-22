@@ -2,7 +2,8 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
-import fi.oph.kouta.TestData.MinValintaperuste
+import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
@@ -20,6 +21,11 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   it should "store valintaperuste" in {
     val id = put(valintaperuste)
     get(id, valintaperuste(id))
+  }
+
+  it should "store korkeakoulutus valintaperuste" in {
+    val id = put(TestData.YoValintaperuste)
+    get(id, TestData.YoValintaperuste.copy(id = Some(id)))
   }
 
   it should "update valintaperuste" in {
@@ -56,7 +62,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   }
 
   it should "store and update unfinished valintaperuste" in {
-    val unfinishedValintaperuste = MinValintaperuste
+    val unfinishedValintaperuste = MinYoValintaperuste
     val id = put(unfinishedValintaperuste)
     val lastModified = get(id, unfinishedValintaperuste.copy(id = Some(id)))
     val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatioOid = OrganisaatioOid("6.6.6.6.6"))

@@ -4,11 +4,11 @@ import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
 
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.valintaperuste.{Valintaperuste, ValintaperusteListItem}
+import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import fi.oph.kouta.domain.{IdListItem, Valintaperuste, ValintaperusteListItem}
-import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def put(valintaperuste: Valintaperuste): Option[UUID]
@@ -80,6 +80,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def insertValintaperuste(valintaperuste: Valintaperuste) = {
     sqlu"""insert into valintaperusteet (
+                     koulutustyyppi,
                      id,
                      tila,
                      hakutapa_koodi_uri,
@@ -92,6 +93,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      muokkaaja,
                      kielivalinta
          ) values (
+                     ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
                      ${valintaperuste.id.map(_.toString)}::uuid,
                      ${valintaperuste.tila.toString}::julkaisutila,
                      ${valintaperuste.hakutapaKoodiUri},
@@ -107,7 +109,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   def selectValintaperuste(id: UUID) =
-    sql"""select id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
+    sql"""select koulutustyyppi, id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
                  onkoJulkinen, metadata, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time)
           from valintaperusteet where id = ${id.toString}::uuid"""
 
@@ -124,7 +126,8 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      muokkaaja = ${valintaperuste.muokkaaja},
                      kielivalinta = ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
            where id = ${valintaperuste.id.map(_.toString)}::uuid
-           and (tila is distinct from ${valintaperuste.tila.toString}::julkaisutila
+           and (koulutustyyppi is distinct from ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi
+           or tila is distinct from ${valintaperuste.tila.toString}::julkaisutila
            or hakutapa_koodi_uri is distinct from ${valintaperuste.hakutapaKoodiUri}
            or kohdejoukko_koodi_uri is distinct from ${valintaperuste.kohdejoukkoKoodiUri}
            or kohdejoukon_tarkenne_koodi_uri is distinct from ${valintaperuste.kohdejoukonTarkenneKoodiUri}

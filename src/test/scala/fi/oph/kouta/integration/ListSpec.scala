@@ -1,7 +1,8 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.valintaperuste.ValintaperusteListItem
+import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {

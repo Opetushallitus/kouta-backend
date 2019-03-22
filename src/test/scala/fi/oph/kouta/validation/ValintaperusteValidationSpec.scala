@@ -1,13 +1,14 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.TestData.{JulkaistuValintaperuste, MinValintaperuste}
+import fi.oph.kouta.TestData.{MinYoValintaperuste, YoValintaperuste}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.UserOid
+import fi.oph.kouta.domain.valintaperuste.Valintaperuste
 
 class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] with Validations {
 
-  val max = JulkaistuValintaperuste
-  val min = MinValintaperuste
+  val max = YoValintaperuste
+  val min = MinYoValintaperuste
 
   it should "fail if perustiedot is invalid" in {
     assertLeft(max.copy(kielivalinta = Seq()), MissingKielivalinta)

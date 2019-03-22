@@ -8,6 +8,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.{read, write}
 import fi.oph.kouta.TestData
+import fi.oph.kouta.domain.valintaperuste.{Valintaperuste, ValintaperusteMetadata}
 import fi.oph.kouta.validation.Validatable
 
 import scala.collection.JavaConverters._
@@ -207,7 +208,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_11#1",
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
     JulkinenKey -> "false",
-    MetadataKey -> write(TestData.JulkaistuValintaperuste.metadata)
+    MetadataKey -> write(TestData.AmmValintaperuste.metadata)
   ))
 
   private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta map {k => (k, nimi + " " + k.toString)} toMap
@@ -318,6 +319,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val params = valintaperusteet(id)
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Valintaperuste(
+      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(UUID.fromString(id)),
       Julkaisutila.withName(params(TilaKey)),
       Some(params(HakutapaKoodiUriKey)),

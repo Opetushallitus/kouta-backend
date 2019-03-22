@@ -6,6 +6,7 @@ import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.valintaperuste._
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Extraction, Formats}
@@ -26,7 +27,8 @@ sealed trait DefaultKoutaJsonFormats {
   def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
     koulutusMetadataSerializer,
     toteutusMetadataSerializer,
-    valintatapaSisaltoSerializer)
+    valintatapaSisaltoSerializer,
+    valintaperusteMetadataSerializer)
 
   private def genericKoutaFormats: Formats = DefaultFormats
     .addKeySerializers(Seq(kieliKeySerializer)) ++
@@ -112,6 +114,25 @@ sealed trait DefaultKoutaJsonFormats {
   }, {
     case j: ToteutusMetadata =>
       implicit def formats: Formats = genericKoutaFormats
+
+      Extraction.decompose(j)
+  }))
+
+  private def valintaperusteMetadataSerializer = new CustomSerializer[ValintaperusteMetadata](_ => ( {
+    case s: JObject =>
+      implicit def formats: Formats = genericKoutaFormats + valintatapaSisaltoSerializer
+
+      Try(s \ "koulutustyyppi").toOption.collect {
+        case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
+      }.getOrElse(Amm) match {
+        case Yo => s.extract[YliopistoValintaperusteMetadata]
+        case Amm => s.extract[AmmatillinenValintaperusteMetadata]
+        case Amk => s.extract[AmmattikorkeakouluValintaperusteMetadata]
+        case kt => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
+      }
+  }, {
+    case j: ValintaperusteMetadata =>
+      implicit def formats: Formats = genericKoutaFormats + valintatapaSisaltoSerializer
 
       Extraction.decompose(j)
   }))
