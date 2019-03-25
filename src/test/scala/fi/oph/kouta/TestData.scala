@@ -178,7 +178,7 @@ object TestData {
   val AmmValintatapa1 = AmmatillinenValintatapa(
     valintatapaKoodiUri = Some("valintatapajono_av#1"),
     kuvaus = kieliMap("kuvaus"),
-    sisalto = Seq(ValintatapaSisaltoTeksti("Sisaltoteksti"), Taulukko1, Taulukko2),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
     kaytaMuuntotaulukkoa = false,
     kynnysehto = kieliMap("kynnysehto"),
     enimmaispisteet = Some(201.15),
@@ -187,7 +187,7 @@ object TestData {
   val AmmValintatapa2 = AmmatillinenValintatapa(
     valintatapaKoodiUri = Some("valintatapajono_tv#1"),
     kuvaus = kieliMap("kuvaus 2"),
-    sisalto = Seq(ValintatapaSisaltoTeksti("Sisaltoteksti"), Taulukko2),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
     kaytaMuuntotaulukkoa = true,
     kynnysehto = kieliMap("kynnysehto"),
     enimmaispisteet = Some(18.1),
@@ -197,7 +197,7 @@ object TestData {
     nimi = kieliMap("Valintatapa1"),
     valintatapaKoodiUri = Some("valintatapajono_av#1"),
     kuvaus = kieliMap("kuvaus"),
-    sisalto = Seq(ValintatapaSisaltoTeksti("Sisaltoteksti"), Taulukko1, Taulukko2),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
     kaytaMuuntotaulukkoa = false,
     kynnysehto = kieliMap("kynnysehto"),
     enimmaispisteet = Some(201.15),
@@ -206,7 +206,7 @@ object TestData {
   val YoValintatapa2 = YliopistoValintatapa(
     valintatapaKoodiUri = Some("valintatapajono_tv#1"),
     kuvaus = kieliMap("kuvaus 2"),
-    sisalto = Seq(ValintatapaSisaltoTeksti("Sisaltoteksti"), Taulukko2),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
     kaytaMuuntotaulukkoa = true,
     kynnysehto = kieliMap("kynnysehto"),
     enimmaispisteet = Some(18.1),

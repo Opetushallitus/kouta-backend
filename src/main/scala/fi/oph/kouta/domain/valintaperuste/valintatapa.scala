@@ -55,7 +55,7 @@ case class Taulukko(id: Option[UUID],
                     nimi: Kielistetty = Map(),
                     rows: Seq[Row] = Seq()) extends ValintatapaSisalto
 
-case class ValintatapaSisaltoTeksti(teksti: String) extends ValintatapaSisalto
+case class ValintatapaSisaltoTeksti(teksti: Kielistetty) extends ValintatapaSisalto
 
 case class Row(index: Int,
                isHeader: Boolean = false,

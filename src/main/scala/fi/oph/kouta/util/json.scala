@@ -142,7 +142,7 @@ sealed trait DefaultKoutaJsonFormats {
       Try(s \ "tyyppi").collect {
         case JString(tyyppi) if tyyppi == "teksti" =>
           Try(s \ "data").collect {
-            case JString(teksti) => ValintatapaSisaltoTeksti(teksti)
+            case teksti: JObject => ValintatapaSisaltoTeksti(teksti.extract[Kielistetty])
           }.get
         case JString(tyyppi) if tyyppi == "taulukko" =>
           Try(s \ "data").collect {
@@ -151,7 +151,9 @@ sealed trait DefaultKoutaJsonFormats {
       }.get
   }, {
     case j: ValintatapaSisaltoTeksti =>
-      JObject(List("tyyppi" -> JString("teksti"), "data" -> JString(j.teksti)))
+      implicit def formats: Formats = genericKoutaFormats
+
+      JObject(List("tyyppi" -> JString("teksti"), "data" -> Extraction.decompose(j.teksti)))
     case j: Taulukko =>
       implicit def formats: Formats = genericKoutaFormats
 
