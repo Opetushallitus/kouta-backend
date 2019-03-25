@@ -1,8 +1,14 @@
 alter table valintaperusteet
-  add column koulutustyyppi koulutustyyppi not null;
+  add column koulutustyyppi koulutustyyppi not null default 'amm';
 
 alter table valintaperusteet_history
-  add column koulutustyyppi koulutustyyppi not null;
+  add column koulutustyyppi koulutustyyppi not null default 'amm';
+
+alter table valintaperusteet
+  alter column koulutustyyppi drop default;
+
+alter table valintaperusteet_history
+  alter column koulutustyyppi drop default;
 
 create or replace function update_valintaperusteet_history() returns trigger as
 $$
