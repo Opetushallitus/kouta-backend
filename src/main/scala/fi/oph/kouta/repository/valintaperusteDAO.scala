@@ -2,13 +2,13 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
-
-import fi.oph.kouta.domain.{Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.domain.oid._
-import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
-
 import scala.concurrent.ExecutionContext.Implicits.global
+import fi.oph.kouta.domain.{Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.indexing.SQSQueueDAO
+import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
+import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def put(valintaperuste: Valintaperuste): Option[UUID]
@@ -19,12 +19,21 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem]
 }
 
-object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
+object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL with SQSQueueDAO {
+
+  def toSQSQueue(id: UUID): DBIO[Unit] =
+    toSQSQueue(HighPriority, IndexTypeValintaperuste, id.toString)
 
   override def put(valintaperuste: Valintaperuste): Option[UUID] = {
-    KoutaDatabase.runBlocking(insertValintaperuste(valintaperuste)) match {
-      case x if x < 1 => None
-      case _ => valintaperuste.id
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        id <- DBIO.successful(Some(UUID.randomUUID))
+        _  <- insertValintaperuste(valintaperuste.copy(id = id))
+        _  <- toSQSQueue(id.get)
+      } yield (id)
+    ) match {
+      case Left(t) => throw t
+      case Right(id) => id
     }
   }
 
@@ -40,15 +49,26 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
   }
 
   override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(valintaperuste.id.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown valintaperuste id ${valintaperuste.id.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut valintaperustetta ${valintaperuste.id.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateValintaperuste(valintaperuste))) match {
+    KoutaDatabase.runBlockingTransactionally(
+      checkNotModified(valintaperuste, notModifiedSince).andThen(
+        for {
+          v <- updateValintaperuste(valintaperuste)
+          _ <- toSQSQueue(valintaperuste.id.get)
+        } yield (v)
+      )
+    ) match {
       case Left(t) => throw t
-      case Right(x) => 0 < x
+      case Right(count) => 0 < count
     }
   }
+
+  private def checkNotModified(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Instant] =
+    selectLastModified(valintaperuste.id.get).flatMap(_ match {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown valintaperuste id ${valintaperuste.id.get}"))
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
+        new ConcurrentModificationException(s"Joku oli muokannut valintaperustetta ${valintaperuste.id.get} samanaikaisesti"))
+      case Some(time) => DBIO.successful(time)
+    })
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))

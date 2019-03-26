@@ -6,6 +6,8 @@ import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.indexing.SQSQueueDAO
+import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,24 +21,32 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
 }
 
-object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
+object KoulutusDAO extends KoulutusDAO with KoulutusSQL with SQSQueueDAO {
+
+  def toSQSQueue(oid: KoulutusOid): DBIO[Unit] =
+    toSQSQueue(HighPriority, IndexTypeKoulutus, oid.toString)
 
   override def put(koulutus: Koulutus): Option[KoulutusOid] = {
-    KoutaDatabase.runBlockingTransactionally( for {
-      oid <- insertKoulutus(koulutus)
-      _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
-    } yield (oid) ) match {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        oid <- insertKoulutus(koulutus)
+        _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
+        _ <- toSQSQueue(oid.get)
+      } yield (oid)
+    ) match {
       case Left(t) => throw t
       case Right(oid) => oid
     }
   }
 
   override def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally( for {
-      k <- selectKoulutus(oid).as[Koulutus].headOption
-      t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
-      l <- selectLastModified(oid)
-    } yield (k, t, l) ) match {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        k <- selectKoulutus(oid).as[Koulutus].headOption
+        t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
+        l <- selectLastModified(oid)
+      } yield (k, t, l)
+    ) match {
       case Left(t) => throw t
       case Right((None, _, _)) | Right((_, _, None)) => None
       case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
@@ -44,16 +54,27 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   }
 
   override def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(koulutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown koulutus oid ${koulutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateKoulutus(koulutus))
-      .zip(updateKoulutuksenTarjoajat(koulutus))) match {
+    KoutaDatabase.runBlockingTransactionally(
+      checkNotModified(koulutus, notModifiedSince).andThen(
+        for {
+          k <- updateKoulutus(koulutus)
+          t <- updateKoulutuksenTarjoajat(koulutus)
+          _ <- toSQSQueue(koulutus.oid.get)
+        } yield (k + t.sum)
+      )
+    ) match {
       case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
+      case Right(count) => 0 < count
     }
   }
+
+  private def checkNotModified(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Instant] =
+    selectLastModified(koulutus.oid.get).flatMap(_ match {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown koulutus oid ${koulutus.oid.get}"))
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
+        new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
+      case Some(time) => DBIO.successful(time)
+    })
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)

@@ -4,23 +4,15 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.indexing.IndexingService
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
-import fi.oph.kouta.util.WithSideEffect
 
-object KoulutusService extends ValidatingService[Koulutus] with AuthorizationService with WithSideEffect {
+object KoulutusService extends ValidatingService[Koulutus] with AuthorizationService {
 
-  def put(koulutus: Koulutus): Option[KoulutusOid] = {
-    withSideEffect(withValidation(koulutus, KoulutusDAO.put)) {
-      case oid => IndexingService.index(koulutus.copy(oid = oid))
-    }
-  }
+  def put(koulutus: Koulutus): Option[KoulutusOid] =
+    withValidation(koulutus, KoulutusDAO.put)
 
-  def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean = {
-    withSideEffect(withValidation(koulutus, KoulutusDAO.update(_, notModifiedSince))) {
-      case true => IndexingService.index(koulutus)
-    }
-  }
+  def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean =
+    withValidation(koulutus, KoulutusDAO.update(_, notModifiedSince))
 
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
 

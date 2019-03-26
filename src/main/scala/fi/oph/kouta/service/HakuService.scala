@@ -4,23 +4,15 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.indexing.IndexingService
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO}
-import fi.oph.kouta.util.WithSideEffect
 
-object HakuService extends ValidatingService[Haku] with AuthorizationService with WithSideEffect {
+object HakuService extends ValidatingService[Haku] with AuthorizationService {
 
-  def put(haku: Haku): Option[HakuOid] = {
-    withSideEffect(withValidation(haku, HakuDAO.put)) {
-      case oid => IndexingService.index(haku.copy(oid = oid))
-    }
-  }
+  def put(haku: Haku): Option[HakuOid] =
+    withValidation(haku, HakuDAO.put)
 
-  def update(haku: Haku, notModifiedSince:Instant): Boolean = {
-    withSideEffect(withValidation(haku, HakuDAO.update(_, notModifiedSince))) {
-      case true => IndexingService.index(haku)
-    }
-  }
+  def update(haku: Haku, notModifiedSince:Instant): Boolean =
+    withValidation(haku, HakuDAO.update(_, notModifiedSince))
 
   def get(oid: HakuOid): Option[(Haku, Instant)] = HakuDAO.get(oid)
 

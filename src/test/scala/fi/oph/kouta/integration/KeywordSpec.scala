@@ -1,11 +1,14 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.KonfoIndexingQueues
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi, ToteutusMetadata}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import org.scalatest.BeforeAndAfterEach
 
-class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture with KoulutusFixture with ToteutusFixture with BeforeAndAfterEach {
+@tags.RequiresDocker
+class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
+  with KoulutusFixture with ToteutusFixture with KonfoIndexingQueues with BeforeAndAfterEach {
 
   var koulutusOid = ""
 

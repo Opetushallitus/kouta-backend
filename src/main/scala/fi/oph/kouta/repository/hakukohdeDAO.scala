@@ -6,6 +6,8 @@ import java.util.{ConcurrentModificationException, UUID}
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.indexing.SQSQueueDAO
+import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 import slick.sql.SqlAction
@@ -23,17 +25,21 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem]
 }
 
-object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
+object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL with SQSQueueDAO {
+
+  def toSQSQueue(oid: HakukohdeOid): DBIO[Unit] =
+    toSQSQueue(HighPriority, IndexTypeHakukohde, oid.toString)
 
   override def put(hakukohde: Hakukohde): Option[HakukohdeOid] = {
     KoutaDatabase.runBlockingTransactionally( for {
       oid <- insertHakukohde(hakukohde)
       _ <- insertHakuajat(hakukohde.copy(oid = oid))
       _ <- insertValintakokeet(hakukohde.copy(oid = oid))
-      x <- insertLiitteet(hakukohde.copy(oid = oid))
-    } yield (oid, x) ) match {
+      _ <- insertLiitteet(hakukohde.copy(oid = oid))
+      _ <- toSQSQueue(oid.get)
+    } yield (oid) ) match {
       case Left(t) => throw t
-      case Right((oid, _)) => oid
+      case Right(oid) => oid
     }
   }
 
@@ -55,18 +61,28 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   }
 
   override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(hakukohde.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown hakukohde oid ${hakukohde.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut hakukohdetta ${hakukohde.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateHakukohde(hakukohde))
-      .zip(updateHakuajat(hakukohde))
-      .zip(updateValintakokeet(hakukohde))
-      .zip(updateLiitteet(hakukohde))) match {
+    KoutaDatabase.runBlockingTransactionally(
+      checkNotModified(hakukohde, notModifiedSince).andThen(
+        for {
+          hk <- updateHakukohde(hakukohde)
+          ha <- updateHakuajat(hakukohde)
+          vk <- updateValintakokeet(hakukohde)
+          li <- updateLiitteet(hakukohde)
+          _  <- toSQSQueue(hakukohde.oid.get)
+        } yield (hk + ha.sum + vk.sum + li.sum)
+    )) match {
       case Left(t) => throw t
-      case Right((((a, b), c), d)) => 0 < (a + b.sum + c.sum + d.sum)
+      case Right(count) => 0 < count
     }
   }
+
+  private def checkNotModified(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Instant] =
+    selectLastModified(hakukohde.oid.get).flatMap(_ match {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown hakukohde oid ${hakukohde.oid.get}"))
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
+        new ConcurrentModificationException(s"Joku oli muokannut hakukohdetta ${hakukohde.oid.get} samanaikaisesti"))
+      case Some(time) => DBIO.successful(time)
+    })
 
   private def updateHakuajat(hakukohde: Hakukohde) = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)

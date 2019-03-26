@@ -6,9 +6,10 @@ import java.util.ConcurrentModificationException
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
+import fi.oph.kouta.indexing.SQSQueueDAO
+import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
-import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -21,13 +22,19 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
 }
   
-object HakuDAO extends HakuDAO with HakuSQL {
+object HakuDAO extends HakuDAO with HakuSQL with SQSQueueDAO {
+
+  def toSQSQueue(oid: HakuOid): DBIO[Unit] =
+    toSQSQueue(HighPriority, IndexTypeHaku, oid.toString)
 
   override def put(haku: Haku): Option[HakuOid] = {
-    KoutaDatabase.runBlockingTransactionally( for {
-      oid <- insertHaku(haku)
-      _ <- insertHakuajat(haku.copy(oid = oid))
-    } yield (oid) ) match {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        oid <- insertHaku(haku)
+        _ <- insertHakuajat(haku.copy(oid = oid))
+        _ <- toSQSQueue(oid.get)
+      } yield (oid)
+    ) match {
       case Left(t) => throw t
       case Right(oid) => oid
     }
@@ -46,16 +53,27 @@ object HakuDAO extends HakuDAO with HakuSQL {
   }
 
   override def update(haku: Haku, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(haku.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown haku oid ${haku.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut hakua ${haku.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateHaku(haku))
-      .zip(updateHaunHakuajat(haku))) match {
+    KoutaDatabase.runBlockingTransactionally(
+      checkNotModified(haku, notModifiedSince).andThen(
+        for {
+          x <- updateHaku(haku)
+          y <- updateHaunHakuajat(haku)
+          _ <- toSQSQueue(haku.oid.get)
+        } yield (x + y.sum)
+      )
+    ) match {
       case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
+      case Right(count) => 0 < count
     }
   }
+
+  private def checkNotModified(haku: Haku, notModifiedSince: Instant): DBIO[Instant] =
+    selectLastModified(haku.oid.get).flatMap(_ match {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown haku oid ${haku.oid.get}"))
+      case Some(time) if time.isAfter(notModifiedSince) =>
+        DBIO.failed( new ConcurrentModificationException(s"Joku oli muokannut hakua ${haku.oid.get} samanaikaisesti"))
+      case Some(time) => DBIO.successful(time)
+    })
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))

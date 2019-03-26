@@ -6,6 +6,8 @@ import java.util.ConcurrentModificationException
 import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.indexing.SQSQueueDAO
+import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -23,7 +25,10 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
 }
 
-object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
+object ToteutusDAO extends ToteutusDAO with ToteutusSQL with SQSQueueDAO {
+
+  def toSQSQueue(oid: ToteutusOid): DBIO[Unit] =
+    toSQSQueue(HighPriority, IndexTypeToteutus, oid.toString)
 
   override def put(toteutus: Toteutus): Option[ToteutusOid] = {
     KoutaDatabase.runBlockingTransactionally( for {
@@ -31,6 +36,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       _ <- insertToteutuksenTarjoajat(toteutus.copy(oid = oid))
       _ <- insertAmmattinimikkeet(toteutus)
       _ <- insertAsiasanat(toteutus)
+      _ <- toSQSQueue(oid.get)
     } yield (oid) ) match {
       case Left(t) => throw t
       case Right(oid) => oid
@@ -50,18 +56,29 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   override def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(toteutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown toteutus oid ${toteutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut toteutusta ${toteutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateToteutus(toteutus))
-      .zip(updateToteutuksenTarjoajat(toteutus))
-      .zip(insertAsiasanat(toteutus))
-      .zip(insertAmmattinimikkeet(toteutus))) match {
+    KoutaDatabase.runBlockingTransactionally(
+      checkNotModified(toteutus, notModifiedSince).andThen(
+        for {
+          t  <- updateToteutus(toteutus)
+          tt <- updateToteutuksenTarjoajat(toteutus)
+          _  <- insertAsiasanat(toteutus)
+          _  <- insertAmmattinimikkeet(toteutus)
+          _  <- toSQSQueue(toteutus.oid.get)
+        } yield (t + tt.sum)
+      )
+    ) match {
       case Left(t) => throw t
-      case Right((((x, y), _), _)) => 0 < (x + y.sum)
+      case Right(count) => 0 < count
     }
   }
+
+  private def checkNotModified(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Instant] =
+    selectLastModified(toteutus.oid.get).flatMap(_ match {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown toteutus oid ${toteutus.oid.get}"))
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
+        new ConcurrentModificationException(s"Joku oli muokannut toteutusta ${toteutus.oid.get} samanaikaisesti"))
+      case Some(time) => DBIO.successful(time)
+    })
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
     val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _, _) = toteutus
