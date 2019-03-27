@@ -210,7 +210,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MetadataKey -> write(TestData.AmmValintaperuste.metadata)
   ))
 
-  private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta map {k => (k, nimi + " " + k.toString)} toMap
+  private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta.map {k => (k, nimi + " " + k.toString)}.toMap
   private def toKielivalinta(params:Map[String, String]) = params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_))
 
   private def toJsonIfValid[T <: Validatable](v :T): String = v.validate() match {

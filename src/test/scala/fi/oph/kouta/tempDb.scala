@@ -85,7 +85,7 @@ object TempDb extends Logging {
     case n => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
   }
 
-  private def isAcceptingConnections(): Boolean = {
+  private val isAcceptingConnections: () => Boolean = () => {
     runBlocking(s"pg_isready -q -t 1 -h localhost -p $port -d $dbName", failOnError = false) == 0
   }
 }

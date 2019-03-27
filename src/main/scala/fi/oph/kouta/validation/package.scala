@@ -7,7 +7,7 @@ package object validation {
     def validate():IsValid
 
     def and(validations: IsValid*): IsValid = validations collect { case Left(msgList) => msgList } match {
-      case l if l.isEmpty => Right()
+      case l if l.isEmpty => Right(())
       case l => Left(l.flatten.distinct.toList)
     }
   }

@@ -39,7 +39,7 @@ trait Validations {
   def assertValid(oid: Oid): IsValid = assertTrue(oid.isValid(), validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], name: String): IsValid = assertTrue(value.isDefined, missingMsg(name))
 
-  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(Right())
+  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(Right(()))
 
   def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = {
     val messages = values
@@ -53,13 +53,13 @@ trait Validations {
 
   def validateIfTrue(b: Boolean, f: () => IsValid): IsValid = b match {
     case true => f()
-    case _ => Right()
+    case _ => Right(())
   }
 
   def findInvalidOids(l: Seq[Oid]): Seq[Oid] = l.filter(!_.isValid())
   def validateOidList(values: Seq[Oid]): IsValid = findInvalidOids(values) match {
     case x if !x.isEmpty => toLeft(invalidOidsMsg(x))
-    case _ => Right()
+    case _ => Right(())
   }
 
   def findPuuttuvatKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] = {
@@ -69,12 +69,12 @@ trait Validations {
   def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, msg: String): IsValid =
     findPuuttuvatKielet(kielivalinta, k) match {
       case x if !x.isEmpty => toLeft(invalidKielistetty(msg, x))
-      case _ => Right()
+      case _ => Right(())
     }
 
   def isValidHakuaika(hakuaika: Ajanjakso): Boolean = hakuaika.alkaa.isBefore(hakuaika.paattyy)
   def validateHakuajat(hakuajat: List[Ajanjakso]): IsValid = hakuajat.filterNot(isValidHakuaika) match {
-    case x if x.isEmpty => Right()
+    case x if x.isEmpty => Right(())
     case x => toLeft(InvalidHakuaika)
   }
 
