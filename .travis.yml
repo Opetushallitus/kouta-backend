@@ -50,7 +50,7 @@ before_script:
 script:
   - mvn install -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
 
-  - mv target/kouta-backend-*.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
+  - mv target/kouta-backend-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
   - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
 
   - export BASE_IMAGE="baseimage-fatjar:master"
@@ -58,7 +58,14 @@ script:
   - ./ci-tools/build/build-fatjar.sh $ARTIFACT_NAME
 
 deploy:
-  provider: script
-  script: ./ci-tools/build/upload-image.sh $ARTIFACT_NAME
-  on:
-    all_branches: true
+  - provider: script
+    script:
+      mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
+    skip_cleanup: true
+    on:
+      branch: KTO-114
+  - provider: script
+    script:
+      ./ci-tools/build/upload-image.sh $ARTIFACT_NAME
+    on:
+      all_branches: true
