@@ -8,7 +8,6 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.validation.Validations
 
-@tags.RequiresDocker
 class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations with SQLHelpers with KonfoIndexingQueues with EventuallyMessages {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")

@@ -6,7 +6,6 @@ import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi, ToteutusMetadata}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import org.scalatest.BeforeAndAfterEach
 
-@tags.RequiresDocker
 class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
   with KoulutusFixture with ToteutusFixture with KonfoIndexingQueues with BeforeAndAfterEach {
 

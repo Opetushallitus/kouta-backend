@@ -28,7 +28,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     "test-data-generator.path",
     s"http://localhost:${System.getProperty("kouta-backend.port", DEFAULT_PORT)}/kouta-backend")
 
-  val KoulutusCount = 500
+  val KoulutusCount = 5
   val DebugOids = false
 
   val userOid = "1.2.246.562.24.62301161440"

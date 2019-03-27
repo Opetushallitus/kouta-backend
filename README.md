@@ -8,7 +8,6 @@ Testit voi ajaa `mvn test` komennolla tai rajaamalla ajettavien testejä
 `mvn test -Dsuites="<testiluokan nimet pilkulla erotettuna>"`
 
 Testit vaativat että Docker on asennettuna ja Docker daemon on käynnissä.
-Nämä testit voi ohittaa komennolla `mvn test -DtagsToExclude="tags.RequiresDocker"`
 
 ## Ajaminen lokaalisti
 
@@ -17,7 +16,11 @@ Asetuksia voi muuttaa muokkaamalla ```'/src/test/resources/dev-vars.yml'```-tied
 
 Emebedded Postgres-kannan käyttäminen vaatii, että postgresql on asennettu koneelle.
 
-Indeksoinnin jonot saa lokaalisti käyttöön porttiin `localhost:4576` käynnistämällä
+EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
+
+## Indeksoinnin SQS-jonot
+
+Indeksoinnin jonot saa manuaalisesti lokaalisti käyttöön porttiin `localhost:4576` käynnistämällä
 Localstack Docker instanssin komennolla `tools/start_localstack` ja sammutettua
 `tools/stop_localstack` komennolla. Mikäli käytössä on lokaali `konfo-indeksoija` voi sen
 Localstack instanssia käyttää koska komennot ovat identtisiä.
