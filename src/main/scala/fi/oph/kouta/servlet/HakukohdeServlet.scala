@@ -13,7 +13,7 @@ class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
   get("/:oid", operation(apiOperation[Hakukohde]("Hae hakukohde")
     tags modelName
     summary "Hae hakukohde"
-    parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
+    parameter pathParam[String]("oid").description("Hakukohteen oid"))) {
 
     HakukohdeService.get(HakukohdeOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown hakukohde oid")

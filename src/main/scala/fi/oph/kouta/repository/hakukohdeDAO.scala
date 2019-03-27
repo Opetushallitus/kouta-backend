@@ -193,7 +193,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${toJsonParam(hakukohde.hakulomake)}::jsonb,
             ${hakukohde.aloituspaikat},
             ${hakukohde.ensikertalaisenAloituspaikat},
-            ${toJsonParam(hakukohde.pohjakoulutusvaatimusKoodiUrit)}::jsonb,
+            ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
             ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
             ${hakukohde.toinenAsteOnkoKaksoistutkinto},
             ${hakukohde.kaytetaanHaunAikataulua},
@@ -221,7 +221,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               hakulomake = ${toJsonParam(hakukohde.hakulomake)}::jsonb,
               aloituspaikat = ${hakukohde.aloituspaikat},
               ensikertalaisen_aloituspaikat = ${hakukohde.ensikertalaisenAloituspaikat},
-              pohjakoulutusvaatimus_koodi_urit = ${toJsonParam(hakukohde.pohjakoulutusvaatimusKoodiUrit)}::jsonb,
+              pohjakoulutusvaatimus_koodi_urit = ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
               muu_pohjakoulutusvaatimus_kuvaus = ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
               toinen_aste_onko_kaksoistutkinto = ${hakukohde.toinenAsteOnkoKaksoistutkinto},
               kaytetaan_haun_aikataulua = ${hakukohde.kaytetaanHaunAikataulua},
@@ -245,7 +245,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or hakulomake is distinct from ${toJsonParam(hakukohde.hakulomake)}::jsonb
             or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
             or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
-            or pohjakoulutusvaatimus_koodi_urit is distinct from ${toJsonParam(hakukohde.pohjakoulutusvaatimusKoodiUrit)}::jsonb
+            or pohjakoulutusvaatimus_koodi_urit is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUrit}
             or muu_pohjakoulutusvaatimus_kuvaus is distinct from ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
             or toinen_aste_onko_kaksoistutkinto is distinct from ${hakukohde.toinenAsteOnkoKaksoistutkinto}
             or kaytetaan_haun_aikataulua is distinct from ${hakukohde.kaytetaanHaunAikataulua}

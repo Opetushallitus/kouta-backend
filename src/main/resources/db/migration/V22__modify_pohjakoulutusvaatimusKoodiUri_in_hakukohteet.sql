@@ -1,12 +1,12 @@
 alter table hakukohteet
   rename column pohjakoulutusvaatimus_koodi_uri to pohjakoulutusvaatimus_koodi_urit;
 alter table hakukohteet
-  alter column pohjakoulutusvaatimus_koodi_urit type jsonb using concat('["', pohjakoulutusvaatimus_koodi_urit, '"]')::jsonb;
+  alter column pohjakoulutusvaatimus_koodi_urit type varchar[] using array[pohjakoulutusvaatimus_koodi_urit];
 
 alter table hakukohteet_history
   rename column pohjakoulutusvaatimus_koodi_uri to pohjakoulutusvaatimus_koodi_urit;
 alter table hakukohteet_history
-  alter column pohjakoulutusvaatimus_koodi_urit type jsonb using concat('["', pohjakoulutusvaatimus_koodi_urit, '"]')::jsonb;
+alter column pohjakoulutusvaatimus_koodi_urit type varchar[] using array[pohjakoulutusvaatimus_koodi_urit];
 
 create or replace function update_hakukohteet_history() returns trigger as
 $$
