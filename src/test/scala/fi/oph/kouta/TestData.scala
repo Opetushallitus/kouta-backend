@@ -6,7 +6,6 @@ import java.time.temporal.ChronoUnit
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.valintaperuste._
 
 object TestData {
 

@@ -5,9 +5,6 @@ import java.time.LocalDateTime
 import fi.oph.kouta.domain.oid.{HakuOid, Oid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None,
-                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq())
-
 case class Haku(oid: Option[HakuOid] = None,
                 tila: Julkaisutila = Tallennettu,
                 nimi: Kielistetty = Map(),
@@ -51,3 +48,6 @@ case class HakuListItem(oid: HakuOid,
                         organisaatioOid: OrganisaatioOid,
                         muokkaaja: UserOid,
                         modified: LocalDateTime) extends OidListItem
+
+case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None,
+                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq())

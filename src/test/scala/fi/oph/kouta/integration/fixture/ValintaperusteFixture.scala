@@ -5,7 +5,6 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.valintaperuste.{Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.ValintaperusteServlet
 

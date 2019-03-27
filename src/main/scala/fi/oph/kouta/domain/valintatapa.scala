@@ -1,8 +1,7 @@
-package fi.oph.kouta.domain.valintaperuste
+package fi.oph.kouta.domain
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.Kielistetty
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 sealed trait Valintatapa extends Validatable {

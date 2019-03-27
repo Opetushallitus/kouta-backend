@@ -1,4 +1,4 @@
-package fi.oph.kouta.domain.valintaperuste
+package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -32,3 +32,10 @@ case class Valintaperuste(koulutustyyppi: Koulutustyyppi,
     ))
   )
 }
+
+case class ValintaperusteListItem(id: UUID,
+                                  nimi: Kielistetty,
+                                  tila: Julkaisutila,
+                                  organisaatioOid: OrganisaatioOid,
+                                  muokkaaja: UserOid,
+                                  modified: LocalDateTime) extends IdListItem

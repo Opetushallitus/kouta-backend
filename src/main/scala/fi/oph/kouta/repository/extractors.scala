@@ -6,7 +6,6 @@ import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.valintaperuste.{Valintaperuste, ValintaperusteListItem, ValintaperusteMetadata}
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.read
 import slick.jdbc._

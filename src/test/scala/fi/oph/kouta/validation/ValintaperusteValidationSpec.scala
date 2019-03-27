@@ -3,7 +3,6 @@ package fi.oph.kouta.validation
 import fi.oph.kouta.TestData.{MinYoValintaperuste, YoValintaperuste}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.UserOid
-import fi.oph.kouta.domain.valintaperuste.Valintaperuste
 
 class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] with Validations {
 

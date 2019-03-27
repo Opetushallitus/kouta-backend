@@ -3,8 +3,8 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.{ConcurrentModificationException, UUID}
 
+import fi.oph.kouta.domain.{Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.valintaperuste.{Valintaperuste, ValintaperusteListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 

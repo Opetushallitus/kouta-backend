@@ -5,8 +5,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.valintaperuste._
+import fi.oph.kouta.domain.oid.{HakukohdeOid, _}
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Extraction, Formats}
@@ -33,20 +32,21 @@ sealed trait DefaultKoutaJsonFormats {
   private def genericKoutaFormats: Formats = DefaultFormats
     .addKeySerializers(Seq(kieliKeySerializer)) ++
     Seq(
-      julkaisuTilaSerializer,
-      koulutusTyyppiSerializer,
-      hakulomaketyyppiSerializer,
       localDateTimeSerializer,
-      kieliSerializer,
-      uuidSerializer,
-      liitteenToimitustapaSerializer,
-      hakuOidSerializer,
-      hakuKohdeOidSerializer,
-      koulutusOidSerializer,
-      toteutusOidSerializer,
-      organisaatioOidSerializer,
-      userOidSerializer,
-      oidSerializer)
+      stringSerializer(Julkaisutila.withName),
+      stringSerializer(Koulutustyyppi.withName),
+      stringSerializer(Hakulomaketyyppi.withName),
+      stringSerializer(Kieli.withName),
+      stringSerializer(UUID.fromString),
+      stringSerializer(LiitteenToimitustapa.withName),
+      stringSerializer(HakuOid),
+      stringSerializer(HakukohdeOid),
+      stringSerializer(KoulutusOid),
+      stringSerializer(ToteutusOid),
+      stringSerializer(OrganisaatioOid),
+      stringSerializer(UserOid),
+      stringSerializer(GenericOid),
+    )
 
   private def kieliKeySerializer = new CustomKeySerializer[Kieli](_ => ( {
     case s: String => Kieli.withName(s)
@@ -54,30 +54,16 @@ sealed trait DefaultKoutaJsonFormats {
     case k: Kieli => k.toString
   }))
 
-  private def stringSerializer[A: Manifest](construct: String => A) = new CustomSerializer[A](_ => ({
-      case JString(s) => construct(s)
-    }, {
-      case a: A => JString(a.toString)
+  private def localDateTimeSerializer = new CustomSerializer[LocalDateTime](_ => ({
+    case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
+  }, {
+    case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
   }))
 
-  private def julkaisuTilaSerializer:         CustomSerializer[Julkaisutila]         = stringSerializer(Julkaisutila.withName)
-  private def koulutusTyyppiSerializer:       CustomSerializer[Koulutustyyppi]       = stringSerializer(Koulutustyyppi.withName)
-  private def hakulomaketyyppiSerializer:     CustomSerializer[Hakulomaketyyppi]     = stringSerializer(Hakulomaketyyppi.withName)
-  private def kieliSerializer:                CustomSerializer[Kieli]                = stringSerializer(Kieli.withName)
-  private def uuidSerializer:                 CustomSerializer[UUID]                 = stringSerializer(UUID.fromString)
-  private def liitteenToimitustapaSerializer: CustomSerializer[LiitteenToimitustapa] = stringSerializer(LiitteenToimitustapa.withName)
-  private def hakuOidSerializer:              CustomSerializer[HakuOid]              = stringSerializer(HakuOid)
-  private def hakuKohdeOidSerializer:         CustomSerializer[HakukohdeOid]         = stringSerializer(HakukohdeOid)
-  private def koulutusOidSerializer:          CustomSerializer[KoulutusOid]          = stringSerializer(KoulutusOid)
-  private def toteutusOidSerializer:          CustomSerializer[ToteutusOid]          = stringSerializer(ToteutusOid)
-  private def organisaatioOidSerializer:      CustomSerializer[OrganisaatioOid]      = stringSerializer(OrganisaatioOid)
-  private def userOidSerializer:              CustomSerializer[UserOid]              = stringSerializer(UserOid)
-  private def oidSerializer:                  CustomSerializer[GenericOid]           = stringSerializer(GenericOid)
-
-  private def localDateTimeSerializer = new CustomSerializer[LocalDateTime](_ => ({
-      case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
-    }, {
-      case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
+  private def stringSerializer[A: Manifest](construct: String => A) = new CustomSerializer[A](_ => ({
+    case JString(s) => construct(s)
+  }, {
+    case a: A => JString(a.toString)
   }))
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ => ({

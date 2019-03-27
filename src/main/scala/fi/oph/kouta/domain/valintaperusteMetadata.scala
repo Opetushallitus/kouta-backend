@@ -1,6 +1,4 @@
-package fi.oph.kouta.domain.valintaperuste
-
-import fi.oph.kouta.domain._
+package fi.oph.kouta.domain
 
 sealed trait ValintaperusteMetadata {
   def koulutustyyppi: Koulutustyyppi
@@ -38,8 +36,11 @@ case class ValintaperusteKielitaitovaatimus(kieliKoodiUri: Option[String] = None
                                             kielitaidonVoiOsoittaa: Seq[Kielitaito] = Seq(),
                                             vaatimukset: Seq[Kielitaitovaatimus] = Seq())
 
-case class Kielitaito(kielitaitoKoodiUri: Option[String] = None, lisatieto: Kielistetty = Map())
+case class Kielitaito(kielitaitoKoodiUri: Option[String] = None,
+                      lisatieto: Kielistetty = Map())
 
-case class Kielitaitovaatimus(kielitaitovaatimusKoodiUri: Option[String] = None, kielitaitovaatimusKuvaukset: Seq[KielitaitovaatimusKuvaus] = Seq())
+case class Kielitaitovaatimus(kielitaitovaatimusKoodiUri: Option[String] = None,
+                              kielitaitovaatimusKuvaukset: Seq[KielitaitovaatimusKuvaus] = Seq())
 
-case class KielitaitovaatimusKuvaus(kielitaitovaatimusKuvausKoodiUri: Option[String] = None, kielitaitovaatimusTaso: Option[String] = None)
+case class KielitaitovaatimusKuvaus(kielitaitovaatimusKuvausKoodiUri: Option[String] = None,
+                                    kielitaitovaatimusTaso: Option[String] = None)

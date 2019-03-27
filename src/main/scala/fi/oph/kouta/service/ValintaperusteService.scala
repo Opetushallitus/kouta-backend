@@ -4,8 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.valintaperuste.{Valintaperuste, ValintaperusteListItem}
-import fi.oph.kouta.domain.{HakukohdeListItem, IdListItem}
+import fi.oph.kouta.domain.{HakukohdeListItem, IdListItem, Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 
 object ValintaperusteService extends ValidatingService[Valintaperuste] with AuthorizationService {

@@ -3,13 +3,12 @@ package fi.oph.kouta.external
 import java.time.LocalDateTime
 import java.util.UUID
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
-import org.json4s.jackson.Serialization.{read, write}
-import fi.oph.kouta.TestData
-import fi.oph.kouta.domain.valintaperuste.{Valintaperuste, ValintaperusteMetadata}
 import fi.oph.kouta.validation.Validatable
+import org.json4s.jackson.Serialization.{read, write}
 
 import scala.collection.JavaConverters._
 
