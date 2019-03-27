@@ -1,7 +1,9 @@
 package fi.oph.kouta
 
-import fi.oph.kouta.config.KoutaConfigurationConstants
+import com.amazonaws.services.sqs.AmazonSQSClient
+import fi.oph.kouta.config.{KoutaConfigurationConstants, KoutaConfigurationFactory}
 import fi.vm.sade.utils.slf4j.Logging
+import io.atlassian.aws.sqs.SQSClient
 
 object EmbeddedJettyLauncher extends Logging {
 
@@ -13,16 +15,37 @@ object EmbeddedJettyLauncher extends Logging {
       case _ => TestSetups.setupWithEmbeddedPostgres()
     }
     TestSetups.setupAwsKeysForSqs()
+    TestSetups.setupSqsQueues()
     new JettyLauncher(System.getProperty("kouta-backend.port", DEFAULT_PORT).toInt).start.join
   }
 }
 
 object TestSetups extends Logging with KoutaConfigurationConstants {
 
+  def setupSqsQueues() = {
+    if((new java.io.File(s".localstack")).exists()) {
+      logger.warn(s"Localstack is already running. Skipping ./tools/start_localstack....")
+    } else {
+      logger.info(s"Running ./tools/start_localstack....")
+      CommandLine.runBlocking(s"./tools/start_localstack")
+      Runtime.getRuntime.addShutdownHook(new Thread(() => CommandLine.runBlocking(s"./tools/stop_localstack")))
+    }
+    logSqsQueues()
+  }
+
+  def logSqsQueues() = {
+    val config = KoutaConfigurationFactory.configuration.indexingConfiguration
+    val sqsClient: AmazonSQSClient = config.endpoint.map(SQSClient.withEndpoint).getOrElse(SQSClient.default)
+    import scala.collection.JavaConverters._
+    val queues = sqsClient.listQueues().getQueueUrls.asScala
+    logger.info(s"Found ${queues.size} SQS queues:")
+    queues.foreach(queueUrl => logger.info(queueUrl))
+  }
+
   def setupAwsKeysForSqs() = {
     if(!Option(System.getProperty("aws.accessKeyId", null)).isDefined) {
-      System.setProperty("aws.accessKeyId", "testAccessKeyId")
-      System.setProperty("aws.secretKey", "testSecretKey")
+      System.setProperty("aws.accessKeyId", "just need something for Localstack")
+      System.setProperty("aws.secretKey", "just need something for Localstack")
     }
   }
 
