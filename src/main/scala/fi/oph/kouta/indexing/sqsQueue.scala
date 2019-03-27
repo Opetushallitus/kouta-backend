@@ -1,7 +1,6 @@
 package fi.oph.kouta.indexing
 
 import com.amazonaws.services.sqs.AmazonSQSClient
-import com.amazonaws.services.sqs.model.SendMessageResult
 import io.atlassian.aws.sqs.SQSClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.indexing.indexing._
@@ -9,7 +8,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.AmazonClientConnectionDef
 import slick.dbio.DBIO
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 package object indexing {
   type Priority = Int
@@ -34,10 +33,32 @@ object SqsService extends Logging {
 
   private val queues = Map(HighPriority -> sqsClient.getQueueUrl(config.priorityQueue).getQueueUrl)
 
-  def addToQueue(priority: Priority, stuff: Map[IndexType, Seq[String]]): Either[Throwable, SendMessageResult] = {
+  private def createMessage(stuff: Map[IndexType, Seq[String]]): Either[Throwable, String] = {
     import org.json4s.jackson.JsonMethods.{compact, render}
     import org.json4s.JsonDSL._
-    Try(sqsClient.sendMessage(queues(priority), compact(render(stuff)))).toEither
+    Try(compact(render(stuff))) match {
+      case Success(message) => Right(message)
+      case Failure(t) => {
+        logger.error(s"Unable to create SQS message for oids [${stuff.values.flatten.mkString(",")}]", t)
+        Left(t)
+      }
+    }
+  }
+
+  def sendMessage(priority: Priority, message: String): Either[Throwable, String] =
+    Try(sqsClient.sendMessage(queues(priority), message)) match {
+      case Success(r) => Right(r.getMessageId)
+      case Failure(t) => {
+        logger.error(s"Got exception from SQS queue. Unable to index message ${message}.", t)
+        Left(t)
+      }
+    }
+
+  def addToQueue(priority: Priority, stuff: Map[IndexType, Seq[String]]): Either[Throwable, String] = {
+    for {
+      message <- createMessage(stuff).right
+      messageId <- sendMessage(priority, message).right
+    } yield messageId
   }
 }
 
