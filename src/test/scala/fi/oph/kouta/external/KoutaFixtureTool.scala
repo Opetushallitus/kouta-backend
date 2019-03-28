@@ -197,6 +197,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   ))
 
   val DefaultValintaperuste: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    KoulutustyyppiKey -> Amm.name,
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     MuokkaajaKey -> "1.2.3",
