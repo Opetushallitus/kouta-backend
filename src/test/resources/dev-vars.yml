@@ -6,3 +6,4 @@ host_postgresql_kouta_password:
 host_virkailija: virkailija.hahtuvaopintopolku.fi
 kouta_backend_sqs_endpoint: http://localhost:4576
 kouta_backend_sqs_queue_priority: konfoIndeksoijaPriority
+kouta_backend_sqs_region:

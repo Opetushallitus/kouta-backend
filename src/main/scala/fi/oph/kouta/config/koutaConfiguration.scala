@@ -17,7 +17,7 @@ case class KoutaDatabaseConfiguration(
   leakDetectionThresholdMillis: Option[Int]
 )
 
-case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String])
+case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
 
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration = KoutaDatabaseConfiguration(
@@ -33,7 +33,8 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
   )
   val indexingConfiguration = IndexingConfiguration(
     config.getString("kouta-backend.sqs.queue.priority"),
-    scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).toOption
+    scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
+    scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
 }
 

@@ -1,5 +1,6 @@
 package fi.oph.kouta.indexing
 
+import com.amazonaws.regions.RegionUtils
 import com.amazonaws.services.sqs.AmazonSQSClient
 import io.atlassian.aws.sqs.SQSClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
@@ -29,7 +30,8 @@ object SqsService extends Logging {
   private val sqsClient: AmazonSQSClient = SQSClient.create(
     config = Some( AmazonClientConnectionDef.default.copy(
       maxErrorRetry = Some(5),
-      endpointUrl = config.endpoint )))
+      endpointUrl = config.endpoint,
+      region = config.region.map(RegionUtils.getRegion))))
 
   private val queues = Map(HighPriority -> sqsClient.getQueueUrl(config.priorityQueue).getQueueUrl)
 
