@@ -44,8 +44,8 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupAwsKeysForSqs() = {
     if(!Option(System.getProperty("aws.accessKeyId", null)).isDefined) {
-      System.setProperty("aws.accessKeyId", "just need something for Localstack")
-      System.setProperty("aws.secretKey", "just need something for Localstack")
+      System.setProperty("aws.accessKeyId", "randomKeyIdForLocalstack")
+      System.setProperty("aws.secretKey", "randomKeyForLocalstack")
     }
   }
 

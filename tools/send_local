@@ -8,8 +8,8 @@ print_help () {
 }
 
 export ENDPOINT="http://localhost:4576"
-export AWS_ACCESS_KEY_ID="just need something for Localstack"
-export AWS_SECRET_ACCESS_KEY="just need something for Localstack"
+export AWS_ACCESS_KEY_ID="randomKeyIdForLocalstack"
+export AWS_SECRET_ACCESS_KEY="randomKeyForLocalstack"
 
 while [[ $# -gt 0 ]]
 do

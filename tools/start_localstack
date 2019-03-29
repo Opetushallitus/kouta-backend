@@ -20,8 +20,8 @@ wait_for_ready () {
 }
 
 create_queues () {
-    export AWS_ACCESS_KEY_ID="just need something for Localstack"
-    export AWS_SECRET_ACCESS_KEY="just need something for Localstack"
+    export AWS_ACCESS_KEY_ID="randomKeyIdForLocalstack"
+    export AWS_SECRET_ACCESS_KEY="randomKeyForLocalstack"
 
     config="$(dirname ${BASH_SOURCE[0]})/queue-config.json"
 
