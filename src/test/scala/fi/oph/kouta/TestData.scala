@@ -2,7 +2,6 @@ package fi.oph.kouta
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
@@ -12,6 +11,8 @@ object TestData {
 
   def now() = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
   def inFuture(s:Long = 500) = LocalDateTime.now().plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
+
+  def kieliMap(text: String): Kielistetty = Map(Fi -> s"$text fi", Sv -> s"$text sv")
 
   val Osoite1 = Osoite(
     osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"),
@@ -126,7 +127,7 @@ object TestData {
     hakulomake = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     aloituspaikat = Some(2),
     ensikertalaisenAloituspaikat = Some(1),
-    pohjakoulutusvaatimusKoodiUri = Some("pohjakoulutusvaatimustoinenaste_01#2"),
+    pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_01#2", "pohjakoulutusvaatimustoinenaste_01#3"),
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
     kaytetaanHaunAikataulua = Some(false),
@@ -173,21 +174,42 @@ object TestData {
         Column(index = 0, text = Map(Fi -> "Tekstiä", Sv -> "Tekstiä sv")),
         Column(index = 1, text = Map(Fi -> "Tekstiä 2", Sv -> "Tekstiä 2 sv"))))))
 
-  val Valintatapa1 = new Valintatapa(valintatapaKoodiUri = Some("valintatapajono_av#1"),
-                                     kuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv"),
-                                     taulukot = Seq(Taulukko1, Taulukko2),
-                                     kaytaMuuntotaulukkoa = false,
-                                     kynnysehto = Map(Fi -> "kynnysehto fi", Sv -> "kynnysehto sv"),
-                                     enimmaispisteet = Some(201.15),
-                                     vahimmaispisteet = Some(182.1))
+  val AmmValintatapa1 = AmmatillinenValintatapa(
+    valintatapaKoodiUri = Some("valintatapajono_av#1"),
+    kuvaus = kieliMap("kuvaus"),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
+    kaytaMuuntotaulukkoa = false,
+    kynnysehto = kieliMap("kynnysehto"),
+    enimmaispisteet = Some(201.15),
+    vahimmaispisteet = Some(182.1))
 
-  val Valintatapa2 = new Valintatapa(valintatapaKoodiUri = Some("valintatapajono_tv#1"),
-                                     kuvaus = Map(Fi -> "kuvaus 2 fi", Sv -> "kuvaus 2 sv"),
-                                     taulukot = Seq(Taulukko2),
-                                     kaytaMuuntotaulukkoa = true,
-                                     kynnysehto = Map(Fi -> "kynnysehto fi", Sv -> "kynnysehto sv"),
-                                     enimmaispisteet = Some(18.1),
-                                     vahimmaispisteet = Some(10.1))
+  val AmmValintatapa2 = AmmatillinenValintatapa(
+    valintatapaKoodiUri = Some("valintatapajono_tv#1"),
+    kuvaus = kieliMap("kuvaus 2"),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
+    kaytaMuuntotaulukkoa = true,
+    kynnysehto = kieliMap("kynnysehto"),
+    enimmaispisteet = Some(18.1),
+    vahimmaispisteet = Some(10.1))
+
+  val YoValintatapa1 = YliopistoValintatapa(
+    nimi = kieliMap("Valintatapa1"),
+    valintatapaKoodiUri = Some("valintatapajono_av#1"),
+    kuvaus = kieliMap("kuvaus"),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
+    kaytaMuuntotaulukkoa = false,
+    kynnysehto = kieliMap("kynnysehto"),
+    enimmaispisteet = Some(201.15),
+    vahimmaispisteet = Some(182.1))
+
+  val YoValintatapa2 = YliopistoValintatapa(
+    valintatapaKoodiUri = Some("valintatapajono_tv#1"),
+    kuvaus = kieliMap("kuvaus 2"),
+    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
+    kaytaMuuntotaulukkoa = true,
+    kynnysehto = kieliMap("kynnysehto"),
+    enimmaispisteet = Some(18.1),
+    vahimmaispisteet = Some(10.1))
 
   val Kielitaitovaatimus1 = new ValintaperusteKielitaitovaatimus(
     kieliKoodiUri = Some("kieli_en#1"),
@@ -210,24 +232,47 @@ object TestData {
             kielitaitovaatimusKuvausKoodiUri = Some("koodiUri_write#1"),
             kielitaitovaatimusTaso = Some("A"))))))
 
-  val valintaperusteMetadata = new ValintaperusteMetadata(
-    valintatavat = Seq(Valintatapa1, Valintatapa2),
+  val yoValintaperusteMetadata = YliopistoValintaperusteMetadata(
+    valintatavat = Seq(YoValintatapa1, YoValintatapa2),
+    kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
+    osaamistaustaKoodiUrit = Seq("osaamistausta_03"),
+    kuvaus = kieliMap("kuvaus"))
+
+  val ammValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
+    valintatavat = Seq(AmmValintatapa1, AmmValintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1))
 
-  val JulkaistuValintaperuste = new Valintaperuste(
+  val AmmValintaperuste = Valintaperuste(
+    koulutustyyppi = Amm,
     id = None,
     tila = Julkaistu,
     hakutapaKoodiUri = Some("hakutapa_01#1"),
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_02#2"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(valintaperusteMetadata),
+    onkoJulkinen = true,
+    metadata = Some(ammValintaperusteMetadata),
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
     muokkaaja = UserOid("2.1.2.1.2"),
     kielivalinta = List(Fi, Sv),
     modified = None)
 
-  val MinValintaperuste = new Valintaperuste(muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"), modified = None)
+  val YoValintaperuste = Valintaperuste(
+    koulutustyyppi = Yo,
+    id = None,
+    tila = Julkaistu,
+    hakutapaKoodiUri = Some("hakutapa_01#1"),
+    kohdejoukkoKoodiUri = Some("haunkohdejoukko_02#2"),
+    kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
+    nimi = kieliMap("nimi"),
+    onkoJulkinen = true,
+    metadata = Some(yoValintaperusteMetadata),
+    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    muokkaaja = UserOid("2.1.2.1.2"),
+    kielivalinta = List(Fi, Sv),
+    modified = None)
+
+  val MinYoValintaperuste = Valintaperuste(koulutustyyppi = Yo, muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"), modified = None)
 
   val ToteutuksenOpetus = Opetus(
     opetuskieliKoodiUrit = Seq("kieli_fi#1"),

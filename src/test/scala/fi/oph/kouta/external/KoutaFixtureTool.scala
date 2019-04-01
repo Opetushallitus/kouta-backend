@@ -3,12 +3,12 @@ package fi.oph.kouta.external
 import java.time.LocalDateTime
 import java.util.UUID
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
-import org.json4s.jackson.Serialization.{read, write}
-import fi.oph.kouta.TestData
 import fi.oph.kouta.validation.Validatable
+import org.json4s.jackson.Serialization.{read, write}
 
 import scala.collection.JavaConverters._
 
@@ -96,7 +96,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val HakuaikaPaattyyKey = "hakuaikaPaattyy"
   val AloituspaikatKey = "aloituspaikat"
   val EnsikertalaisenAloituspaikatKey = "ensikertalaisenAloituspaikat"
-  val PohjakoulutusvaatimusKoodiUriKey = "pohjakoulutusvaatimusKoodiUri"
+  val PohjakoulutusvaatimusKoodiUritKey = "pohjakoulutusvaatimusKoodiUrit"
   val ToinenAsteOnkoKaksoistutkintoKey = "toinenAsteOnkoKaksoistutkinto"
   val KaytetaanHaunAikatauluaKey = "kaytetaanHaunAikataulua"
   val ValintaperusteIdKey = "valintaperuste"
@@ -178,7 +178,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaPaattyyKey -> "2019-11-10T12:00",
     AloituspaikatKey -> "100",
     EnsikertalaisenAloituspaikatKey -> "0",
-    PohjakoulutusvaatimusKoodiUriKey -> "pohjakoulutusvaatimustoinenaste_01#2",
+    PohjakoulutusvaatimusKoodiUritKey -> "pohjakoulutusvaatimustoinenaste_01#2, pohjakoulutusvaatimustoinenaste_02#2",
     ToinenAsteOnkoKaksoistutkintoKey -> "false",
     KaytetaanHaunAikatauluaKey -> "false",
     HakuaikaAlkaaKey -> "2020-10-10T12:00",
@@ -197,6 +197,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   ))
 
   val DefaultValintaperuste: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    KoulutustyyppiKey -> Amm.name,
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     MuokkaajaKey -> "1.2.3",
@@ -207,10 +208,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_11#1",
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
     JulkinenKey -> "false",
-    MetadataKey -> write(TestData.JulkaistuValintaperuste.metadata)
+    MetadataKey -> write(TestData.AmmValintaperuste.metadata)
   ))
 
-  private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta map {k => (k, nimi + " " + k.toString)} toMap
+  private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta.map {k => (k, nimi + " " + k.toString)}.toMap
   private def toKielivalinta(params:Map[String, String]) = params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_))
 
   private def toJsonIfValid[T <: Validatable](v :T): String = v.validate() match {
@@ -295,7 +296,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeKey)),
       Some(params(AloituspaikatKey).toInt),
       Some(params(EnsikertalaisenAloituspaikatKey).toInt),
-      Some(params(PohjakoulutusvaatimusKoodiUriKey)),
+      params(PohjakoulutusvaatimusKoodiUritKey).split(",").map(_.trim).toSeq,
       params.get(MuuPohjakoulutusvaatimusKey).map(toKielistetty(kielivalinta, _)).getOrElse(Map()),
       Some(params(ToinenAsteOnkoKaksoistutkintoKey).toBoolean),
       Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
@@ -318,6 +319,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val params = valintaperusteet(id)
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Valintaperuste(
+      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(UUID.fromString(id)),
       Julkaisutila.withName(params(TilaKey)),
       Some(params(HakutapaKoodiUriKey)),

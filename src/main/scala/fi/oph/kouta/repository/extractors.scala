@@ -27,6 +27,11 @@ trait ExtractorBase extends KoutaJsonFormats {
     new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestamp().toLocalDateTime)
   })
 
+  def extractArray[U](o: Option[Object]): Seq[U] = o
+    .map(_.asInstanceOf[org.postgresql.jdbc.PgArray])
+    .map(_.getArray.asInstanceOf[Array[U]].toSeq)
+    .getOrElse(Seq.empty[U])
+
   def extractKielistetty(json: Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
   def extractKielivalinta(json: Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
   def extractModified(timestamp: Timestamp): LocalDateTime = LocalDateTime.ofInstant(timestamp.toInstant, ZoneId.of("Europe/Helsinki"))
@@ -122,6 +127,7 @@ trait HakuExtractors extends ExtractorBase {
 
 trait ValintaperusteExtractors extends ExtractorBase {
   implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     id = r.nextStringOption().map(UUID.fromString),
     tila = Julkaisutila.withName(r.nextString()),
     hakutapaKoodiUri = r.nextStringOption(),
@@ -159,7 +165,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     hakulomake = extractKielistetty(r.nextStringOption()),
     aloituspaikat = r.nextIntOption(),
     ensikertalaisenAloituspaikat = r.nextIntOption(),
-    pohjakoulutusvaatimusKoodiUri = r.nextStringOption(),
+    pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
     muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption()),
     toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption(),
     kaytetaanHaunAikataulua = r.nextBooleanOption(),

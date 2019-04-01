@@ -135,7 +135,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     organisaatioOid = getTarjoajat(i)(k)
   )
 
-  def valintaperuste(i: Int) = JulkaistuValintaperuste.copy(
+  def valintaperuste(i: Int) = AmmValintaperuste.copy(
     nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
     tila = shuffle(Julkaisutila.values()).head,
     organisaatioOid = OrganisaatioOid(organisaatioOid(i))

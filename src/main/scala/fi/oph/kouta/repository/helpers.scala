@@ -109,4 +109,10 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
       pp.setStringOption(o.map(_.toString))
     }
   }
+
+  implicit object SetStringSeq extends SetParameter[Seq[String]]   {
+    def apply(o: Seq[String], pp: PositionedParameters) {
+      pp.setObject(o.toArray, java.sql.Types.ARRAY)
+    }
+  }
 }

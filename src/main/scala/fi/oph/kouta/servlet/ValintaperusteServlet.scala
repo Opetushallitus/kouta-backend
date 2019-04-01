@@ -2,11 +2,11 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.service.ValintaperusteService
-import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
+import org.scalatra.{NotFound, Ok}
 
 class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
   override val applicationDescription = "Valintaperustekuvausten API"

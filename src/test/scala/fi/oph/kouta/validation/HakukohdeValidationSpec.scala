@@ -32,7 +32,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
     assertLeft(max.copy(alkamiskausiKoodiUri = Some("tintti")), validationMsg("tintti"))
     assertLeft(max.copy(alkamisvuosi = Some("20180")), validationMsg("20180"))
     assertLeft(max.copy(alkamisvuosi = Some("2017")), validationMsg("2017"))
-    assertLeft(max.copy(pohjakoulutusvaatimusKoodiUri = Some("hessu")), validationMsg("hessu"))
+    assertLeft(max.copy(pohjakoulutusvaatimusKoodiUrit = Seq("hessu")), validationMsg("hessu"))
     assertLeft(max.copy(hakuajat = List(Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000)))), InvalidHakuaika)
   }
 

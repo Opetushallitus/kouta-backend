@@ -2,12 +2,11 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
-import fi.oph.kouta.TestData.JulkaistuValintaperuste
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.ValintaperusteServlet
-import org.scalactic.Equality
 
 trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
@@ -15,7 +14,7 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
   addServlet(new ValintaperusteServlet(), ValintaperustePath)
 
-  val valintaperuste = JulkaistuValintaperuste
+  val valintaperuste = TestData.AmmValintaperuste
 
   def valintaperuste(id:UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
   def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)

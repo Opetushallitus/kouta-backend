@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {
@@ -165,8 +165,6 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     get(s"$KoulutusPath/${k1.oid}/hakutiedot") {
       status should equal(200)
       //debugJson[List[Hakutieto]](body)
-
-      TestData.JulkaistuHaku.hakutapaKoodiUri
 
       val expected = List(Hakutieto(
         toteutusOid = t1.oid,
