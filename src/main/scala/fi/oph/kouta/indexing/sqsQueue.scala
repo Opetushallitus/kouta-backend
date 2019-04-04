@@ -33,7 +33,12 @@ object SqsService extends Logging {
       endpointUrl = config.endpoint,
       region = config.region.map(RegionUtils.getRegion))))
 
-  private val queues = Map(HighPriority -> sqsClient.getQueueUrl(config.priorityQueue).getQueueUrl)
+  private val queues = {
+    logger.info(s"""Got priority queue name '${config.priorityQueue}' from oph configuration""")
+    val queueUrl = sqsClient.getQueueUrl(config.priorityQueue).getQueueUrl
+    logger.info(s"""AWS queue url for priority queue in current environment is '$queueUrl'""")
+    Map(HighPriority -> sqsClient.getQueueUrl(config.priorityQueue).getQueueUrl)
+  }
 
   private def createMessage(stuff: Map[IndexType, Seq[String]]): Either[Throwable, String] = {
     import org.json4s.jackson.JsonMethods.{compact, render}
