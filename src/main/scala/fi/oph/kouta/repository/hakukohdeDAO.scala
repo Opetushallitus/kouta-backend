@@ -37,7 +37,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     } yield oid
 
   override def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean] =
-    checkNotModified(hakukohde, notModifiedSince).andThen(
+    checkNotModified(hakukohde.oid.get, notModifiedSince).andThen(
       for {
         hk <- updateHakukohde(hakukohde)
         ha <- updateHakuajat(hakukohde)
@@ -67,14 +67,6 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(hakukohde, notModifiedSince)).get
-
-  private def checkNotModified(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Instant] =
-    selectLastModified(hakukohde.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown hakukohde oid ${hakukohde.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
-        new ConcurrentModificationException(s"Joku oli muokannut hakukohdetta ${hakukohde.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    })
 
   private def updateHakuajat(hakukohde: Hakukohde) = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)

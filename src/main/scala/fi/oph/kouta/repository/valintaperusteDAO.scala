@@ -33,7 +33,7 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     KoutaDatabase.runBlockingTransactionally(getPutActions(valintaperuste)).get
 
   override def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Boolean] =
-    checkNotModified(valintaperuste, notModifiedSince).andThen(
+    checkNotModified(valintaperuste.id.get, notModifiedSince).andThen(
       for {
         v <- updateValintaperuste(valintaperuste)
       } yield 0 < v
@@ -51,14 +51,6 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       case _ => None
     }).get
   }
-
-  private def checkNotModified(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Instant] =
-    selectLastModified(valintaperuste.id.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown valintaperuste id ${valintaperuste.id.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
-        new ConcurrentModificationException(s"Joku oli muokannut valintaperustetta ${valintaperuste.id.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    })
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))

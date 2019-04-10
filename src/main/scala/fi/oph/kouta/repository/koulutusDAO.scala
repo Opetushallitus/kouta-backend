@@ -9,6 +9,7 @@ import fi.oph.kouta.domain.oid._
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid]
@@ -27,7 +28,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   override def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid] =
     for {
       oid <- insertKoulutus(koulutus)
-      _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = Some(oid)))
+      _   <- insertKoulutuksenTarjoajat(koulutus.copy(oid = Some(oid)))
     } yield oid
 
   override def put(koulutus: Koulutus): KoulutusOid =
@@ -47,7 +48,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   }
 
   override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Boolean] = {
-    checkNotModified(koulutus, notModifiedSince).andThen(
+    checkNotModified(koulutus.oid.get, notModifiedSince).andThen(
       for {
         k <- updateKoulutus(koulutus)
         t <- updateKoulutuksenTarjoajat(koulutus)
@@ -57,14 +58,6 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   override def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(koulutus, notModifiedSince)).get
-
-  private def checkNotModified(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Instant] =
-    selectLastModified(koulutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown koulutus oid ${koulutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
-        new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    })
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)

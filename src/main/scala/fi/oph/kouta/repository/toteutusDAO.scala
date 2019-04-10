@@ -39,9 +39,8 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def put(toteutus: Toteutus): ToteutusOid =
     KoutaDatabase.runBlockingTransactionally(getPutActions(toteutus)).get
 
-
   override def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Boolean] =
-    checkNotModified(toteutus, notModifiedSince).andThen(
+    checkNotModified(toteutus.oid.get, notModifiedSince).andThen(
       for {
         t  <- updateToteutus(toteutus)
         tt <- updateToteutuksenTarjoajat(toteutus)
@@ -62,14 +61,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case _ => None
     }).get
   }
-
-  private def checkNotModified(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Instant] =
-    selectLastModified(toteutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown toteutus oid ${toteutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
-        new ConcurrentModificationException(s"Joku oli muokannut toteutusta ${toteutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    })
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
     val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _, _) = toteutus

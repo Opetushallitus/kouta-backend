@@ -46,7 +46,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
   }
 
   def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Boolean] =
-    checkNotModified(haku, notModifiedSince).andThen(
+    checkNotModified(haku.oid.get, notModifiedSince).andThen(
       for {
         x <- updateHaku(haku)
         y <- updateHaunHakuajat(haku)
@@ -55,14 +55,6 @@ object HakuDAO extends HakuDAO with HakuSQL {
 
   override def update(haku: Haku, notModifiedSince: Instant): Boolean =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(haku, notModifiedSince)).get
-
-  private def checkNotModified(haku: Haku, notModifiedSince: Instant): DBIO[Instant] =
-    selectLastModified(haku.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown haku oid ${haku.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) =>
-        DBIO.failed( new ConcurrentModificationException(s"Joku oli muokannut hakua ${haku.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    })
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
