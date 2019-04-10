@@ -29,7 +29,7 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     parameter bodyParam[Valintaperuste])) {
 
     ValintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
-      case id => Ok("id" -> id.getOrElse(""))
+      case id => Ok("id" -> id)
     }
   }
 

@@ -19,10 +19,7 @@ object ModificationDAO extends ModificationDAO {
     h <- HakuDAO.selectModifiedSince(modifiedSince)
     a <- HakukohdeDAO.selectModifiedSince(modifiedSince)
     p <- ValintaperusteDAO.selectModifiedSince(modifiedSince)
-  } yield (k, t, h, a, p)) match {
-    case Left(t) => throw t
-    case Right((k, t, h, a, p)) => ListEverything(k, t, h, a, p)
-  }
+  } yield ListEverything(k, t, h, a, p)).get
 }
 
 trait EntityModificationDAO[T] {

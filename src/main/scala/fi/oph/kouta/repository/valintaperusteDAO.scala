@@ -6,12 +6,13 @@ import fi.oph.kouta.domain.oid._
 import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 import fi.oph.kouta.domain.{Valintaperuste, ValintaperusteListItem}
-import fi.oph.kouta.indexing.SQSQueueDAO
-import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import slick.dbio.DBIO
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
-  def put(valintaperuste: Valintaperuste): Option[UUID]
+  def getPutActions(valintaperuste: Valintaperuste): DBIO[UUID]
+  def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(valintaperuste: Valintaperuste): UUID
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean
 
@@ -19,47 +20,36 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem]
 }
 
-object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL with SQSQueueDAO {
+object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
 
-  def toSQSQueue(id: UUID): DBIO[Unit] =
-    toSQSQueue(HighPriority, IndexTypeValintaperuste, id.toString)
-
-  override def put(valintaperuste: Valintaperuste): Option[UUID] = {
-    KoutaDatabase.runBlockingTransactionally(
-      for {
-        id <- DBIO.successful(Some(UUID.randomUUID))
-        _  <- insertValintaperuste(valintaperuste.copy(id = id))
-        _  <- toSQSQueue(id.get)
-      } yield (id)
-    ) match {
-      case Left(t) => throw t
-      case Right(id) => id
-    }
+  override def getPutActions(valintaperuste: Valintaperuste): DBIO[UUID] = {
+    for {
+      id <- DBIO.successful(UUID.randomUUID)
+      _  <- insertValintaperuste(valintaperuste.copy(id = Some(id)))
+    } yield id
   }
+
+  override def put(valintaperuste: Valintaperuste): UUID =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(valintaperuste)).get
+
+  override def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Boolean] =
+    checkNotModified(valintaperuste, notModifiedSince).andThen(
+      for {
+        v <- updateValintaperuste(valintaperuste)
+      } yield 0 < v
+    )
+
+  override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(valintaperuste, notModifiedSince)).get
 
   override def get(id: UUID): Option[(Valintaperuste, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       v <- selectValintaperuste(id).as[Valintaperuste].headOption
       l <- selectLastModified(id)
-    } yield (v, l) ) match {
-      case Left(t) => {t.printStackTrace(); throw t}
-      case Right((None, _)) | Right((_, None)) => None
-      case Right((Some(v), Some(l))) => Some((v, l))
-    }
-  }
-
-  override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally(
-      checkNotModified(valintaperuste, notModifiedSince).andThen(
-        for {
-          v <- updateValintaperuste(valintaperuste)
-          _ <- toSQSQueue(valintaperuste.id.get)
-        } yield (v)
-      )
-    ) match {
-      case Left(t) => throw t
-      case Right(count) => 0 < count
-    }
+    } yield (v, l) match {
+      case (Some(v), Some(l)) => Some((v, l))
+      case _ => None
+    }).get
   }
 
   private def checkNotModified(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Instant] =

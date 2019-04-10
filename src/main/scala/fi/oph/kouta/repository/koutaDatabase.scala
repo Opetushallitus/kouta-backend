@@ -34,11 +34,8 @@ object KoutaDatabase extends Logging {
     )
   }
 
-  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS)): Either[Throwable, R] = {
-    Try(runBlocking(operations.transactionally.withTransactionIsolation(Serializable), timeout)) match {
-      case Success(r) => Right(r)
-      case Failure(t) => Left(t)
-    }
+  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS)): Try[R] = {
+    Try(runBlocking(operations.transactionally.withTransactionIsolation(Serializable), timeout))
   }
 
   def destroy() = {

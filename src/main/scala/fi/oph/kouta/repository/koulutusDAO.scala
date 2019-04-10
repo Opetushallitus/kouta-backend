@@ -6,14 +6,15 @@ import java.time.Instant
 import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.indexing.SQSQueueDAO
-import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
-  def put(koulutus: Koulutus): Option[KoulutusOid]
+  def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid]
+  def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(koulutus: Koulutus): KoulutusOid
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean
 
@@ -21,23 +22,16 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
 }
 
-object KoulutusDAO extends KoulutusDAO with KoulutusSQL with SQSQueueDAO {
+object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
-  def toSQSQueue(oid: KoulutusOid): DBIO[Unit] =
-    toSQSQueue(HighPriority, IndexTypeKoulutus, oid.toString)
+  override def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid] =
+    for {
+      oid <- insertKoulutus(koulutus)
+      _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = Some(oid)))
+    } yield oid
 
-  override def put(koulutus: Koulutus): Option[KoulutusOid] = {
-    KoutaDatabase.runBlockingTransactionally(
-      for {
-        oid <- insertKoulutus(koulutus)
-        _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
-        _ <- toSQSQueue(oid.get)
-      } yield (oid)
-    ) match {
-      case Left(t) => throw t
-      case Right(oid) => oid
-    }
-  }
+  override def put(koulutus: Koulutus): KoulutusOid =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(koulutus)).get
 
   override def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(
@@ -46,27 +40,23 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL with SQSQueueDAO {
         t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
         l <- selectLastModified(oid)
       } yield (k, t, l)
-    ) match {
-      case Left(t) => throw t
-      case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+    ).get match {
+      case (Some(k), t, Some(l)) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+      case _ => None
     }
   }
 
-  override def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally(
-      checkNotModified(koulutus, notModifiedSince).andThen(
-        for {
-          k <- updateKoulutus(koulutus)
-          t <- updateKoulutuksenTarjoajat(koulutus)
-          _ <- toSQSQueue(koulutus.oid.get)
-        } yield (k + t.sum)
-      )
-    ) match {
-      case Left(t) => throw t
-      case Right(count) => 0 < count
-    }
+  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Boolean] = {
+    checkNotModified(koulutus, notModifiedSince).andThen(
+      for {
+        k <- updateKoulutus(koulutus)
+        t <- updateKoulutuksenTarjoajat(koulutus)
+      } yield 0 < (k + t.sum)
+    )
   }
+
+  override def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(koulutus, notModifiedSince)).get
 
   private def checkNotModified(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Instant] =
     selectLastModified(koulutus.oid.get).flatMap(_ match {
@@ -143,7 +133,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.julkinen},
             ${koulutus.muokkaaja},
             ${koulutus.organisaatioOid},
-            ${toJsonParam(koulutus.kielivalinta)}::jsonb) returning oid""".as[KoulutusOid].headOption
+            ${toJsonParam(koulutus.kielivalinta)}::jsonb) returning oid""".as[KoulutusOid].head
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus) = {

@@ -27,7 +27,7 @@ class HakuServlet (implicit val swagger:Swagger) extends KoutaServlet {
     parameter bodyParam[Haku])) {
 
     HakuService.put(parsedBody.extract[Haku]) match {
-      case oid => Ok("oid" -> oid.getOrElse(""))
+      case oid => Ok("oid" -> oid)
     }
   }
 

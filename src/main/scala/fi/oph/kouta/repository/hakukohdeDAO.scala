@@ -6,8 +6,6 @@ import java.util.{ConcurrentModificationException, UUID}
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.indexing.SQSQueueDAO
-import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 import slick.sql.SqlAction
@@ -15,7 +13,10 @@ import slick.sql.SqlAction
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
-  def put(hakukohde: Hakukohde): Option[HakukohdeOid]
+  def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid]
+  def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(hakukohde: Hakukohde): HakukohdeOid
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)]
   def update(haku: Hakukohde, notModifiedSince: Instant): Boolean
 
@@ -25,23 +26,28 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem]
 }
 
-object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL with SQSQueueDAO {
+object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
-  def toSQSQueue(oid: HakukohdeOid): DBIO[Unit] =
-    toSQSQueue(HighPriority, IndexTypeHakukohde, oid.toString)
-
-  override def put(hakukohde: Hakukohde): Option[HakukohdeOid] = {
-    KoutaDatabase.runBlockingTransactionally( for {
+  override def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid] =
+    for {
       oid <- insertHakukohde(hakukohde)
-      _ <- insertHakuajat(hakukohde.copy(oid = oid))
-      _ <- insertValintakokeet(hakukohde.copy(oid = oid))
-      _ <- insertLiitteet(hakukohde.copy(oid = oid))
-      _ <- toSQSQueue(oid.get)
-    } yield (oid) ) match {
-      case Left(t) => throw t
-      case Right(oid) => oid
-    }
-  }
+      _ <- insertHakuajat(hakukohde.copy(oid = Some(oid)))
+      _ <- insertValintakokeet(hakukohde.copy(oid = Some(oid)))
+      _ <- insertLiitteet(hakukohde.copy(oid = Some(oid)))
+    } yield oid
+
+  override def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean] =
+    checkNotModified(hakukohde, notModifiedSince).andThen(
+      for {
+        hk <- updateHakukohde(hakukohde)
+        ha <- updateHakuajat(hakukohde)
+        vk <- updateValintakokeet(hakukohde)
+        li <- updateLiitteet(hakukohde)
+      } yield 0 < (hk + ha.sum + vk.sum + li.sum)
+    )
+
+  override def put(hakukohde: Hakukohde): HakukohdeOid =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(hakukohde)).get
 
   override def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
@@ -50,31 +56,17 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL with SQSQueueDAO {
       k <- selectValintakokeet(oid)
       i <- selectLiitteet(oid)
       l <- selectLastModified(oid)
-    } yield (h, a, k, i, l) ) match {
-      case Left(t) => throw t
-      case Right((None, _, _, _, _)) | Right((_, _, _, _, None)) => None
-      case Right((Some(h), a, k, i, Some(l))) => Some((h.copy(
+    } yield (h, a, k, i, l) ).get match {
+      case (Some(h), a, k, i, Some(l)) => Some((h.copy(
         hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
         valintakokeet = k.toList,
         liitteet = i.toList), l))
+      case _ => None
     }
   }
 
-  override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally(
-      checkNotModified(hakukohde, notModifiedSince).andThen(
-        for {
-          hk <- updateHakukohde(hakukohde)
-          ha <- updateHakuajat(hakukohde)
-          vk <- updateValintakokeet(hakukohde)
-          li <- updateLiitteet(hakukohde)
-          _  <- toSQSQueue(hakukohde.oid.get)
-        } yield (hk + ha.sum + vk.sum + li.sum)
-    )) match {
-      case Left(t) => throw t
-      case Right(count) => 0 < count
-    }
-  }
+  override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(hakukohde, notModifiedSince)).get
 
   private def checkNotModified(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Instant] =
     selectLastModified(hakukohde.oid.get).flatMap(_ match {
@@ -222,7 +214,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${hakukohde.muokkaaja},
             ${hakukohde.organisaatioOid},
             ${toJsonParam(hakukohde.kielivalinta)}::jsonb
-          ) returning oid""".as[HakukohdeOid].headOption
+          ) returning oid""".as[HakukohdeOid].head
   }
 
   def updateHakukohde(hakukohde: Hakukohde) = {
