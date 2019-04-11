@@ -31,9 +31,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   override def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid] =
     for {
       oid <- insertHakukohde(hakukohde)
-      _ <- insertHakuajat(hakukohde.copy(oid = Some(oid)))
-      _ <- insertValintakokeet(hakukohde.copy(oid = Some(oid)))
-      _ <- insertLiitteet(hakukohde.copy(oid = Some(oid)))
+      _   <- insertHakuajat(hakukohde.copy(oid = Some(oid)))
+      _   <- insertValintakokeet(hakukohde.copy(oid = Some(oid)))
+      _   <- insertLiitteet(hakukohde.copy(oid = Some(oid)))
     } yield oid
 
   override def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean] =

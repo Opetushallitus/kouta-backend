@@ -40,5 +40,6 @@ object HakuService extends ValidatingService[Haku] with AuthorizationService {
     runActionAndUpdateIndex(
       HighPriority,
       IndexTypeHaku,
-      () => HakuDAO.getUpdateActions(haku, notModifiedSince), haku.oid.get.toString)
+      () => HakuDAO.getUpdateActions(haku, notModifiedSince),
+      haku.oid.get.toString)
 }

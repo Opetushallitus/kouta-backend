@@ -28,7 +28,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
   override def getPutActions(haku: Haku): DBIO[HakuOid] =
     for {
       oid <- insertHaku(haku)
-      _ <- insertHakuajat(haku.copy(oid = Some(oid)))
+      _   <- insertHakuajat(haku.copy(oid = Some(oid)))
     } yield oid
 
   override def put(haku: Haku): HakuOid =

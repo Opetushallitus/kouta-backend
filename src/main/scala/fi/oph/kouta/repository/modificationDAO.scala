@@ -3,8 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.ConcurrentModificationException
 
-import fi.oph.kouta.domain.{Koulutus, ListEverything}
-import fi.oph.kouta.repository.KoulutusDAO.selectLastModified
+import fi.oph.kouta.domain.ListEverything
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,8 +37,8 @@ trait EntityModificationDAO[T] {
   def checkNotModified(id: T, notModifiedSince: Instant): DBIO[Instant] =
     selectLastModified(id).flatMap {
       case None => DBIO.failed(new NoSuchElementException(s"Unknown oid/id ${id.toString}"))
-    case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
-      new ConcurrentModificationException(s"Another user has modified ${id.toString} concurrently!"))
-    case Some(time) => DBIO.successful(time)
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
+        new ConcurrentModificationException(s"Another user has modified ${id.toString} concurrently!"))
+      case Some(time) => DBIO.successful(time)
   }
 }

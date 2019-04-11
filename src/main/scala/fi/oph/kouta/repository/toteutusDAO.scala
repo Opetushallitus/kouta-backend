@@ -96,9 +96,9 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
         toteutukset <- selectJulkaistutToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
         tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
       } yield (toteutukset, tarjoajat) ).map {
-      case (toteutukset, tarjoajat) => {
-        toteutukset.map(t =>
-          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
+        case (toteutukset, tarjoajat) => {
+          toteutukset.map(t =>
+            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
       }
     }.get
   }

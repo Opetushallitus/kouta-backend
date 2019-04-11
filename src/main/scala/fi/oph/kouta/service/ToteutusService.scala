@@ -37,5 +37,6 @@ object ToteutusService extends ValidatingService[Toteutus] with AuthorizationSer
     runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => ToteutusDAO.getUpdateActions(toteutus, notModifiedSince), toteutus.oid.get.toString)
+      () => ToteutusDAO.getUpdateActions(toteutus, notModifiedSince),
+      toteutus.oid.get.toString)
 }

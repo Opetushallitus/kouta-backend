@@ -88,9 +88,9 @@ object SqsInTransactionService extends Logging {
                                  getIndexableValue: (R) => String): R =
     KoutaDatabase.runBlockingTransactionally(
       for {
-        id <- action()
-        _  <- toSQSQueue(priority, index, getIndexableValue(id))
-      } yield id ).get
+        result <- action()
+        _      <- toSQSQueue(priority, index, getIndexableValue(result))
+      } yield result ).get
 
   def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[String] =
     toSQSQueue(priority, index, Seq(value))

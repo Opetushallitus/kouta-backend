@@ -45,5 +45,6 @@ object KoulutusService extends ValidatingService[Koulutus] with AuthorizationSer
     runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
-      () => KoulutusDAO.getUpdateActions(koulutus, notModifiedSince), koulutus.oid.get.toString)
+      () => KoulutusDAO.getUpdateActions(koulutus, notModifiedSince),
+      koulutus.oid.get.toString)
 }

@@ -38,5 +38,6 @@ object ValintaperusteService extends ValidatingService[Valintaperuste] with Auth
     runActionAndUpdateIndex(
       HighPriority,
       IndexTypeValintaperuste,
-      () => ValintaperusteDAO.getUpdateActions(valintaperuste, notModifiedSince), valintaperuste.id.get.toString)
+      () => ValintaperusteDAO.getUpdateActions(valintaperuste, notModifiedSince),
+      valintaperuste.id.get.toString)
 }

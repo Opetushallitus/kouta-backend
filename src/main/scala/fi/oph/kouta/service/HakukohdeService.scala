@@ -28,5 +28,6 @@ object HakukohdeService extends ValidatingService[Hakukohde] {
     runActionAndUpdateIndex(
       HighPriority,
       IndexTypeHakukohde,
-      () => HakukohdeDAO.getUpdateActions(hakukohde, notModifiedSince), hakukohde.oid.get.toString)
+      () => HakukohdeDAO.getUpdateActions(hakukohde, notModifiedSince),
+      hakukohde.oid.get.toString)
 }
