@@ -1,30 +1,42 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
-import scala.reflect.Manifest
 
 import fi.oph.kouta.KoutaBackendSwagger
-import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithTemplate, setupAwsKeysForSqs}
+import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
+import fi.oph.kouta.repository.SessionDAO
+import fi.oph.kouta.security.{CasSession, Role, ServiceTicket}
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
+import scala.reflect.Manifest
+
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
+  val testUserOid = "test-user-oid"
+  val testUserTicket = ServiceTicket("test-user-ticket")
+
+  def addDefaultSession(): Unit = SessionDAO.store(CasSession(testUserTicket, testUserOid, Role.all.values.toSet), defaultSessionId)
+
   implicit val swagger = new KoutaBackendSwagger
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     Option(System.getProperty("kouta-backend.test-postgres-port")) match {
       case Some(port) => setupWithTemplate(port.toInt)
       case None => setupWithEmbeddedPostgres
     }
     setupAwsKeysForSqs()
+
+    addDefaultSession()
   }
 }
 
 sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
+  val defaultSessionId = UUID.randomUUID()
+
   val DebugJson = false
 
   def debugJson[E <: AnyRef](body: String)(implicit mf: Manifest[E]) = {
@@ -47,9 +59,15 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def validateErrorBody(expected: String): String = validateErrorBody(List(expected))
 
-  def jsonHeader = ("Content-Type", "application/json; charset=utf-8")
+  def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 
-  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, ("If-Unmodified-Since", lastModified))
+  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, "If-Unmodified-Since" -> lastModified)
+
+  def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
+
+  def sessionHeader: (String, String) = sessionHeader(defaultSessionId.toString)
+
+  def defaultHeaders: Seq[(String, String)] = Seq(sessionHeader, jsonHeader)
 
   def bytes(o: AnyRef) = write(o).getBytes
 
@@ -132,6 +150,10 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from toteutukset_history""")
     db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
     db.runBlocking(sqlu"""delete from koulutukset_history""")
+
+    db.runBlocking(sqlu"""delete from roolit""")
+    db.runBlocking(sqlu"""delete from sessiot""")
+
     deleteAsiasanat()
   }
 

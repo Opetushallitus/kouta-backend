@@ -24,6 +24,9 @@
         <scala-utils.version>0.0.1-SNAPSHOT</scala-utils.version>
         <json4s.version>3.5.2</json4s.version>
 
+        <!-- Cas properties -->
+        <scala-cas.version>1.0.1-SNAPSHOT</scala-cas.version>
+
         <!-- Http related properties -->
         <scalatra.version>2.6.3</scalatra.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
@@ -100,6 +103,43 @@
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
                     <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Cas related dependencies -->
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-cas_2.12</artifactId>
+            <version>${scala-cas.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-parser-combinators_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-xml_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.log4s</groupId>
+                    <artifactId>log4s_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scalaz</groupId>
+                    <artifactId>scalaz-core_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scalaz</groupId>
+                    <artifactId>scalaz-concurrent_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

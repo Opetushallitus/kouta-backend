@@ -1,11 +1,12 @@
 package fi.oph.kouta.servlet
 
 import java.text.ParseException
-import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.time.format.DateTimeFormatter
-import java.util.{ConcurrentModificationException, NoSuchElementException, UUID}
+import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.util.{ConcurrentModificationException, NoSuchElementException}
 
 import fi.oph.kouta.PrettySwaggerSupport
+import fi.oph.kouta.security.{AuthenticationFailedException, AuthorizationFailedException}
 import fi.oph.kouta.service.{KoutaAuthorizationFailedException, KoutaValidationException}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
@@ -14,6 +15,7 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger._
 
+import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
 trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
@@ -54,42 +56,42 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     case None => throw new IllegalArgumentException("Otsake If-Unmodified-Since on pakollinen.")
   }
 
-  def errorMsgFromRequest() = {
+  def errorMsgFromRequest(): String = {
     def msgBody = request.body.length match {
       case x if x > 500000 => request.body.substring(0, 500000)
       case _ => request.body
     }
-    s"""Error ${request.getMethod} ${request.getContextPath} => ${msgBody}"""
+
+    s"Error ${request.getMethod} ${request.getContextPath} => $msgBody"
   }
 
-  def badRequest(t: Throwable) = {
+  def badRequest(t: Throwable): ActionResult = {
     logger.warn(errorMsgFromRequest(), t)
     BadRequest("error" -> t.getMessage)
   }
 
   error {
-    case t: Throwable => {
-      t match {
-        /*case e: AuthenticationFailedException =>
-          logger.warn("authentication failed", e)
-          Unauthorized("error" -> "Unauthorized")*/
-        case e: KoutaAuthorizationFailedException =>
-          logger.warn("authorization failed", e)
-          Forbidden("error" -> s"Forbidden ${e.oid}")
-        case e: KoutaValidationException => BadRequest(e.errorMessages.distinct)
-        case e: IllegalStateException =>  badRequest(t)
-        case e: IllegalArgumentException => badRequest(t)
-        case e: MappingException =>  badRequest(t)
-        case e: ParseException =>  badRequest(t)
-        case e: ConcurrentModificationException =>
-          Conflict("error" -> e.getMessage)
-        case e: NoSuchElementException =>
-          NotFound("error" -> e.getMessage)
-        case e =>
-          logger.error(errorMsgFromRequest(), e)
-          InternalServerError("error" -> "500 Internal Server Error")
-      }
-    }
+    case e: AuthenticationFailedException =>
+      logger.warn(s"authentication failed: ${e.getMessage}")
+      Unauthorized("error" -> "Unauthorized")
+    case e: AuthorizationFailedException =>
+      logger.warn("authorization failed", e)
+      Forbidden("error" -> "Forbidden")
+    case e: KoutaAuthorizationFailedException =>
+      logger.warn("authorization failed", e.getMessage)
+      Forbidden("error" -> s"Forbidden ${e.oid}")
+    case e: KoutaValidationException => BadRequest(e.errorMessages.distinct)
+    case e: IllegalStateException => badRequest(e)
+    case e: IllegalArgumentException => badRequest(e)
+    case e: MappingException => badRequest(e)
+    case e: ParseException => badRequest(e)
+    case e: ConcurrentModificationException =>
+      Conflict("error" -> e.getMessage)
+    case e: NoSuchElementException =>
+      NotFound("error" -> e.getMessage)
+    case NonFatal(e) =>
+      logger.error(errorMsgFromRequest(), e)
+      InternalServerError("error" -> "500 Internal Server Error")
   }
 }
 
@@ -97,8 +99,6 @@ class HealthcheckServlet(implicit val swagger:Swagger) extends KoutaServlet {
 
   override val modelName: String = "Healthcheck"
   override val applicationDescription = "Healthcheck API"
-
-  import org.json4s.JsonDSL._
 
   get("/", operation(apiOperation[String]("Healthcheck") summary "Healthcheck" tags "Admin")) {
     Ok("message" -> "ok")

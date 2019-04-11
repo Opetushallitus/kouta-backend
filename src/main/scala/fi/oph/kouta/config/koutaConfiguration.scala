@@ -1,7 +1,9 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
+import fi.oph.kouta.security.{MockSecurityContext, ProductionSecurityContext, Role, SecurityContext}
 import fi.vm.sade.properties.OphProperties
+import fi.vm.sade.utils.cas.CasClient
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
 
@@ -15,6 +17,15 @@ case class KoutaDatabaseConfiguration(
   registerMbeans: Option[Boolean],
   initializationFailTimeout: Option[Int],
   leakDetectionThresholdMillis: Option[Int]
+)
+
+case class CasConfiguration(
+  securityContext: String,
+  url: String,
+  serviceIdentifier: String,
+  username: String,
+  password: String,
+  requiredRoles: Set[Role]
 )
 
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
@@ -31,11 +42,29 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     initializationFailTimeout = Option(config.getInt("kouta-backend.db.initializationFailTimeout")),
     leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis"))
   )
+
   val indexingConfiguration = IndexingConfiguration(
     config.getString("kouta-backend.sqs.queue.priority"),
     scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
     scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
+
+  val casConfiguration = CasConfiguration(
+    url = config.getString("cas.url"),
+    securityContext = config.getString("kouta-backend.cas.type"),
+    serviceIdentifier = config.getString("kouta-backend.cas.service"),
+    username = config.getString("kouta-backend.cas.username"),
+    password = config.getString("kouta-backend.cas.password"),
+
+    requiredRoles = Set("APP_KOUTA_USER").map(Role(_))
+  )
+
+  val securityContext: SecurityContext = casConfiguration.securityContext match {
+    case "mock" => MockSecurityContext(casConfiguration.serviceIdentifier, casConfiguration.requiredRoles)
+    case _ =>
+      val casClient = new CasClient(casConfiguration.url, org.http4s.client.blaze.defaultClient)
+      ProductionSecurityContext(casClient, casConfiguration.serviceIdentifier, casConfiguration.requiredRoles)
+  }
 }
 
 trait KoutaConfigurationConstants {
@@ -58,6 +87,7 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
       s"Unknown profile '${profile}'! Cannot load oph-properties! Use either " +
       s"'${CONFIG_PROFILE_DEFAULT}' or '${CONFIG_PROFILE_TEMPLATE}' profiles.")
   }
+  logger.info(s"Using security context ${configuration.securityContext.getClass.getSimpleName}")
 
   def init() = {}
 
