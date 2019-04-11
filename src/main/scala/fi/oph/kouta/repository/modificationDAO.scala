@@ -1,6 +1,7 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
+import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.domain.ListEverything
 import slick.dbio.DBIO
@@ -19,10 +20,7 @@ object ModificationDAO extends ModificationDAO {
     h <- HakuDAO.selectModifiedSince(modifiedSince)
     a <- HakukohdeDAO.selectModifiedSince(modifiedSince)
     p <- ValintaperusteDAO.selectModifiedSince(modifiedSince)
-  } yield (k, t, h, a, p)) match {
-    case Left(t) => throw t
-    case Right((k, t, h, a, p)) => ListEverything(k, t, h, a, p)
-  }
+  } yield ListEverything(k, t, h, a, p)).get
 }
 
 trait EntityModificationDAO[T] {
@@ -35,4 +33,12 @@ trait EntityModificationDAO[T] {
 
   def selectLastModified(id: T): DBIO[Option[Instant]]
   def selectModifiedSince(since: Instant): DBIO[Seq[T]]
+
+  def checkNotModified(id: T, notModifiedSince: Instant): DBIO[Instant] =
+    selectLastModified(id).flatMap {
+      case None => DBIO.failed(new NoSuchElementException(s"Unknown oid/id ${id.toString}"))
+      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(
+        new ConcurrentModificationException(s"Another user has modified ${id.toString} concurrently!"))
+      case Some(time) => DBIO.successful(time)
+  }
 }

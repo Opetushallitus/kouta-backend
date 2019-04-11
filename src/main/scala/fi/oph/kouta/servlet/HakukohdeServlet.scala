@@ -27,7 +27,7 @@ class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
     parameter bodyParam[Hakukohde])) {
 
     HakukohdeService.put(parsedBody.extract[Hakukohde]) match {
-      case oid => Ok("oid" -> oid.getOrElse(""))
+      case oid => Ok("oid" -> oid)
     }
   }
 

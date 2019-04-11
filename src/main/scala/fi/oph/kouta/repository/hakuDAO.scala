@@ -8,12 +8,14 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
-import slick.sql.SqlStreamingAction
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
-  def put(haku: Haku): Option[HakuOid]
+  def getPutActions(haku: Haku): DBIO[HakuOid]
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(haku: Haku): HakuOid
   def get(oid: HakuOid): Option[(Haku, Instant)]
   def update(haku: Haku, notModifiedSince: Instant): Boolean
 
@@ -23,39 +25,36 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   
 object HakuDAO extends HakuDAO with HakuSQL {
 
-  override def put(haku: Haku): Option[HakuOid] = {
-    KoutaDatabase.runBlockingTransactionally( for {
+  override def getPutActions(haku: Haku): DBIO[HakuOid] =
+    for {
       oid <- insertHaku(haku)
-      _ <- insertHakuajat(haku.copy(oid = oid))
-    } yield (oid) ) match {
-      case Left(t) => throw t
-      case Right(oid) => oid
-    }
-  }
+      _   <- insertHakuajat(haku.copy(oid = Some(oid)))
+    } yield oid
+
+  override def put(haku: Haku): HakuOid =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(haku)).get
 
   override def get(oid: HakuOid): Option[(Haku, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       h <- selectHaku(oid).as[Haku].headOption
       a <- selectHaunHakuajat(oid).as[Hakuaika]
       l <- selectLastModified(oid)
-    } yield (h, a, l) ) match {
-      case Left(t) => {t.printStackTrace(); throw t}
-      case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(h), a, Some(l))) => Some((h.copy(hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList), l))
-    }
+    } yield (h, a, l) ).map {
+      case (Some(h), a, Some(l)) => Some((h.copy(hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList), l))
+      case _ => None
+    }.get
   }
 
-  override def update(haku: Haku, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(haku.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown haku oid ${haku.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut hakua ${haku.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateHaku(haku))
-      .zip(updateHaunHakuajat(haku))) match {
-      case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
-    }
-  }
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Boolean] =
+    checkNotModified(haku.oid.get, notModifiedSince).andThen(
+      for {
+        x <- updateHaku(haku)
+        y <- updateHaunHakuajat(haku)
+      } yield 0 < (x + y.sum)
+    )
+
+  override def update(haku: Haku, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(haku, notModifiedSince)).get
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
@@ -126,7 +125,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                      ${haku.organisaatioOid},
                      ${haku.muokkaaja},
                      ${toJsonParam(haku.kielivalinta)}::jsonb
-          ) returning oid""".as[HakuOid].headOption
+          ) returning oid""".as[HakuOid].head
   }
 
   def insertHakuajat(haku: Haku) = {

@@ -27,7 +27,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     parameter bodyParam[Toteutus])) {
 
     ToteutusService.put(parsedBody.extract[Toteutus]) match {
-      case oid => Ok("oid" -> oid.getOrElse(""))
+      case oid => Ok("oid" -> oid)
     }
   }
 

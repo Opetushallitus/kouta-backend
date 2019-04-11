@@ -3,6 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{HakuOid, Oid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.indexing.indexing.{IndexTypeHaku/*, Indexable*/}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class Haku(oid: Option[HakuOid] = None,
@@ -23,7 +24,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakuajat: List[Ajanjakso] = List(),
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
-                modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable {
+                modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable /*with Indexable*/ {
 
   override def validate(): IsValid = and (
      super.validate(),
@@ -40,6 +41,9 @@ case class Haku(oid: Option[HakuOid] = None,
        assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")
      ))
   )
+
+  //override val indexType: String = IndexTypeHaku
+  //override def getIndexIds: Seq[String] = oid.map(_.toString).map(Seq(_)).getOrElse(Seq())
 }
 
 case class HakuListItem(oid: HakuOid,

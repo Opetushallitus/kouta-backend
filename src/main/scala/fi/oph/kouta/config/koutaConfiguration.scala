@@ -6,16 +6,18 @@ import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, 
 import fi.vm.sade.utils.slf4j.Logging
 
 case class KoutaDatabaseConfiguration(
-  val url:String,
-  val username:String,
-  val password:String,
-  val numThreads:Option[Int],
-  val maxConnections:Option[Int],
-  val minConnections:Option[Int],
-  val registerMbeans:Option[Boolean],
-  val initializationFailTimeout:Option[Int],
-  val leakDetectionThresholdMillis:Option[Int]
+  url: String,
+  username: String,
+  password: String,
+  numThreads: Option[Int],
+  maxConnections: Option[Int],
+  minConnections: Option[Int],
+  registerMbeans: Option[Boolean],
+  initializationFailTimeout: Option[Int],
+  leakDetectionThresholdMillis: Option[Int]
 )
+
+case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
 
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration = KoutaDatabaseConfiguration(
@@ -28,6 +30,11 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     registerMbeans = Option(config.getBoolean("kouta-backend.db.registerMbeans")),
     initializationFailTimeout = Option(config.getInt("kouta-backend.db.initializationFailTimeout")),
     leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis"))
+  )
+  val indexingConfiguration = IndexingConfiguration(
+    config.getString("kouta-backend.sqs.queue.priority"),
+    scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
+    scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
 }
 

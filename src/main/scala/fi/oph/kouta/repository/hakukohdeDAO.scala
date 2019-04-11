@@ -13,7 +13,10 @@ import slick.sql.SqlAction
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
-  def put(hakukohde: Hakukohde): Option[HakukohdeOid]
+  def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid]
+  def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(hakukohde: Hakukohde): HakukohdeOid
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)]
   def update(haku: Hakukohde, notModifiedSince: Instant): Boolean
 
@@ -25,17 +28,26 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
-  override def put(hakukohde: Hakukohde): Option[HakukohdeOid] = {
-    KoutaDatabase.runBlockingTransactionally( for {
+  override def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid] =
+    for {
       oid <- insertHakukohde(hakukohde)
-      _ <- insertHakuajat(hakukohde.copy(oid = oid))
-      _ <- insertValintakokeet(hakukohde.copy(oid = oid))
-      x <- insertLiitteet(hakukohde.copy(oid = oid))
-    } yield (oid, x) ) match {
-      case Left(t) => throw t
-      case Right((oid, _)) => oid
-    }
-  }
+      _   <- insertHakuajat(hakukohde.copy(oid = Some(oid)))
+      _   <- insertValintakokeet(hakukohde.copy(oid = Some(oid)))
+      _   <- insertLiitteet(hakukohde.copy(oid = Some(oid)))
+    } yield oid
+
+  override def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean] =
+    checkNotModified(hakukohde.oid.get, notModifiedSince).andThen(
+      for {
+        hk <- updateHakukohde(hakukohde)
+        ha <- updateHakuajat(hakukohde)
+        vk <- updateValintakokeet(hakukohde)
+        li <- updateLiitteet(hakukohde)
+      } yield 0 < (hk + ha.sum + vk.sum + li.sum)
+    )
+
+  override def put(hakukohde: Hakukohde): HakukohdeOid =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(hakukohde)).get
 
   override def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
@@ -44,29 +56,17 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       k <- selectValintakokeet(oid)
       i <- selectLiitteet(oid)
       l <- selectLastModified(oid)
-    } yield (h, a, k, i, l) ) match {
-      case Left(t) => throw t
-      case Right((None, _, _, _, _)) | Right((_, _, _, _, None)) => None
-      case Right((Some(h), a, k, i, Some(l))) => Some((h.copy(
+    } yield (h, a, k, i, l) ).get match {
+      case (Some(h), a, k, i, Some(l)) => Some((h.copy(
         hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
         valintakokeet = k.toList,
         liitteet = i.toList), l))
+      case _ => None
     }
   }
 
-  override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(hakukohde.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown hakukohde oid ${hakukohde.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut hakukohdetta ${hakukohde.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateHakukohde(hakukohde))
-      .zip(updateHakuajat(hakukohde))
-      .zip(updateValintakokeet(hakukohde))
-      .zip(updateLiitteet(hakukohde))) match {
-      case Left(t) => throw t
-      case Right((((a, b), c), d)) => 0 < (a + b.sum + c.sum + d.sum)
-    }
-  }
+  override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(hakukohde, notModifiedSince)).get
 
   private def updateHakuajat(hakukohde: Hakukohde) = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
@@ -206,7 +206,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${hakukohde.muokkaaja},
             ${hakukohde.organisaatioOid},
             ${toJsonParam(hakukohde.kielivalinta)}::jsonb
-          ) returning oid""".as[HakukohdeOid].headOption
+          ) returning oid""".as[HakukohdeOid].head
   }
 
   def updateHakukohde(hakukohde: Hakukohde) = {

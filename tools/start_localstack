@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+id_file=".localstack"
+
+wait_for_ready () {
+    echo "Wait for services to be started..."
+    id=$(cat ${id_file})
+    wait=120
+    while [[ ${wait} > 0 ]]
+    do
+        if [[ $(docker logs ${id} --tail 1) == *"Ready."* ]]
+        then
+            started=true
+            return
+        else
+            sleep 1
+            wait=$(expr ${wait} - 1)
+        fi
+    done
+}
+
+create_queues () {
+    export AWS_ACCESS_KEY_ID="randomKeyIdForLocalstack"
+    export AWS_SECRET_ACCESS_KEY="randomKeyForLocalstack"
+
+    config="$(dirname ${BASH_SOURCE[0]})/queue-config.json"
+
+    echo "Creating queues for service"
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaDlq
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaPriority --attributes file://${config}
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaFast     --attributes file://${config}
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaSlow     --attributes file://${config}
+    echo "Created queues"
+}
+
+start_container() {
+    echo "Starting Localstack container"
+    docker run -d -e "SERVICES=sqs" -p 4576:4576 localstack/localstack:latest  > ${id_file}
+    echo "Container started"
+}
+
+if [[ -f ${id_file} ]]; then
+    echo "Localstack environment is already running. '.localstack' file found."
+    exit -1
+else
+    start_container
+    wait_for_ready
+    if [[ ${started} ]]
+    then
+        echo "Services are started."
+        create_queues
+    else
+        echo "Failed to start services. Shutting down container"
+        ./tools/stop_localstack
+        exit -1
+    fi
+fi

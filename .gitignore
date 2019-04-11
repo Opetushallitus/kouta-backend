@@ -7,3 +7,4 @@ embedded-jetty-vars.yml
 
 kouta_backend.sql
 .DS_Store
+.localstack

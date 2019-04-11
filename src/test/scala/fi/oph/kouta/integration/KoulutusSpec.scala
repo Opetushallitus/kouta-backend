@@ -1,13 +1,15 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
-class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with Validations {
+class KoulutusSpec extends KoutaIntegrationSpec
+  with KoulutusFixture with ToteutusFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
   it should "return 404 if koulutus not found" in {
     get("/koulutus/123") {
@@ -129,5 +131,19 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List())
     }
+  }
+
+  it should "send indexing message after creating koulutus" in {
+    val oid = put(koulutus)
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
+  }
+
+  it should "send indexing message after updating koulutus" in {
+    val oid = put(koulutus)
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
+
+    update(koulutus(oid, Arkistoitu), lastModified = get(oid, koulutus(oid)))
+
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
   }
 }

@@ -12,7 +12,10 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
-  def put(toteutus: Toteutus): Option[ToteutusOid]
+  def getPutActions(toteutus: Toteutus): DBIO[ToteutusOid]
+  def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(toteutus: Toteutus): ToteutusOid
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
   def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean
   def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
@@ -25,42 +28,38 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
-  override def put(toteutus: Toteutus): Option[ToteutusOid] = {
-    KoutaDatabase.runBlockingTransactionally( for {
+  override def getPutActions(toteutus: Toteutus): DBIO[ToteutusOid] =
+    for {
       oid <- insertToteutus(toteutus)
-      _ <- insertToteutuksenTarjoajat(toteutus.copy(oid = oid))
+      _ <- insertToteutuksenTarjoajat(toteutus.copy(oid = Some(oid)))
       _ <- insertAmmattinimikkeet(toteutus)
       _ <- insertAsiasanat(toteutus)
-    } yield (oid) ) match {
-      case Left(t) => throw t
-      case Right(oid) => oid
-    }
-  }
+    } yield oid
+
+  override def put(toteutus: Toteutus): ToteutusOid =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(toteutus)).get
+
+  override def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Boolean] =
+    checkNotModified(toteutus.oid.get, notModifiedSince).andThen(
+      for {
+        t  <- updateToteutus(toteutus)
+        tt <- updateToteutuksenTarjoajat(toteutus)
+        _  <- insertAsiasanat(toteutus)
+        _  <- insertAmmattinimikkeet(toteutus)
+      } yield 0 < (t + tt.sum))
+
+  override def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(toteutus, notModifiedSince)).get
 
   override def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       k <- selectToteutus(oid).as[Toteutus].headOption
       t <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
       l <- selectLastModified(oid)
-    } yield (k, t, l) ) match {
-      case Left(t) => throw t
-      case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
-    }
-  }
-
-  override def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(toteutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown toteutus oid ${toteutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut toteutusta ${toteutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateToteutus(toteutus))
-      .zip(updateToteutuksenTarjoajat(toteutus))
-      .zip(insertAsiasanat(toteutus))
-      .zip(insertAmmattinimikkeet(toteutus))) match {
-      case Left(t) => throw t
-      case Right((((x, y), _), _)) => 0 < (x + y.sum)
-    }
+    } yield (k, t, l) match {
+      case (Some(k), t, Some(l)) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+      case _ => None
+    }).get
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
@@ -83,13 +82,12 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       for {
         toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
         tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
-      } yield (toteutukset, tarjoajat) ) match {
-        case Left(t) => throw t
-        case Right((toteutukset, tarjoajat)) => {
+      } yield (toteutukset, tarjoajat)).map {
+        case (toteutukset, tarjoajat) => {
           toteutukset.map(t =>
             t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
         }
-      }
+      }.get
   }
 
   override def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
@@ -97,13 +95,12 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       for {
         toteutukset <- selectJulkaistutToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
         tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
-      } yield (toteutukset, tarjoajat) ) match {
-      case Left(t) => throw t
-      case Right((toteutukset, tarjoajat)) => {
-        toteutukset.map(t =>
-          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
+      } yield (toteutukset, tarjoajat) ).map {
+        case (toteutukset, tarjoajat) => {
+          toteutukset.map(t =>
+            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
       }
-    }
+    }.get
   }
 
   override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
@@ -189,7 +186,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             ${toteutus.muokkaaja},
             ${toteutus.organisaatioOid},
             ${toJsonParam(toteutus.kielivalinta)}::jsonb
-          ) returning oid""".as[ToteutusOid].headOption
+          ) returning oid""".as[ToteutusOid].head
   }
 
   def insertToteutuksenTarjoajat(toteutus: Toteutus) = {

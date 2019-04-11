@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+id_file=".localstack"
+
+if [[ -f ${id_file} ]]
+then
+    id=$(cat ${id_file})
+    echo "Stopping container $(docker stop ${id})"
+    rm ${id_file}
+    echo "Localstack stopped"
+else
+    echo "Localstack environment not running. '.localstack' file not found."
+fi
+

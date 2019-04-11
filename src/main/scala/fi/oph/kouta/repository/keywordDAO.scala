@@ -22,10 +22,7 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
   override def put(`type`: KeywordType, keywords: List[Keyword]): Int =
     KoutaDatabase.runBlockingTransactionally(
       insertKeywords(`type`, keywords)
-    ) match {
-      case Left(t) => throw t
-      case Right(i) => i.sum
-    }
+    ).get.sum
 
   override def insert(`type`: KeywordType, keywords: List[Keyword]): DBIO[List[Int]] =
     insertKeywords(`type`, keywords)

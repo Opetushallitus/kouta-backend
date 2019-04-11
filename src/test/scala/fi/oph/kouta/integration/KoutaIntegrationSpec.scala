@@ -1,20 +1,16 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
+import scala.reflect.Manifest
 
 import fi.oph.kouta.KoutaBackendSwagger
-import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithTemplate}
-import fi.oph.kouta.domain.{Perustiedot, Toteutus}
+import fi.oph.kouta.TestSetups.{setupWithEmbeddedPostgres, setupWithTemplate, setupAwsKeysForSqs}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
-import org.scalatest.DoNotDiscover
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-import scala.reflect.Manifest
-
-@DoNotDiscover
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
   implicit val swagger = new KoutaBackendSwagger
 
@@ -24,6 +20,7 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
       case Some(port) => setupWithTemplate(port.toInt)
       case None => setupWithEmbeddedPostgres
     }
+    setupAwsKeysForSqs()
   }
 }
 

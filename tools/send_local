@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+print_help () {
+    echo "Send message to local SQS queues."
+    echo ""
+    echo "Usage: ${BASH_SOURCE[0]} --queue <queue url> [--message <message body> --file <file for message>]"
+    echo "Only one of ´--message´ and ´--file´ can be set."
+}
+
+export ENDPOINT="http://localhost:4576"
+export AWS_ACCESS_KEY_ID="randomKeyIdForLocalstack"
+export AWS_SECRET_ACCESS_KEY="randomKeyForLocalstack"
+
+while [[ $# -gt 0 ]]
+do
+    if [[ $1 == *"--"* ]]
+    then
+        v="${1/--/}"
+        declare $v="$2"
+    fi
+    shift
+done
+
+if [[ -z ${queue} ]]
+then
+    print_help
+    exit -1
+fi
+
+if [[ -n ${file} ]]
+then
+    if [[ -n ${message} ]]
+    then
+        print_help
+        echo "Can't have both ´--file´ and ´--message´"
+        exit -1
+    fi
+
+    message=$(jq -arM < ${file})
+fi
+
+if [[ -z ${message} ]]
+then
+    print_help
+    exit -1
+fi
+
+aws sqs send-message --endpoint-url ${ENDPOINT} --region foobar --queue-url ${queue} --message-body "${message}"

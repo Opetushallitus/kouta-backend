@@ -11,14 +11,15 @@ trait HakutietoDAO {
 
 object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
   override def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Hakutieto] = {
-    KoutaDatabase.runBlockingTransactionally( for {
-      haut <- selectHakujenHakutiedot(koulutusOid)
-      hakujenHakuajat <- selectHakujenHakuajat(haut)
-      hakukohteet <- selectHakukohteidenHakutiedot(koulutusOid)
-      hakukohteidenHakuajat <- selectHakukohteidenHakuajat(hakukohteet)
-    } yield (haut, hakujenHakuajat, hakukohteet, hakukohteidenHakuajat) ) match {
-      case Left(t) => throw t
-      case Right((h, hh, hk, hkh)) => createHakutieto(h, hh, hk, hkh)
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        haut <- selectHakujenHakutiedot(koulutusOid)
+        hakujenHakuajat <- selectHakujenHakuajat(haut)
+        hakukohteet <- selectHakukohteidenHakutiedot(koulutusOid)
+        hakukohteidenHakuajat <- selectHakukohteidenHakuajat(hakukohteet)
+      } yield (haut, hakujenHakuajat, hakukohteet, hakukohteidenHakuajat)
+    ).get match {
+      case (h, hh, hk, hkh) => createHakutieto(h, hh, hk, hkh)
     }
   }
 

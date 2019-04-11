@@ -34,11 +34,8 @@ object KoutaDatabase extends Logging {
     )
   }
 
-  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS)): Either[Throwable, R] = {
-    Try(runBlocking(operations.transactionally.withTransactionIsolation(Serializable), timeout)) match {
-      case Success(r) => Right(r)
-      case Failure(t) => Left(t)
-    }
+  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS)): Try[R] = {
+    Try(runBlocking(operations.transactionally.withTransactionIsolation(Serializable), timeout))
   }
 
   def destroy() = {
@@ -50,18 +47,18 @@ object KoutaDatabase extends Logging {
     hikariConfig.setJdbcUrl(settings.url)
     hikariConfig.setUsername(settings.username)
     hikariConfig.setPassword(settings.password)
-    settings.maxConnections.foreach(hikariConfig.setMaximumPoolSize)
+    val maxPoolSize = settings.maxConnections.getOrElse(10)
+    hikariConfig.setMaximumPoolSize(maxPoolSize)
     settings.minConnections.foreach(hikariConfig.setMinimumIdle)
     settings.registerMbeans.foreach(hikariConfig.setRegisterMbeans)
     //settings.initializationFailTimeout.foreach(hikariConfig.setI)
     //hikariConfig.setLeakDetectionThreshold(settings.leakDetectionThresholdMillis.getOrElse(settings.getMaxLifetime))
-    val maxConnections = settings.numThreads.getOrElse(20)
-    val executor = AsyncExecutor("kouta", 10, 1000)
+    val executor = AsyncExecutor("kouta", maxPoolSize, 1000)
     logger.info(s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
       s"${ToStringBuilder.reflectionToString(hikariConfig).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
       s" and executor ${ToStringBuilder.reflectionToString(executor)}")
 
-    Database.forDataSource(new HikariDataSource(hikariConfig), maxConnections = Some(10), executor)
+    Database.forDataSource(new HikariDataSource(hikariConfig), maxConnections = Some(maxPoolSize), executor)
   }
 
   private def migrate() = {

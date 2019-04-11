@@ -1,12 +1,13 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData
+import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.validation.Validations
 
-class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
+class HakuSpec extends KoutaIntegrationSpec
+  with HakuFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
   it should "return 404 if haku not found" in {
     get("/haku/123") {
@@ -128,5 +129,19 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
     val lastModified = get(oid, haku(oid))
     update(haku(oid).copy(hakuajat = List()), lastModified)
     get(oid, haku(oid).copy(hakuajat = List()))
+  }
+
+  it should "send indexing message after creating haku" in {
+    val oid = put(haku)
+    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
+  }
+
+  it should "send indexing message after updating haku" in {
+    val oid = put(haku)
+    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
+
+    update(haku(oid, Arkistoitu), lastModified = get(oid, haku(oid)))
+
+    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
   }
 }

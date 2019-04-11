@@ -3,7 +3,6 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 
-import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 

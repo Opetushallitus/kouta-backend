@@ -1,10 +1,9 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.{ServiceMocks, TestSetups}
-import org.scalatest.{BeforeAndAfterEach, DoNotDiscover}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-@DoNotDiscover
 trait KoutaClientSpec extends ScalatraFlatSpec with BeforeAndAfterEach { this: ServiceMocks =>
 
   TestSetups.setupWithTemplate(1234)

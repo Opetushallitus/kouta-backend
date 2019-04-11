@@ -9,9 +9,13 @@ import fi.oph.kouta.domain.oid._
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
-  def put(koulutus: Koulutus): Option[KoulutusOid]
+  def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid]
+  def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(koulutus: Koulutus): KoulutusOid
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean
 
@@ -21,39 +25,39 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
-  override def put(koulutus: Koulutus): Option[KoulutusOid] = {
-    KoutaDatabase.runBlockingTransactionally( for {
+  override def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid] =
+    for {
       oid <- insertKoulutus(koulutus)
-      _ <- insertKoulutuksenTarjoajat(koulutus.copy(oid = oid))
-    } yield (oid) ) match {
-      case Left(t) => throw t
-      case Right(oid) => oid
-    }
-  }
+      _   <- insertKoulutuksenTarjoajat(koulutus.copy(oid = Some(oid)))
+    } yield oid
+
+  override def put(koulutus: Koulutus): KoulutusOid =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(koulutus)).get
 
   override def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally( for {
-      k <- selectKoulutus(oid).as[Koulutus].headOption
-      t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
-      l <- selectLastModified(oid)
-    } yield (k, t, l) ) match {
-      case Left(t) => throw t
-      case Right((None, _, _)) | Right((_, _, None)) => None
-      case Right((Some(k), t, Some(l))) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        k <- selectKoulutus(oid).as[Koulutus].headOption
+        t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
+        l <- selectLastModified(oid)
+      } yield (k, t, l)
+    ).get match {
+      case (Some(k), t, Some(l)) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+      case _ => None
     }
   }
 
-  override def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean = {
-    KoutaDatabase.runBlockingTransactionally( selectLastModified(koulutus.oid.get).flatMap(_ match {
-      case None => DBIO.failed(new NoSuchElementException(s"Unknown koulutus oid ${koulutus.oid.get}"))
-      case Some(time) if time.isAfter(notModifiedSince) => DBIO.failed(new ConcurrentModificationException(s"Joku oli muokannut koulutusta ${koulutus.oid.get} samanaikaisesti"))
-      case Some(time) => DBIO.successful(time)
-    }).andThen(updateKoulutus(koulutus))
-      .zip(updateKoulutuksenTarjoajat(koulutus))) match {
-      case Left(t) => throw t
-      case Right((x, y)) => 0 < (x + y.sum)
-    }
+  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Boolean] = {
+    checkNotModified(koulutus.oid.get, notModifiedSince).andThen(
+      for {
+        k <- updateKoulutus(koulutus)
+        t <- updateKoulutuksenTarjoajat(koulutus)
+      } yield 0 < (k + t.sum)
+    )
   }
+
+  override def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(koulutus, notModifiedSince)).get
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
@@ -122,7 +126,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.julkinen},
             ${koulutus.muokkaaja},
             ${koulutus.organisaatioOid},
-            ${toJsonParam(koulutus.kielivalinta)}::jsonb) returning oid""".as[KoulutusOid].headOption
+            ${toJsonParam(koulutus.kielivalinta)}::jsonb) returning oid""".as[KoulutusOid].head
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus) = {
