@@ -6,7 +6,7 @@ import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
 
-class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
+class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet with CasAuthenticatedServlet {
   override val modelName: String = "Hakukohde"
   override val applicationDescription = "Hakukohteiden API"
 
@@ -14,6 +14,8 @@ class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Hae hakukohde"
     parameter pathParam[String]("oid").description("Hakukohteen oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     HakukohdeService.get(HakukohdeOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown hakukohde oid")
@@ -26,6 +28,8 @@ class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
     summary "Tallenna uusi hakukohde"
     parameter bodyParam[Hakukohde])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     HakukohdeService.put(parsedBody.extract[Hakukohde]) match {
       case oid => Ok("oid" -> oid)
     }
@@ -35,6 +39,8 @@ class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Muokkaa olemassa olevaa hakukohdetta"
     parameter bodyParam[Hakukohde])) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     HakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
