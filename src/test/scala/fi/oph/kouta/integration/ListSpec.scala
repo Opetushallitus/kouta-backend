@@ -84,16 +84,19 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Haku list" should "list all haut for authorized organizations" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid), List(h1, h2, h3))
+    list(HakuPath, Map("organisaatioOid" -> ChildOid), List(h1, h2, h3), defaultHeaders)
   }
   it should "list all haut for authorized organizations 2" in {
-    list(HakuPath, Map("organisaatioOid" -> LonelyOid), List(h4))
+    list(HakuPath, Map("organisaatioOid" -> LonelyOid), List(h4), defaultHeaders)
   }
   it should "return forbidden if oid is unknown" in {
-    list(HakuPath, Map("organisaatioOid" -> UnknownOid), 403)
+    list(HakuPath, Map("organisaatioOid" -> UnknownOid), 403, defaultHeaders)
   }
   it should "return 404 if oid not given" in {
-    list(HakuPath, Map[String,String](), 404)
+    list(HakuPath, Map[String,String](), 404, defaultHeaders)
+  }
+  it should "return 401 if session is not valid" in {
+    list(HakuPath, Map[String,String](), 401)
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
@@ -141,23 +144,30 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid), List(hk1, hk2))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid), List(hk1, hk2), defaultHeaders)
   }
   it should "list all hakukohteet mapped to given haku for authorized organizations 2" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> LonelyOid), List(hk4))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> LonelyOid), List(hk4), defaultHeaders)
   }
   it should "not list hakukohteet belonging to parent organisations" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ChildOid), List(hk2))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ChildOid), List(hk2), defaultHeaders)
   }
   it should "return forbidden if organisaatio oid is unknown" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> UnknownOid), 403)
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> UnknownOid), 403, defaultHeaders)
   }
   it should "return all if organisaatio oid not given" in { //TODO: OIKEUDET!
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), List(hk1, hk2, hk4))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), List(hk1, hk2, hk4), defaultHeaders)
+  }
+  it should "return 401 if there's no valid session" in {
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), 401)
   }
 
   "Hakuun kuuluvat koulutukset" should "list all koulutukset mapped to given haku by hakukohde" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), List(k1, k4))
+    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), List(k1, k4), defaultHeaders)
+  }
+
+  it should "return 401 if there's no valid session" in {
+    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), 401)
   }
 
   //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
