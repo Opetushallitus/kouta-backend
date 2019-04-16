@@ -1,19 +1,17 @@
-create table sessiot(
-  id              uuid primary key,
-  cas_tiketti     character varying,
-  henkilo         character varying not null,
-  viimeksi_luettu timestamptz       not null default now()
+create table sessions (
+  id         uuid primary key,
+  cas_ticket character varying,
+  person     character varying not null,
+  last_read  timestamptz       not null default now()
 );
 
-alter table sessiot
-  owner to oph;
+alter table sessions owner to oph;
 
-create table roolit(
-  sessio uuid references sessiot (id) on delete cascade,
-  rooli  character varying not null
+create table roles (
+  session uuid references sessions (id) on delete cascade,
+  role    character varying not null
 );
 
-alter table roolit
-  owner to oph;
+alter table roles owner to oph;
 
-create index roolit_sessio_idx ON roolit (sessio);
+create index roles_session_idx ON roles (session);

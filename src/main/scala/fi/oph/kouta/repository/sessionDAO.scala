@@ -21,32 +21,33 @@ trait SessionDAO {
 }
 
 object SessionDAO extends SessionDAO with SessionSQL {
-  import KoutaDatabase.runBlocking
+
+  import KoutaDatabase.{runBlocking, runBlockingTransactionally}
 
   override def store(session: Session): UUID = session match {
     case CasSession(ServiceTicket(ticket), personOid, roles) =>
       val id = UUID.randomUUID()
-      runBlocking(storeCasSession(id, ticket, personOid, roles), timeout = Duration(1, TimeUnit.MINUTES))
+      runBlockingTransactionally(storeCasSession(id, ticket, personOid, roles), timeout = Duration(1, TimeUnit.MINUTES))
       id
   }
 
-  def store(session: CasSession, id: UUID) =
-    runBlocking(storeCasSession(id, session.casTicket.s, session.personOid, session.roles), timeout = Duration(1, TimeUnit.MINUTES))
+  def store(session: CasSession, id: UUID): Unit =
+    runBlockingTransactionally(storeCasSession(id, session.casTicket.s, session.personOid, session.roles), timeout = Duration(1, TimeUnit.MINUTES))
 
 
   override def delete(id: UUID): Unit = {
-    runBlocking(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS))
+    runBlockingTransactionally(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS))
   }
 
   override def delete(ticket: ServiceTicket): Unit = {
-    runBlocking(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS))
+    runBlockingTransactionally(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS))
   }
 
   override def get(id: UUID): Option[Session] = {
     runBlocking(getSession(id), timeout = Duration(2, TimeUnit.SECONDS)).map {
       case (casTicket, personOid) =>
-        val roolit = runBlocking(searchRoolitBySessio(id), Duration(2, TimeUnit.SECONDS))
-        CasSession(ServiceTicket(casTicket.get), personOid, roolit.map(Role(_)).toSet)
+        val roles = runBlocking(searchRolesBySessio(id), Duration(2, TimeUnit.SECONDS))
+        CasSession(ServiceTicket(casTicket.get), personOid, roles.map(Role(_)).toSet)
     }
   }
 
@@ -54,20 +55,21 @@ object SessionDAO extends SessionDAO with SessionSQL {
 
 sealed trait SessionSQL extends SQLHelpers {
 
-  protected def storeCasSession(
-      id: UUID,
-      ticket: String,
-      personOid: String,
-      roles: Set[Role]
-  ): DBIOAction[Unit, NoStream, Effect] = {
+  protected def storeCasSession(id: UUID,
+                                ticket: String,
+                                personOid: String,
+                                roles: Set[Role]) = {
     DBIO.seq(
-      sqlu"""insert into sessiot (id, cas_tiketti, henkilo) values ($id, $ticket, $personOid)""",
-      DBIO.sequence(roles.map(role => sqlu"""insert into roolit (sessio, rooli) values ($id, ${role.name})""").toSeq)
+      sqlu"""insert into sessions (id, cas_ticket, person) values ($id, $ticket, $personOid)""",
+      DBIO.sequence(roles.map(role => sqlu"""insert into roles (session, role) values ($id, ${role.name})""").toSeq)
     )
   }
 
-  protected def deleteSession(id: UUID)              = sqlu"""delete from sessiot where id = $id"""
-  protected def deleteSession(ticket: ServiceTicket) = sqlu"""delete from sessiot where cas_tiketti = ${ticket.s}"""
+  protected def deleteSession(id: UUID) =
+    sqlu"""delete from sessions where id = $id"""
+
+  protected def deleteSession(ticket: ServiceTicket) =
+    sqlu"""delete from sessions where cas_ticket = ${ticket.s}"""
 
   protected def getSession(id: UUID) =
     getSessionQuery(id)
@@ -78,18 +80,17 @@ sealed trait SessionSQL extends SQLHelpers {
         case Some(t) =>
           updateViimeksiLuettu(id).andThen(DBIO.successful(Some(t)))
       }
-      .transactionally
 
   private def getSessionQuery(id: UUID) =
-    sql"""select cas_tiketti, henkilo from sessiot
-          where id = $id and viimeksi_luettu > now() - interval '60 minutes'"""
+    sql"""select cas_ticket, person from sessions
+          where id = $id and last_read > now() - interval '60 minutes'"""
       .as[(Option[String], String)]
 
   private def updateViimeksiLuettu(id: UUID) =
-    sqlu"""update sessiot set viimeksi_luettu = now()
-           where id = $id and viimeksi_luettu < now() - interval '30 minutes'"""
+    sqlu"""update sessions set last_read = now()
+           where id = $id and last_read < now() - interval '30 minutes'"""
 
-  protected def searchRoolitBySessio(sessioId: UUID) =
-    sql"""select rooli from roolit where sessio = $sessioId""".as[String]
+  protected def searchRolesBySessio(sessioId: UUID) =
+    sql"""select role from roles where session = $sessioId""".as[String]
 
 }

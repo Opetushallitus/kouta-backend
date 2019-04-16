@@ -151,8 +151,8 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
     db.runBlocking(sqlu"""delete from koulutukset_history""")
 
-    db.runBlocking(sqlu"""delete from roolit""")
-    db.runBlocking(sqlu"""delete from sessiot""")
+    db.runBlocking(sqlu"""delete from roles""")
+    db.runBlocking(sqlu"""delete from sessions""")
 
     deleteAsiasanat()
   }
