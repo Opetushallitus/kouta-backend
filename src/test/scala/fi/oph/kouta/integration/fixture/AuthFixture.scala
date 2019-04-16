@@ -1,7 +1,8 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.MockSecurityContext
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.security.{CasSessionService, MockSecurityContext, Role, SecurityContext}
+import fi.oph.kouta.security.{CasSessionService, Role, SecurityContext}
 import fi.oph.kouta.servlet.AuthServlet
 
 trait AuthFixture {
@@ -14,17 +15,11 @@ trait AuthFixture {
   val casUrl = "testCasUrl"
   val serviceIdentifier = "testService"
 
-  val securityContext: SecurityContext = MockSecurityContext(serviceIdentifier, Set(Role.GenericUser))
+  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, Set(Role.GenericUser))
 
-  addServlet(
-    new AuthServlet(
-      casUrl = casUrl,
-      cas = new CasSessionService(
-        securityContext.casClient,
-        securityContext.casServiceIdentifier
-        //userDetailsService
-      )
-    ), authPath)
+  object MockCasSessionService extends CasSessionService(securityContext)
+
+  addServlet(new AuthServlet(MockCasSessionService), authPath)
 
   def getSessionFromCookies(cookies: String) = {
     "session=[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}".r

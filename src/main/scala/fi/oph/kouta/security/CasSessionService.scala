@@ -3,8 +3,8 @@ package fi.oph.kouta.security
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
-import fi.vm.sade.utils.cas.CasClient
 import fi.vm.sade.utils.cas.CasClient.Username
 import fi.vm.sade.utils.slf4j.Logging
 import scalaz.concurrent.Task
@@ -13,21 +13,37 @@ import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-class CasSessionService(casClient: CasClient, val serviceIdentifier: String /*, userDetailsService: KayttooikeusUserDetailsService */) extends Logging {
-  val sessionRepository: SessionDAO = SessionDAO
+class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
+  def this(msg: String) = this(msg, null)
+  def this() = this(null, null)
+}
+
+class AuthorizationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
+  def this(msg: String) = this(msg, null)
+  def this() = this(null, null)
+}
+
+object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.casConfiguration))
+
+abstract class CasSessionService(val securityContext: SecurityContext /*, userDetailsService: KayttooikeusUserDetailsService*/ ) extends Logging {
+  logger.info(s"Using security context ${securityContext.getClass.getSimpleName}")
+
+  val serviceIdentifier: String = securityContext.casServiceIdentifier
+  val casUrl: String = securityContext.casUrl
+
+  private val casClient = securityContext.casClient
 
   private def validateServiceTicket(ticket: ServiceTicket): Try[Username] = {
     val ServiceTicket(s) = ticket
-    casClient.validateServiceTicket(serviceIdentifier)(s).handleWith {
+    casClient.validateServiceTicket(securityContext.casServiceIdentifier)(s).handleWith {
       case NonFatal(t) => Task.fail(new AuthenticationFailedException(s"Failed to validate service ticket $s", t))
     }.unsafePerformSyncAttemptFor(Duration(1, TimeUnit.SECONDS)).toEither.toTry
   }
 
   private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): Try[(UUID, CasSession)] = {
-
     val session = CasSession(ticket, user.oid, user.roles)
-    logger.debug("Storing to session:" + session.casTicket + " " + session.personOid + " " + session.roles)
-    Try(sessionRepository.store(session)).map(id => (id, session))
+    logger.debug(s"Storing to session: ${session.casTicket} ${session.personOid} ${session.roles}")
+    Try(SessionDAO.store(session)).map(id => (id, session))
   }
 
   private def createSession(ticket: ServiceTicket): Try[(UUID, CasSession)] = {
@@ -39,7 +55,7 @@ class CasSessionService(casClient: CasClient, val serviceIdentifier: String /*, 
   }
 
   private def getSession(id: UUID): Try[(UUID, Session)] = {
-    Try(sessionRepository.get(id)) match {
+    Try(SessionDAO.get(id)) match {
       case Success(Some(session)) => Success((id, session))
       case Success(None) => Failure(new AuthenticationFailedException(s"Session $id doesn't exist"))
       case Failure(t) => Failure(t)
@@ -61,6 +77,6 @@ class CasSessionService(casClient: CasClient, val serviceIdentifier: String /*, 
   }
 
   def deleteSession(ticket: ServiceTicket): Try[Unit] = {
-    Try(sessionRepository.delete(ticket))
+    Try(SessionDAO.delete(ticket))
   }
 }

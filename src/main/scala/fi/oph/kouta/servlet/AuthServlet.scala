@@ -10,14 +10,16 @@ import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 import org.scalatra.swagger.{Swagger, SwaggerSupport}
 
-import scala.util.{Failure, Success}
+import scala.util.Success
 import scala.util.control.NonFatal
 
-class AuthServlet(casUrl: String, cas: CasSessionService)(implicit val swagger: Swagger)
+class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Swagger)
   extends ScalatraServlet
     with JacksonJsonSupport
     with Logging
     with SwaggerSupport {
+
+  def this()(implicit swagger: Swagger) = this(CasSessionService)
 
   override val applicationDescription = "Kirjautumisen API"
 
@@ -38,15 +40,11 @@ class AuthServlet(casUrl: String, cas: CasSessionService)(implicit val swagger: 
       halt(InternalServerError("error" -> "Internal server error"))
   }
 
-  get(
-    "/login",
-    operation(
-      apiOperation[Unit]("Kirjaudu sisään")
-        tags "Auth"
-        summary "Kirjaudu sisään"
-        parameter queryParam[String]("ticket").optional.description("CAS tiketti")
-    )
-  ) {
+  get("/login", operation(apiOperation[Unit]("Kirjaudu sisään")
+    tags "Auth"
+    summary "Kirjaudu sisään"
+    parameter queryParam[String]("ticket").optional.description("CAS tiketti"))) {
+
     val ticket = params.get("ticket").map(ServiceTicket)
 
     val existingSession = cookies
@@ -54,7 +52,7 @@ class AuthServlet(casUrl: String, cas: CasSessionService)(implicit val swagger: 
       .orElse(Option(request.getAttribute("session")).map(_.toString))
       .map(UUID.fromString)
 
-    cas.getSession(ticket, existingSession).map { case (id, session) =>
+    casSessionService.getSession(ticket, existingSession).map { case (id, session) =>
       contentType = formats("json")
       implicit val cookieOptions: CookieOptions = CookieOptions(
         path = "/kouta-backend",
@@ -65,32 +63,29 @@ class AuthServlet(casUrl: String, cas: CasSessionService)(implicit val swagger: 
       request.setAttribute("session", id.toString)
       Ok(Map("personOid" -> session.personOid))
     }.recoverWith { case _ if ticket.isEmpty =>
-      Success(Found(s"$casUrl/login?service=${cas.serviceIdentifier}"))
+      Success(Found(s"${casSessionService.casUrl}/login?service=${casSessionService.serviceIdentifier}"))
     }.get
   }
 
-  get("/session",
-    operation(
-      apiOperation[Unit]("Tarkista sessio")
-        tags "Auth"
-        summary "Tarkista sessio"
-    )
-  ) {
+  get("/session", operation(apiOperation[Unit]("Tarkista sessio")
+    tags "Auth"
+    summary "Tarkista sessio")) {
+
     val existingSession = cookies
       .get("session")
       .orElse(Option(request.getAttribute("session")).map(_.toString))
       .map(UUID.fromString)
 
-    cas.getSession(None, existingSession).map { case (_, session) =>
+    casSessionService.getSession(None, existingSession).map { case (_, session) =>
       Ok(Map("personOid" -> session.personOid))
     }.get
   }
 
-  post("/login",
-    operation(apiOperation[Unit]("Kirjaudu ulos")
-      tags "Auth"
-      summary "Kirjaudu ulos"
-      parameter bodyParam[String](name = "logoutRequest"))) {
+  post("/login", operation(apiOperation[Unit]("Kirjaudu ulos")
+    tags "Auth"
+    summary "Kirjaudu ulos"
+    parameter bodyParam[String](name = "logoutRequest"))) {
+
     params
       .get("logoutRequest")
       .toRight(
@@ -104,7 +99,7 @@ class AuthServlet(casUrl: String, cas: CasSessionService)(implicit val swagger: 
         )
       )
       .toTry
-      .flatMap(ticket => cas.deleteSession(ServiceTicket(ticket)))
+      .flatMap(ticket => casSessionService.deleteSession(ServiceTicket(ticket)))
       .map(_ => NoContent)
       .get
   }

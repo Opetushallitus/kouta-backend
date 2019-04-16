@@ -15,18 +15,9 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     KoutaConfigurationFactory.init()
     KoutaDatabase.init()
 
-    val appConfig = KoutaConfigurationFactory.configuration
-
     implicit val swagger: KoutaBackendSwagger = new KoutaBackendSwagger
 
-    context.mount(new AuthServlet(
-      appConfig.casConfiguration.url,
-      new CasSessionService(
-        appConfig.securityContext.casClient,
-        appConfig.securityContext.casServiceIdentifier + "/auth/login",
-        //userDetailsService
-      )
-    ), "/auth", "auth")
+    context.mount(new AuthServlet(), "/auth", "auth")
 
     context.mount(new HealthcheckServlet(), "/healthcheck", "healthcheck")
     context.mount(new KoulutusServlet(), "/koulutus", "koulutus")

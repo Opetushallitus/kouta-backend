@@ -1,9 +1,8 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
-import fi.oph.kouta.security.{MockSecurityContext, ProductionSecurityContext, Role, SecurityContext}
+import fi.oph.kouta.security.Role
 import fi.vm.sade.properties.OphProperties
-import fi.vm.sade.utils.cas.CasClient
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
 
@@ -58,13 +57,6 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
 
     requiredRoles = Set("APP_KOUTA_USER").map(Role(_))
   )
-
-  val securityContext: SecurityContext = casConfiguration.securityContext match {
-    case "mock" => MockSecurityContext(casConfiguration.serviceIdentifier, casConfiguration.requiredRoles)
-    case _ =>
-      val casClient = new CasClient(casConfiguration.url, org.http4s.client.blaze.defaultClient)
-      ProductionSecurityContext(casClient, casConfiguration.serviceIdentifier, casConfiguration.requiredRoles)
-  }
 }
 
 trait KoutaConfigurationConstants {
@@ -87,7 +79,6 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
       s"Unknown profile '${profile}'! Cannot load oph-properties! Use either " +
       s"'${CONFIG_PROFILE_DEFAULT}' or '${CONFIG_PROFILE_TEMPLATE}' profiles.")
   }
-  logger.info(s"Using security context ${configuration.securityContext.getClass.getSimpleName}")
 
   def init() = {}
 
