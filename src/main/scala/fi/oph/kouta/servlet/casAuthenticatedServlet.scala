@@ -1,10 +1,9 @@
 package fi.oph.kouta.servlet
 
-import java.net.InetAddress
 import java.util.UUID
 
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{AuthenticationFailedException, AuthorizationFailedException, Role, Session}
+import fi.oph.kouta.security.{AuthenticationFailedException, Session}
 import fi.vm.sade.utils.slf4j.Logging
 import org.scalatra._
 
@@ -18,7 +17,10 @@ trait CasAuthenticatedServlet {
     logger.trace("Session cookie {}", sessionCookie)
     logger.trace("Session attribute {}", sessionAttribute)
 
-    val session = sessionCookie.orElse(sessionAttribute).map(UUID.fromString).flatMap(id => SessionDAO.get(id).map((id, _)))
+    val session = sessionCookie
+      .orElse(sessionAttribute)
+      .map(UUID.fromString)
+      .flatMap(id => SessionDAO.get(id).map((id, _)))
 
     logger.trace("Session found {}", session)
 

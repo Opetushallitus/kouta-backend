@@ -11,7 +11,6 @@ import scalaz.concurrent.Task
 
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
-import scala.util.{Failure, Success, Try}
 
 class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
   def this(msg: String) = this(msg, null)
@@ -23,6 +22,8 @@ class AuthorizationFailedException(msg: String, cause: Throwable) extends Runtim
   def this() = this(null, null)
 }
 
+case class KayttooikeusUserDetails(roles : Set[Role], oid: String)
+
 object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.casConfiguration))
 
 abstract class CasSessionService(val securityContext: SecurityContext /*, userDetailsService: KayttooikeusUserDetailsService*/ ) extends Logging {
@@ -33,50 +34,47 @@ abstract class CasSessionService(val securityContext: SecurityContext /*, userDe
 
   private val casClient = securityContext.casClient
 
-  private def validateServiceTicket(ticket: ServiceTicket): Try[Username] = {
+  private def validateServiceTicket(ticket: ServiceTicket): Either[Throwable, Username] = {
     val ServiceTicket(s) = ticket
     casClient.validateServiceTicket(securityContext.casServiceIdentifier)(s).handleWith {
       case NonFatal(t) => Task.fail(new AuthenticationFailedException(s"Failed to validate service ticket $s", t))
-    }.unsafePerformSyncAttemptFor(Duration(1, TimeUnit.SECONDS)).toEither.toTry
+    }.unsafePerformSyncAttemptFor(Duration(1, TimeUnit.SECONDS)).toEither
   }
 
-  private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): Try[(UUID, CasSession)] = {
+  private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): (UUID, CasSession) = {
     val session = CasSession(ticket, user.oid, user.roles)
     logger.debug(s"Storing to session: ${session.casTicket} ${session.personOid} ${session.roles}")
-    Try(SessionDAO.store(session)).map(id => (id, session))
+    val id = SessionDAO.store(session)
+    (id, session)
   }
 
-  private def createSession(ticket: ServiceTicket): Try[(UUID, CasSession)] = {
+  private def createSession(ticket: ServiceTicket): Either[Throwable, (UUID, CasSession)] = {
     validateServiceTicket(ticket)
-      //.right.flatMap(userDetailsService.getUserByUsername)
+      //.flatMap(userDetailsService.getUserByUsername)
       // TODO: authorization
       .map(KayttooikeusUserDetails(Role.all.values.toSet, _))
-      .flatMap(storeSession(ticket, _))
+      .map(storeSession(ticket, _))
   }
 
-  private def getSession(id: UUID): Try[(UUID, Session)] = {
-    Try(SessionDAO.get(id)) match {
-      case Success(Some(session)) => Success((id, session))
-      case Success(None) => Failure(new AuthenticationFailedException(s"Session $id doesn't exist"))
-      case Failure(t) => Failure(t)
-    }
-  }
+  private def getSession(id: UUID): Either[Throwable, (UUID, Session)] =
+    SessionDAO.get(id)
+      .map(session => (id, session))
+      .toRight(new AuthenticationFailedException(s"Session $id doesn't exist"))
 
-  def getSession(ticket: Option[ServiceTicket], id: Option[UUID]): Try[(UUID, Session)] = {
+  def getSession(ticket: Option[ServiceTicket], id: Option[UUID]): Either[Throwable, (UUID, Session)] = {
     logger.trace(s"Getting session with ticket $ticket and session id $id")
     (ticket, id) match {
       case (None, None) =>
-        logger.trace(s"No session found")
-        Failure(new AuthenticationFailedException(s"No credentials given"))
+        logger.trace("No session found")
+        Left(new AuthenticationFailedException("No credentials given"))
       case (None, Some(i)) => getSession(i)
       case (Some(t), None) => createSession(t)
-      case (Some(t), Some(i)) => getSession(i).recoverWith {
+      case (Some(t), Some(i)) => getSession(i).left.flatMap {
         case _: AuthenticationFailedException => createSession(t)
+        case e => Left(e)
       }
     }
   }
 
-  def deleteSession(ticket: ServiceTicket): Try[Unit] = {
-    Try(SessionDAO.delete(ticket))
-  }
+  def deleteSession(ticket: ServiceTicket): Boolean = SessionDAO.delete(ticket)
 }

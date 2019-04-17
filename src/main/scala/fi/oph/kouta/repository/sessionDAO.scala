@@ -11,12 +11,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 
 trait SessionDAO {
-  def delete(ticket: ServiceTicket): Unit
-
-  def delete(id: UUID): Unit
-
+  def delete(ticket: ServiceTicket): Boolean
+  def delete(id: UUID): Boolean
   def store(session: Session): UUID
-
+  def store(session: CasSession, id: UUID): UUID
   def get(id: UUID): Option[Session]
 }
 
@@ -28,29 +26,26 @@ object SessionDAO extends SessionDAO with SessionSQL {
     case CasSession(ServiceTicket(ticket), personOid, roles) =>
       val id = UUID.randomUUID()
       runBlockingTransactionally(storeCasSession(id, ticket, personOid, roles), timeout = Duration(1, TimeUnit.MINUTES))
-      id
+        .map(_ => id).get
   }
 
-  def store(session: CasSession, id: UUID): Unit =
+  override def store(session: CasSession, id: UUID): UUID =
     runBlockingTransactionally(storeCasSession(id, session.casTicket.s, session.personOid, session.roles), timeout = Duration(1, TimeUnit.MINUTES))
+      .map(_ => id).get
 
+  override def delete(id: UUID): Boolean =
+    runBlockingTransactionally(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS)).get
 
-  override def delete(id: UUID): Unit = {
-    runBlockingTransactionally(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS))
-  }
-
-  override def delete(ticket: ServiceTicket): Unit = {
-    runBlockingTransactionally(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS))
-  }
+  override def delete(ticket: ServiceTicket): Boolean =
+    runBlockingTransactionally(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS)).get
 
   override def get(id: UUID): Option[Session] = {
-    runBlocking(getSession(id), timeout = Duration(2, TimeUnit.SECONDS)).map {
+    runBlockingTransactionally(getSession(id), timeout = Duration(2, TimeUnit.SECONDS)).get.map {
       case (casTicket, personOid) =>
         val roles = runBlocking(searchRolesBySessio(id), Duration(2, TimeUnit.SECONDS))
         CasSession(ServiceTicket(casTicket.get), personOid, roles.map(Role(_)).toSet)
     }
   }
-
 }
 
 sealed trait SessionSQL extends SQLHelpers {
@@ -66,14 +61,13 @@ sealed trait SessionSQL extends SQLHelpers {
   }
 
   protected def deleteSession(id: UUID) =
-    sqlu"""delete from sessions where id = $id"""
+    sqlu"""delete from sessions where id = $id""".map(_ > 0)
 
   protected def deleteSession(ticket: ServiceTicket) =
-    sqlu"""delete from sessions where cas_ticket = ${ticket.s}"""
+    sqlu"""delete from sessions where cas_ticket = ${ticket.s}""".map(_ > 0)
 
   protected def getSession(id: UUID) =
     getSessionQuery(id)
-      .map(_.headOption)
       .flatMap {
         case None =>
           deleteSession(id).andThen(DBIO.successful(None))
@@ -84,7 +78,7 @@ sealed trait SessionSQL extends SQLHelpers {
   private def getSessionQuery(id: UUID) =
     sql"""select cas_ticket, person from sessions
           where id = $id and last_read > now() - interval '60 minutes'"""
-      .as[(Option[String], String)]
+      .as[(Option[String], String)].headOption
 
   private def updateViimeksiLuettu(id: UUID) =
     sqlu"""update sessions set last_read = now()
