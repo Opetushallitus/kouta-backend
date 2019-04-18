@@ -19,11 +19,9 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
   def haku(tila: Julkaisutila, organisaatioOid: String): Haku =
     haku.copy(organisaatioOid = OrganisaatioOid(organisaatioOid), tila = tila)
 
-  def put(haku: Haku): String = put(HakuPath, haku, defaultSessionId, oid)
-
-  def get(oid: String, expected: Haku): String = get(HakuPath, oid, defaultSessionId, expected.copy(modified = Some(readModifiedByOid(oid, "haut"))))
-
-  def update(haku: Haku, lastModified: String, expectUpdate: Boolean): Unit = update(HakuPath, haku, lastModified, expectUpdate, defaultSessionId)
+  def put(haku: Haku): String = put(HakuPath, haku, oid)
+  def get(oid: String, expected: Haku): String = get(HakuPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "haut"))))
+  def update(haku: Haku, lastModified: String, expectUpdate: Boolean): Unit = update(HakuPath, haku, lastModified, expectUpdate)
   def update(haku: Haku, lastModified: String): Unit = update(haku, lastModified, expectUpdate = true)
 
   def addToList(haku: Haku) = {

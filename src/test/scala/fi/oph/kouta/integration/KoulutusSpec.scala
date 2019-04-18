@@ -11,14 +11,20 @@ import org.json4s.jackson.Serialization.read
 class KoulutusSpec extends KoutaIntegrationSpec
   with KoulutusFixture with ToteutusFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
-  it should "return 404 if koulutus not found" in {
-    get("/koulutus/123") {
+  "GET /:oid" should "return 404 if koulutus not found" in {
+    get(s"$KoulutusPath/123", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown koulutus oid")
     }
   }
 
-  it should "store koulutus" in {
+  it should "return 401 without a session" in {
+    get(s"$KoulutusPath/123", headers = Map.empty) {
+      status should equal (401)
+    }
+  }
+
+  "PUT /" should "store koulutus" in {
     val oid = put(koulutus)
     get(oid, koulutus(oid))
   }
@@ -28,7 +34,27 @@ class KoulutusSpec extends KoutaIntegrationSpec
     get(oid, TestData.YoKoulutus.copy(oid = Some(KoulutusOid(oid))))
   }
 
-  it should "update koulutus" in {
+  it should "validate new koulutus" in {
+    put(KoulutusPath, bytes(koulutus.copy(koulutusKoodiUri = None)), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
+    }
+  }
+
+  it should "return 401 without a session" in {
+    get("/koulutus/123", headers = Map.empty) {
+      status should equal (401)
+    }
+  }
+
+  it should "send indexing message after creating koulutus" in {
+    val oid = put(koulutus)
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
+  }
+
+  "POST /" should "update koulutus" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
     update(koulutus(oid, Arkistoitu), lastModified)
@@ -42,10 +68,17 @@ class KoulutusSpec extends KoutaIntegrationSpec
     get(oid, koulutus(oid))
   }
 
+  it should "return 401 without a session" in {
+    val oid = put(koulutus)
+    post(KoulutusPath, bytes(koulutus(oid)), Map.empty) {
+      status should equal (401)
+    }
+   }
+
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    post(KoulutusPath, bytes(koulutus(oid))) {
+    post(KoulutusPath, bytes(koulutus(oid)), defaultHeaders) {
       status should equal (400)
       body should equal (errorBody("Otsake If-Unmodified-Since on pakollinen."))
     }
@@ -90,15 +123,6 @@ class KoulutusSpec extends KoutaIntegrationSpec
     get(oid, newUnfinishedKoulutus)
   }
 
-  it should "validate new koulutus" in {
-    put(KoulutusPath, bytes(koulutus.copy(koulutusKoodiUri = None)), List(jsonHeader)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
-    }
-  }
-
   it should "validate updated koulutus" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
@@ -110,12 +134,21 @@ class KoulutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  it should "return all toteutuksen related to koulutus" in {
+  it should "send indexing message after updating koulutus" in {
+    val oid = put(koulutus)
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
+
+    update(koulutus(oid, Arkistoitu), lastModified = get(oid, koulutus(oid)))
+
+    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
+  }
+
+  "GET /:oid/toteutukset" should "return all toteutukset related to koulutus" in {
     val oid = put(koulutus)
     val t1 = put(toteutus(oid))
     val t2 = put(toteutus(oid))
     val t3 = put(toteutus(oid))
-    get(s"$KoulutusPath/$oid/toteutukset") {
+    get(s"$KoulutusPath/$oid/toteutukset", headers = defaultHeaders) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List(
         toteutus(t1, oid).copy(modified = Some(readModifiedByOid(t1, "toteutukset"))),
@@ -127,23 +160,10 @@ class KoulutusSpec extends KoutaIntegrationSpec
 
   it should "return empty result if koulutus has no toteutukset" in {
     val oid = put(koulutus)
-    get(s"$KoulutusPath/$oid/toteutukset") {
+    get(s"$KoulutusPath/$oid/toteutukset", headers = defaultHeaders) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List())
     }
   }
 
-  it should "send indexing message after creating koulutus" in {
-    val oid = put(koulutus)
-    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
-  }
-
-  it should "send indexing message after updating koulutus" in {
-    val oid = put(koulutus)
-    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
-
-    update(koulutus(oid, Arkistoitu), lastModified = get(oid, koulutus(oid)))
-
-    eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
-  }
 }

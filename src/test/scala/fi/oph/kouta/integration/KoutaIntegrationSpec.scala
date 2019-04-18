@@ -61,7 +61,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 
-  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, "If-Unmodified-Since" -> lastModified)
+  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, sessionHeader, "If-Unmodified-Since" -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
 
@@ -77,14 +77,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def updated(body: String) = read[Updated](body).updated
 
-  def put[E <: scala.AnyRef, R](path: String, entity: E, result: String => R): R =
-    put(path, entity, List(jsonHeader), result)
 
-  def put[E <: scala.AnyRef, R](path: String, entity: E, sessionId: UUID, result: String => R): R =
-    put(path, entity, List(jsonHeader, sessionHeader(sessionId.toString)), result)
-
-  def put[E <: scala.AnyRef, R](path: String, entity: E, headers: Iterable[(String, String)], result: String => R): R = {
-    put(path, bytes(entity), headers) {
+  def put[E <: scala.AnyRef, R](path: String, entity: E, result: String => R): R = {
+    put(path, bytes(entity), defaultHeaders) {
       withClue(body) {
         status should equal(200)
       }
@@ -93,10 +88,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   }
 
   def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
-    get(path, id, Map.empty, expected)
-
-  def get[E <: scala.AnyRef, I](path: String, id: I, sessionId: UUID, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
-    get(path, id, Map(sessionHeader(sessionId.toString)), expected)
+    get(path, id, defaultHeaders, expected)
 
   def get[E <: scala.AnyRef, I](path: String, id: I, headers: Iterable[(String, String)], expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
     get(s"$path/${id.toString}", headers = headers) {
@@ -109,9 +101,6 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean): Unit =
     update(path, entity, headersIfUnmodifiedSince(lastModified), expectUpdate)
-
-  def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit =
-    update(path, entity, sessionHeader(sessionId.toString) :: headersIfUnmodifiedSince(lastModified), expectUpdate)
 
   def update[E <: scala.AnyRef](path: String, entity: E, headers: Iterable[(String, String)], expectUpdate: Boolean): Unit = {
     post(path, bytes(entity), headers) {
@@ -131,7 +120,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   }
 
   def list[R](path: String, params: Map[String, String], expected: List[R])(implicit mf: Manifest[R]): Seq[R] =
-    list(path, params, expected, Map.empty)
+    list(path, params, expected, defaultHeaders)
 
   def list(path: String, params: Map[String, String], expectedStatus: Int, headers: Iterable[(String, String)]): Unit = {
     get(s"$path/list", params, headers) {
@@ -140,7 +129,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   }
 
   def list(path: String, params: Map[String, String], expectedStatus: Int): Unit =
-    list(path, params, expectedStatus, Map.empty)
+    list(path, params, expectedStatus, defaultHeaders)
 }
 
 sealed trait DatabaseSpec {

@@ -126,7 +126,7 @@ class ModificationSpec extends KoutaIntegrationSpec with KonfoIndexingQueues wit
     }
   }
 
-  it should "return  only modified oids 3" in {
+  it should "return only modified oids 3" in {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterAllModifications, "UTF-8")
 

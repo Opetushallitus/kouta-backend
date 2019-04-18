@@ -73,7 +73,7 @@ class HakuSpec extends KoutaIntegrationSpec
   it should "return 401 without a valid session" in {
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(haku(oid)), headersIfUnmodifiedSince(lastModified)) {
+    post(HakuPath, bytes(haku(oid)), Map.empty) {
       status should equal (401)
       body should include ("Unauthorized")
     }
@@ -84,7 +84,7 @@ class HakuSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, haku(oid))
     Thread.sleep(1500)
     update(haku(oid, Arkistoitu), lastModified)
-    post(HakuPath, bytes(haku(oid)), sessionHeader :: headersIfUnmodifiedSince(lastModified)) {
+    post(HakuPath, bytes(haku(oid)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
   }
@@ -123,7 +123,7 @@ class HakuSpec extends KoutaIntegrationSpec
   it should "validate updated haku" in {
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(addInvalidHakuaika(haku(oid))), sessionHeader :: headersIfUnmodifiedSince(lastModified)) {
+    post(HakuPath, bytes(addInvalidHakuaika(haku(oid))), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }

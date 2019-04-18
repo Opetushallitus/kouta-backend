@@ -28,11 +28,9 @@ trait HakukohdeFixture { this: KoutaIntegrationSpec =>
   def hakukohde(toteutusOid: String, hakuOid: String, valintaperusteId: UUID, organisaatioOid: String): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), organisaatioOid = OrganisaatioOid(organisaatioOid))
 
-  def put(hakukohde: Hakukohde): String = put(HakukohdePath, hakukohde, defaultSessionId, oid)
-
-  def get(oid: String, expected: Hakukohde): String = get(HakukohdePath, oid, defaultSessionId, expected.copy(modified = Some(readModifiedByOid(oid, "hakukohteet"))))
-
-  def update(haku: Hakukohde, lastModified: String, expectUpdate: Boolean): Unit = update(HakukohdePath, haku, lastModified, expectUpdate, defaultSessionId)
+  def put(hakukohde: Hakukohde): String = put(HakukohdePath, hakukohde, oid)
+  def get(oid: String, expected: Hakukohde): String = get(HakukohdePath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "hakukohteet"))))
+  def update(haku: Hakukohde, lastModified: String, expectUpdate: Boolean): Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
   def update(haku: Hakukohde, lastModified: String): Unit = update(haku, lastModified, expectUpdate = true)
 
   def addToList(hakukohde: Hakukohde) = {

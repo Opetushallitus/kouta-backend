@@ -157,7 +157,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
   it should "validate updated hakukohde" in {
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
-    post(HakukohdePath, bytes(addInvalidHakuaika(tallennettuHakukohde(oid))), sessionHeader :: headersIfUnmodifiedSince(lastModified)) {
+    post(HakukohdePath, bytes(addInvalidHakuaika(tallennettuHakukohde(oid))), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
