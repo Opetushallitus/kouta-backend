@@ -3,7 +3,7 @@ package fi.oph.kouta.servlet
 import fi.oph.kouta.domain.keyword._
 import fi.oph.kouta.domain.{Fi, Kieli}
 import fi.oph.kouta.service.KeywordService._
-import org.scalatra.{Ok}
+import org.scalatra.Ok
 import org.scalatra.swagger.Swagger
 
 import scala.util.Try
@@ -19,6 +19,8 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     parameter queryParam[String]("kieli").description("fi/en/sv")
     parameter queryParam[Int]("limit").description("Asiasanojen määrä (default = 15)"))) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     Ok(search(parseAsiasanaSearch()))
   }
 
@@ -27,6 +29,8 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     summary "Tallenna asiasanoja"
     parameter bodyParam[List[String]]
     parameter queryParam[String]("kieli").description("fi/sv/en"))) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     val kieli = parseKieliParam("kieli", Fi)
     Ok(store(Asiasana, bodyToKeywords(kieli)))
@@ -50,6 +54,8 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
     parameter queryParam[String]("kieli").description("fi/sv/en")
     parameter queryParam[Int]("limit").description("Asiasanojen määrä (default = 15)"))) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     Ok(search(parseAmmattinimikeSearch()))
   }
 
@@ -58,6 +64,8 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
     summary "Tallenna ammattinimikkeitä"
     parameter bodyParam[List[String]]
     parameter queryParam[String]("kieli").description("fi/sv/en"))) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     val kieli = parseKieliParam("kieli", Fi)
     Ok(store(Ammattinimike, bodyToKeywords(kieli)))
@@ -70,7 +78,7 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
     parseIntParam("limit", 15))
 }
 
-sealed trait KeywordServlet extends KoutaServlet {
+sealed trait KeywordServlet extends KoutaServlet with CasAuthenticatedServlet {
   def parseKieliParam(name: String, default: Kieli = Fi): Kieli =
     params.get(name).map(Kieli.withName).getOrElse(default)
 
