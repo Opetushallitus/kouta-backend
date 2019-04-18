@@ -70,14 +70,14 @@ class KoulutusSpec extends KoutaIntegrationSpec
 
   it should "return 401 without a session" in {
     val oid = put(koulutus)
-    post(KoulutusPath, bytes(koulutus(oid)), Map.empty) {
+    val lastModified = get(oid, koulutus(oid))
+    post(KoulutusPath, bytes(koulutus(oid)), Seq("If-Unmodified-Since" -> lastModified)) {
       status should equal (401)
     }
    }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(koulutus)
-    val lastModified = get(oid, koulutus(oid))
     post(KoulutusPath, bytes(koulutus(oid)), defaultHeaders) {
       status should equal (400)
       body should equal (errorBody("Otsake If-Unmodified-Since on pakollinen."))

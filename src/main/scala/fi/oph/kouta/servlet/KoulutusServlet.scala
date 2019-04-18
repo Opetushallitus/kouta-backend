@@ -6,7 +6,7 @@ import fi.oph.kouta.service.KoulutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
 
-class KoulutusServlet(implicit val swagger: Swagger) extends KoutaServlet with CasAuthenticatedServlet {
+class KoulutusServlet(implicit val swagger: Swagger) extends KoutaServlet {
   override val modelName = "Koulutus"
   override val applicationDescription = "Koulutusten API"
 

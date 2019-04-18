@@ -78,7 +78,7 @@ class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet 
     parseIntParam("limit", 15))
 }
 
-sealed trait KeywordServlet extends KoutaServlet with CasAuthenticatedServlet {
+sealed trait KeywordServlet extends KoutaServlet {
   def parseKieliParam(name: String, default: Kieli = Fi): Kieli =
     params.get(name).map(Kieli.withName).getOrElse(default)
 

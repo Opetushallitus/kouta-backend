@@ -6,7 +6,7 @@ import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
 
-class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet with CasAuthenticatedServlet {
+class HakukohdeServlet (implicit val swagger:Swagger) extends KoutaServlet {
   override val modelName: String = "Hakukohde"
   override val applicationDescription = "Hakukohteiden API"
 

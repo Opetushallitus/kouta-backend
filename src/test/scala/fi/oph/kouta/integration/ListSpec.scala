@@ -85,6 +85,9 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   it should "return 404 if oid not given" in {
     list(ToteutusPath, Map[String,String](), 404)
   }
+  it should "return 401 if oid not given" in {
+    list(ToteutusPath, Map[String,String](), 401, Map.empty)
+  }
 
   "Haku list" should "list all haut for authorized organizations" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid), List(h1, h2, h3))
@@ -120,9 +123,15 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   it should "return 404 if oid not given" in {
     list(ValintaperustePath, Map[String,String](), 404)
   }
+  it should "return 401 if session is not valid" in {
+    list(ValintaperustePath, Map[String,String](), 401, Map.empty)
+  }
 
   "Valintaperustetta käyttävät hakukohteet list" should "list all hakukohteet using given valintaperuste id" in {
     list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
+  }
+  it should "return 401 if session is not valid" in {
+    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 401, Map.empty)
   }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
@@ -145,8 +154,16 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     list(s"$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2))
   }
 
+  it should "return 401 if no session is found" in {
+    list(s"$ToteutusPath/${t1.oid}/haut", Map[String,String](), 401, Map.empty)
+  }
+
   "Toteutukseen liitetyt hakukohteet" should "list all hakukohteet mapped to given toteutus" in {
     list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3))
+  }
+
+  it should "return 401 if no session is found" in {
+    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), 401, Map.empty)
   }
 
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {

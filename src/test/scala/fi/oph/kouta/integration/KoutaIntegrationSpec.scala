@@ -77,7 +77,6 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def updated(body: String) = read[Updated](body).updated
 
-
   def put[E <: scala.AnyRef, R](path: String, entity: E, result: String => R): R = {
     put(path, bytes(entity), defaultHeaders) {
       withClue(body) {
