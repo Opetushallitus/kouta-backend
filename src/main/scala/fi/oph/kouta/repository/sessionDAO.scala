@@ -42,7 +42,7 @@ object SessionDAO extends SessionDAO with SessionSQL {
   override def get(id: UUID): Option[Session] = {
     runBlockingTransactionally(getSession(id), timeout = Duration(2, TimeUnit.SECONDS)).get.map {
       case (casTicket, personOid) =>
-        val roles = runBlocking(searchRolesBySessio(id), Duration(2, TimeUnit.SECONDS))
+        val roles = runBlocking(searchRolesBySession(id), Duration(2, TimeUnit.SECONDS))
         CasSession(ServiceTicket(casTicket.get), personOid, roles.map(Role(_)).toSet)
     }
   }
@@ -72,7 +72,7 @@ sealed trait SessionSQL extends SQLHelpers {
         case None =>
           deleteSession(id).andThen(DBIO.successful(None))
         case Some(t) =>
-          updateViimeksiLuettu(id).andThen(DBIO.successful(Some(t)))
+          updateLastRead(id).andThen(DBIO.successful(Some(t)))
       }
 
   private def getSessionQuery(id: UUID) =
@@ -80,11 +80,11 @@ sealed trait SessionSQL extends SQLHelpers {
           where id = $id and last_read > now() - interval '60 minutes'"""
       .as[(Option[String], String)].headOption
 
-  private def updateViimeksiLuettu(id: UUID) =
+  private def updateLastRead(id: UUID) =
     sqlu"""update sessions set last_read = now()
            where id = $id and last_read < now() - interval '30 minutes'"""
 
-  protected def searchRolesBySessio(sessioId: UUID) =
-    sql"""select role from roles where session = $sessioId""".as[String]
+  protected def searchRolesBySession(sessionId: UUID) =
+    sql"""select role from roles where session = $sessionId""".as[String]
 
 }

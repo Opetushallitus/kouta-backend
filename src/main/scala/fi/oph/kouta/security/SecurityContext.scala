@@ -10,7 +10,10 @@ trait SecurityContext {
   def requiredRoles: Set[Role]
 }
 
-case class ProductionSecurityContext(casUrl: String, casClient: CasClient, casServiceIdentifier: String, requiredRoles: Set[Role]) extends SecurityContext
+case class ProductionSecurityContext(casUrl: String,
+                                     casClient: CasClient,
+                                     casServiceIdentifier: String,
+                                     requiredRoles: Set[Role]) extends SecurityContext
 
 object ProductionSecurityContext {
   def apply(config: CasConfiguration): ProductionSecurityContext = {

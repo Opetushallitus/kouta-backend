@@ -1,5 +1,4 @@
 cas.url={{cas_url}}
-kouta-backend.cas.type={{kouta_backend_cas_type}}
 kouta-backend.cas.service=https://{{host_virkailija}}/kouta-backend
 kouta-backend.cas.username={{kouta_backend_cas_username}}
 kouta-backend.cas.password={{kouta_backend_cas_password}}

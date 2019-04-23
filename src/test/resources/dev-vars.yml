@@ -7,4 +7,3 @@ host_virkailija: virkailija.hahtuvaopintopolku.fi
 kouta_backend_sqs_endpoint: http://localhost:4576
 kouta_backend_sqs_queue_priority: konfoIndeksoijaPriority
 kouta_backend_sqs_region:
-kouta_backend_cas_type: mock
