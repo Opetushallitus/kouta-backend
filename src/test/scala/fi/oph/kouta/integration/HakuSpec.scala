@@ -12,7 +12,7 @@ class HakuSpec extends KoutaIntegrationSpec
   def addInvalidHakuaika(haku:Haku) = haku.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
-  "Get" should "return 404 if haku not found" in {
+  "GET /haku/:oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(sessionHeader)) {
       status should equal (404)
       body should include ("Unknown haku oid")
@@ -26,7 +26,7 @@ class HakuSpec extends KoutaIntegrationSpec
     }
   }
 
-  "Put" should "store haku" in {
+  "PUT /haku" should "store haku" in {
     val oid = put(haku)
     get(oid, haku(oid))
   }
@@ -47,7 +47,12 @@ class HakuSpec extends KoutaIntegrationSpec
     }
   }
 
-  "Post" should "update haku" in {
+  it should "send indexing message after creating haku" in {
+    val oid = put(haku)
+    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
+  }
+
+  "POST /haku" should "update haku" in {
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
     update(haku(oid, Arkistoitu), lastModified)
@@ -152,11 +157,6 @@ class HakuSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, haku(oid))
     update(haku(oid).copy(hakuajat = List()), lastModified)
     get(oid, haku(oid).copy(hakuajat = List()))
-  }
-
-  it should "send indexing message after creating haku" in {
-    val oid = put(haku)
-    eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
   }
 
   it should "send indexing message after updating haku" in {

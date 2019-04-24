@@ -13,7 +13,7 @@ import fi.oph.kouta.validation.Validations
 class ValintaperusteSpec extends KoutaIntegrationSpec
   with ValintaperusteFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
-  "GET /" should "return 404 if valintaperuste not found" in {
+  "GET /valintaperuste/:id" should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown valintaperuste id")

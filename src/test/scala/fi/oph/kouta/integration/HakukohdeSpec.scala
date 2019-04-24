@@ -36,7 +36,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
   def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
-  "GET" should "return 404 if hakukohde not found" in {
+  "GET /hakukohde/:oid" should "return 404 if hakukohde not found" in {
     get(s"$HakukohdePath/123", headers = Seq(sessionHeader)) {
       status should equal (404)
       body should include ("Unknown hakukohde oid")
@@ -50,7 +50,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     }
   }
 
-  "PUT" should "store hakukohde" in {
+  "PUT /hakukohde" should "store hakukohde" in {
     val oid = put(uusiHakukohde)
     get(oid, tallennettuHakukohde(oid))
   }
@@ -62,12 +62,21 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     }
   }
 
+  it should "validate new hakukohde" in {
+    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, sessionHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validateErrorBody(InvalidHakuaika))
+    }
+  }
+
   it should "send indexing message after creating hakukohde" in {
     val oid = put(uusiHakukohde)
     eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
   }
 
-  "POST" should "update hakukohde" in {
+  "POST /hakukohde" should "update hakukohde" in {
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu)
@@ -143,15 +152,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val newUnfinishedHakukohde = unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(newToteutusOid))
     update(newUnfinishedHakukohde, lastModified)
     get(oid, newUnfinishedHakukohde)
-  }
-
-  it should "validate new hakukohde" in {
-    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, sessionHeader)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validateErrorBody(InvalidHakuaika))
-    }
   }
 
   it should "validate updated hakukohde" in {

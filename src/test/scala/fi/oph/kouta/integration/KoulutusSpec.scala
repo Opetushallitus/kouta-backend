@@ -11,7 +11,7 @@ import org.json4s.jackson.Serialization.read
 class KoulutusSpec extends KoutaIntegrationSpec
   with KoulutusFixture with ToteutusFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
-  "GET /:oid" should "return 404 if koulutus not found" in {
+  "GET /koulutus/:oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown koulutus oid")
@@ -24,7 +24,7 @@ class KoulutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  "PUT /" should "store koulutus" in {
+  "PUT /koulutus" should "store koulutus" in {
     val oid = put(koulutus)
     get(oid, koulutus(oid))
   }
@@ -54,7 +54,7 @@ class KoulutusSpec extends KoutaIntegrationSpec
     eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
   }
 
-  "POST /" should "update koulutus" in {
+  "POST /koulutus" should "update koulutus" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
     update(koulutus(oid, Arkistoitu), lastModified)
@@ -143,7 +143,7 @@ class KoulutusSpec extends KoutaIntegrationSpec
     eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
   }
 
-  "GET /:oid/toteutukset" should "return all toteutukset related to koulutus" in {
+  "GET /koulutus/:oid/toteutukset" should "return all toteutukset related to koulutus" in {
     val oid = put(koulutus)
     val t1 = put(toteutus(oid))
     val t2 = put(toteutus(oid))
