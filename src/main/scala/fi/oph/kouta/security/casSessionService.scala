@@ -37,8 +37,10 @@ abstract class CasSessionService(val securityContext: SecurityContext /*, userDe
   private def validateServiceTicket(ticket: ServiceTicket): Either[Throwable, Username] = {
     val ServiceTicket(s) = ticket
     casClient.validateServiceTicket(securityContext.casServiceIdentifier)(s).handleWith {
-      case NonFatal(t) => Task.fail(new AuthenticationFailedException(s"Failed to validate service ticket $s", t))
-    }.unsafePerformSyncAttemptFor(Duration(1, TimeUnit.SECONDS)).toEither
+      case NonFatal(t) =>
+        logger.debug("Ticket validation error", t)
+        Task.fail(new AuthenticationFailedException(s"Failed to validate service ticket $s", t))
+    }.attemptRunFor(Duration(1, TimeUnit.SECONDS)).toEither
   }
 
   private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): (UUID, CasSession) = {

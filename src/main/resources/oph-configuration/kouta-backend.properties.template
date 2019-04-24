@@ -1,7 +1,5 @@
 cas.url={{cas_url}}
-kouta-backend.cas.service=https://{{host_virkailija}}/kouta-backend
-kouta-backend.cas.username={{kouta_backend_cas_username}}
-kouta-backend.cas.password={{kouta_backend_cas_password}}
+kouta-backend.cas.service={{kouta_backend_cas_service}}
 
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
 kouta-backend.db.user={{host_postgresql_kouta_user}}

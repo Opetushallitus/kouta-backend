@@ -274,6 +274,14 @@
                     <artifactId>scalaz-core_2.12</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.scalaz</groupId>
+                    <artifactId>scalaz-concurrent_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scalaz</groupId>
+                    <artifactId>scalaz-effect_2.12</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>com.typesafe</groupId>
                     <artifactId>config</artifactId>
                 </exclusion>
@@ -327,14 +335,42 @@
             </exclusions>
         </dependency>
         <!-- override version because of conflicting versions in aws-scala -->
+        <!-- the version of http4s used in scala-cas requires this version (7.1.13) of scalaz -->
         <dependency>
             <groupId>org.scalaz</groupId>
             <artifactId>scalaz-core_2.12</artifactId>
-            <version>7.2.12</version>
+            <version>7.1.13</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
                     <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-parser-combinators_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-xml_2.12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.scalaz</groupId>
+            <artifactId>scalaz-concurrent_2.12</artifactId>
+            <version>7.1.13</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-parser-combinators_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-xml_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

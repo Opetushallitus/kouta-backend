@@ -19,11 +19,8 @@ case class KoutaDatabaseConfiguration(
 )
 
 case class CasConfiguration(
-  securityContext: String,
   url: String,
   serviceIdentifier: String,
-  username: String,
-  password: String,
   requiredRoles: Set[Role]
 )
 
@@ -50,11 +47,7 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
 
   val casConfiguration = CasConfiguration(
     url = config.getString("cas.url"),
-    securityContext = config.getString("kouta-backend.cas.type"),
     serviceIdentifier = config.getString("kouta-backend.cas.service"),
-    username = config.getString("kouta-backend.cas.username"),
-    password = config.getString("kouta-backend.cas.password"),
-
     requiredRoles = Set("APP_KOUTA_USER").map(Role(_))
   )
 }
