@@ -1,3 +1,6 @@
+cas.url={{cas_url}}
+kouta-backend.cas.service={{kouta_backend_cas_service}}
+
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
 kouta-backend.db.user={{host_postgresql_kouta_user}}
 kouta-backend.db.password={{host_postgresql_kouta_password}}
@@ -10,8 +13,11 @@ kouta-backend.db.registerMbeans=true
 kouta-backend.db.initializationFailTimeout=1000
 kouta-backend.db.timeoutSeconds=20
 kouta-backend.db.leakDetectionThresholdMillis=1800000
-host.virkailija={{host_virkailija}}
-organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/hierarkia/hae
+
 kouta-backend.sqs.queue.priority={{kouta_backend_sqs_queue_priority}}
 kouta-backend.sqs.endpoint={{kouta_backend_sqs_endpoint}}
 kouta-backend.sqs.region={{kouta_backend_sqs_region}}
+
+host.virkailija={{host_virkailija}}
+organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/hierarkia/hae
+

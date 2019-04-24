@@ -22,6 +22,7 @@ class ModificationSpec extends KoutaIntegrationSpec with KonfoIndexingQueues wit
   override def beforeAll() = {
     super.beforeAll()
     truncateDatabase()
+    addDefaultSession()
     createTestData(15)
     updateTestData()
   }

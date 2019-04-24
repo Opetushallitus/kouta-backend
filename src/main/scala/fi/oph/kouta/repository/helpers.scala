@@ -115,4 +115,10 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
       pp.setObject(o.toArray, java.sql.Types.ARRAY)
     }
   }
+
+  implicit object SetUUID extends SetParameter[UUID] {
+    def apply(v: UUID, pp: PositionedParameters) {
+      pp.setObject(v, JDBCType.BINARY.getVendorTypeNumber)
+    }
+  }
 }

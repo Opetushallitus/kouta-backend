@@ -1,20 +1,23 @@
-import fi.oph.kouta.config.{KoutaConfiguration, KoutaConfigurationFactory}
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.KoutaDatabase
-import fi.oph.kouta.{KoutaBackendSwagger, SwaggerServlet}
+import fi.oph.kouta.security.CasSessionService
 import fi.oph.kouta.servlet._
+import fi.oph.kouta.{KoutaBackendSwagger, SwaggerServlet}
 import fi.vm.sade.utils.slf4j.Logging
-import org.scalatra._
 import javax.servlet.ServletContext
+import org.scalatra._
 
 class ScalatraBootstrap extends LifeCycle with Logging {
 
-  override def init(context: ServletContext) = {
+  override def init(context: ServletContext): Unit = {
     super.init(context)
 
     KoutaConfigurationFactory.init()
     KoutaDatabase.init()
 
-    implicit val swagger = new KoutaBackendSwagger
+    implicit val swagger: KoutaBackendSwagger = new KoutaBackendSwagger
+
+    context.mount(new AuthServlet(), "/auth", "auth")
 
     context.mount(new HealthcheckServlet(), "/healthcheck", "healthcheck")
     context.mount(new KoulutusServlet(), "/koulutus", "koulutus")
@@ -29,7 +32,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context.mount(new SwaggerServlet, "/swagger")
   }
 
-  override def destroy(context: ServletContext) = {
+  override def destroy(context: ServletContext): Unit = {
     super.destroy(context)
     KoutaDatabase.destroy()
   }

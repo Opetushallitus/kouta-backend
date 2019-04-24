@@ -1,6 +1,7 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
+import fi.oph.kouta.security.Role
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
@@ -17,6 +18,12 @@ case class KoutaDatabaseConfiguration(
   leakDetectionThresholdMillis: Option[Int]
 )
 
+case class CasConfiguration(
+  url: String,
+  serviceIdentifier: String,
+  requiredRoles: Set[Role]
+)
+
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
 
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
@@ -31,10 +38,17 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     initializationFailTimeout = Option(config.getInt("kouta-backend.db.initializationFailTimeout")),
     leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis"))
   )
+
   val indexingConfiguration = IndexingConfiguration(
     config.getString("kouta-backend.sqs.queue.priority"),
     scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
     scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
+  )
+
+  val casConfiguration = CasConfiguration(
+    url = config.getString("cas.url"),
+    serviceIdentifier = config.getString("kouta-backend.cas.service"),
+    requiredRoles = Set("APP_KOUTA_USER").map(Role(_))
   )
 }
 
