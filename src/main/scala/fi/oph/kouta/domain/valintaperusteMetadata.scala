@@ -4,6 +4,7 @@ sealed trait ValintaperusteMetadata {
   def koulutustyyppi: Koulutustyyppi
   def valintatavat: Seq[Valintatapa]
   def kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus]
+  def valituksiTulemisenVahimmaisehto: Kielistetty
 }
 
 sealed trait KorkeakoulutusValintaperusteMetadata extends ValintaperusteMetadata {
@@ -15,21 +16,24 @@ sealed trait KorkeakoulutusValintaperusteMetadata extends ValintaperusteMetadata
 
 case class AmmatillinenValintaperusteMetadata(koulutustyyppi: Koulutustyyppi = Amm,
                                               valintatavat: Seq[AmmatillinenValintatapa],
-                                              kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus])
+                                              kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
+                                              valituksiTulemisenVahimmaisehto: Kielistetty = Map())
     extends ValintaperusteMetadata
 
 case class YliopistoValintaperusteMetadata(koulutustyyppi: Koulutustyyppi = Yo,
                                            valintatavat: Seq[YliopistoValintatapa],
                                            kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                            osaamistaustaKoodiUrit: Seq[String] = Seq(),
-                                           kuvaus: Kielistetty = Map())
+                                           kuvaus: Kielistetty = Map(),
+                                           valituksiTulemisenVahimmaisehto: Kielistetty = Map())
     extends KorkeakoulutusValintaperusteMetadata
 
 case class AmmattikorkeakouluValintaperusteMetadata(koulutustyyppi: Koulutustyyppi = Amk,
                                                     valintatavat: Seq[AmmattikorkeakouluValintatapa],
                                                     kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                                     osaamistaustaKoodiUrit: Seq[String] = Seq(),
-                                                    kuvaus: Kielistetty = Map())
+                                                    kuvaus: Kielistetty = Map(),
+                                                    valituksiTulemisenVahimmaisehto: Kielistetty = Map())
     extends KorkeakoulutusValintaperusteMetadata
 
 case class ValintaperusteKielitaitovaatimus(kieliKoodiUri: Option[String] = None,

@@ -236,11 +236,13 @@ object TestData {
     valintatavat = Seq(YoValintatapa1, YoValintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     osaamistaustaKoodiUrit = Seq("osaamistausta_03"),
-    kuvaus = kieliMap("kuvaus"))
+    kuvaus = kieliMap("kuvaus"),
+    valituksiTulemisenVahimmaisehto = kieliMap("ehto"))
 
   val ammValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
     valintatavat = Seq(AmmValintatapa1, AmmValintatapa2),
-    kielitaitovaatimukset = Seq(Kielitaitovaatimus1))
+    kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
+    valituksiTulemisenVahimmaisehto = kieliMap("ehto"))
 
   val AmmValintaperuste = Valintaperuste(
     koulutustyyppi = Amm,
