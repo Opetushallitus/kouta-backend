@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
-import fi.oph.kouta.KoutaBackendSwagger
+import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext}
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
@@ -14,11 +14,20 @@ import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import scala.reflect.Manifest
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
-  val testUserOid = "test-user-oid"
-  val testUserTicket = ServiceTicket("test-user-ticket")
+case class TestUser(oid: String, username: String, sessionId: UUID) {
+  val ticket = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
+}
 
-  def addDefaultSession(): Unit = SessionDAO.store(CasSession(testUserTicket, testUserOid, Role.all.values.toSet), defaultSessionId)
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
+  val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
+
+  val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
+  val rolelessUser = TestUser("roleless-user-oid", "rolelessuser", UUID.randomUUID())
+
+  def addDefaultSession(): Unit =  {
+    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket),     testUser.oid,     Role.all.values.toSet), testUser.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty            ), rolelessUser.sessionId)
+  }
 
   implicit val swagger = new KoutaBackendSwagger
 
@@ -32,6 +41,10 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
 
     addDefaultSession()
   }
+}
+
+object KoutaIntegrationSpec {
+  val serviceIdentifier = "testService"
 }
 
 sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
@@ -64,8 +77,8 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, sessionHeader, "If-Unmodified-Since" -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
-
-  def sessionHeader: (String, String) = sessionHeader(defaultSessionId.toString)
+  def sessionHeader(sessionId: UUID): (String, String) = sessionHeader(sessionId.toString)
+  def sessionHeader: (String, String) = sessionHeader(defaultSessionId)
 
   def defaultHeaders: Seq[(String, String)] = Seq(sessionHeader, jsonHeader)
 

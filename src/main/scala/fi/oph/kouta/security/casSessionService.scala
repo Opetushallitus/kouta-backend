@@ -17,16 +17,15 @@ class AuthenticationFailedException(msg: String, cause: Throwable) extends Runti
   def this() = this(null, null)
 }
 
-class AuthorizationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
-  def this(msg: String) = this(msg, null)
-  def this() = this(null, null)
-}
+class RoleAuthorizationFailedException(roles: Seq[Role])
+  extends RuntimeException(s"Authorization failed, none of ${roles.map(_.name).mkString(",")} found")
 
 case class KayttooikeusUserDetails(roles : Set[Role], oid: String)
 
-object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.casConfiguration))
+object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
+                                                   KayttooikeusUserDetailsService)
 
-abstract class CasSessionService(val securityContext: SecurityContext /*, userDetailsService: KayttooikeusUserDetailsService*/ ) extends Logging {
+abstract class CasSessionService(val securityContext: SecurityContext , val userDetailsService: KayttooikeusUserDetailsService) extends Logging {
   logger.info(s"Using security context ${securityContext.getClass.getSimpleName}")
 
   val serviceIdentifier: String = securityContext.casServiceIdentifier
@@ -52,9 +51,7 @@ abstract class CasSessionService(val securityContext: SecurityContext /*, userDe
 
   private def createSession(ticket: ServiceTicket): Either[Throwable, (UUID, CasSession)] = {
     validateServiceTicket(ticket)
-      //.flatMap(userDetailsService.getUserByUsername)
-      // TODO: authorization
-      .map(KayttooikeusUserDetails(Role.all.values.toSet, _))
+      .flatMap(userDetailsService.getUserByUsername)
       .map(storeSession(ticket, _))
   }
 

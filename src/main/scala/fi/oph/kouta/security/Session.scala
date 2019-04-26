@@ -1,14 +1,16 @@
 package fi.oph.kouta.security
 
-abstract class Role(val name: String)
+sealed abstract class Role(val name: String)
 
 object Role {
   //TODO: meaningful roles for this project
-  case object GenericUser extends Role("APP_KOUTA_USER")
+  case object CrudUser extends Role("APP_TARJONTA_CRUD")
 
-  val all: Map[String, Role] = List(GenericUser).map(r => r.name -> r).toMap
+  case class UnknownRole(override val name: String) extends Role(name)
 
-  def apply(s: String): Role = all.getOrElse(s, throw new IllegalArgumentException("Unknown role $s"))
+  val all: Map[String, Role] = List(CrudUser).map(r => r.name -> r).toMap
+
+  def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }
 
 sealed trait Session {

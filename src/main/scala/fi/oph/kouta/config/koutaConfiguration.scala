@@ -18,10 +18,11 @@ case class KoutaDatabaseConfiguration(
   leakDetectionThresholdMillis: Option[Int]
 )
 
-case class CasConfiguration(
-  url: String,
-  serviceIdentifier: String,
-  requiredRoles: Set[Role]
+case class SecurityConfiguration(
+  casUrl: String,
+  casServiceIdentifier: String,
+  requiredRoles: Set[Role],
+  kayttooikeusUrl: String
 )
 
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
@@ -45,10 +46,11 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
 
-  val casConfiguration = CasConfiguration(
-    url = config.getString("cas.url"),
-    serviceIdentifier = config.getString("kouta-backend.cas.service"),
-    requiredRoles = Set("APP_KOUTA_USER").map(Role(_))
+  val securityConfiguration = SecurityConfiguration(
+    casUrl = config.getString("cas.url"),
+    casServiceIdentifier = config.getString("kouta-backend.cas.service"),
+    requiredRoles = Set(Role.CrudUser),
+    kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername")
   )
 }
 
