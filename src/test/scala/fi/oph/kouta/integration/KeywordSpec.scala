@@ -23,7 +23,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     storeAmmattinimikkeet()
   }
 
-  "GET /asiasana/search" should "search asiasanat" in {
+  "Asiasana search" should "search asiasanat" in {
     searchAsiasanat("aa", List("aamu", "aarre", "kaipaa"))
   }
 
@@ -55,7 +55,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     searchAsiasanat("kai", List("kaipaa", "kaipaus", "aikainen"))
   }
 
-  "GET /ammattinimike/search" should "search ammattinimikkeet" in {
+  "Ammattinimike search" should "search ammattinimikkeet" in {
     searchAmmattinimikkeet("lääk", List("lääkäri", "yleislääkäri"))
   }
 
@@ -87,7 +87,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     searchAmmattinimikkeet("pa", List("pappi", "kippari", "kuppari"))
   }
 
-  "PUT /toteutus" should "store ammattinimikkeet ja asiasanat in toteutus" in {
+  "Update toteutus" should "store ammattinimikkeet ja asiasanat in toteutus" in {
     searchAsiasanat("robo", List())
     searchAmmattinimikkeet("insinööri", List())
     put(toteutus(koulutusOid))
@@ -95,7 +95,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     searchAmmattinimikkeet("insinööri", toteutus.metadata.get.ammattinimikkeet.map(_.arvo))
   }
 
-  "POST /toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
+  "Create toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(AmmatillinenToteutusMetadata(
@@ -107,7 +107,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     searchAmmattinimikkeet("insinööri", List("insinööri", "koneinsinööri", "robotti-insinööri"))
   }
 
-  "POST /ammattinimike" should "not mind if ammattinimike exists" in {
+  "Create ammattinimike" should "not mind if ammattinimike exists" in {
     import slick.jdbc.PostgresProfile.api._
     val value = ammattinimikkeet.head.toLowerCase
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
@@ -124,7 +124,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     }
   }
 
-  "POST /asiasana" should "not mind if asiasana exists" in {
+  "Create asiasana" should "not mind if asiasana exists" in {
     import slick.jdbc.PostgresProfile.api._
     val value = asiasanat.head.toLowerCase
     db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)

@@ -17,7 +17,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     koulutusOid = put(koulutus)
   }
 
-  "GET /toteutus/:oid" should "return 404 if toteutus not found" in {
+  "Get toteutus by oid" should "return 404 if toteutus not found" in {
     get(s"$ToteutusPath/123", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown toteutus oid")
@@ -30,7 +30,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  "PUT /toteutus" should "store toteutus" in {
+  "Create toteutus" should "store toteutus" in {
     val oid = put(toteutus(koulutusOid))
     get(oid, toteutus(oid, koulutusOid))
   }
@@ -60,7 +60,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     eventuallyIndexingMessages { _ should contain (s"""{"toteutukset":["$oid"]}""") }
   }
 
-  "POST /toteutus" should "update toteutus" in {
+  "Update toteutus" should "update toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)

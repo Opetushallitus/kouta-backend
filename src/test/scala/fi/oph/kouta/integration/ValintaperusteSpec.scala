@@ -13,7 +13,7 @@ import fi.oph.kouta.validation.Validations
 class ValintaperusteSpec extends KoutaIntegrationSpec
   with ValintaperusteFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
-  "GET /valintaperuste/:id" should "return 404 if valintaperuste not found" in {
+  "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown valintaperuste id")
@@ -26,7 +26,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec
     }
   }
 
-  "PUT /" should "store valintaperuste" in {
+  "Create valintaperuste" should "store valintaperuste" in {
     val id = put(valintaperuste)
     get(id, valintaperuste(id))
   }
@@ -56,7 +56,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$oid"]}""") }
   }
 
-  "POST /" should "update valintaperuste" in {
+  "Update valintaperuste" should "update valintaperuste" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
     update(valintaperuste(id, Arkistoitu), lastModified)

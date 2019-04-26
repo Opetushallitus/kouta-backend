@@ -36,7 +36,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
   def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
-  "GET /hakukohde/:oid" should "return 404 if hakukohde not found" in {
+  "Get hakukohde by oid" should "return 404 if hakukohde not found" in {
     get(s"$HakukohdePath/123", headers = Seq(sessionHeader)) {
       status should equal (404)
       body should include ("Unknown hakukohde oid")
@@ -50,7 +50,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     }
   }
 
-  "PUT /hakukohde" should "store hakukohde" in {
+  "Create hakukohde" should "store hakukohde" in {
     val oid = put(uusiHakukohde)
     get(oid, tallennettuHakukohde(oid))
   }
@@ -76,7 +76,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
   }
 
-  "POST /hakukohde" should "update hakukohde" in {
+  "Update hakukohde" should "update hakukohde" in {
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu)
