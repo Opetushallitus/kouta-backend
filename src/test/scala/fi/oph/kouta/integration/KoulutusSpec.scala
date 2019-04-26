@@ -49,6 +49,14 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     }
   }
 
+  it should "fail if the user doesn't have the right role" in {
+    put(KoulutusPath, bytes(koulutus), Seq(jsonHeader, sessionHeader(rolelessUser.sessionId))) {
+      withClue(body) {
+        status should equal(403)
+      }
+    }
+  }
+
   "Update koulutus" should "update koulutus" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))

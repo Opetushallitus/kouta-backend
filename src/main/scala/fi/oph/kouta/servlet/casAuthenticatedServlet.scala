@@ -3,7 +3,7 @@ package fi.oph.kouta.servlet
 import java.util.UUID
 
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{AuthenticationFailedException, Session}
+import fi.oph.kouta.security.{AuthenticationFailedException, RoleAuthorizationFailedException, Role, Session}
 import fi.vm.sade.utils.slf4j.Logging
 import org.scalatra._
 
@@ -27,13 +27,11 @@ trait CasAuthenticatedServlet {
     Authenticated.tupled(session.getOrElse(throw new AuthenticationFailedException))
   }
 
-  /*
-    def authorize(roles:Role*)(implicit authenticated: Authenticated) = {
-      if (!authenticated.session.hasAnyRole(roles.toSet)) {
-        throw new AuthorizationFailedException
+    def authorize(acceptedRoles:Role*)(implicit authenticated: Authenticated): Unit = {
+      if (!authenticated.session.hasAnyRole(acceptedRoles.toSet)) {
+        throw new RoleAuthorizationFailedException(acceptedRoles)
       }
     }
-  */
 
   /*
     protected def auditInfo(implicit authenticated: Authenticated): AuditInfo = {
