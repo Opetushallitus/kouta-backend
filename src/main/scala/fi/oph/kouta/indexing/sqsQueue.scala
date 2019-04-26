@@ -65,7 +65,9 @@ object SqsService extends Logging {
   }
 }
 
-object SqsInTransactionService extends Logging {
+object SqsInTransactionService extends SqsInTransactionService
+
+abstract class SqsInTransactionService extends Logging {
 
   import slick.dbio.DBIO
   import fi.oph.kouta.repository.KoutaDatabase

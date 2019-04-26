@@ -4,11 +4,13 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.Hakukohde
 import fi.oph.kouta.domain.oid.HakukohdeOid
-import fi.oph.kouta.indexing.SqsInTransactionService.runActionAndUpdateIndex
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.HakukohdeDAO
 
-object HakukohdeService extends ValidatingService[Hakukohde] {
+object HakukohdeService extends HakukohdeService(SqsInTransactionService)
+
+abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Hakukohde] {
 
   def put(hakukohde: Hakukohde): HakukohdeOid =
     withValidation(hakukohde, putWithIndexing)
@@ -19,13 +21,13 @@ object HakukohdeService extends ValidatingService[Hakukohde] {
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = HakukohdeDAO.get(oid)
 
   private def putWithIndexing(hakukohde: Hakukohde) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeHakukohde,
       () => HakukohdeDAO.getPutActions(hakukohde))
 
   private def updateWithIndexing(hakukohde: Hakukohde, notModifiedSince: Instant) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeHakukohde,
       () => HakukohdeDAO.getUpdateActions(hakukohde, notModifiedSince),

@@ -1,18 +1,23 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.HakuServlet
-import org.scalactic.Equality
+
+object HakuServiceIgnoringIndexing extends HakuService(SqsInTransactionServiceIgnoringIndexing)
 
 trait HakuFixture { this: KoutaIntegrationSpec =>
 
   val HakuPath = "/haku"
 
-  addServlet(new HakuServlet(), HakuPath)
-  
+  def init(): Unit = addServlet(new HakuServlet(HakuServiceIgnoringIndexing), HakuPath)
+
+  init()
+
   val haku = JulkaistuHaku
 
   def haku(oid:String): Haku = haku.copy(oid = Some(HakuOid(oid)))
