@@ -2,6 +2,7 @@ package fi.oph.kouta.servlet
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.service.KoulutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
@@ -31,6 +32,7 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     parameter bodyParam[Koulutus])) {
 
     implicit val authenticated: Authenticated = authenticate
+    authorize(Role.CrudUser)
 
     koulutusService.put(parsedBody.extract[Koulutus]) match {
       case oid => Ok("oid" -> oid)

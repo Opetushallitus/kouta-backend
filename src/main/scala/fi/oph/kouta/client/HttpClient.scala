@@ -1,22 +1,22 @@
 package fi.oph.kouta.client
 
-import java.util
+import java.util.{Map => JavaMap}
 import java.util.NoSuchElementException
 
 import fi.vm.sade.utils.http.DefaultHttpClient
 import scalaj.http.HttpOptions._
 
 trait HttpClient {
-  val DefaultConnTimeout = 30000
-  val DefaultReadTimeout = 120000
+  private val DefaultConnTimeout = 30000
+  private val DefaultReadTimeout = 120000
 
-  val DefaultOptions = Seq(
+  private val DefaultOptions: Seq[HttpOption] = Seq(
     connTimeout(DefaultConnTimeout),
     readTimeout(DefaultReadTimeout)
   )
 
-  val HeaderCallerId            = ("Caller-id", "kouta-backend")
-  val HeaderClientSubSystemCode = ("clientSubSystemCode", "kouta-backend")
+  private val HeaderCallerId            = ("Caller-id", "kouta-backend")
+  private val HeaderClientSubSystemCode = ("clientSubSystemCode", "kouta-backend")
 
   def get[T](url: String, parse: (String) => T): T =
     DefaultHttpClient.httpGet(url, DefaultOptions:_*)
@@ -33,5 +33,5 @@ trait HttpClient {
     case (xxx, result) => throw new InternalError(s"Url $url returned status code $xxx $result")
   }
 
-  def toQueryParams(params: (String, String)*): util.Map[String, String] = scala.collection.JavaConverters.mapAsJavaMap(Map(params:_*))
+  def toQueryParams(params: (String, String)*): JavaMap[String, String] = scala.collection.JavaConverters.mapAsJavaMap(Map(params:_*))
 }
