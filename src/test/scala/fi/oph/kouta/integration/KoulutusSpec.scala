@@ -11,7 +11,7 @@ import org.json4s.jackson.Serialization.read
 class KoulutusSpec extends KoutaIntegrationSpec
   with KoulutusFixture with ToteutusFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
 
-  "Get koulut by oid" should "return 404 if koulutus not found" in {
+  "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown koulutus oid")
@@ -44,8 +44,10 @@ class KoulutusSpec extends KoutaIntegrationSpec
   }
 
   it should "return 401 without a session" in {
-    get("/koulutus/123", headers = Map.empty) {
-      status should equal (401)
+    put(KoulutusPath, bytes(koulutus), Seq(jsonHeader)) {
+      withClue(body) {
+        status should equal(401)
+      }
     }
   }
 
