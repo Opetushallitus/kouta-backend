@@ -8,7 +8,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.validation.Validations
 
-class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations with SQLHelpers with KonfoIndexingQueues with EventuallyMessages {
+class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId:UUID = null
@@ -23,15 +23,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
 
   lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
   lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))}
-
-  def getIds(hakukohde:Hakukohde) = {
-    import slick.jdbc.PostgresProfile.api._
-    hakukohde.copy(
-    liitteet = hakukohde.liitteet.map(l => l.copy(id = db.runBlocking(
-      sql"""select id from hakukohteiden_liitteet where hakukohde_oid = ${hakukohde.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString))),
-    valintakokeet = hakukohde.valintakokeet.map(l => l.copy(id = db.runBlocking(
-      sql"""select id from hakukohteiden_valintakokeet where hakukohde_oid = ${hakukohde.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString))),
-  )}
 
   it should "return 404 if hakukohde not found" in {
     get(s"$HakukohdePath/123") {
@@ -157,23 +148,4 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     get(oid, muokattuHakukohde)
   }
 
-  it should "send indexing message after creating hakukohde" in {
-    val oid = put(uusiHakukohde)
-    eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
-  }
-
-  it should "send indexing message after updating hakukohde" in {
-    val oid = put(uusiHakukohde)
-    eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
-
-    val lastModified = get(oid, tallennettuHakukohde(oid))
-    val muokattuHakukohde = tallennettuHakukohde(oid).copy(
-      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      hakulomaketyyppi = Some(Ataru),
-      hakulomake = Map(Fi -> "http://ataru/kivahakulomake"),
-      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
-    update(muokattuHakukohde, lastModified, true)
-
-    eventuallyIndexingMessages { _ should contain (s"""{"hakukohteet":["$oid"]}""") }
-  }
 }
