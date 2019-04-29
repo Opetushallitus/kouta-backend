@@ -2,17 +2,22 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
-import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.service.ValintaperusteService
 import fi.oph.kouta.servlet.ValintaperusteServlet
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+
+object ValintaperusteServiceIgnoringIndexing extends ValintaperusteService(SqsInTransactionServiceIgnoringIndexing)
 
 trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
   val ValintaperustePath = "/valintaperuste"
 
-  addServlet(new ValintaperusteServlet(), ValintaperustePath)
+  protected lazy val valintaperusteService: ValintaperusteService = ValintaperusteServiceIgnoringIndexing
+
+  addServlet(new ValintaperusteServlet(valintaperusteService), ValintaperustePath)
 
   val valintaperuste = TestData.AmmValintaperuste
 

@@ -3,6 +3,11 @@ package fi.oph.kouta.integration.fixture
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.service._
 
+trait IndexingFixture extends KoulutusFixtureWithIndexing with HakuFixtureWithIndexing with ToteutusFixtureWithIndexing
+  with ValintaperusteFixtureWithIndexing {
+  this: KoutaIntegrationSpec =>
+}
+
 trait HakuFixtureWithIndexing extends HakuFixture {
   this: KoutaIntegrationSpec =>
   override protected lazy val hakuService = HakuService
@@ -18,6 +23,7 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
   override protected lazy val toteutusService = ToteutusService
 }
 
-trait EverythingFixtureWithIndexing extends KoulutusFixtureWithIndexing with HakuFixtureWithIndexing with ToteutusFixtureWithIndexing {
+trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
   this: KoutaIntegrationSpec =>
+  override protected lazy val valintaperusteService = ValintaperusteService
 }
