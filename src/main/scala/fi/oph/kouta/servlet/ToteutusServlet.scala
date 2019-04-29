@@ -6,16 +6,18 @@ import fi.oph.kouta.service.ToteutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
 
-class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
+class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Swagger) extends KoutaServlet {
   override val applicationDescription = "Koulutusten toteutusten API"
   override val modelName = "Toteutus"
+
+  def this()(implicit swagger: Swagger) = this(ToteutusService)
 
   get("/:oid", operation(apiOperation[Toteutus]("Hae toteutus")
     tags modelName
     summary "Hae toteutus"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
 
-    ToteutusService.get(ToteutusOid(params("oid"))) match {
+    toteutusService.get(ToteutusOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown toteutus oid")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
     }
@@ -26,7 +28,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Tallenna uusi toteutus"
     parameter bodyParam[Toteutus])) {
 
-    ToteutusService.put(parsedBody.extract[Toteutus]) match {
+    toteutusService.put(parsedBody.extract[Toteutus]) match {
       case oid => Ok("oid" -> oid)
     }
   }
@@ -36,7 +38,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Muokkaa olemassa olevaa toteutusta"
     parameter bodyParam[Toteutus])) {
 
-    ToteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
+    toteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
     }
   }
@@ -47,7 +49,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
-      case Some(oid) => Ok(ToteutusService.list(oid))
+      case Some(oid) => Ok(toteutusService.list(oid))
     }
   }
 
@@ -55,7 +57,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Listaa toteutukseen liitetyt haut"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
-    Ok(ToteutusService.listHaut(ToteutusOid(params("oid"))))
+    Ok(toteutusService.listHaut(ToteutusOid(params("oid"))))
   }
 
   get("/:oid/hakukohteet/list", operation(apiOperation[List[HakukohdeListItem]]("Listaa toteutukseen liitetyt hakukohteet")
@@ -63,7 +65,7 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Listaa toteutukseen liitetyt hakukohteet"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
 
-    Ok(ToteutusService.listHakukohteet(ToteutusOid(params("oid"))))
+    Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid"))))
   }
 
   prettifySwaggerModels()

@@ -4,11 +4,13 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.indexing.SqsInTransactionService.runActionAndUpdateIndex
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
 
-object ToteutusService extends ValidatingService[Toteutus] with AuthorizationService {
+object ToteutusService extends ToteutusService(SqsInTransactionService)
+
+abstract class ToteutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Toteutus] with AuthorizationService {
 
   def put(toteutus: Toteutus): ToteutusOid =
     withValidation(toteutus, putWithIndexing)
@@ -28,13 +30,13 @@ object ToteutusService extends ValidatingService[Toteutus] with AuthorizationSer
     HakukohdeDAO.listByToteutusOid(oid)
 
   private def putWithIndexing(toteutus: Toteutus) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
       () => ToteutusDAO.getPutActions(toteutus))
 
   private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
       () => ToteutusDAO.getUpdateActions(toteutus, notModifiedSince),

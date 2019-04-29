@@ -14,9 +14,9 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
 
   val HakuPath = "/haku"
 
-  def init(): Unit = addServlet(new HakuServlet(HakuServiceIgnoringIndexing), HakuPath)
+  protected lazy val hakuService: HakuService = HakuServiceIgnoringIndexing
 
-  init()
+  addServlet(new HakuServlet(hakuService), HakuPath)
 
   val haku = JulkaistuHaku
 

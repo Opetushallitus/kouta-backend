@@ -121,18 +121,4 @@ class ToteutusSpec extends KoutaIntegrationSpec
       body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
     }
   }
-
-  it should "send indexing message after creating toteutus" in {
-    val oid = put(toteutus(koulutusOid))
-    eventuallyIndexingMessages { _ should contain (s"""{"toteutukset":["$oid"]}""") }
-  }
-
-  it should "send indexing message after updating toteutus" in {
-    val oid = put(toteutus(koulutusOid))
-    eventuallyIndexingMessages { _ should contain (s"""{"toteutukset":["$oid"]}""") }
-
-    update(toteutus(oid, koulutusOid, Arkistoitu), lastModified = get(oid, toteutus(oid, koulutusOid)))
-
-    eventuallyIndexingMessages { _ should contain (s"""{"toteutukset":["$oid"]}""") }
-  }
 }
