@@ -1,15 +1,13 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
-class KoulutusSpec extends KoutaIntegrationSpec
-  with KoulutusFixture with ToteutusFixture with Validations {
+class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with Validations {
 
   it should "return 404 if koulutus not found" in {
     get("/koulutus/123") {

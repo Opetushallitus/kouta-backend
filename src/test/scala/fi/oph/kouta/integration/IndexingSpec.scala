@@ -79,14 +79,14 @@ class IndexingSpec extends KoutaIntegrationSpec
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
 
-  it should "send indexing message after creating hakukohde" in {
+  "Create hakukohde" should "send indexing message after creating hakukohde" in {
     val oid = put(uusiHakukohde)
     eventuallyIndexingMessages {
       _ should contain(s"""{"hakukohteet":["$oid"]}""")
     }
   }
 
-  it should "send indexing message after updating hakukohde" in {
+  "Update hakukohde" should "send indexing message after updating hakukohde" in {
     val oid = put(uusiHakukohde)
     eventuallyIndexingMessages {
       _ should contain(s"""{"hakukohteet":["$oid"]}""")

@@ -2,10 +2,9 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
-import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.validation.Validations
 
 class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations {

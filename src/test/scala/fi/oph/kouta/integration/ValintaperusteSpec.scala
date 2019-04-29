@@ -4,7 +4,6 @@ import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.MinYoValintaperuste
-import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture

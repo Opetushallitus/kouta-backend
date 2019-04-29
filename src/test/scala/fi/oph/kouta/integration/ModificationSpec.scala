@@ -1,12 +1,11 @@
 package fi.oph.kouta.integration
 
 import java.net.URLEncoder
+import java.time.Instant.now
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId, ZonedDateTime}
-import java.time.Instant.now
 import java.util.UUID
 
-import fi.oph.kouta.KonfoIndexingQueues
 import fi.oph.kouta.TestData.inFuture
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -14,7 +13,7 @@ import fi.oph.kouta.servlet.AnythingServlet
 import org.json4s.jackson.Serialization.read
 
 
-class ModificationSpec extends KoutaIntegrationSpec with KonfoIndexingQueues with EverythingFixture {
+class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
 
   val AnythingPath = "/anything"
   addServlet(new AnythingServlet(), AnythingPath)
