@@ -19,7 +19,7 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
 trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
-  with Logging with KoutaJsonFormats with PrettySwaggerSupport with CasAuthenticatedServlet {
+  with Logging with KoutaJsonFormats with PrettySwaggerSupport {
 
   before() {
     contentType = formats("json")
