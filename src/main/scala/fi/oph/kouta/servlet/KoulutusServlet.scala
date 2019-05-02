@@ -6,7 +6,7 @@ import fi.oph.kouta.service.KoulutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
 
-class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
+class KoulutusServlet(implicit val swagger: Swagger) extends KoutaServlet {
   override val modelName = "Koulutus"
   override val applicationDescription = "Koulutusten API"
 
@@ -14,6 +14,8 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Hae koulutus"
     parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     KoulutusService.get(KoulutusOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown koulutus oid")
@@ -26,6 +28,8 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Tallenna uusi koulutus"
     parameter bodyParam[Koulutus])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     KoulutusService.put(parsedBody.extract[Koulutus]) match {
       case oid => Ok("oid" -> oid)
     }
@@ -36,6 +40,8 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Muokkaa olemassa olevaa koulutusta"
     parameter bodyParam[Koulutus])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     KoulutusService.update(parsedBody.extract[Koulutus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
     }
@@ -45,6 +51,9 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Listaa niiden koulutusten perustiedot, joita organisaatio voi käyttää"
     parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(oid) => Ok(KoulutusService.list(oid))
@@ -56,6 +65,9 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Palauttaa koulutuksen kaikki toteutukset indeksointia varten"
     parameter pathParam[String]("oid").description("Koulutuksen oid")
     parameter queryParam[Boolean]("vainJulkaistut").description("Palautetaanko vain julkaistut toteutukset").defaultValue(false))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     Ok(KoulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").map(_.toBoolean)))
   }
 
@@ -64,6 +76,9 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Listaa niiden koulutukseen kuuluvien toteutusten perustiedot, joihin organisaatiolla on oikeus"
     parameter pathParam[String]("oid").description("Koulutuksen oid")
     parameter queryParam[String]("organisaatioOid").description("Organisaation oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => Ok(KoulutusService.listToteutukset(KoulutusOid(params("oid")))) //TODO: Vain oph/indeksoija saa hakea kaiken
       case Some(organisaatioOid) => Ok(KoulutusService.listToteutukset(KoulutusOid(params("oid")), organisaatioOid))
@@ -74,6 +89,9 @@ class KoulutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Palauttaa koulutuksen kaikki julkaistut hakutiedot indeksointia varten"
     parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     Ok(KoulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
 

@@ -15,6 +15,8 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Hae toteutus"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     ToteutusService.get(ToteutusOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown toteutus oid")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
@@ -26,6 +28,8 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Tallenna uusi toteutus"
     parameter bodyParam[Toteutus])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     ToteutusService.put(parsedBody.extract[Toteutus]) match {
       case oid => Ok("oid" -> oid)
     }
@@ -36,6 +40,8 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Muokkaa olemassa olevaa toteutusta"
     parameter bodyParam[Toteutus])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     ToteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
     }
@@ -45,6 +51,9 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Listaa kaikki toteutukset, joihin käyttäjällä on oikeudet"
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(oid) => Ok(ToteutusService.list(oid))
@@ -55,6 +64,9 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Listaa toteutukseen liitetyt haut"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     Ok(ToteutusService.listHaut(ToteutusOid(params("oid"))))
   }
 
@@ -62,6 +74,8 @@ class ToteutusServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Listaa toteutukseen liitetyt hakukohteet"
     parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     Ok(ToteutusService.listHakukohteet(ToteutusOid(params("oid"))))
   }
