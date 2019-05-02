@@ -87,27 +87,18 @@ class ModificationSpec extends KoutaIntegrationSpec with KonfoIndexingQueues wit
   def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppi = Some(s"tyyppi$i")))), timestampAfterInserts)
   def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), Arkistoitu), timestampAfterInserts)
 
-  it should "return 401 without a valid session" in {
-
-    val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
-
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded") {
-      status should be(401)
-    }
-  }
-
   it should "return only modified oids 1" in {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded") {
       status should be(200)
       val result = read[ListEverything](body)
-      result.koulutukset should contain theSameElementsAs List(koulutusOids(0), koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
-      result.toteutukset should contain theSameElementsAs List(toteutusOids(3), toteutusOids(4), toteutusOids(5)).map(ToteutusOid)
-      result.haut should contain theSameElementsAs List(hakuOids(6), hakuOids(7)).map(HakuOid)
-      result.hakukohteet should contain theSameElementsAs List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)).map(HakukohdeOid)
-      result.valintaperusteet should contain theSameElementsAs List(valintaperusteIds(12))
+      result.koulutukset should contain theSameElementsAs (List(koulutusOids(0), koulutusOids(1), koulutusOids(2)).map(KoulutusOid))
+      result.toteutukset should contain theSameElementsAs (List(toteutusOids(3), toteutusOids(4), toteutusOids(5)).map(ToteutusOid))
+      result.haut should contain theSameElementsAs (List(hakuOids(6), hakuOids(7)).map(HakuOid))
+      result.hakukohteet should contain theSameElementsAs (List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)).map(HakukohdeOid))
+      result.valintaperusteet should contain theSameElementsAs (List(valintaperusteIds(12)))
     }
   }
 
@@ -115,22 +106,22 @@ class ModificationSpec extends KoutaIntegrationSpec with KonfoIndexingQueues wit
 
     val lastModifiedEncoded = URLEncoder.encode(timestampBeforeAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded") {
       status should be(200)
       val result = read[ListEverything](body)
-      result.koulutukset should contain theSameElementsAs koulutusOids.map(KoulutusOid)
-      result.toteutukset should contain theSameElementsAs toteutusOids.map(ToteutusOid)
-      result.haut should contain theSameElementsAs hakuOids.map(HakuOid)
-      result.hakukohteet should contain theSameElementsAs hakukohdeOids.map(HakukohdeOid)
-      result.valintaperusteet should contain theSameElementsAs valintaperusteIds
+      result.koulutukset should contain theSameElementsAs (koulutusOids).map(KoulutusOid)
+      result.toteutukset should contain theSameElementsAs (toteutusOids).map(ToteutusOid)
+      result.haut should contain theSameElementsAs (hakuOids).map(HakuOid)
+      result.hakukohteet should contain theSameElementsAs (hakukohdeOids).map(HakukohdeOid)
+      result.valintaperusteet should contain theSameElementsAs (valintaperusteIds)
     }
   }
 
-  it should "return only modified oids 3" in {
+  it should "return  only modified oids 3" in {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded") {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should be(empty)

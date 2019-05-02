@@ -17,8 +17,6 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Hae valintaperuste"
     parameter pathParam[String]("id").description("Valintaperusteen UUID"))) {
 
-    implicit val authenticated: Authenticated = authenticate
-
     ValintaperusteService.get(UUID.fromString(params("id"))) match {
       case None => NotFound("error" -> "Unknown valintaperuste id")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
@@ -30,8 +28,6 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Tallenna uusi valintaperuste"
     parameter bodyParam[Valintaperuste])) {
 
-    implicit val authenticated: Authenticated = authenticate
-
     ValintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
       case id => Ok("id" -> id)
     }
@@ -41,8 +37,6 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Muokkaa olemassa olevaa valintaperusteta"
     parameter bodyParam[Valintaperuste])) {
-
-    implicit val authenticated: Authenticated = authenticate
 
     ValintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -54,9 +48,6 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet. Listaa voidaan rajata myös haun oidilla, jolloin kuvaukset rajataan haun kohdejoukoun perusteella."
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)")
     parameter queryParam[String]("hakuOid").description(s"Haun oid"))) {
-
-    implicit val authenticated: Authenticated = authenticate
-
     ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
       case (None, _) => NotFound()
       case (Some(oid), None) => Ok(ValintaperusteService.list(OrganisaatioOid(oid)))
@@ -68,8 +59,6 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     tags modelName
     summary "Listaa kaikki hakukohteet, jotka käyttävät annettua valintaperustekuvausta"
     parameter pathParam[String]("id").description("Valintaperusteen UUID"))) {
-
-    implicit val authenticated: Authenticated = authenticate
 
     Ok(ValintaperusteService.listByValintaperusteId(UUID.fromString(params("id"))))
   }

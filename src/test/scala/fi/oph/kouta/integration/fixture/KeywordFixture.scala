@@ -51,32 +51,32 @@ trait KeywordFixture { this:KoutaIntegrationSpec =>
   )
 
   def storeAsiasanat() = {
-    post(AsiasanaPath, bytes(asiasanat), headers = Seq(sessionHeader)) {
+    post(AsiasanaPath, bytes(asiasanat)) {
       status should equal(200)
     }
-    post(s"$AsiasanaPath?kieli=sv", bytes(asiasanat.map(a => s"${a}_sv")), headers = Seq(sessionHeader)) {
+    post(s"$AsiasanaPath?kieli=sv", bytes(asiasanat.map(a => s"${a}_sv"))) {
       status should equal(200)
     }
   }
 
   def storeAmmattinimikkeet() = {
-    post(AmmattinimikePath, bytes(ammattinimikkeet), headers = Seq(sessionHeader)) {
+    post(AmmattinimikePath, bytes(ammattinimikkeet)) {
       status should equal(200)
     }
-    post(s"$AmmattinimikePath?kieli=sv", bytes(ammattinimikkeet.map(a => s"${a}_sv")), headers = Seq(sessionHeader)) {
+    post(s"$AmmattinimikePath?kieli=sv", bytes(ammattinimikkeet.map(a => s"${a}_sv"))) {
       status should equal(200)
     }
   }
 
-  def searchAsiasanat(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(sessionHeader)) = {
-    get(s"$AsiasanaPath/search/$term${paramString(params)}", headers = headers) {
+  def searchAsiasanat(term:String, expected:List[String], params:List[(String,String)] = List()) = {
+    get(s"$AsiasanaPath/search/$term${paramString(params)}" ) {
       status should equal(200)
       read[List[String]](body) should equal(expected)
     }
   }
 
-  def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(sessionHeader)) = {
-    get(s"$AmmattinimikePath/search/$term${paramString(params)}", headers = headers) {
+  def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List()) = {
+    get(s"$AmmattinimikePath/search/$term${paramString(params)}" ) {
       status should equal(200)
       read[List[String]](body) should equal(expected)
     }
