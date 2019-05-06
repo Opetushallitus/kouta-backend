@@ -1,14 +1,15 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.MockSecurityContext
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.AuthServlet
 
-class KayttooikeusUserDetailsServiceMock(securityContext: SecurityContext) extends KayttooikeusUserDetailsService {
+class KayttooikeusUserDetailsServiceMock(securityContext: SecurityContext, defaultAuthorities: Set[Authority]) extends KayttooikeusUserDetailsService {
   override def getUserByUsername(username: String): Either[Throwable, KayttooikeusUserDetails] = {
     username match {
-      case "testuser" => Right(KayttooikeusUserDetails(securityContext.requiredRoles, "test-user-oid"))
+      case "testuser" => Right(KayttooikeusUserDetails(defaultAuthorities, "test-user-oid"))
       case _ => Left(new AuthenticationFailedException(s"User not found with username: $username"))
     }
   }
@@ -23,8 +24,8 @@ trait AuthFixture {
 
   val casUrl = "testCasUrl"
 
-  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, Set(Role.CrudUser))
-  val kayttooikeusUserDetailsService = new KayttooikeusUserDetailsServiceMock(securityContext)
+  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, Set(defaultAuthority))
+  val kayttooikeusUserDetailsService = new KayttooikeusUserDetailsServiceMock(securityContext, Set(defaultAuthority))
 
   object MockCasSessionService extends CasSessionService(securityContext, kayttooikeusUserDetailsService)
 

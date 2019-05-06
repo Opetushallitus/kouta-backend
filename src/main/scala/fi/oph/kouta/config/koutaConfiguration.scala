@@ -1,7 +1,6 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
-import fi.oph.kouta.security.Role
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
@@ -21,7 +20,6 @@ case class KoutaDatabaseConfiguration(
 case class SecurityConfiguration(
   casUrl: String,
   casServiceIdentifier: String,
-  requiredRoles: Set[Role],
   kayttooikeusUrl: String
 )
 
@@ -49,7 +47,6 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
   val securityConfiguration = SecurityConfiguration(
     casUrl = config.getString("cas.url"),
     casServiceIdentifier = config.getString("kouta-backend.cas.service"),
-    requiredRoles = Set(Role.CrudUser),
     kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername")
   )
 }

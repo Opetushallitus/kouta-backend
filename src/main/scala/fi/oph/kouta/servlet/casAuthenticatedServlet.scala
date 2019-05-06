@@ -27,11 +27,11 @@ trait CasAuthenticatedServlet {
     Authenticated.tupled(session.getOrElse(throw new AuthenticationFailedException))
   }
 
-    def authorize(acceptedRoles:Role*)(implicit authenticated: Authenticated): Unit = {
-      if (!authenticated.session.hasAnyRole(acceptedRoles.toSet)) {
-        throw new RoleAuthorizationFailedException(acceptedRoles)
-      }
+  def authorize(acceptedRoles: Role*)(implicit authenticated: Authenticated): Unit = {
+    if (!authenticated.session.hasAnyRole(acceptedRoles.toSet)) {
+      throw new RoleAuthorizationFailedException(acceptedRoles)
     }
+  }
 
   /*
     protected def auditInfo(implicit authenticated: Authenticated): AuditInfo = {

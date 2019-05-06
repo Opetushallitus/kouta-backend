@@ -20,7 +20,7 @@ class AuthenticationFailedException(msg: String, cause: Throwable) extends Runti
 class RoleAuthorizationFailedException(roles: Seq[Role])
   extends RuntimeException(s"Authorization failed, none of ${roles.map(_.name).mkString(",")} found")
 
-case class KayttooikeusUserDetails(roles : Set[Role], oid: String)
+case class KayttooikeusUserDetails(authorities: Set[Authority], oid: String)
 
 object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
                                                    KayttooikeusUserDetailsService)
@@ -43,8 +43,8 @@ abstract class CasSessionService(val securityContext: SecurityContext , val user
   }
 
   private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): (UUID, CasSession) = {
-    val session = CasSession(ticket, user.oid, user.roles)
-    logger.debug(s"Storing to session: ${session.casTicket} ${session.personOid} ${session.roles}")
+    val session = CasSession(ticket, user.oid, user.authorities)
+    logger.debug(s"Storing to session: ${session.casTicket} ${session.personOid} ${session.authorities}")
     val id = SessionDAO.store(session)
     (id, session)
   }

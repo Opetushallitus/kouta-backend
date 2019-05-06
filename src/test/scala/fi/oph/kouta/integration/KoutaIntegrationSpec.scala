@@ -4,9 +4,10 @@ import java.util.UUID
 
 import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext}
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{CasSession, Role, ServiceTicket}
+import fi.oph.kouta.security.{Authority, CasSession, Role, ServiceTicket}
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
@@ -21,21 +22,23 @@ case class TestUser(oid: String, username: String, sessionId: UUID) {
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
 
+  val defaultAuthority = Authority(Role.CrudUser, OrganisaatioOid("1.2.246.562.10.0001"))
+
   val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
   val rolelessUser = TestUser("roleless-user-oid", "rolelessuser", UUID.randomUUID())
 
   def addDefaultSession(): Unit =  {
-    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket),     testUser.oid,     Role.all.values.toSet), testUser.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket),     testUser.oid,     Set(defaultAuthority)), testUser.sessionId)
     SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty            ), rolelessUser.sessionId)
   }
 
-  implicit val swagger = new KoutaBackendSwagger
+  implicit val swagger: KoutaBackendSwagger = new KoutaBackendSwagger
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     Option(System.getProperty("kouta-backend.test-postgres-port")) match {
       case Some(port) => setupWithTemplate(port.toInt)
-      case None => setupWithEmbeddedPostgres
+      case None => setupWithEmbeddedPostgres()
     }
     setupAwsKeysForSqs()
 

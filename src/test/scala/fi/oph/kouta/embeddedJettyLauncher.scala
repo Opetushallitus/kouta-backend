@@ -4,9 +4,9 @@ import java.util.UUID
 
 import com.amazonaws.services.sqs.AmazonSQSClient
 import fi.oph.kouta.config.{KoutaConfigurationConstants, KoutaConfigurationFactory}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{CasSession, ServiceTicket}
-import fi.oph.kouta.security.Role.CrudUser
+import fi.oph.kouta.security.{Authority, CasSession, Role, ServiceTicket}
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
 
@@ -85,7 +85,10 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupCasSessionIdForTestDataGenerator()= {
     logger.info(s"Adding session for TestDataGenerator")
-    SessionDAO.store(CasSession(ServiceTicket(""), "", Set(CrudUser)), UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId))
+    SessionDAO.store(
+      CasSession(ServiceTicket(""), "", Set(Authority(Role.CrudUser, OrganisaatioOid("1.2.246.562.10.0001")))),
+      UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)
+    )
   }
 }
 
