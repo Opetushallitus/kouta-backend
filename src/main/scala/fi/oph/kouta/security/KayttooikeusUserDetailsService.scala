@@ -8,7 +8,6 @@ import scalaj.http.HttpOptions
 
 import scala.util.Try
 import scala.util.control.NonFatal
-import scala.util.matching.Regex
 
 object KayttooikeusUserDetailsService extends KayttooikeusUserDetailsService
 
@@ -26,7 +25,7 @@ trait KayttooikeusUserDetailsService extends Logging {
       val koDto = parse(response).extract[KayttooikeusUserResp]
       KayttooikeusUserDetails(
         koDto.authorities
-          .map(ga => Role(ga.role))
+          .map(a => Authority(a.authority.replace("ROLE_", "")))
           .toSet,
         koDto.username
       )
@@ -61,15 +60,4 @@ trait KayttooikeusUserDetailsService extends Logging {
 
 case class KayttooikeusUserResp(authorities: List[GrantedAuthority], username: String)
 
-case class GrantedAuthority(authority: String) {
-
-  lazy val role: String = GrantedAuthority.organisaatioRegex
-    .replaceAllIn(authority, "")
-    .replace("ROLE_", "")
-
-  lazy val organisaatio: Option[String] = GrantedAuthority.organisaatioRegex.findFirstIn(authority).map(_.filterNot(_ == '_'))
-}
-
-object GrantedAuthority {
-  val organisaatioRegex: Regex = """_1\.2\.246\.562\.10.[\d]+$""".r
-}
+case class GrantedAuthority(authority: String)
