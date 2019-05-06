@@ -1,9 +1,12 @@
 package fi.oph.kouta.security
 
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+
+import scala.util.matching.Regex
+
 sealed abstract class Role(val name: String)
 
 object Role {
-  //TODO: meaningful roles for this project
   case object CrudUser extends Role("APP_TARJONTA_CRUD")
 
   case class UnknownRole(override val name: String) extends Role(name)
@@ -13,15 +16,34 @@ object Role {
   def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }
 
+case class Authority(authority: String) {
+  import Authority.OrganisaatioRegex
+
+  lazy val role: Role = Role(OrganisaatioRegex.replaceAllIn(authority, ""))
+
+  lazy val organisaatioId: Option[OrganisaatioOid] = OrganisaatioRegex.findFirstIn(authority)
+    .map(_.filterNot(_ == '_'))
+    .map(OrganisaatioOid.apply)
+}
+
+object Authority {
+  val OrganisaatioRegex: Regex = """_1\.2\.246\.562\.10.[\d]+$""".r
+
+  def apply(role: Role, organisaatioOid: OrganisaatioOid): Authority = this(s"${role}_$organisaatioOid")
+}
+
 sealed trait Session {
   def hasAnyRole(roles: Set[Role]): Boolean
   def hasEveryRole(roles: Set[Role]): Boolean
   def personOid: String
-  def roles: Set[Role]
+  def authorities: Set[Authority]
+
+  lazy val roleMap: Map[Role, Set[Option[OrganisaatioOid]]] = authorities.groupBy(_.role).mapValues(_.map(_.organisaatioId))
+  lazy val roles: Set[Role] = roleMap.keySet
 }
 
 case class ServiceTicket(s: String)
-case class CasSession(casTicket: ServiceTicket, personOid: String, roles: Set[Role]) extends Session {
+case class CasSession(casTicket: ServiceTicket, personOid: String, authorities: Set[Authority]) extends Session {
   override def hasAnyRole(roles: Set[Role]): Boolean = this.roles.intersect(roles).nonEmpty
   override def hasEveryRole(roles: Set[Role]): Boolean = roles.subsetOf(this.roles)
 }

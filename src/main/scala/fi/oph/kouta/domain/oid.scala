@@ -16,7 +16,7 @@ package object oid {
   case class GenericOid(s: String) extends Oid
 
   case class KoulutusOid(s: String) extends Oid {
-    override val OidPattern = Pattern.compile("""^1\.2\.246\.562\.13.+[\d]$""")
+    override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.13.+[\d]$""")
   }
 
   case class ToteutusOid(s: String) extends Oid {

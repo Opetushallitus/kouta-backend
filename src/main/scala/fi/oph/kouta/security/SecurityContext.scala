@@ -7,17 +7,15 @@ trait SecurityContext {
   def casUrl: String
   def casServiceIdentifier: String
   def casClient: CasClient
-  def requiredRoles: Set[Role]
 }
 
 case class ProductionSecurityContext(casUrl: String,
                                      casClient: CasClient,
-                                     casServiceIdentifier: String,
-                                     requiredRoles: Set[Role]) extends SecurityContext
+                                     casServiceIdentifier: String) extends SecurityContext
 
 object ProductionSecurityContext {
   def apply(config: SecurityConfiguration): ProductionSecurityContext = {
     val casClient = new CasClient(config.casUrl, org.http4s.client.blaze.defaultClient)
-    ProductionSecurityContext(config.casUrl, casClient, config.casServiceIdentifier, config.requiredRoles)
+    ProductionSecurityContext(config.casUrl, casClient, config.casServiceIdentifier)
   }
 }
