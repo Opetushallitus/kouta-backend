@@ -26,10 +26,10 @@ create_queues () {
     config="$(dirname ${BASH_SOURCE[0]})/queue-config.json"
 
     echo "Creating queues for service"
-    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaDlq
-    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaPriority --attributes file://${config}
-    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaFast     --attributes file://${config}
-    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name konfoIndeksoijaSlow     --attributes file://${config}
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name koutaIndeksoijaDlq
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name koutaIndeksoijaPriority --attributes file://${config}
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name koutaIndeksoijaFast     --attributes file://${config}
+    aws --endpoint-url http://localhost:4576 --output text sqs create-queue --region eu-west-1 --queue-name koutaIndeksoijaSlow     --attributes file://${config}
     echo "Created queues"
 }
 
