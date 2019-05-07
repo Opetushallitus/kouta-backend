@@ -2,13 +2,13 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
-import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext}
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{Authority, CasSession, Role, ServiceTicket}
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
@@ -21,8 +21,7 @@ case class TestUser(oid: String, username: String, sessionId: UUID) {
 
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
-
-  val defaultAuthority = Authority(Role.CrudUser, OrganisaatioOid("1.2.246.562.10.0001"))
+  val defaultAuthority  = KoutaIntegrationSpec.defaultAuthority
 
   val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
   val rolelessUser = TestUser("roleless-user-oid", "rolelessuser", UUID.randomUUID())
@@ -48,6 +47,9 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
 
 object KoutaIntegrationSpec {
   val serviceIdentifier = "testService"
+
+  val rootOrganisaatio = OrganisaatioOid("1.2.246.562.10.00000000001")
+  val defaultAuthority = Authority(Role.CrudUser, rootOrganisaatio)
 }
 
 sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
@@ -179,7 +181,7 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
     db.runBlocking(sqlu"""delete from koulutukset_history""")
 
-    db.runBlocking(sqlu"""delete from roles""")
+    db.runBlocking(sqlu"""delete from authorities""")
     db.runBlocking(sqlu"""delete from sessions""")
 
     deleteAsiasanat()

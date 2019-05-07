@@ -12,13 +12,10 @@ import scalaz.concurrent.Task
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
-class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
+case class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
   def this(msg: String) = this(msg, null)
   def this() = this(null, null)
 }
-
-class RoleAuthorizationFailedException(roles: Seq[Role])
-  extends RuntimeException(s"Authorization failed, none of ${roles.map(_.name).mkString(",")} found")
 
 case class KayttooikeusUserDetails(authorities: Set[Authority], oid: String)
 
