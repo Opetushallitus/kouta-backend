@@ -21,4 +21,4 @@ kouta-backend.sqs.region={{kouta_backend_sqs_region}}
 host.virkailija={{host_virkailija}}
 kayttooikeus-service.userDetails.byUsername=https://{{host_virkailija}}/kayttooikeus-service/userDetails/
 organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/hierarkia/hae
-
+root.organisaatio.oid=1.2.246.562.10.00000000001

@@ -28,10 +28,10 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
       "lakkautetut" -> "false")
 
   private def children(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
-    find(oid, organisaatiot).map(x => x.oid +: childOisFlat(x)).getOrElse(Seq()).distinct
+    find(oid, organisaatiot).map(x => x.oid +: childOidsFlat(x)).getOrElse(Seq()).distinct
 
   private def parentsAndChildren(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
-    find(oid, organisaatiot).map(x => parentOidsFlat(x) ++ Seq(x.oid) ++ childOisFlat(x)).getOrElse(Seq()).distinct
+    find(oid, organisaatiot).map(x => parentOidsFlat(x) ++ Seq(x.oid) ++ childOidsFlat(x)).getOrElse(Seq()).distinct
 
   private def find(oid: OrganisaatioOid, level: List[OidAndChildren]): Option[OidAndChildren] =
     level.find(_.oid == oid) match {
@@ -40,8 +40,8 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
       case None => find(oid, level.map(_.children).flatten)
     }
 
-  private def childOisFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
-    item.children.map(c => c.oid +: childOisFlat(c)).flatten
+  private def childOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
+    item.children.map(c => c.oid +: childOidsFlat(c)).flatten
 
   private def parentOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
     item.parentOidPath.split('/').toSeq.reverse.map(OrganisaatioOid)
