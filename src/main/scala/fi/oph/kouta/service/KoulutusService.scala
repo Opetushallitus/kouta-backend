@@ -7,16 +7,23 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
+import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.Authenticated
 
 object KoulutusService extends KoulutusService(SqsInTransactionService)
 
 abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with AuthorizationService {
 
-  def put(koulutus: Koulutus): KoulutusOid =
+  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
+    authorizeAll(Role.CrudUser,  koulutus.organisaatioOid :: koulutus.tarjoajat)
     withValidation(koulutus, putWithIndexing)
+  }
 
-  def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean =
+  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val existing = KoulutusDAO.get(koulutus.oid.get).getOrElse(throw new NoSuchElementException("koulutusOid"))._1
+    authorizeAll(Role.CrudUser,  existing.organisaatioOid :: existing.tarjoajat ++ koulutus.tarjoajat)
     withValidation(koulutus, updateWithIndexing(_, notModifiedSince))
+  }
 
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
 

@@ -29,7 +29,7 @@ case class Authority(authority: String) {
 object Authority {
   val OrganisaatioRegex: Regex = """_1\.2\.246\.562\.10.[\d]+$""".r
 
-  def apply(role: Role, organisaatioOid: OrganisaatioOid): Authority = this(s"${role}_$organisaatioOid")
+  def apply(role: Role, organisaatioOid: OrganisaatioOid): Authority = this(s"${role.name}_$organisaatioOid")
 }
 
 sealed trait Session {
