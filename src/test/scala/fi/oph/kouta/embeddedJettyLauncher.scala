@@ -4,10 +4,9 @@ import java.util.UUID
 
 import com.amazonaws.services.sqs.AmazonSQSClient
 import fi.oph.kouta.config.{KoutaConfigurationConstants, KoutaConfigurationFactory}
-import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{Authority, CasSession, Role, ServiceTicket}
+import fi.oph.kouta.security.{CasSession, ServiceTicket}
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
 
@@ -98,11 +97,11 @@ object Templates {
   val DEFAULT_TEMPLATE_FILE_PATH = "src/test/resources/dev-vars.yml"
   val TEST_TEMPLATE_FILE_PATH = "src/test/resources/embedded-jetty-vars.yml"
 
-  import java.io.File
+  import java.io.{File, PrintWriter}
   import java.nio.file.Files
-  import java.io.PrintWriter
+
   import scala.io.Source
-  import scala.util.{Try, Success, Failure}
+  import scala.util.{Failure, Success, Try}
 
   def createTestTemplate(port:Int, deleteAutomatically:Boolean = true) = Try(new PrintWriter(new File(TEST_TEMPLATE_FILE_PATH))) match {
     case Failure(t) => throw t
