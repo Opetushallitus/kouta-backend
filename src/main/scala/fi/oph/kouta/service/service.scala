@@ -20,6 +20,8 @@ case class KoutaValidationException(errorMessages:List[String]) extends RuntimeE
 
 trait AuthorizationService extends Logging {
 
+  private val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+
   def withAuthorizedChildAndParentOrganizationOids[R](oid:OrganisaatioOid, f: Seq[OrganisaatioOid] => R): R =
     OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
       case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
@@ -32,28 +34,15 @@ trait AuthorizationService extends Logging {
       case oids => f(oids)
     }
 
-  private def lazyFlatChildren(orgs: Set[OrganisaatioOid]): Set[OrganisaatioOid] =
-    orgs.view
-      .flatMap(oid => OrganisaatioClient.getAllChildOidsFlat(oid).toSet)
-      .toSet
-
-  private def orgsForRole(role: Role, authenticated: Authenticated): Set[OrganisaatioOid] =
-    authenticated.session.roleMap
-      .getOrElse(role, throw RoleAuthorizationFailedException(Seq(role), authenticated.session.roles))
-      .flatten
-
   def authorize(role: Role, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Unit =
     authorizeAll(role, Seq(organisaatioOid))
 
-  def authorizeAll(role: Role, organisaatioOids: Iterable[OrganisaatioOid])(implicit authenticated: Authenticated): Unit = {
-    logger.trace(s"Authorizing against authorities: ${authenticated.session.roleMap}")
-
+  def authorizeAll(role: Role, organisaatioOids: Iterable[OrganisaatioOid])(implicit authenticated: Authenticated): Unit =
     withChildren(role) { children =>
       organisaatioOids
         .find(oid => !children.contains(oid))
         .foreach(oid => throw OrganizationAuthorizationFailedException(oid))
     }
-  }
 
   def authorizeAny(role: Role, organisaatioOids: Iterable[OrganisaatioOid])(implicit authenticated: Authenticated): Unit =
     withChildren(role) { children =>
@@ -64,12 +53,22 @@ trait AuthorizationService extends Logging {
 
   private def withChildren(role: Role)(authorization: Set[OrganisaatioOid] => Unit)(implicit authenticated: Authenticated): Unit =
     orgsForRole(role, authenticated) match {
-      case oids if oids.contains(KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio) =>
+      case oids if oids.contains(rootOrganisaatioOid) =>
       case oids =>
         val childOids = oids ++ lazyFlatChildren(oids)
 
         authorization(childOids)
     }
+
+  private def orgsForRole(role: Role, authenticated: Authenticated): Set[OrganisaatioOid] =
+    authenticated.session.roleMap
+      .getOrElse(role, throw RoleAuthorizationFailedException(Seq(role), authenticated.session.roles))
+      .flatten
+
+  private def lazyFlatChildren(orgs: Set[OrganisaatioOid]): Set[OrganisaatioOid] =
+    orgs.view
+      .flatMap(oid => OrganisaatioClient.getAllChildOidsFlat(oid).toSet)
+      .toSet
 
   def authorize(acceptedRoles: Role*)(implicit authenticated: Authenticated): Unit = {
     if (!authenticated.session.hasAnyRole(acceptedRoles.toSet)) {
