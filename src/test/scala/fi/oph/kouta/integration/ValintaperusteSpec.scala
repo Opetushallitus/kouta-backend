@@ -4,14 +4,12 @@ import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.MinYoValintaperuste
-import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.validation.Validations
 
-class ValintaperusteSpec extends KoutaIntegrationSpec
-  with ValintaperusteFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
+class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with Validations {
 
   it should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}") {
@@ -90,19 +88,5 @@ class ValintaperusteSpec extends KoutaIntegrationSpec
       }
       body should equal (validateErrorBody(validationMsg("saippua")))
     }
-  }
-
-  it should "send indexing message after creating valintaperuste" in {
-    val oid = put(valintaperuste)
-    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$oid"]}""") }
-  }
-
-  it should "send indexing message after updating valintaperuste" in {
-    val id = put(valintaperuste)
-    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
-
-    update(valintaperuste(id, Arkistoitu), lastModified = get(id, valintaperuste(id)))
-
-    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
 }

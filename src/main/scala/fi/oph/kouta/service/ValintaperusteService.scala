@@ -5,11 +5,13 @@ import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, IdListItem, Valintaperuste, ValintaperusteListItem}
-import fi.oph.kouta.indexing.SqsInTransactionService.runActionAndUpdateIndex
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 
-object ValintaperusteService extends ValidatingService[Valintaperuste] with AuthorizationService {
+object ValintaperusteService extends ValintaperusteService(SqsInTransactionService)
+
+abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Valintaperuste] with AuthorizationService {
 
   def put(valintaperuste: Valintaperuste): UUID =
     withValidation(valintaperuste, putWithIndexing)
@@ -29,13 +31,13 @@ object ValintaperusteService extends ValidatingService[Valintaperuste] with Auth
     HakukohdeDAO.listByValintaperusteId(valintaperusteId)
 
   private def putWithIndexing(valintaperuste: Valintaperuste) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeValintaperuste,
       () => ValintaperusteDAO.getPutActions(valintaperuste))
 
   private def updateWithIndexing(valintaperuste: Valintaperuste, notModifiedSince: Instant) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeValintaperuste,
       () => ValintaperusteDAO.getUpdateActions(valintaperuste, notModifiedSince),

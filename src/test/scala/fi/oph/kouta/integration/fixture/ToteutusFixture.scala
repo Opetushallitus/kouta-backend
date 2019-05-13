@@ -1,17 +1,22 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.ToteutusServlet
-import org.scalactic.Equality
+
+object ToteutusServiceIgnoringIndexing extends ToteutusService(SqsInTransactionServiceIgnoringIndexing)
 
 trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
   val ToteutusPath = "/toteutus"
 
-  addServlet(new ToteutusServlet(), ToteutusPath)
+  protected lazy val toteutusService: ToteutusService = ToteutusServiceIgnoringIndexing
+
+  addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
 
   val opetus = ToteutuksenOpetus
   val ammMetatieto = AmmToteutuksenMetatieto

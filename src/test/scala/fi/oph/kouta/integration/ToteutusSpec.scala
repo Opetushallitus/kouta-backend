@@ -1,14 +1,13 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.validation.Validations
 
 class ToteutusSpec extends KoutaIntegrationSpec
-  with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
+  with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
 
   var koulutusOid = ""
 
@@ -120,19 +119,5 @@ class ToteutusSpec extends KoutaIntegrationSpec
       }
       body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
     }
-  }
-
-  it should "send indexing message after creating toteutus" in {
-    val oid = put(toteutus(koulutusOid))
-    eventuallyIndexingMessages { _ should contain (s"""{"toteutukset":["$oid"]}""") }
-  }
-
-  it should "send indexing message after updating toteutus" in {
-    val oid = put(toteutus(koulutusOid))
-    eventuallyIndexingMessages { _ should contain (s"""{"toteutukset":["$oid"]}""") }
-
-    update(toteutus(oid, koulutusOid, Arkistoitu), lastModified = get(oid, toteutus(oid, koulutusOid)))
-
-    eventuallyIndexingMessages { _ should contain (s"""{"toteutukset":["$oid"]}""") }
   }
 }

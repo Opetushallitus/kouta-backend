@@ -1,18 +1,21 @@
 package fi.oph.kouta.integration.fixture
 
-import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.service.KoulutusService
 import fi.oph.kouta.servlet.KoulutusServlet
-import org.json4s.jackson.Serialization.read
-import org.scalactic.Equality
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+
+object KoulutusServiceIgnoringIndexing extends KoulutusService(SqsInTransactionServiceIgnoringIndexing)
 
 trait KoulutusFixture { this: KoutaIntegrationSpec =>
 
   val KoulutusPath = "/koulutus"
 
-  addServlet(new KoulutusServlet(), KoulutusPath)
+  protected lazy val koulutusService: KoulutusService = KoulutusServiceIgnoringIndexing
+
+  addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
 
   val koulutus = TestData.AmmKoulutus
 

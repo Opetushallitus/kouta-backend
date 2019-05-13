@@ -8,16 +8,18 @@ import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.swagger.Swagger
 import org.scalatra.{NotFound, Ok}
 
-class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
+class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implicit val swagger: Swagger) extends KoutaServlet {
   override val applicationDescription = "Valintaperustekuvausten API"
   override val modelName = "Valintaperuste"
+
+  def this()(implicit swagger: Swagger) = this(ValintaperusteService)
 
   get("/:id", operation(apiOperation[Valintaperuste]("Hae valintaperuste")
     tags modelName
     summary "Hae valintaperuste"
     parameter pathParam[String]("id").description("Valintaperusteen UUID"))) {
 
-    ValintaperusteService.get(UUID.fromString(params("id"))) match {
+    valintaperusteService.get(UUID.fromString(params("id"))) match {
       case None => NotFound("error" -> "Unknown valintaperuste id")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
     }
@@ -28,7 +30,7 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Tallenna uusi valintaperuste"
     parameter bodyParam[Valintaperuste])) {
 
-    ValintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
+    valintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
       case id => Ok("id" -> id)
     }
   }
@@ -38,7 +40,7 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Muokkaa olemassa olevaa valintaperusteta"
     parameter bodyParam[Valintaperuste])) {
 
-    ValintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
+    valintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
     }
   }
@@ -50,8 +52,8 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     parameter queryParam[String]("hakuOid").description(s"Haun oid"))) {
     ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
       case (None, _) => NotFound()
-      case (Some(oid), None) => Ok(ValintaperusteService.list(OrganisaatioOid(oid)))
-      case (Some(oid), Some(hakuOid)) => Ok(ValintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid)))
+      case (Some(oid), None) => Ok(valintaperusteService.list(OrganisaatioOid(oid)))
+      case (Some(oid), Some(hakuOid)) => Ok(valintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid)))
     }
   }
 
@@ -60,7 +62,7 @@ class ValintaperusteServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Listaa kaikki hakukohteet, jotka käyttävät annettua valintaperustekuvausta"
     parameter pathParam[String]("id").description("Valintaperusteen UUID"))) {
 
-    Ok(ValintaperusteService.listByValintaperusteId(UUID.fromString(params("id"))))
+    Ok(valintaperusteService.listByValintaperusteId(UUID.fromString(params("id"))))
   }
 
   prettifySwaggerModels()

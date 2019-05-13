@@ -4,11 +4,13 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.indexing.SqsInTransactionService._
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 
-object KoulutusService extends ValidatingService[Koulutus] with AuthorizationService {
+object KoulutusService extends KoulutusService(SqsInTransactionService)
+
+abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with AuthorizationService {
 
   def put(koulutus: Koulutus): KoulutusOid =
     withValidation(koulutus, putWithIndexing)
@@ -36,13 +38,13 @@ object KoulutusService extends ValidatingService[Koulutus] with AuthorizationSer
   }
 
   private def putWithIndexing(koulutus: Koulutus) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
       () => KoulutusDAO.getPutActions(koulutus))
 
   private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant) =
-    runActionAndUpdateIndex(
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
       () => KoulutusDAO.getUpdateActions(koulutus, notModifiedSince),
