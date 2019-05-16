@@ -2,6 +2,7 @@ package fi.oph.kouta
 
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
@@ -106,6 +107,9 @@ object TestData {
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#11"),
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomake = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
+    hakulomakeId = Some(UUID.randomUUID().toString),
+    hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
+    hakulomakeLinkki = Map( Fi -> "https://koulu.test/hakemusinfo-fi", Sv -> "https://koulu.test/hakemusinfo-sv"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
@@ -125,6 +129,10 @@ object TestData {
     alkamisvuosi = Some("2019"),
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomake = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
+    hakulomakeId = Some(UUID.randomUUID().toString),
+    hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
+    hakulomakeLinkki = Map( Fi -> "https://koulu.test/kohteen-hakemusinfo-fi", Sv -> "https://koulu.test/kohteen-hakemusinfo-sv"),
+    eriHakulomake = true,
     aloituspaikat = Some(2),
     ensikertalaisenAloituspaikat = Some(1),
     pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_01#2", "pohjakoulutusvaatimustoinenaste_01#3"),
