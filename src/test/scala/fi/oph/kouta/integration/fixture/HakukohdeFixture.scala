@@ -32,28 +32,27 @@ trait HakukohdeFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
         sql"""select id from hakukohteiden_valintakokeet where hakukohde_oid = ${hakukohde.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString))),
     )}
 
-  def hakukohde(toteutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
+  def hakukohde(toteutusOid: String, hakuOid: String, valintaperusteId: UUID): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId))
 
   def hakukohde(oid:String, toteutusOid:String, hakuOid:String, valintaperusteId:UUID):Hakukohde = hakukohde.copy(
     oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId))
 
-  def hakukohde(oid:String, toteutusOid:String, hakuOid:String, valintaperusteId:UUID, tila:Julkaisutila):Hakukohde = hakukohde.copy(
+  def hakukohde(oid: String, toteutusOid: String, hakuOid: String, valintaperusteId: UUID, tila: Julkaisutila): Hakukohde = hakukohde.copy(
     oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), tila = tila)
 
-  def put(hakukohde:Hakukohde):String = put(HakukohdePath, hakukohde, oid(_))
-  def get(oid:String, expected:Hakukohde):String = get(HakukohdePath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "hakukohteet"))))
-  def update(haku:Hakukohde, lastModified:String, expectUpdate:Boolean):Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
-  def update(haku:Hakukohde, lastModified:String):Unit = update(haku, lastModified, true)
-
-
-  def hakukohde(toteutusOid:String, hakuOid:String, valintaperusteId:UUID, organisaatioOid:String):Hakukohde = hakukohde.copy(
+  def hakukohde(toteutusOid: String, hakuOid: String, valintaperusteId: UUID, organisaatioOid: String): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), organisaatioOid = OrganisaatioOid(organisaatioOid))
 
-  def addToList(hakukohde:Hakukohde) = {
+  def put(hakukohde: Hakukohde): String = put(HakukohdePath, hakukohde, oid)
+  def get(oid: String, expected: Hakukohde): String = get(HakukohdePath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "hakukohteet"))))
+  def update(haku: Hakukohde, lastModified: String, expectUpdate: Boolean): Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
+  def update(haku: Hakukohde, lastModified: String): Unit = update(haku, lastModified, expectUpdate = true)
+
+  def addToList(hakukohde: Hakukohde) = {
     val oid = put(hakukohde)
     val modified = readModifiedByOid(oid, "hakukohteet")
-    new HakukohdeListItem(HakukohdeOid(oid), hakukohde.toteutusOid, hakukohde.hakuOid, hakukohde.valintaperusteId,
+    HakukohdeListItem(HakukohdeOid(oid), hakukohde.toteutusOid, hakukohde.hakuOid, hakukohde.valintaperusteId,
       hakukohde.nimi, hakukohde.tila, hakukohde.organisaatioOid, hakukohde.muokkaaja, modified)
   }
 }

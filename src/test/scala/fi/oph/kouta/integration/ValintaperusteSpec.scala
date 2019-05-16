@@ -11,14 +11,20 @@ import fi.oph.kouta.validation.Validations
 
 class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with Validations {
 
-  it should "return 404 if valintaperuste not found" in {
-    get(s"/valintaperuste/${UUID.randomUUID()}") {
+  "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {
+    get(s"/valintaperuste/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown valintaperuste id")
     }
   }
 
-  it should "store valintaperuste" in {
+  it should "return 401 if no session is found" in {
+    get(s"/valintaperuste/${UUID.randomUUID()}") {
+      status should equal(401)
+    }
+  }
+
+  "Create valintaperuste" should "store valintaperuste" in {
     val id = put(valintaperuste)
     get(id, valintaperuste(id))
   }
@@ -28,7 +34,22 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     get(id, TestData.YoValintaperuste.copy(id = Some(id)))
   }
 
-  it should "update valintaperuste" in {
+  it should "return 401 if no session is found" in {
+    put(s"$ValintaperustePath", bytes(valintaperuste)) {
+      status should equal (401)
+    }
+  }
+
+  it should "validate new valintaperuste" in {
+    put(ValintaperustePath, bytes(valintaperuste.copy(organisaatioOid = OrganisaatioOid("saippua"))), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validateErrorBody(validationMsg("saippua")))
+    }
+  }
+
+  "Update valintaperuste" should "update valintaperuste" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
     update(valintaperuste(id, Arkistoitu), lastModified)
@@ -42,10 +63,17 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     get(id, valintaperuste(id)) should equal (lastModified)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "return 401 if no session is found" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    post(ValintaperustePath, bytes(valintaperuste(id))) {
+    post(ValintaperustePath, bytes(valintaperuste(id)), Seq("If-Unmodified-Since" -> lastModified)) {
+      status should equal (401)
+    }
+  }
+
+  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+    val id = put(valintaperuste)
+    post(ValintaperustePath, bytes(valintaperuste(id)), defaultHeaders) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -68,15 +96,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatioOid = OrganisaatioOid("6.6.6.6.6"))
     update(newUnfinishedValintaperuste, lastModified)
     get(id, newUnfinishedValintaperuste)
-  }
-
-  it should "validate new valintaperuste" in {
-    put(ValintaperustePath, bytes(valintaperuste.copy(organisaatioOid = OrganisaatioOid("saippua"))), List(jsonHeader)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validateErrorBody(validationMsg("saippua")))
-    }
   }
 
   it should "validate updated valintaperuste" in {
