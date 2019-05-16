@@ -19,6 +19,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implic
     summary "Hae valintaperuste"
     parameter pathParam[String]("id").description("Valintaperusteen UUID"))) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     valintaperusteService.get(UUID.fromString(params("id"))) match {
       case None => NotFound("error" -> "Unknown valintaperuste id")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
@@ -30,6 +32,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implic
     summary "Tallenna uusi valintaperuste"
     parameter bodyParam[Valintaperuste])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     valintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
       case id => Ok("id" -> id)
     }
@@ -39,6 +43,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implic
     tags modelName
     summary "Muokkaa olemassa olevaa valintaperusteta"
     parameter bodyParam[Valintaperuste])) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     valintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -50,6 +56,9 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implic
     summary "Listaa kaikki valintaperustekuvaukset, joihin käyttäjällä on oikeudet. Listaa voidaan rajata myös haun oidilla, jolloin kuvaukset rajataan haun kohdejoukoun perusteella."
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)")
     parameter queryParam[String]("hakuOid").description(s"Haun oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
       case (None, _) => NotFound()
       case (Some(oid), None) => Ok(valintaperusteService.list(OrganisaatioOid(oid)))
@@ -61,6 +70,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implic
     tags modelName
     summary "Listaa kaikki hakukohteet, jotka käyttävät annettua valintaperustekuvausta"
     parameter pathParam[String]("id").description("Valintaperusteen UUID"))) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     Ok(valintaperusteService.listByValintaperusteId(UUID.fromString(params("id"))))
   }

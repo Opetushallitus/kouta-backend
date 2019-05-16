@@ -6,7 +6,7 @@ import fi.oph.kouta.integration.fixture.AuthFixture
 
 class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
 
-  "GET /session" should "return 200 if the session is active" in {
+  "Get session" should "return 200 if the session is active" in {
     get(sessionPath, headers = defaultHeaders) {
       body should include(testUserOid)
       status should equal(200)
@@ -21,7 +21,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
     }
   }
 
-  "GET /login" should "redirect to Cas service if neither ticket nor session is found" in {
+  "Do login" should "redirect to Cas service if neither ticket nor session is found" in {
     get(loginPath, headers = Seq(jsonHeader)) {
       withClue(body) {
         status should equal(302)
@@ -107,7 +107,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
 
   }
 
-  "POST /login" should "" in {
+  "Logout" should "" in {
     //TODO: tests
   }
 

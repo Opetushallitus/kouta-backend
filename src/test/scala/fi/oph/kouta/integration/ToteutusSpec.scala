@@ -16,14 +16,20 @@ class ToteutusSpec extends KoutaIntegrationSpec
     koulutusOid = put(koulutus)
   }
 
-  it should "return 404 if toteutus not found" in {
-    get(s"$ToteutusPath/123") {
+  "Get toteutus by oid" should "return 404 if toteutus not found" in {
+    get(s"$ToteutusPath/123", headers = defaultHeaders) {
       status should equal (404)
       body should include ("Unknown toteutus oid")
     }
   }
 
-  it should "store toteutus" in {
+  it should "return 401 if no session is found" in {
+    get(s"$ToteutusPath/123") {
+      status should equal (401)
+    }
+  }
+
+  "Create toteutus" should "store toteutus" in {
     val oid = put(toteutus(koulutusOid))
     get(oid, toteutus(oid, koulutusOid))
   }
@@ -33,7 +39,22 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid)))
   }
 
-  it should "update toteutus" in {
+  it should "return 401 if no session is found" in {
+    put(s"$ToteutusPath", bytes(toteutus(koulutusOid))) {
+      status should equal (401)
+    }
+  }
+
+  it should "validate new toteutus" in {
+    put(ToteutusPath, bytes(toteutus(koulutusOid).copy(tarjoajat = List("katkarapu").map(OrganisaatioOid))), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
+    }
+  }
+
+  "Update toteutus" should "update toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
@@ -48,11 +69,19 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, thisToteutus)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "return 401 if no session is found" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    post(ToteutusPath, bytes(thisToteutus)) {
+    post(ToteutusPath, bytes(thisToteutus), Seq("If-Unmodified-Since" -> lastModified)) {
+      status should equal (401)
+    }
+  }
+
+  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+    val oid = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    post(ToteutusPath, bytes(thisToteutus), headers = defaultHeaders) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -64,7 +93,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, thisToteutus)
     Thread.sleep(1500)
     update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
-    post(ToteutusPath, bytes(thisToteutus), List(("If-Unmodified-Since", lastModified))) {
+    post(ToteutusPath, bytes(thisToteutus), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
   }
@@ -99,15 +128,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(newKoulutusOid))
     update(newUnfinishedToteutus, lastModified)
     get(oid, newUnfinishedToteutus)
-  }
-
-  it should "validate new toteutus" in {
-    put(ToteutusPath, bytes(toteutus(koulutusOid).copy(tarjoajat = List("katkarapu").map(OrganisaatioOid))), List(jsonHeader)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
-    }
   }
 
   it should "validate updated toteutus" in {

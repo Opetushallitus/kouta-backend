@@ -61,7 +61,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 
-  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, "If-Unmodified-Since" -> lastModified)
+  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, sessionHeader, "If-Unmodified-Since" -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
 
@@ -71,14 +71,14 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def bytes(o: AnyRef) = write(o).getBytes
 
-  def oid(body: String) = (read[Oid](body)).oid
+  val oid = (body: String) => read[Oid](body).oid
 
   def id(body: String) = (read[Id](body)).id
 
   def updated(body: String) = read[Updated](body).updated
 
-  def put[E <: scala.AnyRef, R](path: String, entity: E, result: (String) => R): R = {
-    put(path, bytes(entity), List(jsonHeader)) {
+  def put[E <: scala.AnyRef, R](path: String, entity: E, result: String => R): R = {
+    put(path, bytes(entity), defaultHeaders) {
       withClue(body) {
         status should equal(200)
       }
@@ -86,37 +86,49 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
-  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
-    get(s"$path/${id.toString}") {
+  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
+    get(path, id, defaultHeaders, expected)
+
+  def get[E <: scala.AnyRef, I](path: String, id: I, headers: Iterable[(String, String)], expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
+    get(s"$path/${id.toString}", headers = headers) {
       status should equal(200)
       debugJson(body)
       read[E](body) should equal(expected)
-      header.get("Last-Modified").get
+      header("Last-Modified")
     }
   }
 
-  def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean) = {
-    post(path, bytes(entity), headersIfUnmodifiedSince(lastModified)) {
+  def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean): Unit =
+    update(path, entity, headersIfUnmodifiedSince(lastModified), expectUpdate)
+
+  def update[E <: scala.AnyRef](path: String, entity: E, headers: Iterable[(String, String)], expectUpdate: Boolean): Unit = {
+    post(path, bytes(entity), headers) {
       status should equal(200)
       updated(body) should equal(expectUpdate)
     }
   }
 
-  def list[R](path: String, params: Map[String, String], expected: List[R])(implicit mf: Manifest[R]) = {
-    get(s"$path/list", params) {
+  def list[R](path: String, params: Map[String, String], expected: List[R], headers: Iterable[(String, String)])
+             (implicit mf: Manifest[R]): Seq[R] = {
+    get(s"$path/list", params, headers) {
       status should equal(200)
       val result = read[List[R]](body)
-      result should contain theSameElementsAs (expected)
+      result should contain theSameElementsAs expected
       result
     }
   }
 
-  def list(path: String, params: Map[String, String], expectedStatus: Int) = {
-    get(s"$path/list", params) {
+  def list[R](path: String, params: Map[String, String], expected: List[R])(implicit mf: Manifest[R]): Seq[R] =
+    list(path, params, expected, defaultHeaders)
+
+  def list(path: String, params: Map[String, String], expectedStatus: Int, headers: Iterable[(String, String)]): Unit = {
+    get(s"$path/list", params, headers) {
       status should equal(expectedStatus)
-      body
     }
   }
+
+  def list(path: String, params: Map[String, String], expectedStatus: Int): Unit =
+    list(path, params, expectedStatus, defaultHeaders)
 }
 
 sealed trait DatabaseSpec {

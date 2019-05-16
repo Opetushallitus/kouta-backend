@@ -23,19 +23,45 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
   lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
   lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))}
 
-  it should "return 404 if hakukohde not found" in {
-    get(s"$HakukohdePath/123") {
+  def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
+    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
+
+  "Get hakukohde by oid" should "return 404 if hakukohde not found" in {
+    get(s"$HakukohdePath/123", headers = Seq(sessionHeader)) {
       status should equal (404)
       body should include ("Unknown hakukohde oid")
     }
   }
 
-  it should "store hakukohde" in {
+  it should "return 401 if a valid session is not found" in {
+    get(s"$HakukohdePath/123") {
+      status should equal (401)
+      body should include ("Unauthorized")
+    }
+  }
+
+  "Create hakukohde" should "store hakukohde" in {
     val oid = put(uusiHakukohde)
     get(oid, tallennettuHakukohde(oid))
   }
 
-  it should "update hakukohde" in {
+  it should "return 401 if a valid session is not found" in {
+    put(uri = s"$HakukohdePath", bytes(uusiHakukohde), Seq(jsonHeader)) {
+      status should equal (401)
+      body should include ("Unauthorized")
+    }
+  }
+
+  it should "validate new hakukohde" in {
+    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, sessionHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validateErrorBody(InvalidHakuaika))
+    }
+  }
+
+  "Update hakukohde" should "update hakukohde" in {
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu)
@@ -47,7 +73,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
-    update(thisHakukohde, lastModified, false)
+    update(thisHakukohde, lastModified, expectUpdate = false)
     get(oid, thisHakukohde)
   }
 
@@ -55,7 +81,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
-    post(HakukohdePath, bytes(thisHakukohde)) {
+    post(HakukohdePath, bytes(thisHakukohde), Seq(sessionHeader)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -67,8 +93,17 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val lastModified = get(oid, thisHakukohde)
     Thread.sleep(1500)
     update(tallennettuHakukohde(oid).copy(tila = Arkistoitu), lastModified)
-    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified))) {
+    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified), sessionHeader)) {
       status should equal (409)
+    }
+  }
+
+  it should "return 401 if a valid session is not found" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified))) {
+      status should equal (401)
     }
   }
 
@@ -80,7 +115,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
       hakulomaketyyppi = Some(Ataru),
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake", Sv -> "http://ataru/kivahakulomake/sv", En -> "http://ataru/kivahakulomake/en"),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
-    update(muokattuHakukohde, lastModified, true)
+    update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde)
   }
 
@@ -89,12 +124,12 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val lastModified = get(oid, tallennettuHakukohde(oid))
     Thread.sleep(1500)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List())
-    update(muokattuHakukohde, lastModified, true)
-    get(oid, muokattuHakukohde) should not equal (lastModified)
+    update(muokattuHakukohde, lastModified, expectUpdate = true)
+    get(oid, muokattuHakukohde) should not equal lastModified
   }
 
   it should "store and update unfinished hakukohde" in {
-    val unfinishedHakukohde = new Hakukohde(muokkaaja = UserOid("7.7.7.7"), toteutusOid = ToteutusOid(toteutusOid),
+    val unfinishedHakukohde = Hakukohde(muokkaaja = UserOid("7.7.7.7"), toteutusOid = ToteutusOid(toteutusOid),
       hakuOid = HakuOid(hakuOid), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid))))
@@ -102,18 +137,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val newUnfinishedHakukohde = unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(newToteutusOid))
     update(newUnfinishedHakukohde, lastModified)
     get(oid, newUnfinishedHakukohde)
-  }
-
-  def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
-    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
-
-  it should "validate new hakukohde" in {
-    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validateErrorBody(InvalidHakuaika))
-    }
   }
 
   it should "validate updated hakukohde" in {
@@ -134,16 +157,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val muokattuHakukohde = tallennettu.copy(
       valintakokeet = List(TestData.Valintakoe1.copy(tyyppi = Some("tyyyyppi"))),
       liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.now()))))
-    update(muokattuHakukohde, lastModified, true)
+    update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, getIds(muokattuHakukohde))
   }
 
-  it should "delete all hakuajat, litteet ja valintakokeet nicely" in {
+  it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {
     val oid = put(uusiHakukohde)
     val tallennettu = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List())
-    update(muokattuHakukohde, lastModified, true)
+    update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde)
   }
 

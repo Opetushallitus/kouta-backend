@@ -17,6 +17,8 @@ class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extend
     summary "Hae haku"
     parameter pathParam[String]("oid").description("Haun oid"))) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     hakuService.get(HakuOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown haku oid")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
@@ -28,6 +30,8 @@ class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extend
     summary "Tallenna uusi haku"
     parameter bodyParam[Haku])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     hakuService.put(parsedBody.extract[Haku]) match {
       case oid => Ok("oid" -> oid)
     }
@@ -38,6 +42,8 @@ class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extend
     summary "Muokkaa olemassa olevaa hakua"
     parameter bodyParam[Haku])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     hakuService.update(parsedBody.extract[Haku], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
     }
@@ -47,6 +53,9 @@ class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extend
     tags modelName
     summary "Listaa kaikki haut, joihin käyttäjällä on oikeudet"
     parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(oid) => Ok(hakuService.list(oid))
@@ -58,6 +67,9 @@ class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extend
     summary "Listaa niiden hakuun liitettyjen hakukohteiden perustiedot, joihin organisaatiolla on oikeus"
     parameter pathParam[String]("oid").description("Haun oid")
     parameter queryParam[String]("organisaatioOid").description("Organisaation oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => Ok(hakuService.listHakukohteet(HakuOid(params("oid")))) //TODO: Vain oph/indeksoija saa nähdä kaiken. Koskee myös muiden servletien vastaavia rajapintoja.
       case Some(organisaatioOid) => Ok(hakuService.listHakukohteet(HakuOid(params("oid")), organisaatioOid))
@@ -67,6 +79,8 @@ class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extend
     tags modelName
     summary "Listaa hakuun liittyvät koulutukset"
     parameter pathParam[String]("oid").description("Haun oid"))) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
   }
