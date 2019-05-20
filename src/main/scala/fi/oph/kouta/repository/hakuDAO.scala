@@ -104,8 +104,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              kohdejoukko_koodi_uri,
                              kohdejoukon_tarkenne_koodi_uri,
                              hakulomaketyyppi,
-                             hakulomake,
-                             hakulomake_id,
+                             hakulomake_ataru_id,
                              hakulomake_kuvaus,
                              hakulomake_linkki,
                              metadata,
@@ -123,8 +122,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                      ${haku.kohdejoukkoKoodiUri},
                      ${haku.kohdejoukonTarkenneKoodiUri},
                      ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-                     ${toJsonParam(haku.hakulomake)}::jsonb,
-                     ${haku.hakulomakeId},
+                     ${haku.hakulomakeAtaruId.map(_.toString)}::uuid,
                      ${toJsonParam(haku.hakulomakeKuvaus)}::jsonb,
                      ${toJsonParam(haku.hakulomakeLinkki)}::jsonb,
                      ${toJsonParam(haku.metadata)}::jsonb,
@@ -148,7 +146,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   def selectHaku(oid: HakuOid) = {
     sql"""select oid, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja,
                  ajastettu_julkaisu, alkamiskausi_koodi_uri, alkamisvuosi, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri,
-                 hakulomaketyyppi, hakulomake, hakulomake_id, hakulomake_kuvaus, hakulomake_linkki, metadata, organisaatio_oid,
+                 hakulomaketyyppi, hakulomake_ataru_id, hakulomake_kuvaus, hakulomake_linkki, metadata, organisaatio_oid,
                  muokkaaja, kielivalinta, lower(system_time) from haut where oid = $oid"""
   }
 
@@ -167,8 +165,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
               kohdejoukko_koodi_uri = ${haku.kohdejoukkoKoodiUri},
               kohdejoukon_tarkenne_koodi_uri = ${haku.kohdejoukonTarkenneKoodiUri},
               hakulomaketyyppi = ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-              hakulomake = ${toJsonParam(haku.hakulomake)}::jsonb,
-              hakulomake_id = ${haku.hakulomakeId},
+              hakulomake_ataru_id = ${haku.hakulomakeAtaruId.map(_.toString)}::uuid,
               hakulomake_kuvaus = ${toJsonParam(haku.hakulomakeKuvaus)}::jsonb,
               hakulomake_linkki = ${toJsonParam(haku.hakulomakeLinkki)}::jsonb,
               organisaatio_oid = ${haku.organisaatioOid},
@@ -184,8 +181,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or kohdejoukko_koodi_uri is distinct from ${haku.kohdejoukkoKoodiUri}
             or kohdejoukon_tarkenne_koodi_uri is distinct from ${haku.kohdejoukonTarkenneKoodiUri}
             or hakulomaketyyppi is distinct from ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
-            or hakulomake is distinct from ${toJsonParam(haku.hakulomake)}::jsonb
-            or hakulomake_id is distinct from ${haku.hakulomakeId}
+            or hakulomake_ataru_id is distinct from ${haku.hakulomakeAtaruId.map(_.toString)}::uuid
             or hakulomake_kuvaus is distinct from ${toJsonParam(haku.hakulomakeKuvaus)}::jsonb
             or hakulomake_linkki is distinct from ${toJsonParam(haku.hakulomakeLinkki)}::jsonb
             or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp

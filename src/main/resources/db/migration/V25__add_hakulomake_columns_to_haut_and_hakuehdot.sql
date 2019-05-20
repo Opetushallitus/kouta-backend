@@ -1,24 +1,28 @@
 alter table haut
-  add column hakulomake_id character varying,
-  add column hakulomake_kuvaus jsonb,
+  rename column hakulomake to hakulomake_kuvaus;
+alter table haut
+  add column hakulomake_ataru_id uuid,
   add column hakulomake_linkki jsonb;
 
 alter table haut_history
-  add column hakulomake_id character varying,
-  add column hakulomake_kuvaus jsonb,
+  rename column hakulomake to hakulomake_kuvaus;
+alter table haut_history
+  add column hakulomake_ataru_id uuid,
   add column hakulomake_linkki jsonb;
 
 alter table hakukohteet
-  add column hakulomake_id character varying,
-  add column hakulomake_kuvaus jsonb,
+  rename column hakulomake to hakulomake_kuvaus;
+alter table hakukohteet
+  add column hakulomake_ataru_id uuid,
   add column hakulomake_linkki jsonb,
-  add column eri_hakulomake boolean;
+  add column eri_hakulomake_kuin_haulla boolean;
 
 alter table hakukohteet_history
-  add column hakulomake_id character varying,
-  add column hakulomake_kuvaus jsonb,
+  rename column hakulomake to hakulomake_kuvaus;
+alter table hakukohteet_history
+  add column hakulomake_ataru_id uuid,
   add column hakulomake_linkki jsonb,
-  add column eri_hakulomake boolean;
+  add column eri_hakulomake_kuin_haulla boolean;
 
 create or replace function update_haut_history() returns trigger as
 $$
@@ -36,8 +40,7 @@ begin
     kohdejoukko_koodi_uri,
     kohdejoukon_tarkenne_koodi_uri,
     hakulomaketyyppi,
-    hakulomake,
-    hakulomake_id,
+    hakulomake_ataru_id,
     hakulomake_kuvaus,
     hakulomake_linkki,
     metadata,
@@ -59,8 +62,7 @@ begin
              old.kohdejoukko_koodi_uri,
              old.kohdejoukon_tarkenne_koodi_uri,
              old.hakulomaketyyppi,
-             old.hakulomake,
-             old.hakulomake_id,
+             old.hakulomake_ataru_id,
              old.hakulomake_kuvaus,
              old.hakulomake_linkki,
              old.metadata,
@@ -86,11 +88,10 @@ begin
     alkamiskausi_koodi_uri,
     alkamisvuosi,
     hakulomaketyyppi,
-    hakulomake,
-    hakulomake_id,
+    hakulomake_ataru_id,
     hakulomake_kuvaus,
     hakulomake_linkki,
-    eri_hakulomake,
+    eri_hakulomake_kuin_haulla,
     aloituspaikat,
     ensikertalaisen_aloituspaikat,
     pohjakoulutusvaatimus_koodi_urit,
@@ -118,11 +119,10 @@ begin
              old.alkamiskausi_koodi_uri,
              old.alkamisvuosi,
              old.hakulomaketyyppi,
-             old.hakulomake,
-             old.hakulomake_id,
+             old.hakulomake_ataru_id,
              old.hakulomake_kuvaus,
              old.hakulomake_linkki,
-             old.eri_hakulomake,
+             old.eri_hakulomake_kuin_haulla,
              old.aloituspaikat,
              old.ensikertalaisen_aloituspaikat,
              old.pohjakoulutusvaatimus_koodi_urit,

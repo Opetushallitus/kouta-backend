@@ -1,6 +1,7 @@
 package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
+import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
@@ -17,8 +18,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,
                 kohdejoukonTarkenneKoodiUri: Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                hakulomake: Kielistetty = Map(),
-                hakulomakeId: Option[String] = None,
+                hakulomakeAtaruId: Option[UUID] = None,
                 hakulomakeKuvaus: Kielistetty = Map(),
                 hakulomakeLinkki: Kielistetty = Map(),
                 metadata: Option[HakuMetadata] = None,

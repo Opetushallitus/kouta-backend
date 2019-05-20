@@ -166,11 +166,10 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             alkamiskausi_koodi_uri,
             alkamisvuosi,
             hakulomaketyyppi,
-            hakulomake,
-            hakulomake_id,
+            hakulomake_ataru_id,
             hakulomake_kuvaus,
             hakulomake_linkki,
-            eri_hakulomake,
+            eri_hakulomake_kuin_haulla,
             aloituspaikat,
             ensikertalaisen_aloituspaikat,
             pohjakoulutusvaatimus_koodi_urit,
@@ -194,11 +193,10 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${hakukohde.alkamiskausiKoodiUri},
             ${hakukohde.alkamisvuosi},
             ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-            ${toJsonParam(hakukohde.hakulomake)}::jsonb,
-            ${hakukohde.hakulomakeId},
+            ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid,
             ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb,
             ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
-            ${hakukohde.eriHakulomake},
+            ${hakukohde.eriHakulomakeKuinHaulla},
             ${hakukohde.aloituspaikat},
             ${hakukohde.ensikertalaisenAloituspaikat},
             ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
@@ -226,11 +224,10 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               alkamiskausi_koodi_uri = ${hakukohde.alkamiskausiKoodiUri},
               alkamisvuosi = ${hakukohde.alkamisvuosi},
               hakulomaketyyppi = ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
-              hakulomake = ${toJsonParam(hakukohde.hakulomake)}::jsonb,
-              hakulomake_id = ${hakukohde.hakulomakeId},
+              hakulomake_ataru_id = ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid,
               hakulomake_kuvaus = ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb,
               hakulomake_linkki = ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
-              eri_hakulomake = ${hakukohde.eriHakulomake},
+              eri_hakulomake_kuin_haulla = ${hakukohde.eriHakulomakeKuinHaulla},
               aloituspaikat = ${hakukohde.aloituspaikat},
               ensikertalaisen_aloituspaikat = ${hakukohde.ensikertalaisenAloituspaikat},
               pohjakoulutusvaatimus_koodi_urit = ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
@@ -254,11 +251,10 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or alkamiskausi_koodi_uri is distinct from ${hakukohde.alkamiskausiKoodiUri}
             or alkamisvuosi is distinct from ${hakukohde.alkamisvuosi}
             or hakulomaketyyppi is distinct from ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
-            or hakulomake is distinct from ${toJsonParam(hakukohde.hakulomake)}::jsonb
-            or hakulomake_id is distinct from ${hakukohde.hakulomakeId}
+            or hakulomake_ataru_id is distinct from ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid
             or hakulomake_kuvaus is distinct from ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb
             or hakulomake_linkki is distinct from ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb
-            or eri_hakulomake is distinct from ${hakukohde.eriHakulomake}
+            or eri_hakulomake_kuin_haulla is distinct from ${hakukohde.eriHakulomakeKuinHaulla}
             or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
             or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
             or pohjakoulutusvaatimus_koodi_urit is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUrit}
@@ -284,11 +280,10 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              alkamiskausi_koodi_uri,
              alkamisvuosi,
              hakulomaketyyppi,
-             hakulomake,
-             hakulomake_id,
+             hakulomake_ataru_id,
              hakulomake_kuvaus,
              hakulomake_linkki,
-             eri_hakulomake,
+             eri_hakulomake_kuin_haulla,
              aloituspaikat,
              ensikertalaisen_aloituspaikat,
              pohjakoulutusvaatimus_koodi_urit,
