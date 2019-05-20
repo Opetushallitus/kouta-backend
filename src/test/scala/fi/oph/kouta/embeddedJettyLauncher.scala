@@ -1,13 +1,20 @@
 package fi.oph.kouta
 
+import java.util.UUID
+
 import com.amazonaws.services.sqs.AmazonSQSClient
 import fi.oph.kouta.config.{KoutaConfigurationConstants, KoutaConfigurationFactory}
+import fi.oph.kouta.repository.SessionDAO
+import fi.oph.kouta.security.{CasSession, ServiceTicket}
+import fi.oph.kouta.security.Role.GenericUser
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
 
 object EmbeddedJettyLauncher extends Logging {
 
-  val DEFAULT_PORT = "8099"
+  val DefaultPort = "8099"
+
+  val TestDataGeneratorSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
 
   def main(args: Array[String]) {
     System.getProperty("kouta-backend.embedded", "true") match {
@@ -16,7 +23,8 @@ object EmbeddedJettyLauncher extends Logging {
     }
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
-    new JettyLauncher(System.getProperty("kouta-backend.port", DEFAULT_PORT).toInt).start.join
+    SessionDAO.store(CasSession(ServiceTicket(""), "", Set(GenericUser)), UUID.fromString(TestDataGeneratorSessionId))
+    new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt).start.join
   }
 }
 
