@@ -82,8 +82,8 @@ trait Validations {
   def isValidAlkamisvuosi(s: String): Boolean = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
   def validateAlkamisvuosi(alkamisvuosi: String): IsValid = assertTrue(isValidAlkamisvuosi(alkamisvuosi), validationMsg(alkamisvuosi))
 
-  def validateAtaruId(hakulomaketyyppi: Option[Hakulomaketyyppi], hakulomakeAtaruId: Option[UUID]): IsValid = hakulomaketyyppi {
+  def validateAtaruId(hakulomaketyyppi: Option[Hakulomaketyyppi], hakulomakeAtaruId: Option[UUID]): IsValid = hakulomaketyyppi match {
     case Some(Ataru) => assertNotOptional(hakulomakeAtaruId, "hakemuspalvelu ID")
-    case _ => Right()
+    case _ => Right(())
   }
 }
