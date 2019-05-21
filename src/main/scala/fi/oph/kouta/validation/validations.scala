@@ -1,6 +1,7 @@
 package fi.oph.kouta.validation
 
 import java.time.LocalDate
+import java.util.UUID
 import java.util.regex.Pattern
 
 import fi.oph.kouta.domain._
@@ -80,4 +81,9 @@ trait Validations {
 
   def isValidAlkamisvuosi(s: String): Boolean = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
   def validateAlkamisvuosi(alkamisvuosi: String): IsValid = assertTrue(isValidAlkamisvuosi(alkamisvuosi), validationMsg(alkamisvuosi))
+
+  def validateAtaruId(hakulomaketyyppi: Option[Hakulomaketyyppi], hakulomakeAtaruId: Option[UUID]): IsValid = hakulomaketyyppi {
+    case Some(Ataru) => assertNotOptional(hakulomakeAtaruId, "hakemuspalvelu ID")
+    case _ => Right()
+  }
 }
