@@ -16,6 +16,8 @@ class AnythingServlet(implicit val swagger:Swagger) extends KoutaServlet {
     summary "Hae kaikki tietyn ajan jälkeen muuttuneet oidit"
     parameter pathParam[String]("since").description(SampleHttpDate))) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     Ok(ModificationService.getModifiedSince(parseHttpDate(URLDecoder.decode(params("since"), "UTF-8"))))
   }
 

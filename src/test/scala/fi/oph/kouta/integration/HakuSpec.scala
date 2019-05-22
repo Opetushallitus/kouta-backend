@@ -8,19 +8,45 @@ import fi.oph.kouta.validation.Validations
 
 class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
 
-  it should "return 404 if haku not found" in {
-    get("/haku/123") {
+  def addInvalidHakuaika(haku:Haku) = haku.copy(
+    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
+
+  "Get haku by oid" should "return 404 if haku not found" in {
+    get("/haku/123", headers = Seq(sessionHeader)) {
       status should equal (404)
       body should include ("Unknown haku oid")
     }
   }
 
-  it should "store haku" in {
+  it should "return 401 without a valid session" in {
+    get("/haku/123") {
+      status should equal (401)
+      body should include ("Unauthorized")
+    }
+  }
+
+  "Create haku" should "store haku" in {
     val oid = put(haku)
     get(oid, haku(oid))
   }
 
-  it should "update haku" in {
+  it should "return 401 without a valid session" in {
+    put(HakuPath, bytes(haku), Seq(jsonHeader)) {
+      status should equal(401)
+      body should include ("Unauthorized")
+    }
+  }
+
+  it should "validate new haku" in {
+    put(HakuPath, bytes(addInvalidHakuaika(haku)), Seq(jsonHeader, sessionHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validateErrorBody(InvalidHakuaika))
+    }
+  }
+
+  "Update haku" should "update haku" in {
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
     update(haku(oid, Arkistoitu), lastModified)
@@ -37,9 +63,18 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(haku(oid))) {
+    post(HakuPath, bytes(haku(oid)), Seq(sessionHeader)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
+    }
+  }
+
+  it should "return 401 without a valid session" in {
+    val oid = put(haku)
+    val lastModified = get(oid, haku(oid))
+    post(HakuPath, bytes(haku(oid)), Map.empty) {
+      status should equal (401)
+      body should include ("Unauthorized")
     }
   }
 
@@ -82,18 +117,6 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
     val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = OrganisaatioOid("6.6.6"))
     update(newUnfinishedHaku, lastModified)
     get(oid, newUnfinishedHaku)
-  }
-
-  def addInvalidHakuaika(haku:Haku) = haku.copy(
-    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
-
-  it should "validate new haku" in {
-    put(HakuPath, bytes(addInvalidHakuaika(haku)), List(jsonHeader)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validateErrorBody(InvalidHakuaika))
-    }
   }
 
   it should "validate updated haku" in {

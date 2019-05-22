@@ -17,6 +17,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService)(implicit val swagger:
     summary "Hae hakukohde"
     parameter pathParam[String]("oid").description("Hakukohteen oid"))) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     hakukohdeService.get(HakukohdeOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown hakukohde oid")
       case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
@@ -28,6 +30,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService)(implicit val swagger:
     summary "Tallenna uusi hakukohde"
     parameter bodyParam[Hakukohde])) {
 
+    implicit val authenticated: Authenticated = authenticate
+
     hakukohdeService.put(parsedBody.extract[Hakukohde]) match {
       case oid => Ok("oid" -> oid)
     }
@@ -37,6 +41,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService)(implicit val swagger:
     tags modelName
     summary "Muokkaa olemassa olevaa hakukohdetta"
     parameter bodyParam[Hakukohde])) {
+
+    implicit val authenticated: Authenticated = authenticate
 
     hakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
