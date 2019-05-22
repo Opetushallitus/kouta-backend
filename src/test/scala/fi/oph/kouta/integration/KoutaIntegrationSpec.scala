@@ -19,7 +19,31 @@ case class TestUser(oid: String, username: String, sessionId: UUID) {
   val ticket = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
 }
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with AccessControlSpec with DatabaseSpec {
+  implicit val swagger: KoutaBackendSwagger = new KoutaBackendSwagger
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    Option(System.getProperty("kouta-backend.test-postgres-port")) match {
+      case Some(port) => setupWithTemplate(port.toInt)
+      case None => setupWithEmbeddedPostgres()
+    }
+    setupAwsKeysForSqs()
+
+    addDefaultSession()
+  }
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    truncateDatabase()
+  }
+}
+
+object KoutaIntegrationSpec {
+  val serviceIdentifier = "testService"
+}
+
+sealed trait AccessControlSpec { this: HttpSpec =>
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
 
   val rootOrganisaatio = OrganisaatioOid("1.2.246.562.10.00000000001")
@@ -33,22 +57,18 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
     SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty            ), rolelessUser.sessionId)
   }
 
-  implicit val swagger: KoutaBackendSwagger = new KoutaBackendSwagger
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    Option(System.getProperty("kouta-backend.test-postgres-port")) match {
-      case Some(port) => setupWithTemplate(port.toInt)
-      case None => setupWithEmbeddedPostgres()
-    }
-    setupAwsKeysForSqs()
-
-    addDefaultSession()
+  def addTestSession(authorities: Authority*): (String, String) = {
+    val sessionId = UUID.randomUUID()
+    val oid = s"1.2.246.562.24.${math.abs(sessionId.getLeastSignificantBits.toInt)}"
+    val user = TestUser(oid, s"user-$oid", sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid, authorities.toSet), user.sessionId)
+    sessionHeader(sessionId)
   }
-}
 
-object KoutaIntegrationSpec {
-  val serviceIdentifier = "testService"
+  def addTestSession(role: Role, organisaatioOids: OrganisaatioOid*): (String, String) = {
+    val authorities = organisaatioOids.map(oid => Authority(Role.CrudUser, oid))
+    addTestSession(authorities: _*)
+  }
 }
 
 sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>

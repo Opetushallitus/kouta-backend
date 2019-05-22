@@ -6,6 +6,8 @@ import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
+import scala.annotation.tailrec
+
 object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
   val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
@@ -33,15 +35,16 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
   private def parentsAndChildren(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
     find(oid, organisaatiot).map(x => parentOidsFlat(x) ++ Seq(x.oid) ++ childOidsFlat(x)).getOrElse(Seq()).distinct
 
+  @tailrec
   private def find(oid: OrganisaatioOid, level: List[OidAndChildren]): Option[OidAndChildren] =
     level.find(_.oid == oid) match {
       case None if level.isEmpty => None
       case Some(c) => Some(c)
-      case None => find(oid, level.map(_.children).flatten)
+      case None => find(oid, level.flatMap(_.children))
     }
 
   private def childOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
-    item.children.map(c => c.oid +: childOidsFlat(c)).flatten
+    item.children.flatMap(c => c.oid +: childOidsFlat(c))
 
   private def parentOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
     item.parentOidPath.split('/').toSeq.reverse.map(OrganisaatioOid)
