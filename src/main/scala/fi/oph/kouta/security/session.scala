@@ -8,10 +8,11 @@ sealed abstract class Role(val name: String)
 
 object Role {
   case object CrudUser extends Role("APP_TARJONTA_CRUD")
+  case object Read extends Role("APP_KOUTA_READ")
 
   case class UnknownRole(override val name: String) extends Role(name)
 
-  val all: Map[String, Role] = List(CrudUser).map(r => r.name -> r).toMap
+  val all: Map[String, Role] = List(CrudUser, Read).map(r => r.name -> r).toMap
 
   def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }
@@ -38,7 +39,7 @@ sealed trait Session {
   def personOid: String
   def authorities: Set[Authority]
 
-  lazy val roleMap: Map[Role, Set[Option[OrganisaatioOid]]] = authorities.groupBy(_.role).mapValues(_.map(_.organisaatioId))
+  lazy val roleMap: Map[Role, Set[OrganisaatioOid]] = authorities.groupBy(_.role).mapValues(_.flatMap(_.organisaatioId))
   lazy val roles: Set[Role] = roleMap.keySet
 }
 

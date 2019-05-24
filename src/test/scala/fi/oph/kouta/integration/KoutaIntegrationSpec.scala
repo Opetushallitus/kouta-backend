@@ -8,19 +8,34 @@ import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{Authority, CasSession, Role, ServiceTicket}
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext}
+import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
+import scala.collection.mutable
 import scala.reflect.Manifest
 
 case class TestUser(oid: String, username: String, sessionId: UUID) {
   val ticket = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
 }
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with AccessControlSpec with DatabaseSpec {
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
   implicit val swagger: KoutaBackendSwagger = new KoutaBackendSwagger
+
+  val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
+  val rootOrganisaatio = KoutaIntegrationSpec.rootOrganisaatio
+  val defaultAuthority = KoutaIntegrationSpec.defaultAuthority
+
+  val indexerAuthority = Authority(Role.Read, rootOrganisaatio)
+
+  val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
+  val rolelessUser = TestUser("roleless-user-oid", "rolelessuser", UUID.randomUUID())
+
+  def addDefaultSession(): Unit =  {
+    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket),     testUser.oid,     Set(defaultAuthority)), testUser.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty            ), rolelessUser.sessionId)
+  }
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -46,17 +61,11 @@ object KoutaIntegrationSpec {
   val defaultAuthority = Authority(Role.CrudUser, rootOrganisaatio)
 }
 
-sealed trait AccessControlSpec { this: HttpSpec =>
-  val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
-  val defaultAuthority = KoutaIntegrationSpec.defaultAuthority
+trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
+  val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
 
-  val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
-  val rolelessUser = TestUser("roleless-user-oid", "rolelessuser", UUID.randomUUID())
-
-  def addDefaultSession(): Unit =  {
-    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket),     testUser.oid,     Set(defaultAuthority)), testUser.sessionId)
-    SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty            ), rolelessUser.sessionId)
-  }
+  val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
+  val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
 
   def addTestSession(authorities: Authority*): (String, String) = {
     val sessionId = UUID.randomUUID()
@@ -67,8 +76,21 @@ sealed trait AccessControlSpec { this: HttpSpec =>
   }
 
   def addTestSession(role: Role, organisaatioOids: OrganisaatioOid*): (String, String) = {
-    val authorities = organisaatioOids.map(oid => Authority(Role.CrudUser, oid))
+    val authorities = organisaatioOids.map(oid => Authority(role, oid))
     addTestSession(authorities: _*)
+  }
+
+  def addTestSessions(): Unit = {
+    mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
+    mockSingleOrganisaatioResponses(LonelyOid)
+    testSessions.update('child, addTestSession(Role.CrudUser, ChildOid))
+    testSessions.update('evilChild, addTestSession(Role.CrudUser, EvilChildOid))
+    testSessions.update('grandChild, addTestSession(Role.CrudUser, GrandChildOid))
+    testSessions.update('parent, addTestSession(Role.CrudUser, ParentOid))
+    testSessions.update('otherRole, addTestSession(Authority("APP_OTHER")))
+    testSessions.update('unrelated, addTestSession(Role.CrudUser, LonelyOid))
+    testSessions.update('indexer, addTestSession(Role.Read, OphOid))
+    testSessions.update('childRead, addTestSession(Role.Read, ChildOid))
   }
 }
 
@@ -129,7 +151,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def get[E <: scala.AnyRef, I](path: String, id: I, headers: Iterable[(String, String)], expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
     get(s"$path/${id.toString}", headers = headers) {
-      status should equal(200)
+      withClue(body) {
+        status should equal(200)
+      }
       debugJson(body)
       read[E](body) should equal(expected)
       header("Last-Modified")

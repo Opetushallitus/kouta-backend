@@ -21,14 +21,22 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
   def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
-  def koulutus(julkinen:Boolean, organisaatioOid:String, tila:Julkaisutila):Koulutus =
-    koulutus.copy(julkinen = julkinen, organisaatioOid = OrganisaatioOid(organisaatioOid), tila = tila)
+  def koulutus(julkinen:Boolean, organisaatioOid: OrganisaatioOid, tila:Julkaisutila):Koulutus =
+    koulutus.copy(julkinen = julkinen, organisaatioOid = organisaatioOid, tila = tila)
 
   def put(koulutus:Koulutus):String = put(KoulutusPath, koulutus, oid(_))
-  def get(oid:String, expected:Koulutus):String = get(KoulutusPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
 
-  def update(koulutus: Koulutus, lastModified: String, expectUpdate: Boolean): Unit = update(KoulutusPath, koulutus, lastModified, expectUpdate)
-  def update(koulutus: Koulutus, lastModified: String): Unit = update(koulutus, lastModified, expectUpdate = true)
+  def get(oid: String, expected: Koulutus): String =
+    get(KoulutusPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
+
+  def get(oid: String, headers: Seq[(String, String)], expected: Koulutus): String =
+    get(KoulutusPath, oid, headers, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
+
+  def update(koulutus: Koulutus, lastModified: String, expectUpdate: Boolean): Unit =
+    update(KoulutusPath, koulutus, lastModified, expectUpdate)
+
+  def update(koulutus: Koulutus, lastModified: String): Unit =
+    update(koulutus, lastModified, expectUpdate = true)
 
   def addToList(koulutus:Koulutus) = {
     val oid = put(koulutus)
