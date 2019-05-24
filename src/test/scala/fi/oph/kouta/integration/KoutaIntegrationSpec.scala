@@ -128,7 +128,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def get[E <: scala.AnyRef, I](path: String, id: I, headers: Iterable[(String, String)], expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
     get(s"$path/${id.toString}", headers = headers) {
-      status should equal(200)
+      withClue(body) {
+        status should equal(200)
+      }
       debugJson(body)
       read[E](body) should equal(expected)
       header("Last-Modified")

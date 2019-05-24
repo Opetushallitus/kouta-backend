@@ -72,21 +72,6 @@ trait OrganisaatioServiceMock extends ServiceMocks {
 
   def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid", "parentOidPath": "$oid/$OphOid", "children" : []}]}"""
 
-  def singleLevelChildrenResponse(parentOid: String, childOids: Seq[String]): String = {
-    import org.json4s.jackson.Serialization.write
-    import org.json4s.{DefaultFormats, Formats}
-
-    implicit val formats: Formats = DefaultFormats
-
-    val s = write(Map("numHits" -> (childOids.size + 1), "organisaatiot" -> Seq(
-      Map("oid" -> parentOid, "parentOidPath" -> s"$parentOid/$OphOid", "children" ->
-        childOids.map(oid => Map("oid" -> oid, "parentOidPath" -> s"$oid/$parentOid/$OphOid", "children" -> Seq.empty))
-      )
-    )))
-    logger.error(s)
-    s
-  }
-
   def mockOrganisaatioResponse(oid: String, response: String = DefaultResponse): Unit =
     mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), response)
 

@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Authority, Role}
 import fi.oph.kouta.validation.Validations
 import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import org.json4s.jackson.Serialization.read
@@ -14,15 +14,22 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
 
   val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
 
+  val UnrelatedOrganizationOid = OrganisaatioOid("1.2.246.562.10.314159265359")
+
   override def beforeAll(): Unit = {
     super.beforeAll()
     startServiceMocking()
     mockOrganisaatioResponse(EvilChildOid)
     mockOrganisaatioResponse(ChildOid)
     mockOrganisaatioResponse(ParentOid)
+    mockOrganisaatioResponse(GrandChildOid)
+    mockSingleOrganisaatioResponses(UnrelatedOrganizationOid)
     testSessions.update('child, addTestSession(Role.CrudUser, OrganisaatioOid(ChildOid)))
     testSessions.update('evilChild, addTestSession(Role.CrudUser, OrganisaatioOid(EvilChildOid)))
+    testSessions.update('grandChild, addTestSession(Role.CrudUser, OrganisaatioOid(GrandChildOid)))
     testSessions.update('parent, addTestSession(Role.CrudUser, OrganisaatioOid(ParentOid)))
+    testSessions.update('otherRole, addTestSession(Authority("APP_OTHER")))
+    testSessions.update('unrelated, addTestSession(Role.CrudUser, UnrelatedOrganizationOid))
   }
 
   override def afterAll(): Unit = {
@@ -41,6 +48,34 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     get(s"$KoulutusPath/123", headers = Map.empty) {
       status should equal (401)
     }
+  }
+
+  it should "allow any authenticated user to access published koulutus" in {
+    val oid = put(koulutus.copy(julkinen = true))
+    get(oid, Seq(testSessions('otherRole)), koulutus(oid).copy(julkinen = true))
+  }
+
+  it should "deny an authenticated user without organization access to access unpublished koulutus" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid", headers = Seq(testSessions('unrelated))) {
+      status should equal(403)
+      body should include ("Forbidden")
+    }
+  }
+
+  it should "allow the user of a tarjoaja organization to read the koulutus" in {
+    val oid = put(koulutus.copy(tarjoajat = List(UnrelatedOrganizationOid)))
+    get(oid, Seq(testSessions('unrelated)), koulutus(oid).copy(tarjoajat = List(UnrelatedOrganizationOid)))
+  }
+
+  it should "allow the user of a parent organization to read the koulutus" in {
+    val oid = put(koulutus)
+    get(oid, Seq(testSessions('parent)), koulutus(oid))
+  }
+
+  it should "allow the user of a child organization to read the koulutus" in {
+    val oid = put(koulutus)
+    get(oid, Seq(testSessions('grandChild)), koulutus(oid))
   }
 
   "Create koulutus" should "store koulutus" in {
