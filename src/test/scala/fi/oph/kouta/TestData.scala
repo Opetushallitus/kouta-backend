@@ -66,9 +66,9 @@ object TestData {
       lisatiedot = Seq(
         Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin).map(OrganisaatioOid),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = UserOid("5.5.5"),
-    organisaatioOid = OrganisaatioOid(ChildOid),
+    organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     modified = None)
 

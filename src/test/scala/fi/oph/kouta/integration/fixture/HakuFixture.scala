@@ -22,8 +22,8 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
 
   def haku(oid: String): Haku = haku.copy(oid = Some(HakuOid(oid)))
   def haku(oid: String, tila: Julkaisutila): Haku = haku.copy(oid = Some(HakuOid(oid)), tila = tila)
-  def haku(tila: Julkaisutila, organisaatioOid: String): Haku =
-    haku.copy(organisaatioOid = OrganisaatioOid(organisaatioOid), tila = tila)
+  def haku(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Haku =
+    haku.copy(organisaatioOid = organisaatioOid, tila = tila)
 
   def put(haku: Haku): String = put(HakuPath, haku, oid)
   def get(oid: String, expected: Haku): String = get(HakuPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "haut"))))

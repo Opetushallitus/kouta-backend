@@ -37,8 +37,8 @@ sealed trait ServiceMocks extends Logging {
   protected def responseFromResource(filename:String) = Source.fromInputStream(
     getClass().getClassLoader().getResourceAsStream(s"data/$filename.json")).mkString
 
-  protected def organisaationServiceParams(oid:String) = Map(
-    "oid" -> oid,
+  protected def organisaationServiceParams(oid: OrganisaatioOid) = Map(
+    "oid" -> oid.s,
     "aktiiviset" -> "true",
     "suunnitellut" -> "true",
     "lakkautetut" -> "false")
@@ -59,40 +59,30 @@ sealed trait ServiceMocks extends Logging {
 
 trait OrganisaatioServiceMock extends ServiceMocks {
 
-  val OphOid = "1.2.246.562.10.00000000001"
-  val ParentOid = "1.2.246.562.10.594252633210"
-  val ChildOid = "1.2.246.562.10.81934895871"
-  val EvilChildOid = "1.2.246.562.10.66634895871"
-  val GrandChildOid = "1.2.246.562.10.67603619189"
-  val EvilGrandChildOid = "1.2.246.562.10.66603619189"
-  val EvilCousin = "1.2.246.562.10.66634895666"
+  val OphOid = OrganisaatioOid("1.2.246.562.10.00000000001")
+  val ParentOid = OrganisaatioOid("1.2.246.562.10.594252633210")
+  val ChildOid = OrganisaatioOid("1.2.246.562.10.81934895871")
+  val EvilChildOid = OrganisaatioOid("1.2.246.562.10.66634895871")
+  val GrandChildOid = OrganisaatioOid("1.2.246.562.10.67603619189")
+  val EvilGrandChildOid = OrganisaatioOid("1.2.246.562.10.66603619189")
+  val EvilCousin = OrganisaatioOid("1.2.246.562.10.66634895666")
 
   val NotFoundOrganisaatioResponse = s"""{ "numHits": 0, "organisaatiot": []}"""
   lazy val DefaultResponse = responseFromResource("organisaatio")
 
   def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid", "parentOidPath": "$oid/$OphOid", "children" : []}]}"""
 
-  def singleLevelChildrenResponse(parentOid: String, childOids: Seq[String]): String = {
-    import org.json4s.jackson.Serialization.write
-    import org.json4s.{DefaultFormats, Formats}
-
-    implicit val formats: Formats = DefaultFormats
-
-    val s = write(Map("numHits" -> (childOids.size + 1), "organisaatiot" -> Seq(
-      Map("oid" -> parentOid, "parentOidPath" -> s"$parentOid/$OphOid", "children" ->
-        childOids.map(oid => Map("oid" -> oid, "parentOidPath" -> s"$oid/$parentOid/$OphOid", "children" -> Seq.empty))
-      )
-    )))
-    logger.error(s)
-    s
-  }
-
-  def mockOrganisaatioResponse(oid: String, response: String = DefaultResponse): Unit =
+  def mockOrganisaatioResponse(oid: OrganisaatioOid, response: String = DefaultResponse): Unit =
     mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), response)
 
+  def mockOrganisaatioResponses(oids: OrganisaatioOid*): Unit = oids.foreach(mockOrganisaatioResponse(_))
+
   def mockSingleOrganisaatioResponses(organisaatioOids: OrganisaatioOid*): Unit = organisaatioOids.foreach { oid =>
-    mockOrganisaatioResponse(oid.s, singleOidOrganisaatioResponse(oid.s))
+    mockOrganisaatioResponse(oid, singleOidOrganisaatioResponse(oid.s))
   }
+
+  def mockSingleOrganisaatioResponses(first: String, organisaatioOids: String*): Unit =
+    mockSingleOrganisaatioResponses((organisaatioOids :+ first).map(OrganisaatioOid):_*)
 }
 
 object OrganisaatioServiceMock extends OrganisaatioServiceMock

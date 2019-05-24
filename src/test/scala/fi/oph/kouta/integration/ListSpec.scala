@@ -1,13 +1,11 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
-import fi.oph.kouta.{OrganisaatioServiceMock, TestData}
 import org.json4s.jackson.Serialization.read
 
-class ListSpec extends KoutaIntegrationSpec with EverythingFixture with OrganisaatioServiceMock {
+class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
-  val LonelyOid = "1.2.246.562.10.99999999999"
-  val UnknownOid = "1.2.246.562.10.99999999998"
 
   var k1, k2, k3, k4, k5 :KoulutusListItem = null
   var t1, t2, t3, t4     :ToteutusListItem = null
@@ -19,11 +17,12 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     super.beforeAll()
     startServiceMocking()
 
-    List(ParentOid, ChildOid, GrandChildOid).foreach(mockOrganisaatioResponse(_))
-    mockOrganisaatioResponse(LonelyOid, singleOidOrganisaatioResponse(LonelyOid))
+    mockOrganisaatioResponses(ParentOid, ChildOid, GrandChildOid)
+    mockSingleOrganisaatioResponses(LonelyOid)
     mockOrganisaatioResponse(UnknownOid, NotFoundOrganisaatioResponse)
 
     createTestData()
+    addTestSessions()
   }
 
   override def afterAll() = {
@@ -50,36 +49,45 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
     v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     v4 = addToList(valintaperuste(Julkaistu, LonelyOid))
 
-    hk1 = addToList(hakukohde(t1.oid.toString, h1.oid.toString, v1.id, ParentOid))
-    hk2 = addToList(hakukohde(t2.oid.toString, h1.oid.toString, v1.id, ChildOid))
-    hk3 = addToList(hakukohde(t1.oid.toString, h2.oid.toString, v1.id, GrandChildOid))
-    hk4 = addToList(hakukohde(t4.oid.toString, h1.oid.toString, v1.id, LonelyOid))
+    hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
+    hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid))
+    hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid))
+    hk4 = addToList(hakukohde(t4.oid, h1.oid, v1.id, LonelyOid))
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid), List(k1, k2, k3, k5))
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5))
   }
   it should "list all koulutukset for authorized organizations 2" in {
-    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid), List(k4, k5))
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5))
   }
   it should "return forbidden if oid is unknown" in {
-    list(KoulutusPath, Map("organisaatioOid" -> UnknownOid), 403)
-  }
-  it should "return 401 if no session is found" in {
-    list(KoulutusPath, Map("organisaatioOid" -> UnknownOid), 403)
+    list(KoulutusPath, Map("organisaatioOid" -> UnknownOid.s), 403)
   }
   it should "return 404 if oid not given" in {
-    list(KoulutusPath, Map[String,String](), 404)
+    list(KoulutusPath, Map[String, String](), 404)
+  }
+  it should "return 401 if no session is found" in {
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), 401, Map())
+  }
+  it should "deny access without an accepted role" in {
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, Seq(sessionHeader(rolelessUser.sessionId)))
+  }
+  it should "deny access without access to the right organization" in {
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), 403, Seq(testSessions('child)))
+  }
+  it should "allow access with the read role" in {
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5), Seq(testSessions('indexer)))
   }
 
   "Toteutus list" should "list all toteutukset for authorized organizations" in {
-    list(ToteutusPath, Map("organisaatioOid" -> ChildOid), List(t1, t2, t3))
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t1, t2, t3))
   }
   it should "list all toteutukset for authorized organizations 2" in {
-    list(ToteutusPath, Map("organisaatioOid" -> LonelyOid), List(t4))
+    list(ToteutusPath, Map("organisaatioOid" -> LonelyOid.s), List(t4))
   }
   it should "return forbidden if oid is unknown" in {
-    list(ToteutusPath, Map("organisaatioOid" -> UnknownOid), 403)
+    list(ToteutusPath, Map("organisaatioOid" -> UnknownOid.s), 403)
   }
   it should "return 404 if oid not given" in {
     list(ToteutusPath, Map[String,String](), 404)
@@ -89,13 +97,13 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Haku list" should "list all haut for authorized organizations" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid), List(h1, h2, h3))
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3))
   }
   it should "list all haut for authorized organizations 2" in {
-    list(HakuPath, Map("organisaatioOid" -> LonelyOid), List(h4))
+    list(HakuPath, Map("organisaatioOid" -> LonelyOid.s), List(h4))
   }
   it should "return forbidden if oid is unknown" in {
-    list(HakuPath, Map("organisaatioOid" -> UnknownOid), 403)
+    list(HakuPath, Map("organisaatioOid" -> UnknownOid.s), 403)
   }
   it should "return 404 if oid not given" in {
     list(HakuPath, Map[String,String](), 404)
@@ -105,19 +113,19 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid), List(v1, v2, v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3))
   }
   it should "list all valintaperustekuvaukset for authorized organizations 2" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid), List(v4))
+    list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid.s), List(v4))
   }
   it should "list all valintaperustekuvaukset that can be joined to given haku" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h2.oid.toString), List(v1, v2))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString), List(v1, v2))
   }
   it should "list all valinteperustekuvaukset that can be joiden to given haku even when kohdejoukko is null" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid, "hakuOid" -> h3.oid.toString), List(v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h3.oid.toString), List(v3))
   }
   it should "return forbidden if oid is unknown" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> UnknownOid), 403)
+    list(ValintaperustePath, Map("organisaatioOid" -> UnknownOid.s), 403)
   }
   it should "return 404 if oid not given" in {
     list(ValintaperustePath, Map[String,String](), 404)
@@ -134,19 +142,31 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid), List(t1, t2, t3))
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid.s), List(t1, t2, t3))
   }
   it should "not list toteutukset for parent organizations" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> GrandChildOid), List(t3))
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> GrandChildOid.s), List(t3))
   }
   it should "return 401 if no session is found" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid), 401, Map.empty)
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid.s), 401, Map.empty)
   }
   it should "return forbidden if organisaatio oid is unknown" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> UnknownOid), 403)
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> UnknownOid.s), 403)
   }
-  it should "return all toteutukset if organisaatio oid not given" in { //TODO: oikeudet
+  it should "return all toteutukset if organisaatio oid not given" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), List(t1, t2, t3))
+  }
+  it should "deny access to all toteutukset without root organization access" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), 403, Seq(testSessions('parent)))
+  }
+  it should "deny access without an accepted role" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ChildOid.s), 403, Seq(sessionHeader(rolelessUser.sessionId)))
+  }
+  it should "deny access without access to the right organization" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> LonelyOid.s), 403, Seq(testSessions('child)))
+  }
+  it should "allow access with the read role" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), List(t1, t2, t3), Seq(testSessions('indexer)))
   }
 
   "Toteutukseen liitetyt haut" should "list all haut mapped to given toteutus" in {
@@ -166,16 +186,16 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   }
 
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid), List(hk1, hk2))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid.s), List(hk1, hk2))
   }
   it should "list all hakukohteet mapped to given haku for authorized organizations 2" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> LonelyOid), List(hk4))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> LonelyOid.s), List(hk4))
   }
   it should "not list hakukohteet belonging to parent organisations" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ChildOid), List(hk2))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ChildOid.s), List(hk2))
   }
   it should "return forbidden if organisaatio oid is unknown" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> UnknownOid), 403)
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> UnknownOid.s), 403)
   }
   it should "return all if organisaatio oid not given" in { //TODO: OIKEUDET!
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), List(hk1, hk2, hk4))
@@ -194,7 +214,7 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
 
   //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
   "Koulutukset hakutiedot" should "return all hakutiedot related to koulutus" in {
-    get(s"$KoulutusPath/${k1.oid}/hakutiedot", headers = defaultHeaders) {
+    get(s"$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(testSessions('indexer))) {
       status should equal(200)
       //debugJson[List[Hakutieto]](body)
 

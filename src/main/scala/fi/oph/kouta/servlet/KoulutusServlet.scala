@@ -70,7 +70,7 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
 
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").map(_.toBoolean)))
+    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
   }
 
   get("/:oid/toteutukset/list", operation(apiOperation[List[ToteutusListItem]]("Listaa koulutuksen toteutukset")
@@ -82,7 +82,7 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     implicit val authenticated: Authenticated = authenticate
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")))) //TODO: Vain oph/indeksoija saa hakea kaiken
+      case None => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid"))))
       case Some(organisaatioOid) => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")), organisaatioOid))
     }
   }
