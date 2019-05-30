@@ -21,8 +21,8 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
   def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
-  def koulutus(julkinen:Boolean, organisaatioOid:String, tila:Julkaisutila):Koulutus =
-    koulutus.copy(julkinen = julkinen, organisaatioOid = OrganisaatioOid(organisaatioOid), tila = tila)
+  def koulutus(julkinen:Boolean, organisaatioOid: OrganisaatioOid, tila:Julkaisutila):Koulutus =
+    koulutus.copy(julkinen = julkinen, organisaatioOid = organisaatioOid, tila = tila)
 
   def put(koulutus:Koulutus):String = put(KoulutusPath, koulutus, oid(_))
 

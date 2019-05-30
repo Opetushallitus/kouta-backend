@@ -8,10 +8,11 @@ sealed abstract class Role(val name: String)
 
 object Role {
   case object CrudUser extends Role("APP_TARJONTA_CRUD")
+  case object Read extends Role("APP_KOUTA_READ")
 
   case class UnknownRole(override val name: String) extends Role(name)
 
-  val all: Map[String, Role] = List(CrudUser).map(r => r.name -> r).toMap
+  val all: Map[String, Role] = List(CrudUser, Read).map(r => r.name -> r).toMap
 
   def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }

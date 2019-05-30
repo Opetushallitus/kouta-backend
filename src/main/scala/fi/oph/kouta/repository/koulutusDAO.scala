@@ -1,15 +1,13 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.domain._
-import slick.jdbc.PostgresProfile.api._
 import java.time.Instant
-import java.util.ConcurrentModificationException
 
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import slick.dbio.DBIO
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Try
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid]
@@ -19,7 +17,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids:Seq[OrganisaatioOid]) :Seq[KoulutusListItem]
+  def listByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
 }
 
@@ -68,8 +66,8 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+  override def listByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusListItem] =
+    KoutaDatabase.runBlocking(selectByOrganisaatioOidsOrJulkinen(organisaatioOids))
 
   override def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem] =
     KoutaDatabase.runBlocking(selectByHakuOid(hakuOid))
@@ -181,7 +179,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def deleteTarjoajat(oid: Option[KoulutusOid]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
-  def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from koulutukset
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
