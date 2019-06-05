@@ -24,8 +24,8 @@ trait AuthFixture {
 
   val casUrl = "testCasUrl"
 
-  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, Set(defaultAuthority))
-  val kayttooikeusUserDetailsService = new KayttooikeusUserDetailsServiceMock(securityContext, Set(defaultAuthority))
+  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
+  val kayttooikeusUserDetailsService = new KayttooikeusUserDetailsServiceMock(securityContext, defaultAuthorities)
 
   object MockCasSessionService extends CasSessionService(securityContext, kayttooikeusUserDetailsService)
 

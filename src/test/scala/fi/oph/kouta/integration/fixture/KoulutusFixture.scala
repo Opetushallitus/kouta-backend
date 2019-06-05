@@ -1,5 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
+import java.util.UUID
+
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
@@ -26,11 +28,19 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
 
   def put(koulutus:Koulutus):String = put(KoulutusPath, koulutus, oid(_))
 
+  def put(koulutus: Koulutus, sessionId: UUID): String = put(KoulutusPath, koulutus, sessionId, oid(_))
+
   def get(oid: String, expected: Koulutus): String =
     get(KoulutusPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
 
-  def get(oid: String, headers: Seq[(String, String)], expected: Koulutus): String =
-    get(KoulutusPath, oid, headers, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
+  def get(oid: String, sessionId: UUID, expected: Koulutus): String =
+    get(KoulutusPath, oid, sessionId, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
+
+  def update(koulutus: Koulutus, lastModified: String, sessionId: UUID, expectedStatus: Int): Unit =
+    update(KoulutusPath, koulutus, lastModified, sessionId, expectedStatus)
+
+  def update(koulutus: Koulutus, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit =
+    update(KoulutusPath, koulutus, lastModified, expectUpdate, sessionId)
 
   def update(koulutus: Koulutus, lastModified: String, expectUpdate: Boolean): Unit =
     update(KoulutusPath, koulutus, lastModified, expectUpdate)

@@ -97,7 +97,7 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(defaultSessionHeader)) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should contain theSameElementsAs List(koulutusOids(0), koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
@@ -112,7 +112,7 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampBeforeAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(defaultSessionHeader)) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should contain theSameElementsAs koulutusOids.map(KoulutusOid)
@@ -127,7 +127,7 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(defaultSessionHeader)) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should be(empty)

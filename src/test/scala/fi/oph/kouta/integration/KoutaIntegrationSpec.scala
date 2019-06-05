@@ -3,10 +3,11 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.domain.{PerustiedotWithId, PerustiedotWithOid}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{Authority, CasSession, Role, ServiceTicket}
+import fi.oph.kouta.security.{Authority, CasSession, Role, RoleEntity, ServiceTicket}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
@@ -26,15 +27,21 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
   val rootOrganisaatio = OrganisaatioOid("1.2.246.562.10.00000000001")
 
-  val defaultAuthority = Authority(Role.CrudUser, rootOrganisaatio)
-  val indexerAuthority = Authority(Role.Read, rootOrganisaatio)
+  val defaultAuthorities = Set(
+    Authority(Role.Koulutus.Crud, rootOrganisaatio),
+    Authority(Role.Toteutus.Crud, rootOrganisaatio),
+    Authority(Role.Haku.Crud, rootOrganisaatio),
+    Authority(Role.Hakukohde.Crud, rootOrganisaatio),
+    Authority(Role.Valintaperuste.Crud, rootOrganisaatio),
+  )
+  val indexerAuthority = Authority(Role.Indexer, rootOrganisaatio)
 
   val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
   val rolelessUser = TestUser("roleless-user-oid", "rolelessuser", UUID.randomUUID())
 
   def addDefaultSession(): Unit =  {
-    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket),     testUser.oid,     Set(defaultAuthority)), testUser.sessionId)
-    SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty            ), rolelessUser.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid, defaultAuthorities), testUser.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty), rolelessUser.sessionId)
   }
 
   override def beforeAll(): Unit = {
@@ -59,35 +66,50 @@ object KoutaIntegrationSpec {
 }
 
 trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
-  val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
-
   val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
   val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
 
-  def addTestSession(authorities: Authority*): (String, String) = {
+  //val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
+  val crudSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
+  val readSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
+
+  var indexerSession: UUID = _
+  var fakeIndexerSession: UUID = _
+  var otherRoleSession: UUID = _
+
+  def addTestSession(authorities: Authority*): UUID = {
     val sessionId = UUID.randomUUID()
     val oid = s"1.2.246.562.24.${math.abs(sessionId.getLeastSignificantBits.toInt)}"
     val user = TestUser(oid, s"user-$oid", sessionId)
     SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid, authorities.toSet), user.sessionId)
-    sessionHeader(sessionId)
+    sessionId
   }
 
-  def addTestSession(role: Role, organisaatioOids: OrganisaatioOid*): (String, String) = {
+  def addTestSession(role: Role, organisaatioOids: OrganisaatioOid*): UUID = {
     val authorities = organisaatioOids.map(oid => Authority(role, oid))
     addTestSession(authorities: _*)
   }
 
-  def addTestSessions(): Unit = {
+  def addTestSession(roles: Set[Role], organisaatioOids: OrganisaatioOid*): UUID = {
+    val authorities = organisaatioOids.flatMap(oid => roles.map(Authority(_, oid)))
+    addTestSession(authorities: _*)
+  }
+
+  def addTestSessions(roleEntity: RoleEntity): Unit = {
     mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
     mockSingleOrganisaatioResponses(LonelyOid)
-    testSessions.update('child, addTestSession(Role.CrudUser, ChildOid))
-    testSessions.update('evilChild, addTestSession(Role.CrudUser, EvilChildOid))
-    testSessions.update('grandChild, addTestSession(Role.CrudUser, GrandChildOid))
-    testSessions.update('parent, addTestSession(Role.CrudUser, ParentOid))
-    testSessions.update('otherRole, addTestSession(Authority("APP_OTHER")))
-    testSessions.update('unrelated, addTestSession(Role.CrudUser, LonelyOid))
-    testSessions.update('indexer, addTestSession(Role.Read, OphOid))
-    testSessions.update('childRead, addTestSession(Role.Read, ChildOid))
+
+    Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid).foreach { org =>
+      crudSessions.update(org, addTestSession(roleEntity.Crud, org))
+    }
+
+    Seq(ChildOid).foreach { org =>
+      readSessions.update(org, addTestSession(roleEntity.Read, org))
+    }
+
+    indexerSession = addTestSession(Role.Indexer, OphOid)
+    fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
+    otherRoleSession = addTestSession(Authority("APP_OTHER"))
   }
 }
 
@@ -118,13 +140,14 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 
-  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, sessionHeader, "If-Unmodified-Since" -> lastModified)
+  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, defaultSessionHeader, "If-Unmodified-Since" -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
   def sessionHeader(sessionId: UUID): (String, String) = sessionHeader(sessionId.toString)
-  def sessionHeader: (String, String) = sessionHeader(defaultSessionId)
 
-  def defaultHeaders: Seq[(String, String)] = Seq(sessionHeader, jsonHeader)
+  def defaultSessionHeader: (String, String) = sessionHeader(defaultSessionId)
+
+  def defaultHeaders: Seq[(String, String)] = Seq(defaultSessionHeader, jsonHeader)
 
   def bytes(o: AnyRef) = write(o).getBytes
 
@@ -134,8 +157,8 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def updated(body: String) = read[Updated](body).updated
 
-  def put[E <: scala.AnyRef, R](path: String, entity: E, result: String => R): R = {
-    put(path, bytes(entity), defaultHeaders) {
+  def put[E <: scala.AnyRef, R](path: String, entity: E, sessionId: UUID, result: String => R): R = {
+    put(path, bytes(entity), headers = Seq(sessionHeader(sessionId))) {
       withClue(body) {
         status should equal(200)
       }
@@ -143,11 +166,22 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
-  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
-    get(path, id, defaultHeaders, expected)
+  def put[E <: scala.AnyRef, R](path: String, entity: E, result: String => R): R =
+    put(path, entity, defaultSessionId, result)
 
-  def get[E <: scala.AnyRef, I](path: String, id: I, headers: Iterable[(String, String)], expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
-    get(s"$path/${id.toString}", headers = headers) {
+  def put[E <: scala.AnyRef](path: String, entity: E, sessionId: UUID, expectedStatus: Int): Unit = {
+    put(path, bytes(entity), headers = Seq(sessionHeader(sessionId))) {
+      withClue(body) {
+        status should equal(expectedStatus)
+      }
+    }
+  }
+
+  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
+    get(path, id, defaultSessionId, expected)
+
+  def get[E <: scala.AnyRef, I](path: String, id: I, sessionId: UUID, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
+    get(s"$path/${id.toString}", headers = Seq(sessionHeader(sessionId))) {
       withClue(body) {
         status should equal(200)
       }
@@ -157,8 +191,19 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
+  def get(path: String, sessionId: UUID, expectedStatus: Int): Unit = {
+    get(path, headers = Seq(sessionHeader(sessionId))) {
+      withClue(body) {
+        status should equal(expectedStatus)
+      }
+    }
+  }
+
   def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean): Unit =
-    update(path, entity, headersIfUnmodifiedSince(lastModified), expectUpdate)
+    update(path, entity, lastModified, expectUpdate, defaultSessionId)
+
+  def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit =
+    update(path, entity, Seq("If-Unmodified-Since" -> lastModified, jsonHeader, sessionHeader(sessionId)), expectUpdate)
 
   def update[E <: scala.AnyRef](path: String, entity: E, headers: Iterable[(String, String)], expectUpdate: Boolean): Unit = {
     post(path, bytes(entity), headers) {
@@ -167,9 +212,19 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
-  def list[R](path: String, params: Map[String, String], expected: List[R], headers: Iterable[(String, String)])
-             (implicit mf: Manifest[R]): Seq[R] = {
-    get(s"$path/list", params, headers) {
+  def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, sessionId: UUID, expectedStatus: Int): Unit = {
+    post(path, bytes(entity), Seq("If-Unmodified-Since" -> lastModified, jsonHeader, sessionHeader(sessionId))) {
+      withClue(body) {
+        status should equal(expectedStatus)
+      }
+    }
+  }
+
+  def list[R](path: String, params: Map[String, String], expected: List[R])(implicit mf: Manifest[R]): Seq[R] =
+    list(path, params, expected, defaultSessionId)
+
+  def list[R](path: String, params: Map[String, String], expected: List[R], sessionId: UUID)(implicit mf: Manifest[R]): Seq[R] = {
+    get(s"$path/list", params, Seq(sessionHeader(sessionId))) {
       status should equal(200)
       val result = read[List[R]](body)
       result should contain theSameElementsAs expected
@@ -177,17 +232,17 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
-  def list[R](path: String, params: Map[String, String], expected: List[R])(implicit mf: Manifest[R]): Seq[R] =
-    list(path, params, expected, defaultHeaders)
+  def list(path: String, params: Map[String, String], expectedStatus: Int): Unit =
+    list(path, params, expectedStatus, defaultSessionId)
+
+  def list(path: String, params: Map[String, String], expectedStatus: Int, sessionId: UUID): Unit =
+    list(path, params, expectedStatus, Seq(sessionHeader(sessionId)))
 
   def list(path: String, params: Map[String, String], expectedStatus: Int, headers: Iterable[(String, String)]): Unit = {
     get(s"$path/list", params, headers) {
       status should equal(expectedStatus)
     }
   }
-
-  def list(path: String, params: Map[String, String], expectedStatus: Int): Unit =
-    list(path, params, expectedStatus, defaultHeaders)
 }
 
 sealed trait DatabaseSpec {

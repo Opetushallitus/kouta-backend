@@ -12,7 +12,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
   "Get haku by oid" should "return 404 if haku not found" in {
-    get("/haku/123", headers = Seq(sessionHeader)) {
+    get("/haku/123", headers = Seq(defaultSessionHeader)) {
       status should equal (404)
       body should include ("Unknown haku oid")
     }
@@ -38,7 +38,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
   }
 
   it should "validate new haku" in {
-    put(HakuPath, bytes(addInvalidHakuaika(haku)), Seq(jsonHeader, sessionHeader)) {
+    put(HakuPath, bytes(addInvalidHakuaika(haku)), Seq(jsonHeader, defaultSessionHeader)) {
       withClue(body) {
         status should equal(400)
       }
@@ -63,7 +63,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(haku(oid)), Seq(sessionHeader)) {
+    post(HakuPath, bytes(haku(oid)), Seq(defaultSessionHeader)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
