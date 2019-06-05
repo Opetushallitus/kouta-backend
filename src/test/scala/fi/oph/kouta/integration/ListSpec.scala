@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
+import fi.oph.kouta.security.Role
 import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
@@ -22,7 +23,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     mockOrganisaatioResponse(UnknownOid, NotFoundOrganisaatioResponse)
 
     createTestData()
-    addTestSessions()
+    addTestSessions(Role.Koulutus)
   }
 
   override def afterAll() = {
@@ -56,7 +57,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5))
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k2, k3, k5))
   }
   it should "list all koulutukset for authorized organizations 2" in {
     list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5))
@@ -70,14 +71,23 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "return 401 if no session is found" in {
     list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), 401, Map())
   }
+  it should "allow access to user of the selected organization" in {
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k2, k3, k5), crudSessions(ChildOid))
+  }
+  it should "deny access without access to the given organization" in {
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), 403, crudSessions(ChildOid))
+  }
+  it should "allow access for a user of an ancestor organization" in {
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k2, k3, k5), crudSessions(ParentOid))
+  }
+  it should "deny access for a user of a descendant organization" in {
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  }
   it should "deny access without an accepted role" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, Seq(sessionHeader(rolelessUser.sessionId)))
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
-  it should "deny access without access to the right organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), 403, Seq(testSessions('child)))
-  }
-  it should "allow access with the read role" in {
-    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5), Seq(testSessions('indexer)))
+  it should "allow access to any koulutus with the indexer role" in {
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5), indexerSession)
   }
 
   "Toteutus list" should "list all toteutukset for authorized organizations" in {
@@ -157,16 +167,25 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), List(t1, t2, t3))
   }
   it should "deny access to all toteutukset without root organization access" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), 403, Seq(testSessions('parent)))
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), 403, crudSessions(ParentOid))
+  }
+  it should "allow access to a user of the koulutus organization" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k1.organisaatioOid.s), List(t1, t2, t3), crudSessions(k1.organisaatioOid))
+  }
+  it should "deny access to a user without access to the koulutus organization" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k1.organisaatioOid.s), 403, crudSessions(LonelyOid))
+  }
+  it should "allow access to a user of an ancestor organization" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k3.organisaatioOid.s), List(t3), crudSessions(ParentOid))
+  }
+  it should "deny access to a user of a descendant organization" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k1.organisaatioOid.s), 403, crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ChildOid.s), 403, Seq(sessionHeader(rolelessUser.sessionId)))
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ChildOid.s), 403, rolelessUser.sessionId)
   }
-  it should "deny access without access to the right organization" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> LonelyOid.s), 403, Seq(testSessions('child)))
-  }
-  it should "allow access with the read role" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), List(t1, t2, t3), Seq(testSessions('indexer)))
+  it should "allow access to the indexer" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), List(t1, t2, t3), indexerSession)
   }
 
   "Toteutukseen liitetyt haut" should "list all haut mapped to given toteutus" in {
@@ -214,7 +233,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
   "Koulutukset hakutiedot" should "return all hakutiedot related to koulutus" in {
-    get(s"$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(testSessions('indexer))) {
+    get(s"$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
       //debugJson[List[Hakutieto]](body)
 

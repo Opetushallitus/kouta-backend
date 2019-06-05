@@ -51,31 +51,31 @@ trait KeywordFixture { this:KoutaIntegrationSpec =>
   )
 
   def storeAsiasanat() = {
-    post(AsiasanaPath, bytes(asiasanat), headers = Seq(sessionHeader)) {
+    post(AsiasanaPath, bytes(asiasanat), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
-    post(s"$AsiasanaPath?kieli=sv", bytes(asiasanat.map(a => s"${a}_sv")), headers = Seq(sessionHeader)) {
+    post(s"$AsiasanaPath?kieli=sv", bytes(asiasanat.map(a => s"${a}_sv")), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
   }
 
   def storeAmmattinimikkeet() = {
-    post(AmmattinimikePath, bytes(ammattinimikkeet), headers = Seq(sessionHeader)) {
+    post(AmmattinimikePath, bytes(ammattinimikkeet), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
-    post(s"$AmmattinimikePath?kieli=sv", bytes(ammattinimikkeet.map(a => s"${a}_sv")), headers = Seq(sessionHeader)) {
+    post(s"$AmmattinimikePath?kieli=sv", bytes(ammattinimikkeet.map(a => s"${a}_sv")), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
   }
 
-  def searchAsiasanat(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(sessionHeader)) = {
+  def searchAsiasanat(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(defaultSessionHeader)) = {
     get(s"$AsiasanaPath/search/$term${paramString(params)}", headers = headers) {
       status should equal(200)
       read[List[String]](body) should equal(expected)
     }
   }
 
-  def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(sessionHeader)) = {
+  def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(defaultSessionHeader)) = {
     get(s"$AmmattinimikePath/search/$term${paramString(params)}", headers = headers) {
       status should equal(200)
       read[List[String]](body) should equal(expected)

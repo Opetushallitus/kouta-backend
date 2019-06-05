@@ -27,7 +27,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
   "Get hakukohde by oid" should "return 404 if hakukohde not found" in {
-    get(s"$HakukohdePath/123", headers = Seq(sessionHeader)) {
+    get(s"$HakukohdePath/123", headers = Seq(defaultSessionHeader)) {
       status should equal (404)
       body should include ("Unknown hakukohde oid")
     }
@@ -53,7 +53,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
   }
 
   it should "validate new hakukohde" in {
-    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, sessionHeader)) {
+    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, defaultSessionHeader)) {
       withClue(body) {
         status should equal(400)
       }
@@ -81,7 +81,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
-    post(HakukohdePath, bytes(thisHakukohde), Seq(sessionHeader)) {
+    post(HakukohdePath, bytes(thisHakukohde), Seq(defaultSessionHeader)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -93,7 +93,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val lastModified = get(oid, thisHakukohde)
     Thread.sleep(1500)
     update(tallennettuHakukohde(oid).copy(tila = Arkistoitu), lastModified)
-    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified), sessionHeader)) {
+    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified), defaultSessionHeader)) {
       status should equal (409)
     }
   }
