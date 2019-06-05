@@ -23,7 +23,7 @@ object EmbeddedJettyLauncher extends Logging {
     }
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
-    SessionDAO.store(CasSession(ServiceTicket(""), "", Set(GenericUser)), UUID.fromString(TestDataGeneratorSessionId))
+    TestSetups.setupCasSessionIdForTestDataGenerator()
     new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt).start.join
   }
 }
@@ -81,6 +81,11 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     logger.info(s"Using default test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
+  }
+
+  def setupCasSessionIdForTestDataGenerator()= {
+    logger.info(s"Adding session for TestDataGenerator")
+    SessionDAO.store(CasSession(ServiceTicket(""), "", Set(GenericUser)), UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId))
   }
 }
 
