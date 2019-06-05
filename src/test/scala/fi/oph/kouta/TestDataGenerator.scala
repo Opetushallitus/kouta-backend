@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
-import fi.oph.kouta.EmbeddedJettyLauncher.DEFAULT_PORT
+import fi.oph.kouta.EmbeddedJettyLauncher.{DefaultPort, TestDataGeneratorSessionId}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{Id, Oid}
@@ -26,7 +26,7 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   val KoutaBackendPath = System.getProperty(
     "test-data-generator.path",
-    s"http://localhost:${System.getProperty("kouta-backend.port", DEFAULT_PORT)}/kouta-backend")
+    s"http://localhost:${System.getProperty("kouta-backend.port", DefaultPort)}/kouta-backend")
 
   val KoulutusCount = 5
   val DebugOids = false
@@ -143,7 +143,7 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   def put[T <: AnyRef](path: String, data: T): String =
     new DefaultHttpRequest(
-      Http(s"$KoutaBackendPath$path").method("PUT").put(write(data).getBytes)
+      Http(s"$KoutaBackendPath$path").method("PUT").header("Cookie", s"session=$TestDataGeneratorSessionId").put(write(data).getBytes)
     ).responseWithHeaders match {
       case (200, _, result) if path == "/valintaperuste" => debug(id(result).toString)
       case (200, _, result) => debug(oid(result))
