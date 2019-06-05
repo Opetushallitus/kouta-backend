@@ -4,6 +4,7 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
@@ -12,7 +13,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   override def beforeAll(): Unit = {
     super.beforeAll()
     startServiceMocking()
-    addTestSessions()
+    addTestSessions(Role.Koulutus)
   }
 
   override def afterAll(): Unit = {
@@ -35,30 +36,47 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow any authenticated user to access published koulutus" in {
     val oid = put(koulutus.copy(julkinen = true))
-    get(oid, Seq(testSessions('otherRole)), koulutus(oid).copy(julkinen = true))
+    get(oid, otherRoleSession, koulutus(oid).copy(julkinen = true))
+  }
+
+  it should "allow the root user to read any koulutus" in {
+    val oid = put(koulutus)
+    get(oid, defaultSessionId, koulutus(oid))
+  }
+
+  it should "allow the user of the koulutus organization to read the koulutus" in {
+    val oid = put(koulutus)
+    get(oid, crudSessions(ChildOid), koulutus(oid))
   }
 
   it should "deny an authenticated user without organization access to access unpublished koulutus" in {
     val oid = put(koulutus)
-    get(s"$KoulutusPath/$oid", headers = Seq(testSessions('unrelated))) {
-      status should equal(403)
-      body should include ("Forbidden")
-    }
+    get(s"$KoulutusPath/$oid", crudSessions(LonelyOid), 403)
   }
 
-  it should "allow the user of a tarjoaja organization to read the koulutus" in {
+  it should "deny the user of a tarjoaja organization without access to the koulutus organization to read the koulutus" in {
     val oid = put(koulutus.copy(tarjoajat = List(LonelyOid)))
-    get(oid, Seq(testSessions('unrelated)), koulutus(oid).copy(tarjoajat = List(LonelyOid)))
+    get(s"$KoulutusPath/$oid", crudSessions(LonelyOid), 403)
   }
 
   it should "allow the user of a parent organization to read the koulutus" in {
     val oid = put(koulutus)
-    get(oid, Seq(testSessions('parent)), koulutus(oid))
+    get(oid, crudSessions(ParentOid), koulutus(oid))
   }
 
-  it should "allow the user of a child organization to read the koulutus" in {
+  it should "deny the user of a child organization to read the koulutus" in {
     val oid = put(koulutus)
-    get(oid, Seq(testSessions('grandChild)), koulutus(oid))
+    get(s"$KoulutusPath/$oid", crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny the user of a wrong role to read the koulutus" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid", otherRoleSession, 403)
+  }
+
+  it should "allow the indexer to read any koulutus" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid", otherRoleSession, 403)
   }
 
   "Create koulutus" should "store koulutus" in {
@@ -88,46 +106,32 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     }
   }
 
-  it should "fail if the user doesn't have the right role" in {
-    put(KoulutusPath, bytes(koulutus), Seq(jsonHeader, sessionHeader(rolelessUser.sessionId))) {
-      withClue(body) {
-        status should equal(403)
-      }
-    }
+  it should "allow access if the user has rights to the koulutus organization" in {
+    put(koulutus.copy(tarjoajat = List.empty), crudSessions(ChildOid))
   }
 
   it should "deny access if the user is missing rights to the koulutus organization" in {
-    put(KoulutusPath, bytes(koulutus.copy(tarjoajat = List.empty)), Seq(testSessions('evilChild))) {
-      withClue(body) {
-        status should equal(403)
-        body should include(ChildOid.s)
-      }
-    }
-  }
-
-  it should "allow access if the user has rights to the koulutus organization" in {
-    put(KoulutusPath, bytes(koulutus.copy(tarjoajat = List.empty)), Seq(testSessions('child))) {
-      withClue(body) {
-        status should equal(200)
-      }
-    }
+    put(KoulutusPath, koulutus.copy(tarjoajat = List.empty), crudSessions(EvilChildOid), 403)
   }
 
   it should "allow access if the user has rights to an ancestor of the koulutus organization" in {
-    put(KoulutusPath, bytes(koulutus), Seq(testSessions('parent))) {
-      withClue(body) {
-        status should equal(200)
-      }
-    }
+    put(koulutus, crudSessions(ParentOid))
   }
 
-  it should "deny access if the user is missing rights to some of the tarjoajat" in {
-    put(KoulutusPath, bytes(koulutus), Seq(testSessions('child))) {
-      withClue(body) {
-        status should equal(403)
-        body should include(EvilCousin.s)
-      }
-    }
+  it should "deny access if the user only has rights to a descendant of the koulutus organization" in {
+    put(KoulutusPath, koulutus, crudSessions(EvilChildOid), 403)
+  }
+
+  it should "fail if the user doesn't have the right role" in {
+    put(KoulutusPath, koulutus, otherRoleSession, 403)
+  }
+
+  it should "deny access for the indexer" in {
+    put(KoulutusPath, koulutus, indexerSession, 403)
+  }
+
+  it should "allow access even if the user is missing rights to some of the tarjoajat" in {
+    put(koulutus, crudSessions(ChildOid))
   }
 
   "Update koulutus" should "update koulutus" in {
@@ -152,46 +156,55 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     }
   }
 
-  it should "deny access if the user is missing rights to the koulutus organization" in {
-    val oid = put(koulutus)
-    val lastModified = get(oid, koulutus(oid))
-    post(KoulutusPath, bytes(koulutus(oid)), Seq("If-Unmodified-Since" -> lastModified, testSessions('evilChild))) {
-      withClue(body) {
-        status should equal(403)
-      }
-    }
-  }
-
   it should "allow access if the user has rights to the koulutus organization" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    post(KoulutusPath, bytes(koulutus(oid)), Seq("If-Unmodified-Since" -> lastModified, testSessions('child))) {
-      withClue(body) {
-        status should equal(200)
-      }
-    }
+    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(ChildOid))
   }
 
-  it should "deny access if the user doesn't have rights to a tarjoaja organization being removed" in {
+  it should "deny access if the user is missing rights to the koulutus organization" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, crudSessions(EvilChildOid), 403)
+  }
+
+  it should "allow access if the user has rights to an ancestor organization" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(ParentOid))
+  }
+
+  it should "deny access if the user only has rights to a descent organization" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny access if the user doesn't have update rights" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, readSessions(ChildOid), 403)
+  }
+
+  it should "deny access for the indexer" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, indexerSession, 403)
+  }
+
+  it should "allow access even if the user doesn't have rights to a tarjoaja organization being removed" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
-    post(KoulutusPath, bytes(updatedKoulutus), Seq("If-Unmodified-Since" -> lastModified, testSessions('child))) {
-      withClue(body) {
-        status should equal(403)
-      }
-    }
+
+    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(ChildOid))
   }
 
-  it should "deny access if the user doesn't have rights to a tarjoaja organization being added" in {
+  it should "allow access even if the user doesn't have rights to a tarjoaja organization being added" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = EvilChildOid :: koulutus.tarjoajat)
-    post(KoulutusPath, bytes(updatedKoulutus), Seq("If-Unmodified-Since" -> lastModified, testSessions('child))) {
-      withClue(body) {
-        status should equal(403)
-      }
-    }
+    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(ChildOid))
   }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
@@ -257,7 +270,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val t1 = put(toteutus(oid))
     val t2 = put(toteutus(oid))
     val t3 = put(toteutus(oid))
-    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq(testSessions('indexer))) {
+    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List(
         toteutus(t1, oid).copy(modified = Some(readModifiedByOid(t1, "toteutukset"))),
@@ -269,7 +282,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "return empty result if koulutus has no toteutukset" in {
     val oid = put(koulutus)
-    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq(testSessions('indexer))) {
+    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List())
     }
@@ -284,22 +297,13 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     }
   }
 
-  it should "deny access without the read role" in {
+  it should "deny access without the indexer role" in {
     val oid = KoulutusOid("oid")
-    get(s"$KoulutusPath/$oid/toteutukset", headers = defaultHeaders) {
-      withClue(body) {
-        status should equal(403)
-      }
-    }
+    get(s"$KoulutusPath/$oid/toteutukset", defaultSessionId, 403)
   }
 
-  it should "deny access without root organization access to the read role" in {
+  it should "deny access without root organization access to the indexer role" in {
     val oid = KoulutusOid("oid")
-    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq(testSessions('childRead))) {
-      withClue(body) {
-        status should equal (403)
-      }
-    }
+    get(s"$KoulutusPath/$oid/toteutukset", fakeIndexerSession, 403)
   }
-
 }

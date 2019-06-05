@@ -4,15 +4,34 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 import scala.util.matching.Regex
 
-sealed abstract class Role(val name: String)
+sealed abstract class Role(val name: String) extends Product with Serializable
+
+sealed abstract class RoleEntity(val entity: String) {
+  case object Read extends Role(s"APP_KOUTA_${entity}_READ")
+  case object Update extends Role(s"APP_KOUTA_${entity}_UPDATE")
+  case object Crud extends Role(s"APP_KOUTA_${entity}_CRUD")
+
+  def all: Seq[Role] = Seq(Read, Update, Crud)
+}
 
 object Role {
-  case object CrudUser extends Role("APP_TARJONTA_CRUD")
-  case object Read extends Role("APP_KOUTA_READ")
+  case object Indexer extends Role("APP_KOUTA_INDEXER")
+
+  object Koulutus extends RoleEntity("KOULUTUS")
+  object Toteutus extends RoleEntity("TOTEUTUS")
+  object Haku extends RoleEntity("HAKU")
+  object Hakukohde extends RoleEntity("HAKUKOHDE")
+  object Valintaperuste extends RoleEntity("VALINTAPERUSTE")
 
   case class UnknownRole(override val name: String) extends Role(name)
 
-  val all: Map[String, Role] = List(CrudUser, Read).map(r => r.name -> r).toMap
+  val all: Map[String, Role] = Seq.concat(
+    Koulutus.all,
+    Toteutus.all,
+    Haku.all,
+    Hakukohde.all,
+    Valintaperuste.all,
+    Seq(Indexer)).map(r => r.name -> r).toMap
 
   def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }

@@ -110,7 +110,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     import slick.jdbc.PostgresProfile.api._
     val value = ammattinimikkeet.head.toLowerCase
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
-    post(AmmattinimikePath, bytes(List(value)), headers = Seq(sessionHeader)) {
+    post(AmmattinimikePath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
@@ -127,7 +127,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     import slick.jdbc.PostgresProfile.api._
     val value = asiasanat.head.toLowerCase
     db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)
-    post(AsiasanaPath, bytes(List(value)), headers = Seq(sessionHeader)) {
+    post(AsiasanaPath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       withClue(body) {
         status should equal(200)
       }

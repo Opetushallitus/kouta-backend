@@ -86,7 +86,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
   def setupCasSessionIdForTestDataGenerator()= {
     logger.info(s"Adding session for TestDataGenerator")
     SessionDAO.store(
-      CasSession(ServiceTicket(""), "", Set(KoutaIntegrationSpec.defaultAuthority)),
+      CasSession(ServiceTicket(""), "", KoutaIntegrationSpec.defaultAuthorities),
       UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)
     )
   }
