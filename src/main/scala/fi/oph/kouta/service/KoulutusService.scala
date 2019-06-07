@@ -7,17 +7,27 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 
 object KoulutusService extends KoulutusService(SqsInTransactionService)
 
 abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with AuthorizationService {
 
-  private val createRoles = Seq(Role.Koulutus.Crud)
-  private val readRoles = Seq(Role.Koulutus.Read, Role.Koulutus.Crud, Role.Indexer)
-  private val updateRoles = Seq(Role.Koulutus.Update, Role.Koulutus.Crud)
-  private val indexerRoles = Seq(Role.Indexer)
+  protected val roleEntity: RoleEntity = Role.Koulutus
+
+  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
+    KoulutusDAO.get(oid).map {
+      case (koulutus, lastModified) if hasRootAccess(readRoles) => (koulutus, lastModified)
+      case (koulutus, lastModified) if koulutus.julkinen => (koulutus, lastModified) // TODO: sallittu vain saman koulutustyypin käyttäjille
+      case (koulutus, lastModified) =>
+        withAuthorizedChildOrganizationOids(readRoles) { authorizedOrganizations =>
+          authorize(koulutus.organisaatioOid, authorizedOrganizations) {
+            (koulutus, lastModified)
+          }
+        }
+    }
+  }
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
     withAuthorizedChildOrganizationOids(createRoles) { authorizedOrganizations =>
@@ -34,19 +44,6 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
       authorize(existing.organisaatioOid, authorizedOrganizations) {
         withValidation(koulutus, updateWithIndexing(_, notModifiedSince))
       }
-    }
-  }
-
-  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
-    KoulutusDAO.get(oid).map {
-      case (koulutus, lastModified) if hasRootAccess(readRoles) => (koulutus, lastModified)
-      case (koulutus, lastModified) if koulutus.julkinen => (koulutus, lastModified)
-      case (koulutus, lastModified) =>
-        withAuthorizedChildOrganizationOids(readRoles) { authorizedOrganizations =>
-          authorize(koulutus.organisaatioOid, authorizedOrganizations) {
-            (koulutus, lastModified)
-          }
-        }
     }
   }
 

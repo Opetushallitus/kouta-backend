@@ -7,15 +7,18 @@ import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO}
+import fi.oph.kouta.security.{Role, RoleEntity}
 
 object HakuService extends HakuService(SqsInTransactionService)
 
 abstract class HakuService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Haku] with AuthorizationService {
 
+  override val roleEntity: RoleEntity = Role.Haku
+
   def put(haku: Haku): HakuOid =
     withValidation(haku, putWithIndexing)
 
-  def update(haku: Haku, notModifiedSince:Instant): Boolean =
+  def update(haku: Haku, notModifiedSince: Instant): Boolean =
     withValidation(haku, updateWithIndexing(_, notModifiedSince))
 
   def get(oid: HakuOid): Option[(Haku, Instant)] = HakuDAO.get(oid)

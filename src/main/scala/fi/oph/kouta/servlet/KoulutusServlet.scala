@@ -52,7 +52,7 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
   get("/list", operation(apiOperation[List[KoulutusListItem]]("Listaa käytettävissä olevat koulutukset")
     tags modelName
     summary "Listaa niiden koulutusten perustiedot, joita organisaatio voi käyttää"
-    parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
+    parameter queryParam[String]("organisaatioOid").description("Valitun organisaation oid").required)) {
 
     implicit val authenticated: Authenticated = authenticate
 

@@ -88,31 +88,29 @@ trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
     sessionId
   }
 
-  def addTestSession(role: Role, organisaatioOids: OrganisaatioOid*): UUID = {
-    val authorities = organisaatioOids.map(oid => Authority(role, oid))
+  def addTestSession(role: Role, organisaatioOid: OrganisaatioOid): UUID =
+    addTestSession(Seq(role), organisaatioOid)
+
+  def addTestSession(roles: Seq[Role], organisaatioOid: OrganisaatioOid): UUID = {
+    val authorities = roles.map(Authority(_, organisaatioOid))
     addTestSession(authorities: _*)
   }
 
-  def addTestSession(roles: Set[Role], organisaatioOids: OrganisaatioOid*): UUID = {
-    val authorities = organisaatioOids.flatMap(oid => roles.map(Authority(_, oid)))
-    addTestSession(authorities: _*)
-  }
-
-  def addTestSessions(roleEntity: RoleEntity): Unit = {
+  def addTestSessions(roleEntities: RoleEntity*): Unit = {
     mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
     mockSingleOrganisaatioResponses(LonelyOid)
 
     Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid).foreach { org =>
-      crudSessions.update(org, addTestSession(roleEntity.Crud, org))
+      crudSessions.update(org, addTestSession(roleEntities.map(re => re.Crud.asInstanceOf[Role]), org))
     }
 
     Seq(ChildOid).foreach { org =>
-      readSessions.update(org, addTestSession(roleEntity.Read, org))
+      readSessions.update(org, addTestSession(roleEntities.map(_.Read.asInstanceOf[Role]), org))
     }
 
     indexerSession = addTestSession(Role.Indexer, OphOid)
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
-    otherRoleSession = addTestSession(Authority("APP_OTHER"))
+    otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)
   }
 }
 
@@ -228,7 +226,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def list[R](path: String, params: Map[String, String], expected: List[R], sessionId: UUID)(implicit mf: Manifest[R]): Seq[R] = {
     get(s"$path/list", params, Seq(sessionHeader(sessionId))) {
-      status should equal(200)
+      withClue(body) {
+        status should equal(200)
+      }
       val result = read[List[R]](body)
       result should contain theSameElementsAs expected
       result
