@@ -334,7 +334,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
     muokkaaja = UserOid("1.2.3.4"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 

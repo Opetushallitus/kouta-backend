@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validatable
 import fi.vm.sade.utils.slf4j.Logging
@@ -24,11 +24,17 @@ trait AuthorizationService extends Logging {
 
   private lazy val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
+  protected val roleEntity: RoleEntity
+  protected lazy val createRoles: Seq[Role] = Seq(roleEntity.Crud)
+  protected lazy val readRoles: Seq[Role] = Seq(roleEntity.Read, roleEntity.Crud, Role.Indexer)
+  protected lazy val updateRoles: Seq[Role] = Seq(roleEntity.Update, roleEntity.Crud)
+  protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
+
   @deprecated("Should use Authenticated instead of a single given oid", "2019-05-23")
   def withAuthorizedChildAndParentOrganizationOids[R](oid: OrganisaatioOid, f: Seq[OrganisaatioOid] => R): R =
     OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
       case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
-      case oids => f(oids)
+      case oids                 => f(oids)
     }
 
   @deprecated("Should use Authenticated instead of a single given oid", "2019-05-23")
@@ -60,7 +66,7 @@ trait AuthorizationService extends Logging {
   def withAuthorizedChildOrganizationOids[R](roles: Seq[Role])(f: IterableView[OrganisaatioOid, Iterable[_]] => R)(implicit authenticated: Authenticated): R =
     orgsForRoles(roles) match {
       case oids if oids.isEmpty => throw RoleAuthorizationFailedException(roles, authenticated.session.roles)
-      case oids => f(oids.view ++ lazyFlatChildren(oids))
+      case oids                 => f(oids.view ++ lazyFlatChildren(oids))
     }
 
   def authorize[R](allowedOrganization: OrganisaatioOid, authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =

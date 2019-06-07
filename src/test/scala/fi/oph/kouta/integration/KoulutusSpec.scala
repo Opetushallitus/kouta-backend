@@ -39,11 +39,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, otherRoleSession, koulutus(oid).copy(julkinen = true))
   }
 
-  it should "allow the root user to read any koulutus" in {
-    val oid = put(koulutus)
-    get(oid, defaultSessionId, koulutus(oid))
-  }
-
   it should "allow the user of the koulutus organization to read the koulutus" in {
     val oid = put(koulutus)
     get(oid, crudSessions(ChildOid), koulutus(oid))

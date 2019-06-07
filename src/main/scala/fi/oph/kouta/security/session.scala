@@ -4,7 +4,9 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 import scala.util.matching.Regex
 
-sealed abstract class Role(val name: String) extends Product with Serializable
+sealed abstract class Role(val name: String) extends Product with Serializable {
+  override def toString: String = name
+}
 
 sealed abstract class RoleEntity(val entity: String) {
   case object Read extends Role(s"APP_KOUTA_${entity}_READ")
