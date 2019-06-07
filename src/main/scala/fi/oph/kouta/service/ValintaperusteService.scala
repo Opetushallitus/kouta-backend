@@ -8,10 +8,13 @@ import fi.oph.kouta.domain.{HakukohdeListItem, IdListItem, Valintaperuste, Valin
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
+import fi.oph.kouta.security.{Role, RoleEntity}
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService)
 
 abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Valintaperuste] with AuthorizationService {
+
+  override val roleEntity: RoleEntity = Role.Valintaperuste
 
   def put(valintaperuste: Valintaperuste): UUID =
     withValidation(valintaperuste, putWithIndexing)

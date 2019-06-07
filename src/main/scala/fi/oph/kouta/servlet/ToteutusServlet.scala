@@ -49,10 +49,10 @@ class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Sw
     }
   }
 
-  get("/list", operation(apiOperation[List[ToteutusListItem]]("Listaa kaikki toteutukset, joihin käyttäjällä on oikeudet")
+  get("/list", operation(apiOperation[List[ToteutusListItem]]("Listaa kaikki toteutukset, joita organisaatio voi käyttää")
     tags modelName
-    summary "Listaa kaikki toteutukset, joihin käyttäjällä on oikeudet"
-    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+    summary "Listaa kaikki toteutukset, joita organisaatio voi käyttää"
+    parameter queryParam[String]("organisaatioOid").description(s"Valitun organisaation oid"))) {
 
     implicit val authenticated: Authenticated = authenticate
 
