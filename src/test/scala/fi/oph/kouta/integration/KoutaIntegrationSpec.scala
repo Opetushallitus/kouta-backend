@@ -3,11 +3,10 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
-import fi.oph.kouta.domain.{PerustiedotWithId, PerustiedotWithOid}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{Authority, CasSession, Role, RoleEntity, ServiceTicket}
+import fi.oph.kouta.security._
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.{KoutaBackendSwagger, MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
@@ -289,8 +288,9 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 
-  import slick.jdbc.PostgresProfile.api._
   import java.time._
+
+  import slick.jdbc.PostgresProfile.api._
 
   implicit val getInstant = slick.jdbc.GetResult[LocalDateTime](r =>
     LocalDateTime.ofInstant(r.nextTimestamp().toInstant, ZoneId.of("Europe/Helsinki")).withNano(0).withSecond(0))

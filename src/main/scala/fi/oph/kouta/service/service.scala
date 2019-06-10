@@ -1,7 +1,10 @@
 package fi.oph.kouta.service
 
+import java.time.Instant
+
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.Perustiedot
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -25,9 +28,6 @@ trait AuthorizationService extends Logging {
   private lazy val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
   protected val roleEntity: RoleEntity
-  protected lazy val createRoles: Seq[Role] = Seq(roleEntity.Crud)
-  protected lazy val readRoles: Seq[Role] = Seq(roleEntity.Read, roleEntity.Crud, Role.Indexer)
-  protected lazy val updateRoles: Seq[Role] = Seq(roleEntity.Update, roleEntity.Crud)
   protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
 
   @deprecated("Should use Authenticated instead of a single given oid", "2019-05-23")
@@ -37,12 +37,35 @@ trait AuthorizationService extends Logging {
       case oids                 => f(oids)
     }
 
-  @deprecated("Should use Authenticated instead of a single given oid", "2019-05-23")
-  def withAuthorizedChildOrganizationOids[R](oid: OrganisaatioOid, f: Seq[OrganisaatioOid] => R): R =
-    OrganisaatioClient.getAllChildOidsFlat(oid) match {
-      case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
-      case oids => f(oids)
+  def authorizeGet[R <: Perustiedot](thingWithTime: Option[(R, Instant)])(implicit authenticated: Authenticated): Option[(R, Instant)] =
+    thingWithTime.map {
+      case (thing, lastModified) =>
+        withAuthorizedChildOrganizationOids(roleEntity.readRoles) { authorizedOrganizations =>
+          authorize(thing.organisaatioOid, authorizedOrganizations) {
+            (thing, lastModified)
+          }
+        }
     }
+
+
+  def authorizePut[R <: Perustiedot, I](thing: R)(f: => I)(implicit authenticated: Authenticated): I =
+    withAuthorizedChildOrganizationOids(roleEntity.createRoles) { authorizedOrganizations =>
+      authorize(thing.organisaatioOid, authorizedOrganizations) {
+        f
+      }
+    }
+
+  def authorizeUpdate[R <: Perustiedot, I](maybeExisting: => Option[R])(f: => I)(implicit authenticated: Authenticated): I = {
+    withAuthorizedChildOrganizationOids(roleEntity.updateRoles) { authorizedOrganizations =>
+      maybeExisting match {
+        case None => throw new NoSuchElementException()
+        case Some(existing) =>
+          authorize(existing.organisaatioOid, authorizedOrganizations) {
+            f
+          }
+      }
+    }
+  }
 
   /**
     * Checks if the the authenticated user has access to the given organization, then calls f with a sequence of descendants of that organization.

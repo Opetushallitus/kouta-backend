@@ -18,10 +18,10 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
 
   def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     KoulutusDAO.get(oid).map {
-      case (koulutus, lastModified) if hasRootAccess(readRoles) => (koulutus, lastModified)
+      case (koulutus, lastModified) if hasRootAccess(roleEntity.readRoles) => (koulutus, lastModified)
       case (koulutus, lastModified) if koulutus.julkinen => (koulutus, lastModified) // TODO: sallittu vain saman koulutustyypin käyttäjille
       case (koulutus, lastModified) =>
-        withAuthorizedChildOrganizationOids(readRoles) { authorizedOrganizations =>
+        withAuthorizedChildOrganizationOids(roleEntity.readRoles) { authorizedOrganizations =>
           authorize(koulutus.organisaatioOid, authorizedOrganizations) {
             (koulutus, lastModified)
           }
@@ -29,27 +29,19 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
     }
   }
 
-  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
-    withAuthorizedChildOrganizationOids(createRoles) { authorizedOrganizations =>
-      authorize(koulutus.organisaatioOid, authorizedOrganizations) {
-        withValidation(koulutus, putWithIndexing)
-      }
+  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
+    authorizePut(koulutus) {
+      withValidation(koulutus, putWithIndexing)
     }
-  }
 
-  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    withAuthorizedChildOrganizationOids(updateRoles) { authorizedOrganizations =>
-      val existing = KoulutusDAO.get(koulutus.oid.get).getOrElse(throw new NoSuchElementException("koulutusOid"))._1
-
-      authorize(existing.organisaatioOid, authorizedOrganizations) {
-        withValidation(koulutus, updateWithIndexing(_, notModifiedSince))
-      }
+  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
+    authorizeUpdate(KoulutusDAO.get(koulutus.oid.get).map(_._1)) {
+      withValidation(koulutus, updateWithIndexing(_, notModifiedSince))
     }
-  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, readRoles) { oids =>
-      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids)
+    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles) { oids =>
+      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids) // TODO: julkiset vain samasta koulutustyypistä
     }
   }
 
@@ -69,13 +61,12 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
   }
 
   def listToteutukset(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withRootAccess(readRoles)(ToteutusDAO.listByKoulutusOid(oid))
+    withRootAccess(Role.Toteutus.readRoles)(ToteutusDAO.listByKoulutusOid(oid))
 
-  def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, readRoles) {
+  def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withAuthorizedChildOrganizationOids(organisaatioOid, Role.Toteutus.readRoles) {
       ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _)
     }
-  }
 
   private def putWithIndexing(koulutus: Koulutus) =
     sqsInTransactionService.runActionAndUpdateIndex(
