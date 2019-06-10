@@ -7,18 +7,27 @@ import fi.oph.kouta.domain.oid.HakukohdeOid
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.HakukohdeDAO
+import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.servlet.Authenticated
 
 object HakukohdeService extends HakukohdeService(SqsInTransactionService)
 
-abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Hakukohde] {
+abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Hakukohde] with AuthorizationService {
 
-  def put(hakukohde: Hakukohde): HakukohdeOid =
-    withValidation(hakukohde, putWithIndexing)
+  protected val roleEntity: RoleEntity = Role.Hakukohde
 
-  def update(hakukohde: Hakukohde, notModifiedSince:Instant): Boolean =
-    withValidation(hakukohde, updateWithIndexing(_, notModifiedSince))
+  def get(oid: HakukohdeOid)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] =
+    authorizeGet(HakukohdeDAO.get(oid))
 
-  def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = HakukohdeDAO.get(oid)
+  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
+    authorizePut(hakukohde) {
+      withValidation(hakukohde, putWithIndexing)
+    }
+
+  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get)) {
+      withValidation(hakukohde, updateWithIndexing(_, notModifiedSince))
+    }
 
   private def putWithIndexing(hakukohde: Hakukohde) =
     sqsInTransactionService.runActionAndUpdateIndex(

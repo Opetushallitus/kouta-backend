@@ -37,17 +37,17 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     }
   }
 
-  it should "allow a user of the toteutus organization to read the toteutus" in {
+  it should "allow a user of the haku organization to read the haku" in {
     val oid = put(haku)
     get(oid, crudSessions(haku.organisaatioOid), haku(oid))
   }
 
-  it should "deny a user without access to the toteutus organization" in {
+  it should "deny a user without access to the haku organization" in {
     val oid = put(haku)
     get(s"$HakuPath/$oid", crudSessions(LonelyOid), 403)
   }
 
-  it should "allow a user of an ancestor organization to read the toteutus" in {
+  it should "allow a user of an ancestor organization to read the haku" in {
     val oid = put(haku)
     get(oid, crudSessions(ParentOid), haku(oid))
   }
@@ -79,7 +79,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     }
   }
 
-  it should "allow a user of the toteutus organization to create the toteutus" in {
+  it should "allow a user of the haku organization to create the haku" in {
     put(haku, crudSessions(haku.organisaatioOid))
   }
 

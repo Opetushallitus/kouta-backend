@@ -142,7 +142,7 @@ object TestData {
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     muokkaaja = UserOid("1.2.3.2.1"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 
