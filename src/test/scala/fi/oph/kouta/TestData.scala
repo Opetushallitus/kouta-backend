@@ -109,7 +109,7 @@ object TestData {
     hakulomake = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
-    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    organisaatioOid = ChildOid,
     muokkaaja = UserOid("5.4.3.2.1"),
     kielivalinta = Seq(Fi, Sv),
     modified = None)
