@@ -16,55 +16,27 @@ abstract class ToteutusService(sqsInTransactionService: SqsInTransactionService)
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
-  def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = ToteutusDAO.get(oid).map {
-    case (toteutus, lastModified) =>
-      withAuthorizedChildOrganizationOids(readRoles) { authorizedOrganizations =>
-        authorize(toteutus.organisaatioOid, authorizedOrganizations) {
-          (toteutus, lastModified)
-        }
-      }
-  }
+  def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] =
+    authorizeGet(ToteutusDAO.get(oid))
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
-    withAuthorizedChildOrganizationOids(createRoles) { authorizedOrganizations =>
-      authorize(toteutus.organisaatioOid, authorizedOrganizations) {
-        withValidation(toteutus, putWithIndexing)
-      }
+    authorizePut(toteutus) {
+      withValidation(toteutus, putWithIndexing)
     }
 
-  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    withAuthorizedChildOrganizationOids(updateRoles) { authorizedOrganizations =>
-      val existing = ToteutusDAO.get(toteutus.oid.get).getOrElse(throw new NoSuchElementException("toteutusOid"))._1
-      authorize(existing.organisaatioOid, authorizedOrganizations) {
-        withValidation(toteutus, updateWithIndexing(_, notModifiedSince))
-      }
+  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
+    authorizeUpdate(ToteutusDAO.get(toteutus.oid.get).map(_._1)) {
+      withValidation(toteutus, updateWithIndexing(_, notModifiedSince))
     }
-  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedChildOrganizationOids(organisaatioOid, readRoles) { oids =>
-      logger.error(s"ASDF ${oids.mkString(", ")}")
-      ToteutusDAO.listByOrganisaatioOids(oids)
-    }
+    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(ToteutusDAO.listByOrganisaatioOids)
 
   def listHaut(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    ToteutusDAO.get(oid).map { case (toteutus, _) =>
-      withAuthorizedChildOrganizationOids(readRoles) { oids =>
-        authorize(toteutus.organisaatioOid, oids) {
-          HakuDAO.listByToteutusOid(oid)
-        }
-      }
-    }.getOrElse(Seq.empty)
+    withRootAccess(Role.Haku.readRoles)(HakuDAO.listByToteutusOid(oid))
 
   def listHakukohteet(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
-    ToteutusDAO.get(oid).map { case (toteutus, _) =>
-      withAuthorizedChildOrganizationOids(readRoles) { oids =>
-        authorize(toteutus.organisaatioOid, oids) {
-          HakukohdeDAO.listByToteutusOid(oid)
-        }
-      }
-    }.getOrElse(Seq.empty)
-
+    withRootAccess(Role.Hakukohde.readRoles)(HakukohdeDAO.listByToteutusOid(oid))
 
   private def putWithIndexing(toteutus: Toteutus) =
     sqsInTransactionService.runActionAndUpdateIndex(

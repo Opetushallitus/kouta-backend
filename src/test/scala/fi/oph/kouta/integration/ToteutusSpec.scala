@@ -179,7 +179,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, 403, indexerSession)  }
+    update(thisToteutus, lastModified, 403, indexerSession)
+  }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(toteutus(koulutusOid))
