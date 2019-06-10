@@ -55,12 +55,12 @@ trait AuthorizationService extends Logging {
       }
     }
 
-  def authorizeUpdate[R <: Perustiedot, I](maybeExisting: => Option[R])(f: => I)(implicit authenticated: Authenticated): I = {
+  def authorizeUpdate[R <: Perustiedot, I](maybeExisting: => Option[(R, Instant)])(f: => I)(implicit authenticated: Authenticated): I = {
     withAuthorizedChildOrganizationOids(roleEntity.updateRoles) { authorizedOrganizations =>
       maybeExisting match {
         case None => throw new NoSuchElementException()
         case Some(existing) =>
-          authorize(existing.organisaatioOid, authorizedOrganizations) {
+          authorize(existing._1.organisaatioOid, authorizedOrganizations) {
             f
           }
       }
