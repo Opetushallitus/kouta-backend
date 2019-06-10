@@ -35,7 +35,7 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
     }
 
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(KoulutusDAO.get(koulutus.oid.get).map(_._1)) {
+    authorizeUpdate(KoulutusDAO.get(koulutus.oid.get)) {
       withValidation(koulutus, updateWithIndexing(_, notModifiedSince))
     }
 

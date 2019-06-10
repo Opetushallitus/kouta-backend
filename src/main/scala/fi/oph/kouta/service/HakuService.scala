@@ -26,7 +26,7 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
   }
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(HakuDAO.get(haku.oid.get).map(_._1)) {
+    authorizeUpdate(HakuDAO.get(haku.oid.get)) {
       withValidation(haku, updateWithIndexing(_, notModifiedSince))
     }
 

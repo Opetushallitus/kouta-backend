@@ -25,7 +25,7 @@ abstract class ToteutusService(sqsInTransactionService: SqsInTransactionService)
     }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(ToteutusDAO.get(toteutus.oid.get).map(_._1)) {
+    authorizeUpdate(ToteutusDAO.get(toteutus.oid.get)) {
       withValidation(toteutus, updateWithIndexing(_, notModifiedSince))
     }
 
