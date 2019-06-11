@@ -37,25 +37,25 @@ trait AuthorizationService extends Logging {
       case oids                 => f(oids)
     }
 
-  def authorizeGet[R <: Perustiedot](thingWithTime: Option[(R, Instant)])(implicit authenticated: Authenticated): Option[(R, Instant)] =
-    thingWithTime.map {
-      case (thing, lastModified) =>
+  def authorizeGet[E <: Perustiedot](entityWithTime: Option[(E, Instant)])(implicit authenticated: Authenticated): Option[(E, Instant)] =
+    entityWithTime.map {
+      case (entity, lastModified) =>
         withAuthorizedChildOrganizationOids(roleEntity.readRoles) { authorizedOrganizations =>
-          authorize(thing.organisaatioOid, authorizedOrganizations) {
-            (thing, lastModified)
+          authorize(entity.organisaatioOid, authorizedOrganizations) {
+            (entity, lastModified)
           }
         }
     }
 
 
-  def authorizePut[R <: Perustiedot, I](thing: R)(f: => I)(implicit authenticated: Authenticated): I =
+  def authorizePut[E <: Perustiedot, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
     withAuthorizedChildOrganizationOids(roleEntity.createRoles) { authorizedOrganizations =>
-      authorize(thing.organisaatioOid, authorizedOrganizations) {
+      authorize(entity.organisaatioOid, authorizedOrganizations) {
         f
       }
     }
 
-  def authorizeUpdate[R <: Perustiedot, I](maybeExisting: => Option[(R, Instant)])(f: => I)(implicit authenticated: Authenticated): I = {
+  def authorizeUpdate[E <: Perustiedot, I](maybeExisting: => Option[(E, Instant)])(f: => I)(implicit authenticated: Authenticated): I = {
     withAuthorizedChildOrganizationOids(roleEntity.updateRoles) { authorizedOrganizations =>
       maybeExisting match {
         case None => throw new NoSuchElementException()

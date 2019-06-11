@@ -7,9 +7,21 @@ import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.validation.Validations
 
-class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture with Validations {
+class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture with Validations {
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    startServiceMocking()
+    addTestSessions(Role.Valintaperuste)
+  }
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    stopServiceMocking()
+  }
 
   "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}", headers = defaultHeaders) {
@@ -23,6 +35,37 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       status should equal(401)
     }
   }
+
+  it should "allow a user of the valintaperuste organization to read the valintaperuste" in {
+    val id = put(valintaperuste)
+    get(id, crudSessions(valintaperuste.organisaatioOid), valintaperuste(id))
+  }
+
+  it should "deny a user without access to the valintaperuste organization" in {
+    val id = put(valintaperuste)
+    get(s"$ValintaperustePath/$id", crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to read the valintaperuste" in {
+    val id = put(valintaperuste)
+    get(id, crudSessions(ParentOid), valintaperuste(id))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val id = put(valintaperuste)
+    get(s"$ValintaperustePath/$id", crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    val id = put(valintaperuste)
+    get(s"$ValintaperustePath/$id", otherRoleSession, 403)
+  }
+
+  it should "allow indexer access" in {
+    val id = put(valintaperuste)
+    get(id, indexerSession, valintaperuste(id))
+  }
+
 
   "Create valintaperuste" should "store valintaperuste" in {
     val id = put(valintaperuste)
@@ -38,6 +81,30 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     put(s"$ValintaperustePath", bytes(valintaperuste)) {
       status should equal (401)
     }
+  }
+
+  it should "allow a user of the valintaperuste organization to create the valintaperuste" in {
+    put(valintaperuste, crudSessions(valintaperuste.organisaatioOid))
+  }
+
+  it should "deny a user without access to the valintaperuste organization" in {
+    put(ValintaperustePath, valintaperuste, crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to create the valintaperuste" in {
+    put(valintaperuste, crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    put(ValintaperustePath, valintaperuste, crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    put(ValintaperustePath, valintaperuste, readSessions(ChildOid), 403)
+  }
+
+  it should "deny indexer access" in {
+    put(ValintaperustePath, valintaperuste, indexerSession, 403)
   }
 
   it should "validate new valintaperuste" in {
@@ -69,6 +136,48 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     post(ValintaperustePath, bytes(valintaperuste(id)), Seq("If-Unmodified-Since" -> lastModified)) {
       status should equal (401)
     }
+  }
+
+  it should "allow a user of the valintaperuste organization to update the valintaperuste" in {
+    val oid = put(valintaperuste)
+    val thisValintaperuste = valintaperuste(oid)
+    val lastModified = get(oid, thisValintaperuste)
+    update(thisValintaperuste, lastModified, false, crudSessions(valintaperuste.organisaatioOid))
+  }
+
+  it should "deny a user without access to the valintaperuste organization" in {
+    val oid = put(valintaperuste)
+    val thisValintaperuste = valintaperuste(oid)
+    val lastModified = get(oid, thisValintaperuste)
+    update(thisValintaperuste, lastModified, 403, crudSessions(LonelyOid))
+  }
+
+  it should "allow a user of an ancestor organization to create the valintaperuste" in {
+    val oid = put(valintaperuste)
+    val thisValintaperuste = valintaperuste(oid)
+    val lastModified = get(oid, thisValintaperuste)
+    update(thisValintaperuste, lastModified, false, crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val oid = put(valintaperuste)
+    val thisValintaperuste = valintaperuste(oid)
+    val lastModified = get(oid, thisValintaperuste)
+    update(thisValintaperuste, lastModified, 403, crudSessions(GrandChildOid))
+  }
+
+  it should "deny a user with the wrong role" in {
+    val oid = put(valintaperuste)
+    val thisValintaperuste = valintaperuste(oid)
+    val lastModified = get(oid, thisValintaperuste)
+    update(thisValintaperuste, lastModified, 403, readSessions(valintaperuste.organisaatioOid))
+  }
+
+  it should "deny indexer access" in {
+    val oid = put(valintaperuste)
+    val thisValintaperuste = valintaperuste(oid)
+    val lastModified = get(oid, thisValintaperuste)
+    update(thisValintaperuste, lastModified, 403, indexerSession)
   }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
