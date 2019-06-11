@@ -92,15 +92,15 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     }
   }
 
-  it should "allow a user of the haku organization to create the haku" in {
-    put(uusiHakukohde, crudSessions(haku.organisaatioOid))
+  it should "allow a user of the hakukohde organization to create the hakukohde" in {
+    put(uusiHakukohde, crudSessions(hakukohde.organisaatioOid))
   }
 
-  it should "deny a user without access to the haku organization" in {
+  it should "deny a user without access to the hakukohde organization" in {
     put(HakukohdePath, uusiHakukohde, crudSessions(LonelyOid), 403)
   }
 
-  it should "allow a user of an ancestor organization to create the haku" in {
+  it should "allow a user of an ancestor organization to create the hakukohde" in {
     put(uusiHakukohde, crudSessions(ParentOid))
   }
 

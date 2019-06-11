@@ -73,7 +73,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implic
 
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(valintaperusteService.listByValintaperusteId(UUID.fromString(params("id"))))
+    Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id"))))
   }
 
   prettifySwaggerModels()

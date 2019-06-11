@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
@@ -14,7 +14,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   var v1, v2, v3, v4     :ValintaperusteListItem = null
   var hk1, hk2, hk3, hk4 :HakukohdeListItem = null
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     startServiceMocking()
 
@@ -23,15 +23,15 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     mockOrganisaatioResponse(UnknownOid, NotFoundOrganisaatioResponse)
 
     createTestData()
-    addTestSessions(Role.Koulutus, Role.Toteutus, Role.Haku, Role.Hakukohde)
+    addTestSessions(RoleEntity.all:_*)
   }
 
-  override def afterAll() = {
+  override def afterAll(): Unit = {
     super.afterAll()
     stopServiceMocking()
   }
 
-  def createTestData() = {
+  def createTestData(): Unit = {
     k1 = addToList(koulutus(false, ParentOid, Julkaistu))
     k2 = addToList(koulutus(false, ChildOid, Arkistoitu))
     k3 = addToList(koulutus(false, GrandChildOid, Tallennettu))
@@ -159,13 +159,13 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3))
   }
   it should "list all valintaperustekuvaukset for authorized organizations 2" in {
     list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid.s), List(v4))
   }
   it should "list all valintaperustekuvaukset that can be joined to given haku" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString), List(v1, v2))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString), List(v2))
   }
   it should "list all valinteperustekuvaukset that can be joiden to given haku even when kohdejoukko is null" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h3.oid.toString), List(v3))
@@ -179,12 +179,36 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "return 401 if session is not valid" in {
     list(ValintaperustePath, Map[String,String](), 401, Map.empty)
   }
+  it should "allow access to user of the selected organization" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3), crudSessions(ChildOid))
+  }
+  it should "deny access without access to the given organization" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
+  }
+  it should "allow access for a user of an ancestor organization" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3), crudSessions(ParentOid))
+  }
+  it should "deny access for a user of a descendant organization" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  }
+  it should "deny access without an accepted role" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
+  }
+  it should "allow access to any valintaperuste with the indexer role" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3), indexerSession)
+  }
 
   "Valintaperustetta käyttävät hakukohteet list" should "list all hakukohteet using given valintaperuste id" in {
     list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
   }
   it should "return 401 if session is not valid" in {
     list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 401, Map.empty)
+  }
+  it should "deny access to non-root users" in {
+    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 403, crudSessions(v1.organisaatioOid))
+  }
+  it should "allow access to the indexer" in {
+    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4), indexerSession)
   }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
