@@ -12,7 +12,7 @@ import fi.oph.kouta.servlet.Authenticated
 
 object KoulutusService extends KoulutusService(SqsInTransactionService)
 
-abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with AuthorizationService {
+abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with RoleEntityAuthorizationService {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
 

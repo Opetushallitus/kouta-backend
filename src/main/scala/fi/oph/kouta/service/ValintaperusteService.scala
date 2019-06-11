@@ -13,7 +13,7 @@ import fi.oph.kouta.servlet.Authenticated
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService)
 
-abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Valintaperuste] with AuthorizationService {
+abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
 
