@@ -30,11 +30,9 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val indexerAuthority = Authority(Role.Indexer, rootOrganisaatio)
 
   val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
-  val rolelessUser = TestUser("roleless-user-oid", "rolelessuser", UUID.randomUUID())
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid, defaultAuthorities), testUser.sessionId)
-    SessionDAO.store(CasSession(ServiceTicket(rolelessUser.ticket), rolelessUser.oid, Set.empty), rolelessUser.sessionId)
   }
 
   override def beforeAll(): Unit = {
@@ -78,6 +76,7 @@ trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
   var indexerSession: UUID = _
   var fakeIndexerSession: UUID = _
   var otherRoleSession: UUID = _
+  var rolelessSession: UUID = _
 
   def addTestSession(authorities: Authority*): UUID = {
     val sessionId = UUID.randomUUID()
@@ -110,6 +109,7 @@ trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
     indexerSession = addTestSession(Role.Indexer, OphOid)
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
     otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)
+    rolelessSession = addTestSession()
   }
 }
 

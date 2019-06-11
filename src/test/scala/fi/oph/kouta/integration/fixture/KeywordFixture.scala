@@ -1,5 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
+import java.util.UUID
+
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet}
 import org.json4s.jackson.Serialization.read
@@ -68,15 +70,15 @@ trait KeywordFixture { this:KoutaIntegrationSpec =>
     }
   }
 
-  def searchAsiasanat(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(defaultSessionHeader)) = {
-    get(s"$AsiasanaPath/search/$term${paramString(params)}", headers = headers) {
+  def searchAsiasanat(term:String, expected:List[String], params:List[(String,String)] = List(), sessionId: UUID = defaultSessionId) = {
+    get(s"$AsiasanaPath/search/$term${paramString(params)}", headers = Seq(sessionHeader(sessionId))) {
       status should equal(200)
       read[List[String]](body) should equal(expected)
     }
   }
 
-  def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List(), headers: Seq[(String, String)] = Seq(defaultSessionHeader)) = {
-    get(s"$AmmattinimikePath/search/$term${paramString(params)}", headers = headers) {
+  def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List(), sessionId: UUID = defaultSessionId) = {
+    get(s"$AmmattinimikePath/search/$term${paramString(params)}", headers = Seq(sessionHeader(sessionId))) {
       status should equal(200)
       read[List[String]](body) should equal(expected)
     }
