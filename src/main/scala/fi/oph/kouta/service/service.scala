@@ -20,7 +20,7 @@ case class KoutaValidationException(errorMessages:List[String]) extends RuntimeE
 
 trait AuthorizationService extends Logging {
 
-  private val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+  private lazy val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
   def withAuthorizedChildAndParentOrganizationOids[R](oid:OrganisaatioOid, f: Seq[OrganisaatioOid] => R): R =
     OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
@@ -37,12 +37,13 @@ trait AuthorizationService extends Logging {
   def authorize(role: Role, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Unit =
     authorizeAll(role, Seq(organisaatioOid))
 
-  def authorizeAll(role: Role, organisaatioOids: Iterable[OrganisaatioOid])(implicit authenticated: Authenticated): Unit =
+  def authorizeAll(role: Role, organisaatioOids: Iterable[OrganisaatioOid])(implicit authenticated: Authenticated): Unit = {
     withChildren(role) { children =>
       organisaatioOids
         .find(oid => !children.contains(oid))
         .foreach(oid => throw OrganizationAuthorizationFailedException(oid))
     }
+  }
 
   def authorizeAny(role: Role, organisaatioOids: Iterable[OrganisaatioOid])(implicit authenticated: Authenticated): Unit =
     withChildren(role) { children =>

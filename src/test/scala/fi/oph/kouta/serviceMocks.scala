@@ -1,6 +1,7 @@
 package fi.oph.kouta
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.tcp.PortChecker
 import org.mockserver.integration.ClientAndServer
@@ -86,6 +87,12 @@ trait OrganisaatioServiceMock extends ServiceMocks {
     s
   }
 
-  def mockOrganisaatioResponse(oid:String, response:String = DefaultResponse) =
+  def mockOrganisaatioResponse(oid: String, response: String = DefaultResponse): Unit =
     mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), response)
+
+  def mockSingleOrganisaatioResponses(organisaatioOids: OrganisaatioOid*): Unit = organisaatioOids.foreach { oid =>
+    mockOrganisaatioResponse(oid.s, singleOidOrganisaatioResponse(oid.s))
+  }
 }
+
+object OrganisaatioServiceMock extends OrganisaatioServiceMock

@@ -20,8 +20,6 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
 
   override def beforeAll() = {
     super.beforeAll()
-    truncateDatabase()
-    addDefaultSession()
     createTestData(15)
     updateTestData()
   }
