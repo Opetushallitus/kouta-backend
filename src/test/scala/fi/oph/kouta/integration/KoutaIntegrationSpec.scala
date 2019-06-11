@@ -27,8 +27,6 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val rootOrganisaatio = KoutaIntegrationSpec.rootOrganisaatio
   val defaultAuthorities = KoutaIntegrationSpec.defaultAuthorities
 
-  val indexerAuthority = Authority(Role.Indexer, rootOrganisaatio)
-
   val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
 
   def addDefaultSession(): Unit =  {
@@ -56,13 +54,7 @@ object KoutaIntegrationSpec {
   val serviceIdentifier = "testService"
 
   val rootOrganisaatio = OrganisaatioOid("1.2.246.562.10.00000000001")
-  val defaultAuthorities = Set(
-    Authority(Role.Koulutus.Crud, rootOrganisaatio),
-    Authority(Role.Toteutus.Crud, rootOrganisaatio),
-    Authority(Role.Haku.Crud, rootOrganisaatio),
-    Authority(Role.Hakukohde.Crud, rootOrganisaatio),
-    Authority(Role.Valintaperuste.Crud, rootOrganisaatio),
-  )
+  val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, rootOrganisaatio)).toSet
 }
 
 trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
