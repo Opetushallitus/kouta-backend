@@ -12,7 +12,7 @@ import fi.oph.kouta.servlet.Authenticated
 
 object HakukohdeService extends HakukohdeService(SqsInTransactionService)
 
-abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Hakukohde] with AuthorizationService {
+abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Hakukohde] with RoleEntityAuthorizationService {
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
 

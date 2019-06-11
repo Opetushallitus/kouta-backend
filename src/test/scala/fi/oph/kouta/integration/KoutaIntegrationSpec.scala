@@ -73,7 +73,6 @@ trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
   var indexerSession: UUID = _
   var fakeIndexerSession: UUID = _
   var otherRoleSession: UUID = _
-  var rolelessSession: UUID = _
 
   def addTestSession(authorities: Authority*): UUID = {
     val sessionId = UUID.randomUUID()
@@ -106,7 +105,6 @@ trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
     indexerSession = addTestSession(Role.Indexer, OphOid)
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
     otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)
-    rolelessSession = addTestSession()
   }
 }
 

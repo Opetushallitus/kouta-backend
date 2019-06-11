@@ -2,12 +2,10 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.keyword.{Keyword, KeywordSearch, KeywordType}
 import fi.oph.kouta.repository.KeywordDAO
-import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.servlet.Authenticated
 
 object KeywordService extends AuthorizationService {
-
-  val roleEntity: RoleEntity = Role.Haku
 
   def search(search: KeywordSearch): List[String] = KeywordDAO.search(search)
 

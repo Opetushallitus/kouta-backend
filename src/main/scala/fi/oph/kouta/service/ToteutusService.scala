@@ -12,7 +12,7 @@ import fi.oph.kouta.servlet.Authenticated
 
 object ToteutusService extends ToteutusService(SqsInTransactionService)
 
-abstract class ToteutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Toteutus] with AuthorizationService {
+abstract class ToteutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Toteutus] with RoleEntityAuthorizationService {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
