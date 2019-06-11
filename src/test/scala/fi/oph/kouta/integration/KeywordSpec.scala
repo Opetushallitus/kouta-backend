@@ -3,9 +3,10 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.security.Role
 import org.scalatest.BeforeAndAfterEach
 
-class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
+class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with KeywordFixture
   with KoulutusFixture with ToteutusFixture with BeforeAndAfterEach {
 
   var koulutusOid = ""
@@ -13,6 +14,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
+    addTestSessions(Role.Hakukohde)
   }
 
   override def beforeEach(): Unit = {
@@ -36,6 +38,10 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
         status should equal(401)
       }
     }
+  }
+
+  it should "allow access to any authenticated user" in {
+    searchAsiasanat("aa", List("aamu", "aarre", "kaipaa"), sessionId = rolelessSession)
   }
 
   it should "search asiasanat with given kieli" in {
@@ -68,6 +74,10 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
         status should equal(401)
       }
     }
+  }
+
+  it should "allow access to any authenticated user" in {
+    searchAmmattinimikkeet("lääk", List("lääkäri", "yleislääkäri"), sessionId = rolelessSession)
   }
 
   it should "search ammattinimikkeet with given kieli" in {
@@ -123,6 +133,13 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     }
   }
 
+  it should "deny access without root access" in {
+    val value = ammattinimikkeet.head.toLowerCase
+    post(AmmattinimikePath, bytes(List(value)), headers = Seq(sessionHeader(crudSessions(ParentOid)))) {
+      status should equal(403)
+    }
+  }
+
   "Create asiasana" should "not mind if asiasana exists" in {
     import slick.jdbc.PostgresProfile.api._
     val value = asiasanat.head.toLowerCase
@@ -141,6 +158,13 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
       withClue(body) {
         status should equal(401)
       }
+    }
+  }
+
+  it should "deny access without root access" in {
+    val value = asiasanat.head.toLowerCase
+    post(AsiasanaPath, bytes(List(value)), headers = Seq(sessionHeader(crudSessions(ParentOid)))) {
+      status should equal(403)
     }
   }
 }
