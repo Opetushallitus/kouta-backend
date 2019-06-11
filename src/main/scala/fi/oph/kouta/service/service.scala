@@ -23,19 +23,8 @@ trait ValidatingService[E <: Validatable] {
 
 case class KoutaValidationException(errorMessages:List[String]) extends RuntimeException
 
-trait AuthorizationService extends Logging {
-
-  private lazy val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
-
+trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity
-  protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
-
-  @deprecated("Should use Authenticated instead of a single given oid", "2019-05-23")
-  def withAuthorizedChildAndParentOrganizationOids[R](oid: OrganisaatioOid, f: Seq[OrganisaatioOid] => R): R =
-    OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
-      case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
-      case oids                 => f(oids)
-    }
 
   def authorizeGet[E <: Perustiedot](entityWithTime: Option[(E, Instant)])(implicit authenticated: Authenticated): Option[(E, Instant)] =
     entityWithTime.map {
@@ -66,6 +55,21 @@ trait AuthorizationService extends Logging {
       }
     }
   }
+
+}
+
+trait AuthorizationService extends Logging {
+
+  private lazy val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+
+  protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
+
+  @deprecated("Should use Authenticated instead of a single given oid", "2019-05-23")
+  def withAuthorizedChildAndParentOrganizationOids[R](oid: OrganisaatioOid, f: Seq[OrganisaatioOid] => R): R =
+    OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
+      case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
+      case oids                 => f(oids)
+    }
 
   /**
     * Checks if the the authenticated user has access to the given organization, then calls f with a sequence of descendants of that organization.

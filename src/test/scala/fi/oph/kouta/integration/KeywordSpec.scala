@@ -1,5 +1,7 @@
 package fi.oph.kouta.integration
 
+import java.util.UUID
+
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
@@ -10,11 +12,14 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   with KoulutusFixture with ToteutusFixture with BeforeAndAfterEach {
 
   var koulutusOid = ""
+  var rolelessSession: UUID = _
+  var parentSession: UUID = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
-    addTestSessions(Role.Hakukohde)
+    rolelessSession = addTestSession()
+    parentSession = addTestSession(Role.Koulutus.Crud, ParentOid)
   }
 
   override def beforeEach(): Unit = {
@@ -135,7 +140,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
 
   it should "deny access without root access" in {
     val value = ammattinimikkeet.head.toLowerCase
-    post(AmmattinimikePath, bytes(List(value)), headers = Seq(sessionHeader(crudSessions(ParentOid)))) {
+    post(AmmattinimikePath, bytes(List(value)), headers = Seq(sessionHeader(parentSession))) {
       status should equal(403)
     }
   }
@@ -163,7 +168,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
 
   it should "deny access without root access" in {
     val value = asiasanat.head.toLowerCase
-    post(AsiasanaPath, bytes(List(value)), headers = Seq(sessionHeader(crudSessions(ParentOid)))) {
+    post(AsiasanaPath, bytes(List(value)), headers = Seq(sessionHeader(parentSession))) {
       status should equal(403)
     }
   }
