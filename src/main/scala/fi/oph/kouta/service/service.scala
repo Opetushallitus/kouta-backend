@@ -64,13 +64,6 @@ trait AuthorizationService extends Logging {
 
   protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
 
-  @deprecated("Should use Authenticated instead of a single given oid", "2019-05-23")
-  def withAuthorizedChildAndParentOrganizationOids[R](oid: OrganisaatioOid, f: Seq[OrganisaatioOid] => R): R =
-    OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
-      case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
-      case oids                 => f(oids)
-    }
-
   /**
     * Checks if the the authenticated user has access to the given organization, then calls f with a sequence of descendants of that organization.
     * @param oid Organisaatio oid of the organization
@@ -99,27 +92,9 @@ trait AuthorizationService extends Logging {
   def authorize[R](allowedOrganization: OrganisaatioOid, authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =
     authorizeRootOrAny(Set(allowedOrganization), authorizedOrganizations)(r)
 
-/*
-  def authorizeAny[R](allowedOrganizations: Set[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =
-    if (authorizedOrganizations.exists(allowedOrganizations.contains)) r
-    else throw OrganizationAuthorizationFailedException(allowedOrganizations)
-  */
-
   def authorizeRootOrAny[R](allowedOrganizations: Set[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =
     if (authorizedOrganizations.exists(authorized => authorized == rootOrganisaatioOid || allowedOrganizations.contains(authorized))) r
     else throw OrganizationAuthorizationFailedException(allowedOrganizations)
-
-  /*
-  def authorizeRootOrAll[R](requiredOrganizations: Set[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid])(r: => R): R = {
-    if (authorizedOrganizations.exists(_ == rootOrganisaatioOid)) r
-    else authorizeAll(requiredOrganizations, authorizedOrganizations.toSet)(r)
-  }
-
-  def authorizeAll[R](requiredOrganizations: Set[OrganisaatioOid], authorizedOrganizations: Set[OrganisaatioOid])(r: => R): R = {
-    if (requiredOrganizations.diff(authorizedOrganizations).isEmpty) r
-    else throw OrganizationAuthorizationFailedException(requiredOrganizations)
-  }
-       */
 
   private def orgsForRoles(roles: Seq[Role])(implicit authenticated: Authenticated): Set[OrganisaatioOid] =
     roles.flatMap { role =>
@@ -128,14 +103,6 @@ trait AuthorizationService extends Logging {
 
   private def lazyFlatChildren(orgs: Set[OrganisaatioOid]): IterableView[OrganisaatioOid, Iterable[_]] =
     orgs.view.flatMap(oid => OrganisaatioClient.getAllChildOidsFlat(oid).toSet)
-
-/*
-  def authorize(acceptedRoles: Role*)(implicit authenticated: Authenticated): Unit = {
-    if (!authenticated.session.hasAnyRole(acceptedRoles.toSet)) {
-      throw RoleAuthorizationFailedException(acceptedRoles, authenticated.session.roles)
-    }
-  }
-*/
 
   def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
     roles.exists { role =>
