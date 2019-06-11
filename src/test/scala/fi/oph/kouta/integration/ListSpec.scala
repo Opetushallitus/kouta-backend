@@ -29,7 +29,6 @@ class ListSpec extends KoutaIntegrationSpec with EverythingFixture with Organisa
   override def afterAll() = {
     super.afterAll()
     stopServiceMocking()
-    truncateDatabase()
   }
 
   def createTestData() = {

@@ -7,6 +7,7 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.OrganisaatioServiceMock.{ChildOid, EvilGrandChildOid, GrandChildOid, EvilCousin}
 
 object TestData {
 
@@ -65,9 +66,9 @@ object TestData {
       lisatiedot = Seq(
         Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
-    tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin).map(OrganisaatioOid),
     muokkaaja = UserOid("5.5.5"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    organisaatioOid = OrganisaatioOid(ChildOid),
     kielivalinta = List(Fi, Sv),
     modified = None)
 

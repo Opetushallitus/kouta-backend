@@ -21,7 +21,12 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
 
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val existing = KoulutusDAO.get(koulutus.oid.get).getOrElse(throw new NoSuchElementException("koulutusOid"))._1
-    authorizeAll(Role.CrudUser,  existing.organisaatioOid :: existing.tarjoajat ++ koulutus.tarjoajat)
+
+    val tarjoajatToBeAdded = koulutus.tarjoajat.toSet diff existing.tarjoajat.toSet
+    val tarjoajatToBeRemoved = existing.tarjoajat.toSet diff koulutus.tarjoajat.toSet
+
+    authorizeAll(Role.CrudUser, tarjoajatToBeAdded ++ tarjoajatToBeRemoved + existing.organisaatioOid )
+
     withValidation(koulutus, updateWithIndexing(_, notModifiedSince))
   }
 

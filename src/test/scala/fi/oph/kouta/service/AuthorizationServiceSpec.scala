@@ -18,22 +18,18 @@ class AuthorizationServiceSpec extends ScalatraFlatSpec with OrganisaatioService
   def testSession(role: Role, organisaatioOids: OrganisaatioOid*): Authenticated =
     testSession(organisaatioOids.map(oid => Authority(role, oid)).toSet)
 
-  def mockSingleOrganisaatioResponses(organisaatioOids: OrganisaatioOid*): Unit = {
-    organisaatioOids.foreach { oid =>
-      mockOrganisaatioResponse(oid.s, singleOidOrganisaatioResponse(oid.s))
-    }
-  }
-
   TestSetups.setupWithTemplate(1234)
 
   val LonelyOid = OrganisaatioOid("1.2.246.562.10.0002")
   val OtherLonelyOid = OrganisaatioOid("1.2.246.562.10.1")
+  val NonexistentOid = OrganisaatioOid("1.2.246.562.10.404")
 
   override def beforeAll: Unit = {
     super.beforeAll()
     startServiceMocking()
     mockSingleOrganisaatioResponses(LonelyOid, OtherLonelyOid)
     mockOrganisaatioResponse(ParentOid)
+    mockOrganisaatioResponse(NonexistentOid.s, NotFoundOrganisaatioResponse)
   }
 
   override def afterAll(): Unit = {
@@ -43,18 +39,28 @@ class AuthorizationServiceSpec extends ScalatraFlatSpec with OrganisaatioService
 
   "authorize(role, organisaatio)" should "not authorize if the user doesn't have any roles" in {
     an[RoleAuthorizationFailedException] should be thrownBy
-      AuthorizationServiceMock.authorizeAll(Role.CrudUser, Seq())(testSession(Set.empty[Authority]))
+      AuthorizationServiceMock.authorize(Role.CrudUser, LonelyOid)(testSession(Set.empty[Authority]))
   }
 
   it should "not authorize if the user doesn't have the right role" in {
     val authorities = Set(Authority("APP_OTHER_APP"))
     an[RoleAuthorizationFailedException] should be thrownBy
-      AuthorizationServiceMock.authorize(Role.CrudUser, OtherLonelyOid)(testSession(authorities))
+      AuthorizationServiceMock.authorize(Role.CrudUser, LonelyOid)(testSession(authorities))
   }
 
-  it should "not authorize if the user doesn't have the right role for the right organization" in {
+  it should "not authorize if the user has the right organization but for the wrong role" in {
+    an[RoleAuthorizationFailedException] should be thrownBy
+      AuthorizationServiceMock.authorize(Role.CrudUser, LonelyOid)(testSession(Role.UnknownRole("APP_OTHER"), LonelyOid))
+  }
+
+  it should "not authorize if the user has the right role for the wrong organization" in {
     an[OrganizationAuthorizationFailedException] should be thrownBy
-      AuthorizationServiceMock.authorize(Role.CrudUser, OtherLonelyOid)(testSession(Role.CrudUser, LonelyOid))
+      AuthorizationServiceMock.authorize(Role.CrudUser, LonelyOid)(testSession(Role.CrudUser, OtherLonelyOid))
+  }
+
+  it should "not authorize if the authority's organization oid is unknown" in {
+    an[OrganizationAuthorizationFailedException] should be thrownBy
+      AuthorizationServiceMock.authorize(Role.CrudUser, LonelyOid)(testSession(Role.CrudUser, NonexistentOid))
   }
 
   it should "authorize if the user has the right role and organization" in {
