@@ -9,6 +9,7 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.servlet.Authenticated
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService)
 
@@ -16,22 +17,31 @@ abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionSe
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
 
-  def put(valintaperuste: Valintaperuste): UUID =
-    withValidation(valintaperuste, putWithIndexing)
+  def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
+    authorizeGet(ValintaperusteDAO.get(id))
 
-  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean =
-    withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince))
+  def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
+    authorizePut(valintaperuste) {
+      withValidation(valintaperuste, putWithIndexing)
+    }
 
-  def get(id: UUID): Option[(Valintaperuste, Instant)] = ValintaperusteDAO.get(id)
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
+    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {
+      withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince))
+    }
 
-  def list(organisaatioOid: OrganisaatioOid): Seq[IdListItem] =
-    withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.listByOrganisaatioOids)
+  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(ValintaperusteDAO.listByOrganisaatioOids)
 
-  def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid): Seq[ValintaperusteListItem] =
-    withAuthorizedChildAndParentOrganizationOids(organisaatioOid, ValintaperusteDAO.ListByOrganisaatioOidAndHaunKohdejoukko(_, hakuOid))
+  def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles) {
+      ValintaperusteDAO.ListByOrganisaatioOidAndHaunKohdejoukko(_, hakuOid)
+    }
 
-  def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem] =
-    HakukohdeDAO.listByValintaperusteId(valintaperusteId)
+  def listHakukohteet(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+    withRootAccess(Role.Hakukohde.readRoles) {
+      HakukohdeDAO.listByValintaperusteId(valintaperusteId)
+    }
 
   private def putWithIndexing(valintaperuste: Valintaperuste) =
     sqsInTransactionService.runActionAndUpdateIndex(

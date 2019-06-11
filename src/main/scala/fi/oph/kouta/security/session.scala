@@ -1,7 +1,6 @@
 package fi.oph.kouta.security
 
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.security.Role.Indexer
 
 import scala.util.matching.Regex
 
@@ -14,11 +13,15 @@ sealed abstract class RoleEntity(val entity: String) {
   case object Update extends Role(s"APP_KOUTA_${entity}_UPDATE")
   case object Crud extends Role(s"APP_KOUTA_${entity}_CRUD")
 
-  def all: Seq[Role] = Seq(Read, Update, Crud)
+  val roles: Seq[Role] = Seq(Read, Update, Crud)
 
   def createRoles: Seq[Role] = Seq(Crud)
-  def readRoles: Seq[Role] = Seq(Crud, Indexer, Read)
+  def readRoles: Seq[Role] = Seq(Crud, Role.Indexer, Read)
   def updateRoles: Seq[Role] = Seq(Crud, Update)
+}
+
+object RoleEntity {
+  val all: List[RoleEntity] = List(Role.Koulutus, Role.Toteutus, Role.Haku, Role.Hakukohde, Role.Valintaperuste)
 }
 
 object Role {
@@ -32,13 +35,7 @@ object Role {
 
   case class UnknownRole(override val name: String) extends Role(name)
 
-  val all: Map[String, Role] = Seq.concat(
-    Koulutus.all,
-    Toteutus.all,
-    Haku.all,
-    Hakukohde.all,
-    Valintaperuste.all,
-    Seq(Indexer)).map(r => r.name -> r).toMap
+  val all: Map[String, Role] = (Indexer :: RoleEntity.all.flatMap(_.roles)).map(r => r.name -> r).toMap
 
   def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }

@@ -253,7 +253,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     onkoJulkinen = true,
     metadata = Some(ammValintaperusteMetadata),
-    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    organisaatioOid = ChildOid,
     muokkaaja = UserOid("2.1.2.1.2"),
     kielivalinta = List(Fi, Sv),
     modified = None)
