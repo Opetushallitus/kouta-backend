@@ -1,15 +1,17 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.vm.sade.properties.OphProperties
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import scala.annotation.tailrec
 
 object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
-  val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
+  val urlProperties: OphProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   val OphOid = OrganisaatioOid("1.2.246.562.10.00000000001")
 
@@ -18,8 +20,11 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
     case _ => getHierarkia(oid, children(oid, _))
   }
 
+  def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): (Seq[OrganisaatioOid], Seq[Koulutustyyppi]) =
+    getHierarkia(oid, orgs => (children(oid, orgs), oppilaitostyypit(oid, orgs)))
+
   case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
-  case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String)
+  case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String, oppilaitostyyppi: Option[String])
 
   private def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R) = {
     val url = urlProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid.toString))
@@ -55,4 +60,19 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
   private def parentOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
     item.parentOidPath.split('/').toSeq.reverse.map(OrganisaatioOid)
 
+  private def oppilaitostyypit(oid: OrganisaatioOid, organisaatiot: Seq[OidAndChildren]): Seq[Koulutustyyppi] = {
+    organisaatiot.flatMap(findWithParents(oid, _, Seq())).flatMap {
+      case (organisaatio, parents) => (parents.map(_.oppilaitostyyppi) :+ organisaatio.oppilaitostyyppi) ++ organisaatio.children.flatMap(childOppilaitostyypitFlat)
+    }.flatten.map(fi.oph.kouta.domain.oppilaitostyyppi2koulutustyyppi)
+  }
+
+  private def childOppilaitostyypitFlat(item: OidAndChildren): Seq[Option[String]] =
+    item.children.flatMap(c => c.oppilaitostyyppi +: childOppilaitostyypitFlat(c))
+
+  private def findWithParents(oid: OrganisaatioOid, current: OidAndChildren, parents: Seq[OidAndChildren]): Option[(OidAndChildren, Seq[OidAndChildren])] =
+    current match {
+      case c if c.oid == oid => Some((c, parents))
+      case c if c.children.isEmpty => None
+      case c => c.children.flatMap(child => findWithParents(oid, child, parents :+ c)).headOption
+    }
 }

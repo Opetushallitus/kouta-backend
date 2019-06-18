@@ -10,14 +10,14 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   override val roleEntities = RoleEntity.all
 
-  var k1, k2, k3, k4, k5 :KoulutusListItem = null
-  var t1, t2, t3, t4     :ToteutusListItem = null
-  var h1, h2, h3, h4     :HakuListItem = null
-  var v1, v2, v3, v4     :ValintaperusteListItem = null
-  var s1, s2, s3         :SorakuvausListItem = null
-  var hk1, hk2, hk3, hk4 :HakukohdeListItem = null
-  var o1, o2             :OrganisaatioOid = null
-  var oo1, oo2, oo3      :OppilaitoksenOsaListItem = null
+  var k1, k2, k3, k4, k5, k6 :KoulutusListItem = null
+  var t1, t2, t3, t4         :ToteutusListItem = null
+  var h1, h2, h3, h4         :HakuListItem = null
+  var v1, v2, v3, v4         :ValintaperusteListItem = null
+  var s1, s2, s3             :SorakuvausListItem = null
+  var hk1, hk2, hk3, hk4     :HakukohdeListItem = null
+  var o1, o2                 :OrganisaatioOid = null
+  var oo1, oo2, oo3          :OppilaitoksenOsaListItem = null
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -33,6 +33,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     k3 = addToList(koulutus(false, GrandChildOid, Tallennettu))
     k4 = addToList(koulutus(false, LonelyOid, Julkaistu))
     k5 = addToList(koulutus(true, LonelyOid, Julkaistu))
+    k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu))
     t1 = addToList(toteutus(k1.oid.toString, Julkaistu, ParentOid))
     t2 = addToList(toteutus(k1.oid.toString, Arkistoitu, ChildOid))
     t3 = addToList(toteutus(k1.oid.toString, Tallennettu, GrandChildOid))

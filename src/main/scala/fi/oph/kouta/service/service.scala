@@ -4,6 +4,7 @@ import java.time.Instant
 
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Authorizable, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -70,6 +71,16 @@ trait AuthorizationService extends Logging {
         OrganisaatioClient.getAllChildOidsFlat(oid) match {
           case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
           case oids => f(oids)
+        }
+      }
+    }
+
+  def withAuthorizedChildOrganizationOidsAndOppilaitostyypit[R](oid: OrganisaatioOid, roles: Seq[Role])(f: (Seq[OrganisaatioOid], Seq[Koulutustyyppi]) => R)(implicit authenticated: Authenticated): R =
+    withAuthorizedChildOrganizationOids(roles) { children =>
+      authorize(oid, children) {
+        OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid) match {
+          case (oids, _) if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
+          case (oids, t) => f(oids, t)
         }
       }
     }

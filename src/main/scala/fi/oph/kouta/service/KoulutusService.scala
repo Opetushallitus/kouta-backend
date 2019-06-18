@@ -40,8 +40,8 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles) { oids =>
-      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids) // TODO: julkiset vain samasta koulutustyypistä
+    withAuthorizedChildOrganizationOidsAndOppilaitostyypit(organisaatioOid, roleEntity.readRoles) { case (oids, koulutustyypit) =>
+      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids, koulutustyypit)
     }
   }
 
