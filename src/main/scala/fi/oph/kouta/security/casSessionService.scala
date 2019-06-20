@@ -48,7 +48,7 @@ abstract class CasSessionService(val securityContext: SecurityContext , val user
 
   private def createSession(ticket: ServiceTicket): Either[Throwable, (UUID, CasSession)] = {
     validateServiceTicket(ticket)
-      .flatMap(userDetailsService.getUserByUsername)
+      .map(userDetailsService.getUserByUsername)
       .map(storeSession(ticket, _))
   }
 
