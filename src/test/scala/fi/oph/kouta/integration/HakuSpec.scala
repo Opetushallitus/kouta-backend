@@ -11,13 +11,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    startServiceMocking()
     addTestSessions(Role.Haku)
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    stopServiceMocking()
   }
 
   def addInvalidHakuaika(haku:Haku) = haku.copy(

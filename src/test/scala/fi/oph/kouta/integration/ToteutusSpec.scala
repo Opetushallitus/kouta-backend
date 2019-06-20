@@ -14,14 +14,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    startServiceMocking()
     koulutusOid = put(koulutus)
     addTestSessions(Role.Toteutus)
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    stopServiceMocking()
   }
 
   "Get toteutus by oid" should "return 404 if toteutus not found" in {

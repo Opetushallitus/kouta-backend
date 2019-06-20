@@ -12,13 +12,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    startServiceMocking()
     addTestSessions(Role.Koulutus)
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    stopServiceMocking()
   }
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {

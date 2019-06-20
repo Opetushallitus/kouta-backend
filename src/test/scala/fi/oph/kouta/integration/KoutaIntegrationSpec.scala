@@ -57,7 +57,18 @@ object KoutaIntegrationSpec {
   val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, rootOrganisaatio)).toSet
 }
 
-trait AccessControlSpec extends OrganisaatioServiceMock { this: HttpSpec =>
+trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { this: HttpSpec =>
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    startServiceMocking()
+  }
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    stopServiceMocking()
+  }
+
   val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
   val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
 
