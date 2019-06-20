@@ -19,13 +19,11 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)
     valintaperusteId = put(valintaperuste)
-    startServiceMocking()
     addTestSessions(Role.Hakukohde)
   }
 
   override def afterAll(): Unit = {
     super.afterAll()
-    stopServiceMocking()
   }
 
   lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)

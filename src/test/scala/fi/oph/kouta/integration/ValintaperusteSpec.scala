@@ -14,13 +14,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    startServiceMocking()
     addTestSessions(Role.Valintaperuste)
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    stopServiceMocking()
   }
 
   "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {

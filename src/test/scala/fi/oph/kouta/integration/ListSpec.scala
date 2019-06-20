@@ -16,7 +16,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    startServiceMocking()
 
     mockOrganisaatioResponses(ParentOid, ChildOid, GrandChildOid)
     mockSingleOrganisaatioResponses(LonelyOid)
@@ -24,11 +23,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
     createTestData()
     addTestSessions(RoleEntity.all:_*)
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    stopServiceMocking()
   }
 
   def createTestData(): Unit = {
