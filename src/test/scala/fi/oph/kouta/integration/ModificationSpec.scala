@@ -23,7 +23,6 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     super.beforeAll()
     createTestData(15)
     updateTestData()
-    indexerSession = addTestSession(Role.Indexer, OphOid)
   }
 
   def nTimes[T](f: () => T, n: Int = 15) = (0 to n).map(i => f()).toList

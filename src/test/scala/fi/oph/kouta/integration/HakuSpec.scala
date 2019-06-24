@@ -9,10 +9,7 @@ import fi.oph.kouta.validation.Validations
 
 class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture with Validations {
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    addTestSessions(Role.Haku)
-  }
+  override val roleEntities = Seq(Role.Haku)
 
   def addInvalidHakuaika(haku:Haku) = haku.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
