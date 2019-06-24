@@ -12,9 +12,10 @@ import fi.oph.kouta.validation.Validations
 
 class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture with Validations {
 
+  override val roleEntities = Seq(Role.Valintaperuste)
+
   override def beforeAll(): Unit = {
     super.beforeAll()
-    addTestSessions(Role.Valintaperuste)
   }
 
   "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {

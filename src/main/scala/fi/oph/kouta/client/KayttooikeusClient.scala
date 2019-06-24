@@ -1,13 +1,13 @@
-package fi.oph.kouta.security
+package fi.oph.kouta.client
 
-import fi.oph.kouta.client.HttpClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 
-object KayttooikeusUserDetailsService extends KayttooikeusUserDetailsService
+object KayttooikeusClient extends KayttooikeusClient
 
-trait KayttooikeusUserDetailsService extends HttpClient with Logging {
+trait KayttooikeusClient extends HttpClient with Logging {
 
   import org.json4s._
 

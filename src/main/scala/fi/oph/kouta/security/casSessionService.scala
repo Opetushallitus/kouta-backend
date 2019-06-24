@@ -3,6 +3,7 @@ package fi.oph.kouta.security
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
 import fi.vm.sade.utils.cas.CasClient.Username
@@ -20,9 +21,9 @@ case class AuthenticationFailedException(msg: String, cause: Throwable) extends 
 case class KayttooikeusUserDetails(authorities: Set[Authority], oid: String)
 
 object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
-                                                   KayttooikeusUserDetailsService)
+                                                   KayttooikeusClient)
 
-abstract class CasSessionService(val securityContext: SecurityContext , val userDetailsService: KayttooikeusUserDetailsService) extends Logging {
+abstract class CasSessionService(val securityContext: SecurityContext, val userDetailsService: KayttooikeusClient) extends Logging {
   logger.info(s"Using security context ${securityContext.getClass.getSimpleName}")
 
   val serviceIdentifier: String = securityContext.casServiceIdentifier

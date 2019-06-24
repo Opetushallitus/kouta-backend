@@ -10,12 +10,13 @@ import fi.oph.kouta.validation.Validations
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
 
+  override val roleEntities = Seq(Role.Toteutus)
+
   var koulutusOid = ""
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
-    addTestSessions(Role.Toteutus)
   }
 
   "Get toteutus by oid" should "return 404 if toteutus not found" in {

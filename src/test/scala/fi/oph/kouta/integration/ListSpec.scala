@@ -7,6 +7,7 @@ import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
+  override val roleEntities = RoleEntity.all
 
   var k1, k2, k3, k4, k5 :KoulutusListItem = null
   var t1, t2, t3, t4     :ToteutusListItem = null
@@ -17,12 +18,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    mockOrganisaatioResponses(ParentOid, ChildOid, GrandChildOid)
-    mockSingleOrganisaatioResponses(LonelyOid)
     mockOrganisaatioResponse(UnknownOid, NotFoundOrganisaatioResponse)
 
     createTestData()
-    addTestSessions(RoleEntity.all:_*)
   }
 
   def createTestData(): Unit = {

@@ -59,9 +59,12 @@ object KoutaIntegrationSpec {
 
 trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { this: HttpSpec =>
 
+  protected val roleEntities: Seq[RoleEntity] = Seq.empty
+
   override def beforeAll(): Unit = {
     super.beforeAll()
     startServiceMocking()
+    addTestSessions()
   }
 
   override def afterAll(): Unit = {
@@ -96,7 +99,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     addTestSession(authorities: _*)
   }
 
-  def addTestSessions(roleEntities: RoleEntity*): Unit = {
+  def addTestSessions(): Unit = {
     mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
     mockSingleOrganisaatioResponses(LonelyOid)
 

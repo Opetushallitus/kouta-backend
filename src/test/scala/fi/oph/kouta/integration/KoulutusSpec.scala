@@ -10,10 +10,7 @@ import org.json4s.jackson.Serialization.read
 
 class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with Validations {
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    addTestSessions(Role.Koulutus)
-  }
+  override val roleEntities = Seq(Role.Koulutus)
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
@@ -83,7 +80,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
+      body should equal(validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
   }
 

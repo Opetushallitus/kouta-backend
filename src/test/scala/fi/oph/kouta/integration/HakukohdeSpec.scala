@@ -10,6 +10,8 @@ import fi.oph.kouta.validation.Validations
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with Validations {
 
+  override val roleEntities = Seq(Role.Hakukohde)
+
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId: UUID = _
 
@@ -19,7 +21,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)
     valintaperusteId = put(valintaperuste)
-    addTestSessions(Role.Hakukohde)
   }
 
   override def afterAll(): Unit = {
