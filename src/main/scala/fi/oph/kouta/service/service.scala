@@ -4,7 +4,7 @@ import java.time.Instant
 
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.Koulutustyyppi
+import fi.oph.kouta.domain.{Koulutus, Koulutustyyppi}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Authorizable, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -36,6 +36,28 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
         }
     }
 
+  def authorizeGetKoulutus(koulutusWithTime: Option[(Koulutus, Instant)])(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
+    def allowedByOrgOrJulkinen(koulutus: Koulutus, oids: Set[OrganisaatioOid]): Boolean =
+      lazyFlatChildren(oids).exists {
+        case (orgs, tyypit) =>
+          if (koulutus.julkinen) koulutus.koulutustyyppi.exists(tyypit.contains)
+          else orgs.contains(koulutus.organisaatioOid)
+      }
+
+    koulutusWithTime.map {
+      case (koulutus, lastModified) if hasRootAccess(Role.Koulutus.readRoles) => (koulutus, lastModified)
+      case (koulutus, lastModified) =>
+        organizationsForRoles(Role.Koulutus.readRoles) match {
+          case oids if oids.isEmpty => throw RoleAuthorizationFailedException(Role.Koulutus.readRoles, authenticated.session.roles)
+          case oids =>
+            if (allowedByOrgOrJulkinen(koulutus, oids)) {
+              (koulutus, lastModified)
+            } else {
+              throw OrganizationAuthorizationFailedException(koulutus.organisaatioOid)
+            }
+        }
+    }
+  }
 
   def authorizePut[E <: Authorizable, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
     withAuthorizedChildOrganizationOids(roleEntity.createRoles) { authorizedOrganizations =>
@@ -66,13 +88,8 @@ trait AuthorizationService extends Logging {
 
   /** Checks if the the authenticated user has access to the given organization, then calls f with a sequence of descendants of that organization. */
   def withAuthorizedChildOrganizationOids[R](oid: OrganisaatioOid, roles: Seq[Role])(f: Seq[OrganisaatioOid] => R)(implicit authenticated: Authenticated): R =
-    withAuthorizedChildOrganizationOids(roles) { children =>
-      authorize(oid, children) {
-        OrganisaatioClient.getAllChildOidsFlat(oid) match {
-          case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
-          case oids => f(oids)
-        }
-      }
+    withAuthorizedChildOrganizationOidsAndOppilaitostyypit(oid, roles) { case (oids, _) =>
+      f(oids)
     }
 
   def withAuthorizedChildOrganizationOidsAndOppilaitostyypit[R](oid: OrganisaatioOid, roles: Seq[Role])(f: (Seq[OrganisaatioOid], Seq[Koulutustyyppi]) => R)(implicit authenticated: Authenticated): R =
@@ -88,7 +105,7 @@ trait AuthorizationService extends Logging {
   def withAuthorizedChildOrganizationOids[R](roles: Seq[Role])(f: IterableView[OrganisaatioOid, Iterable[_]] => R)(implicit authenticated: Authenticated): R =
     organizationsForRoles(roles) match {
       case oids if oids.isEmpty => throw RoleAuthorizationFailedException(roles, authenticated.session.roles)
-      case oids                 => f(oids.view ++ lazyFlatChildren(oids))
+      case oids                 => f(oids.view ++ lazyFlatChildren(oids).flatMap(_._1))
     }
 
   def authorize[R](allowedOrganization: OrganisaatioOid, authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =
@@ -102,13 +119,13 @@ trait AuthorizationService extends Logging {
       throw OrganizationAuthorizationFailedException(allowedOrganizations, authorizedOrganizations)
     }
 
-  private def organizationsForRoles(roles: Seq[Role])(implicit authenticated: Authenticated): Set[OrganisaatioOid] =
+  protected def organizationsForRoles(roles: Seq[Role])(implicit authenticated: Authenticated): Set[OrganisaatioOid] =
     roles.flatMap { role =>
       authenticated.session.roleMap.get(role)
     }.fold(Set())(_ union _)
 
-  private def lazyFlatChildren(orgs: Set[OrganisaatioOid]): IterableView[OrganisaatioOid, Iterable[_]] =
-    orgs.view.flatMap(oid => OrganisaatioClient.getAllChildOidsFlat(oid).toSet)
+  protected def lazyFlatChildren(orgs: Set[OrganisaatioOid]): IterableView[(Seq[OrganisaatioOid], Seq[Koulutustyyppi]), Iterable[_]] =
+    orgs.view.map(oid => OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid))
 
   def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
     roles.exists { role =>

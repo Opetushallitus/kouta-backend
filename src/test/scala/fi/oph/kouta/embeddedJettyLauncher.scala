@@ -90,7 +90,10 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     logger.info(s"Adding session for TestDataGenerator")
     Try(SessionDAO.delete(UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)))
     SessionDAO.store(
-      CasSession(ServiceTicket(""), "", KoutaIntegrationSpec.defaultAuthorities),
+      CasSession(ServiceTicket(""),
+                 "",
+                 KoutaIntegrationSpec.defaultAuthorities
+      ),
       UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)
     )
   }
