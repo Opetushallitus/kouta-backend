@@ -40,7 +40,14 @@ object SessionDAO extends SessionDAO with SessionSQL {
     runBlockingTransactionally(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS)).get
 
   override def get(id: UUID): Option[Session] = {
-    runBlockingTransactionally(getSession(id), timeout = Duration(2, TimeUnit.SECONDS)).get.map {
+    runBlocking(
+      getSession(id).flatMap {
+        case None =>
+          deleteSession(id).andThen(DBIO.successful(None))
+        case Some(t) =>
+          updateLastRead(id).andThen(DBIO.successful(Some(t)))
+      }.transactionally, Duration(2, TimeUnit.SECONDS)
+    ).map {
       case (casTicket, personOid) =>
         val authorities = runBlocking(searchAuthoritiesBySession(id), Duration(2, TimeUnit.SECONDS))
         CasSession(ServiceTicket(casTicket.get), personOid, authorities.map(Authority(_)).toSet)
@@ -67,20 +74,11 @@ sealed trait SessionSQL extends SQLHelpers {
     sqlu"""delete from sessions where cas_ticket = ${ticket.s}""".map(_ > 0)
 
   protected def getSession(id: UUID) =
-    getSessionQuery(id)
-      .flatMap {
-        case None =>
-          deleteSession(id).andThen(DBIO.successful(None))
-        case Some(t) =>
-          updateLastRead(id).andThen(DBIO.successful(Some(t)))
-      }
-
-  private def getSessionQuery(id: UUID) =
     sql"""select cas_ticket, person from sessions
           where id = $id and last_read > now() - interval '60 minutes'"""
-      .as[(Option[String], String)].headOption
+      .as[(Option[String], String)].map(_.headOption)
 
-  private def updateLastRead(id: UUID) =
+  protected def updateLastRead(id: UUID) =
     sqlu"""update sessions set last_read = now()
            where id = $id and last_read < now() - interval '30 minutes'"""
 

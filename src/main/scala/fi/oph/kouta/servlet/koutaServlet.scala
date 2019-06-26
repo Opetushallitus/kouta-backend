@@ -61,7 +61,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       case _ => request.body
     }
 
-    s"Error ${request.getMethod} ${request.getContextPath} => $msgBody"
+    s"Error ${request.getMethod} ${request.getRequestURI}?${request.getQueryString} => $msgBody"
   }
 
   def badRequest(t: Throwable): ActionResult = {
