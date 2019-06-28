@@ -1,11 +1,12 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-import java.util.{ConcurrentModificationException, UUID}
+import java.util.UUID
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem, Valintakoe}
+import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -43,6 +44,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
       l <- selectLastModified(oid)
     } yield (h, a, k, l) ).map {
       case (Some(h), a, k, Some(l)) => Some((h.copy(
+        modified = Some(instantToLocalDateTime(l)),
         hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
         valintakokeet = k.toList), l))
       case _ => None
@@ -265,14 +267,38 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from haut
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[HakuListItem]
+    sql"""select ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
+          from haut ha
+          inner join (
+            select ha.oid oid, greatest(
+              max(lower(ha.system_time)),
+              max(lower(hah.system_time)),
+              max(upper(hh.system_time)),
+              max(upper(hhh.system_time))) modified
+            from haut ha
+            left join haut_history hah on ha.oid = hah.oid
+            left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
+            left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
+            group by ha.oid
+          ) m on m.oid = ha.oid
+          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[HakuListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
-    sql"""select haut.oid, haut.nimi, haut.tila, haut.organisaatio_oid, haut.muokkaaja, lower(haut.system_time)
+    sql"""select haut.oid, haut.nimi, haut.tila, haut.organisaatio_oid, haut.muokkaaja, m.modified
           from haut
+          inner join (
+            select ha.oid oid, greatest(
+              max(lower(ha.system_time)),
+              max(lower(hah.system_time)),
+              max(upper(hh.system_time)),
+              max(upper(hhh.system_time))) modified
+            from haut ha
+            left join haut_history hah on ha.oid = hah.oid
+            left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
+            left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
+            group by ha.oid
+          ) m on m.oid = haut.oid
           inner join hakukohteet on hakukohteet.haku_oid = haut.oid
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
           where toteutukset.oid = $toteutusOid""".as[HakuListItem]

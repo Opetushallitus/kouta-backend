@@ -1,8 +1,7 @@
 package fi.oph.kouta.servlet
 
 import java.text.ParseException
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.Instant
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
 import fi.oph.kouta.SwaggerPaths.registerPath
@@ -17,19 +16,13 @@ import org.scalatra.json.JacksonJsonSupport
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
+import fi.oph.kouta.util.TimeUtils.{renderHttpDate, parseHttpDate}
+
 trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   with Logging with KoutaJsonFormats with CasAuthenticatedServlet {
 
   before() {
     contentType = formats("json")
-  }
-
-  protected def renderHttpDate(instant: Instant): String = {
-    DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.ofInstant(instant, ZoneId.of("GMT")))
-  }
-
-  protected def parseHttpDate(string: String): Instant = {
-    Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(string))
   }
 
   protected def createLastModifiedHeader(instant: Instant): String = {

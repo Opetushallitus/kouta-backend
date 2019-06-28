@@ -10,6 +10,8 @@ import fi.oph.kouta.security.{CasSession, ServiceTicket}
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
 
+import scala.util.Try
+
 object EmbeddedJettyLauncher extends Logging {
 
   val DefaultPort = "8099"
@@ -85,6 +87,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupCasSessionIdForTestDataGenerator()= {
     logger.info(s"Adding session for TestDataGenerator")
+    Try(SessionDAO.delete(UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)))
     SessionDAO.store(
       CasSession(ServiceTicket(""), "", KoutaIntegrationSpec.defaultAuthorities),
       UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)

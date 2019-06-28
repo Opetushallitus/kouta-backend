@@ -4,6 +4,7 @@ import java.net.URLDecoder
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.service.ModificationService
+import fi.oph.kouta.util.TimeUtils.parseHttpDate
 import org.scalatra.Ok
 
 class AnythingServlet extends KoutaServlet {

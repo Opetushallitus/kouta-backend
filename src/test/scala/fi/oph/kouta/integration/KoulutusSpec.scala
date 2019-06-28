@@ -1,13 +1,19 @@
 package fi.oph.kouta.integration
 
+import java.time.{Duration, Instant, LocalDateTime, ZoneId}
+import java.time.format.DateTimeFormatter
+
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
+
+import scala.util.Success
 
 class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with Validations {
 
@@ -221,6 +227,29 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
     update(uusiKoulutus, lastModified, true)
     get(oid, uusiKoulutus)
+  }
+
+  it should "update the modified time of the koulutus even when just tarjoajat is updated" in {
+    val oid = put(koulutus)
+
+    setModifiedToPast(oid, "10 minutes") should be(Success(()))
+    val lastModified = get(oid, koulutus(oid))
+    val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
+    Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
+
+    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
+    update(uusiKoulutus, lastModified, expectUpdate = true)
+
+    get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+
+      val koulutus = read[Koulutus](body)
+      koulutus.modified.isDefined should be(true)
+      val modifiedInstant = koulutus.modified.get.atZone(ZoneId.of("Europe/Helsinki")).toInstant
+
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(5)) should equal(1)
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(15)) should equal(-1)
+    }
   }
 
   it should "delete all tarjoajat and read last modified from history" in {
