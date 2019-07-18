@@ -1,5 +1,6 @@
 cas.url={{cas_url}}
 kouta-backend.cas.service={{kouta_backend_cas_service}}
+kouta-backend.cas.allowOldTarjontaRole={{kouta_backend_cas_allow_old_tarjonta_rule}}
 
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
 kouta-backend.db.user={{host_postgresql_kouta_user}}

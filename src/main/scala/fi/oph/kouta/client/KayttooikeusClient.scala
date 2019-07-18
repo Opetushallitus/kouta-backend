@@ -1,7 +1,7 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails}
+import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails, Role, RoleEntity}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 
@@ -13,6 +13,7 @@ trait KayttooikeusClient extends HttpClient with Logging {
 
   private implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
+  private lazy val allowOldTarjontaRole = KoutaConfigurationFactory.configuration.securityConfiguration.allowOldTarjontaRole
 
   def getUserByUsername(username: String): KayttooikeusUserDetails = {
     val url = urlProperties.url(s"kayttooikeus-service.userDetails.byUsername", username)
@@ -28,7 +29,17 @@ trait KayttooikeusClient extends HttpClient with Logging {
       KayttooikeusUserDetails(
         kayttooikeusDto.authorities
           .map(a => Authority(a.authority.replace("ROLE_", "")))
-          .toSet,
+          .toSet
+          // Allow users with the old tarjonta role to use the new tarjonta while we don't have the new authorities set up in Kaytto-oikeuspalvelu
+          .flatMap { a: Authority =>
+            if (allowOldTarjontaRole && a.role.name == "APP_TARJONTA_CRUD" && a.organisaatioId.nonEmpty) {
+              logger.info(s"Adding CRUD roles for user $username to organization ${a.organisaatioId} because they have the authority ${a.authority}")
+              RoleEntity.all.map(_.Crud).map((r: Role) => Authority(r, a.organisaatioId.get)).toSet
+            }
+            else {
+              Some(a)
+            }
+          },
         kayttooikeusDto.username
       )
     }

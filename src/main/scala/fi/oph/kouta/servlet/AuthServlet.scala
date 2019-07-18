@@ -56,17 +56,6 @@ class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Sw
     casSessionService.getSession(None, existingSession) match {
       case Left(t) => throw t
       case Right((_, session)) => Ok(Map("personOid" -> session.personOid))
-/*
-      case Right((_, session)) =>
-        val existingOrganizations = session.authorities
-          .map(_.organisaatioId)
-          .collect { case Some(org) => org }
-
-        val children = existingOrganizations
-          .flatMap(OrganisaatioClient.getAllChildOidsFlat)
-
-        Ok(Map("personOid" -> session.personOid, "orgs" -> session.authorities.map(_.organisaatioId), "orgChildOids" -> children))
-        */
     }
   }
 
