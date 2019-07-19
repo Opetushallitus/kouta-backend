@@ -4,15 +4,18 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.validation.Validations
 
-class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
+class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture with Validations {
+
+  override val roleEntities = Seq(Role.Haku)
 
   def addInvalidHakuaika(haku:Haku) = haku.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
   "Get haku by oid" should "return 404 if haku not found" in {
-    get("/haku/123", headers = Seq(sessionHeader)) {
+    get("/haku/123", headers = Seq(defaultSessionHeader)) {
       status should equal (404)
       body should include ("Unknown haku oid")
     }
@@ -23,6 +26,36 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
       status should equal (401)
       body should include ("Unauthorized")
     }
+  }
+
+  it should "allow a user of the haku organization to read the haku" in {
+    val oid = put(haku)
+    get(oid, crudSessions(haku.organisaatioOid), haku(oid))
+  }
+
+  it should "deny a user without access to the haku organization" in {
+    val oid = put(haku)
+    get(s"$HakuPath/$oid", crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to read the haku" in {
+    val oid = put(haku)
+    get(oid, crudSessions(ParentOid), haku(oid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val oid = put(haku)
+    get(s"$HakuPath/$oid", crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    val oid = put(haku)
+    get(s"$HakuPath/$oid", otherRoleSession, 403)
+  }
+
+  it should "allow indexer access" in {
+    val oid = put(haku)
+    get(oid, indexerSession, haku(oid))
   }
 
   "Create haku" should "store haku" in {
@@ -37,8 +70,32 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
     }
   }
 
+  it should "allow a user of the haku organization to create the haku" in {
+    put(haku, crudSessions(haku.organisaatioOid))
+  }
+
+  it should "deny a user without access to the haku organization" in {
+    put(HakuPath, haku, crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to create the haku" in {
+    put(haku, crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    put(HakuPath, haku, crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    put(HakuPath, haku, readSessions(ChildOid), 403)
+  }
+
+  it should "deny indexer access" in {
+    put(HakuPath, haku, indexerSession, 403)
+  }
+
   it should "validate new haku" in {
-    put(HakuPath, bytes(addInvalidHakuaika(haku)), Seq(jsonHeader, sessionHeader)) {
+    put(HakuPath, bytes(addInvalidHakuaika(haku)), Seq(jsonHeader, defaultSessionHeader)) {
       withClue(body) {
         status should equal(400)
       }
@@ -63,7 +120,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(haku(oid)), Seq(sessionHeader)) {
+    post(HakuPath, bytes(haku(oid)), Seq(defaultSessionHeader)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -76,6 +133,48 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture with Validations {
       status should equal (401)
       body should include ("Unauthorized")
     }
+  }
+
+  it should "allow a user of the haku organization to update the haku" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku, lastModified, false, crudSessions(haku.organisaatioOid))
+  }
+
+  it should "deny a user without access to the haku organization" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku, lastModified, 403, crudSessions(LonelyOid))
+  }
+
+  it should "allow a user of an ancestor organization to create the haku" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku, lastModified, false, crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku, lastModified, 403, crudSessions(GrandChildOid))
+  }
+
+  it should "deny a user with the wrong role" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku, lastModified, 403, readSessions(haku.organisaatioOid))
+  }
+
+  it should "deny indexer access" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku, lastModified, 403, indexerSession)
   }
 
   it should "fail update if modified in between get and update" in {

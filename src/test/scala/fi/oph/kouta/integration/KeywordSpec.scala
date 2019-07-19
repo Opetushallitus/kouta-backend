@@ -1,18 +1,25 @@
 package fi.oph.kouta.integration
 
+import java.util.UUID
+
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.security.Role
 import org.scalatest.BeforeAndAfterEach
 
-class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
+class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with KeywordFixture
   with KoulutusFixture with ToteutusFixture with BeforeAndAfterEach {
 
   var koulutusOid = ""
+  var rolelessSession: UUID = _
+  var parentSession: UUID = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
+    rolelessSession = addTestSession()
+    parentSession = addTestSession(Role.Koulutus.Crud, ParentOid)
   }
 
   override def beforeEach(): Unit = {
@@ -36,6 +43,10 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
         status should equal(401)
       }
     }
+  }
+
+  it should "allow access to any authenticated user" in {
+    searchAsiasanat("aa", List("aamu", "aarre", "kaipaa"), sessionId = rolelessSession)
   }
 
   it should "search asiasanat with given kieli" in {
@@ -68,6 +79,10 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
         status should equal(401)
       }
     }
+  }
+
+  it should "allow access to any authenticated user" in {
+    searchAmmattinimikkeet("lääk", List("lääkäri", "yleislääkäri"), sessionId = rolelessSession)
   }
 
   it should "search ammattinimikkeet with given kieli" in {
@@ -110,7 +125,7 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     import slick.jdbc.PostgresProfile.api._
     val value = ammattinimikkeet.head.toLowerCase
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
-    post(AmmattinimikePath, bytes(List(value)), headers = Seq(sessionHeader)) {
+    post(AmmattinimikePath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
@@ -123,11 +138,18 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
     }
   }
 
+  it should "deny access without root access" in {
+    val value = ammattinimikkeet.head.toLowerCase
+    post(AmmattinimikePath, bytes(List(value)), headers = Seq(sessionHeader(parentSession))) {
+      status should equal(403)
+    }
+  }
+
   "Create asiasana" should "not mind if asiasana exists" in {
     import slick.jdbc.PostgresProfile.api._
     val value = asiasanat.head.toLowerCase
     db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)
-    post(AsiasanaPath, bytes(List(value)), headers = Seq(sessionHeader)) {
+    post(AsiasanaPath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       withClue(body) {
         status should equal(200)
       }
@@ -141,6 +163,13 @@ class KeywordSpec extends KoutaIntegrationSpec with KeywordFixture
       withClue(body) {
         status should equal(401)
       }
+    }
+  }
+
+  it should "deny access without root access" in {
+    val value = asiasanat.head.toLowerCase
+    post(AsiasanaPath, bytes(List(value)), headers = Seq(sessionHeader(parentSession))) {
+      status should equal(403)
     }
   }
 }

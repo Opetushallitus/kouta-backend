@@ -4,10 +4,13 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
-class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with ToteutusFixture with Validations {
+class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with Validations {
+
+  override val roleEntities = Seq(Role.Koulutus)
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
@@ -20,6 +23,46 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     get(s"$KoulutusPath/123", headers = Map.empty) {
       status should equal (401)
     }
+  }
+
+  it should "allow any authenticated user to access published koulutus" in {
+    val oid = put(koulutus.copy(julkinen = true))
+    get(oid, otherRoleSession, koulutus(oid).copy(julkinen = true))
+  }
+
+  it should "allow the user of the koulutus organization to read the koulutus" in {
+    val oid = put(koulutus)
+    get(oid, crudSessions(ChildOid), koulutus(oid))
+  }
+
+  it should "deny an authenticated user without organization access to access unpublished koulutus" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid", crudSessions(LonelyOid), 403)
+  }
+
+  it should "deny the user of a tarjoaja organization without access to the koulutus organization to read the koulutus" in {
+    val oid = put(koulutus.copy(tarjoajat = List(LonelyOid)))
+    get(s"$KoulutusPath/$oid", crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow the user of a parent organization to read the koulutus" in {
+    val oid = put(koulutus)
+    get(oid, crudSessions(ParentOid), koulutus(oid))
+  }
+
+  it should "deny the user of a child organization to read the koulutus" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid", crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny the user of a wrong role to read the koulutus" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid", otherRoleSession, 403)
+  }
+
+  it should "allow the indexer to read any koulutus" in {
+    val oid = put(koulutus)
+    get(s"$KoulutusPath/$oid", otherRoleSession, 403)
   }
 
   "Create koulutus" should "store koulutus" in {
@@ -37,7 +80,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
+      body should equal(validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
   }
 
@@ -47,6 +90,34 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
         status should equal(401)
       }
     }
+  }
+
+  it should "allow access if the user has rights to the koulutus organization" in {
+    put(koulutus.copy(tarjoajat = List.empty), crudSessions(ChildOid))
+  }
+
+  it should "deny access if the user is missing rights to the koulutus organization" in {
+    put(KoulutusPath, koulutus.copy(tarjoajat = List.empty), crudSessions(EvilChildOid), 403)
+  }
+
+  it should "allow access if the user has rights to an ancestor of the koulutus organization" in {
+    put(koulutus, crudSessions(ParentOid))
+  }
+
+  it should "deny access if the user only has rights to a descendant of the koulutus organization" in {
+    put(KoulutusPath, koulutus, crudSessions(EvilChildOid), 403)
+  }
+
+  it should "fail if the user doesn't have the right role" in {
+    put(KoulutusPath, koulutus, otherRoleSession, 403)
+  }
+
+  it should "deny access for the indexer" in {
+    put(KoulutusPath, koulutus, indexerSession, 403)
+  }
+
+  it should "allow access even if the user is missing rights to some of the tarjoajat" in {
+    put(koulutus, crudSessions(ChildOid))
   }
 
   "Update koulutus" should "update koulutus" in {
@@ -69,7 +140,58 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     post(KoulutusPath, bytes(koulutus(oid)), Seq("If-Unmodified-Since" -> lastModified)) {
       status should equal (401)
     }
-   }
+  }
+
+  it should "allow access if the user has rights to the koulutus organization" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(ChildOid))
+  }
+
+  it should "deny access if the user is missing rights to the koulutus organization" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, crudSessions(EvilChildOid), 403)
+  }
+
+  it should "allow access if the user has rights to an ancestor organization" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(ParentOid))
+  }
+
+  it should "deny access if the user only has rights to a descent organization" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny access if the user doesn't have update rights" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, readSessions(ChildOid), 403)
+  }
+
+  it should "deny access for the indexer" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, indexerSession, 403)
+  }
+
+  it should "allow access even if the user doesn't have rights to a tarjoaja organization being removed" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
+
+    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(ChildOid))
+  }
+
+  it should "allow access even if the user doesn't have rights to a tarjoaja organization being added" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    val updatedKoulutus = koulutus(oid).copy(tarjoajat = EvilChildOid :: koulutus.tarjoajat)
+    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(ChildOid))
+  }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(koulutus)
@@ -134,7 +256,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
     val t1 = put(toteutus(oid))
     val t2 = put(toteutus(oid))
     val t3 = put(toteutus(oid))
-    get(s"$KoulutusPath/$oid/toteutukset", headers = defaultHeaders) {
+    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List(
         toteutus(t1, oid).copy(modified = Some(readModifiedByOid(t1, "toteutukset"))),
@@ -146,10 +268,28 @@ class KoulutusSpec extends KoutaIntegrationSpec with KoulutusFixture with Toteut
 
   it should "return empty result if koulutus has no toteutukset" in {
     val oid = put(koulutus)
-    get(s"$KoulutusPath/$oid/toteutukset", headers = defaultHeaders) {
+    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List())
     }
   }
 
+  it should "deny access without a valid session" in {
+    val oid = KoulutusOid("oid")
+    get(s"$KoulutusPath/$oid/toteutukset", headers = Seq()) {
+      withClue(body) {
+        status should equal (401)
+      }
+    }
+  }
+
+  it should "deny access without the indexer role" in {
+    val oid = KoulutusOid("oid")
+    get(s"$KoulutusPath/$oid/toteutukset", defaultSessionId, 403)
+  }
+
+  it should "deny access without root organization access to the indexer role" in {
+    val oid = KoulutusOid("oid")
+    get(s"$KoulutusPath/$oid/toteutukset", fakeIndexerSession, 403)
+  }
 }

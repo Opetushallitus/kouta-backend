@@ -1,32 +1,125 @@
 package fi.oph.kouta.service
 
+import java.time.Instant
+
 import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.Perustiedot
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validatable
+import fi.vm.sade.utils.slf4j.Logging
+
+import scala.collection.IterableView
 
 trait ValidatingService[E <: Validatable] {
 
-  def withValidation[R](e:E, f:(E) => R) = e.validate() match {
+  def withValidation[R](e:E, f: E => R): R = e.validate() match {
     case Right(_) => f(e)
-    case Left(list) => throw new KoutaValidationException(list)
+    case Left(list) => throw KoutaValidationException(list)
   }
 }
 
 case class KoutaValidationException(errorMessages:List[String]) extends RuntimeException
 
-trait AuthorizationService {
+trait RoleEntityAuthorizationService extends AuthorizationService {
+  protected val roleEntity: RoleEntity
 
-  def withAuthorizedChildAndParentOrganizationOids[R](oid:OrganisaatioOid, f:(Seq[OrganisaatioOid]) => R) =
-    OrganisaatioClient.getAllParentAndChildOidsFlat(oid) match {
-      case oids if oids.isEmpty => throw new KoutaAuthorizationFailedException(oid)
-      case oids => f(oids)
+  def authorizeGet[E <: Perustiedot](entityWithTime: Option[(E, Instant)])(implicit authenticated: Authenticated): Option[(E, Instant)] =
+    entityWithTime.map {
+      case (entity, lastModified) =>
+        withAuthorizedChildOrganizationOids(roleEntity.readRoles) { authorizedOrganizations =>
+          authorize(entity.organisaatioOid, authorizedOrganizations) {
+            (entity, lastModified)
+          }
+        }
     }
 
-  def withAuthorizedChildOrganizationOids[R](oid:OrganisaatioOid, f:(Seq[OrganisaatioOid]) => R) =
-    OrganisaatioClient.getAllChildOidsFlat(oid) match {
-      case oids if oids.isEmpty => throw new KoutaAuthorizationFailedException(oid)
-      case oids => f(oids)
+
+  def authorizePut[E <: Perustiedot, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
+    withAuthorizedChildOrganizationOids(roleEntity.createRoles) { authorizedOrganizations =>
+      authorize(entity.organisaatioOid, authorizedOrganizations) {
+        f
+      }
+    }
+
+  def authorizeUpdate[E <: Perustiedot, I](entityForUpdate: => Option[(E, Instant)])(f: => I)(implicit authenticated: Authenticated): I = {
+    withAuthorizedChildOrganizationOids(roleEntity.updateRoles) { authorizedOrganizations =>
+      entityForUpdate match {
+        case None => throw new NoSuchElementException()
+        case Some(existing) =>
+          authorize(existing._1.organisaatioOid, authorizedOrganizations) {
+            f
+          }
+      }
+    }
+  }
+
+}
+
+trait AuthorizationService extends Logging {
+
+  private lazy val rootOrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+
+  protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
+
+  /** Checks if the the authenticated user has access to the given organization, then calls f with a sequence of descendants of that organization. */
+  def withAuthorizedChildOrganizationOids[R](oid: OrganisaatioOid, roles: Seq[Role])(f: Seq[OrganisaatioOid] => R)(implicit authenticated: Authenticated): R =
+    withAuthorizedChildOrganizationOids(roles) { children =>
+      authorize(oid, children) {
+        OrganisaatioClient.getAllChildOidsFlat(oid) match {
+          case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
+          case oids => f(oids)
+        }
+      }
+    }
+
+  def withAuthorizedChildOrganizationOids[R](roles: Seq[Role])(f: IterableView[OrganisaatioOid, Iterable[_]] => R)(implicit authenticated: Authenticated): R =
+    organizationsForRoles(roles) match {
+      case oids if oids.isEmpty => throw RoleAuthorizationFailedException(roles, authenticated.session.roles)
+      case oids                 => f(oids.view ++ lazyFlatChildren(oids))
+    }
+
+  def authorize[R](allowedOrganization: OrganisaatioOid, authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =
+    authorizeRootOrAny(Set(allowedOrganization), authorizedOrganizations)(r)
+
+  def authorizeRootOrAny[R](allowedOrganizations: Set[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =
+    if (authorizedOrganizations.exists(authorized => authorized == rootOrganisaatioOid || allowedOrganizations.contains(authorized))) {
+      r
+    }
+    else {
+      throw OrganizationAuthorizationFailedException(allowedOrganizations)
+    }
+
+  private def organizationsForRoles(roles: Seq[Role])(implicit authenticated: Authenticated): Set[OrganisaatioOid] =
+    roles.flatMap { role =>
+      authenticated.session.roleMap.get(role)
+    }.fold(Set())(_ union _)
+
+  private def lazyFlatChildren(orgs: Set[OrganisaatioOid]): IterableView[OrganisaatioOid, Iterable[_]] =
+    orgs.view.flatMap(oid => OrganisaatioClient.getAllChildOidsFlat(oid).toSet)
+
+  def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
+    roles.exists { role =>
+      authenticated.session.roleMap.get(role).exists(_.contains(rootOrganisaatioOid))
+    }
+
+  def withRootAccess[R](roles: Seq[Role])(f: => R)(implicit authenticated: Authenticated): R =
+    if (hasRootAccess(roles)) {
+      f
+    } else {
+      throw OrganizationAuthorizationFailedException()
     }
 }
 
-case class KoutaAuthorizationFailedException(oid:OrganisaatioOid) extends RuntimeException
+case class OrganizationAuthorizationFailedException(oids: Iterable[OrganisaatioOid]) extends RuntimeException
+
+object OrganizationAuthorizationFailedException {
+  def apply(oid: OrganisaatioOid): OrganizationAuthorizationFailedException = OrganizationAuthorizationFailedException(Seq(oid))
+
+  def apply(): OrganizationAuthorizationFailedException = OrganizationAuthorizationFailedException(Seq.empty)
+}
+
+case class RoleAuthorizationFailedException(acceptedRoles: Seq[Role], existingRoles: Iterable[Role])
+  extends RuntimeException(s"Authorization failed, missing role. Accepted roles: ${acceptedRoles.map(_.name).mkString(",")}. Existing roles: ${existingRoles.map(_.name).mkString(",")}.")

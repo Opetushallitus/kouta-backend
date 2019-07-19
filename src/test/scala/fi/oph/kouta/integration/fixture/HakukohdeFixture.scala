@@ -41,11 +41,17 @@ trait HakukohdeFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
   def hakukohde(oid: String, toteutusOid: String, hakuOid: String, valintaperusteId: UUID, tila: Julkaisutila): Hakukohde = hakukohde.copy(
     oid = Some(HakukohdeOid(oid)), toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), tila = tila)
 
-  def hakukohde(toteutusOid: String, hakuOid: String, valintaperusteId: UUID, organisaatioOid: String): Hakukohde = hakukohde.copy(
-    toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId), organisaatioOid = OrganisaatioOid(organisaatioOid))
+  def hakukohde(toteutusOid: ToteutusOid, hakuOid: HakuOid, valintaperusteId: UUID, organisaatioOid: OrganisaatioOid): Hakukohde = hakukohde.copy(
+    toteutusOid = toteutusOid, hakuOid = hakuOid, valintaperusteId = Some(valintaperusteId), organisaatioOid = organisaatioOid)
 
   def put(hakukohde: Hakukohde): String = put(HakukohdePath, hakukohde, oid)
+  def put(hakukohde: Hakukohde, sessionId: UUID): String = put(HakukohdePath, hakukohde, sessionId, oid)
+
   def get(oid: String, expected: Hakukohde): String = get(HakukohdePath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "hakukohteet"))))
+  def get(oid: String, sessionId: UUID, expected: Hakukohde): String = get(HakukohdePath, oid, sessionId, expected.copy(modified = Some(readModifiedByOid(oid, "hakukohteet"))))
+
+  def update(haku: Hakukohde, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(HakukohdePath, haku, lastModified, sessionId, expectedStatus)
+  def update(haku: Hakukohde, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(HakukohdePath, haku, lastModified, expectUpdate, sessionId)
   def update(haku: Hakukohde, lastModified: String, expectUpdate: Boolean): Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
   def update(haku: Hakukohde, lastModified: String): Unit = update(haku, lastModified, expectUpdate = true)
 

@@ -3,6 +3,7 @@ package fi.oph.kouta.security
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
 import fi.vm.sade.utils.cas.CasClient.Username
@@ -12,21 +13,17 @@ import scalaz.concurrent.Task
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
-class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
+case class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
   def this(msg: String) = this(msg, null)
   def this() = this(null, null)
 }
 
-class AuthorizationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
-  def this(msg: String) = this(msg, null)
-  def this() = this(null, null)
-}
+case class KayttooikeusUserDetails(authorities: Set[Authority], oid: String)
 
-case class KayttooikeusUserDetails(roles : Set[Role], oid: String)
+object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
+                                                   KayttooikeusClient)
 
-object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.casConfiguration))
-
-abstract class CasSessionService(val securityContext: SecurityContext /*, userDetailsService: KayttooikeusUserDetailsService*/ ) extends Logging {
+abstract class CasSessionService(val securityContext: SecurityContext, val userDetailsService: KayttooikeusClient) extends Logging {
   logger.info(s"Using security context ${securityContext.getClass.getSimpleName}")
 
   val serviceIdentifier: String = securityContext.casServiceIdentifier
@@ -44,17 +41,15 @@ abstract class CasSessionService(val securityContext: SecurityContext /*, userDe
   }
 
   private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): (UUID, CasSession) = {
-    val session = CasSession(ticket, user.oid, user.roles)
-    logger.debug(s"Storing to session: ${session.casTicket} ${session.personOid} ${session.roles}")
+    val session = CasSession(ticket, user.oid, user.authorities)
+    logger.debug(s"Storing to session: ${session.casTicket} ${session.personOid} ${session.authorities}")
     val id = SessionDAO.store(session)
     (id, session)
   }
 
   private def createSession(ticket: ServiceTicket): Either[Throwable, (UUID, CasSession)] = {
     validateServiceTicket(ticket)
-      //.flatMap(userDetailsService.getUserByUsername)
-      // TODO: authorization
-      .map(KayttooikeusUserDetails(Role.all.values.toSet, _))
+      .map(userDetailsService.getUserByUsername)
       .map(storeSession(ticket, _))
   }
 

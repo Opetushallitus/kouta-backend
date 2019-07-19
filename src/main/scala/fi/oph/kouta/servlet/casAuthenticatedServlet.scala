@@ -28,14 +28,6 @@ trait CasAuthenticatedServlet {
   }
 
   /*
-    def authorize(roles:Role*)(implicit authenticated: Authenticated) = {
-      if (!authenticated.session.hasAnyRole(roles.toSet)) {
-        throw new AuthorizationFailedException
-      }
-    }
-  */
-
-  /*
     protected def auditInfo(implicit authenticated: Authenticated): AuditInfo = {
       AuditInfo(
         Authenticated.unapply(authenticated).get, InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request)),

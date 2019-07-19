@@ -3,8 +3,8 @@ package fi.oph.kouta.servlet
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.service.KoulutusService
-import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger._
+import org.scalatra.{NotFound, Ok}
 
 class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swagger) extends KoutaServlet {
   override val modelName = "Koulutus"
@@ -52,7 +52,7 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
   get("/list", operation(apiOperation[List[KoulutusListItem]]("Listaa käytettävissä olevat koulutukset")
     tags modelName
     summary "Listaa niiden koulutusten perustiedot, joita organisaatio voi käyttää"
-    parameter queryParam[String]("organisaatioOid").description("Organisaation oid").required)) {
+    parameter queryParam[String]("organisaatioOid").description("Valitun organisaation oid").required)) {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -70,7 +70,7 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
 
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").map(_.toBoolean)))
+    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
   }
 
   get("/:oid/toteutukset/list", operation(apiOperation[List[ToteutusListItem]]("Listaa koulutuksen toteutukset")
@@ -82,7 +82,7 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     implicit val authenticated: Authenticated = authenticate
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")))) //TODO: Vain oph/indeksoija saa hakea kaiken
+      case None => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid"))))
       case Some(organisaatioOid) => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")), organisaatioOid))
     }
   }

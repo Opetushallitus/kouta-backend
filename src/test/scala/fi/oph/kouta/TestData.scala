@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.OrganisaatioServiceMock.{ChildOid, EvilGrandChildOid, GrandChildOid, EvilCousin}
 
 object TestData {
 
@@ -64,9 +65,9 @@ object TestData {
       lisatiedot = Seq(
         Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
-    tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = UserOid("5.5.5"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     modified = None)
 
@@ -108,7 +109,7 @@ object TestData {
     hakulomake = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
-    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    organisaatioOid = ChildOid,
     muokkaaja = UserOid("5.4.3.2.1"),
     kielivalinta = Seq(Fi, Sv),
     modified = None)
@@ -141,7 +142,7 @@ object TestData {
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     muokkaaja = UserOid("1.2.3.2.1"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 
@@ -252,7 +253,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     onkoJulkinen = true,
     metadata = Some(ammValintaperusteMetadata),
-    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    organisaatioOid = ChildOid,
     muokkaaja = UserOid("2.1.2.1.2"),
     kielivalinta = List(Fi, Sv),
     modified = None)
@@ -333,7 +334,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
     muokkaaja = UserOid("1.2.3.4"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 

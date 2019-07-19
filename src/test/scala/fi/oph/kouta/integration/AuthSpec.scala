@@ -8,7 +8,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
 
   "Get session" should "return 200 if the session is active" in {
     get(sessionPath, headers = defaultHeaders) {
-      body should include(testUserOid)
+      body should include(testUser.oid)
       status should equal(200)
     }
   }
@@ -32,7 +32,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
 
   it should "reuse an existing session" in {
     get(loginPath, headers = defaultHeaders) {
-      body should include(testUserOid)
+      body should include(testUser.oid)
       status should equal(200)
     }
   }
@@ -45,7 +45,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "redirect to Cas service if ticket is not specified and session is unknown" in {
-    get(loginPath, headers = Seq(jsonHeader, sessionHeader(UUID.randomUUID().toString))) {
+    get(loginPath, headers = Seq(jsonHeader, sessionHeader(UUID.randomUUID()))) {
       withClue(body) {
         status should equal(302)
         header("Location") should (include(casUrl) and include(serviceIdentifier))
@@ -54,8 +54,8 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "create a new session from a verifiable CAS ticket" in {
-    val cookieHeader = get(loginPath, params = Seq("ticket" -> s"mock-ticket-$serviceIdentifier-$testUserOid"), headers = Seq(jsonHeader)) {
-      body should include(testUserOid)
+    val cookieHeader = get(loginPath, params = Seq("ticket" -> testUser.ticket), headers = Seq(jsonHeader)) {
+      body should include(testUser.oid)
       status should equal(200)
 
       header.get("Set-Cookie") should not be empty
@@ -67,7 +67,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
 
     get(sessionPath, headers = Seq(sessionHeader(sessionId.get))) {
       status should equal(200)
-      body should include(testUserOid)
+      body should include(testUser.oid)
     }
   }
 
@@ -81,18 +81,18 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   it should "reuse an existing session even if a ticket is provided" in {
     get(loginPath, params = Seq("ticket" -> "invalid"), headers = defaultHeaders) {
       status should equal(200)
-      body should include(testUserOid)
+      body should include(testUser.oid)
     }
   }
 
   it should "create a new session from a CAS ticket also when an unknown session id is provided" in {
     val cookieHeader = get(
       loginPath,
-      params = Seq("ticket" -> s"mock-ticket-$serviceIdentifier-$testUserOid"),
-      headers = Seq(jsonHeader, sessionHeader(UUID.randomUUID().toString))
+      params = Seq("ticket" -> testUser.ticket),
+      headers = Seq(jsonHeader, sessionHeader(UUID.randomUUID()))
     ) {
       status should equal(200)
-      body should include(testUserOid)
+      body should include(testUser.oid)
 
       header.get("Set-Cookie") should not be empty
       header("Set-Cookie")
@@ -102,9 +102,8 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
 
     get(sessionPath, headers = Seq(sessionHeader(sessionId.get))) {
       status should equal(200)
-      body should include(testUserOid)
+      body should include(testUser.oid)
     }
-
   }
 
   "Logout" should "" in {

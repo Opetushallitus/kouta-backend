@@ -4,14 +4,17 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.validation.Validations
 
 class ToteutusSpec extends KoutaIntegrationSpec
-  with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
+  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
+
+  override val roleEntities = Seq(Role.Toteutus)
 
   var koulutusOid = ""
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
   }
@@ -29,6 +32,36 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
+  it should "allow a user of the toteutus organization to read the toteutus" in {
+    val oid = put(toteutus(koulutusOid))
+    get(oid, crudSessions(toteutus.organisaatioOid), toteutus(oid, koulutusOid))
+  }
+
+  it should "deny a user without access to the toteutus organization" in {
+    val oid = put(toteutus(koulutusOid))
+    get(s"$ToteutusPath/$oid", crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to read the toteutus" in {
+    val oid = put(toteutus(koulutusOid))
+    get(oid, crudSessions(ParentOid), toteutus(oid, koulutusOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val oid = put(toteutus(koulutusOid))
+    get(s"$ToteutusPath/$oid", crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    val oid = put(toteutus(koulutusOid))
+    get(s"$ToteutusPath/$oid", otherRoleSession, 403)
+  }
+
+  it should "allow indexer access" in {
+    val oid = put(toteutus(koulutusOid))
+    get(oid, indexerSession, toteutus(oid, koulutusOid))
+  }
+
   "Create toteutus" should "store toteutus" in {
     val oid = put(toteutus(koulutusOid))
     get(oid, toteutus(oid, koulutusOid))
@@ -40,7 +73,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "return 401 if no session is found" in {
-    put(s"$ToteutusPath", bytes(toteutus(koulutusOid))) {
+    put(ToteutusPath, bytes(toteutus(koulutusOid))) {
       status should equal (401)
     }
   }
@@ -52,6 +85,30 @@ class ToteutusSpec extends KoutaIntegrationSpec
       }
       body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
     }
+  }
+
+  it should "allow a user of the toteutus organization to create the toteutus" in {
+    put(toteutus(koulutusOid), crudSessions(toteutus.organisaatioOid))
+  }
+
+  it should "deny a user without access to the toteutus organization" in {
+    put(ToteutusPath, toteutus(koulutusOid), crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to create the toteutus" in {
+     put(toteutus(koulutusOid), crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    put(ToteutusPath, toteutus(koulutusOid), crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    put(ToteutusPath, toteutus(koulutusOid), readSessions(ChildOid), 403)
+  }
+
+  it should "deny indexer access" in {
+    put(ToteutusPath, toteutus(koulutusOid), indexerSession, 403)
   }
 
   "Update toteutus" should "update toteutus" in {
@@ -76,6 +133,48 @@ class ToteutusSpec extends KoutaIntegrationSpec
     post(ToteutusPath, bytes(thisToteutus), Seq("If-Unmodified-Since" -> lastModified)) {
       status should equal (401)
     }
+  }
+
+  it should "allow a user of the toteutus organization to update the toteutus" in {
+    val oid = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, false, crudSessions(toteutus.organisaatioOid))
+  }
+
+  it should "deny a user without access to the toteutus organization" in {
+    val oid = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, 403, crudSessions(LonelyOid))
+  }
+
+  it should "allow a user of an ancestor organization to create the toteutus" in {
+    val oid = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, false, crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val oid = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, 403, crudSessions(GrandChildOid))
+  }
+
+  it should "deny a user with the wrong role" in {
+    val oid = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, 403, readSessions(toteutus.organisaatioOid))
+  }
+
+  it should "deny indexer access" in {
+    val oid = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, 403, indexerSession)
   }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {

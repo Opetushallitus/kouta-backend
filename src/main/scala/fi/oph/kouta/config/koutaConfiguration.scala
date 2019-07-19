@@ -1,7 +1,7 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
@@ -18,10 +18,12 @@ case class KoutaDatabaseConfiguration(
   leakDetectionThresholdMillis: Option[Int]
 )
 
-case class CasConfiguration(
-  url: String,
-  serviceIdentifier: String,
-  requiredRoles: Set[Role]
+case class SecurityConfiguration(
+  casUrl: String,
+  casServiceIdentifier: String,
+  kayttooikeusUrl: String,
+  rootOrganisaatio: OrganisaatioOid,
+  allowOldTarjontaRole: Boolean
 )
 
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
@@ -45,10 +47,12 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
 
-  val casConfiguration = CasConfiguration(
-    url = config.getString("cas.url"),
-    serviceIdentifier = config.getString("kouta-backend.cas.service"),
-    requiredRoles = Set("APP_KOUTA_USER").map(Role(_))
+  val securityConfiguration = SecurityConfiguration(
+    casUrl = config.getString("cas.url"),
+    casServiceIdentifier = config.getString("kouta-backend.cas.service"),
+    kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername"),
+    rootOrganisaatio = OrganisaatioOid(config.getString("root.organisaatio.oid")),
+    allowOldTarjontaRole = config.getBoolean("kouta-backend.cas.allowOldTarjontaRole")
   )
 }
 

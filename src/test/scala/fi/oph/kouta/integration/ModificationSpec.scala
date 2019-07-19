@@ -9,19 +9,18 @@ import java.util.UUID
 import fi.oph.kouta.TestData.inFuture
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.AnythingServlet
 import org.json4s.jackson.Serialization.read
 
 
-class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
+class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
   val AnythingPath = "/anything"
   addServlet(new AnythingServlet(), AnythingPath)
 
   override def beforeAll() = {
     super.beforeAll()
-    truncateDatabase()
-    addDefaultSession()
     createTestData(15)
     updateTestData()
   }
@@ -95,11 +94,29 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
     }
   }
 
+  it should "deny access without indexer role" in {
+
+    val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
+
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(addTestSession(Role.Koulutus.Crud, OphOid)))) {
+      status should be(403)
+    }
+  }
+
+  it should "deny access without root access to the indexer role" in {
+
+    val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
+
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(addTestSession(Role.Indexer, ChildOid)))) {
+      status should be(403)
+    }
+  }
+
   it should "return only modified oids 1" in {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should contain theSameElementsAs List(koulutusOids(0), koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
@@ -114,7 +131,7 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampBeforeAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should contain theSameElementsAs koulutusOids.map(KoulutusOid)
@@ -129,7 +146,7 @@ class ModificationSpec extends KoutaIntegrationSpec with EverythingFixture {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader)) {
+    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should be(empty)

@@ -5,14 +5,17 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.security.Role
 import fi.oph.kouta.validation.Validations
 
-class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Validations {
+class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with Validations {
+
+  override val roleEntities = Seq(Role.Hakukohde)
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
-  var valintaperusteId:UUID = null
+  var valintaperusteId: UUID = _
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
     toteutusOid = put(toteutus(koulutusOid))
@@ -20,14 +23,20 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     valintaperusteId = put(valintaperuste)
   }
 
+  override def afterAll(): Unit = {
+    super.afterAll()
+  }
+
   lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
-  lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))}
+  lazy val tallennettuHakukohde: String => Hakukohde = { oid: String =>
+    getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))
+  }
 
   def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
   "Get hakukohde by oid" should "return 404 if hakukohde not found" in {
-    get(s"$HakukohdePath/123", headers = Seq(sessionHeader)) {
+    get(s"$HakukohdePath/123", headers = Seq(defaultSessionHeader)) {
       status should equal (404)
       body should include ("Unknown hakukohde oid")
     }
@@ -38,6 +47,36 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
       status should equal (401)
       body should include ("Unauthorized")
     }
+  }
+
+  it should "allow a user of the hakukohde organization to read the hakukohde" in {
+    val oid = put(uusiHakukohde)
+    get(oid, crudSessions(hakukohde.organisaatioOid), tallennettuHakukohde(oid))
+  }
+
+  it should "deny a user without access to the hakukohde organization" in {
+    val oid = put(uusiHakukohde)
+    get(s"$HakukohdePath/$oid", crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to read the hakukohde" in {
+    val oid = put(uusiHakukohde)
+    get(oid, crudSessions(ParentOid), tallennettuHakukohde(oid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val oid = put(uusiHakukohde)
+    get(s"$HakukohdePath/$oid", crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    val oid = put(uusiHakukohde)
+    get(s"$HakukohdePath/$oid", otherRoleSession, 403)
+  }
+
+  it should "allow indexer access" in {
+    val oid = put(uusiHakukohde)
+    get(oid, indexerSession, tallennettuHakukohde(oid))
   }
 
   "Create hakukohde" should "store hakukohde" in {
@@ -52,8 +91,32 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     }
   }
 
+  it should "allow a user of the hakukohde organization to create the hakukohde" in {
+    put(uusiHakukohde, crudSessions(hakukohde.organisaatioOid))
+  }
+
+  it should "deny a user without access to the hakukohde organization" in {
+    put(HakukohdePath, uusiHakukohde, crudSessions(LonelyOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to create the hakukohde" in {
+    put(uusiHakukohde, crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    put(HakukohdePath, uusiHakukohde, crudSessions(GrandChildOid), 403)
+  }
+
+  it should "deny a user with the wrong role" in {
+    put(HakukohdePath, uusiHakukohde, readSessions(ChildOid), 403)
+  }
+
+  it should "deny indexer access" in {
+    put(HakukohdePath, uusiHakukohde, indexerSession, 403)
+  }
+
   it should "validate new hakukohde" in {
-    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, sessionHeader)) {
+    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, defaultSessionHeader)) {
       withClue(body) {
         status should equal(400)
       }
@@ -81,7 +144,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
-    post(HakukohdePath, bytes(thisHakukohde), Seq(sessionHeader)) {
+    post(HakukohdePath, bytes(thisHakukohde), Seq(defaultSessionHeader)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -93,7 +156,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     val lastModified = get(oid, thisHakukohde)
     Thread.sleep(1500)
     update(tallennettuHakukohde(oid).copy(tila = Arkistoitu), lastModified)
-    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified), sessionHeader)) {
+    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified), defaultSessionHeader)) {
       status should equal (409)
     }
   }
@@ -105,6 +168,48 @@ class HakukohdeSpec extends KoutaIntegrationSpec with EverythingFixture with Val
     post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified))) {
       status should equal (401)
     }
+  }
+
+  it should "allow a user of the hakukohde organization to update the hakukohde" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, thisHakukohde)
+    update(thisHakukohde, lastModified, false, crudSessions(hakukohde.organisaatioOid))
+  }
+
+  it should "deny a user without access to the hakukohde organization" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, thisHakukohde)
+    update(thisHakukohde, lastModified, 403, crudSessions(LonelyOid))
+  }
+
+  it should "allow a user of an ancestor organization to create the hakukohde" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, thisHakukohde)
+    update(thisHakukohde, lastModified, false, crudSessions(ParentOid))
+  }
+
+  it should "deny a user with only access to a descendant organization" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, thisHakukohde)
+    update(thisHakukohde, lastModified, 403, crudSessions(GrandChildOid))
+  }
+
+  it should "deny a user with the wrong role" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, thisHakukohde)
+    update(thisHakukohde, lastModified, 403, readSessions(hakukohde.organisaatioOid))
+  }
+
+  it should "deny indexer access" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, thisHakukohde)
+    update(thisHakukohde, lastModified, 403, indexerSession)
   }
 
   it should "update hakukohteen tekstit ja hakuajat" in {
