@@ -14,7 +14,10 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      alkamiskausiKoodiUri: Option[String] = None,
                      alkamisvuosi: Option[String] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                     hakulomake: Kielistetty = Map(),
+                     hakulomakeAtaruId: Option[UUID] = None,
+                     hakulomakeKuvaus: Kielistetty = Map(),
+                     hakulomakeLinkki: Kielistetty = Map(),
+                     eriHakulomakeKuinHaulla: Option[Boolean] = None,
                      aloituspaikat: Option[Int] = None,
                      ensikertalaisenAloituspaikat: Option[Int] = None,
                      pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
@@ -48,7 +51,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
      validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
      validateIfTrue(tila == Julkaistu, () => and(
        validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusaika, "liitteiden toimitusaika"))),
-       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusosoite, "liitteiden toimitusaika")))
+       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusosoite, "liitteiden toimitusaika"))),
+       validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
     ))
   )
 }

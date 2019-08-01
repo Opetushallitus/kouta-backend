@@ -1,9 +1,9 @@
 package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
+import java.util.UUID
 
-import fi.oph.kouta.domain.oid.{HakuOid, Oid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.indexing.indexing.{IndexTypeHaku/*, Indexable*/}
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 case class Haku(oid: Option[HakuOid] = None,
@@ -18,7 +18,9 @@ case class Haku(oid: Option[HakuOid] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,
                 kohdejoukonTarkenneKoodiUri: Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                hakulomake: Kielistetty = Map(),
+                hakulomakeAtaruId: Option[UUID] = None,
+                hakulomakeKuvaus: Kielistetty = Map(),
+                hakulomakeLinkki: Kielistetty = Map(),
                 metadata: Option[HakuMetadata] = None,
                 organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
@@ -38,7 +40,8 @@ case class Haku(oid: Option[HakuOid] = None,
      validateIfTrue(tila == Julkaistu, () => and (
        assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
        assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")
+       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
+       validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
      ))
   )
 

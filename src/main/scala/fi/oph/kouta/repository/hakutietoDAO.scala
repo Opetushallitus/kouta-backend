@@ -63,7 +63,8 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
 
   def selectHakujenHakutiedot(koulutusOid: KoulutusOid) = {
     sql"""select t.oid, h.oid, h.nimi, h.hakutapa_koodi_uri, h.alkamiskausi_koodi_uri, h.alkamisvuosi,
-                 h.hakulomaketyyppi, h.hakulomake, h.organisaatio_oid, h.muokkaaja, lower(h.system_time)
+                 h.hakulomaketyyppi, h.hakulomake_ataru_id, h.hakulomake_kuvaus, h.hakulomake_linkki,
+                 h.organisaatio_oid, h.muokkaaja, lower(h.system_time)
           from haut h
           inner join hakukohteet k on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
           inner join toteutukset t on t.oid = k.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
@@ -79,9 +80,9 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
   }
 
   def selectHakukohteidenHakutiedot(koulutusOid: KoulutusOid) = {
-    sql"""select t.oid, h.oid, k.oid, k.nimi, k.alkamiskausi_koodi_uri, k.alkamisvuosi,
-                 k.hakulomaketyyppi, k.hakulomake, k.aloituspaikat, k.ensikertalaisen_aloituspaikat,
-                 k.kaytetaan_haun_aikataulua, k.organisaatio_oid, k.muokkaaja, lower(k.system_time)
+    sql"""select t.oid, h.oid, k.oid, k.nimi, k.alkamiskausi_koodi_uri, k.alkamisvuosi, k.hakulomaketyyppi,
+                 k.hakulomake_ataru_id, k.hakulomake_kuvaus, k.hakulomake_linkki, k.eri_hakulomake_kuin_haulla, k.aloituspaikat,
+                 k.ensikertalaisen_aloituspaikat, k.kaytetaan_haun_aikataulua, k.organisaatio_oid, k.muokkaaja, lower(k.system_time)
           from hakukohteet k
           inner join haut h on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
           inner join toteutukset t on t.oid = k.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
