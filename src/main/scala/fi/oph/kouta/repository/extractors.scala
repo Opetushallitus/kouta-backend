@@ -27,6 +27,12 @@ trait ExtractorBase extends KoutaJsonFormats {
     new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestamp().toLocalDateTime)
   })
 
+  implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
+    id = r.nextStringOption().map(UUID.fromString),
+    tyyppi = r.nextStringOption(),
+    tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List())
+  ))
+
   def extractArray[U](o: Option[Object]): Seq[U] = o
     .map(_.asInstanceOf[org.postgresql.jdbc.PgArray])
     .map(_.getArray.asInstanceOf[Array[U]].toSeq)
@@ -201,12 +207,6 @@ trait HakukohdeExctractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
-  ))
-
-  implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
-    id = r.nextStringOption().map(UUID.fromString),
-    tyyppi = r.nextStringOption(),
-    tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List()),
   ))
 
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(

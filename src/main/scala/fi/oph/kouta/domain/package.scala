@@ -80,6 +80,14 @@ package object domain {
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
+  case class Valintakoe(id: Option[UUID] = None,
+                        tyyppi: Option[String] = None,
+                        tilaisuudet: List[Valintakoetilaisuus] = List())
+
+  case class Valintakoetilaisuus(osoite: Option[Osoite],
+                                 aika: Option[Ajanjakso] = None,
+                                 lisatietoja: Kielistetty = Map())
+
   abstract class OidListItem {
     val oid: Oid
     val nimi: Kielistetty

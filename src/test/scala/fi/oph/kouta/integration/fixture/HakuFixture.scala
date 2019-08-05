@@ -7,12 +7,13 @@ import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.HakuServlet
 
 object HakuServiceIgnoringIndexing extends HakuService(SqsInTransactionServiceIgnoringIndexing)
 
-trait HakuFixture { this: KoutaIntegrationSpec =>
+trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
 
   val HakuPath = "/haku"
 
@@ -21,6 +22,13 @@ trait HakuFixture { this: KoutaIntegrationSpec =>
   addServlet(new HakuServlet(hakuService), HakuPath)
 
   val haku = JulkaistuHaku
+
+  def getIds(haku:Haku): Haku = {
+    import slick.jdbc.PostgresProfile.api._
+    haku.copy(
+      valintakokeet = haku.valintakokeet.map(l => l.copy(id = db.runBlocking(
+        sql"""select id from hakujen_valintakokeet where haku_oid = ${haku.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString)))
+    )}
 
   def haku(oid: String): Haku = haku.copy(oid = Some(HakuOid(oid)))
   def haku(oid: String, tila: Julkaisutila): Haku = haku.copy(oid = Some(HakuOid(oid)), tila = tila)

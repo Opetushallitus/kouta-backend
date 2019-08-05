@@ -112,6 +112,7 @@ object TestData {
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/hakemusinfo-fi", Sv -> "https://koulu.test/hakemusinfo-sv"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
+    valintakokeet = List(Valintakoe1),
     organisaatioOid = ChildOid,
     muokkaaja = UserOid("5.4.3.2.1"),
     kielivalinta = Seq(Fi, Sv),

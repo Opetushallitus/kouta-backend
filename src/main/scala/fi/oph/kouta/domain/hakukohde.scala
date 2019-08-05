@@ -62,14 +62,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   )
 }
 
-case class Valintakoe(id: Option[UUID] = None,
-                      tyyppi: Option[String] = None,
-                      tilaisuudet: List[Valintakoetilaisuus] = List())
-
-case class Valintakoetilaisuus(osoite: Option[Osoite],
-                               aika: Option[Ajanjakso] = None,
-                               lisatietoja: Kielistetty = Map())
-
 case class Liite(id: Option[UUID] = None,
                  tyyppi: Option[String],
                  nimi: Kielistetty = Map(),

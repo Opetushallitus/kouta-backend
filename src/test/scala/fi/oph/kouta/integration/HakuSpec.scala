@@ -14,6 +14,10 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   def addInvalidHakuaika(haku:Haku) = haku.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
+  lazy val tallennettuHaku: String => Haku = { oid: String =>
+    getIds(haku(oid))
+  }
+
   "Get haku by oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(defaultSessionHeader)) {
       status should equal (404)
@@ -30,7 +34,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "allow a user of the haku organization to read the haku" in {
     val oid = put(haku)
-    get(oid, crudSessions(haku.organisaatioOid), haku(oid))
+    get(oid, crudSessions(haku.organisaatioOid), tallennettuHaku(oid))
   }
 
   it should "deny a user without access to the haku organization" in {
@@ -40,7 +44,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "allow a user of an ancestor organization to read the haku" in {
     val oid = put(haku)
-    get(oid, crudSessions(ParentOid), haku(oid))
+    get(oid, crudSessions(ParentOid), tallennettuHaku(oid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
@@ -55,12 +59,12 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "allow indexer access" in {
     val oid = put(haku)
-    get(oid, indexerSession, haku(oid))
+    get(oid, indexerSession, tallennettuHaku(oid))
   }
 
   "Create haku" should "store haku" in {
     val oid = put(haku)
-    get(oid, haku(oid))
+    get(oid, tallennettuHaku(oid))
   }
 
   it should "return 401 without a valid session" in {
@@ -105,22 +109,25 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   "Update haku" should "update haku" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-    update(haku(oid, Arkistoitu), lastModified)
-    get(oid, haku(oid, Arkistoitu))
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(tila = Arkistoitu), lastModified)
+    get(oid, thisHaku.copy(tila = Arkistoitu))
   }
 
   it should "not update haku" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-    update(haku(oid), lastModified, false)
-    get(oid, haku(oid)) should equal (lastModified)
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku, lastModified, false)
+    get(oid, thisHaku) should equal (lastModified)
   }
 
   it should "fail update if 'If-Unmodified-Since' header is missing" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(haku(oid)), Seq(defaultSessionHeader)) {
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
+    post(HakuPath, bytes(thisHaku), Seq(defaultSessionHeader)) {
       status should equal (400)
       body should include ("If-Unmodified-Since")
     }
@@ -128,8 +135,9 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "return 401 without a valid session" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(haku(oid)), Map.empty) {
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
+    post(HakuPath, bytes(thisHaku), Map.empty) {
       status should equal (401)
       body should include ("Unauthorized")
     }
@@ -137,74 +145,78 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "allow a user of the haku organization to update the haku" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
+    val thisHaku = tallennettuHaku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, false, crudSessions(haku.organisaatioOid))
   }
 
   it should "deny a user without access to the haku organization" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
+    val thisHaku = tallennettuHaku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, crudSessions(LonelyOid))
   }
 
   it should "allow a user of an ancestor organization to create the haku" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
+    val thisHaku = tallennettuHaku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
+    val thisHaku = tallennettuHaku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, crudSessions(GrandChildOid))
   }
 
   it should "deny a user with the wrong role" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
+    val thisHaku = tallennettuHaku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, readSessions(haku.organisaatioOid))
   }
 
   it should "deny indexer access" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
+    val thisHaku = tallennettuHaku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, indexerSession)
   }
 
   it should "fail update if modified in between get and update" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
     Thread.sleep(1500)
-    update(haku(oid, Arkistoitu), lastModified)
-    post(HakuPath, bytes(haku(oid)), headersIfUnmodifiedSince(lastModified)) {
+    update(thisHaku.copy(tila = Arkistoitu), lastModified)
+    post(HakuPath, bytes(thisHaku), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
   }
 
-  it should "update haun tekstit ja hakuajat" in {
+  it should "update haun tekstit, hakuajat and valintakokeet" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-    val uusiHaku = haku(oid).copy(
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
+    val uusiHaku = thisHaku.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake", Sv -> "http://ataru/kivahakulomake/sv", En -> "http://ataru/kivahakulomake/en"),
       metadata = Some(new HakuMetadata(Some(TestData.Yhteystieto1))),
-      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
+      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))),
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppi = Some("tyyyyppi"))))
     update(uusiHaku, lastModified, true)
-    get(oid, uusiHaku)
+    get(oid, getIds(uusiHaku))
   }
 
-  it should "delete all hakuajat and read last modified from history" in {
+  it should "delete all hakuajat and valintakokeet and read last modified from history" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
     Thread.sleep(1500)
-    val uusiHaku = haku(oid).copy(hakuajat = List())
+    val uusiHaku = thisHaku.copy(hakuajat = List(), valintakokeet = List())
     update(uusiHaku, lastModified, true)
     get(oid, uusiHaku) should not equal (lastModified)
   }
@@ -220,8 +232,9 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "validate updated haku" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-    post(HakuPath, bytes(addInvalidHakuaika(haku(oid))), headersIfUnmodifiedSince(lastModified)) {
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
+    post(HakuPath, bytes(addInvalidHakuaika(thisHaku)), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
@@ -234,12 +247,13 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       hakukohteenLiittamisenTakaraja = Some(TestData.inFuture(50000)),
       hakukohteenMuokkaamisenTakaraja = None)
     val oid = put(pvmHaku)
-    val lastModified = get(oid, pvmHaku.copy(oid = Some(HakuOid(oid))))
+    val thisHaku = getIds(pvmHaku.copy(oid = Some(HakuOid(oid))))
+    val lastModified = get(oid, thisHaku)
 
-    val updatedPvmHaku = haku.copy(
-      oid = Some(HakuOid(oid)),
-      hakukohteenMuokkaamisenTakaraja = Some(TestData.inFuture(50000)),
-      hakukohteenLiittamisenTakaraja = None)
+    val updatedPvmHaku =
+      thisHaku.copy(
+        hakukohteenMuokkaamisenTakaraja = Some(TestData.inFuture(50000)),
+        hakukohteenLiittamisenTakaraja = None)
 
     update(updatedPvmHaku, lastModified)
     get(oid, updatedPvmHaku)
@@ -247,8 +261,9 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "delete all hakuajat if none is given" in {
     val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-    update(haku(oid).copy(hakuajat = List()), lastModified)
-    get(oid, haku(oid).copy(hakuajat = List()))
+    val thisHaku = tallennettuHaku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(hakuajat = List()), lastModified)
+    get(oid, thisHaku.copy(hakuajat = List()))
   }
 }

@@ -170,7 +170,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaPaattyyKey -> "2019-11-10T12:00",
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
       tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = parseModified("2022-10-10T12:00"), paattyy = parseModified("2022-12-10T12:00")))
-    ))
+    )),
+    ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
+      id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2019-02-05T09:49"), parseModified("2019-02-05T09:58")))))
+    )))
   ))
 
   val DefaultHakukohde: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
@@ -296,6 +300,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(MetadataKey).map(read[HakuMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       UserOid(params(MuokkaajaKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       Some(parseModified(params(ModifiedKey)))))
