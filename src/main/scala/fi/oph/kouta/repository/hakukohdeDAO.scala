@@ -165,13 +165,18 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             nimi,
             alkamiskausi_koodi_uri,
             alkamisvuosi,
+            kaytetaan_haun_alkamiskautta,
             hakulomaketyyppi,
             hakulomake_ataru_id,
             hakulomake_kuvaus,
             hakulomake_linkki,
-            eri_hakulomake_kuin_haulla,
+            kaytetaan_haun_hakulomaketta,
             aloituspaikat,
+            min_aloituspaikat,
+            max_aloituspaikat,
             ensikertalaisen_aloituspaikat,
+            min_ensikertalaisen_aloituspaikat,
+            max_ensikertalaisen_aloituspaikat,
             pohjakoulutusvaatimus_koodi_urit,
             muu_pohjakoulutusvaatimus_kuvaus,
             toinen_aste_onko_kaksoistutkinto,
@@ -192,13 +197,18 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${toJsonParam(hakukohde.nimi)}::jsonb,
             ${hakukohde.alkamiskausiKoodiUri},
             ${hakukohde.alkamisvuosi},
+            ${hakukohde.kaytetaanHaunAlkamiskautta},
             ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
             ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid,
             ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb,
             ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
-            ${hakukohde.eriHakulomakeKuinHaulla},
+            ${hakukohde.kaytetaanHaunHakulomaketta},
             ${hakukohde.aloituspaikat},
+            ${hakukohde.minAloituspaikat},
+            ${hakukohde.maxAloituspaikat},
             ${hakukohde.ensikertalaisenAloituspaikat},
+            ${hakukohde.minEnsikertalaisenAloituspaikat},
+            ${hakukohde.maxEnsikertalaisenAloituspaikat},
             ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
             ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
             ${hakukohde.toinenAsteOnkoKaksoistutkinto},
@@ -223,13 +233,18 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               nimi = ${toJsonParam(hakukohde.nimi)}::jsonb,
               alkamiskausi_koodi_uri = ${hakukohde.alkamiskausiKoodiUri},
               alkamisvuosi = ${hakukohde.alkamisvuosi},
+              kaytetaan_haun_alkamiskautta = ${hakukohde.kaytetaanHaunAlkamiskautta},
               hakulomaketyyppi = ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
               hakulomake_ataru_id = ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid,
               hakulomake_kuvaus = ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb,
               hakulomake_linkki = ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
-              eri_hakulomake_kuin_haulla = ${hakukohde.eriHakulomakeKuinHaulla},
+              kaytetaan_haun_hakulomaketta = ${hakukohde.kaytetaanHaunHakulomaketta},
               aloituspaikat = ${hakukohde.aloituspaikat},
+              min_aloituspaikat = ${hakukohde.minAloituspaikat},
+              max_aloituspaikat = ${hakukohde.maxAloituspaikat},
               ensikertalaisen_aloituspaikat = ${hakukohde.ensikertalaisenAloituspaikat},
+              min_ensikertalaisen_aloituspaikat = ${hakukohde.minEnsikertalaisenAloituspaikat},
+              max_ensikertalaisen_aloituspaikat = ${hakukohde.maxEnsikertalaisenAloituspaikat},
               pohjakoulutusvaatimus_koodi_urit = ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
               muu_pohjakoulutusvaatimus_kuvaus = ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
               toinen_aste_onko_kaksoistutkinto = ${hakukohde.toinenAsteOnkoKaksoistutkinto},
@@ -250,13 +265,18 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or nimi is distinct from ${toJsonParam(hakukohde.nimi)}::jsonb
             or alkamiskausi_koodi_uri is distinct from ${hakukohde.alkamiskausiKoodiUri}
             or alkamisvuosi is distinct from ${hakukohde.alkamisvuosi}
+            or kaytetaan_haun_alkamiskautta is distinct from ${hakukohde.kaytetaanHaunAlkamiskautta}
             or hakulomaketyyppi is distinct from ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
             or hakulomake_ataru_id is distinct from ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid
             or hakulomake_kuvaus is distinct from ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb
             or hakulomake_linkki is distinct from ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb
-            or eri_hakulomake_kuin_haulla is distinct from ${hakukohde.eriHakulomakeKuinHaulla}
+            or kaytetaan_haun_hakulomaketta is distinct from ${hakukohde.kaytetaanHaunHakulomaketta}
             or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
+            or min_aloituspaikat is distinct from ${hakukohde.minAloituspaikat}
+            or max_aloituspaikat is distinct from ${hakukohde.maxAloituspaikat}
             or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
+            or min_ensikertalaisen_aloituspaikat is distinct from ${hakukohde.minEnsikertalaisenAloituspaikat}
+            or max_ensikertalaisen_aloituspaikat is distinct from ${hakukohde.maxEnsikertalaisenAloituspaikat}
             or pohjakoulutusvaatimus_koodi_urit is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUrit}
             or muu_pohjakoulutusvaatimus_kuvaus is distinct from ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
             or toinen_aste_onko_kaksoistutkinto is distinct from ${hakukohde.toinenAsteOnkoKaksoistutkinto}
@@ -279,13 +299,18 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              nimi,
              alkamiskausi_koodi_uri,
              alkamisvuosi,
+             kaytetaan_haun_alkamiskautta,
              hakulomaketyyppi,
              hakulomake_ataru_id,
              hakulomake_kuvaus,
              hakulomake_linkki,
-             eri_hakulomake_kuin_haulla,
+             kaytetaan_haun_hakulomaketta,
              aloituspaikat,
+             min_aloituspaikat,
+             max_aloituspaikat,
              ensikertalaisen_aloituspaikat,
+             min_ensikertalaisen_aloituspaikat,
+             max_ensikertalaisen_aloituspaikat,
              pohjakoulutusvaatimus_koodi_urit,
              muu_pohjakoulutusvaatimus_kuvaus,
              toinen_aste_onko_kaksoistutkinto,

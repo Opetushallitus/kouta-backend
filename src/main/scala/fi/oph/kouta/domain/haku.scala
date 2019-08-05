@@ -56,5 +56,5 @@ case class HakuListItem(oid: HakuOid,
                         muokkaaja: UserOid,
                         modified: LocalDateTime) extends OidListItem
 
-case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None,
+case class HakuMetadata(yhteyshenkilo: Option[Yhteyshenkilo] = None,
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq())

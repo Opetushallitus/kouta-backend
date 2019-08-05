@@ -8,7 +8,7 @@ sealed trait ToteutusMetadata {
   val opetus: Option[Opetus]
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
-  val yhteystieto: Option[Yhteystieto]
+  val yhteyshenkilo: Option[Yhteyshenkilo]
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
@@ -22,14 +22,14 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         opetus: Option[Opetus] = None,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
-                                        yhteystieto: Option[Yhteystieto] = None) extends ToteutusMetadata
+                                        yhteyshenkilo: Option[Yhteyshenkilo] = None) extends ToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
                                      opetus: Option[Opetus] = None,
                                      asiasanat: List[Keyword] = List(),
                                      ammattinimikkeet: List[Keyword] = List(),
-                                     yhteystieto: Option[Yhteystieto] = None,
+                                     yhteyshenkilo: Option[Yhteyshenkilo] = None,
                                      alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                      ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
 
@@ -38,7 +38,7 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               opetus: Option[Opetus] = None,
                                               asiasanat: List[Keyword] = List(),
                                               ammattinimikkeet: List[Keyword] = List(),
-                                              yhteystieto: Option[Yhteystieto] = None,
+                                              yhteyshenkilo: Option[Yhteyshenkilo] = None,
                                               alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                               ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
 
@@ -58,13 +58,13 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   opetuskieletKuvaus: Kielistetty = Map(),
-                  opetusaikaKoodiUri: Option[String] = None,
+                  opetusaikaKoodiUrit: Seq[String] = Seq(),
                   opetusaikaKuvaus: Kielistetty = Map(),
                   opetustapaKoodiUrit: Seq[String] = Seq(),
                   opetustapaKuvaus: Kielistetty = Map(),
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
-                  maksunMaara: Kielistetty = Map(),
+                  maksunMaara: Option[Double] = None,
                   alkamiskausiKoodiUri: Option[String] = None,
                   alkamisvuosi: Option[String] = None,
                   alkamisaikaKuvaus: Kielistetty = Map(),

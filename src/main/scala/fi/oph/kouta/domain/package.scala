@@ -72,11 +72,11 @@ package object domain {
   case object Hakijapalvelu extends LiitteenToimitustapa { val name = "hakijapalvelu"}
   case object MuuOsoite extends LiitteenToimitustapa { val name = "osoite"}
 
-  case class Yhteystieto(nimi: Kielistetty = Map(),
-                         titteli: Kielistetty = Map(),
-                         sahkoposti: Kielistetty = Map(),
-                         puhelinnumero: Kielistetty = Map(),
-                         wwwSivu: Kielistetty = Map())
+  case class Yhteyshenkilo(nimi: Kielistetty = Map(),
+                           titteli: Kielistetty = Map(),
+                           sahkoposti: Kielistetty = Map(),
+                           puhelinnumero: Kielistetty = Map(),
+                           wwwSivu: Kielistetty = Map())
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
