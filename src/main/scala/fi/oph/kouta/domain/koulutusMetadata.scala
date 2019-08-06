@@ -4,6 +4,7 @@ sealed trait KoulutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Map[Kieli, String]
   val lisatiedot: Seq[Lisatieto]
+  val koulutusalaKoodiUrit: Seq[String]
 }
 
 trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
@@ -13,12 +14,14 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
 }
 
 case class AmmatillinenKoulutusMetadata(tyyppi: Koulutustyyppi = Amm,
-kuvaus: Map[Kieli, String] = Map(),
-lisatiedot: Seq[Lisatieto] = Seq()) extends KoulutusMetadata
+                                        kuvaus: Map[Kieli, String] = Map(),
+                                        lisatiedot: Seq[Lisatieto] = Seq(),
+                                        koulutusalaKoodiUrit: Seq[String] = Seq()) extends KoulutusMetadata
 
 case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Map[Kieli, String] = Map(),
                                      lisatiedot: Seq[Lisatieto] = Seq(),
+                                     koulutusalaKoodiUrit: Seq[String] = Seq(),
                                      tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                      opintojenLaajuusKoodiUri: Option[String] = None,
                                      kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata
@@ -26,6 +29,7 @@ case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
 case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Map[Kieli, String] = Map(),
                                               lisatiedot: Seq[Lisatieto] = Seq(),
+                                              koulutusalaKoodiUrit: Seq[String] = Seq(),
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                               opintojenLaajuusKoodiUri: Option[String] = None,
                                               kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata

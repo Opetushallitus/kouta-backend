@@ -13,13 +13,18 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      nimi: Kielistetty = Map(),
                      alkamiskausiKoodiUri: Option[String] = None,
                      alkamisvuosi: Option[String] = None,
+                     kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                      hakulomakeAtaruId: Option[UUID] = None,
                      hakulomakeKuvaus: Kielistetty = Map(),
                      hakulomakeLinkki: Kielistetty = Map(),
-                     eriHakulomakeKuinHaulla: Option[Boolean] = None,
+                     kaytetaanHaunHakulomaketta: Option[Boolean] = None,
                      aloituspaikat: Option[Int] = None,
+                     minAloituspaikat: Option[Int] = None,
+                     maxAloituspaikat: Option[Int] = None,
                      ensikertalaisenAloituspaikat: Option[Int] = None,
+                     minEnsikertalaisenAloituspaikat: Option[Int] = None,
+                     maxEnsikertalaisenAloituspaikat: Option[Int] = None,
                      pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
                      muuPohjakoulutusvaatimus: Kielistetty = Map(),
                      toinenAsteOnkoKaksoistutkinto: Option[Boolean] = None,
@@ -56,14 +61,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     ))
   )
 }
-
-case class Valintakoe(id: Option[UUID] = None,
-                      tyyppi: Option[String] = None,
-                      tilaisuudet: List[Valintakoetilaisuus] = List())
-
-case class Valintakoetilaisuus(osoite: Option[Osoite],
-                               aika: Option[Ajanjakso] = None,
-                               lisatietoja: Kielistetty = Map())
 
 case class Liite(id: Option[UUID] = None,
                  tyyppi: Option[String],

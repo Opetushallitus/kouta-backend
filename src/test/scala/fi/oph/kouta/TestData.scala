@@ -21,7 +21,7 @@ object TestData {
     postinumero = Some("12345"),
     postitoimipaikka = Map(Fi -> "Kaupunki", Sv -> "SV kaupunki"))
 
-  val Yhteystieto1 = Yhteystieto(
+  val Yhteystieto1 = Yhteyshenkilo(
     nimi = Map(Fi -> "Aku Ankka", Sv -> "Aku Ankka"),
     puhelinnumero = Map(Fi -> "123", Sv -> "123"),
     sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"),
@@ -112,6 +112,7 @@ object TestData {
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/hakemusinfo-fi", Sv -> "https://koulu.test/hakemusinfo-sv"),
     metadata = Some(HakuMetadata(Some(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
+    valintakokeet = List(Valintakoe1),
     organisaatioOid = ChildOid,
     muokkaaja = UserOid("5.4.3.2.1"),
     kielivalinta = Seq(Fi, Sv),
@@ -127,13 +128,18 @@ object TestData {
     nimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2019"),
+    kaytetaanHaunAlkamiskautta = Some(false),
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/kohteen-hakemusinfo-fi", Sv -> "https://koulu.test/kohteen-hakemusinfo-sv"),
-    eriHakulomakeKuinHaulla = Some(true),
+    kaytetaanHaunHakulomaketta = Some(false),
     aloituspaikat = Some(2),
+    minAloituspaikat = Some(1),
+    maxAloituspaikat = Some(3),
     ensikertalaisenAloituspaikat = Some(1),
+    minEnsikertalaisenAloituspaikat = Some(1),
+    maxEnsikertalaisenAloituspaikat = Some(2),
     pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_01#2", "pohjakoulutusvaatimustoinenaste_01#3"),
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
@@ -284,13 +290,13 @@ object TestData {
   val ToteutuksenOpetus = Opetus(
     opetuskieliKoodiUrit = Seq("kieli_fi#1"),
     opetuskieletKuvaus = Map(Fi -> "Kielikuvaus fi", Sv -> "Kielikuvaus sv"),
-    opetusaikaKoodiUri = Some("opetusaikakk_1#1"),
+    opetusaikaKoodiUrit = Seq("opetusaikakk_1#1"),
     opetusaikaKuvaus = Map(Fi -> "Opetusaikakuvaus fi", Sv -> "Opetusaikakuvaus sv"),
     opetustapaKoodiUrit = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
     opetustapaKuvaus = Map(Fi -> "Opetustapakuvaus fi", Sv -> "Opetustapakuvaus sv"),
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
-    maksunMaara = Map(Fi -> "200,50 euroa", Sv -> "200,50 euro"),
+    maksunMaara = Some(200.5),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2020"),
     alkamisaikaKuvaus = Map(Fi -> "Aikakuvaus fi", Sv -> "Aikakuvaus sv"),
@@ -313,7 +319,7 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-    yhteystieto = Some(Yhteystieto1))
+    yhteyshenkilo = Some(Yhteystieto1))
 
   val YoToteutuksenMetaTieto = YliopistoToteutusMetadata(
     kuvaus = Map(),
@@ -330,7 +336,7 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-    yhteystieto = Some(Yhteystieto1))
+    yhteyshenkilo = Some(Yhteystieto1))
 
   val JulkaistuAmmToteutus = Toteutus(
     oid = None,

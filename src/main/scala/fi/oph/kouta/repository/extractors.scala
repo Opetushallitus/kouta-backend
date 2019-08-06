@@ -27,6 +27,12 @@ trait ExtractorBase extends KoutaJsonFormats {
     new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestamp().toLocalDateTime)
   })
 
+  implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
+    id = r.nextStringOption().map(UUID.fromString),
+    tyyppi = r.nextStringOption(),
+    tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List())
+  ))
+
   def extractArray[U](o: Option[Object]): Seq[U] = o
     .map(_.asInstanceOf[org.postgresql.jdbc.PgArray])
     .map(_.getArray.asInstanceOf[Array[U]].toSeq)
@@ -163,13 +169,18 @@ trait HakukohdeExctractors extends ExtractorBase {
     nimi = extractKielistetty(r.nextStringOption()),
     alkamiskausiKoodiUri = r.nextStringOption(),
     alkamisvuosi = r.nextStringOption(),
+    kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
     hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
     hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
     hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
-    eriHakulomakeKuinHaulla = r.nextBooleanOption(),
+    kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
     aloituspaikat = r.nextIntOption(),
+    minAloituspaikat = r.nextIntOption(),
+    maxAloituspaikat = r.nextIntOption(),
     ensikertalaisenAloituspaikat = r.nextIntOption(),
+    minEnsikertalaisenAloituspaikat = r.nextIntOption(),
+    maxEnsikertalaisenAloituspaikat = r.nextIntOption(),
     pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
     muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption()),
     toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption(),
@@ -196,12 +207,6 @@ trait HakukohdeExctractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
-  ))
-
-  implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
-    id = r.nextStringOption().map(UUID.fromString),
-    tyyppi = r.nextStringOption(),
-    tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List()),
   ))
 
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
@@ -240,13 +245,18 @@ trait HakutietoExtractors extends ExtractorBase {
       nimi = extractKielistetty(r.nextStringOption()),
       alkamiskausiKoodiUri = r.nextStringOption(),
       alkamisvuosi = r.nextStringOption(),
+      kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
       hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
       hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
       hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
       hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
-      eriHakulomakeKuinHaulla = r.nextBooleanOption(),
+      kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
       aloituspaikat = r.nextIntOption(),
+      minAloituspaikat = r.nextIntOption(),
+      maxAloituspaikat = r.nextIntOption(),
       ensikertalaisenAloituspaikat = r.nextIntOption(),
+      minEnsikertalaisenAloituspaikat = r.nextIntOption(),
+      maxEnsikertalaisenAloituspaikat = r.nextIntOption(),
       kaytetaanHaunAikataulua = r.nextBooleanOption(),
       organisaatioOid = OrganisaatioOid(r.nextString()),
       hakuajat = List(),

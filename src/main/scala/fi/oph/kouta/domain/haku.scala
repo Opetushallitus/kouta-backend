@@ -24,6 +24,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 metadata: Option[HakuMetadata] = None,
                 organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
+                valintakokeet: List[Valintakoe] = List(),
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
                 modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable /*with Indexable*/ {
@@ -44,9 +45,6 @@ case class Haku(oid: Option[HakuOid] = None,
        validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
      ))
   )
-
-  //override val indexType: String = IndexTypeHaku
-  //override def getIndexIds: Seq[String] = oid.map(_.toString).map(Seq(_)).getOrElse(Seq())
 }
 
 case class HakuListItem(oid: HakuOid,
@@ -56,5 +54,5 @@ case class HakuListItem(oid: HakuOid,
                         muokkaaja: UserOid,
                         modified: LocalDateTime) extends OidListItem
 
-case class HakuMetadata(yhteystieto: Option[Yhteystieto] = None,
+case class HakuMetadata(yhteyshenkilo: Option[Yhteyshenkilo] = None,
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq())
