@@ -20,6 +20,7 @@ package object indexing {
   val IndexTypeHaku: IndexType = "haut"
   val IndexTypeHakukohde: IndexType = "hakukohteet"
   val IndexTypeValintaperuste: IndexType = "valintaperusteet"
+  val IndexTypeSorakuvaus: IndexType = "sorakuvaukset"
 }
 
 object SqsService extends Logging {

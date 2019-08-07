@@ -161,6 +161,30 @@ trait ValintaperusteExtractors extends ExtractorBase {
   ))
 }
 
+trait SorakuvausExtractors extends ExtractorBase {
+  implicit val getSorakuvausResult: GetResult[Sorakuvaus] = GetResult(r => Sorakuvaus(
+    id = r.nextStringOption().map(UUID.fromString),
+    tila = Julkaisutila.withName(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
+    julkinen = r.nextBoolean(),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[SorakuvausMetadata]),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = Some(extractModified(r.nextTimestamp()))
+  ))
+
+  implicit val getSorakuvausListItemResult: GetResult[SorakuvausListItem] = GetResult(r => SorakuvausListItem(
+    id = UUID.fromString(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
+  ))
+}
+
 trait HakukohdeExctractors extends ExtractorBase {
   implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
     oid = r.nextStringOption().map(HakukohdeOid(_)),
