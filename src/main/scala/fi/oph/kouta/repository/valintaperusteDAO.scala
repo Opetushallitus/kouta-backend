@@ -82,28 +82,29 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def insertValintaperuste(valintaperuste: Valintaperuste) = {
     sqlu"""insert into valintaperusteet (
-                     koulutustyyppi,
                      id,
                      tila,
+                     koulutustyyppi,
                      hakutapa_koodi_uri,
                      kohdejoukko_koodi_uri,
                      kohdejoukon_tarkenne_koodi_uri,
                      nimi,
-                     onkoJulkinen,
+                     julkinen,
                      metadata,
+                     sorakuvaus_id,
                      organisaatio_oid,
                      muokkaaja,
                      kielivalinta
-         ) values (
-                     ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
-                     ${valintaperuste.id.map(_.toString)}::uuid,
+         ) values (  ${valintaperuste.id.map(_.toString)}::uuid,
                      ${valintaperuste.tila.toString}::julkaisutila,
+                     ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
                      ${valintaperuste.hakutapaKoodiUri},
                      ${valintaperuste.kohdejoukkoKoodiUri},
                      ${valintaperuste.kohdejoukonTarkenneKoodiUri},
                      ${toJsonParam(valintaperuste.nimi)}::jsonb,
-                     ${valintaperuste.onkoJulkinen},
+                     ${valintaperuste.julkinen},
                      ${toJsonParam(valintaperuste.metadata)}::jsonb,
+                     ${valintaperuste.sorakuvausId.map(_.toString)}::uuid,
                      ${valintaperuste.organisaatioOid},
                      ${valintaperuste.muokkaaja},
                      ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
@@ -111,19 +112,21 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   def selectValintaperuste(id: UUID) =
-    sql"""select koulutustyyppi, id, tila, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
-                 onkoJulkinen, metadata, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time)
+    sql"""select id, tila, koulutustyyppi, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
+                 julkinen, metadata, sorakuvaus_id, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time)
           from valintaperusteet where id = ${id.toString}::uuid"""
 
   def updateValintaperuste(valintaperuste: Valintaperuste) = {
     sqlu"""update valintaperusteet set
                      tila = ${valintaperuste.tila.toString}::julkaisutila,
+                     koulutustyyppi = ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
                      hakutapa_koodi_uri = ${valintaperuste.hakutapaKoodiUri},
                      kohdejoukko_koodi_uri = ${valintaperuste.kohdejoukkoKoodiUri},
                      kohdejoukon_tarkenne_koodi_uri = ${valintaperuste.kohdejoukonTarkenneKoodiUri},
                      nimi = ${toJsonParam(valintaperuste.nimi)}::jsonb,
-                     onkoJulkinen = ${valintaperuste.onkoJulkinen},
+                     julkinen = ${valintaperuste.julkinen},
                      metadata = ${toJsonParam(valintaperuste.metadata)}::jsonb,
+                     sorakuvaus_id = ${valintaperuste.sorakuvausId.map(_.toString)}::uuid,
                      organisaatio_oid = ${valintaperuste.organisaatioOid},
                      muokkaaja = ${valintaperuste.muokkaaja},
                      kielivalinta = ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
@@ -134,8 +137,9 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            or kohdejoukko_koodi_uri is distinct from ${valintaperuste.kohdejoukkoKoodiUri}
            or kohdejoukon_tarkenne_koodi_uri is distinct from ${valintaperuste.kohdejoukonTarkenneKoodiUri}
            or nimi is distinct from ${toJsonParam(valintaperuste.nimi)}::jsonb
-           or onkoJulkinen is distinct from ${valintaperuste.onkoJulkinen}
+           or julkinen is distinct from ${valintaperuste.julkinen}
            or metadata is distinct from ${toJsonParam(valintaperuste.metadata)}::jsonb
+           or sorakuvaus_id is distinct from ${valintaperuste.sorakuvausId.map(_.toString)}::uuid
            or organisaatio_oid is distinct from ${valintaperuste.organisaatioOid}
            or muokkaaja is distinct from ${valintaperuste.muokkaaja}
            or kielivalinta is distinct from ${toJsonParam(valintaperuste.kielivalinta)}::jsonb

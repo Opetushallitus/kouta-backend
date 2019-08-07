@@ -135,15 +135,16 @@ trait HakuExtractors extends ExtractorBase {
 
 trait ValintaperusteExtractors extends ExtractorBase {
   implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
-    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     id = r.nextStringOption().map(UUID.fromString),
     tila = Julkaisutila.withName(r.nextString()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     hakutapaKoodiUri = r.nextStringOption(),
     kohdejoukkoKoodiUri = r.nextStringOption(),
     kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
-    onkoJulkinen = r.nextBoolean(),
+    julkinen = r.nextBoolean(),
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
+    sorakuvausId = r.nextStringOption().map(UUID.fromString),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),

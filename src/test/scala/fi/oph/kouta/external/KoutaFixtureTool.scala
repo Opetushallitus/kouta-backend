@@ -118,6 +118,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
   val MetadataKey = "metadata"
+  val SorakuvausIdKey = "sorakuvaus"
 
   def formatModified(date:LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
   def parseModified(date:String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
@@ -230,7 +231,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_11#1",
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
     JulkinenKey -> "false",
-    MetadataKey -> write(TestData.AmmValintaperuste.metadata)
+    MetadataKey -> write(TestData.AmmValintaperuste.metadata),
+    SorakuvausIdKey -> UUID.randomUUID().toString,
   ))
 
   private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta.map {k => (k, nimi + " " + k.toString)}.toMap
@@ -352,14 +354,15 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val params = valintaperusteet(id)
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Valintaperuste(
-      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(UUID.fromString(id)),
       Julkaisutila.withName(params(TilaKey)),
+      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(params(HakutapaKoodiUriKey)),
       Some(params(KohdejoukkoKoodiUriKey)),
       Some(params(KohdejoukonTarkenneKoodiUriKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       params(JulkinenKey).toBoolean,
+      Some(UUID.fromString(params(SorakuvausIdKey))),
       params.get(MetadataKey).map(read[ValintaperusteMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
