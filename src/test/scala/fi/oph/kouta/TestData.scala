@@ -289,6 +289,22 @@ object TestData {
 
   val MinYoValintaperuste = Valintaperuste(koulutustyyppi = Yo, muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"), modified = None)
 
+  val YoSorakuvaus = Sorakuvaus(
+    id = None,
+    tila = Julkaistu,
+    nimi = kieliMap("nimi"),
+    koulutustyyppi = Yo,
+    julkinen = true,
+    kielivalinta = List(Fi, Sv),
+    metadata = Some(SorakuvausMetadata(kuvaus = kieliMap("kuvaus"))),
+    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    muokkaaja = UserOid("2.1.2.1.2"),
+    modified = None)
+
+  val AmmSorakuvaus = YoSorakuvaus.copy(koulutustyyppi = Amm)
+
+  val MinSorakuvaus = Sorakuvaus(koulutustyyppi = Yo, muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"), modified = None)
+
   val ToteutuksenOpetus = Opetus(
     opetuskieliKoodiUrit = Seq("kieli_fi#1"),
     opetuskieletKuvaus = Map(Fi -> "Kielikuvaus fi", Sv -> "Kielikuvaus sv"),
