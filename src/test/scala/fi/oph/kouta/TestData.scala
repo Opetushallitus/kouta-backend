@@ -297,7 +297,7 @@ object TestData {
     julkinen = true,
     kielivalinta = List(Fi, Sv),
     metadata = Some(SorakuvausMetadata(kuvaus = kieliMap("kuvaus"))),
-    organisaatioOid = OrganisaatioOid("1.2.3.4"),
+    organisaatioOid = ChildOid,
     muokkaaja = UserOid("2.1.2.1.2"),
     modified = None)
 

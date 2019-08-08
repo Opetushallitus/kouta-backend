@@ -4,7 +4,7 @@ import fi.oph.kouta.TestData.{MinYoValintaperuste, YoValintaperuste}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.UserOid
 
-class ValintaperusteValidationSpec  extends BaseValidationSpec[Valintaperuste] with Validations {
+class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] with Validations {
 
   val max = YoValintaperuste
   val min = MinYoValintaperuste
