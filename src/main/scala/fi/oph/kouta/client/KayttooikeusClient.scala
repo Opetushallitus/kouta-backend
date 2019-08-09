@@ -21,10 +21,10 @@ trait KayttooikeusClient extends HttpClient with Logging {
     val errorHandler = (_: String, status: Int, response: String) =>
       status match {
         case 404 => throw new AuthenticationFailedException(s"User not found with username: $username, got response $status $response")
-        case _ => throw new InternalError(s"Failed to get username $username details, got response $status $response")
+        case _ => throw new RuntimeException(s"Failed to get username $username details, got response $status $response")
       }
 
-    get(url, errorHandler) { response =>
+    get(url, errorHandler, followRedirects = true) { response =>
       val kayttooikeusDto = parse(response).extract[KayttooikeusUserResp]
       KayttooikeusUserDetails(
         kayttooikeusDto.authorities

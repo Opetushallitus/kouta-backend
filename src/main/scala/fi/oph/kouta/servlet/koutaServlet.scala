@@ -72,7 +72,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
 
   error {
     case e: AuthenticationFailedException =>
-      logger.warn(s"authentication failed: ${e.getMessage}")
+      logger.warn(s"authentication failed: ${e.getMessage}", e.cause)
       Unauthorized("error" -> "Unauthorized")
     case e: RoleAuthorizationFailedException =>
       logger.warn("authorization failed", e.getMessage)
