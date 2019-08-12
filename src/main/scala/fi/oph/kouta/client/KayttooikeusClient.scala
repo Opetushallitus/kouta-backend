@@ -29,17 +29,7 @@ trait KayttooikeusClient extends HttpClient with Logging {
       KayttooikeusUserDetails(
         kayttooikeusDto.authorities
           .map(a => Authority(a.authority.replace("ROLE_", "")))
-          .toSet
-          // Allow users with the old tarjonta role to use the new tarjonta while we don't have the new authorities set up in Kaytto-oikeuspalvelu
-          .flatMap { a: Authority =>
-            if (allowOldTarjontaRole && a.role.name == "APP_TARJONTA_CRUD" && a.organisaatioId.nonEmpty) {
-              logger.info(s"Adding CRUD roles for user $username to organization ${a.organisaatioId} because they have the authority ${a.authority}")
-              RoleEntity.all.map(_.Crud).map((r: Role) => Authority(r, a.organisaatioId.get)).toSet
-            }
-            else {
-              Some(a)
-            }
-          },
+          .toSet,
         kayttooikeusDto.username
       )
     }

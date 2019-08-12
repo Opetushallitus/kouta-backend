@@ -10,14 +10,15 @@ sealed abstract class Role(val name: String) extends Product with Serializable {
 
 sealed abstract class RoleEntity(val entity: String) {
   case object Read extends Role(s"APP_KOUTA_${entity}_READ")
-  case object Update extends Role(s"APP_KOUTA_${entity}_UPDATE")
+  case object Update extends Role(s"APP_KOUTA_${entity}_READ_UPDATE")
   case object Crud extends Role(s"APP_KOUTA_${entity}_CRUD")
 
   val roles: Seq[Role] = Seq(Read, Update, Crud)
 
-  def createRoles: Seq[Role] = Seq(Crud)
-  def readRoles: Seq[Role] = Seq(Crud, Role.Indexer, Read)
-  def updateRoles: Seq[Role] = Seq(Crud, Update)
+  def createRoles: Seq[Role] = Seq(Crud, Role.Paakayttaja)
+  def readRoles: Seq[Role] = Seq(Crud, Role.Indexer, Read, Update, Role.Paakayttaja)
+  def updateRoles: Seq[Role] = Seq(Crud, Update, Role.Paakayttaja)
+  def deleteRoles: Seq[Role] = Seq(Crud, Role.Paakayttaja)
 }
 
 object RoleEntity {
@@ -25,7 +26,8 @@ object RoleEntity {
 }
 
 object Role {
-  case object Indexer extends Role("APP_KOUTA_INDEXER")
+  case object Indexer extends Role("APP_KOUTA_INDEKSOINTI")
+  case object Paakayttaja extends Role("APP_KOUTA_OPHPAAKAYTTAJA")
 
   object Koulutus extends RoleEntity("KOULUTUS")
   object Toteutus extends RoleEntity("TOTEUTUS")
