@@ -491,6 +491,14 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  def listHakukohteetByValintaperuste(valintaperusteId: String) = {
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => params(ValintaperusteIdKey) == valintaperusteId
+      }.map(_._1).toSeq.map(hakukohdeListItem)
+    )
+  }
+
   def getLastModified(since:String) = {
     toJson(
       ListEverything(
