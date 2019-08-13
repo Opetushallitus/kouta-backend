@@ -19,6 +19,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   private var haut:Map[String, Map[String, String]] = Map()
   private var hakukohteet:Map[String, Map[String, String]] = Map()
   private var valintaperusteet:Map[String, Map[String, String]] = Map()
+  private var sorakuvaukset:Map[String, Map[String, String]] = Map()
 
   def addKoulutus(oid:String, jParams:java.util.Map[String, String]) = {
     koulutukset += (oid -> jParams.asScala.toMap)
@@ -60,12 +61,21 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     valintaperusteet += (id -> (valintaperusteet.getOrElse(id, Map()) ++ jParams.asScala.toMap))
   }
 
+  def addSorakuvaus(id:String, jParams:java.util.Map[String, String]) = {
+    sorakuvaukset += (id -> jParams.asScala.toMap)
+  }
+
+  def updateSorakuvaus(id:String, jParams:java.util.Map[String, String]) = {
+    sorakuvaukset += (id -> (sorakuvaukset.getOrElse(id, Map()) ++ jParams.asScala.toMap))
+  }
+
   def reset() = {
     koulutukset = Map()
     toteutukset = Map()
     haut = Map()
     hakukohteet = Map()
     valintaperusteet = Map()
+    sorakuvaukset = Map()
   }
 
   val KoulutusOidKey = "koulutusOid"
@@ -235,6 +245,19 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     SorakuvausIdKey -> UUID.randomUUID().toString,
   ))
 
+  val DefaultSorakuvaus: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    NimiKey -> "nimi",
+    KoulutustyyppiKey -> Amm.name,
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    JulkinenKey -> "false",
+    MetadataKey -> write(TestData.AmmSorakuvaus.metadata.get),
+    SorakuvausIdKey -> UUID.randomUUID().toString,
+  ))
+
   private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta.map {k => (k, nimi + " " + k.toString)}.toMap
   private def toKielivalinta(params:Map[String, String]) = params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_))
 
@@ -244,7 +267,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   }
 
   def getKoulutus(oid:String) = {
-    val params: Map[String, String] = koulutukset(oid)
+    val params = koulutukset(oid)
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid(Koulutus(
       Some(KoulutusOid(oid)),
@@ -371,6 +394,23 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ))
   }
 
+  def getSorakuvaus(id:String) = {
+    val params = sorakuvaukset(id)
+    val kielivalinta = toKielivalinta(params)
+    toJsonIfValid( Sorakuvaus(
+      Some(UUID.fromString(id)),
+      Julkaisutila.withName(params(TilaKey)),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
+      params(JulkinenKey).toBoolean,
+      params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      params.get(MetadataKey).map(read[SorakuvausMetadata]),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      Some(parseModified(params(ModifiedKey)))
+    ))
+  }
+
   def getToteutuksetByKoulutus(koulutusOid: String, vainJulkaistut: Boolean) = {
     toJson( toteutukset.filter {
         case (_, params) => params(KoulutusOidKey) == koulutusOid && (!vainJulkaistut || params(TilaKey) == Julkaistu.name)
@@ -443,6 +483,14 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  def listValintaperusteetBySorakuvaus(sorakuvausId: String) = {
+    toJson(
+      valintaperusteet.filter {
+        case (_, params) => params(SorakuvausIdKey) == sorakuvausId
+      }.map(_._1).toSeq.map(valintaperusteListItem)
+    )
+  }
+
   def getLastModified(since:String) = {
     toJson(
       ListEverything(
@@ -452,6 +500,19 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         hakukohteet.keySet.map(HakukohdeOid).toSeq,
         valintaperusteet.keySet.map(UUID.fromString).toSeq,
       )
+    )
+  }
+
+  private def valintaperusteListItem(id: String) = {
+    val params = valintaperusteet(id)
+    val kielivalinta = toKielivalinta(params)
+    ValintaperusteListItem(
+      UUID.fromString(id),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      parseModified(params(ModifiedKey))
     )
   }
 

@@ -64,7 +64,7 @@ object TestData {
     metadata = Some(new AmmatillinenKoulutusMetadata(
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(
-        Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_01#1",
+        Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = UserOid("5.5.5"),
@@ -85,7 +85,7 @@ object TestData {
       kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(
-        Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_01#1",
+        Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
     muokkaaja = UserOid("5.5.5"),
@@ -319,9 +319,9 @@ object TestData {
     alkamisvuosi = Some("2020"),
     alkamisaikaKuvaus = Map(Fi -> "Aikakuvaus fi", Sv -> "Aikakuvaus sv"),
     lisatiedot = Seq(
-      Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_01#1",
+      Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
-      Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_02#1",
+      Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
     onkoStipendia = Some(false),
     onkoLukuvuosimaksua = Some(false),
