@@ -2,7 +2,7 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem}
+import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem, ValintaperusteListItem}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.SorakuvausService
 import org.scalatra.{NotFound, Ok}
@@ -62,5 +62,15 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagg
       case None => NotFound()
       case Some(oid) => Ok(sorakuvausService.list(OrganisaatioOid(oid)))
     }
+  }
+
+  get("/:id/valintaperusteet/list", operation(apiOperation[List[ValintaperusteListItem]]("Listaa kaikki valintaperusteet, jotka käyttävät annettua SORA-kuvausta")
+    tags modelName
+    summary "Listaa kaikki valintaperusteet, jotka käyttävät annettua SORA-kuvausta"
+    parameter pathParam[String]("id").description("SORA-kuvauksen UUID"))) {
+
+    implicit val authenticated: Authenticated = authenticate
+
+    Ok(sorakuvausService.listValintaperusteet(UUID.fromString(params("id"))))
   }
 }

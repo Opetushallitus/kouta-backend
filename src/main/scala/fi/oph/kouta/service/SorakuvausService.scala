@@ -4,10 +4,10 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem}
+import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem, ValintaperusteListItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
-import fi.oph.kouta.repository.{SorakuvausDAO}
+import fi.oph.kouta.repository.{SorakuvausDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 
@@ -28,6 +28,11 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) {
       withValidation(sorakuvaus, updateWithIndexing(_, notModifiedSince))
+    }
+
+  def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+    withRootAccess(Role.Valintaperuste.readRoles) {
+      ValintaperusteDAO.listBySorakuvausId(sorakuvausId)
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =

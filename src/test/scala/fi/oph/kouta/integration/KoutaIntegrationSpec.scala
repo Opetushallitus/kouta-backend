@@ -267,7 +267,6 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from hakujen_valintakokeet""")
     db.runBlocking(sqlu"""delete from haut""")
     db.runBlocking(sqlu"""delete from valintaperusteet""")
-    db.runBlocking(sqlu"""delete from sorakuvaukset""")
     db.runBlocking(sqlu"""delete from toteutusten_tarjoajat""")
     db.runBlocking(sqlu"""delete from toteutukset""")
     db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
@@ -281,11 +280,13 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from hakujen_valintakokeet_history""")
     db.runBlocking(sqlu"""delete from haut_history""")
     db.runBlocking(sqlu"""delete from valintaperusteet_history""")
-    db.runBlocking(sqlu"""delete from sorakuvaukset_history""")
     db.runBlocking(sqlu"""delete from toteutusten_tarjoajat_history""")
     db.runBlocking(sqlu"""delete from toteutukset_history""")
     db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
     db.runBlocking(sqlu"""delete from koulutukset_history""")
+
+    db.runBlocking(sqlu"""delete from sorakuvaukset""")
+    db.runBlocking(sqlu"""delete from sorakuvaukset_history""")
 
     db.runBlocking(sqlu"""delete from authorities""")
     db.runBlocking(sqlu"""delete from sessions""")
