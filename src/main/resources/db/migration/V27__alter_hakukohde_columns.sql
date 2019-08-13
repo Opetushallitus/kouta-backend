@@ -1,3 +1,5 @@
+alter table hakukohteet disable trigger hakukohteet_history;
+
 alter table hakukohteet
   rename column eri_hakulomake_kuin_haulla to kaytetaan_haun_hakulomaketta;
 alter table hakukohteet
@@ -19,6 +21,8 @@ alter table hakukohteet_history
   add column max_ensikertalaisen_aloituspaikat bigint;
 
 update hakukohteet_history set kaytetaan_haun_hakulomaketta = NOT kaytetaan_haun_hakulomaketta;
+
+alter table hakukohteet enable trigger hakukohteet_history;
 
 create or replace function update_hakukohteet_history() returns trigger as
 $$
