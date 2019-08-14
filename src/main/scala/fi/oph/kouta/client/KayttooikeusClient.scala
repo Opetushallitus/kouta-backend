@@ -13,7 +13,6 @@ trait KayttooikeusClient extends HttpClient with Logging {
 
   private implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
-  private lazy val allowOldTarjontaRole = KoutaConfigurationFactory.configuration.securityConfiguration.allowOldTarjontaRole
 
   def getUserByUsername(username: String): KayttooikeusUserDetails = {
     val url = urlProperties.url(s"kayttooikeus-service.userDetails.byUsername", username)

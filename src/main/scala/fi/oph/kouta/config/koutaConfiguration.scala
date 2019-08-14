@@ -22,8 +22,7 @@ case class SecurityConfiguration(
   casUrl: String,
   casServiceIdentifier: String,
   kayttooikeusUrl: String,
-  rootOrganisaatio: OrganisaatioOid,
-  allowOldTarjontaRole: Boolean
+  rootOrganisaatio: OrganisaatioOid
 )
 
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
@@ -51,8 +50,7 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     casUrl = config.getString("cas.url"),
     casServiceIdentifier = config.getString("kouta-backend.cas.service"),
     kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername"),
-    rootOrganisaatio = OrganisaatioOid(config.getString("root.organisaatio.oid")),
-    allowOldTarjontaRole = config.getBoolean("kouta-backend.cas.allowOldTarjontaRole")
+    rootOrganisaatio = OrganisaatioOid(config.getString("root.organisaatio.oid"))
   )
 }
 
