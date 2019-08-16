@@ -89,7 +89,7 @@ trait AuthorizationService extends Logging {
       r
     }
     else {
-      throw OrganizationAuthorizationFailedException(allowedOrganizations)
+      throw OrganizationAuthorizationFailedException(allowedOrganizations, authorizedOrganizations)
     }
 
   private def organizationsForRoles(roles: Seq[Role])(implicit authenticated: Authenticated): Set[OrganisaatioOid] =
@@ -109,16 +109,21 @@ trait AuthorizationService extends Logging {
     if (hasRootAccess(roles)) {
       f
     } else {
-      throw OrganizationAuthorizationFailedException()
+      throw OrganizationAuthorizationFailedException(Seq(rootOrganisaatioOid), Seq.empty)
     }
 }
 
-case class OrganizationAuthorizationFailedException(oids: Iterable[OrganisaatioOid]) extends RuntimeException
+case class OrganizationAuthorizationFailedException(message:String)
+  extends RuntimeException(message)
 
 object OrganizationAuthorizationFailedException {
-  def apply(oid: OrganisaatioOid): OrganizationAuthorizationFailedException = OrganizationAuthorizationFailedException(Seq(oid))
+  def apply(allowerOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
+    OrganizationAuthorizationFailedException(s"Authorization failed, missing organization. " +
+      s"Allowed organizations: ${allowerOrganizationOids.map(_.s).mkString(",")}. " +
+      s"Authorized organizations: ${authorizedOrganizations.map(_.s).mkString(",")}.")
 
-  def apply(): OrganizationAuthorizationFailedException = OrganizationAuthorizationFailedException(Seq.empty)
+  def apply(missingOrganizationOid: OrganisaatioOid): OrganizationAuthorizationFailedException =
+    OrganizationAuthorizationFailedException(s"Authorization failed, unknown organization oid ${missingOrganizationOid.s}")
 }
 
 case class RoleAuthorizationFailedException(acceptedRoles: Seq[Role], existingRoles: Iterable[Role])

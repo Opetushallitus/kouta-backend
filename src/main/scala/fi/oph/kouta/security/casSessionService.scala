@@ -67,7 +67,9 @@ abstract class CasSessionService(val securityContext: SecurityContext, val userD
       case (None, Some(i)) => getSession(i)
       case (Some(t), None) => createSession(t)
       case (Some(t), Some(i)) => getSession(i).left.flatMap {
-        case _: AuthenticationFailedException => createSession(t)
+        case e: AuthenticationFailedException =>
+          logger.warn(s"Creating session after authentication failed exception: ${e.getMessage}")
+          createSession(t)
         case e => Left(e)
       }
     }

@@ -2,7 +2,6 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.service.OrganizationAuthorizationFailedException
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
