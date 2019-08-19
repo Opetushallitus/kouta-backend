@@ -37,7 +37,7 @@ object Role {
 
   case class UnknownRole(override val name: String) extends Role(name)
 
-  val all: Map[String, Role] = (Indexer :: RoleEntity.all.flatMap(_.roles)).map(r => r.name -> r).toMap
+  val all: Map[String, Role] = (Paakayttaja :: Indexer :: RoleEntity.all.flatMap(_.roles)).map(r => r.name -> r).toMap
 
   def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }
