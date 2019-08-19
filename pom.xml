@@ -22,7 +22,7 @@
 
         <!-- Utility properties -->
         <scala-utils.version>0.0.1-SNAPSHOT</scala-utils.version>
-        <json4s.version>3.5.2</json4s.version>
+        <json4s.version>3.6.5</json4s.version>
 
         <!-- Cas properties -->
         <scala-cas.version>1.0.1-SNAPSHOT</scala-cas.version>
@@ -180,6 +180,10 @@
                 <exclusion>
                     <groupId>joda-time</groupId>
                     <artifactId>joda-time</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.json4s</groupId>
+                    <artifactId>json4s-core_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
