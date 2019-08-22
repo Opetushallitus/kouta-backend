@@ -223,7 +223,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "deny access without an accepted role" in {
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
-  it should "allow access to any valintaperuste with the indexer role" in {
+  it should "allow access to any sorakuvaus with the indexer role" in {
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), indexerSession)
   }
 
