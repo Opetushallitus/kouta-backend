@@ -10,16 +10,17 @@ trait HttpClient {
   private val DefaultConnTimeout = 30000
   private val DefaultReadTimeout = 120000
 
-  private val DefaultOptions: Seq[HttpOption] = Seq(
+  private def defaultOptions(doFollowRedirects: Boolean = false): Seq[HttpOption] = Seq(
     connTimeout(DefaultConnTimeout),
-    readTimeout(DefaultReadTimeout)
+    readTimeout(DefaultReadTimeout),
+    followRedirects(doFollowRedirects)
   )
 
   private val HeaderCallerId            = ("Caller-id", "kouta-backend")
   private val HeaderClientSubSystemCode = ("clientSubSystemCode", "kouta-backend")
 
-  def get[T](url: String, errorHandler: (String, Int, String) => Nothing = defaultErrorHandler)(parse: String => T): T =
-    DefaultHttpClient.httpGet(url, DefaultOptions:_*)
+  def get[T](url: String, errorHandler: (String, Int, String) => Nothing = defaultErrorHandler, followRedirects: Boolean = false)(parse: String => T): T =
+    DefaultHttpClient.httpGet(url, defaultOptions(followRedirects):_*)
       .header(HeaderClientSubSystemCode._1, HeaderClientSubSystemCode._2)
       .header(HeaderCallerId._1, HeaderCallerId._2)
       .responseWithHeaders match {
@@ -28,7 +29,7 @@ trait HttpClient {
     }
 
   private def defaultErrorHandler(url: String, statusCode: Int, response: String) =
-    throw new InternalError(s"Url $url returned status code $statusCode $response")
+    throw new RuntimeException(s"Url $url returned status code $statusCode $response")
 
   def toQueryParams(params: (String, String)*): JavaMap[String, String] = scala.collection.JavaConverters.mapAsJavaMap(Map(params:_*))
 }

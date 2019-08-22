@@ -24,7 +24,7 @@ trait CasAuthenticatedServlet {
 
     logger.trace("Session found {}", session)
 
-    Authenticated.tupled(session.getOrElse(throw new AuthenticationFailedException))
+    Authenticated.tupled(session.getOrElse(throw new AuthenticationFailedException(s"No session found. Session cookie: ${sessionCookie}. Session attribute: ${sessionAttribute}.")))
   }
 
   /*

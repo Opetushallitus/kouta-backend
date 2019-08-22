@@ -38,8 +38,11 @@ object TestDataGenerator extends KoutaJsonFormats {
     println(s"Koulutus count = $KoulutusCount")
     println(s"Starting...")
 
-    val valintaperusteId0 = put("/valintaperuste", valintaperuste(0))
-    val valintaperusteId1 = put("/valintaperuste", valintaperuste(1))
+    val sorakuvausId0 = put("/sorakuvaus", sorakuvaus(0))
+    val sorakuvausId1 = put("/sorakuvaus", sorakuvaus(1))
+
+    val valintaperusteId0 = put("/valintaperuste", valintaperuste(0, sorakuvausId0))
+    val valintaperusteId1 = put("/valintaperuste", valintaperuste(1, sorakuvausId1))
     
     println(s"Valintaperusteet ready...")
 
@@ -135,9 +138,16 @@ object TestDataGenerator extends KoutaJsonFormats {
     organisaatioOid = getTarjoajat(i)(k)
   )
 
-  def valintaperuste(i: Int) = AmmValintaperuste.copy(
+  def sorakuvaus(i: Int) = AmmSorakuvaus.copy(
+    nimi = Map(Fi -> s"Sorakuvaus $i", Sv -> s"Sorakuvaus $i sv"),
+    tila = shuffle(Julkaisutila.values()).head,
+    organisaatioOid = OrganisaatioOid(organisaatioOid(i))
+  )
+
+  def valintaperuste(i: Int, sorakuvausId: String) = AmmValintaperuste.copy(
     nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
     tila = shuffle(Julkaisutila.values()).head,
+    sorakuvausId = Some(UUID.fromString(sorakuvausId)),
     organisaatioOid = OrganisaatioOid(organisaatioOid(i))
   )
 
@@ -146,6 +156,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       Http(s"$KoutaBackendPath$path").method("PUT").header("Cookie", s"session=$TestDataGeneratorSessionId").put(write(data).getBytes)
     ).responseWithHeaders match {
       case (200, _, result) if path == "/valintaperuste" => debug(id(result).toString)
+      case (200, _, result) if path == "/sorakuvaus" => debug(id(result).toString)
       case (200, _, result) => debug(oid(result))
       case (xxx, _, result) => throw new RuntimeException(
         s"Got status code $xxx from kouta-backend with response body [$result]! Cannot continue generating test data...")

@@ -135,15 +135,16 @@ trait HakuExtractors extends ExtractorBase {
 
 trait ValintaperusteExtractors extends ExtractorBase {
   implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
-    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     id = r.nextStringOption().map(UUID.fromString),
     tila = Julkaisutila.withName(r.nextString()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     hakutapaKoodiUri = r.nextStringOption(),
     kohdejoukkoKoodiUri = r.nextStringOption(),
     kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
-    onkoJulkinen = r.nextBoolean(),
+    julkinen = r.nextBoolean(),
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
+    sorakuvausId = r.nextStringOption().map(UUID.fromString),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
@@ -151,6 +152,30 @@ trait ValintaperusteExtractors extends ExtractorBase {
   ))
 
   implicit val getValintaperusteListItemResult: GetResult[ValintaperusteListItem] = GetResult(r => ValintaperusteListItem(
+    id = UUID.fromString(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
+  ))
+}
+
+trait SorakuvausExtractors extends ExtractorBase {
+  implicit val getSorakuvausResult: GetResult[Sorakuvaus] = GetResult(r => Sorakuvaus(
+    id = r.nextStringOption().map(UUID.fromString),
+    tila = Julkaisutila.withName(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
+    julkinen = r.nextBoolean(),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[SorakuvausMetadata]),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = Some(extractModified(r.nextTimestamp()))
+  ))
+
+  implicit val getSorakuvausListItemResult: GetResult[SorakuvausListItem] = GetResult(r => SorakuvausListItem(
     id = UUID.fromString(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     tila = Julkaisutila.withName(r.nextString()),

@@ -19,6 +19,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   private var haut:Map[String, Map[String, String]] = Map()
   private var hakukohteet:Map[String, Map[String, String]] = Map()
   private var valintaperusteet:Map[String, Map[String, String]] = Map()
+  private var sorakuvaukset:Map[String, Map[String, String]] = Map()
 
   def addKoulutus(oid:String, jParams:java.util.Map[String, String]) = {
     koulutukset += (oid -> jParams.asScala.toMap)
@@ -60,12 +61,21 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     valintaperusteet += (id -> (valintaperusteet.getOrElse(id, Map()) ++ jParams.asScala.toMap))
   }
 
+  def addSorakuvaus(id:String, jParams:java.util.Map[String, String]) = {
+    sorakuvaukset += (id -> jParams.asScala.toMap)
+  }
+
+  def updateSorakuvaus(id:String, jParams:java.util.Map[String, String]) = {
+    sorakuvaukset += (id -> (sorakuvaukset.getOrElse(id, Map()) ++ jParams.asScala.toMap))
+  }
+
   def reset() = {
     koulutukset = Map()
     toteutukset = Map()
     haut = Map()
     hakukohteet = Map()
     valintaperusteet = Map()
+    sorakuvaukset = Map()
   }
 
   val KoulutusOidKey = "koulutusOid"
@@ -118,6 +128,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
   val MetadataKey = "metadata"
+  val SorakuvausIdKey = "sorakuvaus"
 
   def formatModified(date:LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
   def parseModified(date:String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
@@ -230,7 +241,21 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_11#1",
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
     JulkinenKey -> "false",
-    MetadataKey -> write(TestData.AmmValintaperuste.metadata)
+    MetadataKey -> write(TestData.AmmValintaperuste.metadata),
+    SorakuvausIdKey -> UUID.randomUUID().toString,
+  ))
+
+  val DefaultSorakuvaus: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    NimiKey -> "nimi",
+    KoulutustyyppiKey -> Amm.name,
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    JulkinenKey -> "false",
+    MetadataKey -> write(TestData.AmmSorakuvaus.metadata.get),
+    SorakuvausIdKey -> UUID.randomUUID().toString,
   ))
 
   private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta.map {k => (k, nimi + " " + k.toString)}.toMap
@@ -242,7 +267,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   }
 
   def getKoulutus(oid:String) = {
-    val params: Map[String, String] = koulutukset(oid)
+    val params = koulutukset(oid)
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid(Koulutus(
       Some(KoulutusOid(oid)),
@@ -352,18 +377,36 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val params = valintaperusteet(id)
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Valintaperuste(
-      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(UUID.fromString(id)),
       Julkaisutila.withName(params(TilaKey)),
+      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(params(HakutapaKoodiUriKey)),
       Some(params(KohdejoukkoKoodiUriKey)),
       Some(params(KohdejoukonTarkenneKoodiUriKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       params(JulkinenKey).toBoolean,
+      Some(UUID.fromString(params(SorakuvausIdKey))),
       params.get(MetadataKey).map(read[ValintaperusteMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      Some(parseModified(params(ModifiedKey)))
+    ))
+  }
+
+  def getSorakuvaus(id:String) = {
+    val params = sorakuvaukset(id)
+    val kielivalinta = toKielivalinta(params)
+    toJsonIfValid( Sorakuvaus(
+      Some(UUID.fromString(id)),
+      Julkaisutila.withName(params(TilaKey)),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
+      params(JulkinenKey).toBoolean,
+      params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      params.get(MetadataKey).map(read[SorakuvausMetadata]),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
       Some(parseModified(params(ModifiedKey)))
     ))
   }
@@ -440,6 +483,22 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  def listValintaperusteetBySorakuvaus(sorakuvausId: String) = {
+    toJson(
+      valintaperusteet.filter {
+        case (_, params) => params(SorakuvausIdKey) == sorakuvausId
+      }.map(_._1).toSeq.map(valintaperusteListItem)
+    )
+  }
+
+  def listHakukohteetByValintaperuste(valintaperusteId: String) = {
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => params(ValintaperusteIdKey) == valintaperusteId
+      }.map(_._1).toSeq.map(hakukohdeListItem)
+    )
+  }
+
   def getLastModified(since:String) = {
     toJson(
       ListEverything(
@@ -449,6 +508,19 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         hakukohteet.keySet.map(HakukohdeOid).toSeq,
         valintaperusteet.keySet.map(UUID.fromString).toSeq,
       )
+    )
+  }
+
+  private def valintaperusteListItem(id: String) = {
+    val params = valintaperusteet(id)
+    val kielivalinta = toKielivalinta(params)
+    ValintaperusteListItem(
+      UUID.fromString(id),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      parseModified(params(ModifiedKey))
     )
   }
 

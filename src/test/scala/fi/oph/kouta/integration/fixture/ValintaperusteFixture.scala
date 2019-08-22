@@ -32,9 +32,8 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
   def update(valintaperuste: Valintaperuste, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, sessionId, expectedStatus)
   def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate, sessionId)
-  def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean = true): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
+  def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
   def update(valintaperuste: Valintaperuste, lastModified: String): Unit = update(valintaperuste, lastModified, true)
-  //def list: (List[(String, String)], List[IdListResponse]) => List[IdListResponse] = list(ValintaperustePath, _, _)
 
   def valintaperuste(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
     valintaperuste.copy(organisaatioOid = organisaatioOid, tila = tila)

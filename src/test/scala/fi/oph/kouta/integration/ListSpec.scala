@@ -13,6 +13,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   var t1, t2, t3, t4     :ToteutusListItem = null
   var h1, h2, h3, h4     :HakuListItem = null
   var v1, v2, v3, v4     :ValintaperusteListItem = null
+  var s1, s2, s3         :SorakuvausListItem = null
   var hk1, hk2, hk3, hk4 :HakukohdeListItem = null
 
   override def beforeAll(): Unit = {
@@ -37,11 +38,13 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
-    v1 = addToList(valintaperuste(Julkaistu, ParentOid))
-    v2 = addToList(valintaperuste(Arkistoitu, ChildOid))
+    s1 = addToList(sorakuvaus(Julkaistu, ParentOid))
+    s2 = addToList(sorakuvaus(Arkistoitu, ChildOid))
+    s3 = addToList(sorakuvaus(Julkaistu, LonelyOid))
+    v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(sorakuvausId = Some(s1.id)))
+    v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(sorakuvausId = Some(s1.id)))
     v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
-    v4 = addToList(valintaperuste(Julkaistu, LonelyOid))
-
+    v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(sorakuvausId = Some(s3.id)))
     hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
     hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid))
     hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid))
@@ -188,6 +191,40 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
   it should "allow access to any valintaperuste with the indexer role" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3), indexerSession)
+  }
+
+  "Sorakuvaus list" should "list all sorakuvaukset for authorized organisations" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2))
+  }
+  it should "list all sorakuvaukset for authorized organizations 2" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> LonelyOid.s), List(s3))
+  }
+  it should "return forbidden if oid is unknown" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> UnknownOid.s), 403)
+  }
+  it should "return 404 if oid not given" in {
+    list(SorakuvausPath, Map[String,String](), 404)
+  }
+  it should "return 401 if session is not valid" in {
+    list(SorakuvausPath, Map[String,String](), 401, Map.empty)
+  }
+  it should "allow access to user of the selected organization" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), crudSessions(ChildOid))
+  }
+  it should "deny access without access to the given organization" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
+  }
+  it should "allow access for a user of an ancestor organization" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), crudSessions(ParentOid))
+  }
+  it should "deny access for a user of a descendant organization" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  }
+  it should "deny access without an accepted role" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
+  }
+  it should "allow access to any sorakuvaus with the indexer role" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), indexerSession)
   }
 
   "Valintaperustetta käyttävät hakukohteet list" should "list all hakukohteet using given valintaperuste id" in {
@@ -356,6 +393,34 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
   it should "allow access to the indexer" in {
     list(s"$HakuPath/${h1.oid}/koulutukset", Map[String, String](), List(k1, k4), indexerSession)
+  }
+
+  "Sorakuvausta käyttävät valintaperusteet" should "list all valintaperusteet using given sorakuvaus" in {
+    list(s"$SorakuvausPath/${s1.id}/valintaperusteet", Map[String,String](), List(v1, v2))
+  }
+  it should "list all valintaperusteet using given sorakuvaus 2" in {
+    list(s"$SorakuvausPath/${s3.id}/valintaperusteet", Map[String,String](), List(v4))
+  }
+  it should "deny access to a non-root user, even if they own the toteutus" in {
+    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(ChildOid))
+  }
+  it should "deny access without access to the toteutus organization" in {
+    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(LonelyOid))
+  }
+  it should "deny access for a non-root user of an ancestor organization" in {
+    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(ParentOid))
+  }
+  it should "deny access for a user of a descendant organization" in {
+    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(GrandChildOid))
+  }
+  it should "deny access without the valintaperuste read role" in {
+    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
+  }
+  it should "allow access with the valintaperuste read role" in {
+    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], List(), addTestSession(Role.Valintaperuste.Read, OphOid))
+  }
+  it should "allow access to the haut of any toteutus with the indexer role" in {
+    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], List(), indexerSession)
   }
 
   //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
