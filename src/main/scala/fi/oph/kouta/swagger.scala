@@ -15,9 +15,8 @@ class KoutaBackendSwagger extends Swagger(
   ApiInfo("kouta-backend",
     "Uusi tarjonta",
     "https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/",
-    "verkkotoimitus_opintopolku@oph.fi",
-    "EUPL 1.1 or latest approved by the European Commission",
-    "http://www.osor.eu/eupl/"))
+    ContactInfo("", "", "verkkotoimitus_opintopolku@oph.fi"),
+    LicenseInfo("\"EUPL 1.1 or latest approved by the European Commission\"", "http://www.osor.eu/eupl/")))
 
 class SwaggerServlet(implicit val swagger: Swagger) extends ScalatraServlet with JacksonSwaggerBase
 
@@ -30,13 +29,15 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
   private def modelProperty(position: Int, values: List[String]) = ModelProperty(DataType.String, position, required = false, description = Some(values.mkString("/")))
 
   def prettifySwaggerModels(model: String = modelName) = {
-    models.update(model, models(model).copy(properties = prettifyEnumModels(models(model))))
-    removeRedundantModels()
-    prettifyKielistetty()
-    models.foreach(m => models.update(m._1, m._2.copy(properties = prettifyDatatypes(m._2))))
+//    val foo = models(model)
+  //  foo
+    //models.update(model, models(model).copy(properties = prettifyEnumModels(models(model))))
+    //removeRedundantModels()
+    //prettifyKielistetty()
+    //models.foreach(m => models.update(m._1, m._2.copy(properties = prettifyDatatypes(m._2))))
   }
 
-  private def removeRedundantModels() = {
+  /*private def removeRedundantModels() = {
     models.remove("Hakulomaketyyppi")
     models.remove("Julkaisutila")
     models.remove("Koulutustyyppi")
@@ -93,5 +94,5 @@ trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
     case (name, mp) if mp.`type`.name.equals("Oid") => (name, modelProperty(mp.position, List("1.2.246.123.123.123456")))
     //case (name, mp) if mp.`type`.name.equals("Kieli") => (name, ModelProperty(DataType.GenList(DataType.String), mp.position, description = Some(s"[${Kieli.values.mkString(",")}]")))
     case p => p
-  }
+  }*/
 }

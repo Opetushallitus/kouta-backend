@@ -12,6 +12,12 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
 
   def this()(implicit swagger:Swagger) = this(KoulutusService)
 
+  registerModel[fi.oph.kouta.api.koulutus.Metadata]
+  registerModel[fi.oph.kouta.api.koulutus.Koulutus]
+  registerModel[fi.oph.kouta.api.koulutus.Nimi]
+  registerModel[fi.oph.kouta.api.koulutus.Kuvaus]
+  registerModel[fi.oph.kouta.api.koulutus.KuvausNimi]
+
   get("/:oid", operation(apiOperation[Koulutus]("Hae koulutus")
     tags modelName
     summary "Hae koulutus"
@@ -97,5 +103,5 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
 
-  prettifySwaggerModels()
+  //prettifySwaggerModels()
 }

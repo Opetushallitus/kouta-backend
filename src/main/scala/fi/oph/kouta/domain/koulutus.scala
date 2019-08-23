@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.Validatable
+import org.scalatra.swagger.annotations.{ApiModel, ApiModelProperty}
 
 case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,
