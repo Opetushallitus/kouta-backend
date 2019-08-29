@@ -119,7 +119,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
 sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   val defaultSessionId = UUID.randomUUID()
 
-  val DebugJson = true
+  val DebugJson = false
 
   def debugJson[E <: AnyRef](body: String)(implicit mf: Manifest[E]) = {
     if(DebugJson) {

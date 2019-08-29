@@ -35,7 +35,7 @@ class SwaggerServlet extends ScalatraServlet {
          |    name: "EUPL 1.1 or latest approved by the European Commission"
          |    url: "http://www.osor.eu/eupl/"
          |servers:
-         |  - url: http://localhost:8099/kouta-backend/
+         |  - url: https://virkailija.testiopintopolku.fi/kouta-backend/
          |paths:
          |""".stripMargin
 
