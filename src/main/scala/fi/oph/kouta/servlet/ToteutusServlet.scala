@@ -5,6 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.service.ToteutusService
 import org.scalatra.{NotFound, Ok}
 import org.scalatra.swagger.Swagger
+import fi.oph.kouta.SwaggerYaml.registerPath
 
 class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Swagger) extends KoutaServlet {
   override val applicationDescription = "Koulutusten toteutusten API"
@@ -12,10 +13,29 @@ class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Sw
 
   def this()(implicit swagger: Swagger) = this(ToteutusService)
 
-  get("/:oid", operation(apiOperation[Toteutus]("Hae toteutus")
-    tags modelName
-    summary "Hae toteutus"
-    parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
+  registerPath("/toteutus/{oid}",
+    s"""    get:
+       |      summary: Hae koulutuksen toteutus
+       |      description: Hakee koulutuksen toteutuksen tiedot
+       |      tags:
+       |        - Toteutus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: toteutus-oid
+       |          example: 1.2.246.562.17.00000000000000000009
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                $$ref: '#/components/schemas/Toteutus'
+       |""".stripMargin)
+  get("/:oid") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -25,10 +45,34 @@ class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Sw
     }
   }
 
-  put("/", operation(apiOperation[Unit]("Tallenna uusi toteutus")
-    tags modelName
-    summary "Tallenna uusi toteutus"
-    parameter bodyParam[Toteutus])) {
+  registerPath( "/toteutus/",
+    s"""    put:
+       |      summary: Tallenna uusi toteutus
+       |      description: Tallenna uuden toteutuksen tiedot.
+       |        Rajapinta palauttaa toteutukselle generoidun yksilöivän toteutus-oidin.
+       |      tags:
+       |        - Toteutus
+       |      requestBody:
+       |        description: Tallennettava toteutus
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Toteutus'
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: object
+       |                properties:
+       |                  oid:
+       |                    type: string
+       |                    description: Uuden toteutuksen yksilöivä oid
+       |                    example: 1.2.246.562.17.00000000000000000009
+       |""".stripMargin)
+  put("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -37,10 +81,25 @@ class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Sw
     }
   }
 
-  post("/", operation(apiOperation[Unit]("Muokkaa toteutusta")
-    tags modelName
-    summary "Muokkaa olemassa olevaa toteutusta"
-    parameter bodyParam[Toteutus])) {
+  registerPath("/toteutus/",
+    s"""    post:
+       |      summary: Muokkaa olemassa olevaa toteutusta
+       |      description: Muokkaa olemassa olevaa toteutusta. Rajapinnalle annetaan toteutuksen kaikki tiedot,
+       |        ja muuttuneet tiedot tallennetaan kantaan.
+       |      tags:
+       |        - Toteutus
+       |      requestBody:
+       |        description: Muokattavan toteutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Toteutus'
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |""".stripMargin)
+  post("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -49,10 +108,31 @@ class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Sw
     }
   }
 
-  get("/list", operation(apiOperation[List[ToteutusListItem]]("Listaa kaikki toteutukset, joita organisaatio voi käyttää")
-    tags modelName
-    summary "Listaa kaikki toteutukset, joita organisaatio voi käyttää"
-    parameter queryParam[String]("organisaatioOid").description(s"Valitun organisaation oid"))) {
+  registerPath("/toteutus/list",
+    s"""    get:
+       |      summary: Listaa organisaation käytettävissä olevat toteutukset
+       |      description: Listaa niiden toteutusten tiedot, jotka ovat organisaation käytettävissä
+       |      tags:
+       |        - Toteutus
+       |      parameters:
+       |        - in: query
+       |          name: organisaatioOid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Organisaatio-oid
+       |          example: 1.2.246.562.10.00101010101
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/ToteutusListItem'
+       |""".stripMargin)
+  get("/list") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -62,25 +142,64 @@ class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Sw
     }
   }
 
-  get("/:oid/haut/list", operation(apiOperation[List[HakuListItem]]("Listaa toteutukseen liitetyt haut")
-    tags modelName
-    summary "Listaa toteutukseen liitetyt haut"
-    parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
+  registerPath( "/toteutus/{oid}/haut/list",
+    s"""    get:
+       |      summary: Listaa kaikki toteutukseen liitetyt haut
+       |      description: Listaa kaikki toteutukseen liitetyt hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
+       |      tags:
+       |        - Toteutus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Toteutus-oid
+       |          example: 1.2.246.562.17.00000000000000000009
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/HakuListItem'
+       |""".stripMargin)
+  get("/:oid/haut/list") {
 
     implicit val authenticated: Authenticated = authenticate
 
     Ok(toteutusService.listHaut(ToteutusOid(params("oid"))))
   }
 
-  get("/:oid/hakukohteet/list", operation(apiOperation[List[HakukohdeListItem]]("Listaa toteutukseen liitetyt hakukohteet")
-    tags modelName
-    summary "Listaa toteutukseen liitetyt hakukohteet"
-    parameter pathParam[String]("oid").description("Toteutuksen oid"))) {
-
+  registerPath( "/toteutus/{oid}/hakukohteet/list",
+    s"""    get:
+       |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet
+       |      description: Listaa kaikki toteutukseen liitetyt hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
+       |      tags:
+       |        - Toteutus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Toteutus-oid
+       |          example: 1.2.246.562.17.00000000000000000009
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/HakukohdeListItem'
+       |""".stripMargin)
+  get("/:oid/hakukohteet/list") {
     implicit val authenticated: Authenticated = authenticate
 
     Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid"))))
   }
-
-  prettifySwaggerModels()
 }

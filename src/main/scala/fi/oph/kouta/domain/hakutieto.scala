@@ -5,6 +5,38 @@ import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
 
+package object hakutieto {
+  val HakutietoModel =
+    s"""    Hakutieto:
+       |      type: object
+       |      properties:
+       |        toteutusOid:
+       |          type: string
+       |          description: Toteutuksen yksilöivä tunniste.
+       |          example: "1.2.246.562.13.00000000000000000009"
+       |        haut:
+       |          type: array
+       |          items:
+       |            $$ref: '#/components/schemas/HakutietoHaku'
+       |          description: Koulutuksen toteutuksen hakutiedot
+       |""".stripMargin
+
+  val HakutietoHakuModel =
+    s"""    HakutietoHaku:
+       |      type: object
+       |      properties:
+       |        hakuOid:
+       |          type: string
+       |          description: Haun yksilöivä tunniste.
+       |          example: "1.2.246.562.29.00000000000000000009"
+       |        todo:
+       |          type: string
+       |          description: Tämän scheman dokumentointi on kesken
+       |""".stripMargin
+
+  val models = List(HakutietoModel, HakutietoHakuModel)
+}
+
 case class Hakutieto(toteutusOid:ToteutusOid,
                      haut: Seq[HakutietoHaku])
 

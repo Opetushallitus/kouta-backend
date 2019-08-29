@@ -1,5 +1,60 @@
 package fi.oph.kouta.domain
 
+package object valintaperusteMetadata {
+
+  val ValintaperusteMetadataModel =
+    s"""    ValintaperusteMetadata:
+       |      type: object
+       |      properties:
+       |        kielitaitovaatimukset:
+       |          type: array
+       |          description: Lista valintaperustekuvauksen kielitaitovaatimuksista
+       |          items:
+       |            $$ref: '#/components/schemas/Kielitaitovaatimus'
+       |""".stripMargin
+
+  val KielitaitovaatimusModel =
+    s"""    Kielitaitovaatimus:
+       |      type: object
+       |      properties:
+       |        kieliKoodiUri:
+       |          type: string
+       |          description: Kielitaitovaatimuksen kieli. Viittaa kodistoon
+       |          example:
+       |        kielitaidonVoiOsoittaa:
+       |          type: array
+       |          description: Lista tavoista, joilla kielitaidon voi osoittaa
+       |        vaatimukset:
+       |          type: array
+       |          description: Lista kielitaitovaatimuksista
+       |          items:
+       |            - type: object
+       |              properties:
+       |                kielitaitovaatimusKoodiUri:
+       |                  type: string
+       |                  description: Kielitaitovaatimuksen koodiUri. Viittaa koodistoon
+       |                  example:
+       |                kielitaitovaatimusKuvaukset:
+       |                  type: array
+       |                  description: Lista kielitaitovaatimusten kuvauksia eri kielillä.
+       |                  items:
+       |                    - type: object
+       |                      allOf:
+       |                        - $$ref: '#/components/schemas/Kuvaus'
+
+       |        valintatavat:
+       |          type: array
+       |          description: Lista valintaperustekuvauksen valintatavoista
+       |          items:
+       |            $$ref: '#/components/schemas/Valintatapa'
+       |        kielitaitovaatimukset:
+       |          type: array
+       |          description: Lista valintaperustekuvauksen kielitaitovaatimuksista
+       |          items:
+       |            $$ref: '#/components/schemas/Kielitaitovaatimus'
+       |""".stripMargin
+}
+
 sealed trait ValintaperusteMetadata {
   def koulutustyyppi: Koulutustyyppi
   def valintatavat: Seq[Valintatapa]

@@ -1,5 +1,6 @@
 package fi.oph.kouta.servlet
 
+import fi.oph.kouta.SwaggerYaml.registerPath
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.service.KoulutusService
@@ -12,16 +13,29 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
 
   def this()(implicit swagger:Swagger) = this(KoulutusService)
 
-  registerModel[fi.oph.kouta.api.koulutus.Metadata]
-  registerModel[fi.oph.kouta.api.koulutus.Koulutus]
-  registerModel[fi.oph.kouta.api.koulutus.Nimi]
-  registerModel[fi.oph.kouta.api.koulutus.Kuvaus]
-  registerModel[fi.oph.kouta.api.koulutus.KuvausNimi]
-
-  get("/:oid", operation(apiOperation[Koulutus]("Hae koulutus")
-    tags modelName
-    summary "Hae koulutus"
-    parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
+  registerPath( "/koulutus/{oid}",
+    s"""    get:
+       |      summary: Hae koulutus
+       |      description: Hae koulutuksen tiedot annetulla koulutus-oidilla
+       |      tags:
+       |        - Koulutus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Koulutus-oid
+       |          example: 1.2.246.562.13.00000000000000000009
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                $$ref: '#/components/schemas/Koulutus'
+       |""".stripMargin)
+  get("/:oid") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -31,10 +45,34 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     }
   }
 
-  put("/", operation(apiOperation[Unit]("Tallenna uusi koulutus")
-    tags modelName
-    summary "Tallenna uusi koulutus"
-    parameter bodyParam[Koulutus])) {
+  registerPath( "/koulutus/",
+    s"""    put:
+       |      summary: Tallenna uusi koulutus
+       |      description: Tallenna uuden koulutuksen tiedot.
+       |        Rajapinta palauttaa koulutukselle generoidun yksilöivän koulutus-oidin.
+       |      tags:
+       |        - Koulutus
+       |      requestBody:
+       |        description: Tallennettava koulutus
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Koulutus'
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: object
+       |                properties:
+       |                  oid:
+       |                    type: string
+       |                    description: Uuden koulutuksen yksilöivä oid
+       |                    example: 1.2.246.562.13.00000000000000000009
+       |""".stripMargin)
+  put("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -43,10 +81,25 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     }
   }
 
-  post("/", operation(apiOperation[Unit]("Muokkaa koulutusta")
-    tags modelName
-    summary "Muokkaa olemassa olevaa koulutusta"
-    parameter bodyParam[Koulutus])) {
+  registerPath("/koulutus/",
+    s"""    post:
+       |      summary: Muokkaa olemassa olevaa koulutusta
+       |      description: Muokkaa olemassa olevaa koulutusta. Rajapinnalle annetaan koulutuksen kaikki tiedot,
+       |        ja muuttuneet tiedot tallennetaan kantaan.
+       |      tags:
+       |        - Koulutus
+       |      requestBody:
+       |        description: Muokattavan koulutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Koulutus'
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |""".stripMargin)
+  post("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -55,10 +108,32 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     }
   }
 
-  get("/list", operation(apiOperation[List[KoulutusListItem]]("Listaa käytettävissä olevat koulutukset")
-    tags modelName
-    summary "Listaa niiden koulutusten perustiedot, joita organisaatio voi käyttää"
-    parameter queryParam[String]("organisaatioOid").description("Valitun organisaation oid").required)) {
+  registerPath( "/koulutus/list",
+    s"""    get:
+       |      summary: Listaa organisaation käytettävissä olevat koulutukset
+       |      description: Listaa niiden koulutusten tiedot, jotka ovat organisaation käytettävissä
+       |        esim. uutta toteutusta luotaessa
+       |      tags:
+       |        - Koulutus
+       |      parameters:
+       |        - in: query
+       |          name: organisaatioOid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Organisaatio-oid
+       |          example: 1.2.246.562.10.00101010101
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/KoulutusListItem'
+       |""".stripMargin)
+  get("/list") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -68,22 +143,78 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     }
   }
 
-  get("/:oid/toteutukset", operation(apiOperation[List[Toteutus]]("Hae koulutuksen kaikki toteutukset")
-    tags modelName
-    summary "Palauttaa koulutuksen kaikki toteutukset indeksointia varten"
-    parameter pathParam[String]("oid").description("Koulutuksen oid")
-    parameter queryParam[Boolean]("vainJulkaistut").description("Palautetaanko vain julkaistut toteutukset").defaultValue(false))) {
+  registerPath( "/koulutus/{oid}/toteutukset",
+    s"""    get:
+       |      summary: Hae koulutuksen toteutukset
+       |      description: Hakee koulutuksen kaikkien toteutusten kaikki tiedot. Tämä rajapinta on ideksointia varten
+       |      tags:
+       |        - Koulutus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Koulutus-oid
+       |          example: 1.2.246.562.13.00000000000000000009
+       |        - in: query
+       |          name: vainJulkaistut
+       |          schema:
+       |            type: boolean
+       |          required: false
+       |          default: false
+       |          description: Palautetaanko vain julkaistut, Opintopolussa näytettävät toteutukset
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/Toteutus'
+       |""".stripMargin)
+  get("/:oid/toteutukset") {
 
     implicit val authenticated: Authenticated = authenticate
 
     Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
   }
 
-  get("/:oid/toteutukset/list", operation(apiOperation[List[ToteutusListItem]]("Listaa koulutuksen toteutukset")
-    tags modelName
-    summary "Listaa niiden koulutukseen kuuluvien toteutusten perustiedot, joihin organisaatiolla on oikeus"
-    parameter pathParam[String]("oid").description("Koulutuksen oid")
-    parameter queryParam[String]("organisaatioOid").description("Organisaation oid"))) {
+  registerPath( "/koulutus/{oid}/toteutukset/list",
+    s"""    get:
+       |      summary: Listaa organisaation käytettävissä olevat tietyn koulutuksen toteutukset
+       |      description: Listaa ne tietyn koulutuksen toteutukset, jotka ovat organisaation käytettävissä.
+       |        Jos organisaatio-oidia ei ole annettu,
+       |        listaa koulutuksen kaikki toteutukset, mikäli käyttäjällä on oikeus nähdä ne
+       |      tags:
+       |        - Koulutus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Koulutus-oid
+       |          example: 1.2.246.562.13.00000000000000000009
+       |        - in: query
+       |          name: organisaatioOid
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Organisaatio-oid
+       |          example: 1.2.246.562.10.00101010101
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/ToteutusListItem'
+       |""".stripMargin)
+  get("/:oid/toteutukset/list") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -93,15 +224,34 @@ class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swa
     }
   }
 
-  get("/:oid/hakutiedot", operation(apiOperation[List[Hakutieto]]("Hae koulutuksen kaikki hakutiedot")
-    tags modelName
-    summary "Palauttaa koulutuksen kaikki julkaistut hakutiedot indeksointia varten"
-    parameter pathParam[String]("oid").description("Koulutuksen oid"))) {
+  registerPath( "/koulutus/{oid}/hakutiedot",
+    s"""    get:
+       |      summary: Hae koulutukseen liittyvät hakutiedot
+       |      description: Hakee koulutuksen kaikki hakutiedot. Tämä rajapinta on indeksointia varten
+       |      tags:
+       |        - Koulutus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Koulutus-oid
+       |          example: 1.2.246.562.13.00000000000000000009
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/Hakutieto'
+       |""".stripMargin)
+  get("/:oid/hakutiedot") {
 
     implicit val authenticated: Authenticated = authenticate
 
     Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
-
-  //prettifySwaggerModels()
 }

@@ -1,5 +1,6 @@
 package fi.oph.kouta.servlet
 
+import fi.oph.kouta.SwaggerYaml.registerPath
 import fi.oph.kouta.domain.Hakukohde
 import fi.oph.kouta.domain.oid.HakukohdeOid
 import fi.oph.kouta.service.HakukohdeService
@@ -12,10 +13,29 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService)(implicit val swagger:
 
   def this()(implicit swagger: Swagger) = this(HakukohdeService)
 
-  get("/:oid", operation(apiOperation[Hakukohde]("Hae hakukohde")
-    tags modelName
-    summary "Hae hakukohde"
-    parameter pathParam[String]("oid").description("Hakukohteen oid"))) {
+  registerPath("/hakukohde/{oid}",
+    s"""    get:
+       |      summary: Hae hakukohteen tiedot
+       |      description: Hakee hakukohteen kaikki tiedot
+       |      tags:
+       |        - Hakukohde
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Hakukohde-oid
+       |          example: 1.2.246.562.20.00000000000000000009
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                $$ref: '#/components/schemas/Hakukohde'
+       |""".stripMargin)
+  get("/:oid") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -25,10 +45,34 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService)(implicit val swagger:
     }
   }
 
-  put("/", operation(apiOperation[Unit]("Tallenna uusi hakukohde")
-    tags modelName
-    summary "Tallenna uusi hakukohde"
-    parameter bodyParam[Hakukohde])) {
+  registerPath( "/hakukohde/",
+    s"""    put:
+       |      summary: Tallenna uusi hakukohde
+       |      description: Tallenna uuden hakukohteen tiedot.
+       |        Rajapinta palauttaa hakukohteelle generoidun yksilöivän hakukohde-oidin.
+       |      tags:
+       |        - Hakukohde
+       |      requestBody:
+       |        description: Tallennettava hakukohde
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Hakukohde'
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: object
+       |                properties:
+       |                  oid:
+       |                    type: string
+       |                    description: Uuden hakukohteen yksilöivä oid
+       |                    example: 1.2.246.562.20.00000000000000000009
+       |""".stripMargin)
+  put("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -37,10 +81,25 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService)(implicit val swagger:
     }
   }
 
-  post("/", operation(apiOperation[Unit]("Muokkaa hakua")
-    tags modelName
-    summary "Muokkaa olemassa olevaa hakukohdetta"
-    parameter bodyParam[Hakukohde])) {
+  registerPath("/hakukohde/",
+    s"""    post:
+       |      summary: Muokkaa olemassa olevaa hakukohdetta
+       |      description: Muokkaa olemassa olevaa hakukohdetta. Rajapinnalle annetaan hakukohteen kaikki tiedot,
+       |        ja muuttuneet tiedot tallennetaan kantaan.
+       |      tags:
+       |        - Hakukohde
+       |      requestBody:
+       |        description: Muokattavan hakukohteen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Hakukohde'
+       |      responses:
+       |        '200':
+       |          description: O
+       |""".stripMargin)
+  post("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
