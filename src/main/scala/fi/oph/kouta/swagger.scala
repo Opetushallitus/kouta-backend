@@ -50,17 +50,19 @@ class SwaggerServlet(implicit val swagger: Swagger) extends ScalatraServlet with
       s"""
          |openapi: 3.0.0\n
          |info:
-         |  title: ${swagger.apiInfo.title}
-         |  description: ${swagger.apiInfo.description}
-         |  version: ${swagger.apiVersion}
-         |  termsOfService: ${swagger.apiInfo.termsOfServiceUrl}
+         |  title: kouta-backend
+         |  description: "Uusi koulutustarjonta"
+         |  version: 0.1-SNAPSHOT
+         |  termsOfService: https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/
          |  contact:
-         |    name: ${swagger.apiInfo.contact.name}
-         |    email: ${swagger.apiInfo.contact.email}
-         |    url: ${swagger.apiInfo.contact.url}
+         |    name: ""
+         |    email: verkkotoimitus_opintopolku@oph.fi
+         |    url: ""
          |  license:
-         |    name: ${swagger.apiInfo.license.name}
-         |    url: ${swagger.apiInfo.license.url}
+         |    name: "EUPL 1.1 or latest approved by the European Commission"
+         |    url: "http://www.osor.eu/eupl/"
+         |servers:
+         |  - url: http://localhost:8099/kouta-backend/
          |paths:
          |""".stripMargin
 

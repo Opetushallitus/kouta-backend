@@ -6,6 +6,7 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
 import fi.oph.kouta.PrettySwaggerSupport
+import fi.oph.kouta.SwaggerYaml.registerPath
 import fi.oph.kouta.security.AuthenticationFailedException
 import fi.oph.kouta.service.{KoutaValidationException, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -100,7 +101,17 @@ class HealthcheckServlet(implicit val swagger:Swagger) extends KoutaServlet {
   override val modelName: String = "Healthcheck"
   override val applicationDescription = "Healthcheck API"
 
-  get("/", operation(apiOperation[String]("Healthcheck") summary "Healthcheck" tags "Admin")) {
+  registerPath("/healthcheck/",
+    s"""    get:
+       |      summary: Healthcheck-rajapinta
+       |      description: Healthcheck-rajapinta
+       |      tags:
+       |        - Admin
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |""".stripMargin)
+  get("/") {
     Ok("message" -> "ok")
   }
 

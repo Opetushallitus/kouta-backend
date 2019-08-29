@@ -134,10 +134,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagg
        |                items:
        |                  $$ref: '#/components/schemas/SorakuvausListItem'
        |""".stripMargin)
-  get("/list", operation(apiOperation[List[SorakuvausListItem]]("Listaa kaikki SORA-kuvaukset, joihin käyttäjällä on oikeudet")
-    tags modelName
-    summary "Listaa kaikki SORA-kuvaukset, joihin käyttäjällä on oikeudet."
-    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+  get("/list") {
 
     implicit val authenticated: Authenticated = authenticate
 

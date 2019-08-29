@@ -238,10 +238,51 @@ package object domain {
        |            - $$ref: '#/components/schemas/Teksti'
        |""".stripMargin
 
+  val ListEverythingModel =
+    s"""    ListEverything:
+       |      type: object
+       |      properties:
+       |        koulutukset:
+       |          type: array
+       |          items:
+       |            type: string
+       |            example:
+       |              - 1.2.246.562.13.00000000000000000009
+       |              - 1.2.246.562.13.00000000000000000008
+       |        toteutukset:
+       |          type: array
+       |          items:
+       |            type: string
+       |            example:
+       |              - 1.2.246.562.17.00000000000000000009
+       |              - 1.2.246.562.17.00000000000000000008
+       |        haut:
+       |          type: array
+       |          items:
+       |            type: string
+       |            example:
+       |              - 1.2.246.562.29.00000000000000000009
+       |              - 1.2.246.562.29.00000000000000000008
+       |        hakukohteet:
+       |          type: array
+       |          items:
+       |            type: string
+       |            example:
+       |              - 1.2.246.562.20.00000000000000000009
+       |              - 1.2.246.562.20.00000000000000000008
+       |        valintaperusteet:
+       |          type: array
+       |          items:
+       |            type: string
+       |            example:
+       |              - ea596a9c-5940-497e-b5b7-aded3a2352a7
+       |              - ea596a9c-5940-497e-b5b7-aded3a2352a8
+       |""".stripMargin
+
 
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel,
     LisatietoModel, YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel,
-    ValintakoetilaisuusModel, LiitteenToimitustapaModel)
+    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel)
 
   type Kielistetty = Map[Kieli,String]
 
