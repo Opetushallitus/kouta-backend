@@ -78,6 +78,11 @@ package object koulutus {
        |            kuvaus:
        |              fi: Suomenkielinen kuvaus
        |              sv: Ruotsinkielinen kuvaus
+       |            lisatiedot:
+       |              - otsikkoKoodiUri: koulutuksenjarjestamisenlisaosiot_3#1
+       |                teksti:
+       |                  fi: Opintojen suomenkielinen lisätietokuvaus
+       |                  sv: Opintojen ruotsinkielinen lisätietokuvaus
        |        muokkaaja:
        |          type: string
        |          description: Koulutusta viimeksi muokanneen virkailijan henkilö-oid

@@ -51,13 +51,90 @@ package object toteutus {
        |            - $$ref: '#/components/schemas/AmmatillinenToteutusMetadata'
        |            - $$ref: '#/components/schemas/AmmattikorkeaToteutusMetadata'
        |          example:
-       |            koulutustyyppi: amm
-       |            koulutusalaKoodiUrit:
-       |              - kansallinenkoulutusluokitus2016koulutusalataso2_054#1
-       |              - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
+       |            tyyppi: amm
        |            kuvaus:
        |              fi: Suomenkielinen kuvaus
        |              sv: Ruotsinkielinen kuvaus
+       |            osaamisalat:
+       |              - koodi: osaamisala_0001#1
+       |                linkki:
+       |                  fi: http://osaamisala/linkki/fi
+       |                  sv: http://osaamisala/linkki/sv
+       |                otsikko:
+       |                  fi: Katso osaamisalan tarkempi kuvaus tästä
+       |                  sv: Katso osaamisalan tarkempi kuvaus tästä ruotsiksi
+       |            opetus:
+       |              opetuskieliKoodiUrit:
+       |                - oppilaitoksenopetuskieli_1#1
+       |              opetuskieletKuvaus:
+       |                fi: Opetuskielen suomenkielinen kuvaus
+       |                sv: Opetuskielen ruotsinkielinen kuvaus
+       |              opetusaikaKoodiUrit:
+       |                - opetusaikakk_1#1
+       |              opetusaikaKuvaus:
+       |                fi: Opetusajan suomenkielinen kuvaus
+       |                sv: Opetusajan ruotsinkielinen kuvaus
+       |              opetustapaKoodiUrit:
+       |                - opetuspaikkakk_1#1
+       |                - opetuspaikkakk_2#1
+       |              opetustapaKuvaus:
+       |                fi: Opetustavan suomenkielinen kuvaus
+       |                sv: Opetustavan ruotsinkielinen kuvaus
+       |              onkoMaksullinen: true
+       |              maksullisuusKuvaus:
+       |                fi: Maksullisuuden suomenkielinen kuvaus
+       |                sv: Maksullisuuden ruotsinkielinen kuvaus
+       |              maksunMaara: 200.50
+       |              alkamiskausiKoodiUri: kausi_k#1
+       |              alkamisvuosi : 2020
+       |              alkamisaikaKuvaus:
+       |                fi: Alkamisajan suomenkielinen kuvaus
+       |                sv: Alkamisajan ruotsinkielinen kuvaus
+       |              lisatiedot:
+       |                - otsikkoKoodiUri: koulutuksenjarjestamisenlisaosiot_3#1
+       |                  teksti:
+       |                    fi: Suomenkielinen lisätietoteksti
+       |                    sv: Ruotsinkielinen lisätietoteksti
+       |              onkoLukuvuosimaksua: true
+       |              lukuvuosimaksu:
+       |                 fi: 200 lukukaudessa
+       |                 sv: 200 på svenska
+       |              lukuvuosimaksuKuvaus:
+       |                fi: Lukuvuosimaksun suomenkielinen kuvaus
+       |                sv: Lukuvuosimaksun ruotsinkielinen kuvaus
+       |              onkoStipendia: true
+       |              stipendinMaara:
+       |                 fi: 200 lukukaudessa
+       |                 sv: 200 på svenska
+       |              stipendinKuvaus:
+       |                fi: Stipendin suomenkielinen kuvaus
+       |                sv: Stipendin ruotsinkielinen kuvaus
+       |            ammattinimikkeet:
+       |              - kieli: fi
+       |                arvo: insinööri
+       |              - kieli: en
+       |                arvo: engineer
+       |            asiasanat:
+       |              - kieli: fi
+       |                arvo: ravintotiede
+       |              - kieli: en
+       |                arvo: nutrition
+       |            yhteyshenkilö:
+       |              nimi:
+       |                fi: Aku Ankka
+       |                sv: Kalle Ankka
+       |              titteli:
+       |                fi: Ankka
+       |                sv: Ankka ruotsiksi
+       |              sahkoposti:
+       |                fi: aku.ankka@ankkalinnankoulu.fi
+       |                sv: aku.ankka@ankkalinnankoulu.fi
+       |              puhelinnumero:
+       |                fi: 123
+       |                sv: 223
+       |              wwwSivu:
+       |                fi: http://opintopolku.fi
+       |                sv: http://studieinfo.fi
        |        muokkaaja:
        |          type: string
        |          description: Toteutusta viimeksi muokanneen virkailijan henkilö-oid

@@ -138,7 +138,8 @@ package object domain {
        |      properties:
        |        otsikkoKoodiUri:
        |          type: string
-       |          description: Lisätiedon otsikon koodi URI. Viittaa koodistoon
+       |          description: Lisätiedon otsikon koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutuksenjarjestamisenlisaosiot/1)
+       |          example: koulutuksenjarjestamisenlisaosiot_3#1
        |        teksti:
        |          type: object
        |          description: Lisätiedon teksti eri kielillä. Kielet on määritetty kielivalinnassa.

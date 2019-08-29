@@ -24,7 +24,7 @@ package object koulutusMetadata {
        |          description: Koulutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
        |          items:
        |            type: object
-       |            $$ref: '#/components/schemas/Teksti'
+       |            $$ref: '#/components/schemas/Lisatieto'
        |""".stripMargin
 
   val KorkeakouluMetadataModel =
