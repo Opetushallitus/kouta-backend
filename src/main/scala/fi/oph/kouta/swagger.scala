@@ -84,7 +84,10 @@ class SwaggerServlet(implicit val swagger: Swagger) extends ScalatraServlet with
       fi.oph.kouta.domain.toteutusMetadata.models.mkString +
       fi.oph.kouta.domain.hakutieto.models.mkString +
       fi.oph.kouta.domain.hakukohde.models.mkString +
-      fi.oph.kouta.domain.haku.models.mkString
+      fi.oph.kouta.domain.haku.models.mkString +
+      fi.oph.kouta.domain.valintatapa.models.mkString +
+      fi.oph.kouta.domain.valintaperusteMetadata.models.mkString +
+      fi.oph.kouta.domain.valintaperuste.models.mkString
     yaml
   }
 }

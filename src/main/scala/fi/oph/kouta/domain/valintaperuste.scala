@@ -69,9 +69,9 @@ package object valintaperuste {
        |        metadata:
        |          type: object
        |          oneOf:
-       |            - $$ref: '#/components/schemas/YliopistoToteutusMetadata'
-       |            - $$ref: '#/components/schemas/AmmatillinenToteutusMetadata'
-       |            - $$ref: '#/components/schemas/AmmattikorkeaToteutusMetadata'
+       |            - $$ref: '#/components/schemas/YliopistoValintaperusteMetadata'
+       |            - $$ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
+       |            - $$ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
        |          example:
        |            koulutustyyppi: amm
        |            koulutusalaKoodiUrit:

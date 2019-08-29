@@ -185,7 +185,7 @@ package object hakukohde {
        |""".stripMargin
 
   val HakukohdeListItemModel =
-    s"""    HakukohdeListItemModel:
+    s"""    HakukohdeListItem:
        |      type: object
        |      properties:
        |        oid:
