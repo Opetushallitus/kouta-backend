@@ -4,14 +4,11 @@ import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.HakuService
 import org.scalatra.{NotFound, Ok}
-import org.scalatra.swagger.Swagger
-import fi.oph.kouta.SwaggerYaml.registerPath
+import fi.oph.kouta.SwaggerPaths.registerPath
 
-class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extends KoutaServlet {
-  override val modelName: String = "Haku"
-  override val applicationDescription = "Hakujen API"
+class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
-  def this()(implicit swagger:Swagger) = this(HakuService)
+  def this() = this(HakuService)
 
   registerPath("/haku/{oid}",
     s"""    get:
@@ -215,6 +212,4 @@ class HakuServlet(hakuService: HakuService)(implicit val swagger:Swagger) extend
 
     Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
   }
-
-  prettifySwaggerModels()
 }

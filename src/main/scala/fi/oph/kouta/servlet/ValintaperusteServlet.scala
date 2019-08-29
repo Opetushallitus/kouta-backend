@@ -2,18 +2,15 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.SwaggerYaml.registerPath
-import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.Valintaperuste
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.service.ValintaperusteService
-import org.scalatra.swagger.Swagger
 import org.scalatra.{NotFound, Ok}
 
-class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implicit val swagger: Swagger) extends KoutaServlet {
-  override val applicationDescription = "Valintaperustekuvausten API"
-  override val modelName = "Valintaperuste"
+class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extends KoutaServlet {
 
-  def this()(implicit swagger: Swagger) = this(ValintaperusteService)
+  def this() = this(ValintaperusteService)
 
   registerPath("/valintaperuste/{id}",
     s"""    get:
@@ -183,6 +180,4 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService)(implic
 
     Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id"))))
   }
-
-  prettifySwaggerModels()
 }

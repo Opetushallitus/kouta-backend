@@ -5,8 +5,7 @@ import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
-import fi.oph.kouta.PrettySwaggerSupport
-import fi.oph.kouta.SwaggerYaml.registerPath
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.AuthenticationFailedException
 import fi.oph.kouta.service.{KoutaValidationException, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -14,13 +13,12 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.MappingException
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
-import org.scalatra.swagger._
 
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
 
 trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
-  with Logging with KoutaJsonFormats with PrettySwaggerSupport with CasAuthenticatedServlet {
+  with Logging with KoutaJsonFormats with CasAuthenticatedServlet {
 
   before() {
     contentType = formats("json")
@@ -96,10 +94,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   }
 }
 
-class HealthcheckServlet(implicit val swagger:Swagger) extends KoutaServlet {
-
-  override val modelName: String = "Healthcheck"
-  override val applicationDescription = "Healthcheck API"
+class HealthcheckServlet extends KoutaServlet {
 
   registerPath("/healthcheck/",
     s"""    get:

@@ -4,14 +4,11 @@ import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.ToteutusService
 import org.scalatra.{NotFound, Ok}
-import org.scalatra.swagger.Swagger
-import fi.oph.kouta.SwaggerYaml.registerPath
+import fi.oph.kouta.SwaggerPaths.registerPath
 
-class ToteutusServlet(toteutusService: ToteutusService)(implicit val swagger: Swagger) extends KoutaServlet {
-  override val applicationDescription = "Koulutusten toteutusten API"
-  override val modelName = "Toteutus"
+class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
-  def this()(implicit swagger: Swagger) = this(ToteutusService)
+  def this() = this(ToteutusService)
 
   registerPath("/toteutus/{oid}",
     s"""    get:

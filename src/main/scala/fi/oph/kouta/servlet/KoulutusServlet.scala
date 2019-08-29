@@ -1,17 +1,14 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.SwaggerYaml.registerPath
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.service.KoulutusService
-import org.scalatra.swagger._
 import org.scalatra.{NotFound, Ok}
 
-class KoulutusServlet(koulutusService: KoulutusService)(implicit val swagger:Swagger) extends KoutaServlet {
-  override val modelName = "Koulutus"
-  override val applicationDescription = "Koulutusten API"
+class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
-  def this()(implicit swagger:Swagger) = this(KoulutusService)
+  def this() = this(KoulutusService)
 
   registerPath( "/koulutus/{oid}",
     s"""    get:

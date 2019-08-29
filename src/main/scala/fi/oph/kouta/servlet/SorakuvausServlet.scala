@@ -2,18 +2,15 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.SwaggerYaml.registerPath
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem, ValintaperusteListItem}
+import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.Sorakuvaus
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.SorakuvausService
 import org.scalatra.{NotFound, Ok}
-import org.scalatra.swagger.Swagger
 
-class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagger: Swagger) extends KoutaServlet {
-  override val applicationDescription = "SORA-kuvausten API"
-  override val modelName = "Sorakuvaus"
+class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServlet {
 
-  def this()(implicit swagger: Swagger) = this(SorakuvausService)
+  def this() = this(SorakuvausService)
 
   registerPath("/sorakuvaus/{id}",
     s"""    get:

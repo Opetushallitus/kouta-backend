@@ -2,14 +2,11 @@ package fi.oph.kouta.servlet
 
 import java.net.URLDecoder
 
-import fi.oph.kouta.SwaggerYaml.registerPath
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.service.ModificationService
 import org.scalatra.Ok
-import org.scalatra.swagger.Swagger
 
-class AnythingServlet(implicit val swagger:Swagger) extends KoutaServlet {
-  override val modelName: String = "Anything"
-  override val applicationDescription = "Tarjonnan muutosten API"
+class AnythingServlet extends KoutaServlet {
 
   registerPath("/anything/modifiedSince/{since}",
     s"""    get:

@@ -2,19 +2,14 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.SwaggerYaml.registerPath
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.{CasSessionService, ServiceTicket}
 import fi.vm.sade.utils.cas.CasLogout
 import org.scalatra._
-import org.scalatra.swagger.Swagger
 
-class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Swagger)
-  extends KoutaServlet {
+class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
 
-  override val modelName: String = "session"
-  override val applicationDescription = "Kirjautumisen API"
-
-  def this()(implicit swagger: Swagger) = this(CasSessionService)
+  def this() = this(CasSessionService)
 
   override implicit val cookieOptions: CookieOptions = CookieOptions(
     path = "/kouta-backend",
@@ -73,9 +68,7 @@ class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Sw
        |        '401':
        |          description: Unauthorized
        |""".stripMargin)
-  get("/session", operation(apiOperation[Unit]("Tarkista sessio")
-    tags "Auth"
-    summary "Tarkista sessio")) {
+  get("/session") {
 
     val existingSession = cookies
       .get("session")

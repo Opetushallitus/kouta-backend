@@ -1,17 +1,14 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.SwaggerYaml.registerPath
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.keyword._
 import fi.oph.kouta.domain.{Fi, Kieli}
 import fi.oph.kouta.service.KeywordService._
 import org.scalatra.Ok
-import org.scalatra.swagger.Swagger
 
 import scala.util.Try
 
-class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
-  override val modelName: String = "Asiasana"
-  override val applicationDescription = "Asiasanojen APIt"
+class AsiasanaServlet extends KeywordServlet {
 
   registerPath("/asiasana/search/{term}",
     s"""    get:
@@ -110,9 +107,7 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     parseIntParam("limit", 15))
 }
 
-class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet {
-  override val modelName: String = "Ammattinimike"
-  override val applicationDescription = "Ammattinimikkeiden APIt"
+class AmmattinimikeServlet extends KeywordServlet {
 
   registerPath("/ammattinimike/search/{term}",
     s"""    get:

@@ -186,29 +186,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-swagger_2.12</artifactId>
-            <version>${scalatra.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.json4s</groupId>
-                    <artifactId>json4s-core_2.12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet-api.version}</version>
