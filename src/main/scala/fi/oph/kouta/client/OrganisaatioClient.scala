@@ -1,8 +1,8 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{Koulutustyyppi, oppilaitostyyppi2koulutustyyppi}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.properties.OphProperties
 import org.json4s._
@@ -60,11 +60,13 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
   private def parentOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
     item.parentOidPath.split('/').toSeq.reverse.map(OrganisaatioOid)
 
-  private def oppilaitostyypit(oid: OrganisaatioOid, organisaatiot: Seq[OidAndChildren]): Seq[Koulutustyyppi] = {
-    organisaatiot.flatMap(findWithParents(oid, _, Seq())).flatMap {
-      case (organisaatio, parents) => (parents.map(_.oppilaitostyyppi) :+ organisaatio.oppilaitostyyppi) ++ organisaatio.children.flatMap(childOppilaitostyypitFlat)
-    }.flatten.map(fi.oph.kouta.domain.oppilaitostyyppi2koulutustyyppi)
-  }
+  private def oppilaitostyypit(oid: OrganisaatioOid, organisaatiot: Seq[OidAndChildren]): Seq[Koulutustyyppi] =
+    organisaatiot
+      .flatMap(findWithParents(oid, _, Seq()))
+      .flatMap {
+        case (organisaatio, parents) => (parents.map(_.oppilaitostyyppi) :+ organisaatio.oppilaitostyyppi) ++ organisaatio.children.flatMap(childOppilaitostyypitFlat)
+      }.flatten
+      .map(oppilaitostyyppi2koulutustyyppi)
 
   private def childOppilaitostyypitFlat(item: OidAndChildren): Seq[Option[String]] =
     item.children.flatMap(c => c.oppilaitostyyppi +: childOppilaitostyypitFlat(c))

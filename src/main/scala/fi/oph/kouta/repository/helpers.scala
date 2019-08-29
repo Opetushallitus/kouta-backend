@@ -4,12 +4,11 @@ import java.sql.JDBCType
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.util.UUID
 
-import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi}
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.jdbc.{PositionedParameters, SetParameter}
-import slick.jdbc.PostgresProfile.api._
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
@@ -30,7 +29,7 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
     case _ => null
   }
 
-  def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]) = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
+  def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]): String = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
 
   def toTsrangeString(a: Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
 

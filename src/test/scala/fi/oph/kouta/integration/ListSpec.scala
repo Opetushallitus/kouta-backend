@@ -95,6 +95,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "allow access to any koulutus with the indexer role" in {
     list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5), indexerSession)
   }
+  it should "list public koulutus with the same koulutustyyppi" in {
+    list(KoulutusPath, Map("organisaatioOid" -> YoOid.s), List(k6), readSessions(YoOid))
+  }
 
   "Toteutus list" should "list all toteutukset for selected organization" in {
     list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t2, t3))

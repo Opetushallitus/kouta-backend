@@ -36,29 +36,6 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
         }
     }
 
-  def authorizeGetKoulutus(koulutusWithTime: Option[(Koulutus, Instant)])(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
-    def allowedByOrgOrJulkinen(koulutus: Koulutus, oids: Set[OrganisaatioOid]): Boolean =
-      lazyFlatChildren(oids).exists {
-        case (orgs, tyypit) =>
-          if (koulutus.julkinen) koulutus.koulutustyyppi.exists(tyypit.contains)
-          else orgs.contains(koulutus.organisaatioOid)
-      }
-
-    koulutusWithTime.map {
-      case (koulutus, lastModified) if hasRootAccess(Role.Koulutus.readRoles) => (koulutus, lastModified)
-      case (koulutus, lastModified) =>
-        organizationsForRoles(Role.Koulutus.readRoles) match {
-          case oids if oids.isEmpty => throw RoleAuthorizationFailedException(Role.Koulutus.readRoles, authenticated.session.roles)
-          case oids =>
-            if (allowedByOrgOrJulkinen(koulutus, oids)) {
-              (koulutus, lastModified)
-            } else {
-              throw OrganizationAuthorizationFailedException(koulutus.organisaatioOid)
-            }
-        }
-    }
-  }
-
   def authorizePut[E <: Authorizable, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
     withAuthorizedChildOrganizationOids(roleEntity.createRoles) { authorizedOrganizations =>
       authorize(entity.organisaatioOid, authorizedOrganizations) {
@@ -77,7 +54,6 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
       }
     }
   }
-
 }
 
 trait AuthorizationService extends Logging {
@@ -144,9 +120,9 @@ case class OrganizationAuthorizationFailedException(message:String)
   extends RuntimeException(message)
 
 object OrganizationAuthorizationFailedException {
-  def apply(allowerOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
+  def apply(allowedOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
     OrganizationAuthorizationFailedException(s"Authorization failed, missing organization. " +
-      s"Allowed organizations: ${allowerOrganizationOids.map(_.s).mkString(",")}. " +
+      s"Allowed organizations: ${allowedOrganizationOids.map(_.s).mkString(",")}. " +
       s"Authorized organizations: ${authorizedOrganizations.map(_.s).mkString(",")}.")
 
   def apply(missingOrganizationOid: OrganisaatioOid): OrganizationAuthorizationFailedException =
