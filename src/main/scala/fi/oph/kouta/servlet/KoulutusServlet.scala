@@ -14,6 +14,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     s"""    get:
        |      summary: Hae koulutus
        |      description: Hae koulutuksen tiedot annetulla koulutus-oidilla
+       |      operationId: Hae koulutus
        |      tags:
        |        - Koulutus
        |      parameters:
@@ -45,6 +46,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   registerPath( "/koulutus/",
     s"""    put:
        |      summary: Tallenna uusi koulutus
+       |      operationId: Tallenna uusi koulutus
        |      description: Tallenna uuden koulutuksen tiedot.
        |        Rajapinta palauttaa koulutukselle generoidun yksilöivän koulutus-oidin.
        |      tags:
@@ -81,6 +83,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   registerPath("/koulutus/",
     s"""    post:
        |      summary: Muokkaa olemassa olevaa koulutusta
+       |      operationId: Muokkaa koulutusta
        |      description: Muokkaa olemassa olevaa koulutusta. Rajapinnalle annetaan koulutuksen kaikki tiedot,
        |        ja muuttuneet tiedot tallennetaan kantaan.
        |      tags:
@@ -108,6 +111,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   registerPath( "/koulutus/list",
     s"""    get:
        |      summary: Listaa organisaation käytettävissä olevat koulutukset
+       |      operationId: Listaa koulutukset
        |      description: Listaa niiden koulutusten tiedot, jotka ovat organisaation käytettävissä
        |        esim. uutta toteutusta luotaessa
        |      tags:
@@ -143,6 +147,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   registerPath( "/koulutus/{oid}/toteutukset",
     s"""    get:
        |      summary: Hae koulutuksen toteutukset
+       |      operationId: Hae koulutuksen toteutukset
        |      description: Hakee koulutuksen kaikkien toteutusten kaikki tiedot. Tämä rajapinta on ideksointia varten
        |      tags:
        |        - Koulutus
@@ -181,6 +186,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   registerPath( "/koulutus/{oid}/toteutukset/list",
     s"""    get:
        |      summary: Listaa organisaation käytettävissä olevat tietyn koulutuksen toteutukset
+       |      operationId: Listaa koulutuksen toteutukset
        |      description: Listaa ne tietyn koulutuksen toteutukset, jotka ovat organisaation käytettävissä.
        |        Jos organisaatio-oidia ei ole annettu,
        |        listaa koulutuksen kaikki toteutukset, mikäli käyttäjällä on oikeus nähdä ne
@@ -224,6 +230,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   registerPath( "/koulutus/{oid}/hakutiedot",
     s"""    get:
        |      summary: Hae koulutukseen liittyvät hakutiedot
+       |      operationId: Hae koulutuksen hakutiedot
        |      description: Hakee koulutuksen kaikki hakutiedot. Tämä rajapinta on indeksointia varten
        |      tags:
        |        - Koulutus

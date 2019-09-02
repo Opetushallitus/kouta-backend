@@ -13,6 +13,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
   registerPath("/haku/{oid}",
     s"""    get:
        |      summary: Hae haun tiedot
+       |      operationId: Hae haku
        |      description: Hakee haun kaikki tiedot
        |      tags:
        |        - Haku
@@ -45,6 +46,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
   registerPath( "/haku/",
     s"""    put:
        |      summary: Tallenna uusi haku
+       |      operationId: Tallenna uusi haku
        |      description: Tallenna uuden haun tiedot.
        |        Rajapinta palauttaa haulle generoidun yksilöivän haku-oidin.
        |      tags:
@@ -81,6 +83,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
   registerPath("/haku/",
     s"""    post:
        |      summary: Muokkaa olemassa olevaa hakua
+       |      operationId: Muokkaa hakua
        |      description: Muokkaa olemassa olevaa hakua. Rajapinnalle annetaan haun kaikki tiedot,
        |        ja muuttuneet tiedot tallennetaan kantaan.
        |      tags:
@@ -108,6 +111,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
   registerPath("/haku/list",
     s"""    get:
        |      summary: Listaa organisaation käytettävissä olevat haut
+       |      operationId: Listaa haut
        |      description: Listaa niiden hakujen tiedot, jotka ovat organisaation käytettävissä
        |      tags:
        |        - Haku
@@ -142,6 +146,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
   registerPath( "/haku/{oid}/hakukohteet/list",
     s"""    get:
        |      summary: Listaa kaikki organisaatiolle kuuluvat hakukohteet, jotka on liitetty hakuun
+       |      operationId: Listaa haun hakukohteet
        |      description: Listaa ne hakuun liitetyt hakukohteet, jotka ovat organisaatiolla on oikeus nähdä.
        |        Jos organisaatio-oidia ei ole annettu,
        |        listaa haun kaikki hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
@@ -185,6 +190,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
   registerPath("/haku/{oid}/koulutukset/list",
     s"""    get:
        |      summary: Listaa kaikki hakuun liitetyt koulutukset
+       |      operationId: Listaa haun koulutukset
        |      description: Listaa kaikki hakuun liitetyt koulutukset, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
        |        - Haku

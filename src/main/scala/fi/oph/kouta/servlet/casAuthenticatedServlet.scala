@@ -19,7 +19,6 @@ trait CasAuthenticatedServlet {
 
     val session = sessionCookie
       .orElse(sessionAttribute)
-      .orElse(Some("ea596a9c-5940-497e-b5b7-aded3a2352a7"))
       .map(UUID.fromString)
       .flatMap(id => SessionDAO.get(id).map((id, _)))
 

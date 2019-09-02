@@ -13,6 +13,7 @@ class AsiasanaServlet extends KeywordServlet {
   registerPath("/asiasana/search/{term}",
     s"""    get:
        |      summary: Hakee asiasanoja annetulla hakutermillä
+       |      operationId: Hae asiasanoja
        |      description: Hakee asiasanoja annetulla hakutermillä
        |      tags:
        |        - Asiasana
@@ -63,6 +64,7 @@ class AsiasanaServlet extends KeywordServlet {
   registerPath("/asiasana/",
     s"""    post:
        |      summary: Tallenna asiasanoja
+       |      operationId: Tallenna asiasanoja
        |      description: Tallenna asiasanoja
        |      tags:
        |        - Asiasana
@@ -112,6 +114,7 @@ class AmmattinimikeServlet extends KeywordServlet {
   registerPath("/ammattinimike/search/{term}",
     s"""    get:
        |      summary: Hakee ammattinimikkeitä annetulla hakutermillä
+       |      operationId: Hae ammattinimikkeita
        |      description: Hakee ammattinimikkeitä annetulla hakutermillä
        |      tags:
        |        - Ammattinimike
@@ -162,6 +165,7 @@ class AmmattinimikeServlet extends KeywordServlet {
   registerPath("/ammattinimike/",
     s"""    post:
        |      summary: Tallenna ammattinimikkeitä
+       |      operationId: Tallenna ammattinimikkeita
        |      description: Tallenna ammattinimikkeitä
        |      tags:
        |        - Ammattinimike

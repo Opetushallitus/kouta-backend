@@ -20,6 +20,7 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
   registerPath("/auth/login",
     s"""    get:
        |      summary: Kirjaudu sisään
+       |      operationId: Kirjaudu sisaan
        |      description: Kirjaudu sisään
        |      tags:
        |        - Auth
@@ -59,6 +60,7 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
   registerPath("/auth/session",
     s"""    get:
        |      summary: Tarkista käyttäjän sessio
+       |      operationId: Tarkista sessio
        |      description: Tarkista käyttäjän sessio
        |      tags:
        |        - Auth
@@ -84,6 +86,7 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
   registerPath("/auth/login",
     s"""    post:
        |      summary: Kirjaudu ulos
+       |      operationId: Kirjaudu ulos
        |      description: Kirjaudu ulos
        |      tags:
        |        - Auth

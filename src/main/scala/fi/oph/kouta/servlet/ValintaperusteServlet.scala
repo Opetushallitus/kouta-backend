@@ -15,6 +15,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
   registerPath("/valintaperuste/{id}",
     s"""    get:
        |      summary: Hae valintaperustekuvauksen tiedot
+       |      operationId: Hae valintaperuste
        |      description: Hakee valintaperustekuvauksen kaikki tiedot
        |      tags:
        |        - Valintaperuste
@@ -47,6 +48,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
   registerPath( "/valintaperuste/",
     s"""    put:
        |      summary: Tallenna uusi valintaperustekuvaus
+       |      operationId: Tallenna uusi valintaperuste
        |      description: Tallenna uuden valintaperustekuvauksen tiedot.
        |        Rajapinta palauttaa valintaperustekuvaukselle generoidun yksilöivän id:n
        |      tags:
@@ -83,6 +85,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
   registerPath("/valintaperuste/",
     s"""    post:
        |      summary: Muokkaa olemassa olevaa valintaperustekuvausta
+       |      operationId: Muokkaa valintaperustetta
        |      description: Muokkaa olemassa olevaa valintaperustekuvausta. Rajapinnalle annetaan valintaperusteen kaikki tiedot,
        |        ja muuttuneet tiedot tallennetaan kantaan.
        |      tags:
@@ -110,6 +113,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
   registerPath("/valintaperuste/list",
     s"""    get:
        |      summary: Listaa organisaation tietyn haun hakukohteille käytettävissä olevat valintaperustekuvaukset
+       |      operationId: Listaa valintaperusteet
        |      description: Listaa niiden valintaperustekuvausten tiedot, jotka ovat organisaation käytettävissä.
        |        Jos haku-oid on annettu, listataan ne kuvaukset, joita voi käyttää kyseisen haun hakukohteille
        |      tags:
@@ -153,6 +157,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
   registerPath( "/valintaperuste/{id}/hakukohteet/list",
     s"""    get:
        |      summary: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty
+       |      operationId: Lista valintaperusteen hakukohteet
        |      description: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
        |        - Valintaperuste

@@ -13,6 +13,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
   registerPath("/hakukohde/{oid}",
     s"""    get:
        |      summary: Hae hakukohteen tiedot
+       |      operationId: Hae hakukohde
        |      description: Hakee hakukohteen kaikki tiedot
        |      tags:
        |        - Hakukohde
@@ -45,6 +46,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
   registerPath( "/hakukohde/",
     s"""    put:
        |      summary: Tallenna uusi hakukohde
+       |      operationId: Tallenna uusi hakukohde
        |      description: Tallenna uuden hakukohteen tiedot.
        |        Rajapinta palauttaa hakukohteelle generoidun yksilöivän hakukohde-oidin.
        |      tags:
@@ -81,6 +83,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
   registerPath("/hakukohde/",
     s"""    post:
        |      summary: Muokkaa olemassa olevaa hakukohdetta
+       |      operationId: Muokkaa hakukohdetta
        |      description: Muokkaa olemassa olevaa hakukohdetta. Rajapinnalle annetaan hakukohteen kaikki tiedot,
        |        ja muuttuneet tiedot tallennetaan kantaan.
        |      tags:

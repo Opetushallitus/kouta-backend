@@ -13,6 +13,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
   registerPath("/toteutus/{oid}",
     s"""    get:
        |      summary: Hae koulutuksen toteutus
+       |      operationId: Hae toteutus
        |      description: Hakee koulutuksen toteutuksen tiedot
        |      tags:
        |        - Toteutus
@@ -45,6 +46,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
   registerPath( "/toteutus/",
     s"""    put:
        |      summary: Tallenna uusi toteutus
+       |      operationId: Tallenna uusi toteutus
        |      description: Tallenna uuden toteutuksen tiedot.
        |        Rajapinta palauttaa toteutukselle generoidun yksilöivän toteutus-oidin.
        |      tags:
@@ -81,6 +83,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
   registerPath("/toteutus/",
     s"""    post:
        |      summary: Muokkaa olemassa olevaa toteutusta
+       |      operationId: Muokkaa toteutusta
        |      description: Muokkaa olemassa olevaa toteutusta. Rajapinnalle annetaan toteutuksen kaikki tiedot,
        |        ja muuttuneet tiedot tallennetaan kantaan.
        |      tags:
@@ -108,6 +111,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
   registerPath("/toteutus/list",
     s"""    get:
        |      summary: Listaa organisaation käytettävissä olevat toteutukset
+       |      operationId: Listaa toteutukset
        |      description: Listaa niiden toteutusten tiedot, jotka ovat organisaation käytettävissä
        |      tags:
        |        - Toteutus
@@ -142,6 +146,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
   registerPath( "/toteutus/{oid}/haut/list",
     s"""    get:
        |      summary: Listaa kaikki toteutukseen liitetyt haut
+       |      operationId: Listaa toteutuksen haut
        |      description: Listaa kaikki toteutukseen liitetyt hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
        |        - Toteutus
@@ -173,6 +178,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
   registerPath( "/toteutus/{oid}/hakukohteet/list",
     s"""    get:
        |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet
+       |      operationId: Listaa toteutuksen hakukohteet
        |      description: Listaa kaikki toteutukseen liitetyt hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
        |        - Toteutus

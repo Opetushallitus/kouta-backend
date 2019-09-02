@@ -11,6 +11,7 @@ class AnythingServlet extends KoutaServlet {
   registerPath("/anything/modifiedSince/{since}",
     s"""    get:
        |      summary: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
+       |      operationId: Hae lista muuttuneista
        |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
        |      tags:
        |        - Anything

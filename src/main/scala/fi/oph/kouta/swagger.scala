@@ -15,13 +15,13 @@ class SwaggerServlet extends ScalatraServlet {
 
   get("/swagger.yaml") {
     response.setContentType("text/yaml")
-    renderSwagger3Yaml()
+    renderOpenapi3Yaml()
   }
 
-  protected def renderSwagger3Yaml(): String = {
+  protected def renderOpenapi3Yaml(): String = {
     var yaml =
       s"""
-         |openapi: 3.0.0\n
+         |openapi: 3.0.0
          |info:
          |  title: kouta-backend
          |  description: "Uusi koulutustarjonta"
@@ -35,7 +35,11 @@ class SwaggerServlet extends ScalatraServlet {
          |    name: "EUPL 1.1 or latest approved by the European Commission"
          |    url: "http://www.osor.eu/eupl/"
          |servers:
+         |  - url: http://localhost:8099/kouta-backend/
+         |  - url: https://virkailija.untuvaopintopolku.fi/kouta-backend/
+         |  - url: https://virkailija.hahtuvaopintopolku.fi/kouta-backend/
          |  - url: https://virkailija.testiopintopolku.fi/kouta-backend/
+         |  - url: https://virkailija.opintopolku.fi/kouta-backend/
          |paths:
          |""".stripMargin
 
@@ -46,7 +50,7 @@ class SwaggerServlet extends ScalatraServlet {
         yaml += op.mkString
       }
     }
-    yaml = yaml +
+    yaml +=
       s"""
          |components:
          |  schemas:
@@ -67,9 +71,3 @@ class SwaggerServlet extends ScalatraServlet {
     yaml
   }
 }
-
-/*trait PrettySwaggerSupport extends SwaggerSupport with KoutaJsonFormats {
-  val EXAMPLE_DATE_TIME = ISO_LOCAL_DATE_TIME_FORMATTER.format(LocalDateTime.MIN)
-  val EXAMPLE_UUID = UUID.randomUUID().toString
-
-}*/

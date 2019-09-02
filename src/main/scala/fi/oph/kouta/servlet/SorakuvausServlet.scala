@@ -15,6 +15,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
   registerPath("/sorakuvaus/{id}",
     s"""    get:
        |      summary: Hae SORA-kuvauksen tiedot
+       |      operationId: Hae sorakuvaus
        |      description: Hakee SORA-kuvauksen kaikki tiedot
        |      tags:
        |        - Sorakuvaus
@@ -47,6 +48,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
   registerPath( "/sorakuvaus/",
     s"""    put:
        |      summary: Tallenna uusi SORA-kuvaus
+       |      operationId: Tallenna uusi sorakuvaus
        |      description: Tallenna uuden SORA-kuvauksen tiedot.
        |        Rajapinta palauttaa SORA-kuvaukselle generoidun yksilöivän id:n
        |      tags:
@@ -83,6 +85,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
   registerPath("/sorakuvaus/",
     s"""    post:
        |      summary: Muokkaa olemassa olevaa SORA-kuvausta
+       |      operationId: Muokkaa sorakuvausta
        |      description: Muokkaa olemassa olevaa SORA-kuvausta. Rajapinnalle annetaan SORA-kuvauksen kaikki tiedot,
        |        ja muuttuneet tiedot tallennetaan kantaan.
        |      tags:
@@ -110,6 +113,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
   registerPath("/sorakuvaus/list",
     s"""    get:
        |      summary: Listaa organisaation käytettävissä olevat SORA-kuvaukset
+       |      operationId: Listaa sorakuvaukset
        |      description: Listaa niiden SORA-kuvausten tiedot, jotka ovat organisaation käytettävissä.
        |      tags:
        |        - Sorakuvaus
@@ -144,6 +148,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
   registerPath( "/sorakuvaus/{id}/valintaperusteet/list",
     s"""    get:
        |      summary: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty
+       |      operationId: Listaa sorakuvauksen valintaperusteet
        |      description: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
        |        - Sorakuvaus
