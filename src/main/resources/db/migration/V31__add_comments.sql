@@ -1,3 +1,5 @@
+COMMENT ON SCHEMA public IS 'Opintopolun koulutustarjonnan tiedot';
+
 COMMENT ON TABLE koulutukset IS 'Koulutukset eli koulutusmoduulin toteutukset';
 COMMENT ON COLUMN koulutukset.oid IS 'Koulutuksen yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN koulutukset.johtaa_tutkintoon IS 'Onko koulutus tutkintoon johtavaa';
