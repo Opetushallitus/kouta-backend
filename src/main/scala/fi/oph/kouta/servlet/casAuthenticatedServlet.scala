@@ -14,8 +14,8 @@ trait CasAuthenticatedServlet {
     val sessionCookie = cookies.get("session")
     val sessionAttribute = Option(request.getAttribute("session")).map(_.toString)
 
-    logger.warn("Session cookie {}", sessionCookie)
-    logger.warn("Session attribute {}", sessionAttribute)
+    logger.trace("Session cookie {}", sessionCookie)
+    logger.trace("Session attribute {}", sessionAttribute)
 
     val session = sessionCookie
       .orElse(sessionAttribute)

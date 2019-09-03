@@ -2,7 +2,7 @@ package fi.oph.kouta.servlet
 
 import java.net.URLDecoder
 
-import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.swagger.SwaggerPaths.registerPath
 import fi.oph.kouta.service.ModificationService
 import org.scalatra.Ok
 
@@ -22,7 +22,7 @@ class AnythingServlet extends KoutaServlet {
        |            type: string
        |          format: date-time
        |          required: true
-       |          example: ${SampleHttpDate}
+       |          example: $SampleHttpDate
        |      responses:
        |        '200':
        |          description: Ok

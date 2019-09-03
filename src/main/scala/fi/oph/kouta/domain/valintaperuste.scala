@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.util.SwaggerModel
+import fi.oph.kouta.swagger.SwaggerModel
 import fi.oph.kouta.validation.IsValid
 
 @SwaggerModel(

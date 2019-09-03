@@ -1,6 +1,6 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.swagger.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.{OppilaitoksenOsa, Oppilaitos}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.{OppilaitoksenOsaService, OppilaitosService}

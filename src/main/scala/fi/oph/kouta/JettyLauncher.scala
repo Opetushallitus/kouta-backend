@@ -1,9 +1,9 @@
 package fi.oph.kouta
 
-import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.webapp.WebAppContext
 import fi.vm.sade.utils.slf4j.Logging
+import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.util.resource.Resource
+import org.eclipse.jetty.webapp.WebAppContext
 
 object JettyLauncher extends Logging {
   val DEFAULT_PORT = "8080"

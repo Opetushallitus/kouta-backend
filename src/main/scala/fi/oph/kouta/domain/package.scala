@@ -4,7 +4,7 @@ import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.util.SwaggerModel
+import fi.oph.kouta.swagger.SwaggerModel
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {

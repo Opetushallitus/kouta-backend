@@ -5,7 +5,6 @@ import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
-import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.AuthenticationFailedException
 import fi.oph.kouta.service.{KoutaValidationException, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -98,22 +97,3 @@ object KoutaServlet {
   val IfUnmodifiedSinceHeader = "x-If-Unmodified-Since"
   val LastModifiedHeader = "x-Last-Modified"
 }
-
-class HealthcheckServlet extends KoutaServlet {
-
-  registerPath("/healthcheck/",
-    s"""    get:
-       |      summary: Healthcheck-rajapinta
-       |      description: Healthcheck-rajapinta
-       |      tags:
-       |        - Admin
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |""".stripMargin)
-  get("/") {
-    Ok("message" -> "ok")
-  }
-
-}
-

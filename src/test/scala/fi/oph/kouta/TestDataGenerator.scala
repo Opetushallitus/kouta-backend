@@ -29,7 +29,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     s"http://localhost:${System.getProperty("kouta-backend.port", DefaultPort)}/kouta-backend")
 
   val KoulutusCount = 5
-  val DebugOids = false
+  val DebugOids = true
 
   val userOid = "1.2.246.562.24.62301161440"
 

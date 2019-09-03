@@ -1,7 +1,7 @@
 package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.util.SwaggerModel
+import fi.oph.kouta.swagger.SwaggerModel
 
 @SwaggerModel(
   """    ToteutusMetadata:
@@ -64,7 +64,7 @@ trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
 @SwaggerModel(
   """    AmmatillinenToteutusMetadata:
     |      allOf:
-    |        - $ref: '#/components/schemas/KoulutusMetadata'
+    |        - $ref: '#/components/schemas/ToteutusMetadata'
     |        - type: object
     |          properties:
     |            osaamisalat:

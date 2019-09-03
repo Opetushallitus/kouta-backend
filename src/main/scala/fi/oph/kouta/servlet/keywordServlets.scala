@@ -1,6 +1,6 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.swagger.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.keyword._
 import fi.oph.kouta.domain.{Fi, Kieli}
 import fi.oph.kouta.service.KeywordService._

@@ -1,4 +1,4 @@
-package fi.oph.kouta.util;
+package fi.oph.kouta.swagger;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

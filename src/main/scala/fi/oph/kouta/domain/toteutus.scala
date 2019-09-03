@@ -3,7 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
-import fi.oph.kouta.util.SwaggerModel
+import fi.oph.kouta.swagger.SwaggerModel
 import fi.oph.kouta.validation.IsValid
 
 @SwaggerModel(

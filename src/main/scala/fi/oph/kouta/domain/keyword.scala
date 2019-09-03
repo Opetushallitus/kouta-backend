@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.util.SwaggerModel
+import fi.oph.kouta.swagger.SwaggerModel
 
 package object keyword {
 

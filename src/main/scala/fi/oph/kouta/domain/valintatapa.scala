@@ -2,7 +2,7 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 
-import fi.oph.kouta.util.SwaggerModel
+import fi.oph.kouta.swagger.SwaggerModel
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 @SwaggerModel(
