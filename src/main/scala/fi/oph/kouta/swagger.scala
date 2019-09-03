@@ -1,6 +1,10 @@
 package fi.oph.kouta
 
+import fi.oph.kouta.util.SwaggerModel
+import org.reflections.Reflections
 import org.scalatra.ScalatraServlet
+
+import scala.collection.JavaConverters._
 
 object SwaggerPaths {
 
@@ -43,32 +47,32 @@ class SwaggerServlet extends ScalatraServlet {
          |paths:
          |""".stripMargin
 
-    SwaggerPaths.paths.keySet.map{ path =>
-      yaml += s"""  ${path}:
-                 |""".stripMargin
-      SwaggerPaths.paths.get(path).map { op =>
+    SwaggerPaths.paths.foreach {
+      case (path, op) =>
+        yaml +=
+          s"""  $path:
+             |""".stripMargin
         yaml += op.mkString
-      }
     }
+
     yaml +=
       s"""
          |components:
          |  schemas:
          |""".stripMargin +
-      fi.oph.kouta.domain.models.mkString +
-      fi.oph.kouta.domain.keyword.models.mkString +
-      fi.oph.kouta.domain.koulutus.models.mkString +
-      fi.oph.kouta.domain.koulutusMetadata.models.mkString +
-      fi.oph.kouta.domain.toteutus.models.mkString +
-      fi.oph.kouta.domain.toteutusMetadata.models.mkString +
-      fi.oph.kouta.domain.hakutieto.models.mkString +
-      fi.oph.kouta.domain.hakukohde.models.mkString +
-      fi.oph.kouta.domain.haku.models.mkString +
-      fi.oph.kouta.domain.valintatapa.models.mkString +
-      fi.oph.kouta.domain.valintaperusteMetadata.models.mkString +
-      fi.oph.kouta.domain.valintaperuste.models.mkString +
-      fi.oph.kouta.domain.sorakuvaus.models.mkString +
-      fi.oph.kouta.domain.oppilaitos.models.mkString
+        getModelAnnotations
     yaml
+  }
+
+  def getModelAnnotations: String = {
+    val reflections = new Reflections("fi.oph.kouta")
+
+    val annotatedClasses = reflections.getTypesAnnotatedWith(classOf[SwaggerModel]).asScala.toSeq.sortBy(_.getSimpleName)
+
+    annotatedClasses
+      .map(_.getAnnotation(classOf[SwaggerModel]))
+      .flatMap(Option(_))
+      .map(_.value.stripMargin)
+      .mkString
   }
 }
