@@ -2,18 +2,14 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.{CasSessionService, ServiceTicket}
 import fi.vm.sade.utils.cas.CasLogout
 import org.scalatra._
-import org.scalatra.swagger.Swagger
 
-class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Swagger)
-  extends KoutaServlet {
+class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
 
-  override val modelName: String = "session"
-  override val applicationDescription = "Kirjautumisen API"
-
-  def this()(implicit swagger: Swagger) = this(CasSessionService)
+  def this() = this(CasSessionService)
 
   override implicit val cookieOptions: CookieOptions = CookieOptions(
     path = "/kouta-backend",
@@ -21,10 +17,27 @@ class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Sw
     httpOnly = true
   )
 
-  get("/login", operation(apiOperation[Unit]("Kirjaudu sisään")
-    tags "Auth"
-    summary "Kirjaudu sisään"
-    parameter queryParam[String]("ticket").optional.description("CAS tiketti"))) {
+  registerPath("/auth/login",
+    s"""    get:
+       |      summary: Kirjaudu sisään
+       |      operationId: Kirjaudu sisaan
+       |      description: Kirjaudu sisään
+       |      tags:
+       |        - Auth
+       |      parameters:
+       |        - in: query
+       |          name: ticket
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: CAS-tiketti
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |        '401':
+       |          description: Unauthorized
+       |""".stripMargin)
+  get("/login") {
 
     val ticket = params.get("ticket").map(ServiceTicket)
 
@@ -44,9 +57,20 @@ class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Sw
     }
   }
 
-  get("/session", operation(apiOperation[Unit]("Tarkista sessio")
-    tags "Auth"
-    summary "Tarkista sessio")) {
+  registerPath("/auth/session",
+    s"""    get:
+       |      summary: Tarkista käyttäjän sessio
+       |      operationId: Tarkista sessio
+       |      description: Tarkista käyttäjän sessio
+       |      tags:
+       |        - Auth
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |        '401':
+       |          description: Unauthorized
+       |""".stripMargin)
+  get("/session") {
 
     val existingSession = cookies
       .get("session")
@@ -59,10 +83,24 @@ class AuthServlet(casSessionService: CasSessionService)(implicit val swagger: Sw
     }
   }
 
-  post("/login", operation(apiOperation[Unit]("Kirjaudu ulos")
-    tags "Auth"
-    summary "Kirjaudu ulos"
-    parameter bodyParam[String](name = "logoutRequest"))) {
+  registerPath("/auth/login",
+    s"""    post:
+       |      summary: Kirjaudu ulos
+       |      operationId: Kirjaudu ulos
+       |      description: Kirjaudu ulos
+       |      tags:
+       |        - Auth
+       |      parameters:
+       |        - in: body
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: logoutRequest
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |""".stripMargin)
+  post("/login") {
 
     val logoutRequest = params.get("logoutRequest")
       .getOrElse(throw new IllegalArgumentException("Not 'logoutRequest' parameter given"))

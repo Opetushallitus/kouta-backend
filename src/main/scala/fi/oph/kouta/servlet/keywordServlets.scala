@@ -1,34 +1,100 @@
 package fi.oph.kouta.servlet
 
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.keyword._
 import fi.oph.kouta.domain.{Fi, Kieli}
 import fi.oph.kouta.service.KeywordService._
 import org.scalatra.Ok
-import org.scalatra.swagger.Swagger
 
 import scala.util.Try
 
-class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
-  override val modelName: String = "Asiasana"
-  override val applicationDescription = "Asiasanojen APIt"
+class AsiasanaServlet extends KeywordServlet {
 
-  get("/search/:term", operation(apiOperation[List[String]]("Hae asiasanoja")
-    tags modelName
-    summary "Hae asiasanoja"
-    parameter pathParam[String]("term").description("Hakutermi")
-    parameter queryParam[String]("kieli").description("fi/en/sv")
-    parameter queryParam[Int]("limit").description("Asiasanojen määrä (default = 15)"))) {
+  registerPath("/asiasana/search/{term}",
+    s"""    get:
+       |      summary: Hakee asiasanoja annetulla hakutermillä
+       |      operationId: Hae asiasanoja
+       |      description: Hakee asiasanoja annetulla hakutermillä
+       |      tags:
+       |        - Asiasana
+       |      parameters:
+       |        - in: path
+       |          name: term
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: hakutermi
+       |          example: robo
+       |        - in: query
+       |          name: kieli
+       |          description: Haettavan asiasanan kieli
+       |          schema:
+       |            type: string
+       |            enum:
+       |              - fi
+       |              - sv
+       |              - en
+       |        - in: query
+       |          name: limit
+       |          description: Palautettavien asiasanojen maksimimäärä
+       |          schema:
+       |            type: integer
+       |          default: 15
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  type: string
+       |                  example:
+       |                    - robotiikka
+       |                    - robotti
+       |
+       |""".stripMargin)
+  get("/search/:term") {
 
     implicit val authenticated: Authenticated = authenticate
 
     Ok(search(parseAsiasanaSearch()))
   }
 
-  post("/", operation(apiOperation[Int]("Tallenna asiasanoja")
-    tags modelName
-    summary "Tallenna asiasanoja"
-    parameter bodyParam[List[String]]
-    parameter queryParam[String]("kieli").description("fi/sv/en"))) {
+  registerPath("/asiasana/",
+    s"""    post:
+       |      summary: Tallenna asiasanoja
+       |      operationId: Tallenna asiasanoja
+       |      description: Tallenna asiasanoja
+       |      tags:
+       |        - Asiasana
+       |      parameters:
+       |        - in: query
+       |          name: kieli
+       |          description: Tallennettavan asiasanan kieli
+       |          schema:
+       |            type: string
+       |            enum:
+       |              - fi
+       |              - sv
+       |              - en
+       |      requestBody:
+       |        description: Lista tallennettavia asiasanoja
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              type: array
+       |              items:
+       |                type: string
+       |                example:
+       |                  - biologia
+       |                  - genetiikka
+       |      responses:
+       |        '200':
+       |          description: O
+       |""".stripMargin)
+  post("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -43,27 +109,93 @@ class AsiasanaServlet(implicit val swagger:Swagger) extends KeywordServlet {
     parseIntParam("limit", 15))
 }
 
-class AmmattinimikeServlet(implicit val swagger:Swagger) extends KeywordServlet {
-  override val modelName: String = "Ammattinimike"
-  override val applicationDescription = "Ammattinimikkeiden APIt"
+class AmmattinimikeServlet extends KeywordServlet {
 
-  get("/search/:term", operation(apiOperation[List[String]]("Hae ammattinimikkeitä")
-    tags modelName
-    summary "Hae ammattinimikkeitä"
-    parameter pathParam[String]("term").description("Hakutermi")
-    parameter queryParam[String]("kieli").description("fi/sv/en")
-    parameter queryParam[Int]("limit").description("Asiasanojen määrä (default = 15)"))) {
+  registerPath("/ammattinimike/search/{term}",
+    s"""    get:
+       |      summary: Hakee ammattinimikkeitä annetulla hakutermillä
+       |      operationId: Hae ammattinimikkeita
+       |      description: Hakee ammattinimikkeitä annetulla hakutermillä
+       |      tags:
+       |        - Ammattinimike
+       |      parameters:
+       |        - in: path
+       |          name: term
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: hakutermi
+       |          example: kone
+       |        - in: query
+       |          name: kieli
+       |          description: Haettavan ammattinimikkeen kieli
+       |          schema:
+       |            type: string
+       |            enum:
+       |              - fi
+       |              - sv
+       |              - en
+       |        - in: query
+       |          name: limit
+       |          description: Palautettavien ammattinimikkeiden maksimimäärä
+       |          schema:
+       |            type: integer
+       |          default: 15
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  type: string
+       |                  example:
+       |                    - koneinsinööri
+       |                    - koneistaja
+       |
+       |""".stripMargin)
+  get("/search/:term") {
 
     implicit val authenticated: Authenticated = authenticate
 
     Ok(search(parseAmmattinimikeSearch()))
   }
 
-  post("/", operation(apiOperation[Int]("Tallenna ammattinimikkeitä")
-    tags modelName
-    summary "Tallenna ammattinimikkeitä"
-    parameter bodyParam[List[String]]
-    parameter queryParam[String]("kieli").description("fi/sv/en"))) {
+  registerPath("/ammattinimike/",
+    s"""    post:
+       |      summary: Tallenna ammattinimikkeitä
+       |      operationId: Tallenna ammattinimikkeita
+       |      description: Tallenna ammattinimikkeitä
+       |      tags:
+       |        - Ammattinimike
+       |      parameters:
+       |        - in: query
+       |          name: kieli
+       |          description: Tallennettavan ammattinimikkeen kieli
+       |          schema:
+       |            type: string
+       |            enum:
+       |              - fi
+       |              - sv
+       |              - en
+       |      requestBody:
+       |        description: Lista tallennettavia ammattinimikkeitä
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              type: array
+       |              items:
+       |                type: string
+       |                example:
+       |                  - lähihoitaja
+       |                  - jalkahoitaja
+       |      responses:
+       |        '200':
+       |          description: O
+       |""".stripMargin)
+  post("/") {
 
     implicit val authenticated: Authenticated = authenticate
 

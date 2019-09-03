@@ -22,13 +22,14 @@
 
         <!-- Utility properties -->
         <scala-utils.version>0.0.1-SNAPSHOT</scala-utils.version>
-        <json4s.version>3.6.5</json4s.version>
+        <json4s.version>3.6.7</json4s.version>
+
 
         <!-- Cas properties -->
         <scala-cas.version>1.0.1-SNAPSHOT</scala-cas.version>
 
         <!-- Http related properties -->
-        <scalatra.version>2.6.3</scalatra.version>
+        <scalatra.version>2.7.0-RC1</scalatra.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
 
         <!-- Database related properties -->
@@ -38,8 +39,9 @@
 
         <!-- Test properties -->
         <scala-test.version>3.2.0-SNAP10</scala-test.version>
-        <scalatra-scalatest.version>2.6.3</scalatra-scalatest.version>
+        <scalatra-scalatest.version>2.7.0-RC1</scalatra-scalatest.version>
         <jetty.version>9.4.17.v20190418</jetty.version>
+
         <commons.io.version>2.6</commons.io.version>
 
         <!-- Plugin properties -->
@@ -162,24 +164,20 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-xml_2.12</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-swagger_2.12</artifactId>
+            <artifactId>scalatra-json_2.12</artifactId>
             <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
                     <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.json4s</groupId>
@@ -394,6 +392,10 @@
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
                     <artifactId>scala-reflect</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scala-lang.modules</groupId>
+                    <artifactId>scala-xml_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

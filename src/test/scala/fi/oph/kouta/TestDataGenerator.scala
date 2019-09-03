@@ -70,6 +70,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     
     println(s"Koulutukset, toteutukset ja hakukohteet ready...")
     println(s"DONE.")
+    println(s"Test session id=$TestDataGeneratorSessionId")
   }
 
   def debug(oid: String) = {

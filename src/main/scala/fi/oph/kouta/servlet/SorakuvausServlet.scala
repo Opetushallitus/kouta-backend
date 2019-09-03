@@ -2,22 +2,40 @@ package fi.oph.kouta.servlet
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem, ValintaperusteListItem}
+import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.Sorakuvaus
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.SorakuvausService
 import org.scalatra.{NotFound, Ok}
-import org.scalatra.swagger.Swagger
 
-class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagger: Swagger) extends KoutaServlet {
-  override val applicationDescription = "SORA-kuvausten API"
-  override val modelName = "Sorakuvaus"
+class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServlet {
 
-  def this()(implicit swagger: Swagger) = this(SorakuvausService)
+  def this() = this(SorakuvausService)
 
-  get("/:id", operation(apiOperation[Sorakuvaus]("Hae SORA-kuvaus")
-    tags modelName
-    summary "Hae SORA-kuvaus"
-    parameter pathParam[String]("id").description("SORA-kuvauksen UUID"))) {
+  registerPath("/sorakuvaus/{id}",
+    s"""    get:
+       |      summary: Hae SORA-kuvauksen tiedot
+       |      operationId: Hae sorakuvaus
+       |      description: Hakee SORA-kuvauksen kaikki tiedot
+       |      tags:
+       |        - Sorakuvaus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Sorakuvaus-id
+       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                $$ref: '#/components/schemas/Sorakuvaus'
+       |""".stripMargin)
+  get("/:id") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -27,10 +45,35 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagg
     }
   }
 
-  put("/", operation(apiOperation[Unit]("Tallenna uusi SORA-kuvaus")
-    tags modelName
-    summary "Tallenna uusi SORA-kuvaus"
-    parameter bodyParam[Sorakuvaus])) {
+  registerPath( "/sorakuvaus/",
+    s"""    put:
+       |      summary: Tallenna uusi SORA-kuvaus
+       |      operationId: Tallenna uusi sorakuvaus
+       |      description: Tallenna uuden SORA-kuvauksen tiedot.
+       |        Rajapinta palauttaa SORA-kuvaukselle generoidun yksilöivän id:n
+       |      tags:
+       |        - Sorakuvaus
+       |      requestBody:
+       |        description: Tallennettava SORA-kuvaus
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Sorakuvaus'
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: object
+       |                properties:
+       |                  oid:
+       |                    type: string
+       |                    description: Uuden SORA-kuvauksen yksilöivä id
+       |                    example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+       |""".stripMargin)
+  put("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -39,10 +82,26 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagg
     }
   }
 
-  post("/", operation(apiOperation[Unit]("Muokkaa SORA-kuvausta")
-    tags modelName
-    summary "Muokkaa olemassa olevaa SORA-kuvausta"
-    parameter bodyParam[Sorakuvaus])) {
+  registerPath("/sorakuvaus/",
+    s"""    post:
+       |      summary: Muokkaa olemassa olevaa SORA-kuvausta
+       |      operationId: Muokkaa sorakuvausta
+       |      description: Muokkaa olemassa olevaa SORA-kuvausta. Rajapinnalle annetaan SORA-kuvauksen kaikki tiedot,
+       |        ja muuttuneet tiedot tallennetaan kantaan.
+       |      tags:
+       |        - Sorakuvaus
+       |      requestBody:
+       |        description: Muokattavan SORA-kuvauksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+       |        required: true
+       |        content:
+       |          application/json:
+       |            schema:
+       |              $$ref: '#/components/schemas/Sorakuvaus'
+       |      responses:
+       |        '200':
+       |          description: O
+       |""".stripMargin)
+  post("/") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -51,10 +110,32 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagg
     }
   }
 
-  get("/list", operation(apiOperation[List[SorakuvausListItem]]("Listaa kaikki SORA-kuvaukset, joihin käyttäjällä on oikeudet")
-    tags modelName
-    summary "Listaa kaikki SORA-kuvaukset, joihin käyttäjällä on oikeudet."
-    parameter queryParam[String]("organisaatioOid").description(s"Käyttäjän organisaation oid (TODO: tulee tulevaisuudessa CASista)"))) {
+  registerPath("/sorakuvaus/list",
+    s"""    get:
+       |      summary: Listaa organisaation käytettävissä olevat SORA-kuvaukset
+       |      operationId: Listaa sorakuvaukset
+       |      description: Listaa niiden SORA-kuvausten tiedot, jotka ovat organisaation käytettävissä.
+       |      tags:
+       |        - Sorakuvaus
+       |      parameters:
+       |        - in: query
+       |          name: organisaatioOid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Organisaatio-oid
+       |          example: 1.2.246.562.10.00101010101
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/SorakuvausListItem'
+       |""".stripMargin)
+  get("/list") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -64,10 +145,32 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService)(implicit val swagg
     }
   }
 
-  get("/:id/valintaperusteet/list", operation(apiOperation[List[ValintaperusteListItem]]("Listaa kaikki valintaperusteet, jotka käyttävät annettua SORA-kuvausta")
-    tags modelName
-    summary "Listaa kaikki valintaperusteet, jotka käyttävät annettua SORA-kuvausta"
-    parameter pathParam[String]("id").description("SORA-kuvauksen UUID"))) {
+  registerPath( "/sorakuvaus/{id}/valintaperusteet/list",
+    s"""    get:
+       |      summary: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty
+       |      operationId: Listaa sorakuvauksen valintaperusteet
+       |      description: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
+       |      tags:
+       |        - Sorakuvaus
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: SORA-kuvauksen id
+       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/ValintaperusteListItem'
+       |""".stripMargin)
+  get("/:id/valintaperusteet/list") {
 
     implicit val authenticated: Authenticated = authenticate
 
