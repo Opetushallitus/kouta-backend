@@ -130,3 +130,56 @@ COMMENT ON COLUMN toteutusten_tarjoajat.tarjoaja_oid IS 'Koulutusta toteutusta j
 COMMENT ON COLUMN toteutusten_tarjoajat.muokkaaja IS 'Koulutuksen toteutuksen organisaatioon liittäneen virkailijan henkilö-oid';
 COMMENT ON COLUMN toteutusten_tarjoajat.transaction_id IS '';
 COMMENT ON COLUMN toteutusten_tarjoajat.system_time IS 'Viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE hakukohteiden_valintakokeet IS 'Hakukohteiden valintakokeiden tiedot';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.id IS 'Valintakokeen yksilöivä tunniste. Järjestelmän generoima.';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.hakukohde_oid IS 'Valintakokeen hakukohteen yksilöivä tunniste.';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.tyyppi IS 'Valintakokeen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.tilaisuudet IS 'Valintakokeen järjestämistilaisuudet: osoite, aika ja lisätietoja ';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.muokkaaja IS 'Valintakoetta viimeksi muokanneen virkailijan henkilö-oid';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.transaction_id IS '';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.system_time IS 'Valintakokeen viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE hakukohteiden_liitteet IS 'Hakukohteiden liitteiden tiedot';
+COMMENT ON COLUMN hakukohteiden_liitteet.id IS 'Liitteen yksilöivä tunniste. Järjestelmän generoima.';
+COMMENT ON COLUMN hakukohteiden_liitteet.hakukohde_oid IS 'Liitteen hakukohteen yksilöivä tunniste.';
+COMMENT ON COLUMN hakukohteiden_liitteet.tyyppi IS 'Liitteen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/liitetyypitamm/1';
+COMMENT ON COLUMN hakukohteiden_liitteet.nimi IS '	Liitteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa';
+COMMENT ON COLUMN hakukohteiden_liitteet.kuvaus IS 'Liitteen Opintopolussa näytettävä kuvaus eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.';
+COMMENT ON COLUMN hakukohteiden_liitteet.toimitusaika IS 'Liitteen toimitusaika, jos ei ole sama kuin kaikilla hakukohteen liitteillä';
+COMMENT ON COLUMN hakukohteiden_liitteet.toimitustapa IS 'Liitteen toimitustapa, jos ei ole sama kuin kaikilla hakukohteen liitteillä. Sallitut arvot: "hakijapalvelu", "osoite" ja "lomake"';
+COMMENT ON COLUMN hakukohteiden_liitteet.toimitusosoite IS 'Jos liitteillä on sama toimitusosoite, se ilmoitetaan tässä. Osoite (katuosoite eri kielillä, postinumero, postitoimipaikka) ja sähköposti (sähköpostiosoite eri kielillä, johon liite voidaan toimittaa)';
+COMMENT ON COLUMN hakukohteiden_liitteet.muokkaaja IS 'Liitettä viimeksi muokanneen virkailijan henkilö-oid';
+COMMENT ON COLUMN hakukohteiden_liitteet.transaction_id IS '';
+COMMENT ON COLUMN hakukohteiden_liitteet.system_time IS 'Liitteen viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE hakukohteiden_hakuajat IS 'Hakukohteen hakuajat, jos ei käytetä haun hakuaikoja';
+COMMENT ON COLUMN hakukohteiden_hakuajat.hakukohde_oid IS 'Hakuajan hakukohteen yksilöivä tunniste.';
+COMMENT ON COLUMN hakukohteiden_hakuajat.hakuaika IS 'Hakuaika (aikaväli)';
+COMMENT ON COLUMN hakukohteiden_hakuajat.muokkaaja IS 'Hakuaikaa viimeksi muokanneen virkailijan henkilö-oid';
+COMMENT ON COLUMN hakukohteiden_hakuajat.transaction_id IS '';
+COMMENT ON COLUMN hakukohteiden_hakuajat.system_time IS 'Hakuaikaa viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE hakujen_valintakokeet IS 'Hakujen valintakokeiden tiedot';
+COMMENT ON COLUMN hakujen_valintakokeet.id IS 'Valintakokeen yksilöivä tunniste. Järjestelmän generoima.';
+COMMENT ON COLUMN hakujen_valintakokeet.haku_oid IS 'Valintakokeen haun yksilöivä tunniste.';
+COMMENT ON COLUMN hakujen_valintakokeet.tyyppi IS 'Valintakokeen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1';
+COMMENT ON COLUMN hakujen_valintakokeet.tilaisuudet IS 'Valintakokeen järjestämistilaisuudet: osoite, aika ja lisätietoja ';
+COMMENT ON COLUMN hakujen_valintakokeet.muokkaaja IS 'Valintakoetta viimeksi muokanneen virkailijan henkilö-oid';
+COMMENT ON COLUMN hakujen_valintakokeet.transaction_id IS '';
+COMMENT ON COLUMN hakujen_valintakokeet.system_time IS 'Valintakokeen viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE hakujen_hakuajat IS 'Haun hakuajat. Hakukohteella voi olla omat hakuajat.';
+COMMENT ON COLUMN hakujen_hakuajat.haku_oid IS 'Hakuajan haun yksilöivä tunniste.';
+COMMENT ON COLUMN hakujen_hakuajat.hakuaika IS 'Hakuaika (aikaväli)';
+COMMENT ON COLUMN hakujen_hakuajat.muokkaaja IS 'Hakuaikaa viimeksi muokanneen virkailijan henkilö-oid';
+COMMENT ON COLUMN hakujen_hakuajat.transaction_id IS '';
+COMMENT ON COLUMN hakujen_hakuajat.system_time IS 'Hakuaikaa viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE asiasanat IS 'Koulutusten toteutuksien asiasanat';
+COMMENT ON COLUMN asiasanat.asiasana IS 'Asiasana';
+COMMENT ON COLUMN asiasanat.kieli IS 'Asiasanan kieli. Sallitut arvot: "fi", "sv" ja "en"';
+
+COMMENT ON TABLE ammattinimikkeet IS 'Koulutusten toteutuksien ammattinimikkeet';
+COMMENT ON COLUMN ammattinimikkeet.ammattinimike IS 'Ammattinimke';
+COMMENT ON COLUMN ammattinimikkeet.kieli IS 'Ammattinimikkeen kieli. Sallitut arvot: "fi", "sv" ja "en"'
