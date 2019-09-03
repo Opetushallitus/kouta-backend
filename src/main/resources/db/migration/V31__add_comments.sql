@@ -8,7 +8,7 @@ COMMENT ON COLUMN koulutukset.nimi IS 'Koulutuksen Opintopolussa näytettävä n
 COMMENT ON COLUMN koulutukset.metadata IS 'Yleistä koulutukseen liittyvää metadataa kuten koulutusalat, kuvaukset, lisätietoja, tutkintonimikkeet, opintojen laajuus ja koulutustyyppi.';
 COMMENT ON COLUMN koulutukset.muokkaaja IS 'Koulutusta viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN koulutukset.transaction_id IS '';
-COMMENT ON COLUMN koulutukset.system_time IS '';
+COMMENT ON COLUMN koulutukset.system_time IS 'Koulutuksen viimeisin muokkausaika. Järjestelmän generoima';
 COMMENT ON COLUMN koulutukset.kielivalinta IS 'Kielet, joille koulutuksen nimi, kuvailutiedot ja muut tekstit on käännetty';
 COMMENT ON COLUMN koulutukset.organisaatio_oid IS 'Koulutuksen luoneen organisaation oid';
 COMMENT ON COLUMN koulutukset.julkinen IS 'Voivatko muut oppilaitokset käyttää koulutusta';
@@ -114,3 +114,17 @@ COMMENT ON COLUMN sorakuvaukset.organisaatio_oid IS 'SORA-kuvauksen luoneen orga
 COMMENT ON COLUMN sorakuvaukset.muokkaaja IS 'SORA-kuvausta viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN sorakuvaukset.transaction_id IS '';
 COMMENT ON COLUMN sorakuvaukset.system_time IS 'SORA-kuvauksen viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE koulutusten_tarjoajat IS 'Koulutusta tarjoavien organisaatioden tiedot';
+COMMENT ON COLUMN koulutusten_tarjoajat.koulutus_oid IS 'Koulutuksen yksilöivä tunniste';
+COMMENT ON COLUMN koulutusten_tarjoajat.tarjoaja_oid IS 'Koulutusta tarjoavan organisaation yksilöivä tunniste';
+COMMENT ON COLUMN koulutusten_tarjoajat.muokkaaja IS 'Koulutuksen organisaation liittäneen virkailijan henkilö-oid';
+COMMENT ON COLUMN koulutusten_tarjoajat.transaction_id IS '';
+COMMENT ON COLUMN koulutusten_tarjoajat.system_time IS 'Viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE toteutusten_tarjoajat IS 'Koulutuksen toteutusta järjestävien organisaatioden tiedot';
+COMMENT ON COLUMN toteutusten_tarjoajat.toteutus_oid IS 'Koulutuksen toteutuksen yksilöivä tunniste';
+COMMENT ON COLUMN toteutusten_tarjoajat.tarjoaja_oid IS 'Koulutusta toteutusta järjestävän organisaation yksilöivä tunniste';
+COMMENT ON COLUMN toteutusten_tarjoajat.muokkaaja IS 'Koulutuksen toteutuksen organisaatioon liittäneen virkailijan henkilö-oid';
+COMMENT ON COLUMN toteutusten_tarjoajat.transaction_id IS '';
+COMMENT ON COLUMN toteutusten_tarjoajat.system_time IS 'Viimeisin muokkausaika. Järjestelmän generoima';
