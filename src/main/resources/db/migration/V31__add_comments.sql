@@ -182,7 +182,7 @@ COMMENT ON COLUMN asiasanat.kieli IS 'Asiasanan kieli. Sallitut arvot: "fi", "sv
 
 COMMENT ON TABLE ammattinimikkeet IS 'Koulutusten toteutuksien ammattinimikkeet';
 COMMENT ON COLUMN ammattinimikkeet.ammattinimike IS 'Ammattinimke';
-COMMENT ON COLUMN ammattinimikkeet.kieli IS 'Ammattinimikkeen kieli. Sallitut arvot: "fi", "sv" ja "en"'
+COMMENT ON COLUMN ammattinimikkeet.kieli IS 'Ammattinimikkeen kieli. Sallitut arvot: "fi", "sv" ja "en"';
 
 COMMENT ON TABLE sessions IS 'Virkailijoiden istuntojen tiedot';
 COMMENT ON COLUMN sessions.id IS 'Istunnon yksilöivä tunniste. Järjestelmän generoima.';
