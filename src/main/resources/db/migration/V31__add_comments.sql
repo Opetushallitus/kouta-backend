@@ -9,7 +9,7 @@ COMMENT ON COLUMN koulutukset.tila IS 'Koulutuksen julkaisutila. Jos koulutus on
 COMMENT ON COLUMN koulutukset.nimi IS 'Koulutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa. Esim: "{"fi": "Suomenkielinen nimi", "sv": "Ruotsinkielinen nimi", "en": "Englanninkielinen nimi"}"';
 COMMENT ON COLUMN koulutukset.metadata IS 'Yleistä koulutukseen liittyvää metadataa kuten koulutusalat, kuvaukset, lisätietoja, tutkintonimikkeet, opintojen laajuus ja koulutustyyppi.';
 COMMENT ON COLUMN koulutukset.muokkaaja IS 'Koulutusta viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN koulutukset.transaction_id IS '';
+COMMENT ON COLUMN koulutukset.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN koulutukset.system_time IS 'Koulutuksen viimeisin muokkausaika. Järjestelmän generoima';
 COMMENT ON COLUMN koulutukset.kielivalinta IS 'Kielet, joille koulutuksen nimi, kuvailutiedot ja muut tekstit on käännetty';
 COMMENT ON COLUMN koulutukset.organisaatio_oid IS 'Koulutuksen luoneen organisaation oid';
@@ -22,7 +22,7 @@ COMMENT ON COLUMN toteutukset.tila IS 'Toteutuksen julkaisutila. Jos toteutus on
 COMMENT ON COLUMN toteutukset.nimi IS 'Toteutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa. Esim: "{"fi": "Suomenkielinen nimi", "sv": "Ruotsinkielinen nimi", "en": "Englanninkielinen nimi"}"';
 COMMENT ON COLUMN toteutukset.metadata IS 'Yleistä koulutukseen liittyvää metadataa kuten kuvaus, tietoja opetuksen järjestämisestä sekä maksullisuudesta, yhteyshenkilö, asiasanat, ammattinimikkeet, osaamisalat ja koulutustyyppi.';
 COMMENT ON COLUMN toteutukset.muokkaaja IS 'Toteutusta viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN toteutukset.transaction_id IS '';
+COMMENT ON COLUMN toteutukset.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN toteutukset.system_time IS 'Toteutuksen viimeisin muokkausaika. Järjestelmän generoima';
 COMMENT ON COLUMN toteutukset.kielivalinta IS 'Kielet, joille toteutuksen nimi, kuvailutiedot ja muut tekstit on käännetty';
 COMMENT ON COLUMN toteutukset.organisaatio_oid IS 'Toteutuksen luoneen organisaation oid';
@@ -52,7 +52,7 @@ COMMENT ON COLUMN hakukohteet.liitteiden_toimitusosoite IS 'Jos liitteillä on s
 COMMENT ON COLUMN hakukohteet.metadata IS ''; --TODO: Käytetäänkö?
 COMMENT ON COLUMN hakukohteet.muokkaaja IS 'Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN hakukohteet.kielivalinta IS 'Kielet, joille hakukohteen nimi, kuvailutiedot ja muut tekstit on käännetty';
-COMMENT ON COLUMN hakukohteet.transaction_id IS '';
+COMMENT ON COLUMN hakukohteet.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN hakukohteet.system_time IS 'Hakukohteen viimeisin muokkausaika. Järjestelmän generoima';
 COMMENT ON COLUMN hakukohteet.organisaatio_oid IS 'Hakukohteen luoneen organisaation oid';
 COMMENT ON COLUMN hakukohteet.hakulomake_ataru_id IS 'Hakulomakkeen yksilöivä tunniste, jos käytössä on Atarun (hakemuspalvelun) hakulomake';
@@ -80,7 +80,7 @@ COMMENT ON COLUMN haut.hakulomake_kuvaus IS 'Hakulomakkeen kuvausteksti eri kiel
 COMMENT ON COLUMN haut.metadata IS 'Yleistä hakuun liittyvää metadataa: yhteyshenkilö ja tulevaisuuden aikataulu';
 COMMENT ON COLUMN haut.organisaatio_oid IS 'Haun luoneen organisaation oid';
 COMMENT ON COLUMN haut.muokkaaja IS 'Hakua viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN haut.transaction_id IS '';
+COMMENT ON COLUMN haut.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN haut.system_time IS 'Haun viimeisin muokkausaika. Järjestelmän generoima';
 COMMENT ON COLUMN haut.kielivalinta IS 'Kielet, joille haun nimi, kuvailutiedot ja muut tekstit on käännetty';
 COMMENT ON COLUMN haut.ajastettu_julkaisu IS 'Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet ja koulutukset julkaistaan automaattisesti Opintopolussa, jos ne eivät vielä ole julkisia';
@@ -99,7 +99,7 @@ COMMENT ON COLUMN valintaperusteet.julkinen IS 'Voivatko muut oppilaitokset käy
 COMMENT ON COLUMN valintaperusteet.metadata IS 'Yleistä valintaperustekuvaukseen liittyvää metadataa: osaamistaustat, kuvaukset (eri kielillä) ja valintatavat';
 COMMENT ON COLUMN valintaperusteet.organisaatio_oid IS 'Valintaperustekuvauksen luoneen organisaation oid';
 COMMENT ON COLUMN valintaperusteet.muokkaaja IS 'Valintaperustekuvausta viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN valintaperusteet.transaction_id IS '';
+COMMENT ON COLUMN valintaperusteet.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN valintaperusteet.system_time IS 'Valintaperustekuvauksen viimeisin muokkausaika. Järjestelmän generoima';
 COMMENT ON COLUMN valintaperusteet.koulutustyyppi IS 'Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi? Sallitut arvot: "amm" (ammatillinen), "yo" (yliopisto), "lk" (lukio), "mk" (ammattikorkea), "muu" (muu koulutus)';
 COMMENT ON COLUMN valintaperusteet.sorakuvaus_id IS 'Valintaperustekuvaukseen liittyvän SORA-kuvauksen yksilöivä tunniste';
@@ -114,21 +114,21 @@ COMMENT ON COLUMN sorakuvaukset.kielivalinta IS 'Kielet, joille SORA-kuvauksen n
 COMMENT ON COLUMN sorakuvaukset.metadata IS 'SORA-kuvauksen kuvailutiedot eri kielillä';
 COMMENT ON COLUMN sorakuvaukset.organisaatio_oid IS 'SORA-kuvauksen luoneen organisaation oid';
 COMMENT ON COLUMN sorakuvaukset.muokkaaja IS 'SORA-kuvausta viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN sorakuvaukset.transaction_id IS '';
+COMMENT ON COLUMN sorakuvaukset.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN sorakuvaukset.system_time IS 'SORA-kuvauksen viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE koulutusten_tarjoajat IS 'Koulutusta tarjoavien organisaatioden tiedot';
 COMMENT ON COLUMN koulutusten_tarjoajat.koulutus_oid IS 'Koulutuksen yksilöivä tunniste';
 COMMENT ON COLUMN koulutusten_tarjoajat.tarjoaja_oid IS 'Koulutusta tarjoavan organisaation yksilöivä tunniste';
 COMMENT ON COLUMN koulutusten_tarjoajat.muokkaaja IS 'Koulutuksen organisaation liittäneen virkailijan henkilö-oid';
-COMMENT ON COLUMN koulutusten_tarjoajat.transaction_id IS '';
+COMMENT ON COLUMN koulutusten_tarjoajat.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN koulutusten_tarjoajat.system_time IS 'Viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE toteutusten_tarjoajat IS 'Koulutuksen toteutusta järjestävien organisaatioden tiedot';
 COMMENT ON COLUMN toteutusten_tarjoajat.toteutus_oid IS 'Koulutuksen toteutuksen yksilöivä tunniste';
 COMMENT ON COLUMN toteutusten_tarjoajat.tarjoaja_oid IS 'Koulutusta toteutusta järjestävän organisaation yksilöivä tunniste';
 COMMENT ON COLUMN toteutusten_tarjoajat.muokkaaja IS 'Koulutuksen toteutuksen organisaatioon liittäneen virkailijan henkilö-oid';
-COMMENT ON COLUMN toteutusten_tarjoajat.transaction_id IS '';
+COMMENT ON COLUMN toteutusten_tarjoajat.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN toteutusten_tarjoajat.system_time IS 'Viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE hakukohteiden_valintakokeet IS 'Hakukohteiden valintakokeiden tiedot';
@@ -150,14 +150,14 @@ COMMENT ON COLUMN hakukohteiden_liitteet.toimitusaika IS 'Liitteen toimitusaika,
 COMMENT ON COLUMN hakukohteiden_liitteet.toimitustapa IS 'Liitteen toimitustapa, jos ei ole sama kuin kaikilla hakukohteen liitteillä. Sallitut arvot: "hakijapalvelu", "osoite" ja "lomake"';
 COMMENT ON COLUMN hakukohteiden_liitteet.toimitusosoite IS 'Jos liitteillä on sama toimitusosoite, se ilmoitetaan tässä. Osoite (katuosoite eri kielillä, postinumero, postitoimipaikka) ja sähköposti (sähköpostiosoite eri kielillä, johon liite voidaan toimittaa)';
 COMMENT ON COLUMN hakukohteiden_liitteet.muokkaaja IS 'Liitettä viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN hakukohteiden_liitteet.transaction_id IS '';
+COMMENT ON COLUMN hakukohteiden_liitteet.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN hakukohteiden_liitteet.system_time IS 'Liitteen viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE hakukohteiden_hakuajat IS 'Hakukohteen hakuajat, jos ei käytetä haun hakuaikoja';
 COMMENT ON COLUMN hakukohteiden_hakuajat.hakukohde_oid IS 'Hakuajan hakukohteen yksilöivä tunniste.';
 COMMENT ON COLUMN hakukohteiden_hakuajat.hakuaika IS 'Hakuaika (aikaväli)';
 COMMENT ON COLUMN hakukohteiden_hakuajat.muokkaaja IS 'Hakuaikaa viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN hakukohteiden_hakuajat.transaction_id IS '';
+COMMENT ON COLUMN hakukohteiden_hakuajat.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN hakukohteiden_hakuajat.system_time IS 'Hakuaikaa viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE hakujen_valintakokeet IS 'Hakujen valintakokeiden tiedot';
@@ -166,14 +166,14 @@ COMMENT ON COLUMN hakujen_valintakokeet.haku_oid IS 'Valintakokeen haun yksilöi
 COMMENT ON COLUMN hakujen_valintakokeet.tyyppi IS 'Valintakokeen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1';
 COMMENT ON COLUMN hakujen_valintakokeet.tilaisuudet IS 'Valintakokeen järjestämistilaisuudet: osoite, aika ja lisätietoja ';
 COMMENT ON COLUMN hakujen_valintakokeet.muokkaaja IS 'Valintakoetta viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN hakujen_valintakokeet.transaction_id IS '';
+COMMENT ON COLUMN hakujen_valintakokeet.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN hakujen_valintakokeet.system_time IS 'Valintakokeen viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE hakujen_hakuajat IS 'Haun hakuajat. Hakukohteella voi olla omat hakuajat.';
 COMMENT ON COLUMN hakujen_hakuajat.haku_oid IS 'Hakuajan haun yksilöivä tunniste.';
 COMMENT ON COLUMN hakujen_hakuajat.hakuaika IS 'Hakuaika (aikaväli)';
 COMMENT ON COLUMN hakujen_hakuajat.muokkaaja IS 'Hakuaikaa viimeksi muokanneen virkailijan henkilö-oid';
-COMMENT ON COLUMN hakujen_hakuajat.transaction_id IS '';
+COMMENT ON COLUMN hakujen_hakuajat.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
 COMMENT ON COLUMN hakujen_hakuajat.system_time IS 'Hakuaikaa viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE asiasanat IS 'Koulutusten toteutuksien asiasanat';
@@ -183,3 +183,13 @@ COMMENT ON COLUMN asiasanat.kieli IS 'Asiasanan kieli. Sallitut arvot: "fi", "sv
 COMMENT ON TABLE ammattinimikkeet IS 'Koulutusten toteutuksien ammattinimikkeet';
 COMMENT ON COLUMN ammattinimikkeet.ammattinimike IS 'Ammattinimke';
 COMMENT ON COLUMN ammattinimikkeet.kieli IS 'Ammattinimikkeen kieli. Sallitut arvot: "fi", "sv" ja "en"'
+
+COMMENT ON TABLE sessions IS 'Virkailijoiden istuntojen tiedot';
+COMMENT ON COLUMN sessions.id IS 'Istunnon yksilöivä tunniste. Järjestelmän generoima.';
+COMMENT ON COLUMN sessions.cas_ticket IS 'CAS-autentikointijärjestelmän service ticketin (ST) tunniste';
+COMMENT ON COLUMN sessions.person IS 'Virkailijan henkilö-oid';
+COMMENT ON COLUMN sessions.last_read IS '';
+
+COMMENT ON TABLE authorities IS 'Virkailijoiden istuntoihin liittyvät käyttöoikeudet';
+COMMENT ON COLUMN authorities.session IS 'Käyttöoikeuteen liittyvän istunnon yksilöivä tunniste';
+COMMENT ON COLUMN authorities.authority IS 'Käyttöoikeuden tunniste (organisaation oid + itse käyttöoikeus)';
