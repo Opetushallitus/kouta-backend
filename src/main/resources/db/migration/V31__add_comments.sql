@@ -1,6 +1,6 @@
 COMMENT ON SCHEMA public IS 'Opintopolun koulutustarjonnan tiedot';
 
-COMMENT ON TABLE koulutukset IS 'Koulutukset eli koulutusmoduulin toteutukset';
+COMMENT ON TABLE koulutukset IS 'Koulutukset eli koulutusmoduulit';
 COMMENT ON COLUMN koulutukset.oid IS 'Koulutuksen yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN koulutukset.johtaa_tutkintoon IS 'Onko koulutus tutkintoon johtavaa';
 COMMENT ON COLUMN koulutukset.tyyppi IS 'Koulutuksen tyyppi. Sallitut arvot: "amm" (ammatillinen), "yo" (yliopisto), "lk" (lukio), "mk" (ammattikorkea), "muu" (muu koulutus)';
@@ -19,7 +19,7 @@ COMMENT ON TABLE toteutukset IS 'Koulutusten toteutukset eli koulutusmoduulin to
 COMMENT ON COLUMN toteutukset.oid IS 'Toteutuksen yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN toteutukset.koulutus_oid IS 'Toteutukseen liittyvän koulutuksen yksilöivä tunniste';
 COMMENT ON COLUMN toteutukset.tila IS 'Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu"';
-COMMENT ON COLUMN toteutukset.nimi IS 'Toteutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa. Esim: "{"fi": "Suomenkielinen nimi", "sv": "Ruotsinkielinen nimi", "en": "Englanninkielinen nimi"}"';
+COMMENT ON COLUMN toteutukset.nimi IS 'Toteutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen toteutuksen kielivalinnassa. Esim: "{"fi": "Suomenkielinen nimi", "sv": "Ruotsinkielinen nimi", "en": "Englanninkielinen nimi"}"';
 COMMENT ON COLUMN toteutukset.metadata IS 'Yleistä koulutukseen liittyvää metadataa kuten kuvaus, tietoja opetuksen järjestämisestä sekä maksullisuudesta, yhteyshenkilö, asiasanat, ammattinimikkeet, osaamisalat ja koulutustyyppi.';
 COMMENT ON COLUMN toteutukset.muokkaaja IS 'Toteutusta viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN toteutukset.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
@@ -32,7 +32,7 @@ COMMENT ON COLUMN hakukohteet.oid IS 'Hakukohteen yksilöivä tunniste. Järjest
 COMMENT ON COLUMN hakukohteet.toteutus_oid IS 'Hakukohteeseen liitetyn toteutuksen yksilöivä tunniste.';
 COMMENT ON COLUMN hakukohteet.haku_oid IS 'Hakukohteeseen liitetyn haun yksilöivä tunniste.';
 COMMENT ON COLUMN hakukohteet.tila IS 'Haun julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu"';
-COMMENT ON COLUMN hakukohteet.nimi IS 'Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa. Esim: "{"fi": "Suomenkielinen nimi", "sv": "Ruotsinkielinen nimi", "en": "Englanninkielinen nimi"}"';
+COMMENT ON COLUMN hakukohteet.nimi IS 'Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa. Esim: "{"fi": "Suomenkielinen nimi", "sv": "Ruotsinkielinen nimi", "en": "Englanninkielinen nimi"}"';
 COMMENT ON COLUMN hakukohteet.alkamiskausi_koodi_uri IS 'Hakukohteen koulutusten alkamiskausi, jos ei käytetä haun alkamiskautta. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1';
 COMMENT ON COLUMN hakukohteet.alkamisvuosi IS 'Hakukohteen koulutusten alkamisvuosi, jos ei käytetä haun alkamisvuotta';
 COMMENT ON COLUMN hakukohteet.hakulomaketyyppi IS 'Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta (jolloin voidaan lisätä hakulomakkeeseen linkki) tai onko niin, ettei sähkököistä hakulomaketta ole lainkaan, jolloin sille olisi hyvä lisätä kuvaus.';
@@ -67,7 +67,7 @@ COMMENT ON COLUMN hakukohteet.max_ensikertalaisen_aloituspaikat IS 'Hakukohteen 
 COMMENT ON TABLE haut IS 'Haut';
 COMMENT ON COLUMN haut.oid IS 'Haun yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN haut.tila IS 'Haun julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu"';
-COMMENT ON COLUMN haut.nimi IS 'Haun Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.';
+COMMENT ON COLUMN haut.nimi IS 'Haun Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty haun kielivalinnassa.';
 COMMENT ON COLUMN haut.hakutapa_koodi_uri IS 'Haun hakutapa. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11';
 COMMENT ON COLUMN haut.hakukohteen_liittamisen_takaraja IS 'Viimeinen ajanhetki, jolloin hakuun saa liittää hakukohteen. Hakukohteita ei saa lisätä enää sen jälkeen, kun haku on käynnissä.';
 COMMENT ON COLUMN haut.hakukohteen_muokkaamisen_takaraja IS 'Viimeinen ajanhetki, jolloin hakuun liitettyä hakukohdetta on sallittua muokata. Hakukohteen tietoja ei saa muokata enää sen jälkeen, kun haku on käynnissä.';
@@ -93,7 +93,7 @@ COMMENT ON COLUMN valintaperusteet.tila IS 'Valintaperustekuvauksen julkaisutila
 COMMENT ON COLUMN valintaperusteet.hakutapa_koodi_uri IS 'Valintaperustekuvaukseen liittyvä hakutapa. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11';
 COMMENT ON COLUMN valintaperusteet.kohdejoukko_koodi_uri IS 'Valintaperustekuvaukseen liittyvä kohdejoukko. Valintaperusteen ja siihen hakukohteen kautta liittyvän haun kohdejoukon tulee olla sama. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukko/1';
 COMMENT ON COLUMN valintaperusteet.kohdejoukon_tarkenne_koodi_uri IS 'Valintaperustekuvaukseen liittyvä kohdejoukon tarkenne. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukontarkenne/1';
-COMMENT ON COLUMN valintaperusteet.nimi IS 'Valintaperustekuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.';
+COMMENT ON COLUMN valintaperusteet.nimi IS 'Valintaperustekuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty valintaperustekuvauksen kielivalinnassa.';
 COMMENT ON COLUMN valintaperusteet.kielivalinta IS 'Kielet, joille valintaperustekuvauksen nimi, kuvailutiedot ja muut tekstit on käännetty';
 COMMENT ON COLUMN valintaperusteet.julkinen IS 'Voivatko muut oppilaitokset käyttää valintaperustekuvausta';
 COMMENT ON COLUMN valintaperusteet.metadata IS 'Yleistä valintaperustekuvaukseen liittyvää metadataa: osaamistaustat, kuvaukset (eri kielillä) ja valintatavat';
@@ -158,7 +158,7 @@ COMMENT ON COLUMN hakukohteiden_hakuajat.hakukohde_oid IS 'Hakuajan hakukohteen 
 COMMENT ON COLUMN hakukohteiden_hakuajat.hakuaika IS 'Hakuaika (aikaväli)';
 COMMENT ON COLUMN hakukohteiden_hakuajat.muokkaaja IS 'Hakuaikaa viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN hakukohteiden_hakuajat.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
-COMMENT ON COLUMN hakukohteiden_hakuajat.system_time IS 'Hakuaikaa viimeisin muokkausaika. Järjestelmän generoima';
+COMMENT ON COLUMN hakukohteiden_hakuajat.system_time IS 'Hakuajan viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE hakujen_valintakokeet IS 'Hakujen valintakokeiden tiedot';
 COMMENT ON COLUMN hakujen_valintakokeet.id IS 'Valintakokeen yksilöivä tunniste. Järjestelmän generoima.';
@@ -174,21 +174,21 @@ COMMENT ON COLUMN hakujen_hakuajat.haku_oid IS 'Hakuajan haun yksilöivä tunnis
 COMMENT ON COLUMN hakujen_hakuajat.hakuaika IS 'Hakuaika (aikaväli)';
 COMMENT ON COLUMN hakujen_hakuajat.muokkaaja IS 'Hakuaikaa viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN hakujen_hakuajat.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
-COMMENT ON COLUMN hakujen_hakuajat.system_time IS 'Hakuaikaa viimeisin muokkausaika. Järjestelmän generoima';
+COMMENT ON COLUMN hakujen_hakuajat.system_time IS 'Hakuajan viimeisin muokkausaika. Järjestelmän generoima';
 
 COMMENT ON TABLE asiasanat IS 'Koulutusten toteutuksien asiasanat';
 COMMENT ON COLUMN asiasanat.asiasana IS 'Asiasana';
 COMMENT ON COLUMN asiasanat.kieli IS 'Asiasanan kieli. Sallitut arvot: "fi", "sv" ja "en"';
 
 COMMENT ON TABLE ammattinimikkeet IS 'Koulutusten toteutuksien ammattinimikkeet';
-COMMENT ON COLUMN ammattinimikkeet.ammattinimike IS 'Ammattinimke';
+COMMENT ON COLUMN ammattinimikkeet.ammattinimike IS 'Ammattinimike';
 COMMENT ON COLUMN ammattinimikkeet.kieli IS 'Ammattinimikkeen kieli. Sallitut arvot: "fi", "sv" ja "en"';
 
 COMMENT ON TABLE sessions IS 'Virkailijoiden istuntojen tiedot';
 COMMENT ON COLUMN sessions.id IS 'Istunnon yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN sessions.cas_ticket IS 'CAS-autentikointijärjestelmän service ticketin (ST) tunniste';
 COMMENT ON COLUMN sessions.person IS 'Virkailijan henkilö-oid';
-COMMENT ON COLUMN sessions.last_read IS '';
+COMMENT ON COLUMN sessions.last_read IS 'Ajanhetki jolloin istunnon tiedot on luettu kannasta';
 
 COMMENT ON TABLE authorities IS 'Virkailijoiden istuntoihin liittyvät käyttöoikeudet';
 COMMENT ON COLUMN authorities.session IS 'Käyttöoikeuteen liittyvän istunnon yksilöivä tunniste';
