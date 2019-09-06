@@ -1,0 +1,108 @@
+package fi.oph.kouta.repository
+
+import java.time.Instant
+
+import fi.oph.kouta.domain.Oppilaitos
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+import slick.dbio.DBIO
+import slick.jdbc.PostgresProfile.api._
+import scala.concurrent.ExecutionContext.Implicits.global
+
+trait OppilaitosDAO extends EntityModificationDAO[OrganisaatioOid] {
+  def getPutActions(oppilaitos: Oppilaitos): DBIO[OrganisaatioOid]
+  def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Boolean]
+
+  def put(oppilaitos: Oppilaitos): OrganisaatioOid
+  def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)]
+  def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Boolean
+}
+
+object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
+
+  override def getPutActions(oppilaitos: Oppilaitos): DBIO[OrganisaatioOid] =
+    insertOppilaitos(oppilaitos).andThen(DBIO.successful(oppilaitos.oid))
+
+  override def put(oppilaitos: Oppilaitos): OrganisaatioOid =
+    KoutaDatabase.runBlockingTransactionally(getPutActions(oppilaitos)).get
+
+  override def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        k <- selectOppilaitos(oid).as[Oppilaitos].headOption
+        l <- selectLastModified(oid)
+      } yield (k, l)
+    ).get match {
+      case (Some(k), Some(l)) => Some(k, l)
+      case _ => None
+    }
+  }
+
+  override def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Boolean] = {
+    checkNotModified(oppilaitos.oid, notModifiedSince).andThen(
+      for {
+        k <- updateOppilaitos(oppilaitos)
+      } yield 0 < k
+    )
+  }
+
+  override def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Boolean =
+    KoutaDatabase.runBlockingTransactionally(getUpdateActions(oppilaitos, notModifiedSince)).get
+}
+
+sealed trait OppilaitosModificationSQL extends SQLHelpers {
+  this: ExtractorBase =>
+
+  def selectLastModified(oid: OrganisaatioOid): DBIO[Option[Instant]] = {
+    sql"""select greatest(
+            max(lower(o.system_time)),
+            max(upper(oh.system_time)))
+          from oppilaitokset o
+          left join oppilaitokset_history oh on o.oid = oh.oid
+          where o.oid = $oid""".as[Option[Instant]].head
+  }
+
+  def selectModifiedSince(since: Instant): DBIO[Seq[OrganisaatioOid]] = {
+    sql"""select oid from oppilaitokset where $since < lower(system_time)
+          union
+          select oid from oppilaitokset_history where $since <@ system_time""".as[OrganisaatioOid]
+  }
+}
+
+sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificationSQL with SQLHelpers {
+
+  def selectOppilaitos(oid: OrganisaatioOid) = {
+    sql"""select oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, lower(system_time)
+          from oppilaitokset where oid = $oid"""
+  }
+
+  def insertOppilaitos(oppilaitos: Oppilaitos) = {
+    sqlu"""insert into oppilaitokset (
+            oid,
+            tila,
+            kielivalinta,
+            metadata,
+            muokkaaja,
+            organisaatio_oid)
+          values (
+            ${oppilaitos.oid},
+            ${oppilaitos.tila.toString}::julkaisutila,
+            ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
+            ${toJsonParam(oppilaitos.metadata)}::jsonb,
+            ${oppilaitos.muokkaaja},
+            ${oppilaitos.organisaatioOid})"""
+  }
+
+  def updateOppilaitos(oppilaitos: Oppilaitos) = {
+    sqlu"""update oppilaitokset set
+              tila = ${oppilaitos.tila.toString}::julkaisutila,
+              kielivalinta = ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
+              metadata = ${toJsonParam(oppilaitos.metadata)}::jsonb,
+              muokkaaja = ${oppilaitos.muokkaaja},
+              organisaatio_oid = ${oppilaitos.organisaatioOid}
+            where oid = ${oppilaitos.oid}
+            and ( tila is distinct from ${oppilaitos.tila.toString}::julkaisutila
+            or metadata is distinct from ${toJsonParam(oppilaitos.metadata)}::jsonb
+            or kielivalinta is distinct from ${toJsonParam(oppilaitos.kielivalinta)}::jsonb
+            or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid})"""
+  }
+}

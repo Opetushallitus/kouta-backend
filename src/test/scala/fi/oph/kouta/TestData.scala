@@ -375,4 +375,54 @@ object TestData {
     organisaatioOid = OrganisaatioOid("1.2"),
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     modified = None)
+
+  val JulkaistuOppilaitos = Oppilaitos(
+    oid = ChildOid,
+    tila = Julkaistu,
+    metadata = Some(OppilaitosMetadata(
+      osoite = Some(Osoite1),
+      wwwSivu = Map(Fi -> "www.oppilaitos.fi", Sv -> "www.oppilaitos.sv"),
+      tietoaOpiskelusta = Seq(
+        Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
+          teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))),
+      esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),
+      opiskelijoita = Some(100),
+      korkeakouluja = Some(1),
+      tiedekuntia = Some(2),
+      kampuksia = Some(2),
+      yksikoita = None,
+      toimipisteita = Some(2),
+      akatemioita = Some(1))),
+    kielivalinta = Seq(Fi, Sv),
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"),
+    modified = None)
+
+  val MinOppilaitos = Oppilaitos(
+    oid = ChildOid,
+    tila = Tallennettu,
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"))
+
+  val JulkaistuOppilaitoksenOsa = OppilaitoksenOsa(
+    oid = GrandChildOid,
+    oppilaitosOid = ChildOid,
+    tila = Julkaistu,
+    metadata = Some(OppilaitoksenOsaMetadata(
+      osoite = Some(Osoite1),
+      wwwSivu = Map(Fi -> "www.tiedekunta.fi", Sv -> "www.tiedekunta.sv"),
+      esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),
+      opiskelijoita = Some(100),
+      kampus = Map(Fi -> "Kampus fi", Sv -> "Kampus sv"))),
+    kielivalinta = Seq(Fi, Sv),
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"),
+    modified = None)
+
+  val MinOppilaitoksenOsa = OppilaitoksenOsa(
+    oid = GrandChildOid,
+    oppilaitosOid = ChildOid,
+    tila = Tallennettu,
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"))
 }

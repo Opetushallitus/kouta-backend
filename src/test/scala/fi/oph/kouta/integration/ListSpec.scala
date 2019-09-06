@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
 
@@ -15,6 +16,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   var v1, v2, v3, v4     :ValintaperusteListItem = null
   var s1, s2, s3         :SorakuvausListItem = null
   var hk1, hk2, hk3, hk4 :HakukohdeListItem = null
+  var o1, o2             :OrganisaatioOid = null
+  var oo1, oo2, oo3      :OppilaitoksenOsaListItem = null
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -49,6 +52,13 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid))
     hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid))
     hk4 = addToList(hakukohde(t4.oid, h1.oid, v1.id, LonelyOid))
+
+    o1 = OrganisaatioOid(put(oppilaitos(Julkaistu, ParentOid)))
+    o2 = OrganisaatioOid(put(oppilaitos(Julkaistu, EvilChildOid)))
+
+    oo1 = addToList(oppilaitoksenOsa(o1, Julkaistu, ChildOid))
+    oo2 = addToList(oppilaitoksenOsa(o1, Julkaistu, GrandChildOid))
+    oo3 = addToList(oppilaitoksenOsa(o2, Julkaistu, EvilGrandChildOid))
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
@@ -421,6 +431,34 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
   it should "allow access to the haut of any toteutus with the indexer role" in {
     list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], List(), indexerSession)
+  }
+
+  "Oppilaitoksen osat list" should "list all oppilaitoksen osat for this oppilaitos" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ParentOid.s), List(oo1, oo2))
+  }
+  it should "return 401 if no session is found" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ParentOid.s), 401, Map.empty)
+  }
+  it should "return forbidden if organisaatio oid is unknown" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> UnknownOid.s), 403)
+  }
+  it should "deny access to all oppilaitosten osat without root organization access" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map[String, String](), 403, crudSessions(ParentOid))
+  }
+  it should "deny access to a user without access to the oppilaitos organization" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
+  }
+  it should "allow access to a user of an ancestor organization" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> GrandChildOid.s), List(oo2), crudSessions(GrandChildOid))
+  }
+  it should "deny access without the oppilaitos read role" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ChildOid.s), 403, addTestSession(Role.Koulutus.Read, OphOid))
+  }
+  it should "allow access with the oppilaitos read role" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ChildOid.s), 200, addTestSession(Role.Oppilaitos.Read, OphOid))
+  }
+  it should "allow access to the indexer" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map[String, String](), List(oo1, oo2), indexerSession)
   }
 
   //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa

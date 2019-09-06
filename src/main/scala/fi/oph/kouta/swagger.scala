@@ -67,7 +67,8 @@ class SwaggerServlet extends ScalatraServlet {
       fi.oph.kouta.domain.valintatapa.models.mkString +
       fi.oph.kouta.domain.valintaperusteMetadata.models.mkString +
       fi.oph.kouta.domain.valintaperuste.models.mkString +
-      fi.oph.kouta.domain.sorakuvaus.models.mkString
+      fi.oph.kouta.domain.sorakuvaus.models.mkString +
+      fi.oph.kouta.domain.oppilaitos.models.mkString
     yaml
   }
 }

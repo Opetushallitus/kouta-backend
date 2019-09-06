@@ -1,6 +1,5 @@
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.KoutaDatabase
-import fi.oph.kouta.security.CasSessionService
 import fi.oph.kouta.servlet._
 import fi.oph.kouta.{SwaggerServlet}
 import fi.vm.sade.utils.slf4j.Logging
@@ -26,6 +25,8 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context.mount(new SorakuvausServlet(), "/sorakuvaus", "sorakuvaus")
     context.mount(new AsiasanaServlet(), "/asiasana", "asiasana")
     context.mount(new AmmattinimikeServlet(), "/ammattinimike", "ammattinimike")
+    context.mount(new OppilaitosServlet(), "/oppilaitos", "oppilaitos")
+    context.mount(new OppilaitoksenOsaServlet(), "/oppilaitoksen-osa", "oppilaitoksen-osa")
 
     context.mount(new AnythingServlet(), "/anything", "anything")
     context.mount(new SwaggerServlet, "/swagger")

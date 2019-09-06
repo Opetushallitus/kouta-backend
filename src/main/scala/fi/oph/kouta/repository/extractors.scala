@@ -18,6 +18,7 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getToteutusOidResult: GetResult[ToteutusOid] = GetResult(r => ToteutusOid(r.nextString()))
   implicit val getHakukohdeOidResult: GetResult[HakukohdeOid] = GetResult(r => HakukohdeOid(r.nextString()))
   implicit val getHakuOidResult: GetResult[HakuOid] = GetResult(r => HakuOid(r.nextString()))
+  implicit val getOrganisaatioOidResult: GetResult[OrganisaatioOid] = GetResult(r => OrganisaatioOid(r.nextString()))
 
   implicit val getInstantOptionResult: GetResult[Option[Instant]] = GetResult(r => r.nextTimestampOption().map(_.toInstant))
 
@@ -242,6 +243,40 @@ trait HakukohdeExctractors extends ExtractorBase {
     toimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
     toimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
+  ))
+}
+
+trait OppilaitosExtractors extends ExtractorBase {
+  implicit val getOppilaitosResult: GetResult[Oppilaitos] = GetResult(r => Oppilaitos(
+    oid = OrganisaatioOid(r.nextString()),
+    tila = Julkaisutila.withName(r.nextString()),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
+    muokkaaja = UserOid(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    modified = Some(extractModified(r.nextTimestamp()))
+  ))
+}
+
+trait OppilaitoksenOsaExtractors extends ExtractorBase {
+  implicit val getOppilaitoksenOsaResult: GetResult[OppilaitoksenOsa] = GetResult(r => OppilaitoksenOsa(
+    oid = OrganisaatioOid(r.nextString()),
+    oppilaitosOid = OrganisaatioOid(r.nextString()),
+    tila = Julkaisutila.withName(r.nextString()),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
+    muokkaaja = UserOid(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    modified = Some(extractModified(r.nextTimestamp()))
+  ))
+
+  implicit val getOppilaitoksenOsaListItemResult: GetResult[OppilaitoksenOsaListItem] = GetResult(r => OppilaitoksenOsaListItem(
+    oid = OrganisaatioOid(r.nextString()),
+    oppilaitosOid = OrganisaatioOid(r.nextString()),
+    tila = Julkaisutila.withName(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = extractModified(r.nextTimestamp())
   ))
 }
 

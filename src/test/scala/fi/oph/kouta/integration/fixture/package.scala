@@ -11,5 +11,6 @@ package object fixture {
 
 import fi.oph.kouta.integration.fixture._
 trait EverythingFixture extends KoulutusFixture with ToteutusFixture with HakuFixture
-  with HakukohdeFixture with ValintaperusteFixture with SorakuvausFixture { this: KoutaIntegrationSpec =>
+  with HakukohdeFixture with ValintaperusteFixture with SorakuvausFixture
+  with OppilaitosFixture with OppilaitoksenOsaFixture { this: KoutaIntegrationSpec =>
 }
