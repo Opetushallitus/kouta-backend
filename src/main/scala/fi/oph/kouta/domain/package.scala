@@ -187,10 +187,10 @@ package object domain {
        |          description: Osoite eri kielillä. Kielet on määritetty kielivalinnassa.
        |          allOf:
        |            - $$ref: '#/components/schemas/Teksti'
-       |        postinumero:
+       |        postinumeroKoodiUri:
        |          type: string
-       |          description: Postinumero
-       |          example: "04230"
+       |          description: Postinumero. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/posti/2)
+       |          example: "posti_04230#2"
        |        postitoimipaikka:
        |          type: object
        |          description: Postitoimipaikka eri kielillä. Kielet on määritetty kielivalinnassa.
@@ -387,8 +387,7 @@ package object domain {
   case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty)
 
   case class Osoite(osoite: Kielistetty = Map(),
-                    postinumero: Option[String],
-                    postitoimipaikka: Kielistetty = Map())
+                    postinumeroKoodiUri: Option[String])
 
   case class ListEverything(koulutukset: Seq[KoulutusOid] = Seq(),
                             toteutukset: Seq[ToteutusOid] = Seq(),
