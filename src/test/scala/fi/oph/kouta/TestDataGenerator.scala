@@ -52,7 +52,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       (0 to ToteutusCount).foreach { j =>
         val toteutusOid = put("/toteutus", toteutus(koulutusOid, i, j))
         put("/hakukohde", hakukohde(i, j, 0, toteutusOid, hakuOids(i % 2), valintaperusteIds(i % 2)))
-        put("/hakukohde", hakukohde(i, j, 0, toteutusOid, hakuOids(i % 2) + 2, valintaperusteIds(i % 2)))
+        put("/hakukohde", hakukohde(i, j, 0, toteutusOid, hakuOids(i % 2  + 2), valintaperusteIds(i % 2)))
       }
     }
 
