@@ -261,7 +261,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val tallennettu = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
-      valintakokeet = List(TestData.Valintakoe1.copy(tyyppi = Some("tyyyyppi"))),
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("tyyyyppi_1#2"))),
       liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.now()))))
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, getIds(muokattuHakukohde))

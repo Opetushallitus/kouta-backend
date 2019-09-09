@@ -207,7 +207,7 @@ package object domain {
        |          type: string
        |          description: Valintakokeen yksilöivä tunniste. Järjestelmän generoima.
        |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
-       |        tyyppi:
+       |        tyyppiKoodiUri:
        |          type: string
        |          description: Valintakokeen tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1)
        |          example: valintakokeentyyppi_1#1
@@ -359,7 +359,7 @@ package object domain {
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
   case class Valintakoe(id: Option[UUID] = None,
-                        tyyppi: Option[String] = None,
+                        tyyppiKoodiUri: Option[String] = None,
                         tilaisuudet: List[Valintakoetilaisuus] = List())
 
   case class Valintakoetilaisuus(osoite: Option[Osoite],

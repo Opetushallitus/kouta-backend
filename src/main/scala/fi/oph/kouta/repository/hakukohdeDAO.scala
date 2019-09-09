@@ -341,8 +341,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def insertValintakoe(oid: Option[HakukohdeOid], valintakoe:Valintakoe, muokkaaja:UserOid) = {
-    sqlu"""insert into hakukohteiden_valintakokeet (id, hakukohde_oid, tyyppi, tilaisuudet, muokkaaja)
-               values (${valintakoe.id.map(_.toString)}::uuid, ${oid}, ${valintakoe.tyyppi}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, ${muokkaaja})"""
+    sqlu"""insert into hakukohteiden_valintakokeet (id, hakukohde_oid, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
+               values (${valintakoe.id.map(_.toString)}::uuid, ${oid}, ${valintakoe.tyyppiKoodiUri}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, ${muokkaaja})"""
   }
 
   def insertLiitteet(hakukohde: Hakukohde) = {
@@ -354,7 +354,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
       sqlu"""insert into hakukohteiden_liitteet (
                 id,
                 hakukohde_oid,
-                tyyppi,
+                tyyppi_koodi_uri,
                 nimi,
                 kuvaus,
                 toimitusaika,
@@ -364,7 +364,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              ) values (
                 ${liite.id.map(_.toString)}::uuid,
                 ${oid},
-                ${liite.tyyppi},
+                ${liite.tyyppiKoodiUri},
                 ${toJsonParam(liite.nimi)}::jsonb,
                 ${toJsonParam(liite.kuvaus)}::jsonb,
                 ${formatTimestampParam(liite.toimitusaika)}::timestamp,
@@ -378,11 +378,11 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectValintakokeet(oid: HakukohdeOid) = {
-    sql"""select id, tyyppi, tilaisuudet from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
+    sql"""select id, tyyppi_koodi_uri, tilaisuudet from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
   }
 
   def selectLiitteet(oid: HakukohdeOid) = {
-    sql"""select id, tyyppi, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
+    sql"""select id, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
           from hakukohteiden_liitteet where hakukohde_oid = $oid""".as[Liite]
   }
 
@@ -407,12 +407,12 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def updateValintakoe(oid: Option[HakukohdeOid], valintakoe: Valintakoe, muokkaaja: UserOid) = {
     sqlu"""update hakukohteiden_valintakokeet set
-              tyyppi = ${valintakoe.tyyppi},
+              tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
               tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
               muokkaaja = ${muokkaaja}
            where hakukohde_oid = $oid and id = ${valintakoe.id.map(_.toString)}::uuid and (
               tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
-              tyyppi is distinct from ${valintakoe.tyyppi})"""
+              tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri})"""
   }
 
   def deleteValintakokeet(oid: Option[HakukohdeOid]) = {
@@ -429,7 +429,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def updateLiite(oid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid) = {
     sqlu"""update hakukohteiden_liitteet set
-                tyyppi = ${liite.tyyppi},
+                tyyppi_koodi_uri = ${liite.tyyppiKoodiUri},
                 nimi = ${toJsonParam(liite.nimi)}::jsonb,
                 kuvaus = ${toJsonParam(liite.kuvaus)}::jsonb,
                 toimitusaika = ${formatTimestampParam(liite.toimitusaika)}::timestamp,
@@ -438,7 +438,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
                 muokkaaja = ${muokkaaja}
               where id = ${liite.id.map(_.toString)}::uuid
                 and hakukohde_oid = ${oid}
-                and ( tyyppi is distinct from ${liite.tyyppi}
+                and ( tyyppi_koodi_uri is distinct from ${liite.tyyppiKoodiUri}
                       or nimi is distinct from ${toJsonParam(liite.nimi)}::jsonb
                       or kuvaus is distinct from ${toJsonParam(liite.kuvaus)}::jsonb
                       or toimitusaika is distinct from ${formatTimestampParam(liite.toimitusaika)}::timestamp

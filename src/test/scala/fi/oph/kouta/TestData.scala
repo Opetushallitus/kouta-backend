@@ -29,7 +29,7 @@ object TestData {
 
   val Liite1 = Liite(
     id = None,
-    tyyppi = Some("moi"),
+    tyyppiKoodiUri = Some("moi"),
     nimi = Map(Fi -> "liite 1 Fi", Sv -> "liite 1 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
     toimitusaika = Some(inFuture()),
@@ -38,7 +38,7 @@ object TestData {
 
   val Liite2 = Liite(
     id = None,
-    tyyppi = Some("terve"),
+    tyyppiKoodiUri = Some("terve"),
     nimi = Map(Fi -> "liite 2 Fi", Sv -> "liite 2 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
     toimitusaika = None,
@@ -47,7 +47,7 @@ object TestData {
 
   val Valintakoe1 = Valintakoe(
     id = None,
-    tyyppi = Some("valintakokeentyyppi_1#1"),
+    tyyppiKoodiUri = Some("valintakokeentyyppi_1#1"),
     tilaisuudet = List(Valintakoetilaisuus(
       osoite = Some(Osoite1),
       aika = Some(Ajanjakso(alkaa = now(), paattyy = inFuture())),

@@ -56,7 +56,7 @@ package object toteutus {
        |              fi: Suomenkielinen kuvaus
        |              sv: Ruotsinkielinen kuvaus
        |            osaamisalat:
-       |              - koodi: osaamisala_0001#1
+       |              - koodiUri: osaamisala_0001#1
        |                linkki:
        |                  fi: http://osaamisala/linkki/fi
        |                  sv: http://osaamisala/linkki/sv

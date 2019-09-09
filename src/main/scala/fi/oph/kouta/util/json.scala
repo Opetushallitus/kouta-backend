@@ -108,7 +108,7 @@ sealed trait DefaultKoutaJsonFormats {
     case s: JObject =>
       implicit def formats: Formats = genericKoutaFormats + valintatapaSisaltoSerializer
 
-      Try(s \ "koulutustyyppi").toOption.collect {
+      Try(s \ "tyyppi").toOption.collect {
         case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
       }.getOrElse(Amm) match {
         case Yo => s.extract[YliopistoValintaperusteMetadata]

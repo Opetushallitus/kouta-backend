@@ -27,7 +27,7 @@ trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
     import slick.jdbc.PostgresProfile.api._
     haku.copy(
       valintakokeet = haku.valintakokeet.map(l => l.copy(id = db.runBlocking(
-        sql"""select id from hakujen_valintakokeet where haku_oid = ${haku.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString)))
+        sql"""select id from hakujen_valintakokeet where haku_oid = ${haku.oid} and tyyppi_koodi_uri = ${l.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString)))
     )}
 
   def haku(oid: String): Haku = haku.copy(oid = Some(HakuOid(oid)))

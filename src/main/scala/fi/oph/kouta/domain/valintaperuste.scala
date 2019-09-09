@@ -73,7 +73,7 @@ package object valintaperuste {
        |            - $$ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
        |            - $$ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
        |          example:
-       |            koulutustyyppi: amm
+       |            tyyppi: amm
        |            valintatavat:
        |              - valintatapaKoodiUri: valintatapajono_tv#1
        |                kuvaus:
