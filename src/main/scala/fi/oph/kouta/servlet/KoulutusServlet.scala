@@ -39,7 +39,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     koulutusService.get(KoulutusOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown koulutus oid")
-      case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
+      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
   }
 

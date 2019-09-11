@@ -5,6 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 
 class ToteutusSpec extends KoutaIntegrationSpec
@@ -130,7 +131,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    post(ToteutusPath, bytes(thisToteutus), Seq("If-Unmodified-Since" -> lastModified)) {
+    post(ToteutusPath, bytes(thisToteutus), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
       status should equal (401)
     }
   }
@@ -177,12 +178,12 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutus, lastModified, 403, indexerSession)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     post(ToteutusPath, bytes(thisToteutus), headers = defaultHeaders) {
       status should equal (400)
-      body should include ("If-Unmodified-Since")
+      body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 

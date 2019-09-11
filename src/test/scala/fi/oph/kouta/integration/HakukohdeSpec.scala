@@ -6,6 +6,7 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with Validations {
@@ -140,13 +141,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     get(oid, thisHakukohde)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     post(HakukohdePath, bytes(thisHakukohde), Seq(defaultSessionHeader)) {
       status should equal (400)
-      body should include ("If-Unmodified-Since")
+      body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 
@@ -156,7 +157,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val lastModified = get(oid, thisHakukohde)
     Thread.sleep(1500)
     update(tallennettuHakukohde(oid).copy(tila = Arkistoitu), lastModified)
-    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified), defaultSessionHeader)) {
+    post(HakukohdePath, bytes(thisHakukohde), List((KoutaServlet.IfUnmodifiedSinceHeader, lastModified), defaultSessionHeader)) {
       status should equal (409)
     }
   }
@@ -165,7 +166,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettuHakukohde(oid))
-    post(HakukohdePath, bytes(thisHakukohde), List(("If-Unmodified-Since", lastModified))) {
+    post(HakukohdePath, bytes(thisHakukohde), List((KoutaServlet.IfUnmodifiedSinceHeader, lastModified))) {
       status should equal (401)
     }
   }

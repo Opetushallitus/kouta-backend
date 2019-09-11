@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.SorakuvausFixture
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 
 class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with SorakuvausFixture with Validations {
@@ -127,7 +128,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   it should "return 401 if no session is found" in {
     val id = put(sorakuvaus)
     val lastModified = get(id, sorakuvaus(id))
-    post(SorakuvausPath, bytes(sorakuvaus(id)), Seq("If-Unmodified-Since" -> lastModified)) {
+    post(SorakuvausPath, bytes(sorakuvaus(id)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
       status should equal (401)
     }
   }
@@ -174,11 +175,11 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     update(thisSorakuvaus, lastModified, 403, indexerSession)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val id = put(sorakuvaus)
     post(SorakuvausPath, bytes(sorakuvaus(id)), defaultHeaders) {
       status should equal (400)
-      body should include ("If-Unmodified-Since")
+      body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 

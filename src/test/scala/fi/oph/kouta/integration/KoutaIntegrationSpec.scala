@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
+import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.{MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
@@ -143,7 +144,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 
-  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, defaultSessionHeader, "If-Unmodified-Since" -> lastModified)
+  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, defaultSessionHeader, KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
   def sessionHeader(sessionId: UUID): (String, String) = sessionHeader(sessionId.toString)
@@ -190,7 +191,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
       }
       debugJson(body)
       read[E](body) should equal(expected)
-      header("Last-Modified")
+      header(KoutaServlet.LastModifiedHeader)
     }
   }
 
@@ -206,7 +207,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     update(path, entity, lastModified, expectUpdate, defaultSessionId)
 
   def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit =
-    update(path, entity, Seq("If-Unmodified-Since" -> lastModified, jsonHeader, sessionHeader(sessionId)), expectUpdate)
+    update(path, entity, Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId)), expectUpdate)
 
   def update[E <: scala.AnyRef](path: String, entity: E, headers: Iterable[(String, String)], expectUpdate: Boolean): Unit = {
     post(path, bytes(entity), headers) {
@@ -216,7 +217,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   }
 
   def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, sessionId: UUID, expectedStatus: Int): Unit = {
-    post(path, bytes(entity), Seq("If-Unmodified-Since" -> lastModified, jsonHeader, sessionHeader(sessionId))) {
+    post(path, bytes(entity), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId))) {
       withClue(body) {
         status should equal(expectedStatus)
       }

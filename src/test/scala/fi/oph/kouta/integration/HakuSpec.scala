@@ -5,6 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 
 class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture with Validations {
@@ -123,13 +124,13 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     get(oid, thisHaku) should equal (lastModified)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val oid = put(haku)
     val thisHaku = tallennettuHaku(oid)
     val lastModified = get(oid, thisHaku)
     post(HakuPath, bytes(thisHaku), Seq(defaultSessionHeader)) {
       status should equal (400)
-      body should include ("If-Unmodified-Since")
+      body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 
