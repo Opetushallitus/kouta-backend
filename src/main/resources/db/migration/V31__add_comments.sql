@@ -38,7 +38,7 @@ COMMENT ON COLUMN hakukohteet.alkamisvuosi IS 'Hakukohteen koulutusten alkamisvu
 COMMENT ON COLUMN hakukohteet.hakulomaketyyppi IS 'Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta (jolloin voidaan lisätä hakulomakkeeseen linkki) tai onko niin, ettei sähkököistä hakulomaketta ole lainkaan, jolloin sille olisi hyvä lisätä kuvaus.';
 COMMENT ON COLUMN hakukohteet.hakulomake_kuvaus IS 'Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa.';
 COMMENT ON COLUMN hakukohteet.aloituspaikat IS 'Hakukohteen aloituspaikkojen lukumäärä';
-COMMENT ON COLUMN hakukohteet.ensikertalaisen_aloituspaikat IS 'Hakukohteen ensikertalaisen aloituspaikkojen lukumäärä';
+COMMENT ON COLUMN hakukohteet.ensikertalaisen_aloituspaikat IS 'Hakukohteen ensikertalaisten aloituspaikkojen lukumäärä';
 COMMENT ON COLUMN hakukohteet.pohjakoulutusvaatimus_koodi_urit IS 'Lista toisen asteen hakukohteen pohjakoulutusvaatimuksista. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/pohjakoulutusvaatimustoinenaste/1';
 COMMENT ON COLUMN hakukohteet.muu_pohjakoulutusvaatimus_kuvaus IS 'Hakukohteen muiden pohjakoulutusvaatimusten kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.';
 COMMENT ON COLUMN hakukohteet.toinen_aste_onko_kaksoistutkinto IS 'Onko hakukohteen toisen asteen koulutuksessa mahdollista suorittaa kaksoistutkinto?';
@@ -49,7 +49,7 @@ COMMENT ON COLUMN hakukohteet.liitteet_onko_sama_toimitusosoite IS 'Onko kaikill
 COMMENT ON COLUMN hakukohteet.liitteiden_toimitusaika IS 'Jos liitteillä on sama toimitusaika, se ilmoitetaan tässä';
 COMMENT ON COLUMN hakukohteet.liitteiden_toimitustapa IS 'Jos liitteillä on sama toimitustapa, se ilmoitetaan tässä. Sallitut arvot: "hakijapalvelu", "osoite" ja "lomake".';
 COMMENT ON COLUMN hakukohteet.liitteiden_toimitusosoite IS 'Jos liitteillä on sama toimitusosoite, se ilmoitetaan tässä. Osoite (katuosoite eri kielillä, postinumero, postitoimipaikka) ja sähköposti (sähköpostiosoite eri kielillä, johon liite voidaan toimittaa)';
-COMMENT ON COLUMN hakukohteet.metadata IS ''; --TODO: Käytetäänkö?
+COMMENT ON COLUMN hakukohteet.metadata IS 'Ei käytössä tällä hetkellä';
 COMMENT ON COLUMN hakukohteet.muokkaaja IS 'Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN hakukohteet.kielivalinta IS 'Kielet, joille hakukohteen nimi, kuvailutiedot ja muut tekstit on käännetty';
 COMMENT ON COLUMN hakukohteet.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
@@ -61,8 +61,8 @@ COMMENT ON COLUMN hakukohteet.kaytetaan_haun_hakulomaketta IS 'Käytetäänkö h
 COMMENT ON COLUMN hakukohteet.kaytetaan_haun_alkamiskautta IS 'Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?';
 COMMENT ON COLUMN hakukohteet.min_aloituspaikat IS 'Hakukohteen aloituspaikkojen minimimäärä';
 COMMENT ON COLUMN hakukohteet.max_aloituspaikat IS 'Hakukohteen aloituspaikkojen maksimimäärä';
-COMMENT ON COLUMN hakukohteet.min_ensikertalaisen_aloituspaikat IS 'Hakukohteen ensikertalaisen aloituspaikkojen minimimäärä';
-COMMENT ON COLUMN hakukohteet.max_ensikertalaisen_aloituspaikat IS 'Hakukohteen ensikertalaisen aloituspaikkojen maksimimäärä';
+COMMENT ON COLUMN hakukohteet.min_ensikertalaisen_aloituspaikat IS 'Hakukohteen ensikertalaisten aloituspaikkojen minimimäärä';
+COMMENT ON COLUMN hakukohteet.max_ensikertalaisen_aloituspaikat IS 'Hakukohteen ensikertalaisten aloituspaikkojen maksimimäärä';
 
 COMMENT ON TABLE haut IS 'Haut';
 COMMENT ON COLUMN haut.oid IS 'Haun yksilöivä tunniste. Järjestelmän generoima.';
