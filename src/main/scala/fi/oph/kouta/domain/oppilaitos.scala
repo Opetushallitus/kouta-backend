@@ -38,7 +38,7 @@ package object oppilaitos {
        |        muokkaaja:
        |          type: string
        |          description: Oppilaitosta kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid
-       |          example: 1.2.246.562.10.00101010101
+       |          example: 1.2.246.562.24.00101010101.
        |        organisaatioOid:
        |           type: string
        |           description: Oppilaitoksen kuvailutiedot luoneen organisaation oid

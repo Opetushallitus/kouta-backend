@@ -263,7 +263,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
   registerPath("/oppilaitoksen-osa/",
     s"""    post:
        |      summary: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa
-       |      operationId: Muokkaa oppilaitoksen osata
+       |      operationId: Muokkaa oppilaitoksen osaa
        |      description: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa.
        |        Rajapinnalle annetaan oppilaitoksen osan kaikki tiedot,
        |        ja muuttuneet tiedot tallennetaan kantaan.
