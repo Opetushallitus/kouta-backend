@@ -39,7 +39,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
 
     oppilaitosService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
-      case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
+      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
   }
 
@@ -219,7 +219,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
 
     oppilaitoksenOsaService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
-      case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
+      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
   }
 

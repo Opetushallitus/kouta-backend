@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{OppilaitoksenOsaFixture, OppilaitosFixture}
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 
 class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitoksenOsaFixture with OppilaitosFixture with Validations {
@@ -128,7 +129,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "return 401 if no session is found" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
-    post(OppilaitoksenOsaPath, bytes(oppilaitoksenOsa(oid, oppilaitosOid)), Seq("If-Unmodified-Since" -> lastModified)) {
+    post(OppilaitoksenOsaPath, bytes(oppilaitoksenOsa(oid, oppilaitosOid)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
       status should equal (401)
     }
   }
@@ -182,11 +183,11 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     update(thisOppilaitoksenOsa, lastModified, 403, indexerSession)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     post(OppilaitoksenOsaPath, bytes(oppilaitoksenOsa(oid, oppilaitosOid)), defaultHeaders) {
       status should equal (400)
-      body should include ("If-Unmodified-Since")
+      body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 
