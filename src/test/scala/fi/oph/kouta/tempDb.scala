@@ -5,8 +5,7 @@ import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
 
 object TempDb extends Logging {
 
-  //val port = new PortFromSystemPropertyOrFindFree("kouta-backend.db.port").chosenPort
-  val port = 54871
+  val port = new PortFromSystemPropertyOrFindFree("kouta-backend.db.port").chosenPort
   val dbName = "kouta"
 
   import java.io.File
