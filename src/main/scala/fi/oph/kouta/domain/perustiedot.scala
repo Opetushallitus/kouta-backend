@@ -24,7 +24,7 @@ sealed trait Perustiedot extends Validatable with Authorizable {
     )))
 }
 
-abstract class PerustiedotWithOid extends Perustiedot with Validatable with Authorizable {
+abstract class PerustiedotWithOid extends Perustiedot {
   val oid: Option[Oid]
 
   override def validate(): IsValid = and(
@@ -33,7 +33,7 @@ abstract class PerustiedotWithOid extends Perustiedot with Validatable with Auth
   )
 }
 
-abstract class PerustiedotWithId extends Perustiedot with Validatable with Authorizable {
+abstract class PerustiedotWithId extends Perustiedot {
   val id: Option[UUID]
 
   override def validate(): IsValid = super.validate()

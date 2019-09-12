@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.validation.{IsValid, Validatable}
+import fi.oph.kouta.validation.IsValid
 
 package object hakukohde {
 
@@ -328,7 +328,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable {
+                     modified: Option[LocalDateTime]) extends PerustiedotWithOid {
 
   override def validate(): IsValid = and(
      super.validate(),

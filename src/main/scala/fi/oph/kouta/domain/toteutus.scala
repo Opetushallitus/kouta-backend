@@ -3,7 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
-import fi.oph.kouta.validation.{IsValid, Validatable}
+import fi.oph.kouta.validation.IsValid
 
 package object toteutus {
 
@@ -202,7 +202,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
-                    modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable {
+                    modified: Option[LocalDateTime]) extends PerustiedotWithOid {
 
   override def validate(): IsValid = and(
      super.validate(),
