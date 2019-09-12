@@ -35,24 +35,24 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   protected def createLastModifiedHeader(instant: Instant): String = {
     //- system_time range in database is of form ["2017-02-28 13:40:02.442277+02",)
     //- RFC-1123 date-time format used in headers has no millis
-    //- if Last-Modified/If-Unmodified-Since header is set to 2017-02-28 13:40:02, it will never be inside system_time range
+    //- if x-Last-Modified/x-If-Unmodified-Since header is set to 2017-02-28 13:40:02, it will never be inside system_time range
     //-> this is why we wan't to set it to 2017-02-28 13:40:03 instead
     renderHttpDate(instant.truncatedTo(java.time.temporal.ChronoUnit.SECONDS).plusSeconds(1))
   }
 
   val SampleHttpDate = renderHttpDate(Instant.EPOCH)
-  protected def parseIfUnmodifiedSince: Option[Instant] = request.headers.get("If-Unmodified-Since") match {
+  protected def parseIfUnmodifiedSince: Option[Instant] = request.headers.get(KoutaServlet.IfUnmodifiedSinceHeader) match {
     case Some(s) =>
       Try(parseHttpDate(s)) match {
         case x if x.isSuccess => Some(x.get)
-        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta If-Unmodified-Since muodossa $SampleHttpDate.", e)
+        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta ${KoutaServlet.IfUnmodifiedSinceHeader} muodossa $SampleHttpDate.", e)
       }
     case None => None
   }
 
   protected def getIfUnmodifiedSince: Instant = parseIfUnmodifiedSince match {
     case Some(s) => s
-    case None => throw new IllegalArgumentException("Otsake If-Unmodified-Since on pakollinen.")
+    case None => throw new IllegalArgumentException(s"Otsake ${KoutaServlet.IfUnmodifiedSinceHeader} on pakollinen.")
   }
 
   def errorMsgFromRequest(): String = {
@@ -92,6 +92,11 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       logger.error(errorMsgFromRequest(), e)
       InternalServerError("error" -> "500 Internal Server Error")
   }
+}
+
+object KoutaServlet {
+  val IfUnmodifiedSinceHeader = "x-If-Unmodified-Since"
+  val LastModifiedHeader = "x-Last-Modified"
 }
 
 class HealthcheckServlet extends KoutaServlet {

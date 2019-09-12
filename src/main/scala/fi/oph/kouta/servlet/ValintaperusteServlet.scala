@@ -41,7 +41,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     valintaperusteService.get(UUID.fromString(params("id"))) match {
       case None => NotFound("error" -> "Unknown valintaperuste id")
-      case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
+      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
   }
 

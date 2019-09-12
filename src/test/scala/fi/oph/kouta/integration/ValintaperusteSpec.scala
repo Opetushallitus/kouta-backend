@@ -8,6 +8,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 
 class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture with Validations {
@@ -128,7 +129,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "return 401 if no session is found" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    post(ValintaperustePath, bytes(valintaperuste(id)), Seq("If-Unmodified-Since" -> lastModified)) {
+    post(ValintaperustePath, bytes(valintaperuste(id)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
       status should equal (401)
     }
   }
@@ -175,11 +176,11 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     update(thisValintaperuste, lastModified, 403, indexerSession)
   }
 
-  it should "fail update if 'If-Unmodified-Since' header is missing" in {
+  it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val id = put(valintaperuste)
     post(ValintaperustePath, bytes(valintaperuste(id)), defaultHeaders) {
       status should equal (400)
-      body should include ("If-Unmodified-Since")
+      body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 

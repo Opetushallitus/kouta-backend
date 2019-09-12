@@ -41,7 +41,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
 
     sorakuvausService.get(UUID.fromString(params("id"))) match {
       case None => NotFound("error" -> "Unknown SORA-kuvaus id")
-      case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
+      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
   }
 

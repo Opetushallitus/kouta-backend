@@ -39,7 +39,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     hakukohdeService.get(HakukohdeOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown hakukohde oid")
-      case Some((k, l)) => Ok(k, headers = Map("Last-Modified" -> createLastModifiedHeader(l)))
+      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
   }
 
