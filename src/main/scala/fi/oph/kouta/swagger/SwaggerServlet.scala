@@ -18,7 +18,14 @@ class SwaggerServlet extends ScalatraServlet {
         |openapi: 3.0.0
         |info:
         |  title: kouta-backend
-        |  description: "Uusi koulutustarjonta"
+        |  description: >
+        |    Uuden koulutustarjonnan sisäinen API
+        |
+        |
+        |    Helpoin tapa kirjautua sisään Swagger-ui:n käyttäjälle on avata
+        |    [/kouta-backend/auth/login](/kouta-backend/auth/login) uuteen selainikkunaan.
+        |    Jos näkyviin tulee `{"personOid":"1.2.246.562.24.xxxx"}` on kirjautuminen onnistunut. Jos näkyviin tulee
+        |    opintopolun kirjautumisikkuna, kirjaudu sisään.
         |  version: 0.1-SNAPSHOT
         |  termsOfService: https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/
         |  contact:
@@ -29,6 +36,7 @@ class SwaggerServlet extends ScalatraServlet {
         |    name: "EUPL 1.1 or latest approved by the European Commission"
         |    url: "http://www.osor.eu/eupl/"
         |servers:
+        |  - url: /kouta-backend/
         |  - url: http://localhost:8099/kouta-backend/
         |  - url: https://virkailija.untuvaopintopolku.fi/kouta-backend/
         |  - url: https://virkailija.hahtuvaopintopolku.fi/kouta-backend/
@@ -38,15 +46,26 @@ class SwaggerServlet extends ScalatraServlet {
         |""".stripMargin
 
     val paths = SwaggerPaths.paths.map {
-      case (path, op) =>
+      case (path, ops) =>
         s"""  $path:
+           |    parameters:
+           |      - $$ref: '#/components/parameters/callerId'
            |""".stripMargin +
-          op.mkString
+          ops.mkString
     }.mkString
 
     val modelHeader =
       s"""
          |components:
+         |  parameters:
+         |    callerId:
+         |      in: header
+         |      name: Caller-Id
+         |      schema:
+         |        type: string
+         |        default: kouta-backend-swagger
+         |      required: true
+         |      description: Kutsujan <a href="https://confluence.csc.fi/pages/viewpage.action?pageId=50858064">Caller ID</a>
          |  schemas:
          |""".stripMargin
 

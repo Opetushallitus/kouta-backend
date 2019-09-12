@@ -59,10 +59,10 @@ abstract class CasSessionService(val securityContext: SecurityContext, val userD
       .toRight(new AuthenticationFailedException(s"Session $id doesn't exist"))
 
   def getSession(ticket: Option[ServiceTicket], id: Option[UUID]): Either[Throwable, (UUID, Session)] = {
-    logger.trace(s"Getting session with ticket $ticket and session id $id")
+    logger.debug(s"Getting session with ticket $ticket and session id $id")
     (ticket, id) match {
       case (None, None) =>
-        logger.trace("No session found")
+        logger.debug("No session found")
         Left(new AuthenticationFailedException("No credentials given"))
       case (None, Some(i)) => getSession(i)
       case (Some(t), None) => createSession(t)
