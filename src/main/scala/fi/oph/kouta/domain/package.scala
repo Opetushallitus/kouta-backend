@@ -191,11 +191,6 @@ package object domain {
        |          type: string
        |          description: Postinumero. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/posti/2)
        |          example: "posti_04230#2"
-       |        postitoimipaikka:
-       |          type: object
-       |          description: Postitoimipaikka eri kielillä. Kielet on määritetty kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
        |""".stripMargin
 
   val ValintakoeModel =

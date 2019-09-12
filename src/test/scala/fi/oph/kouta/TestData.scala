@@ -379,8 +379,11 @@ object TestData {
     oid = ChildOid,
     tila = Julkaistu,
     metadata = Some(OppilaitosMetadata(
-      osoite = Some(Osoite1),
-      wwwSivu = Map(Fi -> "www.oppilaitos.fi", Sv -> "www.oppilaitos.sv"),
+      yhteystiedot = Some(Yhteystieto(
+        osoite = Some(Osoite1),
+        wwwSivu = Map(Fi -> "www.oppilaitos.fi", Sv -> "www.oppilaitos.sv"),
+        puhelinnumero = Map(Fi -> "123", Sv -> "123"),
+        sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
       tietoaOpiskelusta = Seq(
         Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))),
@@ -408,8 +411,11 @@ object TestData {
     oppilaitosOid = ChildOid,
     tila = Julkaistu,
     metadata = Some(OppilaitoksenOsaMetadata(
-      osoite = Some(Osoite1),
-      wwwSivu = Map(Fi -> "www.tiedekunta.fi", Sv -> "www.tiedekunta.sv"),
+      yhteystiedot = Some(Yhteystieto(
+        osoite = Some(Osoite1),
+        wwwSivu = Map(Fi -> "www.tiedekunta.fi", Sv -> "www.tiedekunta.sv"),
+        puhelinnumero = Map(Fi -> "123", Sv -> "123"),
+        sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
       esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),
       opiskelijoita = Some(100),
       kampus = Map(Fi -> "Kampus fi", Sv -> "Kampus sv"))),

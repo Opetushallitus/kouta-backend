@@ -54,16 +54,11 @@ package object oppilaitos {
     s"""    OppilaitosMetadata:
        |      type: object
        |      properties:
-       |        osoite:
+       |        yhteystiedot:
        |          type: object
-       |          description: Oppilaitoksen Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+       |          description: Oppilaitoksen Opintopolussa näytettävät yhteystiedot
        |          allOf:
-       |            - $$ref: '#/components/schemas/Osoite'
-       |        wwwSivu:
-       |          type: object
-       |          description: Oppilaitoksen Opintopolussa näytettävä www-sivu eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
+       |            - $$ref: '#/components/schemas/Yhteystieto'
        |        tietoaOpiskelusta:
        |          type: array
        |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
@@ -148,16 +143,11 @@ package object oppilaitos {
     s"""    OppilaitoksenOsaMetadata:
        |      type: object
        |      properties:
-       |        osoite:
+       |        yhteystiedot:
        |          type: object
-       |          description: Oppilaitoksen osan Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+       |          description: Oppilaitoksen osan Opintopolussa näytettävät yhteystiedot
        |          allOf:
-       |            - $$ref: '#/components/schemas/Osoite'
-       |        wwwSivu:
-       |          type: object
-       |          description: Oppilaitoksen osan Opintopolussa näytettävä www-sivu eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
+       |            - $$ref: '#/components/schemas/Yhteystieto'
        |        esittely:
        |          type: object
        |          description: Oppilaitoksen osan Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -208,7 +198,33 @@ package object oppilaitos {
        |           example: 2019-08-23T09:55
        |""".stripMargin
 
-  def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel, OppilaitoksenOsaListItemModel)
+  val YhteystietoModel =
+    s"""    Yhteystieto:
+       |      type: object
+       |      properties:
+       |        osoite:
+       |          type: object
+       |          description: Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty kielivalinnassa.
+       |          allOf:
+       |            - $$ref: '#/components/schemas/Osoite'
+       |        sahkoposti:
+       |          type: object
+       |          description: Opintopolussa näytettävä sähköpostiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
+       |          allOf:
+       |            - $$ref: '#/components/schemas/Teksti'
+       |        puhelinnumero:
+       |          type: object
+       |          description: Opintopolussa näytettävä puhelinnumero eri kielillä. Kielet on määritetty kielivalinnassa.
+       |          allOf:
+       |            - $$ref: '#/components/schemas/Teksti'
+       |        wwwSivu:
+       |          type: object
+       |          description: Opintopolussa näytettävä www-sivu eri kielillä. Kielet on määritetty kielivalinnassa.
+       |          allOf:
+       |            - $$ref: '#/components/schemas/Teksti'
+       |""".stripMargin
+
+  def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel, OppilaitoksenOsaListItemModel, YhteystietoModel)
 
 }
 
@@ -255,9 +271,8 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
     )))
 }
 
-case class OppilaitosMetadata(osoite: Option[Osoite] = None,
-                              wwwSivu: Kielistetty = Map(),
-                              tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
+case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
+                              yhteystiedot: Option[Yhteystieto] = None,
                               esittely: Kielistetty = Map(),
                               opiskelijoita: Option[Integer] = None,
                               korkeakouluja: Option[Integer] = None,
@@ -267,8 +282,7 @@ case class OppilaitosMetadata(osoite: Option[Osoite] = None,
                               toimipisteita: Option[Integer] = None,
                               akatemioita: Option[Integer] = None)
 
-case class OppilaitoksenOsaMetadata(osoite: Option[Osoite] = None,
-                                    wwwSivu: Kielistetty = Map(),
+case class OppilaitoksenOsaMetadata(yhteystiedot: Option[Yhteystieto] = None,
                                     opiskelijoita: Option[Integer] = None,
                                     kampus: Kielistetty = Map(),
                                     esittely: Kielistetty = Map())
@@ -279,3 +293,8 @@ case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
                                     organisaatioOid: OrganisaatioOid,
                                     muokkaaja: UserOid,
                                     modified: LocalDateTime)
+
+case class Yhteystieto(osoite: Option[Osoite] = None,
+                       wwwSivu: Kielistetty = Map(),
+                       puhelinnumero: Kielistetty = Map(),
+                       sahkoposti: Kielistetty = Map())
