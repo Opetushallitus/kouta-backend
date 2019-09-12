@@ -25,9 +25,9 @@ trait OppilaitoksenOsaDAO extends EntityModificationDAO[OrganisaatioOid] {
 object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL {
 
   override def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OrganisaatioOid] =
-    selectOppilaitosOid(oppilaitoksenOsa).flatMap {
-      case None => DBIO.failed(new NoSuchElementException(s"""Oppilaitos ${oppilaitoksenOsa.oppilaitosOid} ei löyty kannasta!"""))
-      case Some(_) => insertOppilaitoksenOsa(oppilaitoksenOsa).andThen(DBIO.successful(oppilaitoksenOsa.oid))
+    checkOppilaitosExists(oppilaitoksenOsa).flatMap {
+      case false => DBIO.failed(new NoSuchElementException(s"""Oppilaitos ${oppilaitoksenOsa.oppilaitosOid} ei löyty kannasta!"""))
+      case true => insertOppilaitoksenOsa(oppilaitoksenOsa).andThen(DBIO.successful(oppilaitoksenOsa.oid))
     }
 
   override def put(oppilaitoksenOsa: OppilaitoksenOsa): OrganisaatioOid =
@@ -87,8 +87,8 @@ sealed trait OppilaitoksenOsaModificationSQL extends SQLHelpers {
 
 sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with OppilaitoksenOsaModificationSQL with SQLHelpers {
 
-  def selectOppilaitosOid(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Option[OrganisaatioOid]]  = {
-    sql"""select oid from oppilaitokset where oid = ${oppilaitoksenOsa.oppilaitosOid}""".as[OrganisaatioOid].headOption
+  def checkOppilaitosExists(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Boolean]  = {
+    sql"""select 1 from oppilaitokset where oid = ${oppilaitoksenOsa.oppilaitosOid}""".as[Int].headOption.map(_.isDefined)
   }
 
   def selectOppilaitoksenOsa(oid: OrganisaatioOid) = {
