@@ -134,7 +134,7 @@ COMMENT ON COLUMN toteutusten_tarjoajat.system_time IS 'Viimeisin muokkausaika. 
 COMMENT ON TABLE hakukohteiden_valintakokeet IS 'Hakukohteiden valintakokeiden tiedot';
 COMMENT ON COLUMN hakukohteiden_valintakokeet.id IS 'Valintakokeen yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN hakukohteiden_valintakokeet.hakukohde_oid IS 'Valintakokeen hakukohteen yksilöivä tunniste.';
-COMMENT ON COLUMN hakukohteiden_valintakokeet.tyyppi IS 'Valintakokeen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.tyyppi_koodi_uri IS 'Valintakokeen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1';
 COMMENT ON COLUMN hakukohteiden_valintakokeet.tilaisuudet IS 'Valintakokeen järjestämistilaisuudet: osoite, aika ja lisätietoja ';
 COMMENT ON COLUMN hakukohteiden_valintakokeet.muokkaaja IS 'Valintakoetta viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN hakukohteiden_valintakokeet.transaction_id IS '';
@@ -143,7 +143,7 @@ COMMENT ON COLUMN hakukohteiden_valintakokeet.system_time IS 'Valintakokeen viim
 COMMENT ON TABLE hakukohteiden_liitteet IS 'Hakukohteiden liitteiden tiedot';
 COMMENT ON COLUMN hakukohteiden_liitteet.id IS 'Liitteen yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN hakukohteiden_liitteet.hakukohde_oid IS 'Liitteen hakukohteen yksilöivä tunniste.';
-COMMENT ON COLUMN hakukohteiden_liitteet.tyyppi IS 'Liitteen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/liitetyypitamm/1';
+COMMENT ON COLUMN hakukohteiden_liitteet.tyyppi_koodi_uri IS 'Liitteen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/liitetyypitamm/1';
 COMMENT ON COLUMN hakukohteiden_liitteet.nimi IS '	Liitteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa';
 COMMENT ON COLUMN hakukohteiden_liitteet.kuvaus IS 'Liitteen Opintopolussa näytettävä kuvaus eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.';
 COMMENT ON COLUMN hakukohteiden_liitteet.toimitusaika IS 'Liitteen toimitusaika, jos ei ole sama kuin kaikilla hakukohteen liitteillä';
@@ -163,7 +163,7 @@ COMMENT ON COLUMN hakukohteiden_hakuajat.system_time IS 'Hakuajan viimeisin muok
 COMMENT ON TABLE hakujen_valintakokeet IS 'Hakujen valintakokeiden tiedot';
 COMMENT ON COLUMN hakujen_valintakokeet.id IS 'Valintakokeen yksilöivä tunniste. Järjestelmän generoima.';
 COMMENT ON COLUMN hakujen_valintakokeet.haku_oid IS 'Valintakokeen haun yksilöivä tunniste.';
-COMMENT ON COLUMN hakujen_valintakokeet.tyyppi IS 'Valintakokeen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1';
+COMMENT ON COLUMN hakujen_valintakokeet.tyyppi_koodi_uri IS 'Valintakokeen tyyppi. Viittaa koodistoon: https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1';
 COMMENT ON COLUMN hakujen_valintakokeet.tilaisuudet IS 'Valintakokeen järjestämistilaisuudet: osoite, aika ja lisätietoja ';
 COMMENT ON COLUMN hakujen_valintakokeet.muokkaaja IS 'Valintakoetta viimeksi muokanneen virkailijan henkilö-oid';
 COMMENT ON COLUMN hakujen_valintakokeet.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
@@ -193,3 +193,24 @@ COMMENT ON COLUMN sessions.last_read IS 'Ajanhetki jolloin istunnon tiedot on lu
 COMMENT ON TABLE authorities IS 'Virkailijoiden istuntoihin liittyvät käyttöoikeudet';
 COMMENT ON COLUMN authorities.session IS 'Käyttöoikeuteen liittyvän istunnon yksilöivä tunniste';
 COMMENT ON COLUMN authorities.authority IS 'Käyttöoikeuden tunniste (organisaation oid + itse käyttöoikeus)';
+
+COMMENT ON TABLE oppilaitokset IS 'Oppilaitosten tiedot';
+COMMENT ON COLUMN oppilaitokset.oid IS 'Oppilaitoksen organisaatio-oid';
+COMMENT ON COLUMN oppilaitokset.tila IS 'Oppilaitoksen julkaisutila. Jos oppilaitos on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: julkaistu, tallennttu ja arkistoitu';
+COMMENT ON COLUMN oppilaitokset.kielivalinta IS 'Kielet, joille oppilaitoksen kuvailutiedot ja muut tekstit on käännetty';
+COMMENT ON COLUMN oppilaitokset.metadata IS 'Yleistä oppilaitokseen liittyvää metadataa: yhteystiedot, tietoja opiskelusta, esittely, opiskelijoiden määrä ja erilaisten oppilaitosten osien määrät';
+COMMENT ON COLUMN oppilaitokset.organisaatio_oid IS 'Oppilaitoksen kuvailutiedot luoneen organisaation oid';
+COMMENT ON COLUMN oppilaitokset.muokkaaja IS 'Oppilaitosta kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid';
+COMMENT ON COLUMN oppilaitokset.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
+COMMENT ON COLUMN oppilaitokset.system_time IS 'Oppilaitoksen kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima';
+
+COMMENT ON TABLE oppilaitosten_osat IS 'Oppilaitosten osien (eli organisaatiopalvelussa oppilaitoksen alla olevien toimipisteiden) tiedot';
+COMMENT ON COLUMN oppilaitosten_osat.oid IS 'Oppilaitoksen osan organisaatio-oid';
+COMMENT ON COLUMN oppilaitosten_osat.oppilaitos_oid IS 'Oppilaitoksen osan oppilaitoksen organisaatio-oid';
+COMMENT ON COLUMN oppilaitosten_osat.tila IS 'Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: julkaistu, tallennttu ja arkistoitu';
+COMMENT ON COLUMN oppilaitosten_osat.kielivalinta IS 'Kielet, joille oppilaitoksen osan kuvailutiedot ja muut tekstit on käännetty';
+COMMENT ON COLUMN oppilaitosten_osat.metadata IS 'Yleistä oppilaitoksen osaan liittyvää metadataa: yhteystiedot, esittely, kampuksen nimi ja opiskelijoiden määrä';
+COMMENT ON COLUMN oppilaitosten_osat.organisaatio_oid IS 'Oppilaitoksen osan kuvailutiedot luoneen organisaation oid';
+COMMENT ON COLUMN oppilaitosten_osat.muokkaaja IS 'Oppilaitoksen osan kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid';
+COMMENT ON COLUMN oppilaitosten_osat.transaction_id IS 'Transaktion, jossa viimeksi muokattu, tunniste';
+COMMENT ON COLUMN oppilaitosten_osat.system_time IS 'Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima';
