@@ -165,7 +165,7 @@ package object toteutusMetadata {
     s"""    Osaamisala:
        |      type: object
        |      properties:
-       |        koodi:
+       |        koodiUri:
        |          type: string
        |          description: Osaamisalan koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/osaamisala/1)
        |          example: osaamisala_0001#1
@@ -293,7 +293,7 @@ trait Osaamisala {
   val otsikko: Kielistetty
 }
 
-case class AmmatillinenOsaamisala(koodi: String,
+case class AmmatillinenOsaamisala(koodiUri: String,
                                   linkki: Kielistetty = Map(),
                                   otsikko: Kielistetty = Map()) extends Osaamisala
 

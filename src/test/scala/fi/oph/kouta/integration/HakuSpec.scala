@@ -207,7 +207,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake", Sv -> "http://ataru/kivahakulomake/sv", En -> "http://ataru/kivahakulomake/en"),
       metadata = Some(new HakuMetadata(Some(TestData.Yhteystieto1))),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))),
-      valintakokeet = List(TestData.Valintakoe1.copy(tyyppi = Some("tyyyyppi"))))
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("tyyyyppi_1#2"))))
     update(uusiHaku, lastModified, true)
     get(oid, getIds(uusiHaku))
   }

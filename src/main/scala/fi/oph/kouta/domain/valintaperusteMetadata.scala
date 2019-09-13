@@ -24,7 +24,7 @@ package object valintaperusteMetadata {
        |          description: Lista valintaperustekuvauksen valintatavoista
        |          items:
        |            $$ref: '#/components/schemas/AmmatillinenValintatapa'
-       |        koulutustyyppi:
+       |        tyyppi:
        |          type: string
        |          description: Valintaperustekuvauksen metatiedon tyyppi
        |          example: amm
@@ -63,7 +63,7 @@ package object valintaperusteMetadata {
        |          description: Lista valintaperustekuvauksen valintatavoista
        |          items:
        |            $$ref: '#/components/schemas/YliopistoValintatapa'
-       |        koulutustyyppi:
+       |        tyyppi:
        |          type: string
        |          description: Valintaperustekuvauksen metatiedon tyyppi
        |          example: yo
@@ -82,7 +82,7 @@ package object valintaperusteMetadata {
        |          description: Lista valintaperustekuvauksen valintatavoista
        |          items:
        |            $$ref: '#/components/schemas/AmmattikorkeakouluValintatapa'
-       |        koulutustyyppi:
+       |        tyyppi:
        |          type: string
        |          description: Valintaperustekuvauksen metatiedon tyyppi
        |          example: amk
@@ -148,7 +148,7 @@ package object valintaperusteMetadata {
 }
 
 sealed trait ValintaperusteMetadata {
-  def koulutustyyppi: Koulutustyyppi
+  def tyyppi: Koulutustyyppi
   def valintatavat: Seq[Valintatapa]
   def kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus]
 }
@@ -160,19 +160,19 @@ sealed trait KorkeakoulutusValintaperusteMetadata extends ValintaperusteMetadata
   def kuvaus: Kielistetty
 }
 
-case class AmmatillinenValintaperusteMetadata(koulutustyyppi: Koulutustyyppi = Amm,
+case class AmmatillinenValintaperusteMetadata(tyyppi: Koulutustyyppi = Amm,
                                               valintatavat: Seq[AmmatillinenValintatapa],
                                               kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus])
     extends ValintaperusteMetadata
 
-case class YliopistoValintaperusteMetadata(koulutustyyppi: Koulutustyyppi = Yo,
+case class YliopistoValintaperusteMetadata(tyyppi: Koulutustyyppi = Yo,
                                            valintatavat: Seq[YliopistoValintatapa],
                                            kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                            osaamistaustaKoodiUrit: Seq[String] = Seq(),
                                            kuvaus: Kielistetty = Map())
     extends KorkeakoulutusValintaperusteMetadata
 
-case class AmmattikorkeakouluValintaperusteMetadata(koulutustyyppi: Koulutustyyppi = Amk,
+case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk,
                                                     valintatavat: Seq[AmmattikorkeakouluValintatapa],
                                                     kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                                     osaamistaustaKoodiUrit: Seq[String] = Seq(),

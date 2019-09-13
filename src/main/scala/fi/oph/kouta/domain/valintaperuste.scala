@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.{IsValid, Validatable}
+import fi.oph.kouta.validation.IsValid
 
 package object valintaperuste {
 
@@ -73,7 +73,7 @@ package object valintaperuste {
        |            - $$ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
        |            - $$ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
        |          example:
-       |            koulutustyyppi: amm
+       |            tyyppi: amm
        |            valintatavat:
        |              - valintatapaKoodiUri: valintatapajono_tv#1
        |                kuvaus:
@@ -188,7 +188,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
                           kielivalinta: Seq[Kieli] = Seq(),
-                          modified: Option[LocalDateTime]) extends PerustiedotWithId with Validatable {
+                          modified: Option[LocalDateTime]) extends PerustiedotWithId {
 
   override def validate(): IsValid = and(
     super.validate(),

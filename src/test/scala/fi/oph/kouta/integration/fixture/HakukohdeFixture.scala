@@ -27,9 +27,9 @@ trait HakukohdeFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
     import slick.jdbc.PostgresProfile.api._
     hakukohde.copy(
       liitteet = hakukohde.liitteet.map(l => l.copy(id = db.runBlocking(
-        sql"""select id from hakukohteiden_liitteet where hakukohde_oid = ${hakukohde.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString))),
+        sql"""select id from hakukohteiden_liitteet where hakukohde_oid = ${hakukohde.oid} and tyyppi_koodi_uri = ${l.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString))),
       valintakokeet = hakukohde.valintakokeet.map(l => l.copy(id = db.runBlocking(
-        sql"""select id from hakukohteiden_valintakokeet where hakukohde_oid = ${hakukohde.oid} and tyyppi = ${l.tyyppi}""".as[String]).headOption.map(UUID.fromString)))
+        sql"""select id from hakukohteiden_valintakokeet where hakukohde_oid = ${hakukohde.oid} and tyyppi_koodi_uri = ${l.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString)))
     )}
 
   def hakukohde(toteutusOid: String, hakuOid: String, valintaperusteId: UUID): Hakukohde = hakukohde.copy(

@@ -20,6 +20,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   private var hakukohteet:Map[String, Map[String, String]] = Map()
   private var valintaperusteet:Map[String, Map[String, String]] = Map()
   private var sorakuvaukset:Map[String, Map[String, String]] = Map()
+  private var oppilaitokset:Map[String, Map[String, String]] = Map()
+  private var oppilaitostenOsat:Map[String, Map[String, String]] = Map()
 
   def addKoulutus(oid:String, jParams:java.util.Map[String, String]) = {
     koulutukset += (oid -> jParams.asScala.toMap)
@@ -67,6 +69,22 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
   def updateSorakuvaus(id:String, jParams:java.util.Map[String, String]) = {
     sorakuvaukset += (id -> (sorakuvaukset.getOrElse(id, Map()) ++ jParams.asScala.toMap))
+  }
+
+  def addOppilaitos(oid: String, jParams:java.util.Map[String, String]) = {
+    oppilaitokset += (oid -> jParams.asScala.toMap)
+  }
+
+  def updateOppilaitos(oid: String, jParams:java.util.Map[String, String]) = {
+    oppilaitokset += (oid -> (oppilaitokset.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
+  }
+
+  def addOppilaitoksenOsa(oid: String, jParams:java.util.Map[String, String]) = {
+    oppilaitostenOsat += (oid -> jParams.asScala.toMap)
+  }
+
+  def updateOppilaitoksenOsa(oid: String, jParams:java.util.Map[String, String]) = {
+    oppilaitostenOsat += (oid -> (oppilaitostenOsat.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
   }
 
   def reset() = {
@@ -129,6 +147,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
   val MetadataKey = "metadata"
   val SorakuvausIdKey = "sorakuvaus"
+  val OppilaitosOidKey = "oppilaitosOid"
 
   def formatModified(date:LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
   def parseModified(date:String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
@@ -256,6 +275,24 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     JulkinenKey -> "false",
     MetadataKey -> write(TestData.AmmSorakuvaus.metadata.get),
     SorakuvausIdKey -> UUID.randomUUID().toString,
+  ))
+
+  val DefaultOppilaitos: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    MetadataKey -> write(TestData.JulkaistuOppilaitos.metadata.get)
+  ))
+
+  val DefaultOppilaiksenOsa: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+    TilaKey -> Julkaistu.name,
+    MuokkaajaKey -> "1.2.3",
+    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    KielivalintaKey -> "fi,sv",
+    ModifiedKey -> formatModified(LocalDateTime.now()),
+    MetadataKey -> write(TestData.JulkaistuOppilaitoksenOsa.metadata.get)
   ))
 
   private def toKielistetty(kielivalinta:Seq[Kieli], nimi:String): Kielistetty = kielivalinta.map {k => (k, nimi + " " + k.toString)}.toMap
@@ -411,6 +448,35 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ))
   }
 
+  def getOppilaitos(oid:String) = {
+    val params = oppilaitokset(oid)
+    toJsonIfValid( Oppilaitos(
+      OrganisaatioOid(oid),
+      Julkaisutila.withName(params(TilaKey)),
+      params.get(MetadataKey).map(read[OppilaitosMetadata]),
+      params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      Some(parseModified(params(ModifiedKey)))
+    ))
+  }
+
+  def getOppilaitoksenOsa(oid:String) = toJsonIfValid(oppilaitoksenOsa(oid))
+
+  private def oppilaitoksenOsa(oid:String) = {
+    val params = oppilaitostenOsat(oid)
+    OppilaitoksenOsa(
+      OrganisaatioOid(oid),
+      OrganisaatioOid(params(OppilaitosOidKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      params.get(MetadataKey).map(read[OppilaitoksenOsaMetadata]),
+      params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      Some(parseModified(params(ModifiedKey)))
+    )
+  }
+
   def getToteutuksetByKoulutus(koulutusOid: String, vainJulkaistut: Boolean) = {
     toJson( toteutukset.filter {
         case (_, params) => params(KoulutusOidKey) == koulutusOid && (!vainJulkaistut || params(TilaKey) == Julkaistu.name)
@@ -499,6 +565,20 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  def getOppilaitostenOsatByOppilaitos(oppilaitosOid: String) = {
+    toJson( oppilaitostenOsat.filter {
+      case (_, params) => params(OppilaitosOidKey) == oppilaitosOid
+    }.map {
+      case (oid, _) => oppilaitoksenOsa(oid)
+    })
+  }
+
+  def listOppilaitostenOsatByOppilaitos(oppilaitosOid: String) = {
+    toJson( oppilaitostenOsat.filter {
+      case (_, params) => params(OppilaitosOidKey) == oppilaitosOid
+    }.map(_._1).toSeq.map(oppilaitoksenOsaListItem))
+  }
+
   def getLastModified(since:String) = {
     toJson(
       ListEverything(
@@ -559,6 +639,18 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KoulutusListItem(
       KoulutusOid(oid),
       toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      parseModified(params(ModifiedKey))
+    )
+  }
+
+  private def oppilaitoksenOsaListItem(oid: String) = {
+    val params = oppilaitostenOsat(oid)
+    OppilaitoksenOsaListItem(
+      OrganisaatioOid(oid),
+      OrganisaatioOid(params(OppilaitosOidKey)),
       Julkaisutila.withName(params(TilaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),

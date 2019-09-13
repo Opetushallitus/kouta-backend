@@ -3,7 +3,6 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.Validatable
 
 package object koulutus {
 
@@ -149,7 +148,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
-                    modified: Option[LocalDateTime]) extends PerustiedotWithOid with Validatable {
+                    modified: Option[LocalDateTime]) extends PerustiedotWithOid {
 
   override def validate() = {
     and(super.validate(),

@@ -4,9 +4,8 @@ import java.time.Instant
 
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.Perustiedot
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.security.{Authorizable, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validatable
 import fi.vm.sade.utils.slf4j.Logging
@@ -26,7 +25,7 @@ case class KoutaValidationException(errorMessages:List[String]) extends RuntimeE
 trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity
 
-  def authorizeGet[E <: Perustiedot](entityWithTime: Option[(E, Instant)])(implicit authenticated: Authenticated): Option[(E, Instant)] =
+  def authorizeGet[E <: Authorizable](entityWithTime: Option[(E, Instant)])(implicit authenticated: Authenticated): Option[(E, Instant)] =
     entityWithTime.map {
       case (entity, lastModified) =>
         withAuthorizedChildOrganizationOids(roleEntity.readRoles) { authorizedOrganizations =>
@@ -37,14 +36,14 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
     }
 
 
-  def authorizePut[E <: Perustiedot, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
+  def authorizePut[E <: Authorizable, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
     withAuthorizedChildOrganizationOids(roleEntity.createRoles) { authorizedOrganizations =>
       authorize(entity.organisaatioOid, authorizedOrganizations) {
         f
       }
     }
 
-  def authorizeUpdate[E <: Perustiedot, I](entityForUpdate: => Option[(E, Instant)])(f: => I)(implicit authenticated: Authenticated): I = {
+  def authorizeUpdate[E <: Authorizable, I](entityForUpdate: => Option[(E, Instant)])(f: => I)(implicit authenticated: Authenticated): I = {
     withAuthorizedChildOrganizationOids(roleEntity.updateRoles) { authorizedOrganizations =>
       entityForUpdate match {
         case None => throw new NoSuchElementException()

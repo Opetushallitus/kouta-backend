@@ -81,8 +81,8 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def updateInHakuHakuajatTable(i: Int) = update(haku(hakuOids(i)).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(5000)))), timestampAfterInserts)
   def updateInHakukohdeTable(i: Int) = update(iHakukohde(i).copy(tila = Arkistoitu), timestampAfterInserts)
   def updateInHakukohteenHakuajatTable(i: Int) = update(iHakukohde(i).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(5000)))), timestampAfterInserts)
-  def updateInHakukohteenLiitteetTable(i: Int) = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppi = Some(s"tyyppi$i")))), timestampAfterInserts)
-  def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppi = Some(s"tyyppi$i")))), timestampAfterInserts)
+  def updateInHakukohteenLiitteetTable(i: Int) = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"tyyppi_$i#1")))), timestampAfterInserts)
+  def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"tyyppi_$i#1")))), timestampAfterInserts)
   def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), Arkistoitu), timestampAfterInserts)
 
   it should "return 401 without a valid session" in {

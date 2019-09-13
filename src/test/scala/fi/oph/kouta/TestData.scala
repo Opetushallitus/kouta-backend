@@ -18,8 +18,7 @@ object TestData {
 
   val Osoite1 = Osoite(
     osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"),
-    postinumero = Some("12345"),
-    postitoimipaikka = Map(Fi -> "Kaupunki", Sv -> "SV kaupunki"))
+    postinumeroKoodiUri = Some("posti_04230#2"))
 
   val Yhteystieto1 = Yhteyshenkilo(
     nimi = Map(Fi -> "Aku Ankka", Sv -> "Aku Ankka"),
@@ -30,7 +29,7 @@ object TestData {
 
   val Liite1 = Liite(
     id = None,
-    tyyppi = Some("moi"),
+    tyyppiKoodiUri = Some("moi"),
     nimi = Map(Fi -> "liite 1 Fi", Sv -> "liite 1 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
     toimitusaika = Some(inFuture()),
@@ -39,7 +38,7 @@ object TestData {
 
   val Liite2 = Liite(
     id = None,
-    tyyppi = Some("terve"),
+    tyyppiKoodiUri = Some("terve"),
     nimi = Map(Fi -> "liite 2 Fi", Sv -> "liite 2 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
     toimitusaika = None,
@@ -48,7 +47,7 @@ object TestData {
 
   val Valintakoe1 = Valintakoe(
     id = None,
-    tyyppi = Some("valintakokeentyyppi_1#1"),
+    tyyppiKoodiUri = Some("valintakokeentyyppi_1#1"),
     tilaisuudet = List(Valintakoetilaisuus(
       osoite = Some(Osoite1),
       aika = Some(Ajanjakso(alkaa = now(), paattyy = inFuture())),
@@ -375,4 +374,60 @@ object TestData {
     organisaatioOid = OrganisaatioOid("1.2"),
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     modified = None)
+
+  val JulkaistuOppilaitos = Oppilaitos(
+    oid = ChildOid,
+    tila = Julkaistu,
+    metadata = Some(OppilaitosMetadata(
+      yhteystiedot = Some(Yhteystieto(
+        osoite = Some(Osoite1),
+        wwwSivu = Map(Fi -> "www.oppilaitos.fi", Sv -> "www.oppilaitos.sv"),
+        puhelinnumero = Map(Fi -> "123", Sv -> "123"),
+        sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
+      tietoaOpiskelusta = Seq(
+        Lisatieto(otsikkoKoodiUri = "koulutuksenjarjestamisenlisaosiot_3#1",
+          teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))),
+      esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),
+      opiskelijoita = Some(100),
+      korkeakouluja = Some(1),
+      tiedekuntia = Some(2),
+      kampuksia = Some(2),
+      yksikoita = None,
+      toimipisteita = Some(2),
+      akatemioita = Some(1))),
+    kielivalinta = Seq(Fi, Sv),
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"),
+    modified = None)
+
+  val MinOppilaitos = Oppilaitos(
+    oid = ChildOid,
+    tila = Tallennettu,
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"))
+
+  val JulkaistuOppilaitoksenOsa = OppilaitoksenOsa(
+    oid = GrandChildOid,
+    oppilaitosOid = ChildOid,
+    tila = Julkaistu,
+    metadata = Some(OppilaitoksenOsaMetadata(
+      yhteystiedot = Some(Yhteystieto(
+        osoite = Some(Osoite1),
+        wwwSivu = Map(Fi -> "www.tiedekunta.fi", Sv -> "www.tiedekunta.sv"),
+        puhelinnumero = Map(Fi -> "123", Sv -> "123"),
+        sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
+      esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),
+      opiskelijoita = Some(100),
+      kampus = Map(Fi -> "Kampus fi", Sv -> "Kampus sv"))),
+    kielivalinta = Seq(Fi, Sv),
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"),
+    modified = None)
+
+  val MinOppilaitoksenOsa = OppilaitoksenOsa(
+    oid = GrandChildOid,
+    oppilaitosOid = ChildOid,
+    tila = Tallennettu,
+    organisaatioOid = ChildOid,
+    muokkaaja = UserOid("5.4.3.2"))
 }

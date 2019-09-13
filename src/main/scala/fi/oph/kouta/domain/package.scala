@@ -187,15 +187,10 @@ package object domain {
        |          description: Osoite eri kielillä. Kielet on määritetty kielivalinnassa.
        |          allOf:
        |            - $$ref: '#/components/schemas/Teksti'
-       |        postinumero:
+       |        postinumeroKoodiUri:
        |          type: string
-       |          description: Postinumero
-       |          example: "04230"
-       |        postitoimipaikka:
-       |          type: object
-       |          description: Postitoimipaikka eri kielillä. Kielet on määritetty kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
+       |          description: Postinumero. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/posti/2)
+       |          example: "posti_04230#2"
        |""".stripMargin
 
   val ValintakoeModel =
@@ -207,7 +202,7 @@ package object domain {
        |          type: string
        |          description: Valintakokeen yksilöivä tunniste. Järjestelmän generoima.
        |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
-       |        tyyppi:
+       |        tyyppiKoodiUri:
        |          type: string
        |          description: Valintakokeen tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1)
        |          example: valintakokeentyyppi_1#1
@@ -359,7 +354,7 @@ package object domain {
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 
   case class Valintakoe(id: Option[UUID] = None,
-                        tyyppi: Option[String] = None,
+                        tyyppiKoodiUri: Option[String] = None,
                         tilaisuudet: List[Valintakoetilaisuus] = List())
 
   case class Valintakoetilaisuus(osoite: Option[Osoite],
@@ -387,8 +382,7 @@ package object domain {
   case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty)
 
   case class Osoite(osoite: Kielistetty = Map(),
-                    postinumero: Option[String],
-                    postitoimipaikka: Kielistetty = Map())
+                    postinumeroKoodiUri: Option[String])
 
   case class ListEverything(koulutukset: Seq[KoulutusOid] = Seq(),
                             toteutukset: Seq[ToteutusOid] = Seq(),

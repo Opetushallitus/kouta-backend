@@ -4,9 +4,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.security.Authorizable
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-sealed trait Perustiedot extends Validatable {
+sealed trait Perustiedot extends Validatable with Authorizable {
   val tila: Julkaisutila
   val nimi: Kielistetty
   val muokkaaja: UserOid
@@ -23,7 +24,7 @@ sealed trait Perustiedot extends Validatable {
     )))
 }
 
-abstract class PerustiedotWithOid extends Perustiedot with Validatable {
+abstract class PerustiedotWithOid extends Perustiedot {
   val oid: Option[Oid]
 
   override def validate(): IsValid = and(
@@ -32,7 +33,7 @@ abstract class PerustiedotWithOid extends Perustiedot with Validatable {
   )
 }
 
-abstract class PerustiedotWithId extends Perustiedot with Validatable {
+abstract class PerustiedotWithId extends Perustiedot {
   val id: Option[UUID]
 
   override def validate(): IsValid = super.validate()

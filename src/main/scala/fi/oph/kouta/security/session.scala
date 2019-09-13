@@ -4,6 +4,10 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 import scala.util.matching.Regex
 
+trait Authorizable {
+  val organisaatioOid: OrganisaatioOid
+}
+
 sealed abstract class Role(val name: String) extends Product with Serializable {
   override def toString: String = name
 }
@@ -22,7 +26,7 @@ sealed abstract class RoleEntity(val entity: String) {
 }
 
 object RoleEntity {
-  val all: List[RoleEntity] = List(Role.Koulutus, Role.Toteutus, Role.Haku, Role.Hakukohde, Role.Valintaperuste)
+  val all: List[RoleEntity] = List(Role.Koulutus, Role.Toteutus, Role.Haku, Role.Hakukohde, Role.Valintaperuste, Role.Oppilaitos)
 }
 
 object Role {
@@ -34,6 +38,7 @@ object Role {
   object Haku extends RoleEntity("HAKU")
   object Hakukohde extends RoleEntity("HAKUKOHDE")
   object Valintaperuste extends RoleEntity("VALINTAPERUSTE")
+  object Oppilaitos extends RoleEntity("OPPILAITOS")
 
   case class UnknownRole(override val name: String) extends Role(name)
 

@@ -154,8 +154,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def insertValintakoe(oid: Option[HakuOid], valintakoe:Valintakoe, muokkaaja:UserOid) = {
-    sqlu"""insert into hakujen_valintakokeet (id, haku_oid, tyyppi, tilaisuudet, muokkaaja)
-           values (${valintakoe.id.map(_.toString)}::uuid, ${oid}, ${valintakoe.tyyppi}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, ${muokkaaja})"""
+    sqlu"""insert into hakujen_valintakokeet (id, haku_oid, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
+           values (${valintakoe.id.map(_.toString)}::uuid, ${oid}, ${valintakoe.tyyppiKoodiUri}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, ${muokkaaja})"""
   }
 
   def selectHaku(oid: HakuOid) = {
@@ -170,7 +170,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def selectValintakokeet(oid: HakuOid) = {
-    sql"""select id, tyyppi, tilaisuudet from hakujen_valintakokeet where haku_oid = $oid""".as[Valintakoe]
+    sql"""select id, tyyppi_koodi_uri, tilaisuudet from hakujen_valintakokeet where haku_oid = $oid""".as[Valintakoe]
   }
 
   def updateHaku(haku: Haku) = {
@@ -245,12 +245,12 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def updateValintakoe(oid: Option[HakuOid], valintakoe: Valintakoe, muokkaaja: UserOid) = {
     sqlu"""update hakujen_valintakokeet set
-              tyyppi = ${valintakoe.tyyppi},
+              tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
               tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
               muokkaaja = ${muokkaaja}
            where haku_oid = $oid and id = ${valintakoe.id.map(_.toString)}::uuid and (
               tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
-              tyyppi is distinct from ${valintakoe.tyyppi})"""
+              tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri})"""
   }
 
   def updateValintakokeet(haku: Haku) = {
