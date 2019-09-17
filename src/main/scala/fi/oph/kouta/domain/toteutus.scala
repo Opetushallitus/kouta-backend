@@ -91,7 +91,7 @@ package object toteutus {
        |                fi: Alkamisajan suomenkielinen kuvaus
        |                sv: Alkamisajan ruotsinkielinen kuvaus
        |              lisatiedot:
-       |                - otsikkoKoodiUri: koulutuksenjarjestamisenlisaosiot_3#1
+       |                - otsikkoKoodiUri: koulutuksenlisatiedot_03#1
        |                  teksti:
        |                    fi: Suomenkielinen lisätietoteksti
        |                    sv: Ruotsinkielinen lisätietoteksti

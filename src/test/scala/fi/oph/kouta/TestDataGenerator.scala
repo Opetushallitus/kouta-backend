@@ -69,6 +69,17 @@ object TestDataGenerator extends KoutaJsonFormats {
     }
     
     println(s"Koulutukset, toteutukset ja hakukohteet ready...")
+
+    println(s"Generating oppilaitoikset...")
+    val oppilaitosOid0 = "1.2.246.562.10.81934895871"
+    val oppilaitosOid1 = "1.2.246.562.10.67476956288"
+
+    put("/oppilaitos", oppilaitos(oppilaitosOid0))
+    put("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.76662434703", oppilaitosOid0))
+    put("/oppilaitos", oppilaitos(oppilaitosOid1))
+    put("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.31388359585", oppilaitosOid1))
+    put("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.875704637010", oppilaitosOid1))
+
     println(s"DONE.")
     println(s"Test session id=$TestDataGeneratorSessionId")
   }
@@ -150,6 +161,17 @@ object TestDataGenerator extends KoutaJsonFormats {
     tila = shuffle(Julkaisutila.values()).head,
     sorakuvausId = Some(UUID.fromString(sorakuvausId)),
     organisaatioOid = OrganisaatioOid(organisaatioOid(i))
+  )
+
+  def oppilaitos(oid: String) = JulkaistuOppilaitos.copy(
+    oid = OrganisaatioOid(oid),
+    organisaatioOid = OrganisaatioOid(oid)
+  )
+
+  def oppilaitoksenOsa(oid: String, oppilaitosOid: String) = JulkaistuOppilaitoksenOsa.copy(
+    oid = OrganisaatioOid(oid),
+    oppilaitosOid = OrganisaatioOid(oppilaitosOid),
+    organisaatioOid = OrganisaatioOid(oid)
   )
 
   def put[T <: AnyRef](path: String, data: T): String =

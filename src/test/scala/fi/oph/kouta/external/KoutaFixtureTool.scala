@@ -286,7 +286,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MetadataKey -> write(TestData.JulkaistuOppilaitos.metadata.get)
   ))
 
-  val DefaultOppilaiksenOsa: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+  val DefaultOppilaitoksenOsa: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
     TilaKey -> Julkaistu.name,
     MuokkaajaKey -> "1.2.3",
     OrganisaatioKey -> "1.2.246.562.10.67476956288",
