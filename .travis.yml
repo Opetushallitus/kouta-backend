@@ -47,7 +47,7 @@ before_script:
   - DB_NAME=kouta
   - psql -c "create database $DB_NAME WITH ENCODING 'UTF8' LC_COLLATE='C' LC_CTYPE='C' TEMPLATE template0;" -U postgres
   - psql -d $DB_NAME -f postgresql/init_it_postgresql.sql
-  - docker pull localstack/localstack:latest
+  - docker pull localstack/localstack:0.10.2
 
 script:
   - mvn install --batch-mode -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
