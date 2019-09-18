@@ -23,14 +23,16 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
   def dockerConfig: LocalstackDockerConfiguration = {
     LocalstackDockerConfiguration.builder()
       .randomizePorts(false)
+      .pullNewImage(false)
       .environmentVariables(mapAsJavaMap(Map("SERVICES" -> "sqs")))
+      .imageTag("0.10.2")
       .build()
   }
 
   private val queueNames: Seq[String] = Seq("koutaIndeksoijaPriority")
   lazy val indexingQueue: String = getQueue("koutaIndeksoijaPriority")
   lazy val sqs: AmazonSQSClient = SQSClient.withEndpoint(localstack.getEndpointSQS)
-
+  
   override def beforeAll(): Unit = {
     super.beforeAll()
     localstack.startup(dockerConfig)
