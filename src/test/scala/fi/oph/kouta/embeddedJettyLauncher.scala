@@ -33,7 +33,8 @@ object EmbeddedJettyLauncher extends Logging {
 object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupSqsQueues() = {
-    if((new java.io.File(s".localstack")).exists()) {
+    val home = System.getProperty("user.home")
+    if(new java.io.File(s"$home/.kouta_localstack").exists()) {
       logger.warn(s"Localstack is already running. Skipping ./tools/start_localstack....")
     } else {
       logger.info(s"Running ./tools/start_localstack....")
