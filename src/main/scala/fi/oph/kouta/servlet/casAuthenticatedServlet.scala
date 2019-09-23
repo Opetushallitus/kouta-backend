@@ -14,15 +14,15 @@ trait CasAuthenticatedServlet {
     val sessionCookie = cookies.get("session")
     val sessionAttribute = Option(request.getAttribute("session")).map(_.toString)
 
-    logger.warn("Session cookie {}", sessionCookie)
-    logger.warn("Session attribute {}", sessionAttribute)
+    logger.debug("Session cookie {}", sessionCookie)
+    logger.debug("Session attribute {}", sessionAttribute)
 
     val session = sessionCookie
       .orElse(sessionAttribute)
       .map(UUID.fromString)
       .flatMap(id => SessionDAO.get(id).map((id, _)))
 
-    logger.trace("Session found {}", session)
+    logger.debug("Session found {}", session)
 
     Authenticated.tupled(session.getOrElse(throw new AuthenticationFailedException(s"No session found. Session cookie: ${sessionCookie}. Session attribute: ${sessionAttribute}.")))
   }

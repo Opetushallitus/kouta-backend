@@ -28,8 +28,13 @@ object TestDataGenerator extends KoutaJsonFormats {
     "test-data-generator.path",
     s"http://localhost:${System.getProperty("kouta-backend.port", DefaultPort)}/kouta-backend")
 
+  val SorakuvausCount = 2
+  val ValintaperusteCount = 2
+  val HakuCount = 4
+
   val KoulutusCount = 5
   val ToteutusCount = 10
+
   val DebugOids = false
 
   val userOid = "1.2.246.562.24.62301161440"
@@ -39,20 +44,21 @@ object TestDataGenerator extends KoutaJsonFormats {
     println(s"Koulutus count = $KoulutusCount")
     println(s"Starting...")
 
-    val sorakuvausIds = (0 to 1).map(i => put("/sorakuvaus", sorakuvaus(i)))
-    val valintaperusteIds = (0 to 1).map(i => put("/valintaperuste", valintaperuste(i, sorakuvausIds(i))))
+    val sorakuvausIds = (0 until SorakuvausCount).map(i => put("/sorakuvaus", sorakuvaus(i)))
+    val valintaperusteIds = (0 until ValintaperusteCount).map(i => put("/valintaperuste", valintaperuste(i, sorakuvausIds(i))))
     println(s"Valintaperusteet ready...")
 
-    val hakuOids = (0 to 3).map(i => put("/haku", haku(i)))
+    val hakuOids = (0 until HakuCount).map(i => put("/haku", haku(i)))
     println(s"Haut ready...")
 
     println(s"Generating koulutukset, toteutukset ja hakukohteet. Wait for a moment...")
-    (0 to KoulutusCount).foreach { i =>
+    (0 until KoulutusCount).foreach { i =>
       val koulutusOid = put("/koulutus", koulutus(i))
-      (0 to ToteutusCount).foreach { j =>
+      (0 until ToteutusCount).foreach { j =>
         val toteutusOid = put("/toteutus", toteutus(koulutusOid, i, j))
-        put("/hakukohde", hakukohde(i, j, 0, toteutusOid, hakuOids(i % 2), valintaperusteIds(i % 2)))
-        put("/hakukohde", hakukohde(i, j, 0, toteutusOid, hakuOids(i % 2  + 2), valintaperusteIds(i % 2)))
+        Seq(hakuOids.lift(i % 2), hakuOids.lift(i % 2 + 2)).flatten.foreach { hakuOid =>
+          put("/hakukohde", hakukohde(i, j, 0, toteutusOid, hakuOid, valintaperusteIds(i % 2)))
+        }
       }
     }
 
