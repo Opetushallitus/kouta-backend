@@ -28,6 +28,9 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |      responses:
       |        '200':
       |          description: Ok
+      |          headers:
+      |            x-Last-Modified:
+      |              $ref: '#/components/headers/x-Last-Modified'
       |          content:
       |            application/json:
       |              schema:
@@ -88,6 +91,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Toteutus
+      |      parameters:
+      |        - $ref: '#/components/parameters/ifUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan toteutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true

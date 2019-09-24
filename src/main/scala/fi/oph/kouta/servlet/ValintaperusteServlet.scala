@@ -30,6 +30,9 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |      responses:
       |        '200':
       |          description: Ok
+      |          headers:
+      |            x-Last-Modified:
+      |              $ref: '#/components/headers/x-Last-Modified'
       |          content:
       |            application/json:
       |              schema:
@@ -90,6 +93,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Valintaperuste
+      |      parameters:
+      |        - $ref: '#/components/parameters/ifUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan valintaperustekuvauksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true

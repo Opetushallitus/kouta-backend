@@ -1,5 +1,6 @@
 package fi.oph.kouta.swagger
 
+import fi.oph.kouta.servlet.KoutaServlet
 import org.reflections.Reflections
 import org.scalatra.ScalatraServlet
 
@@ -57,6 +58,12 @@ class SwaggerServlet extends ScalatraServlet {
     val modelHeader =
       s"""
          |components:
+         |  headers:
+         |    x-Last-Modified:
+         |      schema:
+         |        type: string
+         |        example: Mon, 23 Sep 2019 17:55:31 GMT
+         |      description: Viimeisimmän muokkauksen aika
          |  parameters:
          |    callerId:
          |      in: header
@@ -66,6 +73,14 @@ class SwaggerServlet extends ScalatraServlet {
          |        default: kouta-backend-swagger
          |      required: true
          |      description: Kutsujan <a href="https://confluence.csc.fi/pages/viewpage.action?pageId=50858064">Caller ID</a>
+         |    ifUnmodifiedSince:
+         |      in: header
+         |      name: ${KoutaServlet.IfUnmodifiedSinceHeader}
+         |      schema:
+         |        type: string
+         |        example: Mon, 23 Sep 2019 17:55:31 GMT
+         |      required: true
+         |      description: Mitä ${KoutaServlet.LastModifiedHeader} on tästä sanonut
          |  schemas:
          |""".stripMargin
 

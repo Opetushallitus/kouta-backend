@@ -28,6 +28,9 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |      responses:
       |        '200':
       |          description: Ok
+      |          headers:
+      |            x-Last-Modified:
+      |              $ref: '#/components/headers/x-Last-Modified'
       |          content:
       |            application/json:
       |              schema:
@@ -89,6 +92,8 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Oppilaitos
+      |      parameters:
+      |        - $ref: '#/components/parameters/ifUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan oppilaitoksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
@@ -272,6 +277,8 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Oppilaitoksen osa
+      |      parameters:
+      |        - $ref: '#/components/parameters/ifUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan oppilaitoksen osan kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true

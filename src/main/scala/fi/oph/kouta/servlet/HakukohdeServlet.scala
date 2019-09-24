@@ -28,6 +28,9 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |      responses:
       |        '200':
       |          description: Ok
+      |          headers:
+      |            x-Last-Modified:
+      |              $ref: '#/components/headers/x-Last-Modified'
       |          content:
       |            application/json:
       |              schema:
@@ -88,6 +91,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Hakukohde
+      |      parameters:
+      |        - $ref: '#/components/parameters/ifUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan hakukohteen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true

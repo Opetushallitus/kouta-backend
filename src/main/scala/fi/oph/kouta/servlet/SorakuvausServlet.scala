@@ -30,6 +30,9 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |      responses:
       |        '200':
       |          description: Ok
+      |          headers:
+      |            x-Last-Modified:
+      |              $ref: '#/components/headers/x-Last-Modified'
       |          content:
       |            application/json:
       |              schema:
@@ -90,6 +93,8 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Sorakuvaus
+      |      parameters:
+      |        - $ref: '#/components/parameters/ifUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan SORA-kuvauksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
