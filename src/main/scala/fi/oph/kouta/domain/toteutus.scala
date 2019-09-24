@@ -14,6 +14,10 @@ import fi.oph.kouta.validation.IsValid
     |          type: string
     |          description: Toteutuksen yksilöivä tunniste. Järjestelmän generoima.
     |          example: "1.2.246.562.17.00000000000000000009"
+    |        koulutusOid:
+    |          type: string
+    |          description: Toteutukseen liittyvän koulutuksen yksilöivä tunniste.
+    |          example: "1.2.246.562.13.00000000000000000009"
     |        tila:
     |          type: string
     |          example: "julkaistu"

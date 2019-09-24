@@ -75,8 +75,6 @@ class SwaggerServlet extends ScalatraServlet {
   private def getModelAnnotations: String = {
     val reflections = new Reflections("fi.oph.kouta")
 
-    val annotatedClasses = reflections.getTypesAnnotatedWith(classOf[SwaggerModel]).asScala.toSeq.sortBy(_.getSimpleName)
-
     reflections
       .getTypesAnnotatedWith(classOf[SwaggerModel])
       .asScala
