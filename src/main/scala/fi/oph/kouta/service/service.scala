@@ -108,12 +108,13 @@ trait AuthorizationService extends Logging {
     if (hasRootAccess(roles)) {
       f
     } else {
-      throw OrganizationAuthorizationFailedException(Seq(rootOrganisaatioOid), Seq.empty)
+      throw RootAuthorizationFailedException(roles)
     }
 }
 
-case class OrganizationAuthorizationFailedException(message:String)
-  extends RuntimeException(message)
+abstract class AuthorizationFailedException(message: String) extends RuntimeException(message)
+
+case class OrganizationAuthorizationFailedException(message: String) extends AuthorizationFailedException(message)
 
 object OrganizationAuthorizationFailedException {
   def apply(allowerOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
@@ -123,6 +124,14 @@ object OrganizationAuthorizationFailedException {
 
   def apply(missingOrganizationOid: OrganisaatioOid): OrganizationAuthorizationFailedException =
     OrganizationAuthorizationFailedException(s"Authorization failed, unknown organization oid ${missingOrganizationOid.s}")
+}
+
+case class RootAuthorizationFailedException(message: String) extends AuthorizationFailedException(message)
+
+object RootAuthorizationFailedException {
+  def apply(acceptedRoles: Seq[Role]): RootAuthorizationFailedException = {
+    RootAuthorizationFailedException(s"Authorization failed, missing root access to one of ${acceptedRoles.map(_.name).mkString(",")}.")
+  }
 }
 
 case class RoleAuthorizationFailedException(acceptedRoles: Seq[Role], existingRoles: Iterable[Role])

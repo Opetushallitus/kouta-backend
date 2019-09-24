@@ -6,7 +6,7 @@ import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.{ConcurrentModificationException, NoSuchElementException}
 
 import fi.oph.kouta.security.AuthenticationFailedException
-import fi.oph.kouta.service.{KoutaValidationException, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
+import fi.oph.kouta.service.{AuthorizationFailedException, KoutaValidationException, RoleAuthorizationFailedException}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.MappingException
@@ -75,7 +75,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     case e: RoleAuthorizationFailedException =>
       logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
       Forbidden("error" -> "Forbidden")
-    case e: OrganizationAuthorizationFailedException =>
+    case e: AuthorizationFailedException =>
       logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
       Forbidden("error" -> s"Forbidden ${e.getMessage}")
     case e: KoutaValidationException => BadRequest(e.errorMessages.distinct)

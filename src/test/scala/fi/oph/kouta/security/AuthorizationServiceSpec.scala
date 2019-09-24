@@ -5,9 +5,8 @@ import java.util.UUID
 import fi.oph.kouta.OrganisaatioServiceMock
 import fi.oph.kouta.client.KoutaClientSpec
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.service.{AuthorizationService, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
+import fi.oph.kouta.service.{AuthorizationService, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException, RootAuthorizationFailedException}
 import fi.oph.kouta.servlet.Authenticated
-import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 class AuthorizationServiceSpec extends KoutaClientSpec with OrganisaatioServiceMock {
 
@@ -46,7 +45,7 @@ class AuthorizationServiceSpec extends KoutaClientSpec with OrganisaatioServiceM
   }
   it should "not have permission to execute with root access" in {
     implicit val authenticated = Authenticated(UUID.randomUUID(), readChildOidSession)
-    assertThrows[OrganizationAuthorizationFailedException] {
+    assertThrows[RootAuthorizationFailedException] {
       TestService.withRootAccess(Role.Koulutus.readRoles) {}
     }
   }
