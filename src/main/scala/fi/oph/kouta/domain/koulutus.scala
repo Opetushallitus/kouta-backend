@@ -78,7 +78,7 @@ package object koulutus {
        |              fi: Suomenkielinen kuvaus
        |              sv: Ruotsinkielinen kuvaus
        |            lisatiedot:
-       |              - otsikkoKoodiUri: koulutuksenjarjestamisenlisaosiot_3#1
+       |              - otsikkoKoodiUri: koulutuksenlisatiedot_03#1
        |                teksti:
        |                  fi: Opintojen suomenkielinen lisätietokuvaus
        |                  sv: Opintojen ruotsinkielinen lisätietokuvaus
