@@ -20,24 +20,25 @@ trait SessionDAO {
 
 object SessionDAO extends SessionDAO with SessionSQL {
 
-  import KoutaDatabase.{runBlocking, runBlockingTransactionally}
+  import KoutaDatabase.runBlocking
 
   override def store(session: Session): UUID = session match {
     case CasSession(ServiceTicket(ticket), personOid, authorities) =>
       val id = UUID.randomUUID()
-      runBlockingTransactionally(storeCasSession(id, ticket, personOid, authorities), timeout = Duration(1, TimeUnit.MINUTES))
-        .map(_ => id).get
+      runBlocking(storeCasSession(id, ticket, personOid, authorities), timeout = Duration(1, TimeUnit.MINUTES))
+      id
   }
 
-  override def store(session: CasSession, id: UUID): UUID =
-    runBlockingTransactionally(storeCasSession(id, session.casTicket.s, session.personOid, session.authorities), timeout = Duration(1, TimeUnit.MINUTES))
-      .map(_ => id).get
+  override def store(session: CasSession, id: UUID): UUID = {
+    runBlocking(storeCasSession(id, session.casTicket.s, session.personOid, session.authorities), timeout = Duration(1, TimeUnit.MINUTES))
+    id
+  }
 
   override def delete(id: UUID): Boolean =
-    runBlockingTransactionally(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS)).get
+    runBlocking(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS))
 
   override def delete(ticket: ServiceTicket): Boolean =
-    runBlockingTransactionally(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS)).get
+    runBlocking(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS))
 
   override def get(id: UUID): Option[Session] = {
     runBlocking(
