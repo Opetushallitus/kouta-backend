@@ -68,6 +68,7 @@ trait KoulutusExtractors extends ExtractorBase {
     oid = KoulutusOid(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     tila = Julkaisutila.withName(r.nextString()),
+    tarjoajat = List(),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())
@@ -93,6 +94,7 @@ trait ToteutusExtractors extends ExtractorBase {
     koulutusOid = KoulutusOid(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     tila = Julkaisutila.withName(r.nextString()),
+    tarjoajat = List(),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     modified = extractModified(r.nextTimestamp())

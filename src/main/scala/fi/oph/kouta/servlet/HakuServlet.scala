@@ -218,4 +218,36 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
   }
+
+  registerPath("/haku/{oid}/toteutukset/list",
+    s"""    get:
+       |      summary: Listaa kaikki hakuun liitetyt toteutukset
+       |      operationId: Listaa haun toteutukset
+       |      description: Listaa kaikki hakuun liitetyt toteutukset, mikäli käyttäjällä on oikeus nähdä ne
+       |      tags:
+       |        - Haku
+       |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Haku-oid
+       |          example: 1.2.246.562.29.00000000000000000009
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/ToteutusListItem'
+       |""".stripMargin)
+  get("/:oid/toteutukset/list") {
+
+    implicit val authenticated: Authenticated = authenticate
+
+    Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
+  }
 }

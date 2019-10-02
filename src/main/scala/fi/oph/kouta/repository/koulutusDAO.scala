@@ -66,11 +66,23 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
+  private def listWithTarjoajat(selectListItems : () => DBIO[Seq[KoulutusListItem]]): Seq[KoulutusListItem] =
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        koulutukset <- selectListItems()
+        tarjoajat   <- selectKoulutustenTarjoajat(koulutukset.map(_.oid).toList).as[Tarjoaja]
+      } yield (koulutukset, tarjoajat) ).map {
+      case (toteutukset, tarjoajat) => {
+        toteutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
+      }
+    }.get
+
   override def listByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOidsOrJulkinen(organisaatioOids))
+    listWithTarjoajat(() => selectByOrganisaatioOidsOrJulkinen(organisaatioOids))
 
   override def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem] =
-    KoutaDatabase.runBlocking(selectByHakuOid(hakuOid))
+    listWithTarjoajat(() => selectByHakuOid(hakuOid))
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -141,6 +153,10 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def selectKoulutuksenTarjoajat(oid: KoulutusOid) = {
     sql"""select koulutus_oid, tarjoaja_oid from koulutusten_tarjoajat where koulutus_oid = $oid"""
+  }
+
+  def selectKoulutustenTarjoajat(oids: List[KoulutusOid]) = {
+    sql"""select koulutus_oid, tarjoaja_oid from koulutusten_tarjoajat where koulutus_oid in (#${createOidInParams(oids)})"""
   }
 
   def updateKoulutus(koulutus: Koulutus) = {
