@@ -209,6 +209,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     minEnsikertalaisenAloituspaikat = r.nextIntOption(),
     maxEnsikertalaisenAloituspaikat = r.nextIntOption(),
     pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
+    pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
     muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption()),
     toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption(),
     kaytetaanHaunAikataulua = r.nextBooleanOption(),

@@ -180,6 +180,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             min_ensikertalaisen_aloituspaikat,
             max_ensikertalaisen_aloituspaikat,
             pohjakoulutusvaatimus_koodi_urit,
+            pohjakoulutusvaatimus_tarkenne,
             muu_pohjakoulutusvaatimus_kuvaus,
             toinen_aste_onko_kaksoistutkinto,
             kaytetaan_haun_aikataulua,
@@ -212,6 +213,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${hakukohde.minEnsikertalaisenAloituspaikat},
             ${hakukohde.maxEnsikertalaisenAloituspaikat},
             ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
+            ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
             ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
             ${hakukohde.toinenAsteOnkoKaksoistutkinto},
             ${hakukohde.kaytetaanHaunAikataulua},
@@ -248,6 +250,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               min_ensikertalaisen_aloituspaikat = ${hakukohde.minEnsikertalaisenAloituspaikat},
               max_ensikertalaisen_aloituspaikat = ${hakukohde.maxEnsikertalaisenAloituspaikat},
               pohjakoulutusvaatimus_koodi_urit = ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
+              pohjakoulutusvaatimus_tarkenne = ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
               muu_pohjakoulutusvaatimus_kuvaus = ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
               toinen_aste_onko_kaksoistutkinto = ${hakukohde.toinenAsteOnkoKaksoistutkinto},
               kaytetaan_haun_aikataulua = ${hakukohde.kaytetaanHaunAikataulua},
@@ -280,6 +283,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or min_ensikertalaisen_aloituspaikat is distinct from ${hakukohde.minEnsikertalaisenAloituspaikat}
             or max_ensikertalaisen_aloituspaikat is distinct from ${hakukohde.maxEnsikertalaisenAloituspaikat}
             or pohjakoulutusvaatimus_koodi_urit is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUrit}
+            or pohjakoulutusvaatimus_tarkenne is distinct from ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb
             or muu_pohjakoulutusvaatimus_kuvaus is distinct from ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
             or toinen_aste_onko_kaksoistutkinto is distinct from ${hakukohde.toinenAsteOnkoKaksoistutkinto}
             or kaytetaan_haun_aikataulua is distinct from ${hakukohde.kaytetaanHaunAikataulua}
@@ -314,6 +318,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              min_ensikertalaisen_aloituspaikat,
              max_ensikertalaisen_aloituspaikat,
              pohjakoulutusvaatimus_koodi_urit,
+             pohjakoulutusvaatimus_tarkenne,
              muu_pohjakoulutusvaatimus_kuvaus,
              toinen_aste_onko_kaksoistutkinto,
              kaytetaan_haun_aikataulua,
