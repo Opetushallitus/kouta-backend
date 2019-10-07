@@ -11,6 +11,11 @@ package object valintaperusteMetadata {
        |          description: Lista valintaperustekuvauksen kielitaitovaatimuksista
        |          items:
        |            $$ref: '#/components/schemas/Kielitaitovaatimus'
+       |        valintatavat:
+       |          type: array
+       |          description: Lista valintaperustekuvauksen valintatavoista
+       |          items:
+       |            $$ref: '#/components/schemas/Valintatapa'
        |""".stripMargin
 
   val AmmatillinenValintaperusteMetadataModel =
@@ -19,11 +24,6 @@ package object valintaperusteMetadata {
        |      allOf:
        |        - $$ref: '#/components/schemas/ValintaperusteMetadata'
        |      properties:
-       |        valintatavat:
-       |          type: array
-       |          description: Lista valintaperustekuvauksen valintatavoista
-       |          items:
-       |            $$ref: '#/components/schemas/AmmatillinenValintatapa'
        |        tyyppi:
        |          type: string
        |          description: Valintaperustekuvauksen metatiedon tyyppi
@@ -58,11 +58,6 @@ package object valintaperusteMetadata {
        |      allOf:
        |        - $$ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
        |      properties:
-       |        valintatavat:
-       |          type: array
-       |          description: Lista valintaperustekuvauksen valintatavoista
-       |          items:
-       |            $$ref: '#/components/schemas/YliopistoValintatapa'
        |        tyyppi:
        |          type: string
        |          description: Valintaperustekuvauksen metatiedon tyyppi
@@ -77,11 +72,6 @@ package object valintaperusteMetadata {
        |      allOf:
        |        - $$ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
        |      properties:
-       |        valintatavat:
-       |          type: array
-       |          description: Lista valintaperustekuvauksen valintatavoista
-       |          items:
-       |            $$ref: '#/components/schemas/AmmattikorkeakouluValintatapa'
        |        tyyppi:
        |          type: string
        |          description: Valintaperustekuvauksen metatiedon tyyppi
@@ -154,26 +144,24 @@ sealed trait ValintaperusteMetadata {
 }
 
 sealed trait KorkeakoulutusValintaperusteMetadata extends ValintaperusteMetadata {
-  def valintatavat: Seq[KorkeakoulutusValintatapa]
-  def kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus]
   def osaamistaustaKoodiUrit: Seq[String]
   def kuvaus: Kielistetty
 }
 
 case class AmmatillinenValintaperusteMetadata(tyyppi: Koulutustyyppi = Amm,
-                                              valintatavat: Seq[AmmatillinenValintatapa],
+                                              valintatavat: Seq[Valintatapa],
                                               kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus])
     extends ValintaperusteMetadata
 
 case class YliopistoValintaperusteMetadata(tyyppi: Koulutustyyppi = Yo,
-                                           valintatavat: Seq[YliopistoValintatapa],
+                                           valintatavat: Seq[Valintatapa],
                                            kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                            osaamistaustaKoodiUrit: Seq[String] = Seq(),
                                            kuvaus: Kielistetty = Map())
     extends KorkeakoulutusValintaperusteMetadata
 
 case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk,
-                                                    valintatavat: Seq[AmmattikorkeakouluValintatapa],
+                                                    valintatavat: Seq[Valintatapa],
                                                     kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                                     osaamistaustaKoodiUrit: Seq[String] = Seq(),
                                                     kuvaus: Kielistetty = Map())
