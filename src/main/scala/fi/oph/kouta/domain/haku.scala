@@ -97,11 +97,6 @@ package object haku {
        |          description: Haun hakuajat. Hakukohteella voi olla omat hakuajat.
        |          items:
        |            $$ref: '#/components/schemas/Ajanjakso'
-       |        valintakokeet:
-       |          type: array
-       |          description: Hakuun liittyvät valintakokeet
-       |          items:
-       |            $$ref: '#/components/schemas/Valintakoe'
        |        metadata:
        |          type: object
        |          $$ref: '#/components/schemas/HakuMetadata'
@@ -201,7 +196,6 @@ case class Haku(oid: Option[HakuOid] = None,
                 metadata: Option[HakuMetadata] = None,
                 organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
-                valintakokeet: List[Valintakoe] = List(),
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
                 modified: Option[LocalDateTime]) extends PerustiedotWithOid {

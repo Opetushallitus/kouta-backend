@@ -15,10 +15,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-  }
-
   "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
@@ -122,7 +118,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "not update valintaperuste" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    update(valintaperuste(id), lastModified, false)
+    update(tallennettuValintaperuste(id), lastModified, false)
     get(id, valintaperuste(id)) should equal (lastModified)
   }
 
@@ -135,45 +131,39 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "allow a user of the valintaperuste organization to update the valintaperuste" in {
-    val oid = put(valintaperuste)
-    val thisValintaperuste = valintaperuste(oid)
-    val lastModified = get(oid, thisValintaperuste)
-    update(thisValintaperuste, lastModified, false, crudSessions(valintaperuste.organisaatioOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
-    val oid = put(valintaperuste)
-    val thisValintaperuste = valintaperuste(oid)
-    val lastModified = get(oid, thisValintaperuste)
-    update(thisValintaperuste, lastModified, 403, crudSessions(LonelyOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, 403, crudSessions(LonelyOid))
   }
 
   it should "allow a user of an ancestor organization to create the valintaperuste" in {
-    val oid = put(valintaperuste)
-    val thisValintaperuste = valintaperuste(oid)
-    val lastModified = get(oid, thisValintaperuste)
-    update(thisValintaperuste, lastModified, false, crudSessions(ParentOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
-    val oid = put(valintaperuste)
-    val thisValintaperuste = valintaperuste(oid)
-    val lastModified = get(oid, thisValintaperuste)
-    update(thisValintaperuste, lastModified, 403, crudSessions(GrandChildOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, 403, crudSessions(GrandChildOid))
   }
 
   it should "deny a user with the wrong role" in {
-    val oid = put(valintaperuste)
-    val thisValintaperuste = valintaperuste(oid)
-    val lastModified = get(oid, thisValintaperuste)
-    update(thisValintaperuste, lastModified, 403, readSessions(valintaperuste.organisaatioOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, 403, readSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny indexer access" in {
-    val oid = put(valintaperuste)
-    val thisValintaperuste = valintaperuste(oid)
-    val lastModified = get(oid, thisValintaperuste)
-    update(thisValintaperuste, lastModified, 403, indexerSession)
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, 403, indexerSession)
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
@@ -192,6 +182,25 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     post(ValintaperustePath, bytes(valintaperuste(id)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
+  }
+
+  it should "update valintakokeet" in {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    val uusiValintaperuste = valintaperuste(id).copy(
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("tyyyyppi_1#2"))))
+    update(getIds(uusiValintaperuste), lastModified, expectUpdate = true)
+    get(id, uusiValintaperuste)
+  }
+
+  it should "delete all valintakokeet and read last modified from history" in {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    Thread.sleep(1500)
+    val uusiValintaperuste = valintaperuste(id).copy(valintakokeet = List())
+    update(uusiValintaperuste, lastModified, expectUpdate = true)
+    get(id, uusiValintaperuste) should not equal (lastModified)
   }
 
   it should "store and update unfinished valintaperuste" in {
