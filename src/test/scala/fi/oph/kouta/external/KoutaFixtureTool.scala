@@ -305,10 +305,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     case Right(_) => toJson(v)
   }
 
-  def getKoulutus(oid:String) = {
+  def getKoulutus(oid:String) = toJsonIfValid(koulutus(oid))
+
+  def koulutus(oid:String) = {
     val params = koulutukset(oid)
     val kielivalinta = toKielivalinta(params)
-    toJsonIfValid(Koulutus(
+    Koulutus(
       Some(KoulutusOid(oid)),
       params(JohtaaTutkintoonKey).toBoolean,
       Some(Koulutustyyppi.withName(params(KoulutustyyppiKey))),
@@ -321,7 +323,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
-      Some(parseModified(params(ModifiedKey)))))
+      Some(parseModified(params(ModifiedKey))))
   }
 
   def getToteutus(oid:String) = toJsonIfValid(toteutus(oid))
@@ -527,6 +529,18 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case (_, params) => params(ToteutusOidKey)
       }.map {
         oid => koulutusListItem(toteutukset(oid)(KoulutusOidKey))
+      }
+    )
+  }
+
+  def getKoulutuksetByTarjoajat(tarjoajaOids: String) = {
+    val oids = tarjoajaOids.split(',')
+    println(oids)
+    toJson(
+      koulutukset.filter {
+        case (_, params) => !params(TarjoajatKey).split(',').intersect(oids).isEmpty
+      }.map {
+        case (oid, _) => koulutus(oid)
       }
     )
   }

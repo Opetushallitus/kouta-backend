@@ -144,6 +144,39 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     }
   }
 
+  registerPath( "/koulutus/tarjoaja/{:organisaatioOid}",
+    s"""    get:
+       |      summary: Hakee julkaistut koulutukset, joissa organisaatio tai sen aliorganisaatio on tarjoajana
+       |      operationId: Tarjoajan julkaistut koulutukset
+       |      description: Hakee kaikkien niiden koulutusten kaikki tiedot, joissa organisaatio tai sen aliorganisaatio
+       |        on tarjoajana ja jotka on julkaistu. Tämä rajapinta on indeksointia varten
+       |      tags:
+       |        - Koulutus
+       |      parameters:
+       |        - in: path
+       |          name: organisaatioOid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Organisaatio-oid
+       |          example: 1.2.246.562.10.00101010101
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/KoulutusListItem'
+       |""".stripMargin)
+  get("/tarjoaja/:organisaatioOid") {
+
+    implicit val authenticated: Authenticated = authenticate
+
+    Ok(koulutusService.getTarjoajanKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
+  }
+
   registerPath( "/koulutus/{oid}/toteutukset",
     s"""    get:
        |      summary: Hae koulutuksen toteutukset
