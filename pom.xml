@@ -6,7 +6,7 @@
 
     <groupId>fi.oph.kouta</groupId>
     <artifactId>kouta-backend</artifactId>
-    <version>0.10-SNAPSHOT</version>
+    <version>0.10-SNAPSHOT-KTO-245</version>
     <name>kouta-backend</name>
 
     <!-- TODO: dependencyManagement käyttöön? -->
