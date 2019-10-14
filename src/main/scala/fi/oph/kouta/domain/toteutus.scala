@@ -170,6 +170,14 @@ package object toteutus {
        |            - arkistoitu
        |            - tallennettu
        |          description: Koulutuksen toteutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
+       |        tarjoajat:
+       |          type: array
+       |          description: Koulutusta tarjoavien organisaatioiden yksilöivät organisaatio-oidit
+       |          items:
+       |            type: string
+       |          example:
+       |            - 1.2.246.562.10.00101010101
+       |            - 1.2.246.562.10.00101010102
        |        nimi:
        |          type: object
        |          description: Toteutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
@@ -216,6 +224,7 @@ case class ToteutusListItem(oid: ToteutusOid,
                             koulutusOid: KoulutusOid,
                             nimi: Kielistetty,
                             tila: Julkaisutila,
+                            tarjoajat: List[OrganisaatioOid],
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             modified: LocalDateTime) extends OidListItem

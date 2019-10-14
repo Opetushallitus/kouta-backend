@@ -11,7 +11,12 @@ import scala.annotation.tailrec
 object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
   val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
-  def getAllChildOidsFlat(oid: OrganisaatioOid): Seq[OrganisaatioOid] = getHierarkia(oid, children(oid, _))
+  val OphOid = OrganisaatioOid("1.2.246.562.10.00000000001")
+
+  def getAllChildOidsFlat(oid: OrganisaatioOid): Seq[OrganisaatioOid] = oid match {
+    case OphOid => Seq(OphOid)
+    case _ => getHierarkia(oid, children(oid, _))
+  }
 
   case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
   case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String)

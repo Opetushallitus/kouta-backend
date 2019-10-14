@@ -528,6 +528,16 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  def listToteutuksetByHaku(hakuOid: String) = {
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => params(HakuOidKey) == hakuOid
+      }.map {
+        case (_, params) => params(ToteutusOidKey)
+      }.toSeq.map(toteutusListItem)
+    )
+  }
+
   def getHakutiedotByKoulutus(koulutusOid: String) = {
     toJson(
       toteutukset
@@ -640,6 +650,22 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       KoulutusOid(oid),
       toKielistetty(kielivalinta, params(NimiKey)),
       Julkaisutila.withName(params(TilaKey)),
+      params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,
+      OrganisaatioOid(params(OrganisaatioKey)),
+      UserOid(params(MuokkaajaKey)),
+      parseModified(params(ModifiedKey))
+    )
+  }
+
+  private def toteutusListItem(oid:String) = {
+    val params = toteutukset(oid)
+    val kielivalinta = toKielivalinta(params)
+    ToteutusListItem(
+      ToteutusOid(oid),
+      KoulutusOid(params(KoulutusOidKey)),
+      toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
       parseModified(params(ModifiedKey))

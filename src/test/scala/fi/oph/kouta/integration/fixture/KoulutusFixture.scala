@@ -51,6 +51,6 @@ trait KoulutusFixture { this: KoutaIntegrationSpec =>
   def addToList(koulutus:Koulutus) = {
     val oid = put(koulutus)
     val modified = readModifiedByOid(oid, "koulutukset")
-    new KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
+    new KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
   }
 }

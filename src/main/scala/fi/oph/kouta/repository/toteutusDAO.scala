@@ -24,6 +24,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
   def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
   def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
+  def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -106,14 +107,29 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
+  private def listWithTarjoajat(selectListItems : () => DBIO[Seq[ToteutusListItem]]): Seq[ToteutusListItem] =
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        toteutukset <- selectListItems()
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid).toList).as[Tarjoaja]
+      } yield (toteutukset, tarjoajat) ).map {
+        case (toteutukset, tarjoajat) => {
+          toteutukset.map(t =>
+            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
+        }
+    }.get
+
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+    listWithTarjoajat(() => selectByOrganisaatioOids(organisaatioOids))
 
   override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem] =
-    KoutaDatabase.runBlocking(selectByKoulutusOid(koulutusOid))
+    listWithTarjoajat(() => selectByKoulutusOid(koulutusOid))
 
   override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
-    KoutaDatabase.runBlocking(selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
+    listWithTarjoajat(() => selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
+
+  override def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem] =
+    listWithTarjoajat(() => selectByHakuOid(hakuOid))
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
@@ -235,6 +251,13 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from toteutukset
           where koulutus_oid = $koulutusOid""".as[ToteutusListItem]
+  }
+
+  def selectByHakuOid(hakuOid: HakuOid) = {
+    sql"""select t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, lower(t.system_time)
+          from toteutukset t
+          inner join hakukohteet h on h.toteutus_oid = t.oid
+          where h.haku_oid = $hakuOid""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]) = {
