@@ -248,6 +248,6 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
+    Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
   }
 }
