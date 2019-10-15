@@ -94,6 +94,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     hakukohteet = Map()
     valintaperusteet = Map()
     sorakuvaukset = Map()
+    oppilaitokset = Map()
+    oppilaitostenOsat = Map()
   }
 
   val KoulutusOidKey = "koulutusOid"
