@@ -616,6 +616,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         haut.keySet.map(HakuOid).toSeq,
         hakukohteet.keySet.map(HakukohdeOid).toSeq,
         valintaperusteet.keySet.map(UUID.fromString).toSeq,
+        oppilaitostenOsat.keySet.map(OrganisaatioOid).toSeq.union(
+          oppilaitokset.keySet.map(OrganisaatioOid).toSeq
+        )
       )
     )
   }
