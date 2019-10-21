@@ -2,8 +2,6 @@ package fi.oph.kouta.integration
 
 import java.net.URLEncoder
 import java.time.Instant.now
-import java.time.format.DateTimeFormatter
-import java.time.{Instant, ZoneId, ZonedDateTime}
 import java.util.UUID
 
 import fi.oph.kouta.TestData.inFuture
@@ -11,6 +9,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.AnythingServlet
+import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
 
@@ -35,14 +34,12 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   var valintaperusteIds: List[UUID] = List()
   var hakukohdeOids: List[String] = List()
 
-  def formatInstant(i:Instant) = DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.ofInstant(i, ZoneId.of("GMT")))
-
   var timestampBeforeAllModifications = ""
   var timestampAfterInserts = ""
   var timestampAfterAllModifications = ""
 
   def createTestData(n: Int = 10) = {
-    timestampBeforeAllModifications = formatInstant(now())
+    timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
     koulutusOids = nTimes(() => put(koulutus), n)
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid)))
@@ -50,7 +47,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     valintaperusteIds = nTimes(() => put(valintaperuste), n)
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) => put(hakukohde(oid, hakuOids(i), valintaperusteIds(i))) }
     Thread.sleep(1000)
-    timestampAfterInserts = formatInstant(now())
+    timestampAfterInserts = renderHttpDate(now())
   }
 
   def updateTestData() = {
@@ -68,7 +65,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     updateInHakukohteenValintakokeetTable(11)
     updateInValintaperusteetTable(12)
     Thread.sleep(1000)
-    timestampAfterAllModifications = formatInstant(now())
+    timestampAfterAllModifications = renderHttpDate(now())
   }
 
   def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts)

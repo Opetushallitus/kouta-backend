@@ -1,12 +1,12 @@
 package fi.oph.kouta.repository
 
-import java.sql.Timestamp
-import java.time.{Instant, LocalDateTime, ZoneId}
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.util.TimeUtils.timeStampToLocalDateTime
 import org.json4s.jackson.Serialization.read
 import slick.jdbc._
 
@@ -41,7 +41,6 @@ trait ExtractorBase extends KoutaJsonFormats {
 
   def extractKielistetty(json: Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
   def extractKielivalinta(json: Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
-  def extractModified(timestamp: Timestamp): LocalDateTime = LocalDateTime.ofInstant(timestamp.toInstant, ZoneId.of("Europe/Helsinki"))
 
   implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
     UUID.fromString(r.nextString())
@@ -62,7 +61,7 @@ trait KoulutusExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
-    modified = Some(extractModified(r.nextTimestamp()))))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))))
 
   implicit val getKoulutusListItem: GetResult[KoulutusListItem] = GetResult(r => KoulutusListItem(
     oid = KoulutusOid(r.nextString()),
@@ -71,7 +70,7 @@ trait KoulutusExtractors extends ExtractorBase {
     tarjoajat = List(),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
+    modified = timeStampToLocalDateTime(r.nextTimestamp())
   ))
 }
 
@@ -86,7 +85,7 @@ trait ToteutusExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
-    modified = Some(extractModified(r.nextTimestamp()))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
   implicit val getToteutusListItemResult: GetResult[ToteutusListItem] = GetResult(r => ToteutusListItem(
@@ -97,7 +96,7 @@ trait ToteutusExtractors extends ExtractorBase {
     tarjoajat = List(),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
+    modified = timeStampToLocalDateTime(r.nextTimestamp())
   ))
 }
 
@@ -123,7 +122,7 @@ trait HakuExtractors extends ExtractorBase {
     hakuajat = List(),
     muokkaaja = UserOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
-    modified = Some(extractModified(r.nextTimestamp()))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
   implicit val getHakuListItem: GetResult[HakuListItem] = GetResult(r => HakuListItem(
@@ -132,7 +131,7 @@ trait HakuExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
+    modified = timeStampToLocalDateTime(r.nextTimestamp())
   ))
 }
 
@@ -151,7 +150,7 @@ trait ValintaperusteExtractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
-    modified = Some(extractModified(r.nextTimestamp()))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
   implicit val getValintaperusteListItemResult: GetResult[ValintaperusteListItem] = GetResult(r => ValintaperusteListItem(
@@ -160,7 +159,7 @@ trait ValintaperusteExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
+    modified = timeStampToLocalDateTime(r.nextTimestamp())
   ))
 }
 
@@ -175,7 +174,7 @@ trait SorakuvausExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[SorakuvausMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = Some(extractModified(r.nextTimestamp()))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
   implicit val getSorakuvausListItemResult: GetResult[SorakuvausListItem] = GetResult(r => SorakuvausListItem(
@@ -184,7 +183,7 @@ trait SorakuvausExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
+    modified = timeStampToLocalDateTime(r.nextTimestamp())
   ))
 }
 
@@ -222,7 +221,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
-    modified = Some(extractModified(r.nextTimestamp()))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
   implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] = GetResult(r => HakukohdeListItem(
@@ -234,7 +233,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
+    modified = timeStampToLocalDateTime(r.nextTimestamp())
   ))
 
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
@@ -256,7 +255,7 @@ trait OppilaitosExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    modified = Some(extractModified(r.nextTimestamp()))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 }
 
@@ -269,7 +268,7 @@ trait OppilaitoksenOsaExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    modified = Some(extractModified(r.nextTimestamp()))
+    modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
   implicit val getOppilaitoksenOsaListItemResult: GetResult[OppilaitoksenOsaListItem] = GetResult(r => OppilaitoksenOsaListItem(
@@ -278,7 +277,7 @@ trait OppilaitoksenOsaExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
-    modified = extractModified(r.nextTimestamp())
+    modified = timeStampToLocalDateTime(r.nextTimestamp())
   ))
 }
 
@@ -298,7 +297,7 @@ trait HakutietoExtractors extends ExtractorBase {
       organisaatioOid = OrganisaatioOid(r.nextString()),
       hakuajat = Seq(),
       muokkaaja = UserOid(r.nextString()),
-      modified = Some(extractModified(r.nextTimestamp())),
+      modified = Some(timeStampToLocalDateTime(r.nextTimestamp())),
       hakukohteet = Seq())))
 
   implicit val getHakutietoHakukohdeResult: GetResult[(ToteutusOid, HakuOid, HakutietoHakukohde)] = GetResult(r =>
@@ -323,7 +322,7 @@ trait HakutietoExtractors extends ExtractorBase {
       organisaatioOid = OrganisaatioOid(r.nextString()),
       hakuajat = List(),
       muokkaaja = UserOid(r.nextString()),
-      modified = Some(extractModified(r.nextTimestamp())))))
+      modified = Some(timeStampToLocalDateTime(r.nextTimestamp())))))
 }
 
 trait KeywordExtractors extends ExtractorBase

@@ -8,7 +8,7 @@ import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.util.{KoutaJsonFormats, TimeUtils}
 import fi.oph.kouta.{MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
@@ -305,7 +305,7 @@ sealed trait DatabaseSpec {
   import slick.jdbc.PostgresProfile.api._
 
   implicit val getInstant = slick.jdbc.GetResult[LocalDateTime](r =>
-    LocalDateTime.ofInstant(r.nextTimestamp().toInstant, ZoneId.of("Europe/Helsinki")).withNano(0).withSecond(0))
+    TimeUtils.timeStampToLocalDateTime(r.nextTimestamp()).withNano(0).withSecond(0))
 
   def readModifiedByOid(oid:String, table:String):LocalDateTime = db.runBlocking(
     sql"""select lower(system_time) from #${table} where oid = $oid""".as[LocalDateTime].head)

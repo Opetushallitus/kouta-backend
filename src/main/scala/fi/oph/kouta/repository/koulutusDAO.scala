@@ -4,6 +4,7 @@ import java.time.Instant
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -40,7 +41,8 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
         l <- selectLastModified(oid)
       } yield (k, t, l)
     ).get match {
-      case (Some(k), t, Some(l)) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+      case (Some(k), t, Some(l)) =>
+        Some((k.copy(modified = Some(instantToLocalDateTime(l)), tarjoajat = t.map(_.tarjoajaOid).toList), l))
       case _ => None
     }
   }
@@ -196,15 +198,36 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   def deleteTarjoajat(oid: Option[KoulutusOid]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
   def selectByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from koulutukset
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-          or julkinen = ${true}""".as[KoulutusListItem]
+    sql"""select k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
+          from koulutukset k
+          inner join (
+            select k.oid oid, greatest(
+              max(lower(k.system_time)),
+              max(lower(ta.system_time)),
+              max(upper(kh.system_time)),
+              max(upper(tah.system_time))) modified
+            from koulutukset k
+            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
+            left join koulutukset_history kh on k.oid = kh.oid
+            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+            group by k.oid) m on k.oid = m.oid
+          where k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          or k.julkinen = ${true}""".as[KoulutusListItem]
   }
 
   def selectByHakuOid(hakuOid: HakuOid) = {
-    sql"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, lower(k.system_time)
+    sql"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
           from koulutukset k
+          inner join (select k.oid oid, greatest(
+            max(lower(k.system_time)),
+            max(lower(ta.system_time)),
+            max(upper(kh.system_time)),
+            max(upper(tah.system_time))) modified
+            from koulutukset k
+            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
+            left join koulutukset_history kh on k.oid = kh.oid
+            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+            group by k.oid) m on k.oid = m.oid
           inner join toteutukset t on k.oid = t.koulutus_oid
           inner join hakukohteet h on t.oid = h.toteutus_oid
           where h.haku_oid = ${hakuOid.toString}""".as[KoulutusListItem]
