@@ -81,7 +81,7 @@ trait ToteutusExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption()),
-    metadata = r.nextStringOption().map(read[ToteutusMetadata]),
+    metadata = r.nextStringOption().map(read[ToteutusMetadata]).get,
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),

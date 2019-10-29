@@ -73,10 +73,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   private def insertAmmattinimikkeet(toteutus: Toteutus) =
-    KeywordDAO.insert(Ammattinimike, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(List()))
+    KeywordDAO.insert(Ammattinimike, toteutus.metadata.ammattinimikkeet)
 
   private def insertAsiasanat(toteutus: Toteutus) =
-    KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
+    KeywordDAO.insert(Asiasana, toteutus.metadata.asiasanat)
 
   override def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
