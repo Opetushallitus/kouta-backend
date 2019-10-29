@@ -251,7 +251,7 @@ package object toteutusMetadata {
 sealed trait ToteutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
-  val opetus: Option[Opetus]
+  val opetus: Opetus
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilo: Option[Yhteyshenkilo]
@@ -265,14 +265,14 @@ trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
 case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         kuvaus: Kielistetty = Map(),
                                         osaamisalat: List[AmmatillinenOsaamisala] = List(),
-                                        opetus: Option[Opetus] = None,
+                                        opetus: Opetus,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
                                         yhteyshenkilo: Option[Yhteyshenkilo] = None) extends ToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
-                                     opetus: Option[Opetus] = None,
+                                     opetus: Opetus,
                                      asiasanat: List[Keyword] = List(),
                                      ammattinimikkeet: List[Keyword] = List(),
                                      yhteyshenkilo: Option[Yhteyshenkilo] = None,
@@ -281,7 +281,7 @@ case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
 
 case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Kielistetty = Map(),
-                                              opetus: Option[Opetus] = None,
+                                              opetus: Opetus,
                                               asiasanat: List[Keyword] = List(),
                                               ammattinimikkeet: List[Keyword] = List(),
                                               yhteyshenkilo: Option[Yhteyshenkilo] = None,
