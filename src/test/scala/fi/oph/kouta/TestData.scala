@@ -361,19 +361,18 @@ object TestData {
     tila = Julkaistu,
     tarjoajat = List("1.2.3.3", "1.2.3.4").map(OrganisaatioOid),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = AmmToteutuksenMetatieto,
+    metadata = Some(AmmToteutuksenMetatieto),
     muokkaaja = UserOid("1.2.3.4"),
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 
-  val JulkaistuYoToteutus = JulkaistuAmmToteutus.copy(metadata = YoToteutuksenMetaTieto)
+  val JulkaistuYoToteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetaTieto))
 
   val MinToteutus = new Toteutus(
     muokkaaja = UserOid("5.4.3.2"),
     organisaatioOid = OrganisaatioOid("1.2"),
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
-    metadata = YoToteutuksenMetaTieto,
     modified = None)
 
   val JulkaistuOppilaitos = Oppilaitos(

@@ -204,7 +204,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, thisToteutus)
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      metadata = thisToteutus.metadata.asInstanceOf[AmmatillinenToteutusMetadata].copy(kuvaus = Map(Fi -> "kuvaus", En -> "description")),
+      metadata = Some(thisToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(kuvaus = Map(Fi -> "kuvaus", En -> "description"))),
       tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
     update(uusiToteutus, lastModified, true)
     get(oid, uusiToteutus)
@@ -221,7 +221,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = UserOid("5.4.3.2"), koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = OrganisaatioOid("1.2"), metadata = toteutus.metadata, modified = None)
+    val unfinishedToteutus = new Toteutus(muokkaaja = UserOid("5.4.3.2"), koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
     val newKoulutusOid = put(koulutus)

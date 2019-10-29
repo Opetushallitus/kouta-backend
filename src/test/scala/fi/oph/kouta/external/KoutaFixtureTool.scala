@@ -333,7 +333,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Julkaisutila.withName(params(TilaKey)),
       params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,
       toKielistetty(kielivalinta, params(NimiKey)),
-      params.get(MetadataKey).map(read[ToteutusMetadata]).get,
+      params.get(MetadataKey).map(read[ToteutusMetadata]),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,

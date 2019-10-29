@@ -105,18 +105,18 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
     searchAsiasanat("robo", List())
     searchAmmattinimikkeet("insinööri", List())
     put(toteutus(koulutusOid))
-    searchAsiasanat("robo", toteutus.metadata.asiasanat.map(_.arvo))
-    searchAmmattinimikkeet("insinööri", toteutus.metadata.ammattinimikkeet.map(_.arvo))
+    searchAsiasanat("robo", toteutus.metadata.get.asiasanat.map(_.arvo))
+    searchAmmattinimikkeet("insinööri", toteutus.metadata.get.ammattinimikkeet.map(_.arvo))
   }
 
   "Create toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
-    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = AmmatillinenToteutusMetadata(
+    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(AmmatillinenToteutusMetadata(
       opetus = Opetus(opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1")),
       asiasanat = List(Keyword(Fi, "robotti")),
       ammattinimikkeet = List(Keyword(Fi, "robotti-insinööri"))
-    ))
+    )))
     update(updatedToteutus, lastModified)
     searchAsiasanat("robo", List("robotiikka", "robotti", "robottiautomatiikka"))
     searchAmmattinimikkeet("insinööri", List("insinööri", "koneinsinööri", "robotti-insinööri"))

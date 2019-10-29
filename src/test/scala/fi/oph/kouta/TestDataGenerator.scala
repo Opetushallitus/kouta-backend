@@ -136,7 +136,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
       tarjoajat = getTarjoajat(i),
       muokkaaja = UserOid(userOid),
-      metadata = updateAsiasanat(JulkaistuAmmToteutus.metadata.asInstanceOf[AmmatillinenToteutusMetadata]))
+      metadata = Some(updateAsiasanat(JulkaistuAmmToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata])))
     case 1 => JulkaistuYoToteutus.copy(
       nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
       tila = shuffle(Julkaisutila.values()).head,
