@@ -420,4 +420,9 @@ package object domain {
                             hakukohteet: Seq[HakukohdeOid] = Seq(),
                             valintaperusteet: Seq[UUID] = Seq(),
                             oppilaitokset: Seq[OrganisaatioOid] = Seq())
+
+  trait TeemakuvaMetadata[T] {
+    val teemakuva: Option[String]
+    def withTeemakuva(teemakuva: Option[String]): T
+  }
 }

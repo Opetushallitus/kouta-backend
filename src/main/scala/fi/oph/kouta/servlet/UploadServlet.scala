@@ -1,7 +1,6 @@
 package fi.oph.kouta.servlet
 
 import java.io._
-import java.util.UUID
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.indexing.S3Service
@@ -41,14 +40,11 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
   post("/image") {
 
     val contentType = request.contentType
-    logger.error(s"Content-Type: $contentType")
 
     val extension = contentType.flatMap(allowedImageTypes.get)
       .getOrElse(throw new IllegalArgumentException(s"Content-Type missing or invalid. Allowed types are ${allowedImageTypes.keys.mkString(", ")}"))
-    
-    val length = request.contentLength.get.toInt
-    logger.error(s"$length")
 
+    val length = request.contentLength.get.toInt
     if (length == 0) {
       throw new IllegalArgumentException(s"Invalid Content-Length")
     }
@@ -56,17 +52,10 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
       throw new SizeConstraintExceededException(s"Maximum size is $maxSize bytes", null)
     }
 
-    val key = s"temp/${UUID.randomUUID}.$extension"
-    logger.error(s"key $key")
-
-    logger.error(s"$contextPath${request.getServletPath}$requestPath${request.queryString}")
-
     val array = new Array[Byte](length)
     val dis = new DataInputStream(request.inputStream)
     dis.readFully(array, 0, length)
     dis.close()
-
-    logger.error(s"${array.length}")
 
     val image = ImageIO.read(new ByteArrayInputStream(array))
     val height = image.getHeight
@@ -74,7 +63,7 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
 
     logger.error(s"$width x $height")
 
-    Ok("result" -> S3Service.storeImage(key, contentType.get, array))
+    Ok("result" -> s3Service.storeTempImage(extension, contentType.get, array))
   }
 
 }
