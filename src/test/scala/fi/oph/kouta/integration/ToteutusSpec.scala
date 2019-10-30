@@ -7,6 +7,7 @@ import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, Toteut
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
+import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
@@ -240,4 +241,115 @@ class ToteutusSpec extends KoutaIntegrationSpec
       body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
     }
   }
+
+  object ToteutusJsonMethods extends JsonMethods {
+    def extractJsonString(s: String): Toteutus = {
+      parse(s).extract[Toteutus]
+    }
+  }
+
+  it should "extract toteutus from JSON of correct form" in {
+    val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
+    toteutus.metadata.isDefined shouldBe(true)
+    toteutus.metadata.get.opetus.lukuvuosimaksu.isDefined shouldBe(true)
+  }
+
+  it should "fail to extract toteutus from JSON of incorrect form" in {
+    val thrown = the [org.json4s.MappingException] thrownBy ToteutusJsonMethods.extractJsonString(incorrectJson)
+    thrown.getMessage shouldEqual "Do not know how to convert JObject(List((a,JString(b)))) into double"
+  }
+
+  val correctJson: String = """{
+    "oid": "1.2.246.562.17.00000000000000000067",
+    "koulutusOid": "1.2.246.562.13.00000000000000000167",
+    "tila": "tallennettu",
+    "tarjoajat": [],
+    "nimi": {
+      "fi": "Metalliseppäalan osaamisala, pk (Taideteollisuusalan perustutkinto)"
+    },
+    "metadata": {
+      "tyyppi": "amm",
+      "kuvaus": {},
+      "osaamisalat": [],
+      "opetus": {
+      "opetuskieliKoodiUrit": [
+      "oppilaitoksenopetuskieli_1#1",
+      "oppilaitoksenopetuskieli_2#1"
+      ],
+      "opetuskieletKuvaus": {},
+      "opetusaikaKoodiUrit": [
+      "opetusaikakk_1#1"
+      ],
+      "opetusaikaKuvaus": {},
+      "opetustapaKoodiUrit": [],
+      "opetustapaKuvaus": {},
+      "onkoMaksullinen": false,
+      "maksullisuusKuvaus": {},
+      "alkamisaikaKuvaus": {},
+      "lisatiedot": [],
+      "onkoLukuvuosimaksua": true,
+      "lukuvuosimaksu": 12.5,
+      "lukuvuosimaksuKuvaus": {},
+      "onkoStipendia": false,
+      "stipendinKuvaus": {}
+    },
+      "asiasanat": [],
+      "ammattinimikkeet": []
+    },
+    "muokkaaja": "1.2.246.562.24.87917166937",
+    "organisaatioOid": "1.2.246.562.10.53642770753",
+    "kielivalinta": [
+    "fi",
+    "sv",
+    "en"
+    ],
+    "modified": "2019-10-29T15:21"
+  }"""
+
+  val incorrectJson: String = """{
+    "oid": "1.2.246.562.17.00000000000000000067",
+    "koulutusOid": "1.2.246.562.13.00000000000000000167",
+    "tila": "tallennettu",
+    "tarjoajat": [],
+    "nimi": {
+      "fi": "Metalliseppäalan osaamisala, pk (Taideteollisuusalan perustutkinto)"
+    },
+    "metadata": {
+      "tyyppi": "amm",
+      "kuvaus": {},
+      "osaamisalat": [],
+      "opetus": {
+      "opetuskieliKoodiUrit": [
+      "oppilaitoksenopetuskieli_1#1",
+      "oppilaitoksenopetuskieli_2#1"
+      ],
+      "opetuskieletKuvaus": {},
+      "opetusaikaKoodiUrit": [
+      "opetusaikakk_1#1"
+      ],
+      "opetusaikaKuvaus": {},
+      "opetustapaKoodiUrit": [],
+      "opetustapaKuvaus": {},
+      "onkoMaksullinen": false,
+      "maksullisuusKuvaus": {},
+      "alkamisaikaKuvaus": {},
+      "lisatiedot": [],
+      "onkoLukuvuosimaksua": true,
+      "lukuvuosimaksu": {"a": "b"},
+      "lukuvuosimaksuKuvaus": {},
+      "onkoStipendia": false,
+      "stipendinKuvaus": {}
+    },
+      "asiasanat": [],
+      "ammattinimikkeet": []
+    },
+    "muokkaaja": "1.2.246.562.24.87917166937",
+    "organisaatioOid": "1.2.246.562.10.53642770753",
+    "kielivalinta": [
+    "fi",
+    "sv",
+    "en"
+    ],
+    "modified": "2019-10-29T15:21"
+  }"""
 }
