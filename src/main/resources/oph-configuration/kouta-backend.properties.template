@@ -18,6 +18,10 @@ kouta-backend.sqs.queue.priority={{kouta_backend_sqs_queue_priority}}
 kouta-backend.sqs.endpoint={{kouta_backend_sqs_endpoint}}
 kouta-backend.sqs.region={{kouta_backend_sqs_region}}
 
+kouta-backend.s3.region={{kouta_backend_s3_region}}
+kouta-backend.s3.imageBucket={{kouta_backend_s3_image_bucket}}
+kouta-backend.s3.imageBucketPublicUrl={{kouta_backend_s3_image_bucket_public_url}}
+
 host.virkailija={{host_virkailija}}
 kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kayttooikeus-service/userDetails/$1
 organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/hierarkia/hae

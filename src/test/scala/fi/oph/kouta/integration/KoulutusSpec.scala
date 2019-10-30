@@ -1,15 +1,14 @@
 package fi.oph.kouta.integration
 
-import java.time.{Duration, Instant, LocalDateTime, ZoneId}
-import java.time.format.DateTimeFormatter
+import java.time.{Duration, Instant, ZoneId}
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
-import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
+import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
