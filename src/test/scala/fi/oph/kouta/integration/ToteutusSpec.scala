@@ -251,7 +251,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "extract toteutus from JSON of correct form" in {
     val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
     toteutus.metadata.isDefined shouldBe(true)
-    toteutus.metadata.get.opetus.lukuvuosimaksu.isDefined shouldBe(true)
   }
 
   it should "fail to extract toteutus from JSON of incorrect form" in {
@@ -287,9 +286,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
       "maksullisuusKuvaus": {},
       "alkamisaikaKuvaus": {},
       "lisatiedot": [],
-      "onkoLukuvuosimaksua": true,
-      "lukuvuosimaksu": 12.5,
-      "lukuvuosimaksuKuvaus": {},
       "onkoStipendia": false,
       "stipendinKuvaus": {}
     },
@@ -332,11 +328,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
       "opetustapaKuvaus": {},
       "onkoMaksullinen": false,
       "maksullisuusKuvaus": {},
+      "maksunMaara": {"a": "b"},
       "alkamisaikaKuvaus": {},
       "lisatiedot": [],
-      "onkoLukuvuosimaksua": true,
-      "lukuvuosimaksu": {"a": "b"},
-      "lukuvuosimaksuKuvaus": {},
       "onkoStipendia": false,
       "stipendinKuvaus": {}
     },

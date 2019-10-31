@@ -322,9 +322,7 @@ object TestData {
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
     onkoStipendia = Some(false),
-    onkoLukuvuosimaksua = Some(false),
     stipendinMaara = Some(100.0),
-    lukuvuosimaksu = Some(200.0)
   )
 
   val AmmToteutuksenMetatieto = AmmatillinenToteutusMetadata(
