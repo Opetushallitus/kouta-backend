@@ -218,9 +218,6 @@ sealed trait DefaultKoutaJsonFormats {
         koulutuksenAlkamispaivamaara = (s \ "koulutuksenAlkamispaivamaara").extract[Option[LocalDateTime]],
         koulutuksenPaattymispaivamaara = (s \ "koulutuksenPaattymispaivamaara").extract[Option[LocalDateTime]],
         lisatiedot = (s \ "lisatiedot").extract[Seq[Lisatieto]],
-        onkoLukuvuosimaksua = (s \ "onkoLukuvuosimaksua").extract[Option[Boolean]],
-        lukuvuosimaksu = (s \ "lukuvuosimaksu").extract[Option[Double]],
-        lukuvuosimaksuKuvaus = (s \ "lukuvuosimaksuKuvaus").extract[Kielistetty],
         onkoStipendia = (s \ "onkoStipendia").extract[Option[Boolean]],
         stipendinMaara = (s \ "stipendinMaara").extract[Option[Double]],
         stipendinKuvaus = (s \ "stipendinKuvaus").extract[Kielistetty]
