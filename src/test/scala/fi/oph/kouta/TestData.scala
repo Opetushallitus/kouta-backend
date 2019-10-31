@@ -316,7 +316,6 @@ object TestData {
     maksunMaara = Some(200.5),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some("2020"),
-    alkamisaikaKuvaus = Map(Fi -> "Aikakuvaus fi", Sv -> "Aikakuvaus sv"),
     lisatiedot = Seq(
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
