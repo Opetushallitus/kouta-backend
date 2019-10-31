@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import java.time.LocalDateTime
+
 import fi.oph.kouta.domain.keyword.Keyword
 
 package object toteutusMetadata {
@@ -311,8 +313,8 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
-                  alkamiskausiKoodiUri: Option[String] = None,
-                  alkamisvuosi: Option[String] = None,
+                  koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
+                  koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoLukuvuosimaksua: Option[Boolean] = Some(false),
                   lukuvuosimaksu: Option[Double] = None,

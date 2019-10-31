@@ -314,8 +314,8 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Some(200.5),
-    alkamiskausiKoodiUri = Some("kausi_k#1"),
-    alkamisvuosi = Some("2020"),
+    koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
+    koulutuksenPaattymispaivamaara = Some(inFuture(30000)),
     lisatiedot = Seq(
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
