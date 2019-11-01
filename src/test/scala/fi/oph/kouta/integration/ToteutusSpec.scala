@@ -254,8 +254,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "fail to extract toteutus from JSON of incorrect form" in {
-    val thrown = the [org.json4s.MappingException] thrownBy ToteutusJsonMethods.extractJsonString(incorrectJson)
-    thrown.getMessage shouldEqual "Do not know how to convert JObject(List((a,JString(b)))) into double"
+    an [org.json4s.MappingException] shouldBe thrownBy(ToteutusJsonMethods.extractJsonString(incorrectJson))
   }
 
   val correctJson: String = """{
