@@ -5,7 +5,6 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{HakukohdeOid, _}
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.jackson.Serialization.write
@@ -26,13 +25,9 @@ sealed trait DefaultKoutaJsonFormats {
 
   def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
     koulutusMetadataSerializer,
-    toteutusSerializer,
     toteutusMetadataSerializer,
     valintatapaSisaltoSerializer,
-    valintaperusteMetadataSerializer,
-    yoToteutusMetadataSerializer,
-    ammToteutusMetadataSerializer,
-    amkToteutusMetadataSerializer)
+    valintaperusteMetadataSerializer)
 
   private def genericKoutaFormats: Formats = DefaultFormats.strict
     .addKeySerializers(Seq(kieliKeySerializer)) ++
@@ -90,36 +85,9 @@ sealed trait DefaultKoutaJsonFormats {
         Extraction.decompose(j)
   }))
 
-  private def toteutusSerializer = new CustomSerializer[Toteutus](_ => ( {
-    case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats + toteutusMetadataSerializer
-
-      Toteutus(
-        oid = (s \ "oid").extract[Option[ToteutusOid]],
-        koulutusOid = (s \ "koulutusOid").extract[KoulutusOid],
-        tila = (s \ "tila").extract[Julkaisutila],
-        tarjoajat = (s \ "tarjoajat").extract[List[OrganisaatioOid]],
-        nimi = (s \ "nimi").extract[Kielistetty],
-        metadata = (s \ "metadata").extract[Option[ToteutusMetadata]],
-        muokkaaja = (s \ "muokkaaja").extract[UserOid],
-        organisaatioOid = (s \ "organisaatioOid").extract[OrganisaatioOid],
-        kielivalinta = (s \ "kielivalinta").extract[Seq[Kieli]],
-        modified = (s \ "modified").extract[Option[LocalDateTime]]
-      )
-  }, {
-    case j: Toteutus =>
-      implicit def formats: Formats = genericKoutaFormats + toteutusMetadataSerializer
-
-      Extraction.decompose(j)
-  }))
-
-
   private def toteutusMetadataSerializer = new CustomSerializer[ToteutusMetadata](_ => ({
     case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats ++ Seq(
-        yoToteutusMetadataSerializer,
-        ammToteutusMetadataSerializer,
-        amkToteutusMetadataSerializer)
+      implicit def formats: Formats = genericKoutaFormats
 
       Try(s \ "tyyppi").toOption.collect {
         case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
@@ -131,99 +99,6 @@ sealed trait DefaultKoutaJsonFormats {
       }
   }, {
     case j: ToteutusMetadata =>
-      implicit def formats: Formats = genericKoutaFormats ++ Seq(
-        yoToteutusMetadataSerializer,
-        ammToteutusMetadataSerializer,
-        amkToteutusMetadataSerializer)
-
-      Extraction.decompose(j)
-  }))
-
-  private def yoToteutusMetadataSerializer = new CustomSerializer[YliopistoToteutusMetadata](_ => ( {
-    case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats + opetusSerializer
-
-      YliopistoToteutusMetadata(
-        tyyppi = (s \ "tyyppi").extract[Koulutustyyppi],
-        kuvaus = (s \ "kuvaus").extract[Kielistetty],
-        opetus =  (s \ "opetus").extract[Opetus],
-        asiasanat =  (s \ "asiasanat").extract[List[Keyword]],
-        ammattinimikkeet =  (s \ "ammattinimikkeet").extract[List[Keyword]],
-        yhteyshenkilo =  (s \ "yhteyshenkilo").extract[Option[Yhteyshenkilo]],
-        alemmanKorkeakoulututkinnonOsaamisalat =  (s \ "alemmanKorkeakoulututkinnonOsaamisalat").extract[Seq[KorkeakouluOsaamisala]],
-        ylemmanKorkeakoulututkinnonOsaamisalat =  (s \ "ylemmanKorkeakoulututkinnonOsaamisalat").extract[Seq[KorkeakouluOsaamisala]]
-      )
-  }, {
-    case j: YliopistoToteutusMetadata =>
-      implicit def formats: Formats = genericKoutaFormats + opetusSerializer
-
-      Extraction.decompose(j)
-  }))
-
-  private def ammToteutusMetadataSerializer = new CustomSerializer[AmmatillinenToteutusMetadata](_ => ( {
-    case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats + opetusSerializer
-
-      AmmatillinenToteutusMetadata(
-        tyyppi = (s \ "tyyppi").extract[Koulutustyyppi],
-        kuvaus = (s \ "kuvaus").extract[Kielistetty],
-        osaamisalat = (s \ "osaamisalat").extract[List[AmmatillinenOsaamisala]],
-        opetus =  (s \ "opetus").extract[Opetus],
-        asiasanat =  (s \ "asiasanat").extract[List[Keyword]],
-        ammattinimikkeet =  (s \ "ammattinimikkeet").extract[List[Keyword]],
-        yhteyshenkilo =  (s \ "yhteyshenkilo").extract[Option[Yhteyshenkilo]]
-      )
-  }, {
-    case j: AmmatillinenToteutusMetadata =>
-      implicit def formats: Formats = genericKoutaFormats + opetusSerializer
-
-      Extraction.decompose(j)
-  }))
-
-  private def amkToteutusMetadataSerializer = new CustomSerializer[AmmattikorkeakouluToteutusMetadata](_ => ( {
-    case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats + opetusSerializer
-
-      AmmattikorkeakouluToteutusMetadata(
-        tyyppi = (s \ "tyyppi").extract[Koulutustyyppi],
-        kuvaus = (s \ "kuvaus").extract[Kielistetty],
-        opetus =  (s \ "opetus").extract[Opetus],
-        asiasanat =  (s \ "asiasanat").extract[List[Keyword]],
-        ammattinimikkeet =  (s \ "ammattinimikkeet").extract[List[Keyword]],
-        yhteyshenkilo =  (s \ "yhteyshenkilo").extract[Option[Yhteyshenkilo]],
-        alemmanKorkeakoulututkinnonOsaamisalat =  (s \ "alemmanKorkeakoulututkinnonOsaamisalat").extract[Seq[KorkeakouluOsaamisala]],
-        ylemmanKorkeakoulututkinnonOsaamisalat =  (s \ "ylemmanKorkeakoulututkinnonOsaamisalat").extract[Seq[KorkeakouluOsaamisala]]
-      )
-  }, {
-    case j: AmmattikorkeakouluToteutusMetadata =>
-      implicit def formats: Formats = genericKoutaFormats + opetusSerializer
-
-      Extraction.decompose(j)
-  }))
-
-  private def opetusSerializer = new CustomSerializer[Opetus](_ => ( {
-    case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats
-
-      Opetus(
-        opetuskieliKoodiUrit = (s \ "opetuskieliKoodiUrit").extract[Seq[String]],
-        opetuskieletKuvaus = (s \ "opetuskieletKuvaus").extract[Kielistetty],
-        opetusaikaKoodiUrit = (s \ "opetusaikaKoodiUrit").extract[Seq[String]],
-        opetusaikaKuvaus = (s \ "opetusaikaKuvaus").extract[Kielistetty],
-        opetustapaKoodiUrit = (s \ "opetustapaKoodiUrit").extract[Seq[String]],
-        opetustapaKuvaus = (s \ "opetustapaKuvaus").extract[Kielistetty],
-        onkoMaksullinen = (s \ "onkoMaksullinen").extract[Option[Boolean]],
-        maksullisuusKuvaus = (s \ "maksullisuusKuvaus").extract[Kielistetty],
-        maksunMaara = (s \ "maksunMaara").extract[Option[Double]],
-        koulutuksenAlkamispaivamaara = (s \ "koulutuksenAlkamispaivamaara").extract[Option[LocalDateTime]],
-        koulutuksenPaattymispaivamaara = (s \ "koulutuksenPaattymispaivamaara").extract[Option[LocalDateTime]],
-        lisatiedot = (s \ "lisatiedot").extract[Seq[Lisatieto]],
-        onkoStipendia = (s \ "onkoStipendia").extract[Option[Boolean]],
-        stipendinMaara = (s \ "stipendinMaara").extract[Option[Double]],
-        stipendinKuvaus = (s \ "stipendinKuvaus").extract[Kielistetty]
-      )
-  }, {
-    case j: Opetus =>
       implicit def formats: Formats = genericKoutaFormats
 
       Extraction.decompose(j)
