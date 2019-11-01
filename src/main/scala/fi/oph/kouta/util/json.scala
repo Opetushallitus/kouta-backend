@@ -32,8 +32,7 @@ sealed trait DefaultKoutaJsonFormats {
     valintaperusteMetadataSerializer,
     yoToteutusMetadataSerializer,
     ammToteutusMetadataSerializer,
-    amkToteutusMetadataSerializer,
-    opetusSerializer)
+    amkToteutusMetadataSerializer)
 
   private def genericKoutaFormats: Formats = DefaultFormats.strict
     .addKeySerializers(Seq(kieliKeySerializer)) ++
