@@ -46,7 +46,7 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
 
   def putWithTempImage(koulutus: Koulutus, f: Koulutus => KoulutusOid): KoulutusOid = {
     koulutus.metadata.flatMap(_.teemakuva) match {
-      case Some(S3Service.tempUrl(_, filename)) =>
+      case Some(S3Service.tempUrl(filename)) =>
         val oid = f(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(None))))
         val url = S3Service.copyImage(S3Service.getTempKey(filename), s"koulutus-teemakuva/$oid/$filename")
         updateWithIndexing(koulutus.copy(oid = Some(oid), metadata = koulutus.metadata.map(_.withTeemakuva(Some(url)))), Instant.now())
@@ -63,7 +63,7 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
 
   def updateWithTempImage(koulutus: Koulutus, f: Koulutus => Boolean): Boolean = {
     koulutus.metadata.flatMap(_.teemakuva) match {
-      case Some(S3Service.tempUrl(_, filename)) =>
+      case Some(S3Service.tempUrl(filename)) =>
         val url = S3Service.copyImage(S3Service.getTempKey(filename), s"koulutus-teemakuva/${koulutus.oid.get}/$filename")
         val changed = f(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(url)))))
         S3Service.deleteImage(S3Service.getTempKey(filename))

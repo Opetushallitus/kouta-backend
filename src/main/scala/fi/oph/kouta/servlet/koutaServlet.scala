@@ -85,10 +85,10 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     case e: NoSuchElementException =>
       NotFound("error" -> e.getMessage)
     case e: PayloadTooLargeException =>
-      logger.warn(s"File too large: ${e.getMessage}")
+      logger.warn(s"PayloadTooLargeException: ${e.getMessage}")
       RequestEntityTooLarge("error" -> e.getMessage)
     case e: MediaNotSupportedException =>
-      logger.warn(s"Media not supported: ${e.getMessage}")
+      logger.warn(s"MediaNotSupportedException: ${e.getMessage}")
       UnsupportedMediaType("error" -> e.getMessage)
     case NonFatal(e) =>
       logger.error(errorMsgFromRequest(), e)
