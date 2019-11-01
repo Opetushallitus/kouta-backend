@@ -6,7 +6,7 @@ import java.util.UUID
 import com.amazonaws.regions.RegionUtils
 import com.amazonaws.services.s3.model.{CannedAccessControlList, CopyObjectRequest, ObjectMetadata, PutObjectRequest}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
-import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.config.{KoutaConfigurationFactory, S3Configuration}
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.AmazonClientConnectionDef
 import io.atlassian.aws.s3.S3Client
@@ -29,7 +29,7 @@ object S3Service extends S3Service(S3ClientFactory.create())
 
 class S3Service(private val s3Client: AmazonS3) extends Logging {
 
-  private lazy val config = KoutaConfigurationFactory.configuration.s3Configuration
+  lazy val config: S3Configuration = KoutaConfigurationFactory.configuration.s3Configuration
 
   type ContentType = String
   type Extension = String

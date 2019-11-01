@@ -37,20 +37,20 @@ trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
   }
 }
 
-object KoulutusService extends KoulutusService(SqsInTransactionService)
+object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service)
 
-abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with KoulutusAuthorizationService {
+class KoulutusService(sqsInTransactionService: SqsInTransactionService, s3Service: S3Service) extends ValidatingService[Koulutus] with KoulutusAuthorizationService {
 
   def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
     authorizeGetKoulutus(KoulutusDAO.get(oid))
 
   def putWithTempImage(koulutus: Koulutus, f: Koulutus => KoulutusOid): KoulutusOid = {
     koulutus.metadata.flatMap(_.teemakuva) match {
-      case Some(S3Service.tempUrl(filename)) =>
+      case Some(s3Service.tempUrl(filename)) =>
         val oid = f(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(None))))
-        val url = S3Service.copyImage(S3Service.getTempKey(filename), s"koulutus-teemakuva/$oid/$filename")
+        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"koulutus-teemakuva/$oid/$filename")
         updateWithIndexing(koulutus.copy(oid = Some(oid), metadata = koulutus.metadata.map(_.withTeemakuva(Some(url)))), Instant.now())
-        S3Service.deleteImage(S3Service.getTempKey(filename))
+        s3Service.deleteImage(s3Service.getTempKey(filename))
         oid
       case _ => f(koulutus)
     }
@@ -63,10 +63,10 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
 
   def updateWithTempImage(koulutus: Koulutus, f: Koulutus => Boolean): Boolean = {
     koulutus.metadata.flatMap(_.teemakuva) match {
-      case Some(S3Service.tempUrl(filename)) =>
-        val url = S3Service.copyImage(S3Service.getTempKey(filename), s"koulutus-teemakuva/${koulutus.oid.get}/$filename")
+      case Some(s3Service.tempUrl(filename)) =>
+        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"koulutus-teemakuva/${koulutus.oid.get}/$filename")
         val changed = f(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(url)))))
-        S3Service.deleteImage(S3Service.getTempKey(filename))
+        s3Service.deleteImage(s3Service.getTempKey(filename))
         changed
       case _ => f(koulutus)
     }

@@ -5,7 +5,7 @@ import java.time.{Duration, Instant, ZoneId}
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.integration.fixture.{KoulutusFixture, MockS3Client, ToteutusFixture, UploadFixture}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
@@ -14,7 +14,7 @@ import org.json4s.jackson.Serialization.read
 
 import scala.util.Success
 
-class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with Validations {
+class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with UploadFixture with Validations {
 
   override val roleEntities = Seq(Role.Koulutus)
 
@@ -129,6 +129,24 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow access even if the user is missing rights to some of the tarjoajat" in {
     put(koulutus, crudSessions(ChildOid))
+  }
+
+  it should "copy a temporary image to a permanent location while creating the koulutus" in {
+    saveLocalPng("temp/image.png")
+    val oid = put(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/temp/image.png")))))
+
+    get(oid, koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/koulutus-teemakuva/$oid/image.png")))))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
+    MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
+    MockS3Client.reset()
+  }
+
+  it should "not touch an image that's not in the temporary location" in {
+    val koulutusWithImage = koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/kuvapankki-tai-joku/image.png"))))
+    val oid = put(koulutusWithImage)
+    MockS3Client.storage shouldBe empty
+    get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
   }
 
   "Update koulutus" should "update koulutus" in {
@@ -283,6 +301,31 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       }
       body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
+  }
+
+  it should "copy a temporary image to a permanent location while updating the koulutus" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+
+    saveLocalPng("temp/image.png")
+    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/temp/image.png"))))
+
+    update(koulutusWithImage, lastModified)
+    get(oid, koulutusWithImage.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/koulutus-teemakuva/$oid/image.png")))))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
+    MockS3Client.reset()
+  }
+
+  it should "not touch an image that's not in the temporary location" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/kuvapankki-tai-joku/image.png"))))
+
+    update(koulutusWithImage, lastModified)
+
+    MockS3Client.storage shouldBe empty
+    get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
   }
 
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {

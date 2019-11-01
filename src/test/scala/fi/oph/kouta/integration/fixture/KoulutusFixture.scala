@@ -12,7 +12,7 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Try
 
-object KoulutusServiceIgnoringIndexing extends KoulutusService(SqsInTransactionServiceIgnoringIndexing)
+object KoulutusServiceIgnoringIndexing extends KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
 
 trait KoulutusFixture extends KoulutusDbFixture {
   this: KoutaIntegrationSpec =>

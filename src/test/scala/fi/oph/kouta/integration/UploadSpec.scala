@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.integration.fixture.FakeS3Client.Content
-import fi.oph.kouta.integration.fixture.{FakeS3Client, UploadFixture}
+import fi.oph.kouta.integration.fixture.MockS3Client.Content
+import fi.oph.kouta.integration.fixture.{MockS3Client, UploadFixture}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.source
 import org.scalatest.BeforeAndAfter
@@ -14,7 +14,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture with BeforeAndA
 
   override def after(fun: => Any)(implicit pos: source.Position): Unit = {
     super.after(fun)
-    FakeS3Client.clear()
+    MockS3Client.reset()
   }
 
   "Upload theme image" should "upload image" in {
@@ -22,7 +22,9 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture with BeforeAndA
       status should equal(200)
       read[ImageUrl](body).url match {
         case s3Service.tempUrl(filename) =>
-          val Content(localData, metadata) = FakeS3Client.getLocal(Bucket, s3Service.getTempKey(filename))
+          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+          content should not be empty
+          val Content(localData, metadata) = content.get
           localData should equal(correctTheme)
           metadata.getCacheControl should equal("max-age=86400")
           metadata.getContentType should equal("image/png")
@@ -82,7 +84,9 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture with BeforeAndA
       status should equal(200)
       read[ImageUrl](body).url match {
         case s3Service.tempUrl(filename) =>
-          val Content(localData, metadata) = FakeS3Client.getLocal(Bucket, s3Service.getTempKey(filename))
+          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+          content should not be empty
+          val Content(localData, metadata) = content.get
           localData should equal(correctJpgTheme)
           metadata.getCacheControl should equal("max-age=86400")
           metadata.getContentType should equal("image/jpeg")

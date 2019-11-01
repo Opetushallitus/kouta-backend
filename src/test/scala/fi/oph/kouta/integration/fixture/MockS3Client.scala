@@ -16,7 +16,7 @@ import com.amazonaws.{AmazonWebServiceRequest, HttpMethod}
 
 import scala.collection.mutable
 
-object FakeS3Client extends AmazonS3 {
+object MockS3Client extends AmazonS3 {
 
   case class Content(data: Array[Byte], metadata: ObjectMetadata) {
 
@@ -27,23 +27,28 @@ object FakeS3Client extends AmazonS3 {
 
   val storage: mutable.Map[String, Content] = mutable.Map.empty
 
-  def getLocal(bucket: String, key: String): Content = storage(s"$bucket/$key")
+  def getLocal(bucket: String, key: String): Option[Content] = storage.get(s"$bucket/$key")
 
-  def clear(): Unit = storage.clear()
+  def reset(): Unit = storage.clear()
 
   override def putObject(putObjectRequest: PutObjectRequest): PutObjectResult = {
     val key = s"${putObjectRequest.getBucketName}/${putObjectRequest.getKey}"
     val metadata = putObjectRequest.getMetadata
 
     val length = metadata.getContentLength.toInt
-    val array = new Array[Byte](length)
+    val data = new Array[Byte](length)
     val stream = new DataInputStream(putObjectRequest.getInputStream)
-    stream.readFully(array, 0, length)
+    stream.readFully(data, 0, length)
     stream.close()
 
-    storage.put(key, Content(array, metadata))
+    storage.put(key, Content(data, metadata))
 
-    null // Return value not used ATM, so might as well return null
+    null // Paluuarvoa ei käytetä ATM, joten se voi ihan yhtä hyvin olla null
+  }
+
+  def putLocal(bucket: String, key: String, data: Array[Byte], metadata: ObjectMetadata): Unit = {
+    metadata.setContentLength(data.length)
+    storage.put(s"$bucket/$key", Content(data, metadata))
   }
 
   override def copyObject(copyObjectRequest: CopyObjectRequest): CopyObjectResult = {
@@ -52,7 +57,7 @@ object FakeS3Client extends AmazonS3 {
 
     storage.put(toKey, storage(fromKey))
 
-    null // Return value not used ATM, so might as well return null
+    null // Paluuarvoa ei käytetä ATM, joten se voi ihan yhtä hyvin olla null
   }
 
   override def deleteObject(bucketName: String, key: String): Unit = {
