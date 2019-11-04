@@ -103,12 +103,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate
 
-    logger.info("/toteutus POST body: " + parsedBody)
-    val toteutus: Toteutus = parsedBody.extract[Toteutus]
-    logger.info("extraxted Toteutus object: " + toteutus)
-
-    val result: Boolean = toteutusService.update(toteutus, getIfUnmodifiedSince)
-    result match {
+    toteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
     }
   }
