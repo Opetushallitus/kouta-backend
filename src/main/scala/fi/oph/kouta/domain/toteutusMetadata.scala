@@ -304,7 +304,7 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
                                  linkki: Kielistetty = Map(),
                                  otsikko: Kielistetty = Map()) extends Osaamisala
 
-case class Opetus(opetuskieliKoodiUrit: Seq[String],
+case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetuskieletKuvaus: Kielistetty = Map(),
                   opetusaikaKoodiUrit: Seq[String] = Seq(),
                   opetusaikaKuvaus: Kielistetty = Map(),
