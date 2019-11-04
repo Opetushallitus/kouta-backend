@@ -179,8 +179,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def findJulkaistutKoulutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select k.oid, k.johtaa_tutkintoon, k.tyyppi, k.koulutus_koodi_uri, k.tila,
-                 k.nimi, k.metadata, k.julkinen, k.muokkaaja, k.organisaatio_oid, k.kielivalinta, lower(k.system_time)
+    sql"""select distinct k.oid, k.johtaa_tutkintoon, k.tyyppi, k.koulutus_koodi_uri, k.tila,
+                          k.nimi, k.metadata, k.julkinen, k.muokkaaja, k.organisaatio_oid, k.kielivalinta, lower(k.system_time)
           from koulutukset k
           inner join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
           where k.tila = 'julkaistu'::julkaisutila
