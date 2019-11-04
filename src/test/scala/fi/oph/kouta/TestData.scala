@@ -330,7 +330,7 @@ object TestData {
     osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
       linkki = Map(Fi -> "http://osaamisala/linkki/fi", Sv -> "http://osaamisala/linkki/sv"),
       otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
-    opetus = ToteutuksenOpetus,
+    opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     yhteyshenkilo = Some(Yhteystieto1))
@@ -347,7 +347,7 @@ object TestData {
       otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"),
       nimi = Map(Fi -> "Nimi", Sv -> "Namn"),
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"))),
-    opetus = ToteutuksenOpetus,
+    opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     yhteyshenkilo = Some(Yhteystieto1))
