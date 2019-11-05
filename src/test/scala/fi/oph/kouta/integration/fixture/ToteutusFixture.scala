@@ -10,13 +10,11 @@ import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.ToteutusServlet
 
-object ToteutusServiceIgnoringIndexing extends ToteutusService(SqsInTransactionServiceIgnoringIndexing)
-
 trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
   val ToteutusPath = "/toteutus"
 
-  protected lazy val toteutusService: ToteutusService = ToteutusServiceIgnoringIndexing
+  protected lazy val toteutusService: ToteutusService = new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
 
   addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
 

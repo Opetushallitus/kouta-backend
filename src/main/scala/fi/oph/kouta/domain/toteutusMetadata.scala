@@ -231,13 +231,14 @@ package object toteutusMetadata {
   val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
 }
 
-sealed trait ToteutusMetadata {
+sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilot: Seq[Yhteyshenkilo]
+  val teemakuva: Option[String]
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
@@ -251,7 +252,10 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         opetus: Option[Opetus] = None,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
-                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata
+                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                        teemakuva: Option[String] = None) extends ToteutusMetadata {
+  override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
+}
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
@@ -259,8 +263,11 @@ case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      asiasanat: List[Keyword] = List(),
                                      ammattinimikkeet: List[Keyword] = List(),
                                      yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                     teemakuva: Option[String] = None,
                                      alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                     ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
+                                     ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata {
+  override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
+}
 
 case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Kielistetty = Map(),
@@ -268,8 +275,11 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               asiasanat: List[Keyword] = List(),
                                               ammattinimikkeet: List[Keyword] = List(),
                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                              teemakuva: Option[String] = None,
                                               alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
+                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata {
+  override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
+}
 
 trait Osaamisala {
   val linkki: Kielistetty
