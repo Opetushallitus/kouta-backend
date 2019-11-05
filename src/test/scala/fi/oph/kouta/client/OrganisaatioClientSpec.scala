@@ -14,9 +14,9 @@ class OrganisaatioClientSpec extends KoutaClientSpec with OrganisaatioServiceMoc
       List(ChildOid, GrandChildOid, EvilGrandChildOid)
   }
   "getAllChildOidsFlat" should "return flat list of child organisations 2" in {
-    mockOrganisaatioResponse(ChildOid)
-    OrganisaatioClient.getAllChildOidsFlat(ChildOid) should contain theSameElementsAs
-      List(ChildOid, GrandChildOid, EvilGrandChildOid)
+    mockOrganisaatioResponse(YoOid, responseFromResource("mpkk"))
+    OrganisaatioClient.getAllChildOidsFlat(YoOid) should contain theSameElementsAs
+      List(YoOid)
   }
   it should "return empty list with unknown oid when requesting children" in {
     mockOrganisaatioResponse(OrganisaatioOid("1.2.3"), NotFoundOrganisaatioResponse)

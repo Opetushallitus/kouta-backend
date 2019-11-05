@@ -17,8 +17,7 @@ trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
     def allowedByOrgOrJulkinen(koulutus: Koulutus, oids: Set[OrganisaatioOid]): Boolean =
       lazyFlatChildren(oids).exists {
         case (orgs, tyypit) =>
-          if (koulutus.julkinen) koulutus.koulutustyyppi.exists(tyypit.contains)
-          else orgs.contains(koulutus.organisaatioOid)
+          (koulutus.julkinen && koulutus.koulutustyyppi.exists(tyypit.contains)) || orgs.contains(koulutus.organisaatioOid)
       }
 
     koulutusWithTime.map {
