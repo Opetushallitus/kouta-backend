@@ -28,12 +28,12 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
 
   def teemakuvaPrefix: String
 
-  def checkTeemakuvaInPut(entity: T, put: T => ID, update: T => Boolean): ID =
+  def checkTeemakuvaInPut(entity: T, put: T => ID, update: (T, Instant) => Boolean): ID =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>
         val id = put(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
         val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/$id/$filename")
-        update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+        update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))), Instant.now())
         s3Service.deleteImage(s3Service.getTempKey(filename))
         id
       case _ =>

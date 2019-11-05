@@ -2,22 +2,20 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.{Julkaisutila, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+import fi.oph.kouta.domain.{Julkaisutila, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.service.OppilaitoksenOsaService
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Random
-
-object OppilaitoksenOsaServiceIgnoringIndexing extends OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing)
 
 trait OppilaitoksenOsaFixture { this: KoutaIntegrationSpec =>
 
   val OppilaitoksenOsaPath = "/oppilaitoksen-osa"
 
-  protected lazy val oppilaitoksenOsaService: OppilaitoksenOsaService = OppilaitoksenOsaServiceIgnoringIndexing
+  protected lazy val oppilaitoksenOsaService: OppilaitoksenOsaService = new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
 
   addServlet(new OppilaitoksenOsaServlet(oppilaitoksenOsaService), OppilaitoksenOsaPath)
 

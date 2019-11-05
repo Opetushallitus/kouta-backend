@@ -24,7 +24,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) {
-      withValidation(toteutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing(_, Instant.now())))
+      withValidation(toteutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
     }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =

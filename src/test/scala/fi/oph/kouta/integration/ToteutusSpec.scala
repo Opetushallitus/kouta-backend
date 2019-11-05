@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, MockS3Client, ToteutusFixture, UploadFixture}
+import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -129,6 +129,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
+    MockS3Client.reset()
   }
 
   "Update toteutus" should "update toteutus" in {
@@ -283,6 +284,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
     MockS3Client.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
+    MockS3Client.reset()
   }
 
   object ToteutusJsonMethods extends JsonMethods {

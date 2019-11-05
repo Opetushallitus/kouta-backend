@@ -49,7 +49,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
-      withValidation(koulutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing(_, Instant.now())))
+      withValidation(koulutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
     }
 
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =

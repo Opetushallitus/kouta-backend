@@ -147,6 +147,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val oid = put(koulutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
+    MockS3Client.reset()
   }
 
   "Update koulutus" should "update koulutus" in {
@@ -326,6 +327,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
+    MockS3Client.reset()
   }
 
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {

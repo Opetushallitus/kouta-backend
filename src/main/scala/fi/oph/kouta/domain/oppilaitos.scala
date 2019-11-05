@@ -266,7 +266,11 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             kielivalinta: Seq[Kieli] = Seq(),
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
-                            modified: Option[LocalDateTime] = None) extends Validatable with Authorizable {
+                            modified: Option[LocalDateTime] = None)
+  extends Validatable
+    with Authorizable
+    with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
+    with HasTeemakuvaMetadata[OppilaitoksenOsa, OppilaitoksenOsaMetadata] {
 
   override def validate(): IsValid = and(
     assertValid(muokkaaja),
@@ -279,6 +283,12 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
         validateKielistetty(kielivalinta, metadata.get., "esittely"),
       ))*/
     )))
+
+  override def primaryId: Option[OrganisaatioOid] = Some(oid)
+
+  override def withPrimaryID(oid: OrganisaatioOid): OppilaitoksenOsa = copy(oid = oid)
+
+  override def withMetadata(metadata: OppilaitoksenOsaMetadata): OppilaitoksenOsa = copy(metadata = Some(metadata))
 }
 
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),

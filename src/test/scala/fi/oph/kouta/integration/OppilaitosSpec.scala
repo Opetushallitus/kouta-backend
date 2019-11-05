@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Arkistoitu, OppilaitoksenOsa}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.security.Role
@@ -121,6 +121,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     val oid = put(oppilaitosWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+    MockS3Client.reset()
   }
 
   "Update oppilaitos" should "update oppilaitos" in {
@@ -248,6 +249,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+    MockS3Client.reset()
   }
 
   "Get oppilaitoksen osat" should "return oppilaitoksen osat for indexer" in {
