@@ -39,42 +39,22 @@ trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
 
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service)
 
-class KoulutusService(sqsInTransactionService: SqsInTransactionService, s3Service: S3Service) extends ValidatingService[Koulutus] with KoulutusAuthorizationService {
+class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
+  extends ValidatingService[Koulutus] with KoulutusAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
+
+  val teemakuvaPrefix = "koulutus-teemakuva"
 
   def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
     authorizeGetKoulutus(KoulutusDAO.get(oid))
 
-  def putWithTempImage(koulutus: Koulutus, f: Koulutus => KoulutusOid): KoulutusOid = {
-    koulutus.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        val oid = f(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(None))))
-        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"koulutus-teemakuva/$oid/$filename")
-        updateWithIndexing(koulutus.copy(oid = Some(oid), metadata = koulutus.metadata.map(_.withTeemakuva(Some(url)))), Instant.now())
-        s3Service.deleteImage(s3Service.getTempKey(filename))
-        oid
-      case _ => f(koulutus)
-    }
-  }
-
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
-      withValidation(koulutus, putWithTempImage(_, putWithIndexing))
+      withValidation(koulutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing(_, Instant.now())))
     }
-
-  def updateWithTempImage(koulutus: Koulutus, f: Koulutus => Boolean): Boolean = {
-    koulutus.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"koulutus-teemakuva/${koulutus.oid.get}/$filename")
-        val changed = f(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(url)))))
-        s3Service.deleteImage(s3Service.getTempKey(filename))
-        changed
-      case _ => f(koulutus)
-    }
-  }
 
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(KoulutusDAO.get(koulutus.oid.get)) {
-      withValidation(koulutus, updateWithTempImage(_, updateWithIndexing(_, notModifiedSince)))
+      withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {

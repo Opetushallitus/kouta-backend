@@ -133,9 +133,9 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "copy a temporary image to a permanent location while creating the koulutus" in {
     saveLocalPng("temp/image.png")
-    val oid = put(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/temp/image.png")))))
+    val oid = put(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))))
 
-    get(oid, koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/koulutus-teemakuva/$oid/image.png")))))
+    get(oid, koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
@@ -143,7 +143,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "not touch an image that's not in the temporary location" in {
-    val koulutusWithImage = koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/kuvapankki-tai-joku/image.png"))))
+    val koulutusWithImage = koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
     val oid = put(koulutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
@@ -308,10 +308,10 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val lastModified = get(oid, koulutus(oid))
 
     saveLocalPng("temp/image.png")
-    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/temp/image.png"))))
+    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))))
 
     update(koulutusWithImage, lastModified)
-    get(oid, koulutusWithImage.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/koulutus-teemakuva/$oid/image.png")))))
+    get(oid, koulutusWithImage.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
     MockS3Client.reset()
@@ -320,7 +320,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "not touch an image that's not in the temporary location" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImagePath/kuvapankki-tai-joku/image.png"))))
+    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
 
     update(koulutusWithImage, lastModified)
 

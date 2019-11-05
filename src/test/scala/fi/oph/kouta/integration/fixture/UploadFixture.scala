@@ -20,7 +20,7 @@ trait UploadFixture {
   val ThemeImageUploadPath = s"$UploadPath/theme-image"
 
   val ImageBucket = MockS3Service.config.imageBucket
-  val PublicImagePath = MockS3Service.config.imageBucketPublicUrl
+  val PublicImageServer = MockS3Service.config.imageBucketPublicUrl
 
   protected lazy val s3Service: S3Service = MockS3Service
 

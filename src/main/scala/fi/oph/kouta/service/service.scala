@@ -6,6 +6,8 @@ import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.{Koulutus, Koulutustyyppi}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
+import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.security.{Authorizable, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validatable
@@ -19,6 +21,34 @@ trait ValidatingService[E <: Validatable] {
     case Right(_) => f(e)
     case Left(list) => throw KoutaValidationException(list)
   }
+}
+
+trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID, T], M <: TeemakuvaMetadata[M]] extends Logging {
+  val s3Service: S3Service
+
+  def teemakuvaPrefix: String
+
+  def checkTeemakuvaInPut(entity: T, put: T => ID, update: T => Boolean): ID =
+    entity.metadata.flatMap(_.teemakuva) match {
+      case Some(s3Service.tempUrl(filename)) =>
+        val id = put(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
+        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/$id/$filename")
+        update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+        s3Service.deleteImage(s3Service.getTempKey(filename))
+        id
+      case _ =>
+        put(entity)
+    }
+
+  def checkTeemakuvaInUpdate(entity: T, update: T => Boolean): Boolean =
+    entity.metadata.flatMap(_.teemakuva) match {
+      case Some(s3Service.tempUrl(filename)) =>
+        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename")
+        val changed = update(entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+        s3Service.deleteImage(s3Service.getTempKey(filename))
+        changed
+      case _ => update(entity)
+    }
 }
 
 case class KoutaValidationException(errorMessages:List[String]) extends RuntimeException

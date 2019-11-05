@@ -3,30 +3,34 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem, Oppilaitos}
-import fi.oph.kouta.indexing.SqsInTransactionService
+import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem, Oppilaitos, OppilaitosMetadata}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
+import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Service)
 
-abstract class OppilaitosService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService {
+class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
+  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with TeemakuvaService[OrganisaatioOid, Oppilaitos, OppilaitosMetadata] {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
+
+  val teemakuvaPrefix = "oppilaitos-teemakuva"
 
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] =
     authorizeGet(OppilaitosDAO.get(oid))
 
-  def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid =
+  def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid = {
     authorizePut(oppilaitos) {
-      withValidation(oppilaitos, putWithIndexing)
+      withValidation(oppilaitos, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing(_, Instant.now())))
     }
+  }
 
   def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid)) {
-      withValidation(oppilaitos, updateWithIndexing(_, notModifiedSince))
+      withValidation(oppilaitos, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
 
   def getOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
