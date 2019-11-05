@@ -116,6 +116,9 @@ package object toteutusMetadata {
        |          description: Lista toteutukseen liittyvistä ammattinimikkeistä, joiden avulla opiskelija voi hakea koulutusta Opintopolusta
        |          items:
        |            $$ref: '#/components/schemas/Ammattinimike'
+       |        teemakuva:
+       |          type: string
+       |          description: Toteutuksen Opintopolussa näytettävän teemakuvan URL.
        |""".stripMargin
 
   val KorkeakouluOsaamisala =

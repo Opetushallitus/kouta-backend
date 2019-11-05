@@ -25,6 +25,9 @@ package object koulutusMetadata {
        |          items:
        |            type: object
        |            $$ref: '#/components/schemas/Lisatieto'
+       |        teemakuva:
+       |          type: string
+       |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
        |""".stripMargin
 
   val KorkeakouluMetadataModel =

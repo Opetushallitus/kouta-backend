@@ -91,6 +91,9 @@ package object oppilaitos {
        |        akatemioita:
        |          type: integer
        |          description: Oppilaitoksen akatemioiden lkm
+       |        teemakuva:
+       |          type: string
+       |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
        |""".stripMargin
 
   val OppilaitoksenOsaModel =
@@ -161,6 +164,9 @@ package object oppilaitos {
        |        opiskelijoita:
        |          type: integer
        |          description: Oppilaitoksen osan opiskelijoiden lkm
+       |        teemakuva:
+       |          type: string
+       |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
        |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
