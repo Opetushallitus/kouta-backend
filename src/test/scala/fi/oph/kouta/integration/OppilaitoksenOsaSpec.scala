@@ -124,7 +124,7 @@ class OppilaitoksenOsaSpec
 
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(metadata = oppilaitoksenOsa.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/oppilaitoksen-osa-teemakuva/$oid/image.png")))))
 
-    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksenOsa-teemakuva/$oid/image.png"))
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksen-osa-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
     MockS3Client.reset()
   }
@@ -254,21 +254,21 @@ class OppilaitoksenOsaSpec
     val oppilaitoksenOsaWithImage = oppilaitoksenOsa(oid, oppilaitosOid).copy(metadata = oppilaitoksenOsa.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))))
 
     update(oppilaitoksenOsaWithImage, lastModified)
-    get(oid, oppilaitoksenOsaWithImage.copy(metadata = oppilaitoksenOsa.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/oppilaitoksenOsa-teemakuva/$oid/image.png")))))
+    get(oid, oppilaitoksenOsaWithImage.copy(metadata = oppilaitoksenOsa.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/oppilaitoksen-osa-teemakuva/$oid/image.png")))))
 
-    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksenOsa-teemakuva/$oid/image.png"))
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksen-osa-teemakuva/$oid/image.png"))
     MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
-    val oid = put(oppilaitoksenOsa)
-    val lastModified = get(oid, oppilaitoksenOsa(oid))
-    val oppilaitoksenOsaWithImage = oppilaitoksenOsa(oid).copy(metadata = oppilaitoksenOsa.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
+    val oid = put(oppilaitoksenOsa(oppilaitosOid))
+    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
+    val oppilaitoksenOsaWithImage = oppilaitoksenOsa(oid, oppilaitosOid).copy(metadata = oppilaitoksenOsa.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
 
     update(oppilaitoksenOsaWithImage, lastModified)
 
     MockS3Client.storage shouldBe empty
-    get(oid, oppilaitoksenOsaWithImage.copy(oid = OrganisaatioOid(oid)))
+    get(oid, oppilaitoksenOsaWithImage)
     MockS3Client.reset()
   }
 }
