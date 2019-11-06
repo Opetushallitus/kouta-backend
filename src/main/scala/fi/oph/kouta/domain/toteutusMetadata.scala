@@ -61,46 +61,27 @@ package object toteutusMetadata {
        |          type: double
        |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
        |          example: 220.50
-       |        alkamiskausiKoodiUri:
+       |        koulutuksenAlkamispaivamaara:
        |          type: string
-       |          description: Koulutuksen toteutuksen alkamiskausi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-       |          example: kausi_k#1
-       |        alkamisvuosi:
+       |          description: Koulutuksen alkamisen päivämäärä
+       |          example: 2019-11-20T12:00
+       |        koulutuksenPaattymispaivamaara:
        |          type: string
-       |          description: Koulutuksen toteutuksen alkamisvuosi
-       |          example: 2020
-       |        alkamisaikaKuvaus:
-       |          type: object
-       |          description: Koulutuksen toteutuksen alkamisaikoja tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Kuvaus'
+       |          description: Koulutuksen päättymisen päivämäärä
+       |          example: 2019-12-20T12:00
        |        lisatiedot:
        |          type: array
        |          description: Koulutuksen toteutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
        |          items:
        |            type: object
        |            $$ref: '#/components/schemas/Lisatieto'
-       |        onkoLukuvuosimaksua:
-       |          type: boolean
-       |          description: "Onko koulutuksella lukuvuosimaksua?"
-       |        lukuvuosimaksu:
-       |          type: object
-       |          description: Koulutuksen toteutuksen lukuvuosimaksu eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
-       |        lukuvuosimaksuKuvaus:
-       |          type: object
-       |          description: Koulutuksen toteutuksen lukuvuosimaksua tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Kuvaus'
        |        onkoStipendia:
        |          type: boolean
        |          description: "Onko koulutukseen stipendiä?"
        |        stipendinMaara:
-       |          type: object
-       |          description: Koulutuksen toteutuksen stipendin määrä eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
+       |          type: double
+       |          description: Koulutuksen toteutuksen stipendin määrä.
+       |          example: 10.0
        |        stipendinKuvaus:
        |          type: object
        |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
