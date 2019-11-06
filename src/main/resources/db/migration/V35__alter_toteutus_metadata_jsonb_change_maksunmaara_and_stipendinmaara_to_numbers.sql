@@ -12,7 +12,7 @@ WHERE metadata->'opetus'->'maksunMaara'->'fi' IS NOT NULL;
 --> "maksunMaara": null
 UPDATE toteutukset set metadata = jsonb_set(metadata,
                                             '{opetus, maksunMaara}',
-                                            null)
+                                            'null')
 WHERE metadata->'opetus'->'maksunMaara' = '{}';
 
 --- "stipendinMaara": {"en": "200", "fi": "100", "sv": "300"}
@@ -26,5 +26,5 @@ WHERE metadata->'opetus'->'stipendinMaara'->'fi' IS NOT NULL;
 --> "stipendinMaara": null
 UPDATE toteutukset set metadata = jsonb_set(metadata,
                                             '{opetus, stipendinMaara}',
-                                            null)
+                                            'null')
 WHERE metadata->'opetus'->'stipendinMaara' = '{}';
