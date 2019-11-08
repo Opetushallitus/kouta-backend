@@ -1,0 +1,1 @@
+{ "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:eu-west-1:80398EXAMPLE:koutaIndeksoijaNotificationsDlq\",\"maxReceiveCount\":\"3\"}"}
