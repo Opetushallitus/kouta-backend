@@ -32,11 +32,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     }
   }
 
-  it should "allow any authenticated user to access published koulutus" in {
-    val oid = put(koulutus.copy(julkinen = true))
-    get(oid, otherRoleSession, koulutus(oid).copy(julkinen = true))
-  }
-
   it should "allow the user of the koulutus organization to read the koulutus" in {
     val oid = put(koulutus)
     get(oid, crudSessions(ChildOid), koulutus(oid))
@@ -69,7 +64,17 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow the indexer to read any koulutus" in {
     val oid = put(koulutus)
-    get(s"$KoulutusPath/$oid", otherRoleSession, 403)
+    get(s"$KoulutusPath/$oid", indexerSession, 200)
+  }
+
+  it should "allow a user of similar oppilaitostyyppi to access public koulutus" in {
+    val oid = put(koulutus.copy(julkinen = true), crudSessions(koulutus.organisaatioOid))
+    get(oid, crudSessions(EvilChildOid), koulutus(oid).copy(julkinen = true))
+  }
+
+  it should "deny an authenticated user of a different oppilaitostyyppi to access public koulutus" in {
+    val oid = put(koulutus.copy(julkinen = true))
+    get(s"$KoulutusPath/$oid", readSessions(YoOid), 403)
   }
 
   "Create koulutus" should "store koulutus" in {

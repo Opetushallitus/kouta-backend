@@ -2,32 +2,46 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 
-object KoulutusService extends KoulutusService(SqsInTransactionService)
-
-abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with RoleEntityAuthorizationService {
-
+trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
   protected val roleEntity: RoleEntity = Role.Koulutus
 
-  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
-    KoulutusDAO.get(oid).map {
-      case (koulutus, lastModified) if hasRootAccess(roleEntity.readRoles) => (koulutus, lastModified)
-      case (koulutus, lastModified) if koulutus.julkinen => (koulutus, lastModified) // TODO: sallittu vain saman koulutustyypin käyttäjille
+  def authorizeGetKoulutus(koulutusWithTime: Option[(Koulutus, Instant)])(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
+    def allowedByOrgOrJulkinen(koulutus: Koulutus, oids: Set[OrganisaatioOid]): Boolean =
+      lazyFlatChildren(oids).exists {
+        case (orgs, tyypit) =>
+          (koulutus.julkinen && koulutus.koulutustyyppi.exists(tyypit.contains)) || orgs.contains(koulutus.organisaatioOid)
+      }
+
+    koulutusWithTime.map {
+      case (koulutus, lastModified) if hasRootAccess(Role.Koulutus.readRoles) => (koulutus, lastModified)
       case (koulutus, lastModified) =>
-        withAuthorizedChildOrganizationOids(roleEntity.readRoles) { authorizedOrganizations =>
-          authorize(koulutus.organisaatioOid, authorizedOrganizations) {
-            (koulutus, lastModified)
-          }
+        organizationsForRoles(Role.Koulutus.readRoles) match {
+          case oids if oids.isEmpty => throw RoleAuthorizationFailedException(Role.Koulutus.readRoles, authenticated.session.roles)
+          case oids =>
+            if (allowedByOrgOrJulkinen(koulutus, oids)) {
+              (koulutus, lastModified)
+            } else {
+              throw OrganizationAuthorizationFailedException(koulutus.organisaatioOid)
+            }
         }
     }
   }
+}
+
+object KoulutusService extends KoulutusService(SqsInTransactionService)
+
+abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with KoulutusAuthorizationService {
+
+  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
+    authorizeGetKoulutus(KoulutusDAO.get(oid))
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
@@ -40,8 +54,8 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles) { oids =>
-      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids) // TODO: julkiset vain samasta koulutustyypistä
+    withAuthorizedChildOrganizationOidsAndOppilaitostyypit(organisaatioOid, roleEntity.readRoles) { case (oids, koulutustyypit) =>
+      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids, koulutustyypit)
     }
   }
 

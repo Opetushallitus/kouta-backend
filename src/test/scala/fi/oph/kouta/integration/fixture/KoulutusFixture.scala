@@ -24,6 +24,7 @@ trait KoulutusFixture extends KoulutusDbFixture {
   addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
 
   val koulutus = TestData.AmmKoulutus
+  val yoKoulutus = TestData.YoKoulutus
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
   def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
