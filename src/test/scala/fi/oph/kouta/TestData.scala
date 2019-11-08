@@ -314,18 +314,15 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Some(200.5),
-    alkamiskausiKoodiUri = Some("kausi_k#1"),
-    alkamisvuosi = Some("2020"),
-    alkamisaikaKuvaus = Map(Fi -> "Aikakuvaus fi", Sv -> "Aikakuvaus sv"),
+    koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
+    koulutuksenPaattymispaivamaara = Some(inFuture(30000)),
     lisatiedot = Seq(
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
     onkoStipendia = Some(false),
-    onkoLukuvuosimaksua = Some(false),
-    stipendinMaara = Map(Fi -> "100 euroa", Sv -> "100 euro"),
-    lukuvuosimaksu = Map(Fi -> "200 euroa", Sv -> "200 euro")
+    stipendinMaara = Some(100.0),
   )
 
   val AmmToteutuksenMetatieto = AmmatillinenToteutusMetadata(
