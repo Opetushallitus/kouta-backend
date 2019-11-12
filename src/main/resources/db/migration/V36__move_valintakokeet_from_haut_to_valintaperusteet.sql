@@ -23,7 +23,6 @@ COMMENT ON COLUMN valintaperusteiden_valintakokeet.transaction_id IS 'Transaktio
 COMMENT ON COLUMN valintaperusteiden_valintakokeet.system_time IS 'Valintakokeen viimeisin muokkausaika. Järjestelmän generoima';
 
 create table valintaperusteiden_valintakokeet_history (like valintaperusteiden_valintakokeet);
-alter table valintaperusteiden_valintakokeet_history owner to oph;
 
 create trigger set_temporal_columns_on_valintaperusteiden_valintakokeet_on_insert
     before insert on valintaperusteiden_valintakokeet
