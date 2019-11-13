@@ -66,6 +66,11 @@ package object valintaperuste {
        |          description: Valintaperustekuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
        |          allOf:
        |            - $$ref: '#/components/schemas/Nimi'
+       |        valintakokeet:
+       |          type: array
+       |          description: Hakuun liittyvät valintakokeet
+       |          items:
+       |            $$ref: '#/components/schemas/Valintakoe'
        |        metadata:
        |          type: object
        |          oneOf:
@@ -184,6 +189,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           nimi: Kielistetty = Map(),
                           julkinen: Boolean = false,
                           sorakuvausId: Option[UUID] = None,
+                          valintakokeet: List[Valintakoe] = List(),
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
