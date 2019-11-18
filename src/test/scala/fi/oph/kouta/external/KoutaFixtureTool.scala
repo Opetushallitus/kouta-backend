@@ -23,71 +23,89 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   private var oppilaitokset:Map[String, Map[String, String]] = Map()
   private var oppilaitostenOsat:Map[String, Map[String, String]] = Map()
 
-  def addKoulutus(oid:String, jParams:java.util.Map[String, String]) = {
-    koulutukset += (oid -> jParams.asScala.toMap)
+  def addKoulutus(oid: String, jParams: java.util.Map[String, String]): Unit =
+    addKoulutus(oid, jParams.asScala.toMap)
+
+  def addKoulutus(oid: String, params: Map[String, String]): Unit = {
+    koulutukset += (oid -> params)
   }
 
-  def updateKoulutus(oid:String, jParams:java.util.Map[String, String]) = {
+  def updateKoulutus(oid: String, jParams: java.util.Map[String, String]): Unit = {
     koulutukset += (oid -> (koulutukset.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
   }
 
-  def addToteutus(oid:String, jParams:java.util.Map[String, String]) = {
-    toteutukset += (oid -> jParams.asScala.toMap)
+  def addToteutus(oid: String, jParams: java.util.Map[String, String]): Unit =
+    addToteutus(oid, jParams.asScala.toMap)
+
+  def addToteutus(oid: String, params: Map[String, String]): Unit = {
+    toteutukset += (oid -> params)
   }
 
-  def updateToteutus(oid:String, jParams:java.util.Map[String, String]) = {
+  def updateToteutus(oid: String, jParams: java.util.Map[String, String]): Unit = {
     toteutukset += (oid -> (toteutukset.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
   }
 
-  def addHaku(oid:String, jParams:java.util.Map[String, String]) = {
-    haut += (oid -> jParams.asScala.toMap)
+  def addHaku(oid: String, jParams: java.util.Map[String, String]): Unit =
+    addHaku(oid, jParams.asScala.toMap)
+
+  def addHaku(oid: String, params: Map[String, String]): Unit = {
+    haut += (oid -> params)
   }
 
-  def updateHaku(oid:String, jParams:java.util.Map[String, String]) = {
+  def updateHaku(oid: String, jParams: java.util.Map[String, String]): Unit = {
     haut += (oid -> (haut.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
   }
 
-  def addHakukohde(oid:String, jParams:java.util.Map[String, String]) = {
-    hakukohteet += (oid -> jParams.asScala.toMap)
+  def addHakukohde(oid: String, jParams: java.util.Map[String, String]): Unit =
+    addHakukohde(oid, jParams.asScala.toMap)
+
+  def addHakukohde(oid: String, params: Map[String, String]): Unit = {
+    hakukohteet += (oid -> params)
   }
 
-  def updateHakukohde(oid:String, jParams:java.util.Map[String, String]) = {
+  def updateHakukohde(oid: String, jParams: java.util.Map[String, String]): Unit = {
     hakukohteet += (oid -> (hakukohteet.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
   }
 
-  def addValintaperuste(id:String, jParams:java.util.Map[String, String]) = {
-    valintaperusteet += (id -> jParams.asScala.toMap)
+  def addValintaperuste(id: String, jParams: java.util.Map[String, String]): Unit =
+    addValintaperuste(id, jParams.asScala.toMap)
+
+  def addValintaperuste(id: String, params: Map[String, String]): Unit = {
+    valintaperusteet += (id -> params)
   }
 
-  def updateValintaperuste(id:String, jParams:java.util.Map[String, String]) = {
+  def updateValintaperuste(id: String, jParams: java.util.Map[String, String]): Unit = {
     valintaperusteet += (id -> (valintaperusteet.getOrElse(id, Map()) ++ jParams.asScala.toMap))
   }
 
-  def addSorakuvaus(id:String, jParams:java.util.Map[String, String]) = {
-    sorakuvaukset += (id -> jParams.asScala.toMap)
+  def addSorakuvaus(id: String, jParams: java.util.Map[String, String]): Unit =
+    addSorakuvaus(id, jParams.asScala.toMap)
+
+  def addSorakuvaus(id: String, params: Map[String, String]): Unit = {
+    sorakuvaukset += (id -> params)
   }
 
-  def updateSorakuvaus(id:String, jParams:java.util.Map[String, String]) = {
+  def updateSorakuvaus(id: String, jParams: java.util.Map[String, String]): Unit = {
     sorakuvaukset += (id -> (sorakuvaukset.getOrElse(id, Map()) ++ jParams.asScala.toMap))
   }
 
-  def addOppilaitos(oid: String, jParams:java.util.Map[String, String]) = {
+  def addOppilaitos(oid: String, jParams: java.util.Map[String, String]): Unit = {
     oppilaitokset += (oid -> jParams.asScala.toMap)
   }
 
-  def updateOppilaitos(oid: String, jParams:java.util.Map[String, String]) = {
+  def updateOppilaitos(oid: String, jParams: java.util.Map[String, String]): Unit = {
     oppilaitokset += (oid -> (oppilaitokset.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
   }
 
-  def addOppilaitoksenOsa(oid: String, jParams:java.util.Map[String, String]) = {
+  def addOppilaitoksenOsa(oid: String, jParams: java.util.Map[String, String]): Unit = {
     oppilaitostenOsat += (oid -> jParams.asScala.toMap)
   }
 
-  def updateOppilaitoksenOsa(oid: String, jParams:java.util.Map[String, String]) = {
+  def updateOppilaitoksenOsa(oid: String, jParams: java.util.Map[String, String]): Unit = {
     oppilaitostenOsat += (oid -> (oppilaitostenOsat.getOrElse(oid, Map()) ++ jParams.asScala.toMap))
   }
 
-  def reset() = {
+  def reset(): Unit = {
     koulutukset = Map()
     toteutukset = Map()
     haut = Map()
@@ -120,7 +138,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val KohdejoukkoKoodiUriKey = "kohdejoukkoKoodiUri"
   val KohdejoukonTarkenneKoodiUriKey = "kohdejoukonTarkenneKoodiUri"
   val HakulomaketyyppiKey = "hakulomaketyyppi"
-  val HakulomakeIdKey = "hakulomakeId"
+  val HakulomakeIdKey = "hakulomakeAtaruId"
   val HakulomakeKuvausKey = "hakulomakeKuvaus"
   val HakulomakeLinkkiKey = "hakulomakeLinkki"
   val KaytetaanHaunHakulomakettaKey = "kaytetaanHaunHakulomaketta"
@@ -156,7 +174,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   def formatModified(date:LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
   def parseModified(date:String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
 
-  val DefaultKoulutus: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+  val DefaultKoulutusScala = Map[String, String](
     JohtaaTutkintoonKey -> "true",
     KoulutustyyppiKey -> Amm.name,
     KoulutusKoodiUriKey -> "koulutus_371101#1",
@@ -170,9 +188,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TeemakuvaKey -> "https://testi.domain/koulutus-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.AmmKoulutus.metadata))
-  )
 
-  val DefaultToteutus: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+  val DefaultKoulutus: java.util.Map[String, String] = mapAsJavaMap(DefaultKoulutusScala)
+
+  val DefaultToteutusScala = Map[String, String](
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
@@ -182,9 +201,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TeemakuvaKey -> "https://testi.domain/toteutus-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.AmmToteutuksenMetatieto)
-  ))
+  )
 
-  val DefaultHaku: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+  val DefaultToteutus: java.util.Map[String, String] = mapAsJavaMap(DefaultToteutusScala)
+
+  val DefaultHakuScala = Map[String, String](
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     MuokkaajaKey -> "1.2.3",
@@ -207,9 +228,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
       tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = parseModified("2022-10-10T12:00"), paattyy = parseModified("2022-12-10T12:00")))
     )),
-  ))
+  )
 
-  val DefaultHakukohde: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+  val DefaultHaku: java.util.Map[String, String] = mapAsJavaMap(DefaultHakuScala)
+
+  val DefaultHakukohdeScala = Map[String, String](
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     MuokkaajaKey -> "1.2.3",
@@ -248,10 +271,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
       tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2019-02-05T09:49"), parseModified("2019-02-05T09:58")))))
-      )))
-  ))
+    )))
+  )
 
-  val DefaultValintaperuste: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+  val DefaultHakukohde: java.util.Map[String, String] = mapAsJavaMap(DefaultHakukohdeScala)
+
+  val DefaultValintaperusteScala = Map[String, String](
     KoulutustyyppiKey -> Amm.name,
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
@@ -269,9 +294,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
       tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2019-02-05T09:49"), parseModified("2019-02-05T09:58")))))
     )))
-  ))
+  )
 
-  val DefaultSorakuvaus: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
+  val DefaultValintaperuste: java.util.Map[String, String] = mapAsJavaMap(DefaultValintaperusteScala)
+
+  val DefaultSorakuvausScala = Map[String, String](
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     KoulutustyyppiKey -> Amm.name,
@@ -282,7 +309,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     JulkinenKey -> "false",
     MetadataKey -> write(TestData.AmmSorakuvaus.metadata.get),
     SorakuvausIdKey -> UUID.randomUUID().toString,
-  ))
+  )
+
+  val DefaultSorakuvaus: java.util.Map[String, String] = mapAsJavaMap(DefaultHakukohdeScala)
 
   val DefaultOppilaitos: java.util.Map[String, String] = mapAsJavaMap(Map[String, String](
     TilaKey -> Julkaistu.name,
