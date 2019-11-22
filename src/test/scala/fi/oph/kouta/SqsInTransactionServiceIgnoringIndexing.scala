@@ -5,10 +5,17 @@ import fi.oph.kouta.indexing.indexing.{IndexType, Priority}
 import fi.oph.kouta.repository.KoutaDatabase
 import slick.dbio.DBIO
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 object SqsInTransactionServiceIgnoringIndexing extends SqsInTransactionService {
   override def runActionAndUpdateIndex[R](priority: Priority,
                                           index: IndexType,
                                           action: () => DBIO[R],
-                                          getIndexableValue: R => String): R =
-    KoutaDatabase.runBlockingTransactionally(action()).get
+                                          getIndexableValue: R => String,
+                                          auditLog: R => DBIO[_] = (_: R) => DBIO.successful(true)): R = // TODO: Poista default kun auditlogitus on laitettu kaikkialle
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        result <- action()
+        _      <- auditLog(result)
+      } yield result).get
 }

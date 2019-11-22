@@ -1,7 +1,8 @@
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.servlet._
-import fi.oph.kouta.{SwaggerServlet}
+import fi.oph.kouta.SwaggerServlet
+import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.utils.slf4j.Logging
 import javax.servlet.ServletContext
 import org.scalatra._
@@ -13,6 +14,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
 
     KoutaConfigurationFactory.init()
     KoutaDatabase.init()
+    AuditLog.init()
 
     context.mount(new AuthServlet(), "/auth", "auth")
 

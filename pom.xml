@@ -22,6 +22,7 @@
 
         <!-- Utility properties -->
         <scala-utils.version>0.0.1-SNAPSHOT</scala-utils.version>
+        <auditlogger.version>8.3.1-SNAPSHOT</auditlogger.version>
         <json4s.version>3.6.7</json4s.version>
         <logback-access.version>1.2.3</logback-access.version>
 
@@ -112,6 +113,37 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
             <version>${logback-access.version}</version>
+        </dependency>
+
+        <!-- Audit logger -->
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>auditlogger</artifactId>
+            <version>${auditlogger.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.5</version>
+        </dependency>
+
+        <!-- Diffson for calculating audit log changes -->
+        <dependency>
+            <groupId>org.gnieh</groupId>
+            <artifactId>diffson-circe_2.12</artifactId>
+            <version>4.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Cas related dependencies -->

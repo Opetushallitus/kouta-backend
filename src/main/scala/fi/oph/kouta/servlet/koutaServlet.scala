@@ -83,6 +83,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     case e: ConcurrentModificationException =>
       Conflict("error" -> e.getMessage)
     case e: NoSuchElementException =>
+      // TODO: None.get ja muita koodivirheitä palautuu 404:nä. Oma EntityNotFoundException?
       NotFound("error" -> e.getMessage)
     case e: PayloadTooLargeException =>
       logger.warn(s"PayloadTooLargeException: ${e.getMessage}")

@@ -1,10 +1,10 @@
 package fi.oph.kouta.servlet
 
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
+import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.service.HakuService
 import org.scalatra.{NotFound, Ok}
-import fi.oph.kouta.SwaggerPaths.registerPath
 
 class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 

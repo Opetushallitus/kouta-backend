@@ -3,8 +3,9 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.IsValid
+import fi.vm.sade.auditlog.Changes
 
 package object haku {
 
@@ -198,7 +199,8 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakuajat: List[Ajanjakso] = List(),
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
-                modified: Option[LocalDateTime]) extends PerustiedotWithOid {
+                modified: Option[LocalDateTime])
+  extends PerustiedotWithOid with HasPrimaryId[HakuOid, Haku] {
 
   override def validate(): IsValid = and (
      super.validate(),
@@ -216,6 +218,10 @@ case class Haku(oid: Option[HakuOid] = None,
        validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
      ))
   )
+
+  override def primaryId: Option[HakuOid] = oid
+
+  override def withPrimaryID(oid: HakuOid): Haku = copy(oid = Some(oid))
 }
 
 case class HakuListItem(oid: HakuOid,
