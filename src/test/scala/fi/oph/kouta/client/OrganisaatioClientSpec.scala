@@ -1,32 +1,23 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.OrganisaatioServiceMock
-import fi.oph.kouta.domain.{Amm, Yo}
+import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Yo}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 class OrganisaatioClientSpec extends KoutaClientSpec with OrganisaatioServiceMock {
 
   val YoOid = OrganisaatioOid("1.2.246.562.10.46312206843")
 
-  "getAllChildOidsFlat" should "return flat list of child organisations" in {
-    mockOrganisaatioResponse(ChildOid)
-    OrganisaatioClient.getAllChildOidsFlat(ChildOid) should contain theSameElementsAs
-      List(ChildOid, GrandChildOid, EvilGrandChildOid)
-  }
-  "getAllChildOidsFlat" should "return flat list of child organisations 2" in {
-    mockOrganisaatioResponse(YoOid, responseFromResource("mpkk"))
-    OrganisaatioClient.getAllChildOidsFlat(YoOid) should contain theSameElementsAs
-      List(YoOid)
-  }
-  it should "return empty list with unknown oid when requesting children" in {
-    mockOrganisaatioResponse(OrganisaatioOid("1.2.3"), NotFoundOrganisaatioResponse)
-    OrganisaatioClient.getAllChildOidsFlat(OrganisaatioOid("1.2.3")) should contain theSameElementsAs List()
-  }
-
   "getAllChildOidsAndOppilaitostyypitFlat" should "return flat list of child organisations" in {
     mockOrganisaatioResponse(ChildOid)
     OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)._1 should contain theSameElementsAs
       List(ChildOid, GrandChildOid, EvilGrandChildOid)
+  }
+  it should "return the root organization oid when called with the root organization oid" in {
+    mockOrganisaatioResponse(OphOid, """{"numHits": 0,"organisaatiot": []}""")
+    val response = OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(OphOid)
+    response._1 should contain theSameElementsAs List(OphOid)
+    response._2 should contain theSameElementsAs Koulutustyyppi.values
   }
   it should "return empty list with unknown oid when requesting children" in {
     mockOrganisaatioResponse(OrganisaatioOid("1.2.3"), NotFoundOrganisaatioResponse)
@@ -40,5 +31,4 @@ class OrganisaatioClientSpec extends KoutaClientSpec with OrganisaatioServiceMoc
     mockOrganisaatioResponse(YoOid, responseFromResource("mpkk"))
     OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo)
   }
-
 }
