@@ -139,6 +139,7 @@ object TestData {
     minEnsikertalaisenAloituspaikat = Some(1),
     maxEnsikertalaisenAloituspaikat = Some(2),
     pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_pk#1", "pohjakoulutusvaatimustoinenaste_yo#1"),
+    pohjakoulutusvaatimusTarkenne = kieliMap("Pohjakoulutusvaatimuksen tarkenne"),
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
     kaytetaanHaunAikataulua = Some(false),
@@ -185,25 +186,7 @@ object TestData {
         Column(index = 0, text = Map(Fi -> "Tekstiä", Sv -> "Tekstiä sv")),
         Column(index = 1, text = Map(Fi -> "Tekstiä 2", Sv -> "Tekstiä 2 sv"))))))
 
-  val AmmValintatapa1 = AmmatillinenValintatapa(
-    valintatapaKoodiUri = Some("valintatapajono_av#1"),
-    kuvaus = kieliMap("kuvaus"),
-    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
-    kaytaMuuntotaulukkoa = false,
-    kynnysehto = kieliMap("kynnysehto"),
-    enimmaispisteet = Some(201.15),
-    vahimmaispisteet = Some(182.1))
-
-  val AmmValintatapa2 = AmmatillinenValintatapa(
-    valintatapaKoodiUri = Some("valintatapajono_tv#1"),
-    kuvaus = kieliMap("kuvaus 2"),
-    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
-    kaytaMuuntotaulukkoa = true,
-    kynnysehto = kieliMap("kynnysehto"),
-    enimmaispisteet = Some(18.1),
-    vahimmaispisteet = Some(10.1))
-
-  val YoValintatapa1 = YliopistoValintatapa(
+  val Valintatapa1 = Valintatapa(
     nimi = kieliMap("Valintatapa1"),
     valintatapaKoodiUri = Some("valintatapajono_av#1"),
     kuvaus = kieliMap("kuvaus"),
@@ -213,7 +196,8 @@ object TestData {
     enimmaispisteet = Some(201.15),
     vahimmaispisteet = Some(182.1))
 
-  val YoValintatapa2 = YliopistoValintatapa(
+  val Valintatapa2 = Valintatapa(
+    nimi = kieliMap("Valintatapa2"),
     valintatapaKoodiUri = Some("valintatapajono_tv#1"),
     kuvaus = kieliMap("kuvaus 2"),
     sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
@@ -244,13 +228,13 @@ object TestData {
             kielitaitovaatimusTaso = Some("A"))))))
 
   val yoValintaperusteMetadata = YliopistoValintaperusteMetadata(
-    valintatavat = Seq(YoValintatapa1, YoValintatapa2),
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     osaamistaustaKoodiUrit = Seq("osaamistausta_001#1"),
     kuvaus = kieliMap("kuvaus"))
 
   val ammValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
-    valintatavat = Seq(AmmValintatapa1, AmmValintatapa2),
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1))
 
   val AmmValintaperuste = Valintaperuste(
