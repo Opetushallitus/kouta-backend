@@ -1,6 +1,7 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.{ServiceMocks, TestSetups}
+import fi.oph.kouta.TestSetups
+import fi.oph.kouta.mocks.ServiceMocks
 import org.scalatest.BeforeAndAfterEach
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 

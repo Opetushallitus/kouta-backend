@@ -7,6 +7,7 @@ import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockS3Service
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.ToteutusServlet
 import org.scalactic.Equality

@@ -1,10 +1,8 @@
 package fi.oph.kouta.util
 
 import java.net.InetAddress
-import java.util.UUID
 
-import fi.oph.kouta.domain
-import fi.oph.kouta.domain.{HasPrimaryId, oid}
+import fi.oph.kouta.domain.HasPrimaryId
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog._
 import javax.servlet.http.HttpServletRequest
@@ -32,12 +30,22 @@ class AuditLog(val logger: Logger) extends GsonSupport {
       auditSession: AuditSession[ID],
       operation: Operation,
       resource: Resource,
-      targetOid: Option[String],
+      targetId: Option[String],
       additionalTargets: Iterable[(String, String)] = Map.empty[String, String]
   ): DBIO[_] = {
-    val target = getTarget(resource, targetOid)
+    val target = getTarget(resource, targetId)
     additionalTargets.foreach { case (f, v) => target.setField(f, v) }
     audit.log(auditSession.user, operation, target.build(), auditSession.changes)
+    DBIO.successful(true)
+  }
+
+  def logCreate[ID](
+      auditSession: AuditSession[ID],
+      resource: Resource,
+      targetId: String
+  ): DBIO[_] = {
+    val target = getTarget(resource, Some(targetId))
+    audit.log(auditSession.user, resource.Create, target.build(), auditSession.changes)
     DBIO.successful(true)
   }
 
@@ -76,15 +84,10 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     AuditSession(before.primaryId, getUser, changes)
   }
 
-  private def getTarget[ID](resource: Resource, targetId: Option[ID]): Target.Builder = {
-    val fieldName = targetId match {
-      case Some(_: oid.Oid) => "oid"
-      case _                => "id"
-    }
+  private def getTarget[ID](resource: Resource, targetId: Option[ID]): Target.Builder =
     new Target.Builder()
       .setField("type", resource.name)
-      .setField(fieldName, targetId.map(_.toString).getOrElse(TargetEpaselva))
-  }
+      .setField(resource.idField, targetId.map(_.toString).getOrElse(TargetEpaselva))
 }
 
 case class AuditSession[ID](id: Option[ID], user: User, changes: Changes)

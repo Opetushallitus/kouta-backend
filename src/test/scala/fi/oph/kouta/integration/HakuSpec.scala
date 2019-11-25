@@ -4,6 +4,7 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -72,8 +73,10 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   "Create haku" should "store haku" in {
+    MockAuditLogger.clean()
     val oid = put(haku)
     get(oid, haku(oid))
+    MockAuditLogger.find(oid, "haku_create") shouldBe defined
   }
 
   it should "return 401 without a valid session" in {
@@ -120,7 +123,9 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val oid = put(haku)
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
+    MockAuditLogger.clean()
     update(thisHaku.copy(tila = Arkistoitu), lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "haku_update") shouldBe defined
     get(oid, thisHaku.copy(tila = Arkistoitu))
   }
 
@@ -251,6 +256,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     update(updatedPvmHaku, lastModified)
     get(oid, updatedPvmHaku)
   }
+
   it should "delete all hakuajat if none is given" in {
     val oid = put(haku)
     val thisHaku = haku(oid)

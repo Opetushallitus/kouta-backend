@@ -2,7 +2,9 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
 import fi.oph.kouta.service._
+import fi.oph.kouta.util.AuditLog
 
 trait IndexingFixture extends KoulutusFixtureWithIndexing with HakuFixtureWithIndexing with ToteutusFixtureWithIndexing
   with ValintaperusteFixtureWithIndexing with HakukohdeFixtureWithIndexing {
@@ -11,7 +13,7 @@ trait IndexingFixture extends KoulutusFixtureWithIndexing with HakuFixtureWithIn
 
 trait HakuFixtureWithIndexing extends HakuFixture {
   this: KoutaIntegrationSpec =>
-  override protected lazy val hakuService = HakuService
+  override protected lazy val hakuService = new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger))
 }
 
 trait KoulutusFixtureWithIndexing extends KoulutusFixture {

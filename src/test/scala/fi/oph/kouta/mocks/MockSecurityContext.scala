@@ -1,4 +1,4 @@
-package fi.oph.kouta
+package fi.oph.kouta.mocks
 
 import fi.oph.kouta.security.{Authority, KayttooikeusUserDetails, SecurityContext}
 import fi.vm.sade.utils.cas.CasClient.{SessionCookie, Username}

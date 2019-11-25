@@ -6,11 +6,11 @@ import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, s
 import fi.oph.kouta.domain.{Koulutus, Toteutus, Valintaperuste}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
+import fi.oph.kouta.mocks.{MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.{KoutaJsonFormats, TimeUtils}
-import fi.oph.kouta.{MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec

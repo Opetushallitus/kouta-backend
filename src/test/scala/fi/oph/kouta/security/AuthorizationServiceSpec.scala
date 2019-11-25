@@ -2,9 +2,9 @@ package fi.oph.kouta.security
 
 import java.util.UUID
 
-import fi.oph.kouta.OrganisaatioServiceMock
 import fi.oph.kouta.client.KoutaClientSpec
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.mocks.OrganisaatioServiceMock
 import fi.oph.kouta.service.{AuthorizationService, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.servlet.Authenticated
 import org.scalatra.test.scalatest.ScalatraFlatSpec

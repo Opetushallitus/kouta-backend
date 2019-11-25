@@ -5,7 +5,9 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 import fi.oph.kouta.EmbeddedJettyLauncher.{DefaultPort, TestDataGeneratorSessionId}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{Id, Oid}
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -14,8 +16,6 @@ import org.json4s.jackson.Serialization.{read, write}
 import scalaj.http.Http
 
 import scala.util.Random.shuffle
-import fi.oph.kouta.TestData._
-import fi.oph.kouta.domain.keyword.Keyword
 
 /* Generate random test data to local kouta-backend */
 object TestDataGenerator extends KoutaJsonFormats {
@@ -64,15 +64,15 @@ object TestDataGenerator extends KoutaJsonFormats {
 
     println(s"Koulutukset, toteutukset ja hakukohteet ready...")
 
-    println(s"Generating oppilaitoikset...")
+    println(s"Generating oppilaitokset...")
     val oppilaitosOid0 = "1.2.246.562.10.81934895871"
     val oppilaitosOid1 = "1.2.246.562.10.67476956288"
 
-    put("/oppilaitos", oppilaitos(oppilaitosOid0))
-    put("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.76662434703", oppilaitosOid0))
-    put("/oppilaitos", oppilaitos(oppilaitosOid1))
-    put("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.31388359585", oppilaitosOid1))
-    put("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.875704637010", oppilaitosOid1))
+    putUnlessExists("/oppilaitos", oppilaitos(oppilaitosOid0), oppilaitosOid0)
+    putUnlessExists("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.76662434703", oppilaitosOid0), "1.2.246.562.10.76662434703")
+    putUnlessExists("/oppilaitos", oppilaitos(oppilaitosOid1), oppilaitosOid1)
+    putUnlessExists("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.31388359585", oppilaitosOid1), "1.2.246.562.10.31388359585")
+    putUnlessExists("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.875704637010", oppilaitosOid1), "1.2.246.562.10.875704637010")
 
     println(s"DONE.")
     println(s"Test session id=$TestDataGeneratorSessionId")
@@ -203,6 +203,20 @@ object TestDataGenerator extends KoutaJsonFormats {
       case (200, _, result) => debug(oid(result), path)
       case (xxx, _, result) => throw new RuntimeException(
         s"Got status code $xxx from kouta-backend with response body [$result]! Cannot continue generating test data...")
+    }
+
+  def exists(path: String) = new DefaultHttpRequest(
+    Http(s"$KoutaBackendPath$path").header("Cookie", s"session=$TestDataGeneratorSessionId")
+  ).responseWithHeaders match {
+    case (200, _, _) => true
+    case (404, _, _) => false
+    case (xxx, _, result) => throw new RuntimeException(
+      s"Got status code $xxx from kouta-backend with response body [$result]! Cannot continue generating test data...")
+  }
+
+  def putUnlessExists[T <: AnyRef](path: String, data: T, id: String): Unit =
+    if (!exists(s"$path/$id")) {
+      put(path: String, data: T)
     }
 
   def oid(body: String) = (read[Oid](body)).oid

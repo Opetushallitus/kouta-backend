@@ -10,14 +10,12 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, AuditSession, GsonSupport, Resource}
+import fi.oph.kouta.util.{AuditLog, AuditSession, Resource}
 import javax.servlet.http.HttpServletRequest
 
-import scala.concurrent.ExecutionContext.Implicits.global
+object HakuService extends HakuService(SqsInTransactionService, AuditLog)
 
-object HakuService extends HakuService(SqsInTransactionService)
-
-abstract class HakuService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Haku] with RoleEntityAuthorizationService with GsonSupport {
+class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Haku] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Haku
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -27,14 +25,14 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
 
   def put(haku: Haku)(implicit authenticated: Authenticated, request: HttpServletRequest): HakuOid = {
     authorizePut(haku) {
-      withValidation(haku, putWithIndexing(_, AuditLog.getPutSession[HakuOid, Haku](haku)))
+      withValidation(haku, putWithIndexing(_, auditLog.getPutSession[HakuOid, Haku](haku)))
     }
   }
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
     val oldHaku = HakuDAO.get(haku.oid.get)
     authorizeUpdate(oldHaku) {
-      val auditSession = AuditLog.getUpdateSession[HakuOid, Haku](oldHaku.get._1, haku)
+      val auditSession = auditLog.getUpdateSession[HakuOid, Haku](oldHaku.get._1, haku)
       withValidation(haku, updateWithIndexing(_, notModifiedSince, auditSession))
     }
   }
@@ -74,7 +72,7 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
       HighPriority,
       IndexTypeHaku,
       () => HakuDAO.getPutActions(haku),
-      auditLog = (result: HakuOid) => AuditLog.log(auditSession, Resource.Haku.Create, Resource.Haku, Some(result.s)))
+      auditLog = (result: HakuOid) => auditLog.logCreate(auditSession, Resource.Haku, result.s))
 
   private def updateWithIndexing(haku: Haku, notModifiedSince: Instant, auditSession: AuditSession[HakuOid]) =
     sqsInTransactionService.runActionAndUpdateIndex(
@@ -82,5 +80,5 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
       IndexTypeHaku,
       () => HakuDAO.getUpdateActions(haku, notModifiedSince),
       haku.oid.get.toString,
-      (result: Boolean) => AuditLog.logUpdate(auditSession, Resource.Haku, result))
+      (result: Boolean) => auditLog.logUpdate(auditSession, Resource.Haku, result))
 }

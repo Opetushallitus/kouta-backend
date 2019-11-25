@@ -5,6 +5,7 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockS3Service
 import fi.oph.kouta.repository.{KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.KoulutusService
 import fi.oph.kouta.servlet.{IndexerServlet, KoulutusServlet}

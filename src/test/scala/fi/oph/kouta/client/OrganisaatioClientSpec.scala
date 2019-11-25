@@ -1,8 +1,8 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.OrganisaatioServiceMock
-import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Lk, Yo}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Lk, Yo}
+import fi.oph.kouta.mocks.OrganisaatioServiceMock
 
 class OrganisaatioClientSpec extends KoutaClientSpec with OrganisaatioServiceMock {
 

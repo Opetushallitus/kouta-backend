@@ -6,6 +6,7 @@ import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockS3Service
 import fi.oph.kouta.service.OppilaitosService
 import fi.oph.kouta.servlet.OppilaitosServlet
 

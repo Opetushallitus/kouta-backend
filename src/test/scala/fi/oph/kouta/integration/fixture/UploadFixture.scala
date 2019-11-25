@@ -3,15 +3,11 @@ package fi.oph.kouta.integration.fixture
 import java.nio.file.{Files, Paths}
 
 import com.amazonaws.services.s3.model.ObjectMetadata
-import fi.oph.kouta.config.S3Configuration
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.integration.fixture.MockS3Client.Content
+import fi.oph.kouta.mocks.MockS3Service
 import fi.oph.kouta.servlet.UploadServlet
-
-object MockS3Service extends S3Service(MockS3Client) {
-  override lazy val config = S3Configuration("konfo-files", "https://testibucket.fi", None)
-}
 
 trait UploadFixture {
   this: KoutaIntegrationSpec =>

@@ -5,6 +5,7 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockS3Service
 import fi.oph.kouta.service.OppilaitoksenOsaService
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}

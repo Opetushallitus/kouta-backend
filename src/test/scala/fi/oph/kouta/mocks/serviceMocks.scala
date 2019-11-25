@@ -1,18 +1,18 @@
-package fi.oph.kouta
+package fi.oph.kouta.mocks
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.vm.sade.properties.OphProperties
+import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortChecker
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
+import org.mockserver.model
 import org.mockserver.model.HttpRequest.request
-import org.mockserver.model.Parameter.param
 import org.mockserver.model.HttpResponse.response
+import org.mockserver.model.Parameter.param
 
 import scala.io.Source
-import fi.vm.sade.utils.slf4j.Logging
-import org.mockserver.model
 
 /* If you need to debug mocks,
    change log4j.logger.org.mockserver=INFO
