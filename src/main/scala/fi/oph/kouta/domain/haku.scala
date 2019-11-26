@@ -200,7 +200,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
                 modified: Option[LocalDateTime])
-  extends PerustiedotWithOid with HasPrimaryId[HakuOid, Haku] {
+  extends PerustiedotWithOid with HasPrimaryId[HakuOid, Haku] with HasModified[Haku] {
 
   override def validate(): IsValid = and (
      super.validate(),
@@ -222,6 +222,8 @@ case class Haku(oid: Option[HakuOid] = None,
   override def primaryId: Option[HakuOid] = oid
 
   override def withPrimaryID(oid: HakuOid): Haku = copy(oid = Some(oid))
+
+  override def withModified(modified: LocalDateTime): Haku = copy(modified = Some(modified))
 }
 
 case class HakuListItem(oid: HakuOid,

@@ -19,7 +19,7 @@ object MockAuditLogger extends Logger {
 
   def find(first: String, searchStrings: String*): Option[String] = {
     debugPrint = false
-    logs.find(log => searchStrings.forall(log.contains))
+    logs.find(log => (first +: searchStrings).forall(log.contains))
   }
 
   def findFieldChange(fieldName: String, oldValue: String, newValue: String, others: String*): Option[String] = {

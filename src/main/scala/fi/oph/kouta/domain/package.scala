@@ -438,4 +438,9 @@ package object domain {
 
     def withPrimaryID(id: ID): T
   }
+
+  trait HasModified[T] {
+    def modified: Option[LocalDateTime]
+    def withModified(modified: LocalDateTime): T
+  }
 }

@@ -21,6 +21,7 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getOrganisaatioOidResult: GetResult[OrganisaatioOid] = GetResult(r => OrganisaatioOid(r.nextString()))
 
   implicit val getInstantOptionResult: GetResult[Option[Instant]] = GetResult(r => r.nextTimestampOption().map(_.toInstant))
+  implicit val getInstantResult: GetResult[Instant] = GetResult(r => r.nextTimestamp().toInstant)
 
   implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => new Tarjoaja(GenericOid(r.nextString()), OrganisaatioOid(r.nextString())))
 

@@ -1,8 +1,9 @@
 package fi.oph.kouta.util
 
 import java.net.InetAddress
+import java.time.{LocalDate, LocalDateTime}
 
-import fi.oph.kouta.domain.HasPrimaryId
+import fi.oph.kouta.domain.{HasModified, HasPrimaryId}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog._
 import javax.servlet.http.HttpServletRequest
@@ -18,14 +19,14 @@ object AuditLogger extends Logger {
 
 object AuditLog extends AuditLog(AuditLogger)
 
-class AuditLog(val logger: Logger) extends GsonSupport {
+class AuditLog(val logger: Logger) {
 
   val audit = new Audit(logger, "kouta-backend", ApplicationType.BACKEND) // TODO: Vai ApplicationType.VIRKAILIJA?
 
   private val TargetEpaselva = "Tuntematon tai muutosten implikoima kohde"
 
   def init(): Unit = {}
-
+/*
   def log[ID](
       auditSession: AuditSession[ID],
       operation: Operation,
@@ -38,50 +39,29 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     audit.log(auditSession.user, operation, target.build(), auditSession.changes)
     DBIO.successful(true)
   }
-
-  def logCreate[ID](
-      auditSession: AuditSession[ID],
+*/
+  def logCreate[ID, T <: HasPrimaryId[ID, T] with HasModified[T]](
+      createAudit: CreateAudit[ID, T],
       resource: Resource,
-      targetId: String
+      targetId: ID,
+      modified: LocalDateTime
   ): DBIO[_] = {
     val target = getTarget(resource, Some(targetId))
-    audit.log(auditSession.user, resource.Create, target.build(), auditSession.changes)
+    audit.log(createAudit.user, resource.Create, target.build(), createAudit.withPrimaryId(targetId).withModified(modified).changes)
     DBIO.successful(true)
   }
 
-  def logUpdate[ID](
-      auditSession: AuditSession[ID],
+  def logUpdate[ID, T <: HasPrimaryId[ID, T] with HasModified[T]](
+      updateAudit: UpdateAudit[ID, T],
       resource: Resource,
-      success: Boolean
+      success: Boolean,
+      modifiedAfter: LocalDateTime
   ): DBIO[_] = {
-    val target = getTarget(resource, auditSession.id)
+    val target = getTarget(resource, updateAudit.after.primaryId)
     if (success) {
-      audit.log(auditSession.user, resource.Update, target.build(), auditSession.changes)
+      audit.log(updateAudit.user, resource.Update, target.build(), updateAudit.withModified(modifiedAfter).changes)
     }
     DBIO.successful(true)
-  }
-
-  def getUser(implicit request: HttpServletRequest, authenticated: Authenticated): User = {
-    val userOid   = authenticated.session.personOid
-    val userAgent = request.getHeader("User-Agent")
-    val session   = authenticated.id.toString
-    val ip        = InetAddress.getByName(request.getRemoteAddr) // TODO: Pitääkö ottaa huomioon proxyt yms?
-    new User(new Oid(userOid), ip, session, userAgent)
-  }
-
-  def getPutSession[ID, T <: HasPrimaryId[ID, T]](
-      added: T
-  )(implicit request: HttpServletRequest, authenticated: Authenticated): AuditSession[ID] = {
-    val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
-    AuditSession(None, getUser, changes)
-  }
-
-  def getUpdateSession[ID, T <: HasPrimaryId[ID, T]](
-      before: T,
-      after: T
-  )(implicit request: HttpServletRequest, authenticated: Authenticated): AuditSession[ID] = {
-    val changes = ChangeFactory.getChanges(before, after)
-    AuditSession(before.primaryId, getUser, changes)
   }
 
   private def getTarget[ID](resource: Resource, targetId: Option[ID]): Target.Builder =
@@ -90,4 +70,42 @@ class AuditLog(val logger: Logger) extends GsonSupport {
       .setField(resource.idField, targetId.map(_.toString).getOrElse(TargetEpaselva))
 }
 
-case class AuditSession[ID](id: Option[ID], user: User, changes: Changes)
+case class UpdateAudit[ID, T <: HasPrimaryId[ID, T] with HasModified[T]](user: User, before: T, after: T) {
+  def withModified(modified: LocalDateTime): UpdateAudit[ID, T] = this.copy(user, before, after.withModified(modified))
+
+  def changes: Changes = ChangeFactory.getChanges(before, after)
+}
+
+object UpdateAudit extends AuditSession {
+  def apply[ID, T <: HasPrimaryId[ID, T] with HasModified[T]](
+      before: T,
+      after: T
+  )(implicit request: HttpServletRequest, authenticated: Authenticated): UpdateAudit[ID, T] = {
+    UpdateAudit(getUser, before, after)
+  }
+}
+
+case class CreateAudit[ID, T <: HasPrimaryId[ID, T] with HasModified[T]](user: User, added: T) extends GsonSupport {
+  def withModified(modified: LocalDateTime): CreateAudit[ID, T] = this.copy(user, added.withModified(modified))
+  def withPrimaryId(id: ID): CreateAudit[ID, T] = this.copy(user, added.withPrimaryID(id))
+
+  def changes: Changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
+}
+
+object CreateAudit extends AuditSession {
+  def apply[ID, T <: HasPrimaryId[ID, T] with HasModified[T]](
+      added: T
+  )(implicit request: HttpServletRequest, authenticated: Authenticated): CreateAudit[ID, T] = {
+    CreateAudit(getUser, added)
+  }
+}
+
+trait AuditSession {
+  def getUser(implicit request: HttpServletRequest, authenticated: Authenticated): User = {
+    val userOid   = authenticated.session.personOid
+    val userAgent = request.getHeader("User-Agent")
+    val session   = authenticated.id.toString
+    val ip        = InetAddress.getByName(request.getRemoteAddr) // TODO: Pitääkö ottaa huomioon proxyt yms?
+    new User(new Oid(userOid), ip, session, userAgent)
+  }
+}

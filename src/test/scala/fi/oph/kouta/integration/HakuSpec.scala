@@ -1,5 +1,7 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
+
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -123,9 +125,18 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val oid = put(haku)
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
-    MockAuditLogger.clean()
     update(thisHaku.copy(tila = Arkistoitu), lastModified)
+    get(oid, thisHaku.copy(tila = Arkistoitu))
+  }
+
+  it should "write haku update to audit log" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    MockAuditLogger.clean(true)
+    update(thisHaku.copy(tila = Arkistoitu, modified = Some(LocalDateTime.parse("1000-01-01T00:00:00"))), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "haku_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
     get(oid, thisHaku.copy(tila = Arkistoitu))
   }
 

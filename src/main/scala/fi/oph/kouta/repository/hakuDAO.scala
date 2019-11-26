@@ -1,10 +1,11 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
+import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -12,11 +13,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def getPutActions(haku: Haku): DBIO[HakuOid]
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Boolean]
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, LocalDateTime)]
 
   def put(haku: Haku): HakuOid
   def get(oid: HakuOid): Option[(Haku, Instant)]
-  def update(haku: Haku, notModifiedSince: Instant): Boolean
+  def update(haku: Haku, notModifiedSince: Instant): (Boolean, LocalDateTime)
 
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
@@ -39,21 +40,22 @@ object HakuDAO extends HakuDAO with HakuSQL {
       a <- selectHaunHakuajat(oid).as[Hakuaika]
       l <- selectLastModified(oid)
     } yield (h, a, l) ).map {
-      case (Some(h), a, Some(l)) =>
-        Some((h.copy(hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList), l))
+      case (Some(h), a, Some(l)) => Some((
+        h.copy(modified = Some(instantToLocalDateTime(l)), hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList),
+        l))
       case _ => None
     }.get
   }
 
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Boolean] =
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, LocalDateTime)] =
     checkNotModified(haku.oid.get, notModifiedSince).andThen(
       for {
         x <- updateHaku(haku)
         y <- updateHaunHakuajat(haku)
-      } yield 0 < (x + y.sum)
+      } yield (0 < (x.size + y.size), instantToLocalDateTime((x ++ y :+ Instant.EPOCH).max))
     )
 
-  override def update(haku: Haku, notModifiedSince: Instant): Boolean =
+  override def update(haku: Haku, notModifiedSince: Instant): (Boolean, LocalDateTime) =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(haku, notModifiedSince)).get
 
   override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] = organisaatioOids match {
@@ -82,8 +84,8 @@ trait HakuModificationSQL extends SQLHelpers {
   def selectLastModified(oid: HakuOid): DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(ha.system_time)),
-            max(lower(hah.system_time)),
-            max(upper(hh.system_time)),
+            max(lower(hh.system_time)),
+            max(upper(hah.system_time)),
             max(upper(hhh.system_time)))
           from haut ha
           left join haut_history hah on ha.oid = hah.oid
@@ -158,7 +160,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def updateHaku(haku: Haku) = {
-    sqlu"""update haut set
+    sql"""update haut set
               hakutapa_koodi_uri = ${haku.hakutapaKoodiUri},
               hakukohteen_liittamisen_takaraja = ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
               hakukohteen_muokkaamisen_takaraja = ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp,
@@ -194,17 +196,20 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or tila is distinct from ${haku.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(haku.nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(haku.metadata)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(haku.kielivalinta)}::jsonb)"""
+            or kielivalinta is distinct from ${toJsonParam(haku.kielivalinta)}::jsonb)
+            returning lower(system_time)""".as[Instant]
   }
 
   def insertHakuaika(oid: Option[HakuOid], hakuaika: Ajanjakso, muokkaaja: UserOid) = {
-    sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
+    sql"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
                values ($oid, tsrange(${formatTimestampParam(Some(hakuaika.alkaa))}::timestamp,
                                      ${formatTimestampParam(Some(hakuaika.paattyy))}::timestamp, '[)'), $muokkaaja)
-               on conflict on constraint hakujen_hakuajat_pkey do nothing"""}
+               on conflict on constraint hakujen_hakuajat_pkey do nothing
+               returning lower(system_time)""".as[Instant]
+  }
 
   def deleteHakuajat(oid: Option[HakuOid], exclude: List[Ajanjakso]) = {
-    sqlu"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)})"""
+    sql"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)}) returning now()""".as[Instant]
   }
 
   def updateHaunHakuajat(haku: Haku) = {
@@ -213,9 +218,9 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
       val deleteSQL = deleteHakuajat(oid, hakuajat)
 
-      DBIO.sequence( insertSQL :+ deleteSQL)
+      DBIO.fold(insertSQL :+ deleteSQL, Vector()) { case (first, second) => first ++ second }
     } else {
-      DBIO.sequence(List(sqlu"""delete from hakujen_hakuajat where haku_oid = $oid"""))
+      sql"""delete from hakujen_hakuajat where haku_oid = $oid returning now()""".as[Instant]
     }
   }
 
@@ -225,8 +230,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
          inner join (
            select ha.oid oid, greatest(
              max(lower(ha.system_time)),
-             max(lower(hah.system_time)),
-             max(upper(hh.system_time)),
+             max(lower(hh.system_time)),
+             max(upper(hah.system_time)),
              max(upper(hhh.system_time))) modified
            from haut ha
            left join haut_history hah on ha.oid = hah.oid
