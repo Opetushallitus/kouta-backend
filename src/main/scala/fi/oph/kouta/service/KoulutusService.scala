@@ -62,7 +62,7 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
 
   def getTarjoajanKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] = {
     withRootAccess(indexerRoles) {
-      KoulutusDAO.getJulkaistutByTarjoajaOids(OrganisaatioClient.getAllChildOidsFlat(organisaatioOid))
+      KoulutusDAO.getJulkaistutByTarjoajaOids(OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(organisaatioOid)._1)
     }
   }
 
