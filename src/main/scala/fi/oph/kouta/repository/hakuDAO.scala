@@ -1,6 +1,7 @@
 package fi.oph.kouta.repository
 
 import java.time.{Instant, LocalDateTime}
+import java.util.UUID
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
@@ -12,10 +13,10 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
-  def getPutActions(haku: Haku): DBIO[HakuOid]
+  def getPutActions(haku: Haku): DBIO[(HakuOid, LocalDateTime)]
   def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, LocalDateTime)]
 
-  def put(haku: Haku): HakuOid
+  def put(haku: Haku): (HakuOid, LocalDateTime)
   def get(oid: HakuOid): Option[(Haku, Instant)]
   def update(haku: Haku, notModifiedSince: Instant): (Boolean, LocalDateTime)
 
@@ -25,13 +26,13 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
 
 object HakuDAO extends HakuDAO with HakuSQL {
 
-  override def getPutActions(haku: Haku): DBIO[HakuOid] =
+  override def getPutActions(haku: Haku): DBIO[(HakuOid, LocalDateTime)] =
     for {
-      oid <- insertHaku(haku)
-      _   <- insertHakuajat(haku.copy(oid = Some(oid)))
-    } yield oid
+      (oid, a) <- insertHaku(haku)
+      b <- insertHakuajat(haku.copy(oid = Some(oid)))
+    } yield (oid, instantToLocalDateTime((b :+ a).max))
 
-  override def put(haku: Haku): HakuOid =
+  override def put(haku: Haku): (HakuOid, LocalDateTime) =
     KoutaDatabase.runBlockingTransactionally(getPutActions(haku)).get
 
   override def get(oid: HakuOid): Option[(Haku, Instant)] = {
@@ -134,18 +135,19 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                      ${haku.organisaatioOid},
                      ${haku.muokkaaja},
                      ${toJsonParam(haku.kielivalinta)}::jsonb
-          ) returning oid""".as[HakuOid].head
+          ) returning oid, lower(system_time)""".as[(HakuOid, Instant)].head
   }
 
   def insertHakuajat(haku: Haku) = {
     DBIO.sequence(
       haku.hakuajat.map(t =>
-        sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
-               values (
+        sql"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
+              values (
                 ${haku.oid},
                 tsrange(${formatTimestampParam(Some(t.alkaa))}::timestamp,
                         ${formatTimestampParam(Some(t.paattyy))}::timestamp, '[)'),
-                ${haku.muokkaaja})"""))
+                ${haku.muokkaaja}
+              ) returning lower(system_time)""".as[Instant].head))
   }
 
   def selectHaku(oid: HakuOid) = {

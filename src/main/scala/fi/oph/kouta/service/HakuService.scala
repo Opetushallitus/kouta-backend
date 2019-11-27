@@ -10,7 +10,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, AuditSession, CreateAudit, Resource, UpdateAudit}
+import fi.oph.kouta.util.{AuditLog, CreateAudit, Resource, UpdateAudit}
 import javax.servlet.http.HttpServletRequest
 
 object HakuService extends HakuService(SqsInTransactionService, AuditLog)
@@ -25,7 +25,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
 
   def put(haku: Haku)(implicit authenticated: Authenticated, request: HttpServletRequest): HakuOid = {
     authorizePut(haku) {
-      withValidation(haku, putWithIndexing(_, CreateAudit[HakuOid, Haku](haku)))
+      withValidation(haku, putWithIndexing(_, CreateAudit[HakuOid, Haku](haku))._1)
     }
   }
 
@@ -71,7 +71,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
       HighPriority,
       IndexTypeHaku,
       () => HakuDAO.getPutActions(haku),
-      auditLog = (result: HakuOid) => auditLog.logCreate(createAudit, Resource.Haku, result, LocalDateTime.MIN))
+      (result: (HakuOid, LocalDateTime)) => result._1.toString,
+      auditLog = (result: (HakuOid, LocalDateTime)) => auditLog.logCreate(createAudit, Resource.Haku, result._1, result._2))
 
   private def updateWithIndexing(haku: Haku, notModifiedSince: Instant, updateAudit: UpdateAudit[HakuOid, Haku]) =
     sqsInTransactionService.runActionAndUpdateIndex(

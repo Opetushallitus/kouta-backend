@@ -1,7 +1,7 @@
 package fi.oph.kouta.util
 
 import java.net.InetAddress
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.{HasModified, HasPrimaryId}
 import fi.oph.kouta.servlet.Authenticated

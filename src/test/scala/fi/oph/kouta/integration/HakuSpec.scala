@@ -79,7 +79,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     get(oid, haku(oid))
   }
 
-  it should "write haku create to audit log" in {
+  it should "write create haku to audit log" in {
     MockAuditLogger.clean()
     val oid = put(haku.withModified(LocalDateTime.parse("1000-01-01T00:00:00")))
     MockAuditLogger.find(oid, "haku_create") shouldBe defined
