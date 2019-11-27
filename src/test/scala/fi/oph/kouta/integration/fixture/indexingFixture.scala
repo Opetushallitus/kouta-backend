@@ -28,7 +28,7 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
 
 trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
   this: KoutaIntegrationSpec =>
-  override protected lazy val valintaperusteService = ValintaperusteService
+  override protected lazy val valintaperusteService = new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger))
 }
 
 trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {

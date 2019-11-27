@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
@@ -7,6 +8,7 @@ import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -76,6 +78,14 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, valintaperuste(id))
   }
 
+  it should "write create valintaperuste in log" in {
+    MockAuditLogger.clean()
+    val id = put(valintaperuste.withModified(LocalDateTime.parse("1000-01-01T00:00:00")))
+    MockAuditLogger.find(id.toString, "valintaperuste_create")
+    MockAuditLogger.find("1000-01-01") should not be defined
+    get(id, valintaperuste(id))
+  }
+
   it should "store korkeakoulutus valintaperuste" in {
     val id = put(TestData.YoValintaperuste)
     get(id, TestData.YoValintaperuste.copy(id = Some(id)))
@@ -124,6 +134,15 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
     update(valintaperuste(id, Arkistoitu), lastModified)
+    get(id, valintaperuste(id, Arkistoitu))
+  }
+
+  it should "write valintaperuste update to audit log" in {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    MockAuditLogger.clean()
+    update(valintaperuste(id, Arkistoitu), lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "valintaperuste_update")
     get(id, valintaperuste(id, Arkistoitu))
   }
 

@@ -5,18 +5,18 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.service.ValintaperusteService
 import fi.oph.kouta.servlet.ValintaperusteServlet
+import fi.oph.kouta.util.AuditLog
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
-
-object ValintaperusteServiceIgnoringIndexing extends ValintaperusteService(SqsInTransactionServiceIgnoringIndexing)
 
 trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
   val ValintaperustePath = "/valintaperuste"
 
-  protected lazy val valintaperusteService: ValintaperusteService = ValintaperusteServiceIgnoringIndexing
+  protected lazy val valintaperusteService: ValintaperusteService = new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger))
 
   addServlet(new ValintaperusteServlet(valintaperusteService), ValintaperustePath)
 
