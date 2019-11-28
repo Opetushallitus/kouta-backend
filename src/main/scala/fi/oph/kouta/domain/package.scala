@@ -418,5 +418,6 @@ package object domain {
                             toteutukset: Seq[ToteutusOid] = Seq(),
                             haut: Seq[HakuOid] = Seq(),
                             hakukohteet: Seq[HakukohdeOid] = Seq(),
-                            valintaperusteet: Seq[UUID] = Seq())
+                            valintaperusteet: Seq[UUID] = Seq(),
+                            oppilaitokset: Seq[OrganisaatioOid] = Seq())
 }

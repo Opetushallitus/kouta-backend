@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -56,6 +57,12 @@ abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService)
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
     withAuthorizedChildOrganizationOidsAndOppilaitostyypit(organisaatioOid, roleEntity.readRoles) { case (oids, koulutustyypit) =>
       KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids, koulutustyypit)
+    }
+  }
+
+  def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] = {
+    withRootAccess(indexerRoles) {
+      KoulutusDAO.getJulkaistutByTarjoajaOids(OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(organisaatioOid)._1)
     }
   }
 

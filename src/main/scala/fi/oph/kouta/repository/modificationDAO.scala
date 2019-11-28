@@ -20,7 +20,9 @@ object ModificationDAO extends ModificationDAO {
     h <- HakuDAO.selectModifiedSince(modifiedSince)
     a <- HakukohdeDAO.selectModifiedSince(modifiedSince)
     p <- ValintaperusteDAO.selectModifiedSince(modifiedSince)
-  } yield ListEverything(k, t, h, a, p)).get
+    l <- OppilaitosDAO.selectModifiedSince(modifiedSince)
+    o <- OppilaitoksenOsaDAO.selectModifiedSince(modifiedSince)
+  } yield ListEverything(k, t, h, a, p, o.union(l))).get
 }
 
 trait EntityModificationDAO[T] {

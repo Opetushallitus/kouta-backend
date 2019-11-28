@@ -25,7 +25,7 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
 
   private def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R) = {
     val url = urlProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid.toString))
-    get(url) { response =>
+    get(url, followRedirects = true) { response =>
       result(parse(response).extract[OrganisaatioResponse].organisaatiot)
     }
   }
