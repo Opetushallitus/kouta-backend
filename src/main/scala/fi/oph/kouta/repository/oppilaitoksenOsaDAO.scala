@@ -10,10 +10,10 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait OppilaitoksenOsaDAO extends EntityModificationDAO[OrganisaatioOid] {
-  def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OrganisaatioOid]
+  def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa]
   def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Boolean]
 
-  def put(oppilaitoksenOsa: OppilaitoksenOsa): OrganisaatioOid
+  def put(oppilaitoksenOsa: OppilaitoksenOsa): OppilaitoksenOsa
   def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)]
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): Boolean
 
@@ -24,13 +24,13 @@ trait OppilaitoksenOsaDAO extends EntityModificationDAO[OrganisaatioOid] {
 
 object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL {
 
-  override def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OrganisaatioOid] =
+  override def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa] =
     checkOppilaitosExists(oppilaitoksenOsa).flatMap {
       case false => DBIO.failed(new NoSuchElementException(s"""Oppilaitos ${oppilaitoksenOsa.oppilaitosOid} ei löyty kannasta!"""))
-      case true => insertOppilaitoksenOsa(oppilaitoksenOsa).andThen(DBIO.successful(oppilaitoksenOsa.oid))
+      case true => insertOppilaitoksenOsa(oppilaitoksenOsa).andThen(DBIO.successful(oppilaitoksenOsa))
     }
 
-  override def put(oppilaitoksenOsa: OppilaitoksenOsa): OrganisaatioOid =
+  override def put(oppilaitoksenOsa: OppilaitoksenOsa): OppilaitoksenOsa =
     KoutaDatabase.runBlockingTransactionally(getPutActions(oppilaitoksenOsa)).get
 
   override def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)] = {

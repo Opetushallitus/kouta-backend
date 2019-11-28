@@ -12,12 +12,14 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
-  def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid]
-  def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Boolean]
+  def getPutActions(koulutus: Koulutus): DBIO[Koulutus]
 
-  def put(koulutus: Koulutus): KoulutusOid
+  def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[(Boolean, Instant)]
+
+  def put(koulutus: Koulutus): Koulutus
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
-  def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean
+
+  def update(koulutus: Koulutus, notModifiedSince: Instant): (Boolean, Instant)
 
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
@@ -27,13 +29,13 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
-  override def getPutActions(koulutus: Koulutus): DBIO[KoulutusOid] =
+  override def getPutActions(koulutus: Koulutus): DBIO[Koulutus] =
     for {
-      oid <- insertKoulutus(koulutus)
-      _   <- insertKoulutuksenTarjoajat(koulutus.copy(oid = Some(oid)))
-    } yield oid
+      (oid, a) <- insertKoulutus(koulutus)
+      b <- insertKoulutuksenTarjoajat(koulutus.copy(oid = Some(oid)))
+    } yield koulutus.copy(oid = Some(oid), modified = Some(instantToLocalDateTime((a :: b).max)))
 
-  override def put(koulutus: Koulutus): KoulutusOid =
+  override def put(koulutus: Koulutus): Koulutus =
     KoutaDatabase.runBlockingTransactionally(getPutActions(koulutus)).get
 
   override def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = {
@@ -50,24 +52,25 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Boolean] = {
+  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[(Boolean, Instant)] = {
     checkNotModified(koulutus.oid.get, notModifiedSince).andThen(
       for {
         k <- updateKoulutus(koulutus)
         t <- updateKoulutuksenTarjoajat(koulutus)
-      } yield 0 < (k + t.sum)
+      } yield (0 < (k.size + t.size), (k ++ t :+ Instant.EPOCH).max)
     )
   }
 
-  override def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean =
+  override def update(koulutus: Koulutus, notModifiedSince: Instant): (Boolean, Instant) =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(koulutus, notModifiedSince)).get
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
-      DBIO.sequence(tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
+      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
+      DBIO.fold(actions, Vector()) { case (first, second) => first ++ second }
     } else {
-      DBIO.sequence(List(deleteTarjoajat(oid)))
+      deleteTarjoajat(oid)
     }
   }
 
@@ -160,13 +163,14 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.julkinen},
             ${koulutus.muokkaaja},
             ${koulutus.organisaatioOid},
-            ${toJsonParam(koulutus.kielivalinta)}::jsonb) returning oid""".as[KoulutusOid].head
+            ${toJsonParam(koulutus.kielivalinta)}::jsonb) returning oid, lower(system_time)""".as[(KoulutusOid, Instant)].head
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus) = {
     DBIO.sequence( koulutus.tarjoajat.map(t =>
-      sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
-             values (${koulutus.oid}, $t, ${koulutus.muokkaaja})"""))
+      sql"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
+            values (${koulutus.oid}, $t, ${koulutus.muokkaaja})
+            returning lower(system_time)""".as[Instant].head))
   }
 
   def selectKoulutus(oid: KoulutusOid) = {
@@ -204,7 +208,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def updateKoulutus(koulutus: Koulutus) = {
-    sqlu"""update koulutukset set
+    sql"""update koulutukset set
               johtaa_tutkintoon = ${koulutus.johtaaTutkintoon},
               tyyppi = ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
               koulutus_koodi_uri = ${koulutus.koulutusKoodiUri},
@@ -224,20 +228,26 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or julkinen is distinct from ${koulutus.julkinen}
             or metadata is distinct from ${toJsonParam(koulutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(koulutus.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${koulutus.organisaatioOid})"""
+            or organisaatio_oid is distinct from ${koulutus.organisaatioOid})
+            returning lower(system_time)""".as[Instant]
   }
 
   def insertTarjoaja(oid: Option[KoulutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid ) = {
-    sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
+    sql"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
-             on conflict on constraint koulutusten_tarjoajat_pkey do nothing"""
+             on conflict on constraint koulutusten_tarjoajat_pkey do nothing
+             returning lower(system_time)""".as[Instant]
   }
 
   def deleteTarjoajat(oid: Option[KoulutusOid], exclude: List[OrganisaatioOid]) = {
-    sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
+    sql"""delete from koulutusten_tarjoajat
+          where koulutus_oid = $oid
+           and tarjoaja_oid not in (#${createOidInParams(exclude)})
+          returning now()""".as[Instant]
   }
 
-  def deleteTarjoajat(oid: Option[KoulutusOid]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
+  def deleteTarjoajat(oid: Option[KoulutusOid]) =
+    sql"""delete from koulutusten_tarjoajat where koulutus_oid = $oid returning now()""".as[Instant]
 
   val selectKoulutusListSql =
     """select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified

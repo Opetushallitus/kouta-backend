@@ -6,14 +6,16 @@ import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
+import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validatable
 import fi.vm.sade.utils.slf4j.Logging
+import slick.dbio.DBIO
 
 import scala.collection.IterableView
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ValidatingService[E <: Validatable] {
 
@@ -23,26 +25,47 @@ trait ValidatingService[E <: Validatable] {
   }
 }
 
-trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID, T], M <: TeemakuvaMetadata[M]] extends Logging {
+trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID, T] with HasModified[T], M <: TeemakuvaMetadata[M]] extends Logging {
   val s3Service: S3Service
 
   def teemakuvaPrefix: String
 
-  def checkTeemakuvaInPut(entity: T, put: T => ID, update: (T, Instant) => Boolean): ID =
+  def checkTeemakuvaInPut(entity: T, put: T => T, update: (T, Instant) => Boolean): ID =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>
-        val id = put(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
+        val id = put(entity.withMetadata(entity.metadata.get.withTeemakuva(None))).primaryId.get
         val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/$id/$filename")
         update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))), Instant.now())
         s3Service.deleteImage(s3Service.getTempKey(filename))
         id
       case Some(s3Service.publicUrl(_)) =>
-        put(entity)
+        put(entity).primaryId.get
       case None =>
-        put(entity)
+        put(entity).primaryId.get
       case Some(other) =>
         logger.warn(s"Theme image outside the bucket: $other")
-        put(entity)
+        put(entity).primaryId.get
+    }
+
+  def putActions(entity: T, putActions: T => DBIO[T], updateActions: (T, Instant) => DBIO[(Boolean, Instant)]): DBIO[T] =
+    entity.metadata.flatMap(_.teemakuva) match {
+      case Some(s3Service.tempUrl(filename)) =>
+        putActions(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
+          .flatMap { t =>
+            val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${t.primaryId.get}/$filename")
+            updateActions(t.withMetadata(t.metadata.get.withTeemakuva(Some(url))), Instant.now())
+              .map { case (_, modified) =>
+                s3Service.deleteImage(s3Service.getTempKey(filename))
+                t.withModified(modified)
+              }
+          }
+      case Some(s3Service.publicUrl(_)) =>
+        putActions(entity)
+      case None =>
+        putActions(entity)
+      case Some(other) =>
+        logger.warn(s"Theme image outside the bucket: $other")
+        putActions(entity)
     }
 
   def checkTeemakuvaInUpdate(entity: T, update: T => Boolean): Boolean =

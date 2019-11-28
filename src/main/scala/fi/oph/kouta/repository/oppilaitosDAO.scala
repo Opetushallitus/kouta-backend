@@ -9,20 +9,20 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait OppilaitosDAO extends EntityModificationDAO[OrganisaatioOid] {
-  def getPutActions(oppilaitos: Oppilaitos): DBIO[OrganisaatioOid]
+  def getPutActions(oppilaitos: Oppilaitos): DBIO[Oppilaitos]
   def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Boolean]
 
-  def put(oppilaitos: Oppilaitos): OrganisaatioOid
+  def put(oppilaitos: Oppilaitos): Oppilaitos
   def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)]
   def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Boolean
 }
 
 object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
 
-  override def getPutActions(oppilaitos: Oppilaitos): DBIO[OrganisaatioOid] =
-    insertOppilaitos(oppilaitos).andThen(DBIO.successful(oppilaitos.oid))
+  override def getPutActions(oppilaitos: Oppilaitos): DBIO[Oppilaitos] =
+    insertOppilaitos(oppilaitos).andThen(DBIO.successful(oppilaitos))
 
-  override def put(oppilaitos: Oppilaitos): OrganisaatioOid =
+  override def put(oppilaitos: Oppilaitos): Oppilaitos =
     KoutaDatabase.runBlockingTransactionally(getPutActions(oppilaitos)).get
 
   override def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)] = {

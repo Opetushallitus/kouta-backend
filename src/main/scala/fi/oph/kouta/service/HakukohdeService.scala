@@ -3,8 +3,8 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.KoutaIndexClient
-import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
+import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakukohdeDAO, ToteutusDAO}
@@ -23,7 +23,7 @@ abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) {
       withValidation(hakukohde, putWithIndexing)
-    }
+    }.oid.get
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))) {
@@ -39,11 +39,12 @@ abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  private def putWithIndexing(hakukohde: Hakukohde) =
+  private def putWithIndexing(hakukohde: Hakukohde): Hakukohde =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeHakukohde,
-      () => HakukohdeDAO.getPutActions(hakukohde))
+      () => HakukohdeDAO.getPutActions(hakukohde),
+      (added: Hakukohde) => added.oid.get.toString)
 
   private def updateWithIndexing(hakukohde: Hakukohde, notModifiedSince: Instant) =
     sqsInTransactionService.runActionAndUpdateIndex(

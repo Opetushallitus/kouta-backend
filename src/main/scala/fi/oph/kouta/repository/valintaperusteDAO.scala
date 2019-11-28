@@ -1,24 +1,23 @@
 package fi.oph.kouta.repository
 
-import java.time.{Instant, LocalDateTime}
+import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
-import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
-  def getPutActions(valintaperuste: Valintaperuste): DBIO[(UUID, LocalDateTime)]
-  def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, LocalDateTime)]
+  def getPutActions(valintaperuste: Valintaperuste): DBIO[Valintaperuste]
+  def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, Instant)]
 
-  def put(valintaperuste: Valintaperuste): (UUID, LocalDateTime)
+  def put(valintaperuste: Valintaperuste): Valintaperuste
   def get(id: UUID): Option[(Valintaperuste, Instant)]
-  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, LocalDateTime)
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, Instant)
 
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem]
   def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): Seq[ValintaperusteListItem]
@@ -27,26 +26,26 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
 
-  override def getPutActions(valintaperuste: Valintaperuste): DBIO[(UUID, LocalDateTime)] = {
+  override def getPutActions(valintaperuste: Valintaperuste): DBIO[Valintaperuste] = {
     for {
-      id        <- DBIO.successful(UUID.randomUUID)
-      modified  <- insertValintaperuste(valintaperuste.copy(id = Some(id)))
-      _         <- insertValintakokeet(valintaperuste.copy(id = Some(id)))
-    } yield (id, instantToLocalDateTime(modified))
+      id <- DBIO.successful(UUID.randomUUID)
+      vp <- insertValintaperuste(valintaperuste.copy(id = Some(id)))
+      vk <- insertValintakokeet(valintaperuste.copy(id = Some(id)))
+    } yield valintaperuste.copy(id = Some(id)).withModified((vk :+ vp).max)
   }
 
-  override def put(valintaperuste: Valintaperuste): (UUID, LocalDateTime) =
+  override def put(valintaperuste: Valintaperuste): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally(getPutActions(valintaperuste)).get
 
-  override def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, LocalDateTime)] =
+  override def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, Instant)] =
     checkNotModified(valintaperuste.id.get, notModifiedSince).andThen(
       for {
         v <- updateValintaperuste(valintaperuste)
         k <- updateValintakokeet(valintaperuste)
-      } yield (0 < v.size + k.size, instantToLocalDateTime((v ++ k :+ Instant.EPOCH).max))
+      } yield (0 < v.size + k.size, (v ++ k :+ Instant.EPOCH).max)
     )
 
-  override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, LocalDateTime) =
+  override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, Instant) =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(valintaperuste, notModifiedSince)).get
 
   override def get(id: UUID): Option[(Valintaperuste, Instant)] = {
@@ -138,10 +137,12 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
          ) returning lower(system_time)""".as[Instant].head
   }
 
-  def insertValintakokeet(valintaperuste: Valintaperuste) =
-    DBIO.sequence(
-      valintaperuste.valintakokeet.map(k =>
-        insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja)))
+  def insertValintakokeet(valintaperuste: Valintaperuste) = {
+    val inserts = valintaperuste.valintakokeet.map(k =>
+      insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja))
+    DBIO.fold(inserts, Vector()) { case (first, second) => first ++ second }
+  }
+
 
   def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid) =
     sql"""insert into valintaperusteiden_valintakokeet (id, valintaperuste_id, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
@@ -223,13 +224,13 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]) = {
     sql"""delete from valintaperusteiden_valintakokeet
             where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id not in (#${createUUIDInParams(exclude)})
-            returning lower(system_time)""".as[Instant]
+            returning now()""".as[Instant]
   }
 
   def deleteValintakokeet(valintaperusteId: Option[UUID]) = {
     sql"""delete from valintaperusteiden_valintakokeet
             where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid
-            returning lower(system_time)""".as[Instant]
+            returning now()""".as[Instant]
   }
 
   val selectValintaperusteListSql =

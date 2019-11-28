@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import java.time.{Instant, LocalDateTime}
+import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.client.KoutaIndexClient
@@ -11,7 +11,8 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, CreateAudit, Resource, UpdateAudit}
+import fi.oph.kouta.util.{AuditLog, Resource, UpdateAudit}
+import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog)
@@ -26,8 +27,8 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated, request: HttpServletRequest): UUID =
     authorizePut(valintaperuste) {
-      withValidation(valintaperuste, putWithIndexing(_, CreateAudit[UUID, Valintaperuste](valintaperuste))._1)
-    }
+      withValidation(valintaperuste, putWithIndexing(_, auditLog.getUser))
+    }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
@@ -58,13 +59,13 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
-  private def putWithIndexing(valintaperuste: Valintaperuste, createAudit: CreateAudit[UUID, Valintaperuste]) =
+  private def putWithIndexing(valintaperuste: Valintaperuste, user: User): Valintaperuste =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeValintaperuste,
       () => ValintaperusteDAO.getPutActions(valintaperuste),
-      (result: (UUID, LocalDateTime)) => result._1.toString,
-      (result: (UUID, LocalDateTime)) => auditLog.logCreate(createAudit, Resource.Valintaperuste, result._1, result._2))
+      (added: Valintaperuste) => added.id.get.toString,
+      (added: Valintaperuste) => auditLog.logCreate(added, user, Resource.Valintaperuste))
 
   private def updateWithIndexing(valintaperuste: Valintaperuste, notModifiedSince: Instant, auditUpdate: UpdateAudit[UUID, Valintaperuste]) =
     sqsInTransactionService.runActionAndUpdateIndex(
@@ -72,5 +73,5 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       IndexTypeValintaperuste,
       () => ValintaperusteDAO.getUpdateActions(valintaperuste, notModifiedSince),
       valintaperuste.id.get.toString,
-      (result: (Boolean, LocalDateTime)) => auditLog.logUpdate(auditUpdate, Resource.Valintaperuste, result._1, result._2))
+      (result: (Boolean, Instant)) => auditLog.logUpdate(auditUpdate, Resource.Valintaperuste, result._1, result._2))
 }

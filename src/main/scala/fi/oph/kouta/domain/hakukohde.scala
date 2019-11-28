@@ -329,7 +329,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[LocalDateTime]) extends PerustiedotWithOid {
+                     modified: Option[LocalDateTime]) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
      super.validate(),
@@ -348,6 +348,12 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
        validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
     ))
   )
+
+  override def withModified(modified: LocalDateTime): Hakukohde = copy(modified = Some(modified))
+
+  override def primaryId: Option[HakukohdeOid] = oid
+
+  override def withPrimaryID(oid: HakukohdeOid): Hakukohde = copy(oid = Some(oid))
 }
 
 case class Liite(id: Option[UUID] = None,

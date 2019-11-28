@@ -22,10 +22,10 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
 
   registerPath("/upload/theme-image",
     """    post:
-      |      summary: Tallenna koulutukselle teemakuva
-      |      operationId: Tallenna koulutukselle teemakuva
-      |      description: Tallenna koulutukselle teemakuva.
-      |        Teemakuva korvaa mahdollisen aikaisemman kuvan.
+      |      summary: Tallenna teemakuva
+      |      operationId: Tallenna teemakuva
+      |      description: Tallenna teemakuva väliaikaiseen sijaintiin.
+      |        Teemakuva siirretään lopulliseen sijaintiinsa, kun se asetetaan jonkin objektin teemakuvaksi.
       |      tags:
       |        - Upload
       |      requestBody:

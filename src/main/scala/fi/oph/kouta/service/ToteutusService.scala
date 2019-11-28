@@ -72,7 +72,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => ToteutusDAO.getPutActions(toteutus))
+      () => ToteutusDAO.getPutActions(toteutus),
+      (added: Toteutus) => added.oid.get.toString)
 
   private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant) =
     sqsInTransactionService.runActionAndUpdateIndex(

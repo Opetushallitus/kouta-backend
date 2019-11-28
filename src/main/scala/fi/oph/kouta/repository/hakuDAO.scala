@@ -1,6 +1,6 @@
 package fi.oph.kouta.repository
 
-import java.time.{Instant, LocalDateTime}
+import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.domain
@@ -13,12 +13,12 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
-  def getPutActions(haku: Haku): DBIO[(HakuOid, LocalDateTime)]
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, LocalDateTime)]
+  def getPutActions(haku: Haku): DBIO[Haku]
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Instant)]
 
-  def put(haku: Haku): (HakuOid, LocalDateTime)
+  def put(haku: Haku): Haku
   def get(oid: HakuOid): Option[(Haku, Instant)]
-  def update(haku: Haku, notModifiedSince: Instant): (Boolean, LocalDateTime)
+  def update(haku: Haku, notModifiedSince: Instant): (Boolean, Instant)
 
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
@@ -26,13 +26,13 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
 
 object HakuDAO extends HakuDAO with HakuSQL {
 
-  override def getPutActions(haku: Haku): DBIO[(HakuOid, LocalDateTime)] =
+  override def getPutActions(haku: Haku): DBIO[Haku] =
     for {
       (oid, a) <- insertHaku(haku)
       b <- insertHakuajat(haku.copy(oid = Some(oid)))
-    } yield (oid, instantToLocalDateTime((b :+ a).max))
+    } yield haku.copy(oid = Some(oid)).withModified((b :+ a).max)
 
-  override def put(haku: Haku): (HakuOid, LocalDateTime) =
+  override def put(haku: Haku): Haku =
     KoutaDatabase.runBlockingTransactionally(getPutActions(haku)).get
 
   override def get(oid: HakuOid): Option[(Haku, Instant)] = {
@@ -48,15 +48,15 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }.get
   }
 
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, LocalDateTime)] =
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Instant)] =
     checkNotModified(haku.oid.get, notModifiedSince).andThen(
       for {
         x <- updateHaku(haku)
         y <- updateHaunHakuajat(haku)
-      } yield (0 < (x.size + y.size), instantToLocalDateTime((x ++ y :+ Instant.EPOCH).max))
+      } yield (0 < (x.size + y.size), (x ++ y :+ Instant.EPOCH).max)
     )
 
-  override def update(haku: Haku, notModifiedSince: Instant): (Boolean, LocalDateTime) =
+  override def update(haku: Haku, notModifiedSince: Instant): (Boolean, Instant) =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(haku, notModifiedSince)).get
 
   override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] = organisaatioOids match {

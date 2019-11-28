@@ -12,10 +12,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import slick.dbio.DBIO
 
 trait SorakuvausDAO extends EntityModificationDAO[UUID] {
-  def getPutActions(sorakuvaus: Sorakuvaus): DBIO[UUID]
+  def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus]
   def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Boolean]
 
-  def put(sorakuvaus: Sorakuvaus): UUID
+  def put(sorakuvaus: Sorakuvaus): Sorakuvaus
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
   def update(valintaperuste: Sorakuvaus, notModifiedSince: Instant): Boolean
 
@@ -24,14 +24,14 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
 
-  override def getPutActions(sorakuvaus: Sorakuvaus): DBIO[UUID] = {
+  override def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus] = {
     for {
       id <- DBIO.successful(UUID.randomUUID)
       _ <- insertSorakuvaus(sorakuvaus.copy(id = Some(id)))
-    } yield id
+    } yield sorakuvaus.copy(id = Some(id))
   }
 
-  override def put(sorakuvaus: Sorakuvaus): UUID =
+  override def put(sorakuvaus: Sorakuvaus): Sorakuvaus =
     KoutaDatabase.runBlockingTransactionally(getPutActions(sorakuvaus)).get
 
   override def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Boolean] =

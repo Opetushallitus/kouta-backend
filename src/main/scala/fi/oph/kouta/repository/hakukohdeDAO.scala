@@ -14,10 +14,10 @@ import slick.sql.{SqlAction, SqlStreamingAction}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
-  def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid]
+  def getPutActions(hakukohde: Hakukohde): DBIO[Hakukohde]
   def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean]
 
-  def put(hakukohde: Hakukohde): HakukohdeOid
+  def put(hakukohde: Hakukohde): Hakukohde
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)]
   def update(haku: Hakukohde, notModifiedSince: Instant): Boolean
 
@@ -31,13 +31,13 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
-  override def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid] =
+  override def getPutActions(hakukohde: Hakukohde): DBIO[Hakukohde] =
     for {
       oid <- insertHakukohde(hakukohde)
       _   <- insertHakuajat(hakukohde.copy(oid = Some(oid)))
       _   <- insertValintakokeet(hakukohde.copy(oid = Some(oid)))
       _   <- insertLiitteet(hakukohde.copy(oid = Some(oid)))
-    } yield oid
+    } yield hakukohde.copy(oid = Some(oid))
 
   override def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean] =
     checkNotModified(hakukohde.oid.get, notModifiedSince).andThen(
@@ -49,7 +49,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       } yield 0 < (hk + ha.sum + vk.sum + li.sum)
     )
 
-  override def put(hakukohde: Hakukohde): HakukohdeOid =
+  override def put(hakukohde: Hakukohde): Hakukohde =
     KoutaDatabase.runBlockingTransactionally(getPutActions(hakukohde)).get
 
   override def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = {

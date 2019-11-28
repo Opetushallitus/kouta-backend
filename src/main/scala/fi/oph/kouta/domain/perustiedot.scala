@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.Authorizable
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-sealed trait Perustiedot extends Validatable with Authorizable {
+sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPrimaryId[ID, T] with HasModified[T] {
   val tila: Julkaisutila
   val nimi: Kielistetty
   val muokkaaja: UserOid
@@ -24,7 +24,7 @@ sealed trait Perustiedot extends Validatable with Authorizable {
     )))
 }
 
-abstract class PerustiedotWithOid extends Perustiedot {
+abstract class PerustiedotWithOid[ID <: Oid, T] extends Perustiedot[ID, T] {
   val oid: Option[Oid]
 
   override def validate(): IsValid = and(
@@ -33,7 +33,7 @@ abstract class PerustiedotWithOid extends Perustiedot {
   )
 }
 
-abstract class PerustiedotWithId extends Perustiedot {
+abstract class PerustiedotWithId[T] extends Perustiedot[UUID, T] {
   val id: Option[UUID]
 
   override def validate(): IsValid = super.validate()

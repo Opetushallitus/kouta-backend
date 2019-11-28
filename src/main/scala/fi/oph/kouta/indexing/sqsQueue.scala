@@ -99,7 +99,7 @@ abstract class SqsInTransactionService extends Logging {
   def runActionAndUpdateIndex[R](priority: Priority,
                                  index: IndexType,
                                  action: () => DBIO[R],
-                                 getIndexableValue: R => String = (r:R) => r.toString,
+                                 getIndexableValue: R => String,
                                  auditLog: R => DBIO[_] = (_:R) => DBIO.successful(true)): R = // TODO: Poista default kun auditlogitus on laitettu kaikkialle
     KoutaDatabase.runBlockingTransactionally(
       for {

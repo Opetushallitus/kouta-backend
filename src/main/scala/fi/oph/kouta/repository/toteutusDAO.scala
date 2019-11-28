@@ -12,10 +12,10 @@ import slick.jdbc.PostgresProfile.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
-  def getPutActions(toteutus: Toteutus): DBIO[ToteutusOid]
+  def getPutActions(toteutus: Toteutus): DBIO[Toteutus]
   def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Boolean]
 
-  def put(toteutus: Toteutus): ToteutusOid
+  def put(toteutus: Toteutus): Toteutus
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
   def update(toteutus: Toteutus, notModifiedSince: Instant): Boolean
   def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
@@ -30,15 +30,15 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
-  override def getPutActions(toteutus: Toteutus): DBIO[ToteutusOid] =
+  override def getPutActions(toteutus: Toteutus): DBIO[Toteutus] =
     for {
       oid <- insertToteutus(toteutus)
       _ <- insertToteutuksenTarjoajat(toteutus.copy(oid = Some(oid)))
       _ <- insertAmmattinimikkeet(toteutus)
       _ <- insertAsiasanat(toteutus)
-    } yield oid
+    } yield toteutus.copy(oid = Some(oid))
 
-  override def put(toteutus: Toteutus): ToteutusOid =
+  override def put(toteutus: Toteutus): Toteutus =
     KoutaDatabase.runBlockingTransactionally(getPutActions(toteutus)).get
 
   override def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Boolean] =

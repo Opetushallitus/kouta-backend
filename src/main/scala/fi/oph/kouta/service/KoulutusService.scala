@@ -3,17 +3,20 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
-import fi.oph.kouta.domain.{koulutus, _}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.{AuditLog, Resource, UpdateAudit}
+import fi.vm.sade.auditlog.User
+import javax.servlet.http.HttpServletRequest
 
-object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service)
+object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
 
-class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
+class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
   extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
@@ -26,16 +29,16 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     authorizeGet(koulutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime)))
   }
 
-  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
+  def put(koulutus: Koulutus)(implicit authenticated: Authenticated, request: HttpServletRequest): KoulutusOid =
     authorizePut(koulutus) {
-      withValidation(koulutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
-    }
+      withValidation(koulutus, putWithIndexing(_, auditLog.getUser))
+    }.oid.get
 
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
-  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
     authorizeUpdate(koulutusWithTime, AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))) {
-      withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
+      withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince, UpdateAudit(koulutusWithTime.get._1, koulutus))))
     }
   }
 
@@ -90,16 +93,19 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def getTarjoajat(maybeKoulutusWithTime: Option[(Koulutus, Instant)]): Seq[OrganisaatioOid] =
     maybeKoulutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def putWithIndexing(koulutus: Koulutus) =
+  private def putWithIndexing(koulutus: Koulutus, user: User): Koulutus =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
-      () => KoulutusDAO.getPutActions(koulutus))
+      () => putActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActions),
+      (added: Koulutus) => added.oid.get.toString,
+      (added: Koulutus) => auditLog.logCreate(added, user, Resource.Koulutus))
 
-  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant) =
-    sqsInTransactionService.runActionAndUpdateIndex(
+  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, updateAudit: UpdateAudit[KoulutusOid, Koulutus]): Boolean =
+    sqsInTransactionService.runActionAndUpdateIndex[(Boolean, Instant)](
       HighPriority,
       IndexTypeKoulutus,
       () => KoulutusDAO.getUpdateActions(koulutus, notModifiedSince),
-      koulutus.oid.get.toString)
+      koulutus.oid.get.toString,
+      (result: (Boolean, Instant)) => auditLog.logUpdate(updateAudit, Resource.Koulutus, result._1, result._2))._1
 }

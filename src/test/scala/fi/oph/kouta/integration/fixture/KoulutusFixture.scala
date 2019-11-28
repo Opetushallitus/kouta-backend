@@ -5,10 +5,11 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.MockS3Service
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
 import fi.oph.kouta.repository.{KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.KoulutusService
-import fi.oph.kouta.servlet.{IndexerServlet, KoulutusServlet}
+import fi.oph.kouta.servlet.KoulutusServlet
+import fi.oph.kouta.util.AuditLog
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 
@@ -19,7 +20,7 @@ trait KoulutusFixture extends KoulutusDbFixture {
 
   val KoulutusPath = "/koulutus"
 
-  protected lazy val koulutusService: KoulutusService = new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
+  protected lazy val koulutusService: KoulutusService = new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service, new AuditLog(MockAuditLogger))
 
   addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
 

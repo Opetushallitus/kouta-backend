@@ -48,7 +48,8 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeOppilaitos,
-      () => OppilaitosDAO.getPutActions(oppilaitos))
+      () => OppilaitosDAO.getPutActions(oppilaitos),
+      oppilaitos.oid.toString)
 
   private def updateWithIndexing(oppilaitos: Oppilaitos, notModifiedSince: Instant) =
     sqsInTransactionService.runActionAndUpdateIndex(

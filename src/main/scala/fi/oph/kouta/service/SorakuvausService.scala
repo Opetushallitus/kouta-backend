@@ -24,7 +24,7 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus) {
       withValidation(sorakuvaus, putWithIndexing)
-    }
+    }.id.get
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) {
@@ -41,11 +41,12 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
       SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
     }
 
-  private def putWithIndexing(sorakuvaus: Sorakuvaus) =
+  private def putWithIndexing(sorakuvaus: Sorakuvaus): Sorakuvaus =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeSorakuvaus,
-      () => SorakuvausDAO.getPutActions(sorakuvaus))
+      () => SorakuvausDAO.getPutActions(sorakuvaus),
+      (added: Sorakuvaus) => added.id.get.toString)
 
   private def updateWithIndexing(sorakuvaus: Sorakuvaus, notModifiedSince: Instant) =
     sqsInTransactionService.runActionAndUpdateIndex(
