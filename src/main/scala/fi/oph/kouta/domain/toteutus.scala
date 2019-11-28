@@ -119,22 +119,22 @@ package object toteutus {
        |                arvo: ravintotiede
        |              - kieli: en
        |                arvo: nutrition
-       |            yhteyshenkilö:
-       |              nimi:
-       |                fi: Aku Ankka
-       |                sv: Kalle Ankka
-       |              titteli:
-       |                fi: Ankka
-       |                sv: Ankka ruotsiksi
-       |              sahkoposti:
-       |                fi: aku.ankka@ankkalinnankoulu.fi
-       |                sv: aku.ankka@ankkalinnankoulu.fi
-       |              puhelinnumero:
-       |                fi: 123
-       |                sv: 223
-       |              wwwSivu:
-       |                fi: http://opintopolku.fi
-       |                sv: http://studieinfo.fi
+       |            yhteyshenkilot:
+       |              - nimi:
+       |                  fi: Aku Ankka
+       |                  sv: Kalle Ankka
+       |                titteli:
+       |                  fi: Ankka
+       |                  sv: Ankka ruotsiksi
+       |                sahkoposti:
+       |                  fi: aku.ankka@ankkalinnankoulu.fi
+       |                  sv: aku.ankka@ankkalinnankoulu.fi
+       |                puhelinnumero:
+       |                  fi: 123
+       |                  sv: 223
+       |                wwwSivu:
+       |                  fi: http://opintopolku.fi
+       |                  sv: http://studieinfo.fi
        |        muokkaaja:
        |          type: string
        |          description: Toteutusta viimeksi muokanneen virkailijan henkilö-oid
