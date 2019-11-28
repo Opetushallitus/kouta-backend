@@ -174,7 +174,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(koulutusService.getTarjoajanKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
+    Ok(koulutusService.getTarjoajanJulkaistutKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
   }
 
   registerPath( "/koulutus/{oid}/toteutukset",
