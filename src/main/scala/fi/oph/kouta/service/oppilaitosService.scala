@@ -29,7 +29,7 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
   }
 
   def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid)) {
+    authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid)) { oldOppilaitos =>
       withValidation(oppilaitos, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
 
@@ -79,7 +79,7 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
     }
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid)) {
+    authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid)) { oldOsa =>
       withValidation(oppilaitoksenOsa, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
 

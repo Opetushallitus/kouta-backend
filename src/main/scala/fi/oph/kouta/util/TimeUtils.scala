@@ -7,6 +7,8 @@ import java.time.{Instant, LocalDateTime, ZoneId, ZonedDateTime}
 object TimeUtils {
   def instantToLocalDateTime(instant: Instant): LocalDateTime = LocalDateTime.ofInstant(instant, ZoneId.of("Europe/Helsinki"))
 
+  def localDateTimeToInstant(localDateTime: LocalDateTime): Instant = localDateTime.atZone(ZoneId.of("Europe/Helsinki")).toInstant
+
   def timeStampToLocalDateTime(timestamp: Timestamp): LocalDateTime = instantToLocalDateTime(timestamp.toInstant)
 
   def renderHttpDate(instant: Instant): String = {

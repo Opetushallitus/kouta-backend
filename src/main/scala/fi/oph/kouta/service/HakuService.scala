@@ -7,16 +7,17 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
-import fi.oph.kouta.repository._
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, Resource, UpdateAudit}
+import fi.oph.kouta.util.{AuditLog, Resource}
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 
 object HakuService extends HakuService(SqsInTransactionService, AuditLog)
 
-class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Haku] with RoleEntityAuthorizationService {
+class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog)
+  extends ValidatingService[Haku] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Haku
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -31,11 +32,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
   }.oid.get
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
-    val oldHaku = HakuDAO.get(haku.oid.get)
-    authorizeUpdate(oldHaku) {
-      withValidation(haku, updateWithIndexing(_, notModifiedSince, UpdateAudit[HakuOid, Haku](oldHaku.get._1, haku))._1)
+    authorizeUpdate(HakuDAO.get(haku.oid.get)) { oldHaku =>
+      withValidation(haku, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldHaku))
     }
-  }
+  }._1
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules)(HakuDAO.listByAllowedOrganisaatiot)
@@ -75,11 +75,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
       (added: Haku) => added.oid.get.toString,
       (added: Haku) => auditLog.logCreate(added, user, Resource.Haku))
 
-  private def updateWithIndexing(haku: Haku, notModifiedSince: Instant, updateAudit: UpdateAudit[HakuOid, Haku]) =
+  private def updateWithIndexing(haku: Haku, notModifiedSince: Instant, user: User, before: Haku): (Boolean, Haku) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeHaku,
       () => HakuDAO.getUpdateActions(haku, notModifiedSince),
       haku.oid.get.toString,
-      (result: (Boolean, Instant)) => auditLog.logUpdate(updateAudit, Resource.Haku, result._1, result._2))
+      (result: (Boolean, Haku)) => auditLog.logUpdate(before, result._2, user, Resource.Haku, result._1))
 }

@@ -47,16 +47,16 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
         put(entity).primaryId.get
     }
 
-  def putActions(entity: T, putActions: T => DBIO[T], updateActions: (T, Instant) => DBIO[(Boolean, Instant)]): DBIO[T] =
+  def putActions(entity: T, putActions: T => DBIO[T], updateActions: (T, Instant) => DBIO[(Boolean, T)]): DBIO[T] =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>
         putActions(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
-          .flatMap { t =>
-            val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${t.primaryId.get}/$filename")
-            updateActions(t.withMetadata(t.metadata.get.withTeemakuva(Some(url))), Instant.now())
-              .map { case (_, modified) =>
+          .flatMap { added =>
+            val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${added.primaryId.get}/$filename")
+            updateActions(added.withMetadata(added.metadata.get.withTeemakuva(Some(url))), Instant.now())
+              .map { case (_, updated) =>
                 s3Service.deleteImage(s3Service.getTempKey(filename))
-                t.withModified(modified)
+                updated
               }
           }
       case Some(s3Service.publicUrl(_)) =>
@@ -66,6 +66,19 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
       case Some(other) =>
         logger.warn(s"Theme image outside the bucket: $other")
         putActions(entity)
+    }
+
+  def updateActions(entity: T, updateActions: T => DBIO[(Boolean, T)]): DBIO[(Boolean, T)] =
+    entity.metadata.flatMap(_.teemakuva) match {
+      case Some(s3Service.tempUrl(filename)) =>
+        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename")
+        updateActions(entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+          .map { result =>
+            s3Service.deleteImage(s3Service.getTempKey(filename))
+            result
+          }
+      case _ =>
+        updateActions(entity)
     }
 
   def checkTeemakuvaInUpdate(entity: T, update: T => Boolean): Boolean =
@@ -120,11 +133,11 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
 
   def authorizeUpdate[E <: Authorizable, I](entityForUpdate: => Option[(E, Instant)],
                                             authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.updateRoles))
-                                           (f: => I)(implicit authenticated: Authenticated): I =
+                                           (f: E => I)(implicit authenticated: Authenticated): I =
     entityForUpdate match {
       case None         => throw new NoSuchElementException
       case Some((e, _)) => ifAuthorized(e, authorizationRules) {
-        f
+        f(e)
       }
     }
 }

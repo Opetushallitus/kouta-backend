@@ -27,7 +27,7 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
     }.id.get
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) {
+    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) { oldSorakuvaus =>
       withValidation(sorakuvaus, updateWithIndexing(_, notModifiedSince))
     }
 

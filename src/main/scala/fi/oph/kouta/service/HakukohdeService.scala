@@ -25,10 +25,12 @@ abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService
       withValidation(hakukohde, putWithIndexing)
     }.oid.get
 
-  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))) {
+  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), rules) { oldHakuKohde =>
       withValidation(hakukohde, updateWithIndexing(_, notModifiedSince))
     }
+  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)

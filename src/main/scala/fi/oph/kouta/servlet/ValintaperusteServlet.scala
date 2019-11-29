@@ -106,7 +106,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
     implicit val authenticated: Authenticated = authenticate
 
     valintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
-      case updated => Ok("updated" -> updated)
+      case updated => Ok("updated" -> updated._1)
     }
   }
 

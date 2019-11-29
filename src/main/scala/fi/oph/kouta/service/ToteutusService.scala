@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.{toteutus, _}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
+import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -32,7 +33,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
-    authorizeUpdate(toteutusWithTime, AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))) {
+    val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
+    authorizeUpdate(toteutusWithTime, rules) { oldToteutus =>
       withValidation(toteutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
   }

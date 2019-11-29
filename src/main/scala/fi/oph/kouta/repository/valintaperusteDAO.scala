@@ -6,6 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.util.TimeUtils.localDateTimeToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -13,11 +14,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def getPutActions(valintaperuste: Valintaperuste): DBIO[Valintaperuste]
-  def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, Instant)]
+  def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, Valintaperuste)]
 
   def put(valintaperuste: Valintaperuste): Valintaperuste
   def get(id: UUID): Option[(Valintaperuste, Instant)]
-  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, Instant)
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, Valintaperuste)
 
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem]
   def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): Seq[ValintaperusteListItem]
@@ -37,15 +38,15 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
   override def put(valintaperuste: Valintaperuste): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally(getPutActions(valintaperuste)).get
 
-  override def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, Instant)] =
+  override def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[(Boolean, Valintaperuste)] =
     checkNotModified(valintaperuste.id.get, notModifiedSince).andThen(
       for {
         v <- updateValintaperuste(valintaperuste)
         k <- updateValintakokeet(valintaperuste)
-      } yield (0 < v.size + k.size, (v ++ k :+ Instant.EPOCH).max)
+      } yield (0 < v.size + k.size, valintaperuste.withModified((v ++ k ++ valintaperuste.modified.map(localDateTimeToInstant)).max))
     )
 
-  override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, Instant) =
+  override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): (Boolean, Valintaperuste) =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(valintaperuste, notModifiedSince)).get
 
   override def get(id: UUID): Option[(Valintaperuste, Instant)] = {

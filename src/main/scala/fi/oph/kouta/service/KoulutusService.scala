@@ -10,7 +10,7 @@ import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, Resource, UpdateAudit}
+import fi.oph.kouta.util.{AuditLog, Resource}
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 
@@ -37,9 +37,10 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
-    authorizeUpdate(koulutusWithTime, AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))) {
-      withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince, UpdateAudit(koulutusWithTime.get._1, koulutus))))
-    }
+    val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))
+    authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>
+      withValidation(koulutus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldKoulutus))
+    }._1
   }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
@@ -101,11 +102,11 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       (added: Koulutus) => added.oid.get.toString,
       (added: Koulutus) => auditLog.logCreate(added, user, Resource.Koulutus))
 
-  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, updateAudit: UpdateAudit[KoulutusOid, Koulutus]): Boolean =
-    sqsInTransactionService.runActionAndUpdateIndex[(Boolean, Instant)](
+  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, user: User, before: Koulutus): (Boolean, Koulutus) =
+    sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
-      () => KoulutusDAO.getUpdateActions(koulutus, notModifiedSince),
+      () => updateActions(koulutus, KoulutusDAO.getUpdateActions(_, notModifiedSince)),
       koulutus.oid.get.toString,
-      (result: (Boolean, Instant)) => auditLog.logUpdate(updateAudit, Resource.Koulutus, result._1, result._2))._1
+      (result: (Boolean, Koulutus)) => auditLog.logUpdate(before, result._2, user, Resource.Koulutus, result._1))
 }

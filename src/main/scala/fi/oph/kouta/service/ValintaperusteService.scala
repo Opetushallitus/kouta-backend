@@ -11,7 +11,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, Resource, UpdateAudit}
+import fi.oph.kouta.util.{AuditLog, Resource}
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 
@@ -31,10 +31,9 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
-            (implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
-    val oldValintaperuste = ValintaperusteDAO.get(valintaperuste.id.get)
-    authorizeUpdate(oldValintaperuste) {
-      withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince, UpdateAudit[UUID, Valintaperuste](oldValintaperuste.get._1, valintaperuste))._1)
+            (implicit authenticated: Authenticated, request: HttpServletRequest): (Boolean, Valintaperuste) = {
+    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {  oldValintaperuste =>
+      withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldValintaperuste))
     }
   }
 
@@ -67,11 +66,11 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       (added: Valintaperuste) => added.id.get.toString,
       (added: Valintaperuste) => auditLog.logCreate(added, user, Resource.Valintaperuste))
 
-  private def updateWithIndexing(valintaperuste: Valintaperuste, notModifiedSince: Instant, auditUpdate: UpdateAudit[UUID, Valintaperuste]) =
+  private def updateWithIndexing(valintaperuste: Valintaperuste, notModifiedSince: Instant, user: User, before: Valintaperuste) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeValintaperuste,
       () => ValintaperusteDAO.getUpdateActions(valintaperuste, notModifiedSince),
       valintaperuste.id.get.toString,
-      (result: (Boolean, Instant)) => auditLog.logUpdate(auditUpdate, Resource.Valintaperuste, result._1, result._2))
+      (result: (Boolean, Valintaperuste)) => auditLog.logUpdate(before, result._2, user, Resource.Valintaperuste, result._1))
 }

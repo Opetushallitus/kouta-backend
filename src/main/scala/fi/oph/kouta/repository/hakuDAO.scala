@@ -1,12 +1,11 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-import java.util.UUID
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
-import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
+import fi.oph.kouta.util.TimeUtils.{instantToLocalDateTime, localDateTimeToInstant}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -14,11 +13,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def getPutActions(haku: Haku): DBIO[Haku]
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Instant)]
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Haku)]
 
   def put(haku: Haku): Haku
   def get(oid: HakuOid): Option[(Haku, Instant)]
-  def update(haku: Haku, notModifiedSince: Instant): (Boolean, Instant)
+  def update(haku: Haku, notModifiedSince: Instant): (Boolean, Haku)
 
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
@@ -48,15 +47,15 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }.get
   }
 
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Instant)] =
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Haku)] =
     checkNotModified(haku.oid.get, notModifiedSince).andThen(
       for {
         x <- updateHaku(haku)
         y <- updateHaunHakuajat(haku)
-      } yield (0 < (x.size + y.size), (x ++ y :+ Instant.EPOCH).max)
+      } yield (0 < (x.size + y.size), haku.withModified((x ++ y ++ haku.modified.map(localDateTimeToInstant)).max))
     )
 
-  override def update(haku: Haku, notModifiedSince: Instant): (Boolean, Instant) =
+  override def update(haku: Haku, notModifiedSince: Instant): (Boolean, Haku) =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(haku, notModifiedSince)).get
 
   override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] = organisaatioOids match {
