@@ -47,16 +47,16 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
         put(entity).primaryId.get
     }
 
-  def putActions(entity: T, putActions: T => DBIO[T], updateActions: (T, Instant) => DBIO[(Boolean, T)]): DBIO[T] =
+  def putActions(entity: T, putActions: T => DBIO[T], updateActions: (T, Instant) => DBIO[Option[T]]): DBIO[T] =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>
         putActions(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
           .flatMap { added =>
             val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${added.primaryId.get}/$filename")
             updateActions(added.withMetadata(added.metadata.get.withTeemakuva(Some(url))), Instant.now())
-              .map { case (_, updated) =>
+              .map { updated =>
                 s3Service.deleteImage(s3Service.getTempKey(filename))
-                updated
+                updated.get
               }
           }
       case Some(s3Service.publicUrl(_)) =>
@@ -68,7 +68,7 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
         putActions(entity)
     }
 
-  def updateActions(entity: T, updateActions: T => DBIO[(Boolean, T)]): DBIO[(Boolean, T)] =
+  def updateActions(entity: T, updateActions: T => DBIO[Option[T]]): DBIO[Option[T]] =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>
         val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename")

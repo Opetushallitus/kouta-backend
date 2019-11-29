@@ -2,11 +2,10 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 
-import fi.oph.kouta.config.{KoutaConfiguration, KoutaConfigurationFactory}
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
-import fi.oph.kouta.util.TimeUtils.localDateTimeToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -14,13 +13,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getPutActions(koulutus: Koulutus): DBIO[Koulutus]
-
-  def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[(Boolean, Koulutus)]
+  def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Option[Koulutus]]
 
   def put(koulutus: Koulutus): Koulutus
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
-
-  def update(koulutus: Koulutus, notModifiedSince: Instant): (Boolean, Koulutus)
+  def update(koulutus: Koulutus, notModifiedSince: Instant): Option[Koulutus]
 
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
@@ -53,20 +50,19 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[(Boolean, Koulutus)] = {
+  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Option[Koulutus]] = {
     checkNotModified(koulutus.oid.get, notModifiedSince).andThen(
       for {
         k <- updateKoulutus(koulutus)
         t <- updateKoulutuksenTarjoajat(koulutus)
       } yield {
-        val changed = 0 < (k.size + t.size)
-        val updated = koulutus.withModified((k ++ t ++ koulutus.modified.map(localDateTimeToInstant) :+ Instant.EPOCH).max)
-        (changed, updated)
+        val modified = (k ++ t).sorted.lastOption
+        modified.map(koulutus.withModified)
       }
     )
   }
 
-  override def update(koulutus: Koulutus, notModifiedSince: Instant): (Boolean, Koulutus) =
+  override def update(koulutus: Koulutus, notModifiedSince: Instant): Option[Koulutus] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(koulutus, notModifiedSince)).get
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus) = {

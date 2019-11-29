@@ -10,7 +10,7 @@ import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, Resource}
+import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 
@@ -40,7 +40,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))
     authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>
       withValidation(koulutus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldKoulutus))
-    }._1
+    }.nonEmpty
   }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
@@ -100,13 +100,13 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       IndexTypeKoulutus,
       () => putActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActions),
       (added: Koulutus) => added.oid.get.toString,
-      (added: Koulutus) => auditLog.logCreate(added, user, Resource.Koulutus))
+      (added: Koulutus) => auditLog.logCreate(added, user))
 
-  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, user: User, before: Koulutus): (Boolean, Koulutus) =
+  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, user: User, before: Koulutus): Option[Koulutus] =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
       () => updateActions(koulutus, KoulutusDAO.getUpdateActions(_, notModifiedSince)),
       koulutus.oid.get.toString,
-      (result: (Boolean, Koulutus)) => auditLog.logUpdate(before, result._2, user, Resource.Koulutus, result._1))
+      (updated: Option[Koulutus]) => auditLog.logUpdate(before, updated, user))
 }

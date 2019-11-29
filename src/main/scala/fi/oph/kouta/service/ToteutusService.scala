@@ -3,18 +3,20 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.KoutaIndexClient
-import fi.oph.kouta.domain.{toteutus, _}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.AuditLog
+import fi.vm.sade.auditlog.User
+import javax.servlet.http.HttpServletRequest
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3Service)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3Service, AuditLog)
 
-class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
+class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
   extends ValidatingService[Toteutus] with RoleEntityAuthorizationService with TeemakuvaService[ToteutusOid, Toteutus, ToteutusMetadata] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
@@ -26,16 +28,16 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     authorizeGet(toteutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
   }
 
-  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
+  def put(toteutus: Toteutus)(implicit authenticated: Authenticated, request: HttpServletRequest): ToteutusOid =
     authorizePut(toteutus) {
-      withValidation(toteutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
-    }
+      withValidation(toteutus, putWithIndexing(_, auditLog.getUser))
+    }.oid.get
 
-  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, rules) { oldToteutus =>
-      withValidation(toteutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
+      withValidation(toteutus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldToteutus)).nonEmpty
     }
   }
 
@@ -70,17 +72,19 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def putWithIndexing(toteutus: Toteutus) =
+  private def putWithIndexing(toteutus: Toteutus, user: User) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => ToteutusDAO.getPutActions(toteutus),
-      (added: Toteutus) => added.oid.get.toString)
+      () => putActions(toteutus, ToteutusDAO.getPutActions, ToteutusDAO.getUpdateActions),
+      (added: Toteutus) => added.oid.get.toString,
+      (added: Toteutus) => auditLog.logCreate(added, user))
 
-  private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant) =
+  private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant, user: User, before: Toteutus) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => ToteutusDAO.getUpdateActions(toteutus, notModifiedSince),
-      toteutus.oid.get.toString)
+      () => updateActions(toteutus, ToteutusDAO.getUpdateActions(_, notModifiedSince)),
+      toteutus.oid.get.toString,
+      (updated: Option[Toteutus]) => auditLog.logUpdate(before, updated, user))
 }

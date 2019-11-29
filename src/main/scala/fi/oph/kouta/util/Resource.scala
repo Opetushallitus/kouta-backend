@@ -1,5 +1,7 @@
 package fi.oph.kouta.util
 
+import fi.oph.kouta.domain
+
 abstract class Resource(val name: String, val idField: String) extends ResourceOperations {
   override def toString: String = name
 }
@@ -15,4 +17,19 @@ object Resource {
   case object OppilaitoksenOsa extends Resource("oppilaitoksen osa", "oid")
   //case object Asiasana         extends Resource("asiasana")
   //case object Ammattinimike    extends Resource("ammattinimike")
+
+  def apply(entity: AnyRef): Resource = {
+    entity match {
+      case _: domain.Koulutus         => Koulutus
+      case _: domain.Toteutus         => Toteutus
+      case _: domain.Haku             => Haku
+      case _: domain.Hakukohde        => Hakukohde
+      case _: domain.Valintaperuste   => Valintaperuste
+      case _: domain.Sorakuvaus       => Sorakuvaus
+      case _: domain.Oppilaitos       => Oppilaitos
+      case _: domain.OppilaitoksenOsa => OppilaitoksenOsa
+      case r: Resource                => r
+      case _                          => throw new IllegalArgumentException("Resource not found")
+    }
+  }
 }

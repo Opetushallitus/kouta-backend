@@ -5,7 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
-import fi.oph.kouta.util.TimeUtils.{instantToLocalDateTime, localDateTimeToInstant}
+import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -13,11 +13,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def getPutActions(haku: Haku): DBIO[Haku]
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Haku)]
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Option[Haku]]
 
   def put(haku: Haku): Haku
   def get(oid: HakuOid): Option[(Haku, Instant)]
-  def update(haku: Haku, notModifiedSince: Instant): (Boolean, Haku)
+  def update(haku: Haku, notModifiedSince: Instant): Option[Haku]
 
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
@@ -47,15 +47,18 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }.get
   }
 
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[(Boolean, Haku)] =
+  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Option[Haku]] =
     checkNotModified(haku.oid.get, notModifiedSince).andThen(
       for {
         x <- updateHaku(haku)
         y <- updateHaunHakuajat(haku)
-      } yield (0 < (x.size + y.size), haku.withModified((x ++ y ++ haku.modified.map(localDateTimeToInstant)).max))
+      } yield {
+        val modified = (x ++ y).sorted.lastOption
+        modified.map(haku.withModified)
+      }
     )
 
-  override def update(haku: Haku, notModifiedSince: Instant): (Boolean, Haku) =
+  override def update(haku: Haku, notModifiedSince: Instant): Option[Haku] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(haku, notModifiedSince)).get
 
   override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] = organisaatioOids match {

@@ -1,11 +1,9 @@
 package fi.oph.kouta.util
 
 import java.net.InetAddress
-import java.time.{Instant, LocalDateTime}
 
 import fi.oph.kouta.domain.{HasModified, HasPrimaryId}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import fi.vm.sade.auditlog._
 import javax.servlet.http.HttpServletRequest
 import org.ietf.jgss.Oid
@@ -28,28 +26,22 @@ class AuditLog(val logger: Logger) extends GsonSupport {
 
   def init(): Unit = {}
 
-  def logCreate[T <: HasPrimaryId[_, T] with HasModified[T]](
-      added: T,
-      user: User,
-      resource: Resource
-  ): DBIO[_] = {
-    val target  = getTarget(resource, added.primaryId)
+  def logCreate[T <: HasPrimaryId[_, T] with HasModified[T]](added: T, user: User): DBIO[_] = {
+    val resource = Resource(added)
+    val target = getTarget(resource, added.primaryId)
     val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
     audit.log(user, resource.Create, target.build(), changes)
     DBIO.successful(true)
   }
 
-  def logUpdate[T <: HasPrimaryId[_, T] with HasModified[T]](
-      before: T,
-      after: T,
-      user: User,
-      resource: Resource,
-      success: Boolean
-  ): DBIO[_] = {
-    if (success) {
-      val target  = getTarget(resource, after.primaryId)
-      val changes = ChangeFactory.getChanges(before, after)
-      audit.log(user, resource.Update, target.build(), changes)
+  def logUpdate[T <: HasPrimaryId[_, T] with HasModified[T]](before: T, after: Option[T], user: User): DBIO[_] = {
+    after match {
+      case Some(updated) =>
+        val resource = Resource(updated)
+        val target = getTarget(resource, updated.primaryId)
+        val changes = ChangeFactory.getChanges(before, updated)
+        audit.log(user, resource.Update, target.build(), changes)
+      case None =>
     }
     DBIO.successful(true)
   }

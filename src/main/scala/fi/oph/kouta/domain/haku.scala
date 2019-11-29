@@ -3,9 +3,8 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 
-import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.IsValid
-import fi.vm.sade.auditlog.Changes
 
 package object haku {
 

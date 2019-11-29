@@ -23,7 +23,7 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
 
 trait ToteutusFixtureWithIndexing extends ToteutusFixture {
   this: KoutaIntegrationSpec =>
-  override protected lazy val toteutusService = new ToteutusService(SqsInTransactionService, MockS3Service)
+  override protected lazy val toteutusService = new ToteutusService(SqsInTransactionService, MockS3Service, new AuditLog(MockAuditLogger))
 }
 
 trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
