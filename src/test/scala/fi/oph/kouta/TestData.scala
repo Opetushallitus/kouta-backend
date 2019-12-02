@@ -109,7 +109,7 @@ object TestData {
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/hakemusinfo-fi", Sv -> "https://koulu.test/hakemusinfo-sv"),
-    metadata = Some(HakuMetadata(Some(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
+    metadata = Some(HakuMetadata(Seq(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     organisaatioOid = ChildOid,
     muokkaaja = UserOid("5.4.3.2.1"),
@@ -318,7 +318,7 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-    yhteyshenkilo = Some(Yhteystieto1))
+    yhteyshenkilot = Seq(Yhteystieto1))
 
   val YoToteutuksenMetaTieto = YliopistoToteutusMetadata(
     kuvaus = Map(),
@@ -335,7 +335,7 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-    yhteyshenkilo = Some(Yhteystieto1))
+    yhteyshenkilot = Seq(Yhteystieto1))
 
   val JulkaistuAmmToteutus = Toteutus(
     oid = None,

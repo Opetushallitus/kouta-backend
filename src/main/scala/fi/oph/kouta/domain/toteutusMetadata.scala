@@ -101,11 +101,11 @@ package object toteutusMetadata {
        |        opetus:
        |          type: object
        |          $$ref: '#/components/schemas/Opetus'
-       |        yhteyshenkilo:
-       |          type: object
-       |          description: Toteutuksen yhteyshenkilön tiedot
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Yhteyshenkilo'
+       |        yhteyshenkilot:
+       |          type: array
+       |          description: Lista toteutuksen yhteyshenkilöistä
+       |          items:
+       |            $$ref: '#/components/schemas/Yhteyshenkilo'
        |        asiasanat:
        |          type: array
        |          description: Lista toteutukseen liittyvistä asiasanoista, joiden avulla opiskelija voi hakea koulutusta Opintopolusta
@@ -237,7 +237,7 @@ sealed trait ToteutusMetadata {
   val opetus: Option[Opetus]
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
-  val yhteyshenkilo: Option[Yhteyshenkilo]
+  val yhteyshenkilot: Seq[Yhteyshenkilo]
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
@@ -251,14 +251,14 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         opetus: Option[Opetus] = None,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
-                                        yhteyshenkilo: Option[Yhteyshenkilo] = None) extends ToteutusMetadata
+                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
                                      opetus: Option[Opetus] = None,
                                      asiasanat: List[Keyword] = List(),
                                      ammattinimikkeet: List[Keyword] = List(),
-                                     yhteyshenkilo: Option[Yhteyshenkilo] = None,
+                                     yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                      alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                      ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
 
@@ -267,7 +267,7 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               opetus: Option[Opetus] = None,
                                               asiasanat: List[Keyword] = List(),
                                               ammattinimikkeet: List[Keyword] = List(),
-                                              yhteyshenkilo: Option[Yhteyshenkilo] = None,
+                                              yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                               alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                               ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
 

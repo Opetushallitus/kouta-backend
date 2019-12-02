@@ -127,11 +127,11 @@ package object haku {
     s"""    HakuMetadata:
        |      type: object
        |      properties:
-       |        yhteyshenkilo:
-       |          type: object
-       |          description: Haun yhteyshenkilön tiedot
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Yhteyshenkilo'
+       |        yhteyshenkilot:
+       |          type: array
+       |          description: Lista haun yhteyshenkilöistä
+       |          items:
+       |            $$ref: '#/components/schemas/Yhteyshenkilo'
        |        tulevaisuudenAikataulu:
        |          type: array
        |          description: Oppijalle Opintopolussa näytettävät haun mahdolliset tulevat hakuajat
@@ -225,5 +225,5 @@ case class HakuListItem(oid: HakuOid,
                         muokkaaja: UserOid,
                         modified: LocalDateTime) extends OidListItem
 
-case class HakuMetadata(yhteyshenkilo: Option[Yhteyshenkilo] = None,
+case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq())
