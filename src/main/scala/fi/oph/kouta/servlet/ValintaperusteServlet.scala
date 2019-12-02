@@ -153,36 +153,4 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       case (Some(oid), Some(hakuOid)) => Ok(valintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid)))
     }
   }
-
-  registerPath( "/valintaperuste/{id}/hakukohteet/list",
-    s"""    get:
-       |      summary: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty
-       |      operationId: Lista valintaperusteen hakukohteet
-       |      description: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
-       |      tags:
-       |        - Valintaperuste
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Valintaperusteen id
-       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/HakukohdeListItem'
-       |""".stripMargin)
-  get("/:id/hakukohteet/list") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id"))))
-  }
 }

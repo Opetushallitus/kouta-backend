@@ -182,72 +182,8 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => Ok(hakuService.listHakukohteet(HakuOid(params("oid")))) //TODO: Vain oph/indeksoija saa nähdä kaiken. Koskee myös muiden servletien vastaavia rajapintoja.
+      case None => NotFound()
       case Some(organisaatioOid) => Ok(hakuService.listHakukohteet(HakuOid(params("oid")), organisaatioOid))
     }
-  }
-
-  registerPath("/haku/{oid}/koulutukset/list",
-    s"""    get:
-       |      summary: Listaa kaikki hakuun liitetyt koulutukset
-       |      operationId: Listaa haun koulutukset
-       |      description: Listaa kaikki hakuun liitetyt koulutukset, mikäli käyttäjällä on oikeus nähdä ne
-       |      tags:
-       |        - Haku
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Haku-oid
-       |          example: 1.2.246.562.29.00000000000000000009
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/KoulutusListItem'
-       |""".stripMargin)
-  get("/:oid/koulutukset/list") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
-  }
-
-  registerPath("/haku/{oid}/toteutukset/list",
-    s"""    get:
-       |      summary: Listaa kaikki hakuun liitetyt toteutukset
-       |      operationId: Listaa haun toteutukset
-       |      description: Listaa kaikki hakuun liitetyt toteutukset, mikäli käyttäjällä on oikeus nähdä ne
-       |      tags:
-       |        - Haku
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Haku-oid
-       |          example: 1.2.246.562.29.00000000000000000009
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/ToteutusListItem'
-       |""".stripMargin)
-  get("/:oid/toteutukset/list") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
   }
 }

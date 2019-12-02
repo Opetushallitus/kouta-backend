@@ -143,38 +143,6 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     }
   }
 
-  registerPath( "/toteutus/{oid}/haut/list",
-    s"""    get:
-       |      summary: Listaa kaikki toteutukseen liitetyt haut
-       |      operationId: Listaa toteutuksen haut
-       |      description: Listaa kaikki toteutukseen liitetyt hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
-       |      tags:
-       |        - Toteutus
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Toteutus-oid
-       |          example: 1.2.246.562.17.00000000000000000009
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/HakuListItem'
-       |""".stripMargin)
-  get("/:oid/haut/list") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(toteutusService.listHaut(ToteutusOid(params("oid"))))
-  }
-
   registerPath( "/toteutus/{oid}/hakukohteet/list",
     s"""    get:
        |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet

@@ -144,85 +144,11 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     }
   }
 
-  registerPath( "/koulutus/tarjoaja/{:organisaatioOid}",
-    s"""    get:
-       |      summary: Hakee julkaistut koulutukset, joissa organisaatio tai sen aliorganisaatio on tarjoajana
-       |      operationId: Tarjoajan julkaistut koulutukset
-       |      description: Hakee kaikkien niiden koulutusten kaikki tiedot, joissa organisaatio tai sen aliorganisaatio
-       |        on tarjoajana ja jotka on julkaistu. Tämä rajapinta on indeksointia varten
-       |      tags:
-       |        - Koulutus
-       |      parameters:
-       |        - in: path
-       |          name: organisaatioOid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/KoulutusListItem'
-       |""".stripMargin)
-  get("/tarjoaja/:organisaatioOid") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(koulutusService.getTarjoajanJulkaistutKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
-  }
-
-  registerPath( "/koulutus/{oid}/toteutukset",
-    s"""    get:
-       |      summary: Hae koulutuksen toteutukset
-       |      operationId: Hae koulutuksen toteutukset
-       |      description: Hakee koulutuksen kaikkien toteutusten kaikki tiedot. Tämä rajapinta on ideksointia varten
-       |      tags:
-       |        - Koulutus
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Koulutus-oid
-       |          example: 1.2.246.562.13.00000000000000000009
-       |        - in: query
-       |          name: vainJulkaistut
-       |          schema:
-       |            type: boolean
-       |          required: false
-       |          default: false
-       |          description: Palautetaanko vain julkaistut, Opintopolussa näytettävät toteutukset
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/Toteutus'
-       |""".stripMargin)
-  get("/:oid/toteutukset") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
-  }
-
   registerPath( "/koulutus/{oid}/toteutukset/list",
     s"""    get:
        |      summary: Listaa organisaation käytettävissä olevat tietyn koulutuksen toteutukset
        |      operationId: Listaa koulutuksen toteutukset
        |      description: Listaa ne tietyn koulutuksen toteutukset, jotka ovat organisaation käytettävissä.
-       |        Jos organisaatio-oidia ei ole annettu,
-       |        listaa koulutuksen kaikki toteutukset, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
        |        - Koulutus
        |      parameters:
@@ -255,40 +181,8 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid"))))
+      case None => NotFound()
       case Some(organisaatioOid) => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")), organisaatioOid))
     }
-  }
-
-  registerPath( "/koulutus/{oid}/hakutiedot",
-    s"""    get:
-       |      summary: Hae koulutukseen liittyvät hakutiedot
-       |      operationId: Hae koulutuksen hakutiedot
-       |      description: Hakee koulutuksen kaikki hakutiedot. Tämä rajapinta on indeksointia varten
-       |      tags:
-       |        - Koulutus
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Koulutus-oid
-       |          example: 1.2.246.562.13.00000000000000000009
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/Hakutieto'
-       |""".stripMargin)
-  get("/:oid/hakutiedot") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
 }

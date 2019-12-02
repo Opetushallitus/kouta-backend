@@ -31,7 +31,7 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
     }
 
   def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
-    withRootAccess(Role.Valintaperuste.readRoles) {
+    withRootAccess(indexerRoles) {
       ValintaperusteDAO.listBySorakuvausId(sorakuvausId)
     }
 

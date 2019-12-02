@@ -144,36 +144,4 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       case Some(oid) => Ok(sorakuvausService.list(OrganisaatioOid(oid)))
     }
   }
-
-  registerPath( "/sorakuvaus/{id}/valintaperusteet/list",
-    s"""    get:
-       |      summary: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty
-       |      operationId: Listaa sorakuvauksen valintaperusteet
-       |      description: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
-       |      tags:
-       |        - Sorakuvaus
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: SORA-kuvauksen id
-       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/ValintaperusteListItem'
-       |""".stripMargin)
-  get("/:id/valintaperusteet/list") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(sorakuvausService.listValintaperusteet(UUID.fromString(params("id"))))
-  }
 }

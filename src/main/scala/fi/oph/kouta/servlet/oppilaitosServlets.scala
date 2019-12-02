@@ -109,45 +109,11 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
     }
   }
 
-  registerPath( "/oppilaitos/{oid}/osat",
-    s"""    get:
-       |      summary: Hakee oppilaitoksen kaikkien osien kuvailutiedot
-       |      operationId: Hae oppilaitoksen osat
-       |      description: Hakee oppilaitoksen kaikkien osien kuvailutiedot. Tämä rajapinta on ideksointia varten
-       |      tags:
-       |        - Oppilaitos
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Oppilaitoksen organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/OppilaitoksenOsa'
-       |""".stripMargin)
-  get("/:oid/osat") {
-
-    implicit val authenticated: Authenticated = authenticate
-
-    Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
-  }
-
   registerPath( "/oppilaitos/{oid}/osat/list",
     s"""    get:
        |      summary: Listaa organisaation käytettävissä olevat oppilaitoksen osien kuvailutiedot
        |      operationId: Listaa oppilaitoksen osat
-       |      description: Listaa ne tietyn oppilaitoksen osat, jotka ovat organisaation käytettävissä.
-       |        Jos organisaatio-oidia ei ole annettu,
-       |        listaa oppilaitoksen kaikki osat, mikäli käyttäjällä on oikeus nähdä ne
+       |      description: Listaa ne oppilaitoksen osat, jotka ovat organisaation käytettävissä.
        |      tags:
        |        - Oppilaitos
        |      parameters:
@@ -180,7 +146,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
     implicit val authenticated: Authenticated = authenticate
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => Ok(oppilaitosService.listOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
+      case None => NotFound()
       case Some(organisaatioOid) => Ok(oppilaitosService.listOppilaitoksenOsat(OrganisaatioOid(params("oid")), organisaatioOid))
     }
   }

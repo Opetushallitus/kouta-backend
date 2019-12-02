@@ -34,7 +34,7 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakuDAO.listByOrganisaatioOids)
 
   def listHakukohteet(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
-    withRootAccess(Role.Hakukohde.readRoles)(HakukohdeDAO.listByHakuOid(hakuOid))
+    withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid))
 
   def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
@@ -42,10 +42,10 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
     }
 
   def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
-    withRootAccess(Role.Koulutus.readRoles)(KoulutusDAO.listByHakuOid(hakuOid))
+    withRootAccess(indexerRoles)(KoulutusDAO.listByHakuOid(hakuOid))
 
   def listToteutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withRootAccess(Role.Toteutus.readRoles)(ToteutusDAO.listByHakuOid(hakuOid))
+    withRootAccess(indexerRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
   private def putWithIndexing(haku: Haku) =
     sqsInTransactionService.runActionAndUpdateIndex(

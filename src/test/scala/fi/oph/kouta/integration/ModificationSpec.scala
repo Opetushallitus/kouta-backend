@@ -8,15 +8,15 @@ import fi.oph.kouta.TestData.inFuture
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.Role
-import fi.oph.kouta.servlet.AnythingServlet
+import fi.oph.kouta.servlet.IndexerServlet
 import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
 
 class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
-  val AnythingPath = "/anything"
-  addServlet(new AnythingServlet(), AnythingPath)
+  val AnythingPath = "/indexer"
+  addServlet(new IndexerServlet(), AnythingPath)
 
   override def beforeAll() = {
     super.beforeAll()

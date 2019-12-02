@@ -6,7 +6,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
 
-class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
+class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
   override val roleEntities = RoleEntity.all
 
@@ -241,17 +241,17 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), indexerSession)
   }
 
-  "Valintaperustetta käyttävät hakukohteet list" should "list all hakukohteet using given valintaperuste id" in {
-    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
+  "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
   }
   it should "return 401 if session is not valid" in {
-    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 401, Map.empty)
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 401, Map.empty)
   }
   it should "deny access to non-root users" in {
-    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 403, crudSessions(v1.organisaatioOid))
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 403, crudSessions(v1.organisaatioOid))
   }
   it should "allow access to the indexer" in {
-    list(s"$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4), indexerSession)
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4), indexerSession)
   }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
@@ -265,12 +265,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> UnknownOid.s), 403)
-  }
-  it should "return all toteutukset if organisaatio oid not given" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), List(t1, t2, t3))
-  }
-  it should "deny access to all toteutukset without root organization access" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), 403, crudSessions(ParentOid))
   }
   it should "allow access to a user of the koulutus organization" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k1.organisaatioOid.s), List(t1, t2, t3), crudSessions(k1.organisaatioOid))
@@ -287,33 +281,43 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "deny access without the toteutus read role" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ChildOid.s), 403, addTestSession(Role.Koulutus.Read, OphOid))
   }
-  it should "allow access to the indexer" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), List(t1, t2, t3), indexerSession)
-  }
 
-  "Toteutukseen liitetyt haut" should "list all haut mapped to given toteutus" in {
-    list(s"$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2))
+  "Koulutuksen toteutukset for indexer list" should "return all toteutukset for indexer" in {
+    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), List(t1, t2, t3), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map[String,String](), 403)
+  }
+  it should "deny access to all toteutukset without indexer access" in {
+    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), 403, crudSessions(ParentOid))
   }
   it should "return 401 if no session is found" in {
-    list(s"$ToteutusPath/${t1.oid}/haut", Map[String,String](), 401, Map.empty)
+    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), 401, Map.empty)
+  }
+
+  "Toteutukseen liitetyt haut" should "list all haut mapped to given toteutus for indexer" in {
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/haut", Map[String,String](), 403)
+  }
+  it should "return 401 if no session is found" in {
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/haut", Map[String,String](), 401, Map.empty)
   }
   it should "deny access to a non-root user, even if they own the toteutus" in {
-    list(s"$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(ChildOid))
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(ChildOid))
   }
   it should "deny access without access to the toteutus organization" in {
-    list(s"$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(LonelyOid))
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(LonelyOid))
   }
   it should "deny access for a non-root user of an ancestor organization" in {
-    list(s"$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(ParentOid))
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(ParentOid))
   }
   it should "deny access for a user of a descendant organization" in {
-    list(s"$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(GrandChildOid))
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, crudSessions(GrandChildOid))
   }
   it should "deny access without the haku read role" in {
-    list(s"$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
-  }
-  it should "allow access to the haut of any toteutus with the indexer role" in {
-    list(s"$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], List(h1), indexerSession)
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/haut", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
   }
 
   "Toteutukseen liitetyt hakukohteet" should "list all hakukohteet mapped to given toteutus" in {
@@ -344,6 +348,31 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2), indexerSession)
   }
 
+  "Toteutukseen liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given toteutus for indexer" in {
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), 403)
+  }
+  it should "return 401 if no session is found" in {
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), 401, Map.empty)
+  }
+  it should "deny access to a non-root user of the toteutus organization" in {
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/hakukohteet", Map.empty[String, String], 403, crudSessions(ChildOid))
+  }
+  it should "deny access without access to the toteutus organization" in {
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/hakukohteet", Map.empty[String, String], 403, crudSessions(LonelyOid))
+  }
+  it should "deny access for a non-root user of an ancestor organization" in {
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/hakukohteet", Map.empty[String, String], 403, crudSessions(ParentOid))
+  }
+  it should "deny access for a user of a descendant organization" in {
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/hakukohteet", Map.empty[String, String], 403, crudSessions(GrandChildOid))
+  }
+  it should "deny access without the hakukohde read role" in {
+    list(s"$IndexerPath$ToteutusPath/${t2.oid}/hakukohteet", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
+  }
+
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid.s), List(hk1, hk2))
   }
@@ -356,14 +385,11 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> UnknownOid.s), 403)
   }
-  it should "return all if organisaatio oid not given" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), List(hk1, hk2, hk4))
+  it should "return not found if organisaatio oid is not given" in {
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), 404)
   }
   it should "return 401 if there's no valid session" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), 401, Map.empty)
-  }
-  it should "deny access to all hakukohteet without root organization access" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), 403, crudSessions(ParentOid))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid.s), 401, Map.empty)
   }
   it should "allow access to a user of the haku organization" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> h1.organisaatioOid.s), List(hk1, hk2), crudSessions(h1.organisaatioOid))
@@ -380,64 +406,50 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "deny access without the hakukohde read role" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ChildOid.s), 403, addTestSession(Role.Haku.Read, OphOid))
   }
-  it should "allow access to the indexer" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), List(hk1, hk2, hk4), indexerSession)
-  }
 
-  "Hakuun kuuluvat koulutukset" should "list all koulutukset mapped to given haku by hakukohde" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), List(k1, k4))
+  "Hakuun liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given haku for indexer" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), List(hk1, hk2, hk4), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), 403)
   }
   it should "return 401 if there's no valid session" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String,String](), 401, Map.empty)
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String,String](), 401, Map.empty)
   }
-  it should "deny access to all koulutukset without root organization access" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String, String](), 403, crudSessions(ParentOid))
-  }
-  it should "deny access to a non-root user of the haku organization" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map("organisaatioOid" -> h1.organisaatioOid.s), 403, crudSessions(h1.organisaatioOid))
-  }
-  it should "deny access to a user without access to the haku organization" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map("organisaatioOid" -> h1.organisaatioOid.s), 403, crudSessions(LonelyOid))
-  }
-  it should "deny access to a non-root user of an ancestor organization" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map("organisaatioOid" -> h2.organisaatioOid.s), 403, crudSessions(ParentOid))
-  }
-  it should "deny access to a user of a descendant organization" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map("organisaatioOid" -> h1.organisaatioOid.s), 403, crudSessions(GrandChildOid))
-  }
-  it should "deny access without the koulutus read role" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map("organisaatioOid" -> ChildOid.s), 403, addTestSession(Role.Haku.Read, OphOid))
-  }
-  it should "allow access to the indexer" in {
-    list(s"$HakuPath/${h1.oid}/koulutukset", Map[String, String](), List(k1, k4), indexerSession)
+  it should "deny access to all hakukohteet without root organization access" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), 403, crudSessions(ParentOid))
   }
 
-  "Sorakuvausta käyttävät valintaperusteet" should "list all valintaperusteet using given sorakuvaus" in {
-    list(s"$SorakuvausPath/${s1.id}/valintaperusteet", Map[String,String](), List(v1, v2))
+  "Hakuun kuuluvat koulutukset for indexer" should "list all koulutukset mapped to given haku by hakukohde for indexer" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String, String](), List(k1, k4), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String,String](), 403)
+  }
+  it should "return 401 if there's no valid session" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String,String](), 401, Map.empty)
+  }
+  it should "deny access to all koulutukset without root organization access" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String, String](), 403, crudSessions(ParentOid))
+  }
+
+  "Sorakuvausta käyttävät valintaperusteet for indexer" should "list all valintaperusteet using given sorakuvaus for indexer" in {
+    list(s"$IndexerPath$SorakuvausPath/${s1.id}/valintaperusteet", Map[String,String](), List(v1, v2), indexerSession)
   }
   it should "list all valintaperusteet using given sorakuvaus 2" in {
-    list(s"$SorakuvausPath/${s3.id}/valintaperusteet", Map[String,String](), List(v4))
+    list(s"$IndexerPath$SorakuvausPath/${s3.id}/valintaperusteet", Map[String,String](), List(v4), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$SorakuvausPath/${s1.id}/valintaperusteet", Map[String, String](), 403)
   }
   it should "deny access to a non-root user, even if they own the toteutus" in {
-    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(ChildOid))
-  }
-  it should "deny access without access to the toteutus organization" in {
-    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(LonelyOid))
-  }
-  it should "deny access for a non-root user of an ancestor organization" in {
-    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(ParentOid))
-  }
-  it should "deny access for a user of a descendant organization" in {
-    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(GrandChildOid))
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(ChildOid))
   }
   it should "deny access without the valintaperuste read role" in {
-    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
   }
-  it should "allow access with the valintaperuste read role" in {
-    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], List(), addTestSession(Role.Valintaperuste.Read, OphOid))
-  }
-  it should "allow access to the haut of any toteutus with the indexer role" in {
-    list(s"$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], List(), indexerSession)
+  it should "deny access with the valintaperuste read role" in {
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Valintaperuste.Read, OphOid))
   }
 
   "Oppilaitoksen osat list" should "list all oppilaitoksen osat for this oppilaitos" in {
@@ -449,8 +461,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> UnknownOid.s), 403)
   }
-  it should "deny access to all oppilaitosten osat without root organization access" in {
-    list(s"$OppilaitosPath/${o1.s}/osat", Map[String, String](), 403, crudSessions(ParentOid))
+  it should "return not found if no organization oid is given" in {
+    list(s"$OppilaitosPath/${o1.s}/osat", Map[String, String](), 404, crudSessions(ParentOid))
   }
   it should "deny access to a user without access to the oppilaitos organization" in {
     list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
@@ -464,13 +476,23 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "allow access with the oppilaitos read role" in {
     list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ChildOid.s), 200, addTestSession(Role.Oppilaitos.Read, OphOid))
   }
-  it should "allow access to the indexer" in {
-    list(s"$OppilaitosPath/${o1.s}/osat", Map[String, String](), List(oo1, oo2), indexerSession)
+
+  "Oppilaitoksen osat list for indexer" should "list all oppilaitoksen osat for this oppilaitos for indexer" in {
+    list(s"$IndexerPath$OppilaitosPath/${o1.s}/osat", Map[String, String](), List(oo1, oo2), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$OppilaitosPath/${o1.s}/osat", Map[String, String](), 403)
+  }
+  it should "return 401 if no session is found" in {
+    list(s"$IndexerPath$OppilaitosPath/${o1.s}/osat", Map[String, String](), 401, Map.empty)
+  }
+  it should "deny access with the oppilaitos read role" in {
+    list(s"$IndexerPath$OppilaitosPath/${o1.s}/osat", Map[String, String](), 403, addTestSession(Role.Koulutus.Read, OphOid))
   }
 
   //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
   "Koulutukset hakutiedot" should "return all hakutiedot related to koulutus" in {
-    get(s"$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
+    get(s"$IndexerPath$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
       //debugJson[List[Hakutieto]](body)
 

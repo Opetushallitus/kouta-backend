@@ -85,7 +85,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   }
 
   def listToteutukset(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withRootAccess(Role.Toteutus.readRoles)(ToteutusDAO.listByKoulutusOid(oid))
+    withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid))
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Toteutus.readRoles) {
