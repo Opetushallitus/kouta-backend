@@ -33,5 +33,5 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
 
 trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
   this: KoutaIntegrationSpec =>
-  override protected lazy val hakukohdeService = HakukohdeService
+  override protected lazy val hakukohdeService = new HakukohdeService(SqsInTransactionService, new AuditLog((MockAuditLogger)))
 }

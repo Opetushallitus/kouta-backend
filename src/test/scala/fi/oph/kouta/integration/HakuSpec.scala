@@ -81,7 +81,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "write create haku to audit log" in {
     MockAuditLogger.clean()
-    val oid = put(haku.withModified(LocalDateTime.parse("1000-01-01T00:00:00")))
+    val oid = put(haku.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
     MockAuditLogger.find(oid, "haku_create") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }
@@ -139,7 +139,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
     MockAuditLogger.clean()
-    update(thisHaku.copy(tila = Arkistoitu, modified = Some(LocalDateTime.parse("1000-01-01T00:00:00"))), lastModified)
+    update(thisHaku.copy(tila = Arkistoitu, modified = Some(LocalDateTime.parse("1000-01-01T12:00:00"))), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "haku_update") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }
@@ -148,7 +148,9 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val oid = put(haku)
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
+    MockAuditLogger.clean()
     update(thisHaku, lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, thisHaku) should equal (lastModified)
   }
 

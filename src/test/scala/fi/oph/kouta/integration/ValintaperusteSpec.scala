@@ -80,7 +80,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   it should "write create valintaperuste in log" in {
     MockAuditLogger.clean()
-    val id = put(valintaperuste.withModified(LocalDateTime.parse("1000-01-01T00:00:00")))
+    val id = put(valintaperuste.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
     MockAuditLogger.find(id.toString, "valintaperuste_create")
     MockAuditLogger.find("1000-01-01") should not be defined
     get(id, valintaperuste(id))
@@ -149,7 +149,9 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "not update valintaperuste" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
+    MockAuditLogger.clean()
     update(tallennettuValintaperuste(id), lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(id, valintaperuste(id)) should equal (lastModified)
   }
 
