@@ -322,14 +322,14 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "return 401 if no session is found" in {
     list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map.empty[String,String], 401, Map.empty)
   }
-  it should "deny access to a non-root user of the toteutus organization" in {
-    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List.empty[Hakukohde], crudSessions(ChildOid))
+  it should "allow access to a non-root user of the toteutus organization" in {
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2), crudSessions(ChildOid))
   }
   it should "deny access without access to the toteutus organization" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> LonelyOid.s), List.empty[Hakukohde], crudSessions(LonelyOid))
   }
-  it should "deny access for a non-root user of an ancestor organization" in {
-    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ParentOid.s), List.empty[Hakukohde], crudSessions(ParentOid))
+  it should "allow access for a non-root user of an ancestor organization" in {
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ParentOid.s), List(hk2), crudSessions(ParentOid))
   }
   it should "deny access for a user of a descendant organization" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> GrandChildOid.s), List.empty[Hakukohde], crudSessions(GrandChildOid))
