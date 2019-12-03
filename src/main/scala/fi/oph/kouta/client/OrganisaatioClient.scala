@@ -10,14 +10,23 @@ import org.json4s.jackson.JsonMethods._
 
 import scala.annotation.tailrec
 
-object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
+trait OrganisaatioClient {
+  type OrganisaatioOidsAndOppilaitostyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
+}
+
+object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJsonFormats {
   val urlProperties: OphProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   val OphOid: OrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
-  def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): (Seq[OrganisaatioOid], Seq[Koulutustyyppi]) = oid match {
+  def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
     case OphOid => (Seq(OphOid), Koulutustyyppi.values)
     case _ => getHierarkia(oid, orgs => (children(oid, orgs), oppilaitostyypit(oid, orgs)))
+  }
+
+  def getAllChildAndParentOidsWithOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
+    case OphOid => (Seq(OphOid), Koulutustyyppi.values)
+    case _ => getHierarkia(oid, orgs => (parentsAndChildren(oid, orgs), oppilaitostyypit(oid, orgs)))
   }
 
   case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])

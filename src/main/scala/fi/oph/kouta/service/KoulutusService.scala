@@ -24,7 +24,7 @@ trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
     koulutusWithTime.map {
       case (koulutus, lastModified) if hasRootAccess(Role.Koulutus.readRoles) => (koulutus, lastModified)
       case (koulutus, lastModified) =>
-        organizationsForRoles(Role.Koulutus.readRoles) match {
+        authenticated.session.getOrganizationsForRoles(Role.Koulutus.readRoles) match {
           case oids if oids.isEmpty => throw RoleAuthorizationFailedException(Role.Koulutus.readRoles, authenticated.session.roles)
           case oids =>
             if (allowedByOrgOrJulkinen(koulutus, oids)) {

@@ -71,6 +71,9 @@ sealed trait Session {
 
   lazy val roleMap: Map[Role, Set[OrganisaatioOid]] = authorities.groupBy(_.role).mapValues(_.flatMap(_.organisaatioId))
   lazy val roles: Set[Role] = roleMap.keySet
+
+  def getOrganizationsForRoles(requiredRoles: Seq[Role]): Set[OrganisaatioOid] =
+    requiredRoles.flatMap(roleMap.get).fold(Set())(_ union _)
 }
 
 case class ServiceTicket(s: String)

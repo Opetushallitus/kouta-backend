@@ -37,4 +37,9 @@ trait CasAuthenticatedServlet {
   */
 }
 
-case class Authenticated(id: UUID, session: Session)
+case class Authenticated(id: UUID, session: Session) {
+
+
+
+
+}
