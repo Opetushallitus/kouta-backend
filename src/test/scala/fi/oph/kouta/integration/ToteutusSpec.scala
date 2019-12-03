@@ -65,18 +65,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, indexerSession, toteutus(oid, koulutusOid))
   }
 
-  it should "allow a user of the toteutus organization to list hakukohteet of the toteutus" in {
-    val orgOid = toteutus.organisaatioOid
-    val session: UUID = readSessions(orgOid)
-
-    get(s"$ToteutusPath/${TestData.JulkaistuHakukohde.toteutusOid.s}/hakukohteet/list?organisaatioOid=${orgOid.s}", headers = Seq(sessionHeader(session))) {
-      withClue(body) {
-        status should equal(200)
-        body should equal("[]")
-      }
-    }
-  }
-
   "Create toteutus" should "store toteutus" in {
     val oid = put(toteutus(koulutusOid))
     get(oid, toteutus(oid, koulutusOid))
