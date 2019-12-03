@@ -8,6 +8,7 @@ import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.JsonMethods
+import java.util.UUID
 
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
@@ -62,6 +63,18 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "allow indexer access" in {
     val oid = put(toteutus(koulutusOid))
     get(oid, indexerSession, toteutus(oid, koulutusOid))
+  }
+
+  it should "allow a user of the toteutus organization to list hakukohteet of the toteutus" in {
+    val orgOid = toteutus.organisaatioOid
+    val session: UUID = readSessions(orgOid)
+
+    get(s"$ToteutusPath/${TestData.JulkaistuHakukohde.toteutusOid.s}/hakukohteet/list?organisaatioOid=${orgOid.s}", headers = Seq(sessionHeader(session))) {
+      withClue(body) {
+        status should equal(200)
+        body should equal("[]")
+      }
+    }
   }
 
   "Create toteutus" should "store toteutus" in {

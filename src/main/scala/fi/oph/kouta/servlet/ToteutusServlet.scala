@@ -190,6 +190,13 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
        |          required: true
        |          description: Toteutus-oid
        |          example: 1.2.246.562.17.00000000000000000009
+       |        - in: query
+       |          name: organisaatioOid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Organisaatio-oid
+       |          example: 1.2.246.562.10.00101010101
        |      responses:
        |        '200':
        |          description: Ok
@@ -203,6 +210,13 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
   get("/:oid/hakukohteet/list") {
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid"))))
+    val toteutusOid = ToteutusOid(params("oid"))
+
+    params.get("organisaatioOid").map(OrganisaatioOid) match {
+      case None =>
+        NotFound()
+      case Some(organisaatioOid) =>
+        Ok(toteutusService.listHakukohteet(toteutusOid, organisaatioOid))
+    }
   }
 }
