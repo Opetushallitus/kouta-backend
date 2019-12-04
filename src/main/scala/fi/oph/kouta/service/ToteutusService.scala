@@ -4,6 +4,7 @@ import java.time.Instant
 
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
@@ -14,9 +15,11 @@ import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3Service, AuditLog)
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3Service, AuditLog, KeywordService)
+
+class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog, keywordService: KeywordService)
   extends ValidatingService[Toteutus] with RoleEntityAuthorizationService with TeemakuvaService[ToteutusOid, Toteutus, ToteutusMetadata] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
@@ -72,19 +75,40 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def putWithIndexing(toteutus: Toteutus, user: User) =
+  private def putWithIndexing(toteutus: Toteutus, user: User) = {
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => putActions(toteutus, ToteutusDAO.getPutActions, ToteutusDAO.getUpdateActions),
+      () => themeImagePutActions(toteutus, putActions(_, user), updateActions(_, _, user)),
       (added: Toteutus) => added.oid.get.toString,
       (added: Toteutus) => auditLog.logCreate(added, user))
+  }
 
   private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant, user: User, before: Toteutus) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => updateActions(toteutus, ToteutusDAO.getUpdateActions(_, notModifiedSince)),
+      () => themeImageUpdateActions(toteutus, updateActions(_, notModifiedSince, user)),
       toteutus.oid.get.toString,
       (updated: Option[Toteutus]) => auditLog.logUpdate(before, updated, user))
+
+  private def updateActions(toteutus: Toteutus, notModifiedSince: Instant, user: User) =
+    for {
+      _ <- insertAsiasanat(toteutus, user)
+      _ <- insertAmmattinimikkeet(toteutus, user)
+      t <- ToteutusDAO.getUpdateActions(toteutus, notModifiedSince)
+    } yield t
+
+  private def putActions(toteutus: Toteutus, user: User) =
+    for {
+      _ <- insertAsiasanat(toteutus, user)
+      _ <- insertAmmattinimikkeet(toteutus, user)
+      t <- ToteutusDAO.getPutActions(toteutus)
+    } yield t
+
+  private def insertAsiasanat(toteutus: Toteutus, user: User) =
+    keywordService.insert(Asiasana, user, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))
+
+  private def insertAmmattinimikkeet(toteutus: Toteutus, user: User) =
+    keywordService.insert(Ammattinimike, user, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(Seq()))
 }

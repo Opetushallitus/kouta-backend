@@ -268,11 +268,11 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 sealed trait DatabaseSpec {
 
   import fi.oph.kouta.repository.KoutaDatabase
+  import slick.jdbc.PostgresProfile.api._
 
   lazy val db = KoutaDatabase
 
   def truncateDatabase() = {
-    import slick.jdbc.PostgresProfile.api._
     db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet""")
     db.runBlocking(sqlu"""delete from hakukohteiden_liitteet""")
     db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
@@ -309,16 +309,13 @@ sealed trait DatabaseSpec {
   }
 
   def deleteAsiasanat() = {
-    import slick.jdbc.PostgresProfile.api._
     db.runBlocking(sqlu"""delete from asiasanat""")
     db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 
   import java.time._
 
-  import slick.jdbc.PostgresProfile.api._
-
-  implicit val getInstant = slick.jdbc.GetResult[LocalDateTime](r =>
+  implicit val getLocalDateTime = slick.jdbc.GetResult[LocalDateTime](r =>
     TimeUtils.timeStampToLocalDateTime(r.nextTimestamp()).withNano(0).withSecond(0))
 
   def readModifiedByOid(oid:String, table:String):LocalDateTime = db.runBlocking(

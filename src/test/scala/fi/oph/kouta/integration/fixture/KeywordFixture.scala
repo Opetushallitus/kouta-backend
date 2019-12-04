@@ -3,15 +3,18 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.service.KeywordService
 import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet}
+import fi.oph.kouta.util.AuditLog
 import org.json4s.jackson.Serialization.read
 
 trait KeywordFixture { this:KoutaIntegrationSpec =>
   val AsiasanaPath = "/asiasana"
   val AmmattinimikePath = "/ammattinimike"
 
-  addServlet(new AsiasanaServlet(), AsiasanaPath)
-  addServlet(new AmmattinimikeServlet(), AmmattinimikePath)
+  addServlet(new AsiasanaServlet(new KeywordService(new AuditLog(MockAuditLogger))), AsiasanaPath)
+  addServlet(new AmmattinimikeServlet(new KeywordService(new AuditLog(MockAuditLogger))), AmmattinimikePath)
 
   val asiasanat = List(
     "aaMu",

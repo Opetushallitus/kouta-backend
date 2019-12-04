@@ -2,10 +2,9 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 
-import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
-import fi.oph.kouta.util.TimeUtils.{instantToLocalDateTime, localDateTimeToInstant}
+import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -13,7 +12,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getPutActions(toteutus: Toteutus): DBIO[Toteutus]
-
   def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Option[Toteutus]]
 
   def put(toteutus: Toteutus): Toteutus
@@ -36,8 +34,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     for {
       (oid, t) <- insertToteutus(toteutus)
       tt <- insertToteutuksenTarjoajat(toteutus.copy(oid = Some(oid)))
-      _ <- insertAmmattinimikkeet(toteutus)
-      _ <- insertAsiasanat(toteutus)
     } yield toteutus.copy(oid = Some(oid)).withModified((t +: tt).max)
 
   override def put(toteutus: Toteutus): Toteutus =
@@ -48,8 +44,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       for {
         t  <- updateToteutus(toteutus)
         tt <- updateToteutuksenTarjoajat(toteutus)
-        _  <- insertAsiasanat(toteutus)
-        _  <- insertAmmattinimikkeet(toteutus)
       } yield {
         val modified = (t ++ tt).sorted.lastOption
         modified.map(toteutus.withModified)
@@ -78,12 +72,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       deleteTarjoajat(oid)
     }
   }
-
-  private def insertAmmattinimikkeet(toteutus: Toteutus) =
-    KeywordDAO.insert(Ammattinimike, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(List()))
-
-  private def insertAsiasanat(toteutus: Toteutus) =
-    KeywordDAO.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(List()))
 
   override def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid] =
     KoutaDatabase.runBlocking(selectTarjoajatByHakukohdeOid(hakukohdeOid))

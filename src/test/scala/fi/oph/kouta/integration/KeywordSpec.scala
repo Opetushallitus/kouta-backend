@@ -5,6 +5,7 @@ import java.util.UUID
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import org.scalatest.BeforeAndAfterEach
 
@@ -101,22 +102,28 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
     searchAmmattinimikkeet("pa", List("pappi", "kippari", "kuppari"))
   }
 
-  "Update toteutus" should "store ammattinimikkeet ja asiasanat in toteutus" in {
+  "Create toteutus" should "store ammattinimikkeet ja asiasanat in toteutus" in {
     searchAsiasanat("robo", List())
     searchAmmattinimikkeet("insinööri", List())
+    MockAuditLogger.clean()
     put(toteutus(koulutusOid))
+    MockAuditLogger.find("asiasana", "fi", "robotiikka", "asiasana_create") shouldBe defined
+    MockAuditLogger.find("ammattinimike", "fi", "koneinsinööri", "ammattinimike_create") shouldBe defined
     searchAsiasanat("robo", toteutus.metadata.get.asiasanat.map(_.arvo))
     searchAmmattinimikkeet("insinööri", toteutus.metadata.get.ammattinimikkeet.map(_.arvo))
   }
 
-  "Create toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
+  "Update toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(AmmatillinenToteutusMetadata(
       asiasanat = List(Keyword(Fi, "robotti")),
       ammattinimikkeet = List(Keyword(Fi, "robotti-insinööri"))
     )))
+    MockAuditLogger.clean()
     update(updatedToteutus, lastModified)
+    MockAuditLogger.find("asiasana", "fi", "robotti", "asiasana_create") shouldBe defined
+    MockAuditLogger.find("ammattinimike", "fi", "robotti-insinööri", "ammattinimike_create") shouldBe defined
     searchAsiasanat("robo", List("robotiikka", "robotti", "robottiautomatiikka"))
     searchAmmattinimikkeet("insinööri", List("insinööri", "koneinsinööri", "robotti-insinööri"))
   }
@@ -125,10 +132,22 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
     import slick.jdbc.PostgresProfile.api._
     val value = ammattinimikkeet.head.toLowerCase
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
+    MockAuditLogger.clean()
     post(AmmattinimikePath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
+    MockAuditLogger.logs shouldBe empty
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
+  }
+
+  it should "write to audit log" in {
+    MockAuditLogger.clean()
+    post(AmmattinimikePath, bytes(List("lisätty-ammattinimike")), headers = Seq(defaultSessionHeader)) {
+      withClue(body) {
+        status should equal(200)
+      }
+    }
+    MockAuditLogger.find("ammattinimike", "fi", "lisätty-ammattinimike", "ammattinimike_create") shouldBe defined
   }
 
   it should "return 401 without a valid session" in {
@@ -149,12 +168,24 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
     import slick.jdbc.PostgresProfile.api._
     val value = asiasanat.head.toLowerCase
     db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)
+    MockAuditLogger.clean()
     post(AsiasanaPath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       withClue(body) {
         status should equal(200)
       }
     }
+    MockAuditLogger.logs shouldBe empty
     db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)
+  }
+
+  it should "write to audit log" in {
+    MockAuditLogger.clean()
+    post(AsiasanaPath, bytes(List("lisätty-asiasana")), headers = Seq(defaultSessionHeader)) {
+      withClue(body) {
+        status should equal(200)
+      }
+    }
+    MockAuditLogger.find("asiasana", "fi", "lisätty-asiasana", "asiasana_create") shouldBe defined
   }
 
   it should "return 401 without a valid session" in {

@@ -2,7 +2,7 @@ package fi.oph.kouta.util
 
 import java.net.InetAddress
 
-import fi.oph.kouta.domain.{HasModified, HasPrimaryId}
+import fi.oph.kouta.domain.HasPrimaryId
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog._
 import javax.servlet.http.HttpServletRequest
@@ -26,7 +26,7 @@ class AuditLog(val logger: Logger) extends GsonSupport {
 
   def init(): Unit = {}
 
-  def logCreate[T <: HasPrimaryId[_, T] with HasModified[T]](added: T, user: User): DBIO[_] = {
+  def logCreate[T <: HasPrimaryId[_, T]](added: T, user: User): DBIO[_] = {
     val resource = Resource(added)
     val target = getTarget(resource, added.primaryId)
     val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
@@ -34,7 +34,7 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     DBIO.successful(true)
   }
 
-  def logUpdate[T <: HasPrimaryId[_, T] with HasModified[T]](before: T, after: Option[T], user: User): DBIO[_] = {
+  def logUpdate[T <: HasPrimaryId[_, T]](before: T, after: Option[T], user: User): DBIO[_] = {
     after match {
       case Some(updated) =>
         val resource = Resource(updated)
@@ -43,6 +43,14 @@ class AuditLog(val logger: Logger) extends GsonSupport {
         audit.log(user, resource.Update, target.build(), changes)
       case None =>
     }
+    DBIO.successful(true)
+  }
+
+  def logCreate[T <: AnyRef](added: T, resource: Resource, user: User, targets: Seq[(String, String)]): DBIO[Boolean] = {
+    val target = new Target.Builder()
+    targets.foreach { case (name, value) => target.setField(name, value) }
+    val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
+    audit.log(user, resource.Create, target.build(), changes)
     DBIO.successful(true)
   }
 

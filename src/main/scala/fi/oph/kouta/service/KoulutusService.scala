@@ -98,7 +98,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
-      () => putActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActions),
+      () => themeImagePutActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActions),
       (added: Koulutus) => added.oid.get.toString,
       (added: Koulutus) => auditLog.logCreate(added, user))
 
@@ -106,7 +106,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
-      () => updateActions(koulutus, KoulutusDAO.getUpdateActions(_, notModifiedSince)),
+      () => themeImageUpdateActions(koulutus, KoulutusDAO.getUpdateActions(_, notModifiedSince)),
       koulutus.oid.get.toString,
       (updated: Option[Koulutus]) => auditLog.logUpdate(before, updated, user))
 }
