@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
@@ -14,25 +15,12 @@ import fi.oph.kouta.servlet.Authenticated
 trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
   protected val roleEntity: RoleEntity = Role.Koulutus
 
-  def authorizeGetKoulutus(koulutusWithTime: Option[(Koulutus, Instant)])(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
-    def allowedByOrgOrJulkinen(koulutus: Koulutus, oids: Set[OrganisaatioOid]): Boolean =
-      lazyFlatChildren(oids).exists {
-        case (orgs, tyypit) =>
-          (koulutus.julkinen && koulutus.koulutustyyppi.exists(tyypit.contains)) || orgs.contains(koulutus.organisaatioOid)
-      }
+  def isJulkinenAndAuthorized(koulutus: Koulutus, oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean =
+    koulutus.julkinen && koulutus.koulutustyyppi.exists(oidsAndOppilaitostyypit._2.contains)
 
+  def authorizeGetKoulutus(koulutusWithTime: Option[(Koulutus, Instant)])(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     koulutusWithTime.map {
-      case (koulutus, lastModified) if hasRootAccess(Role.Koulutus.readRoles) => (koulutus, lastModified)
-      case (koulutus, lastModified) =>
-        authenticated.session.getOrganizationsForRoles(Role.Koulutus.readRoles) match {
-          case oids if oids.isEmpty => throw RoleAuthorizationFailedException(Role.Koulutus.readRoles, authenticated.session.roles)
-          case oids =>
-            if (allowedByOrgOrJulkinen(koulutus, oids)) {
-              (koulutus, lastModified)
-            } else {
-              throw OrganizationAuthorizationFailedException(koulutus.organisaatioOid)
-            }
-        }
+      case (k, t) => ifAuthorizedToTheseOrganizationHierarkies(Seq(k.organisaatioOid), roleEntity.readRoles, false, isJulkinenAndAuthorized(k, _))((k,t))
     }
   }
 }
