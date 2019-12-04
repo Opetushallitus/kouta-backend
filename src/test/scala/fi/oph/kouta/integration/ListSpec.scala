@@ -320,10 +320,13 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), List(hk1, hk3))
   }
   it should "return 401 if no session is found" in {
-    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map.empty[String,String], 401, Map.empty)
+    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), 401, Map.empty)
   }
   it should "allow access to a non-root user of the toteutus organization" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2), crudSessions(ChildOid))
+  }
+  it should "return 404 if called without organisaatioOid parameter" in {
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map.empty[String, String], 404, crudSessions(ChildOid))
   }
   it should "deny access without access to the toteutus organization" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> LonelyOid.s), List.empty[Hakukohde], crudSessions(LonelyOid))
@@ -337,8 +340,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "deny access without the hakukohde read role" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> OphOid.s), List.empty[Hakukohde], addTestSession(Role.Toteutus.Read, OphOid))
   }
-  it should "allow access to the hakukohteet of any toteutus with the indexer role" in {
-    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> indexerSession.toString), List(hk2), indexerSession)
+  it should "allow access to the hakukohteet of any toteutus with the indexer role with the toteutus organisation" in {
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2), indexerSession)
   }
 
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {
