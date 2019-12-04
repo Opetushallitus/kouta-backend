@@ -32,7 +32,7 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), rules) { oldHakuKohde =>
       withValidation(hakukohde, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldHakuKohde))
-    }.isDefined
+    }.nonEmpty
   }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =

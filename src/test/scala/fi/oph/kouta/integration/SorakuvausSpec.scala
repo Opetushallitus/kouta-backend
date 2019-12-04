@@ -1,11 +1,13 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.SorakuvausFixture
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -72,6 +74,13 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     get(id, TestData.YoSorakuvaus.copy(id = Some(id)))
   }
 
+  it should "write create haku to audit log" in {
+    MockAuditLogger.clean()
+    val id = put(sorakuvaus.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    MockAuditLogger.find(id.toString, "sorakuvaus_create") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "return 401 if no session is found" in {
     put(s"$SorakuvausPath", bytes(sorakuvaus)) {
       status should equal (401)
@@ -118,10 +127,21 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     get(id, sorakuvaus(id, Arkistoitu))
   }
 
+  it should "write sorakuvaus update to audit log" in {
+    val id = put(sorakuvaus)
+    val lastModified = get(id, sorakuvaus(id))
+    MockAuditLogger.clean()
+    update(sorakuvaus(id, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "sorakuvaus_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "not update sorakuvaus" in {
     val id = put(sorakuvaus)
     val lastModified = get(id, sorakuvaus(id))
+    MockAuditLogger.clean()
     update(sorakuvaus(id), lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(id, sorakuvaus(id)) should equal (lastModified)
   }
 
@@ -134,44 +154,44 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   }
 
   it should "allow a user of the sorakuvaus organization to update the sorakuvaus" in {
-    val oid = put(sorakuvaus)
-    val thisSorakuvaus = sorakuvaus(oid)
-    val lastModified = get(oid, thisSorakuvaus)
+    val id = put(sorakuvaus)
+    val thisSorakuvaus = sorakuvaus(id)
+    val lastModified = get(id, thisSorakuvaus)
     update(thisSorakuvaus, lastModified, false, crudSessions(sorakuvaus.organisaatioOid))
   }
 
   it should "deny a user without access to the sorakuvaus organization" in {
-    val oid = put(sorakuvaus)
-    val thisSorakuvaus = sorakuvaus(oid)
-    val lastModified = get(oid, thisSorakuvaus)
+    val id = put(sorakuvaus)
+    val thisSorakuvaus = sorakuvaus(id)
+    val lastModified = get(id, thisSorakuvaus)
     update(thisSorakuvaus, lastModified, 403, crudSessions(LonelyOid))
   }
 
   it should "allow a user of an ancestor organization to create the sorakuvaus" in {
-    val oid = put(sorakuvaus)
-    val thisSorakuvaus = sorakuvaus(oid)
-    val lastModified = get(oid, thisSorakuvaus)
+    val id = put(sorakuvaus)
+    val thisSorakuvaus = sorakuvaus(id)
+    val lastModified = get(id, thisSorakuvaus)
     update(thisSorakuvaus, lastModified, false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
-    val oid = put(sorakuvaus)
-    val thisSorakuvaus = sorakuvaus(oid)
-    val lastModified = get(oid, thisSorakuvaus)
+    val id = put(sorakuvaus)
+    val thisSorakuvaus = sorakuvaus(id)
+    val lastModified = get(id, thisSorakuvaus)
     update(thisSorakuvaus, lastModified, 403, crudSessions(GrandChildOid))
   }
 
   it should "deny a user with the wrong role" in {
-    val oid = put(sorakuvaus)
-    val thisSorakuvaus = sorakuvaus(oid)
-    val lastModified = get(oid, thisSorakuvaus)
+    val id = put(sorakuvaus)
+    val thisSorakuvaus = sorakuvaus(id)
+    val lastModified = get(id, thisSorakuvaus)
     update(thisSorakuvaus, lastModified, 403, readSessions(sorakuvaus.organisaatioOid))
   }
 
   it should "deny indexer access" in {
-    val oid = put(sorakuvaus)
-    val thisSorakuvaus = sorakuvaus(oid)
-    val lastModified = get(oid, thisSorakuvaus)
+    val id = put(sorakuvaus)
+    val thisSorakuvaus = sorakuvaus(id)
+    val lastModified = get(id, thisSorakuvaus)
     update(thisSorakuvaus, lastModified, 403, indexerSession)
   }
 

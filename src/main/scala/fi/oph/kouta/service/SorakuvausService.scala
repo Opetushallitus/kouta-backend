@@ -10,10 +10,13 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
 import fi.oph.kouta.repository.{SorakuvausDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.AuditLog
+import fi.vm.sade.auditlog.User
+import javax.servlet.http.HttpServletRequest
 
-object SorakuvausService extends SorakuvausService(SqsInTransactionService)
+object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog)
 
-abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService {
+class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -21,15 +24,15 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
     authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
-  def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
+  def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated, request: HttpServletRequest): UUID =
     authorizePut(sorakuvaus) {
-      withValidation(sorakuvaus, putWithIndexing)
+      withValidation(sorakuvaus, putWithIndexing(_, auditLog.getUser))
     }.id.get
 
-  def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
+  def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) { oldSorakuvaus =>
-      withValidation(sorakuvaus, updateWithIndexing(_, notModifiedSince))
-    }
+      withValidation(sorakuvaus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldSorakuvaus))
+    }.nonEmpty
 
   def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withRootAccess(indexerRoles) {
@@ -41,17 +44,19 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
       SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
     }
 
-  private def putWithIndexing(sorakuvaus: Sorakuvaus): Sorakuvaus =
+  private def putWithIndexing(sorakuvaus: Sorakuvaus, user: User): Sorakuvaus =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeSorakuvaus,
       () => SorakuvausDAO.getPutActions(sorakuvaus),
-      (added: Sorakuvaus) => added.id.get.toString)
+      (added: Sorakuvaus) => added.id.get.toString,
+      (added: Sorakuvaus) => auditLog.logCreate(added, user))
 
-  private def updateWithIndexing(sorakuvaus: Sorakuvaus, notModifiedSince: Instant) =
+  private def updateWithIndexing(sorakuvaus: Sorakuvaus, notModifiedSince: Instant, user: User, before: Sorakuvaus) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeSorakuvaus,
       () => SorakuvausDAO.getUpdateActions(sorakuvaus, notModifiedSince),
-      sorakuvaus.id.get.toString)
+      sorakuvaus.id.get.toString,
+      (updated: Option[Sorakuvaus]) => auditLog.logUpdate(before, updated, user))
 }

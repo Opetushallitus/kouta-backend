@@ -13,11 +13,11 @@ import slick.dbio.DBIO
 
 trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus]
-  def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Boolean]
+  def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Option[Sorakuvaus]]
 
   def put(sorakuvaus: Sorakuvaus): Sorakuvaus
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
-  def update(valintaperuste: Sorakuvaus, notModifiedSince: Instant): Boolean
+  def update(valintaperuste: Sorakuvaus, notModifiedSince: Instant): Option[Sorakuvaus]
 
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem]
 }
@@ -27,21 +27,24 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
   override def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus] = {
     for {
       id <- DBIO.successful(UUID.randomUUID)
-      _ <- insertSorakuvaus(sorakuvaus.copy(id = Some(id)))
-    } yield sorakuvaus.copy(id = Some(id))
+      s <- insertSorakuvaus(sorakuvaus.copy(id = Some(id)))
+    } yield sorakuvaus.copy(id = Some(id)).withModified(s.max)
   }
 
   override def put(sorakuvaus: Sorakuvaus): Sorakuvaus =
     KoutaDatabase.runBlockingTransactionally(getPutActions(sorakuvaus)).get
 
-  override def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Boolean] =
+  override def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Option[Sorakuvaus]] =
     checkNotModified(sorakuvaus.id.get, notModifiedSince).andThen(
       for {
         v <- updateSorakuvaus(sorakuvaus)
-      } yield 0 < v
+      } yield {
+        val modified = v.sorted.lastOption
+        modified.map(sorakuvaus.withModified)
+      }
     )
 
-  override def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): Boolean =
+  override def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): Option[Sorakuvaus] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(sorakuvaus, notModifiedSince)).get
 
   override def get(id: UUID): Option[(Sorakuvaus, Instant)] = {
@@ -86,7 +89,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
   lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
   def insertSorakuvaus(sorakuvaus: Sorakuvaus) = {
-    sqlu"""insert into sorakuvaukset (
+    sql"""insert into sorakuvaukset (
                      id,
                      tila,
                      nimi,
@@ -105,7 +108,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      ${toJsonParam(sorakuvaus.metadata)}::jsonb,
                      ${sorakuvaus.organisaatioOid},
                      ${sorakuvaus.muokkaaja}
-         )"""
+         ) returning lower(system_time)""".as[Instant]
   }
 
   def selectSorakuvaus(id: UUID) =
@@ -114,7 +117,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
           from sorakuvaukset where id = ${id.toString}::uuid"""
 
   def updateSorakuvaus(sorakuvaus: Sorakuvaus) = {
-    sqlu"""update sorakuvaukset set
+    sql"""update sorakuvaukset set
                      tila = ${sorakuvaus.tila.toString}::julkaisutila,
                      nimi = ${toJsonParam(sorakuvaus.nimi)}::jsonb,
                      koulutustyyppi = ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi,
@@ -125,14 +128,14 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      muokkaaja = ${sorakuvaus.muokkaaja}
            where id = ${sorakuvaus.id.map(_.toString)}::uuid
            and (koulutustyyppi is distinct from ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi
-           or tila is distinct from ${sorakuvaus.tila.toString}::julkaisutila
-           or nimi is distinct from ${toJsonParam(sorakuvaus.nimi)}::jsonb
-           or julkinen is distinct from ${sorakuvaus.julkinen}
-           or metadata is distinct from ${toJsonParam(sorakuvaus.metadata)}::jsonb
-           or organisaatio_oid is distinct from ${sorakuvaus.organisaatioOid}
-           or muokkaaja is distinct from ${sorakuvaus.muokkaaja}
-           or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb
-         )"""
+             or tila is distinct from ${sorakuvaus.tila.toString}::julkaisutila
+             or nimi is distinct from ${toJsonParam(sorakuvaus.nimi)}::jsonb
+             or julkinen is distinct from ${sorakuvaus.julkinen}
+             or metadata is distinct from ${toJsonParam(sorakuvaus.metadata)}::jsonb
+             or organisaatio_oid is distinct from ${sorakuvaus.organisaatioOid}
+             or muokkaaja is distinct from ${sorakuvaus.muokkaaja}
+             or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb
+           ) returning lower(system_time)""".as[Instant]
   }
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
