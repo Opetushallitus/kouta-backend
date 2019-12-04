@@ -30,23 +30,6 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
 
   def teemakuvaPrefix: String
 
-  def checkTeemakuvaInPut(entity: T, put: T => T, update: (T, Instant) => Boolean): ID =
-    entity.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        val id = put(entity.withMetadata(entity.metadata.get.withTeemakuva(None))).primaryId.get
-        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/$id/$filename")
-        update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))), Instant.now())
-        s3Service.deleteImage(s3Service.getTempKey(filename))
-        id
-      case Some(s3Service.publicUrl(_)) =>
-        put(entity).primaryId.get
-      case None =>
-        put(entity).primaryId.get
-      case Some(other) =>
-        logger.warn(s"Theme image outside the bucket: $other")
-        put(entity).primaryId.get
-    }
-
   def themeImagePutActions(entity: T, putActions: T => DBIO[T], updateActions: (T, Instant) => DBIO[Option[T]]): DBIO[T] =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>
@@ -77,18 +60,13 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
             s3Service.deleteImage(s3Service.getTempKey(filename))
             result
           }
-      case _ =>
+      case Some(s3Service.publicUrl(_)) =>
         updateActions(entity)
-    }
-
-  def checkTeemakuvaInUpdate(entity: T, update: T => Boolean): Boolean =
-    entity.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename")
-        val changed = update(entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
-        s3Service.deleteImage(s3Service.getTempKey(filename))
-        changed
-      case _ => update(entity)
+      case None =>
+        updateActions(entity)
+      case Some(other) =>
+        logger.warn(s"Theme image outside the bucket: $other")
+        updateActions(entity)
     }
 }
 

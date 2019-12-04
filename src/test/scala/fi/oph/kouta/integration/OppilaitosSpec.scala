@@ -1,11 +1,13 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Arkistoitu, OppilaitoksenOsa}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -64,6 +66,13 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   "Create oppilaitos" should "store oppilaitos" in {
     val oid = put(oppilaitos)
     get(oid, oppilaitos(oid))
+  }
+
+  it should "write create oppilaitos to audit log" in {
+    MockAuditLogger.clean()
+    val oid = put(oppilaitos.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    MockAuditLogger.find(oid, "oppilaitos_create") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
   }
 
   it should "return 401 if no session is found" in {
@@ -131,10 +140,22 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     get(oid, oppilaitos(oid, Arkistoitu))
   }
 
+  it should "write oppilaitos update to audit log" in {
+    val oid = put(oppilaitos)
+    val lastModified = get(oid, oppilaitos(oid))
+    MockAuditLogger.clean()
+    update(oppilaitos(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
+    get(oid, oppilaitos(oid, Arkistoitu))
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "oppilaitos_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "not update oppilaitos" in {
     val oid = put(oppilaitos)
     val lastModified = get(oid, oppilaitos(oid))
+    MockAuditLogger.clean()
     update(oppilaitos(oid), lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, oppilaitos(oid)) should equal (lastModified)
   }
 

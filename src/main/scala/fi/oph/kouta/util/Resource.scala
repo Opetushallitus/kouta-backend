@@ -15,7 +15,7 @@ object Resource {
   case object Valintaperuste   extends Resource("valintaperuste", "id")
   case object Sorakuvaus       extends Resource("sorakuvaus", "id")
   case object Oppilaitos       extends Resource("oppilaitos", "oid")
-  case object OppilaitoksenOsa extends Resource("oppilaitoksen osa", "oid")
+  case object OppilaitoksenOsa extends Resource("oppilaitoksen_osa", "oid")
   case object Asiasana         extends Resource("asiasana", "asiasana")
   case object Ammattinimike    extends Resource("ammattinimike", "ammattinimike")
 

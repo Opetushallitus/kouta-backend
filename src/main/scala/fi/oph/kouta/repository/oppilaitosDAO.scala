@@ -6,21 +6,22 @@ import fi.oph.kouta.domain.Oppilaitos
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait OppilaitosDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getPutActions(oppilaitos: Oppilaitos): DBIO[Oppilaitos]
-  def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Boolean]
+  def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Option[Oppilaitos]]
 
   def put(oppilaitos: Oppilaitos): Oppilaitos
   def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)]
-  def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Boolean
+  def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Option[Oppilaitos]
 }
 
 object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
 
   override def getPutActions(oppilaitos: Oppilaitos): DBIO[Oppilaitos] =
-    insertOppilaitos(oppilaitos).andThen(DBIO.successful(oppilaitos))
+    insertOppilaitos(oppilaitos).map(modified => oppilaitos.withModified(modified.max))
 
   override def put(oppilaitos: Oppilaitos): Oppilaitos =
     KoutaDatabase.runBlockingTransactionally(getPutActions(oppilaitos)).get
@@ -37,15 +38,18 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
     }
   }
 
-  override def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Boolean] = {
+  override def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Option[Oppilaitos]] = {
     checkNotModified(oppilaitos.oid, notModifiedSince).andThen(
       for {
         k <- updateOppilaitos(oppilaitos)
-      } yield 0 < k
+      } yield {
+        val modified = k.sorted.lastOption
+        modified.map(oppilaitos.withModified)
+      }
     )
   }
 
-  override def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Boolean =
+  override def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Option[Oppilaitos] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(oppilaitos, notModifiedSince)).get
 }
 
@@ -76,7 +80,7 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
   }
 
   def insertOppilaitos(oppilaitos: Oppilaitos) = {
-    sqlu"""insert into oppilaitokset (
+    sql"""insert into oppilaitokset (
             oid,
             tila,
             kielivalinta,
@@ -89,11 +93,12 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
             ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
             ${toJsonParam(oppilaitos.metadata)}::jsonb,
             ${oppilaitos.muokkaaja},
-            ${oppilaitos.organisaatioOid})"""
+            ${oppilaitos.organisaatioOid})
+          returning lower(system_time)""".as[Instant]
   }
 
   def updateOppilaitos(oppilaitos: Oppilaitos) = {
-    sqlu"""update oppilaitokset set
+    sql"""update oppilaitokset set
               tila = ${oppilaitos.tila.toString}::julkaisutila,
               kielivalinta = ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
               metadata = ${toJsonParam(oppilaitos.metadata)}::jsonb,
@@ -103,6 +108,7 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
             and ( tila is distinct from ${oppilaitos.tila.toString}::julkaisutila
             or metadata is distinct from ${toJsonParam(oppilaitos.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(oppilaitos.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid})"""
+            or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid})
+            returning lower(system_time)""".as[Instant]
   }
 }

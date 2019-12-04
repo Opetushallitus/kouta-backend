@@ -190,7 +190,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
     MockAuditLogger.clean()
-    update(koulutus(oid, Arkistoitu).copy(modified = Some(LocalDateTime.parse("1000-01-01T12:00:00"))), lastModified)
+    update(koulutus(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "koulutus_update") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }

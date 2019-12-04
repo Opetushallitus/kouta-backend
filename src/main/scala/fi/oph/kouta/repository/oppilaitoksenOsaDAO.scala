@@ -11,11 +11,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait OppilaitoksenOsaDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa]
-  def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Boolean]
+  def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Option[OppilaitoksenOsa]]
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa): OppilaitoksenOsa
   def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)]
-  def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): Boolean
+  def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): Option[OppilaitoksenOsa]
 
   def getByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsa]
   def listByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsaListItem]
@@ -27,7 +27,7 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
   override def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa] =
     checkOppilaitosExists(oppilaitoksenOsa).flatMap {
       case false => DBIO.failed(new NoSuchElementException(s"""Oppilaitos ${oppilaitoksenOsa.oppilaitosOid} ei löyty kannasta!"""))
-      case true => insertOppilaitoksenOsa(oppilaitoksenOsa).andThen(DBIO.successful(oppilaitoksenOsa))
+      case true => insertOppilaitoksenOsa(oppilaitoksenOsa).map(modified => oppilaitoksenOsa.withModified(modified.max))
     }
 
   override def put(oppilaitoksenOsa: OppilaitoksenOsa): OppilaitoksenOsa =
@@ -45,15 +45,18 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
     }
   }
 
-  override def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Boolean] = {
+  override def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Option[OppilaitoksenOsa]] = {
     checkNotModified(oppilaitoksenOsa.oid, notModifiedSince).andThen(
       for {
         k <- updateOppilaitoksenOsa(oppilaitoksenOsa)
-      } yield 0 < k
+      } yield {
+        val modified = k.sorted.lastOption
+        modified.map(oppilaitoksenOsa.withModified)
+      }
     )
   }
 
-  override def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): Boolean =
+  override def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): Option[OppilaitoksenOsa] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(oppilaitoksenOsa, notModifiedSince)).get
 
   override def getByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsa] =
@@ -102,7 +105,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
   }
 
   def insertOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa) = {
-    sqlu"""insert into oppilaitosten_osat (
+    sql"""insert into oppilaitosten_osat (
             oid,
             oppilaitos_oid,
             tila,
@@ -117,11 +120,12 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
             ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
             ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
             ${oppilaitoksenOsa.muokkaaja},
-            ${oppilaitoksenOsa.organisaatioOid})"""
+            ${oppilaitoksenOsa.organisaatioOid})
+          returning lower(system_time)""".as[Instant]
   }
 
   def updateOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa) = {
-    sqlu"""update oppilaitosten_osat set
+    sql"""update oppilaitosten_osat set
               tila = ${oppilaitoksenOsa.tila.toString}::julkaisutila,
               kielivalinta = ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
               metadata = ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
@@ -131,7 +135,8 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
             and (tila is distinct from ${oppilaitoksenOsa.tila.toString}::julkaisutila
             or metadata is distinct from ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid})"""
+            or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid})
+            returning lower(system_time)""".as[Instant]
   }
 
   def selectListByOppilaitosOid(oppilaitosOid: OrganisaatioOid) = {

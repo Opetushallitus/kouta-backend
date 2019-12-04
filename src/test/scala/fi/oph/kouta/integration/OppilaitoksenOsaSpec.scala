@@ -1,11 +1,13 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -81,6 +83,13 @@ class OppilaitoksenOsaSpec
     }
   }
 
+  it should "write create oppilaitoksen osa to audit log" in {
+    MockAuditLogger.clean()
+    val oid = put(oppilaitoksenOsa(oppilaitosOid).withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    MockAuditLogger.find(oid, "oppilaitoksen_osa_create") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "return 404 if oppilaitos not found" in {
     put(OppilaitoksenOsaPath, oppilaitoksenOsa, crudSessions(ParentOid), 404)
   }
@@ -144,10 +153,21 @@ class OppilaitoksenOsaSpec
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu))
   }
 
+  it should "write oppilaitoksen osa update to audit log" in {
+    val oid = put(oppilaitoksenOsa(oppilaitosOid))
+    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
+    MockAuditLogger.clean()
+    update(oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "oppilaitoksen_osa_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "not update oppilaitoksen osa" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
+    MockAuditLogger.clean()
     update(oppilaitoksenOsa(oid, oppilaitosOid), lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid)) should equal (lastModified)
   }
 
