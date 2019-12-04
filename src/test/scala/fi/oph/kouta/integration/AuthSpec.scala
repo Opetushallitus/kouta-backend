@@ -3,14 +3,17 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.integration.fixture.AuthFixture
+import fi.oph.kouta.mocks.MockAuditLogger
 
 class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
 
   "Get session" should "return 200 if the session is active" in {
+    MockAuditLogger.clean()
     get(sessionPath, headers = defaultHeaders) {
       body should include(testUser.oid)
       status should equal(200)
     }
+    MockAuditLogger.logs shouldBe empty
   }
 
   it should "return 401 if no session or the session is not active" in {
@@ -31,10 +34,12 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "reuse an existing session" in {
+    MockAuditLogger.clean()
     get(loginPath, headers = defaultHeaders) {
       body should include(testUser.oid)
       status should equal(200)
     }
+    MockAuditLogger.logs shouldBe empty
   }
 
   it should "reject an invalid session id" in {
@@ -54,6 +59,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "create a new session from a verifiable CAS ticket" in {
+    MockAuditLogger.clean()
     val cookieHeader = get(loginPath, params = Seq("ticket" -> testUser.ticket), headers = Seq(jsonHeader)) {
       body should include(testUser.oid)
       status should equal(200)
@@ -61,6 +67,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
       header.get("Set-Cookie") should not be empty
       header("Set-Cookie")
     }
+    MockAuditLogger.find(testUser.ticket, testUser.oid, "kirjautuminen") shouldBe defined
 
     val sessionId = getSessionFromCookies(cookieHeader)
     sessionId should not be empty
@@ -79,13 +86,16 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "reuse an existing session even if a ticket is provided" in {
+    MockAuditLogger.clean()
     get(loginPath, params = Seq("ticket" -> "invalid"), headers = defaultHeaders) {
       status should equal(200)
       body should include(testUser.oid)
     }
+    MockAuditLogger.logs shouldBe empty
   }
 
   it should "create a new session from a CAS ticket also when an unknown session id is provided" in {
+    MockAuditLogger.clean()
     val cookieHeader = get(
       loginPath,
       params = Seq("ticket" -> testUser.ticket),
@@ -97,6 +107,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
       header.get("Set-Cookie") should not be empty
       header("Set-Cookie")
     }
+    MockAuditLogger.find(testUser.ticket, testUser.oid, "kirjautuminen") shouldBe defined
     val sessionId = getSessionFromCookies(cookieHeader)
     sessionId should not be empty
 

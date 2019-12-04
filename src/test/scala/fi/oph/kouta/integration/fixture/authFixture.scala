@@ -2,9 +2,10 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.MockSecurityContext
+import fi.oph.kouta.mocks.{MockAuditLogger, MockSecurityContext}
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.AuthServlet
+import fi.oph.kouta.util.AuditLog
 
 class KayttooikeusClientMock(securityContext: SecurityContext, defaultAuthorities: Set[Authority]) extends KayttooikeusClient {
   override def getUserByUsername(username: String): KayttooikeusUserDetails = {
@@ -27,7 +28,7 @@ trait AuthFixture {
   val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
   val kayttooikeusClient = new KayttooikeusClientMock(securityContext, defaultAuthorities)
 
-  object MockCasSessionService extends CasSessionService(securityContext, kayttooikeusClient)
+  object MockCasSessionService extends CasSessionService(securityContext, kayttooikeusClient, new AuditLog(MockAuditLogger))
 
   addServlet(new AuthServlet(MockCasSessionService), authPath)
 

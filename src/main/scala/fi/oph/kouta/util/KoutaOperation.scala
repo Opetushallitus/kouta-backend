@@ -10,3 +10,7 @@ trait ResourceOperations {
   case object Update extends KoutaOperation(s"${name}_update")
   case object Create extends KoutaOperation(s"${name}_create")
 }
+
+object KoutaOperation {
+  case object Login extends KoutaOperation("kirjautuminen")
+}

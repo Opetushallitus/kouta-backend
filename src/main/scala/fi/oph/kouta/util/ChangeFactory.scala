@@ -52,7 +52,7 @@ object ChangeFactory extends KoutaJsonFormats {
     changes.build()
   }
 
-  def jsonString(json: Json): String = json.asString.getOrElse(json.noSpaces)
+  private def jsonString(json: Json): String = json.asString.getOrElse(json.noSpaces)
 
-  def parseParts(parts: Chain[Part]): String = parts.map(part => part.getOrElse(part.left.get)).toList.mkString(".")
+  private def parseParts(parts: Chain[Part]): String = parts.map(part => part.getOrElse(part.left.get)).toList.mkString(".")
 }

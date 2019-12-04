@@ -1,8 +1,10 @@
 package fi.oph.kouta.util
 
 import java.net.InetAddress
+import java.util.UUID
 
 import fi.oph.kouta.domain.HasPrimaryId
+import fi.oph.kouta.security.{CasSession, ServiceTicket, Session}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog._
 import javax.servlet.http.HttpServletRequest
@@ -28,8 +30,8 @@ class AuditLog(val logger: Logger) extends GsonSupport {
 
   def logCreate[T <: HasPrimaryId[_, T]](added: T, user: User): DBIO[_] = {
     val resource = Resource(added)
-    val target = getTarget(resource, added.primaryId)
-    val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
+    val target   = getTarget(resource, added.primaryId)
+    val changes  = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
     audit.log(user, resource.Create, target.build(), changes)
     DBIO.successful(true)
   }
@@ -38,15 +40,20 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     after match {
       case Some(updated) =>
         val resource = Resource(updated)
-        val target = getTarget(resource, updated.primaryId)
-        val changes = ChangeFactory.getChanges(before, updated)
+        val target   = getTarget(resource, updated.primaryId)
+        val changes  = ChangeFactory.getChanges(before, updated)
         audit.log(user, resource.Update, target.build(), changes)
       case None =>
     }
     DBIO.successful(true)
   }
 
-  def logCreate[T <: AnyRef](added: T, resource: Resource, user: User, targets: Seq[(String, String)]): DBIO[Boolean] = {
+  def logCreate[T <: AnyRef](
+      added: T,
+      resource: Resource,
+      user: User,
+      targets: Seq[(String, String)]
+  ): DBIO[Boolean] = {
     val target = new Target.Builder()
     targets.foreach { case (name, value) => target.setField(name, value) }
     val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
@@ -54,12 +61,22 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     DBIO.successful(true)
   }
 
-  def getUser(implicit request: HttpServletRequest, authenticated: Authenticated): User = {
-    val userOid   = authenticated.session.personOid
+  def logLogin(sessionId: UUID, session: CasSession, ticket: ServiceTicket)(implicit request: HttpServletRequest): (UUID, CasSession) = {
+    val target  = new Target.Builder().setField("personOid", session.personOid).build()
+    val user    = getUser(sessionId, session)
+    val changes = new Changes.Builder().added("ticket", ticket.s).build()
+    audit.log(user, KoutaOperation.Login, target, changes)
+    (sessionId, session)
+  }
+
+  def getUser(implicit request: HttpServletRequest, authenticated: Authenticated): User =
+    getUser(authenticated.id, authenticated.session)
+
+  def getUser(sessionId: UUID, session: Session)(implicit request: HttpServletRequest): User = {
+    val userOid   = session.personOid
     val userAgent = request.getHeader("User-Agent")
-    val session   = authenticated.id.toString
     val ip        = InetAddress.getByName(request.getRemoteAddr) // TODO: Pitääkö ottaa huomioon proxyt yms?
-    new User(new Oid(userOid), ip, session, userAgent)
+    new User(new Oid(userOid), ip, sessionId.toString, userAgent)
   }
 
   private def getTarget[ID](resource: Resource, targetId: Option[ID]): Target.Builder =
