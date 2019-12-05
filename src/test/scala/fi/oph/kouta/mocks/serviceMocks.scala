@@ -4,7 +4,6 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.slf4j.Logging
-import fi.vm.sade.utils.tcp.PortChecker
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.model
@@ -23,9 +22,10 @@ sealed trait ServiceMocks extends Logging {
   var mockServer:Option[ClientAndServer] = None
   var urlProperties:Option[OphProperties] = None
 
-  def startServiceMocking(port:Int = PortChecker.findFreeLocalPort) = {
+  def startServiceMocking() = {
+    mockServer = Some(startClientAndServer())
+    val port = mockServer.get.getLocalPort
     logger.info(s"Mocking oph services in port $port")
-    mockServer = Some(startClientAndServer(port))
     urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$port"))
   }
 
