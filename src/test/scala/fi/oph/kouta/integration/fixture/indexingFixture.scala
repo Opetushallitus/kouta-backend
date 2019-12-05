@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.service._
 
@@ -15,12 +16,12 @@ trait HakuFixtureWithIndexing extends HakuFixture {
 
 trait KoulutusFixtureWithIndexing extends KoulutusFixture {
   this: KoutaIntegrationSpec =>
-  override protected lazy val koulutusService = KoulutusService
+  override protected lazy val koulutusService = new KoulutusService(SqsInTransactionService, MockS3Service)
 }
 
 trait ToteutusFixtureWithIndexing extends ToteutusFixture {
   this: KoutaIntegrationSpec =>
-  override protected lazy val toteutusService = ToteutusService
+  override protected lazy val toteutusService = new ToteutusService(SqsInTransactionService, MockS3Service)
 }
 
 trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {

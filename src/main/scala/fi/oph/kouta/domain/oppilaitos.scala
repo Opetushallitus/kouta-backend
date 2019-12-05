@@ -91,6 +91,9 @@ package object oppilaitos {
        |        akatemioita:
        |          type: integer
        |          description: Oppilaitoksen akatemioiden lkm
+       |        teemakuva:
+       |          type: string
+       |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
        |""".stripMargin
 
   val OppilaitoksenOsaModel =
@@ -161,6 +164,9 @@ package object oppilaitos {
        |        opiskelijoita:
        |          type: integer
        |          description: Oppilaitoksen osan opiskelijoiden lkm
+       |        teemakuva:
+       |          type: string
+       |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
        |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -234,7 +240,11 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       kielivalinta: Seq[Kieli] = Seq(),
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime] = None) extends Validatable with Authorizable {
+                      modified: Option[LocalDateTime] = None)
+  extends Validatable
+    with Authorizable
+    with HasPrimaryId[OrganisaatioOid, Oppilaitos]
+    with HasTeemakuvaMetadata[Oppilaitos, OppilaitosMetadata] {
 
   override def validate(): IsValid = and(
     assertValid(muokkaaja),
@@ -247,6 +257,12 @@ case class Oppilaitos(oid: OrganisaatioOid,
         validateKielistetty(kielivalinta, metadata.get., "esittely"),
       ))*/
     )))
+
+  override def primaryId: Option[OrganisaatioOid] = Some(oid)
+
+  override def withPrimaryID(oid: OrganisaatioOid): Oppilaitos = copy(oid = oid)
+
+  override def withMetadata(metadata: OppilaitosMetadata): Oppilaitos = copy(metadata = Some(metadata))
 }
 
 case class OppilaitoksenOsa(oid: OrganisaatioOid,
@@ -256,7 +272,11 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             kielivalinta: Seq[Kieli] = Seq(),
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
-                            modified: Option[LocalDateTime] = None) extends Validatable with Authorizable {
+                            modified: Option[LocalDateTime] = None)
+  extends Validatable
+    with Authorizable
+    with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
+    with HasTeemakuvaMetadata[OppilaitoksenOsa, OppilaitoksenOsaMetadata] {
 
   override def validate(): IsValid = and(
     assertValid(muokkaaja),
@@ -269,6 +289,12 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
         validateKielistetty(kielivalinta, metadata.get., "esittely"),
       ))*/
     )))
+
+  override def primaryId: Option[OrganisaatioOid] = Some(oid)
+
+  override def withPrimaryID(oid: OrganisaatioOid): OppilaitoksenOsa = copy(oid = oid)
+
+  override def withMetadata(metadata: OppilaitoksenOsaMetadata): OppilaitoksenOsa = copy(metadata = Some(metadata))
 }
 
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
@@ -280,12 +306,18 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
                               kampuksia: Option[Integer] = None,
                               yksikoita: Option[Integer] = None,
                               toimipisteita: Option[Integer] = None,
-                              akatemioita: Option[Integer] = None)
+                              akatemioita: Option[Integer] = None,
+                              teemakuva: Option[String] = None) extends TeemakuvaMetadata[OppilaitosMetadata] {
+  override def withTeemakuva(teemakuva: Option[String]): OppilaitosMetadata = copy(teemakuva = teemakuva)
+}
 
 case class OppilaitoksenOsaMetadata(yhteystiedot: Option[Yhteystieto] = None,
                                     opiskelijoita: Option[Integer] = None,
                                     kampus: Kielistetty = Map(),
-                                    esittely: Kielistetty = Map())
+                                    esittely: Kielistetty = Map(),
+                                    teemakuva: Option[String] = None) extends TeemakuvaMetadata[OppilaitoksenOsaMetadata] {
+  override def withTeemakuva(teemakuva: Option[String]): OppilaitoksenOsaMetadata = copy(teemakuva = teemakuva)
+}
 
 case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
                                     oppilaitosOid: OrganisaatioOid,

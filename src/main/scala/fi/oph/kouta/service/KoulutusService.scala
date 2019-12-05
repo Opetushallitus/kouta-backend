@@ -5,8 +5,8 @@ import java.time.Instant
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
-import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
+import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -37,21 +37,24 @@ trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
   }
 }
 
-object KoulutusService extends KoulutusService(SqsInTransactionService)
+object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service)
 
-abstract class KoulutusService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Koulutus] with KoulutusAuthorizationService {
+class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
+  extends ValidatingService[Koulutus] with KoulutusAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
+
+  val teemakuvaPrefix = "koulutus-teemakuva"
 
   def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
     authorizeGetKoulutus(KoulutusDAO.get(oid))
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
-      withValidation(koulutus, putWithIndexing)
+      withValidation(koulutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
     }
 
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(KoulutusDAO.get(koulutus.oid.get)) {
-      withValidation(koulutus, updateWithIndexing(_, notModifiedSince))
+      withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {

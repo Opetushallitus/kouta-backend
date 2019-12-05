@@ -15,8 +15,8 @@ import org.scalatra.json.JacksonJsonSupport
 
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
-
-import fi.oph.kouta.util.TimeUtils.{renderHttpDate, parseHttpDate}
+import fi.oph.kouta.util.TimeUtils.{parseHttpDate, renderHttpDate}
+import org.scalatra.servlet.SizeConstraintExceededException
 
 trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   with Logging with KoutaJsonFormats with CasAuthenticatedServlet {
@@ -34,6 +34,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   }
 
   val SampleHttpDate = renderHttpDate(Instant.EPOCH)
+
   protected def parseIfUnmodifiedSince: Option[Instant] = request.headers.get(KoutaServlet.IfUnmodifiedSinceHeader) match {
     case Some(s) =>
       Try(parseHttpDate(s)) match {
@@ -49,12 +50,14 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   }
 
   def errorMsgFromRequest(): String = {
-    def msgBody = request.body.length match {
-      case x if x > 500000 => request.body.substring(0, 500000)
-      case _ => request.body
-    }
+    def msgBody = Try {
+      request.body.length match {
+        case x if x > 500000 => request.body.substring(0, 500000)
+        case _ => request.body
+      }
+    }.getOrElse("")
 
-    s"Error ${request.getMethod} ${request.getContextPath} => $msgBody"
+    s"Error ${request.getMethod} $contextPath${request.getServletPath}$requestPath${request.queryString} => $msgBody"
   }
 
   def badRequest(t: Throwable): ActionResult = {
@@ -81,6 +84,12 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       Conflict("error" -> e.getMessage)
     case e: NoSuchElementException =>
       NotFound("error" -> e.getMessage)
+    case e: PayloadTooLargeException =>
+      logger.warn(s"PayloadTooLargeException: ${e.getMessage}")
+      RequestEntityTooLarge("error" -> e.getMessage)
+    case e: MediaNotSupportedException =>
+      logger.warn(s"MediaNotSupportedException: ${e.getMessage}")
+      UnsupportedMediaType("error" -> e.getMessage)
     case NonFatal(e) =>
       logger.error(errorMsgFromRequest(), e)
       InternalServerError("error" -> "500 Internal Server Error")

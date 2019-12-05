@@ -11,13 +11,11 @@ import fi.oph.kouta.servlet.OppilaitosServlet
 
 import scala.util.Random
 
-object OppilaitosServiceIgnoringIndexing extends OppilaitosService(SqsInTransactionServiceIgnoringIndexing)
-
 trait OppilaitosFixture { this: KoutaIntegrationSpec =>
 
   val OppilaitosPath = "/oppilaitos"
 
-  protected lazy val oppilaitosService: OppilaitosService = OppilaitosServiceIgnoringIndexing
+  protected lazy val oppilaitosService: OppilaitosService = new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
 
   addServlet(new OppilaitosServlet(oppilaitosService), OppilaitosPath)
 

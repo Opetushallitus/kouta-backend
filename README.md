@@ -35,11 +35,19 @@ EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
 | ```-Dkouta-backend.embedded=xxxx``` | Käynnistetäänkö embedded PostgreSQL (default true) |
 | ```-Dkouta-backend.profile=xxxx```  | Määrittää profiilin                                | 
 | ```-Dkouta-backend.template=xxxx``` | Määrittää template-tiedoston polun                 |
+| ```-Dkouta-backend.awsKeys=xxxx```  | Luetaanko oikeat AWS-avaimet, oletuksena false     |
 
 * Jos embedded Postgres ei ole käytössä, profiili voi olla joko *default* tai *template*
     * ```default```-profiilissa ```oph-configuration``` luetaan käyttäjän kotihakemistosta
     * ```template```-profiilissa asetukset rakennetaan .yml-templaten pohjalta
 * Template-tiedoston polku on oletuksena ```'/src/test/resources/dev-vars.yml'``` 
+* Jos siis haluaa käynnistää sovelluksen Ideassa ilman embedded-kantaa, pitää VM options -kentässä
+  määritellä sekä embedded-kanta pois päältä että valita template-profiili:
+  `-Dkouta-backend.embedded=false -Dkouta-backend.config-profile=template`
+* Käytettäessä oikeaa S3:sta, tarvitsee olla käyttäjä tarpeellisilla oikeuksilla.
+  `kouta-backend.awsKeys` arvoksi laitetaan true, jonka jälkeen avaimet luetaan AWS SDK:n oletuskäytännöllä,
+  eli `AWS_ACCESS_KEY_ID` ja `AWS_SECRET_ACCESS_KEY` -ympäristömuuttujista tai `~/.aws/credentials` tiedostosta
+  `AWS_PROFILE` -ymäristömuuttujan kertomasta profiilista.
 
 ### Testidatan generointi
 

@@ -12,14 +12,12 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Try
 
-object KoulutusServiceIgnoringIndexing extends KoulutusService(SqsInTransactionServiceIgnoringIndexing)
-
 trait KoulutusFixture extends KoulutusDbFixture {
   this: KoutaIntegrationSpec =>
 
   val KoulutusPath = "/koulutus"
 
-  protected lazy val koulutusService: KoulutusService = KoulutusServiceIgnoringIndexing
+  protected lazy val koulutusService: KoulutusService = new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
 
   addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
 

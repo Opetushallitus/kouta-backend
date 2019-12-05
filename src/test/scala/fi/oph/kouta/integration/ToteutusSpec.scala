@@ -3,14 +3,14 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
-  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
+  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with UploadFixture with Validations {
 
   override val roleEntities = Seq(Role.Toteutus)
 
@@ -111,6 +111,25 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "deny indexer access" in {
     put(ToteutusPath, toteutus(koulutusOid), indexerSession, 403)
+  }
+
+  it should "copy a temporary image to a permanent location while creating the toteutus" in {
+    saveLocalPng("temp/image.png")
+    val oid = put(toteutus(koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))))
+
+    get(oid, toteutus(oid, koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
+    MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
+    MockS3Client.reset()
+  }
+
+  it should "not touch an image that's not in the temporary location" in {
+    val toteutusWithImage = toteutus(koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
+    val oid = put(toteutusWithImage)
+    MockS3Client.storage shouldBe empty
+    get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
+    MockS3Client.reset()
   }
 
   "Update toteutus" should "update toteutus" in {
@@ -240,6 +259,32 @@ class ToteutusSpec extends KoutaIntegrationSpec
       }
       body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
     }
+  }
+
+  it should "copy a temporary image to a permanent location while updating the toteutus" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+
+    saveLocalPng("temp/image.png")
+    val toteutusWithImage = toteutus(oid, koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))))
+
+    update(toteutusWithImage, lastModified)
+    get(oid, toteutusWithImage.copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
+    MockS3Client.reset()
+  }
+
+  it should "not touch an image that's not in the temporary location" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val toteutusWithImage = toteutus(oid, koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
+
+    update(toteutusWithImage, lastModified)
+
+    MockS3Client.storage shouldBe empty
+    get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
+    MockS3Client.reset()
   }
 
   object ToteutusJsonMethods extends JsonMethods {
