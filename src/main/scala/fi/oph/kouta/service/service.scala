@@ -4,9 +4,8 @@ import java.time.Instant
 
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{Koulutus, Koulutustyyppi}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
+import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, Koulutustyyppi, TeemakuvaMetadata}
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.security.{Authorizable, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -36,7 +35,12 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
         update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))), Instant.now())
         s3Service.deleteImage(s3Service.getTempKey(filename))
         id
-      case _ =>
+      case Some(s3Service.publicUrl(_)) =>
+        put(entity)
+      case None =>
+        put(entity)
+      case Some(other) =>
+        logger.warn(s"Theme image outside the bucket: $other")
         put(entity)
     }
 

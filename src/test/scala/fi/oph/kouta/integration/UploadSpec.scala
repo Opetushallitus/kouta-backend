@@ -65,13 +65,6 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture with BeforeAndA
     }
   }
 
-  it should "reject images that have too many pixels" in {
-    post(uri = ThemeImageUploadPath, body = tooLargeTheme, headers = Map("Content-Type" -> "image/png")) {
-      status should equal(400)
-      body should include("väärän kokoinen")
-    }
-  }
-
   it should "reject images that have too few pixels" in {
     post(uri = ThemeImageUploadPath, body = tooSmallHeader, headers = Map("Content-Type" -> "image/png")) {
       status should equal(400)

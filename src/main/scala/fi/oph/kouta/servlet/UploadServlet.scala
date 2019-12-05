@@ -19,8 +19,8 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
 
   val maxSize: Int = 2 * 1024 * 1024
 
-  val themeWidth  = 1260
-  val themeHeight = 400
+  val themeMinWidth  = 1260
+  val themeMinHeight = 400
 
   registerPath(
     "/upload/theme-image",
@@ -51,13 +51,7 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
     val contentType = checkContentType(s3Service.allowedImageTypes)
 
     val imageData       = readImageDataFromStream(request.inputStream, length)
-    val (width, height) = checkImageFormatAndGetSize(contentType, imageData)
-
-    if (width != themeWidth || height != themeHeight) {
-      throw new IllegalArgumentException(
-        s"Kuvan on väärän kokoinen ($width x $height), ku oikea koko on $themeWidth x $themeHeight"
-      )
-    }
+    checkImageFormatAndSize(contentType, imageData)
 
     Ok("url" -> s3Service.storeTempImage(contentType, imageData))
   }
@@ -87,17 +81,24 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
     imageData
   }
 
-  private def checkImageFormatAndGetSize(contentType: String, imageData: Array[Byte]) = {
-    Try {
+  private def checkImageFormatAndSize(contentType: String, imageData: Array[Byte]): Unit = {
+    val (width, height) = Try {
       val mimeReaders = ImageIO.getImageReadersByMIMEType(contentType)
       val reader      = mimeReaders.next()
       reader.setInput(ImageIO.createImageInputStream(new ByteArrayInputStream(imageData)))
       val image = reader.read(reader.getMinIndex)
+
       (image.getWidth, image.getHeight)
     }.recoverWith {
       case _: Exception =>
         Failure(MediaNotSupportedException(s"Tiedostoa ei voitu lukea $contentType -kuvana"))
     }.get
+
+    if (width < themeMinWidth || height < themeMinHeight) {
+      throw new IllegalArgumentException(
+        s"Kuva on väärän kokoinen ($width x $height), kun minimikoko on $themeMinWidth x $themeMinHeight"
+      )
+    }
   }
 
 }
