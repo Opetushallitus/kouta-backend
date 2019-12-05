@@ -9,7 +9,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
-import slick.sql.SqlAction
+import slick.sql.{SqlAction, SqlStreamingAction}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -22,6 +22,7 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def update(haku: Hakukohde, notModifiedSince: Instant): Boolean
 
   def listByToteutusOid(oid: ToteutusOid): Seq[HakukohdeListItem]
+  def listByToteutusOidAndOrganisaatioOids(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[HakukohdeListItem]
   def listByHakuOidAndOrganisaatioOids(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
   def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem]
@@ -109,6 +110,10 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
+
+  override def listByToteutusOidAndOrganisaatioOids(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] = {
+    KoutaDatabase.runBlocking(selectByToteutusOidAndOrganisaatioOids(toteutusOid, organisaatioOids))
+  }
 
   override def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByValintaperusteId(valintaperusteId))
@@ -527,6 +532,32 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
             group by ha.oid) m on m.oid = ha.oid
           where ha.toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
+  }
+
+  def selectByToteutusOidAndOrganisaatioOids(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): SqlStreamingAction[Seq[HakukohdeListItem], HakukohdeListItem, Effect] = {
+    sql"""select ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
+          from hakukohteet ha
+          inner join (
+            select ha.oid oid, greatest(
+              max(lower(ha.system_time)),
+              max(lower(hh.system_time)),
+              max(lower(hv.system_time)),
+              max(lower(hl.system_time)),
+              max(upper(hah.system_time)),
+              max(upper(hhh.system_time)),
+              max(upper(hvh.system_time)),
+              max(upper(hlh.system_time))) modified
+            from hakukohteet ha
+            left join hakukohteet_history hah on ha.oid = hah.oid
+            left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
+            left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
+            left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid
+            left join hakukohteiden_valintakokeet_history hvh on ha.oid = hvh.hakukohde_oid
+            left join hakukohteiden_liitteet hl on ha.oid = hl.hakukohde_oid
+            left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
+            group by ha.oid) m on m.oid = ha.oid
+          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          and ha.toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
   }
 
   def selectByValintaperusteId(valintaperusteId: UUID) = {

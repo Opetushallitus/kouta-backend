@@ -38,6 +38,12 @@ abstract class ToteutusService(sqsInTransactionService: SqsInTransactionService)
   def listHakukohteet(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(Role.Hakukohde.readRoles)(HakukohdeDAO.listByToteutusOid(oid))
 
+  def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
+    withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
+      HakukohdeDAO.listByToteutusOidAndOrganisaatioOids(oid, _)
+    }
+  }
+
   private def putWithIndexing(toteutus: Toteutus) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
