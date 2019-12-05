@@ -39,7 +39,7 @@ abstract class ToteutusService(sqsInTransactionService: SqsInTransactionService)
     withRootAccess(Role.Hakukohde.readRoles)(HakukohdeDAO.listByToteutusOid(oid))
 
   def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, Role.Toteutus.readRoles) {
+    withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
       HakukohdeDAO.listByToteutusOidAndOrganisaatioOids(oid, _)
     }
   }

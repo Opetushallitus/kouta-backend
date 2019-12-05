@@ -213,10 +213,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     val toteutusOid = ToteutusOid(params("oid"))
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None =>
-        NotFound()
-      case Some(organisaatioOid) =>
-        Ok(toteutusService.listHakukohteet(toteutusOid, organisaatioOid))
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(toteutusService.listHakukohteet(toteutusOid, organisaatioOid))
     }
   }
 }

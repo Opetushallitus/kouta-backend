@@ -338,7 +338,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> GrandChildOid.s), List.empty[Hakukohde], crudSessions(GrandChildOid))
   }
   it should "deny access without the hakukohde read role" in {
-    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> OphOid.s), List.empty[Hakukohde], addTestSession(Role.Toteutus.Read, OphOid))
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> OphOid.s), 403, addTestSession(Role.Toteutus.Read, OphOid))
   }
   it should "allow access to the hakukohteet of any toteutus with the indexer role with the toteutus organisation" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2), indexerSession)

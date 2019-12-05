@@ -8,7 +8,6 @@ import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.JsonMethods
-import java.util.UUID
 
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with Validations {
