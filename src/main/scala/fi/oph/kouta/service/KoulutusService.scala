@@ -15,12 +15,14 @@ import fi.oph.kouta.servlet.Authenticated
 trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
   protected val roleEntity: RoleEntity = Role.Koulutus
 
+  protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
+
   def isJulkinenAndAuthorized(koulutus: Koulutus, oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean =
     koulutus.julkinen && koulutus.koulutustyyppi.exists(oidsAndOppilaitostyypit._2.contains)
 
   def authorizeGetKoulutus(koulutusWithTime: Option[(Koulutus, Instant)])(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     koulutusWithTime.map {
-      case (k, t) => ifAuthorizedToTheseOrganizationHierarkies(Seq(k.organisaatioOid), roleEntity.readRoles, false, isJulkinenAndAuthorized(k, _))((k,t))
+      case (k, t) => ifAuthorizedOrganizations(k.tarjoajat :+ k.organisaatioOid, AutorizationRules(roleEntity.readRoles, true, Seq(isJulkinenAndAuthorized(k, _))))((k,t))
     }
   }
 }
@@ -46,7 +48,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
-    withAuthorizedChildOrganizationOidsAndOppilaitostyypit(organisaatioOid, roleEntity.readRoles) { case (oids, koulutustyypit) =>
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
       KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids, koulutustyypit)
     }
   }

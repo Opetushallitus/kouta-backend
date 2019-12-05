@@ -2,6 +2,7 @@ package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 
 package object koulutus {
@@ -167,7 +168,9 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
         validateIfTrue(Julkaistu == tila, () => and(
           assertNotOptional(koulutustyyppi, "koulutustyyppi"),
           validateIfDefined[Koulutustyyppi](koulutustyyppi, (k) => assertTrue(k == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(k.toString))),
-          assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"))))
+          assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"),
+          validateIfTrue(!KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid),
+            () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
   }
 
   override def primaryId: Option[KoulutusOid] = oid

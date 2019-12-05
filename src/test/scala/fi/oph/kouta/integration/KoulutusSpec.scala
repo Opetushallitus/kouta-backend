@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import java.time.{Duration, Instant, ZoneId}
 
+import fi.oph.kouta.OrganisaatioServiceMock.{EvilCousin, EvilGrandChildOid, GrandChildOid}
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -17,6 +18,8 @@ import scala.util.Success
 class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with UploadFixture with Validations {
 
   override val roleEntities = Seq(Role.Koulutus)
+
+  val ophKoulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = rootOrganisaatio, tarjoajat = List(), julkinen = true)
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
@@ -41,9 +44,9 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(s"$KoulutusPath/$oid", crudSessions(LonelyOid), 403)
   }
 
-  it should "deny the user of a tarjoaja organization without access to the koulutus organization to read the koulutus" in {
+  it should "allow the user of a tarjoaja organization without access to the koulutus organization to read the koulutus" in {
     val oid = put(koulutus.copy(tarjoajat = List(LonelyOid)))
-    get(s"$KoulutusPath/$oid", crudSessions(LonelyOid), 403)
+    get(oid, crudSessions(LonelyOid), koulutus(oid).copy(tarjoajat = List(LonelyOid)))
   }
 
   it should "allow the user of a parent organization to read the koulutus" in {
@@ -51,9 +54,19 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, crudSessions(ParentOid), koulutus(oid))
   }
 
-  it should "deny the user of a child organization to read the koulutus" in {
+  it should "allow the user of a child organization to read the koulutus" in {
     val oid = put(koulutus)
-    get(s"$KoulutusPath/$oid", crudSessions(GrandChildOid), 403)
+    get(oid, crudSessions(GrandChildOid), koulutus(oid))
+  }
+
+  it should "allow the user of proper koulutustyyppi to read julkinen koulutus created by oph" in {
+    val oid = put(ophKoulutus)
+    get(oid, readSessions(AmmOid), ophKoulutus.copy(Some(KoulutusOid(oid))))
+  }
+
+  it should "deny the user of wrong koulutustyyppi to read julkinen koulutus created by oph" in {
+    val oid = put(ophKoulutus)
+    get(s"$KoulutusPath/$oid", readSessions(YoOid), 403)
   }
 
   it should "deny the user of a wrong role to read the koulutus" in {
@@ -66,9 +79,9 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(s"$KoulutusPath/$oid", indexerSession, 200)
   }
 
-  it should "allow a user of similar oppilaitostyyppi to access public koulutus" in {
+  it should "allow a user of other organization but similar oppilaitostyyppi to access public koulutus" in {
     val oid = put(koulutus.copy(julkinen = true), crudSessions(koulutus.organisaatioOid))
-    get(oid, crudSessions(EvilChildOid), koulutus(oid).copy(julkinen = true))
+    get(oid, readSessions(AmmOid), koulutus(oid).copy(julkinen = true))
   }
 
   it should "deny an authenticated user of a different oppilaitostyyppi to access public koulutus" in {
@@ -79,6 +92,15 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   "Create koulutus" should "store koulutus" in {
     val oid = put(koulutus)
     get(oid, koulutus(oid))
+  }
+
+  it should "allow oph to create julkaistu koulutus without tarjoajat" in {
+    val oid = put(ophKoulutus, ophSession)
+    get(oid, ophKoulutus.copy(Some(KoulutusOid(oid))))
+  }
+
+  it should "deny other users to create julkaistu koulutus without tarjoajat" in {
+    put(KoulutusPath, ophKoulutus.copy(organisaatioOid = ChildOid), crudSessions(ChildOid), 400)
   }
 
   it should "store korkeakoulutus koulutus" in {
@@ -104,7 +126,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "allow access if the user has rights to the koulutus organization" in {
-    put(koulutus.copy(tarjoajat = List.empty), crudSessions(ChildOid))
+    put(koulutus.copy(tarjoajat = List(LonelyOid)), crudSessions(ChildOid))
   }
 
   it should "deny access if the user is missing rights to the koulutus organization" in {
@@ -275,11 +297,11 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     }
   }
 
-  it should "delete all tarjoajat and read last modified from history" in {
+  it should "delete some tarjoajat and read last modified from history" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
-    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List())
+    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(GrandChildOid, EvilGrandChildOid))
     update(uusiKoulutus, lastModified, true)
     get(oid, uusiKoulutus) should not equal (lastModified)
   }

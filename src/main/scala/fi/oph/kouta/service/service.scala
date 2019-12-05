@@ -62,26 +62,29 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity
 
   def authorizeGet[E <: Authorizable](entityWithTime: Option[(E, Instant)])(implicit authenticated: Authenticated): Option[(E, Instant)] =
-    entityWithTime match {
-      case None         => None
-      case Some((e, _)) => ifAuthorizedToTheseOrganizationsOrTheirChildren(Seq(e.organisaatioOid), roleEntity.readRoles) {
-        entityWithTime
+    entityWithTime.map {
+      case (e, t) => ifAuthorizedOrganizations(Seq(e.organisaatioOid), AutorizationRules(roleEntity.readRoles)) {
+        (e, t)
       }
     }
 
   def authorizePut[E <: Authorizable, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
-    ifAuthorizedToTheseOrganizationsOrTheirChildren(Seq(entity.organisaatioOid), roleEntity.createRoles) {
+    ifAuthorizedOrganizations(Seq(entity.organisaatioOid), AutorizationRules(roleEntity.createRoles)) {
       f
     }
 
   def authorizeUpdate[E <: Authorizable, I](entityForUpdate: => Option[(E, Instant)])(f: => I)(implicit authenticated: Authenticated): I =
     entityForUpdate match {
       case None         => throw new NoSuchElementException
-      case Some((e, _)) => ifAuthorizedToTheseOrganizationsOrTheirChildren(Seq(e.organisaatioOid), roleEntity.updateRoles) {
+      case Some((e, _)) => ifAuthorizedOrganizations(Seq(e.organisaatioOid), AutorizationRules(roleEntity.updateRoles)) {
         f
       }
     }
 }
+
+case class AutorizationRules(requiredRoles: Seq[Role],
+                             withParents: Boolean = false,
+                             alternativeRules: Seq[(OrganisaatioOidsAndOppilaitostyypitFlat) => Boolean] = Seq())
 
 trait AuthorizationService extends Logging {
 
@@ -91,36 +94,50 @@ trait AuthorizationService extends Logging {
 
   type OrganisaatioOidsAndOppilaitostyypitFlatView = IterableView[OrganisaatioOidsAndOppilaitostyypitFlat, Iterable[_]]
 
-  def ifAuthorizedToTheseOrganizationsOrTheirChildren[R](organisaatioOids: Seq[OrganisaatioOid], requiredRoles: Seq[Role])(f: => R)(implicit authenticated: Authenticated): R =
-    ifAuthorizedToTheseOrganizationHierarkies(organisaatioOids, requiredRoles, false)(f)
+  def ifAuthorizedOrganizations[R](organisaatioOids: Seq[OrganisaatioOid],
+                                   autorizationRules: AutorizationRules)
+                                  (f: => R)
+                                  (implicit authenticated: Authenticated): R = {
 
-  def ifAuthorizedToTheseOrganizationHierarkies[R](organisaatioOids: Seq[OrganisaatioOid], requiredRoles: Seq[Role], withParents: Boolean = true, alternativeRule: (OrganisaatioOidsAndOppilaitostyypitFlat) => Boolean = (x) => false)(f: => R)(implicit authenticated: Authenticated): R = {
+    val AutorizationRules(requiredRoles, withParents, alternativeRules) = autorizationRules
 
     def isAuthorizedOrg(x: OrganisaatioOid) = x == rootOrganisaatioOid || organisaatioOids.exists(_ == x)
 
     def authorized(oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView): Boolean =
-      oidsAndOppilaitostyypit.flatMap(_._1).exists(isAuthorizedOrg) || oidsAndOppilaitostyypit.exists(alternativeRule)
+      oidsAndOppilaitostyypit.flatMap(_._1).exists(isAuthorizedOrg) || oidsAndOppilaitostyypit.exists(oo => alternativeRules.exists(_(oo)))
 
-    authenticated.session.getOrganizationsForRoles(requiredRoles) match {
-      case authorizedOrgs if authorizedOrgs.isEmpty => throw RoleAuthorizationFailedException(requiredRoles, authenticated.session.roles)
-      case authorizedOrgs if !withParents && authorized(lazyFlatChildren(authorizedOrgs)) => f
-      case authorizedOrgs if  withParents && authorized(lazyFlatChildrenAndParents(authorizedOrgs)) => f
-      case authorizedOrgs => throw OrganizationAuthorizationFailedException(organisaatioOids, authorizedOrgs)
+    val authorizedOrgs = authenticated.session.getOrganizationsForRoles(requiredRoles)
+    lazy val allAuthorizedOidsAndOppilaitostyypit = if(withParents) lazyFlatChildrenAndParents(authorizedOrgs) else lazyFlatChildren(authorizedOrgs)
+
+    authorizedOrgs match {
+      case _ if authorizedOrgs.isEmpty => throw RoleAuthorizationFailedException(requiredRoles, authenticated.session.roles)
+      case _ if authorized(allAuthorizedOidsAndOppilaitostyypit) => f
+      case _ => throw OrganizationAuthorizationFailedException(organisaatioOids, authorizedOrgs)
     }
   }
 
   /** Checks if the the authenticated user has access to the given organization, then calls f with a sequence of descendants of that organization. */
   def withAuthorizedChildOrganizationOids[R](oid: OrganisaatioOid, roles: Seq[Role])(f: Seq[OrganisaatioOid] => R)(implicit authenticated: Authenticated): R =
-    withAuthorizedChildOrganizationOidsAndOppilaitostyypit(oid, roles) { case (oids, _) =>
-      f(oids)
-    }
+    withAuthorizedOrganizationOids(oid, AutorizationRules(roles)){f}
 
   def withAuthorizedChildOrganizationOidsAndOppilaitostyypit[R](oid: OrganisaatioOid, roles: Seq[Role])(f: OrganisaatioOidsAndOppilaitostyypitFlat => R)(implicit authenticated: Authenticated): R =
-    ifAuthorizedToTheseOrganizationsOrTheirChildren(Seq(oid), roles) {
-      OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid) match {
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(oid, AutorizationRules(roles)){f}
+
+  def withAuthorizedOrganizationOidsAndOppilaitostyypit[R](oid: OrganisaatioOid, autorizationRules: AutorizationRules)(f: OrganisaatioOidsAndOppilaitostyypitFlat => R)(implicit authenticated: Authenticated): R =
+    ifAuthorizedOrganizations(Seq(oid), autorizationRules) {
+
+      val requestedOrganizations = if( autorizationRules.withParents ) OrganisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
+                                   else                                OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid)
+
+      requestedOrganizations match {
         case (oids, _) if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
         case (oids, t) => f(oids, t)
       }
+    }
+
+  def withAuthorizedOrganizationOids[R](oid: OrganisaatioOid, autorizationRules: AutorizationRules)(f: Seq[OrganisaatioOid] => R)(implicit authenticated: Authenticated): R =
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(oid, autorizationRules) { case (oids, _) =>
+      f(oids)
     }
 
   protected def lazyFlatChildrenAndParents(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
@@ -141,17 +158,17 @@ trait AuthorizationService extends Logging {
 }
 
 case class OrganizationAuthorizationFailedException(message:String)
-  extends RuntimeException(message)
+extends RuntimeException(message)
 
 object OrganizationAuthorizationFailedException {
-  def apply(allowedOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
-    OrganizationAuthorizationFailedException(s"Authorization failed, missing organization. " +
-      s"Allowed organizations: ${allowedOrganizationOids.map(_.s).mkString(",")}. " +
-      s"Authorized organizations: ${authorizedOrganizations.map(_.s).mkString(",")}.")
+def apply(allowedOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
+  OrganizationAuthorizationFailedException(s"Authorization failed, missing organization. " +
+    s"Allowed organizations: ${allowedOrganizationOids.map(_.s).mkString(",")}. " +
+    s"Authorized organizations: ${authorizedOrganizations.map(_.s).mkString(",")}.")
 
-  def apply(missingOrganizationOid: OrganisaatioOid): OrganizationAuthorizationFailedException =
-    OrganizationAuthorizationFailedException(s"Authorization failed, unknown organization oid ${missingOrganizationOid.s}")
+def apply(missingOrganizationOid: OrganisaatioOid): OrganizationAuthorizationFailedException =
+  OrganizationAuthorizationFailedException(s"Authorization failed, unknown organization oid ${missingOrganizationOid.s}")
 }
 
 case class RoleAuthorizationFailedException(acceptedRoles: Seq[Role], existingRoles: Iterable[Role])
-  extends RuntimeException(s"Authorization failed, missing role. Accepted roles: ${acceptedRoles.map(_.name).mkString(",")}. Existing roles: ${existingRoles.map(_.name).mkString(",")}.")
+extends RuntimeException(s"Authorization failed, missing role. Accepted roles: ${acceptedRoles.map(_.name).mkString(",")}. Existing roles: ${existingRoles.map(_.name).mkString(",")}.")

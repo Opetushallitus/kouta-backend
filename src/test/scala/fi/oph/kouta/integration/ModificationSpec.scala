@@ -41,7 +41,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def createTestData(n: Int = 10) = {
     timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
-    koulutusOids = nTimes(() => put(koulutus), n)
+    koulutusOids = nTimes(() => put(koulutus.copy(tila = Tallennettu)), n)
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid)))
     hakuOids = nTimes(() => put(haku), n)
     valintaperusteIds = nTimes(() => put(valintaperuste), n)
@@ -69,8 +69,8 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   }
 
   def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
-  def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i)).copy(tarjoajat = List()), timestampAfterInserts)
+  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
+  def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInToteutusTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
   def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
   def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List()), timestampAfterInserts)
@@ -82,7 +82,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"tyyppi_$i#1")))), timestampAfterInserts)
   def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), Arkistoitu), timestampAfterInserts)
 
-  it should "return 401 without a valid session" in {
+  "Modified since" should "return 401 without a valid session" in {
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 

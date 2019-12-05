@@ -63,7 +63,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k2, k3, k5))
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5))
   }
   it should "list all koulutukset for authorized organizations 2" in {
     list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5))
@@ -78,16 +78,16 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), 401, Map())
   }
   it should "allow access to user of the selected organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k2, k3, k5), crudSessions(ChildOid))
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5), crudSessions(ChildOid))
   }
   it should "deny access without access to the given organization" in {
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access for a user of an ancestor organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k2, k3, k5), crudSessions(ParentOid))
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5), crudSessions(ParentOid))
   }
-  it should "deny access for a user of a descendant organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  it should "allow access for a user of a descendant organization" in {
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5), crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)

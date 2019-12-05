@@ -70,7 +70,7 @@ trait OrganisaatioServiceMock extends ServiceMocks {
   val NotFoundOrganisaatioResponse = s"""{ "numHits": 0, "organisaatiot": []}"""
   lazy val DefaultResponse = responseFromResource("organisaatio")
 
-  def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid", "parentOidPath": "$oid/$OphOid", "children" : []}]}"""
+  def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid", "parentOidPath": "$oid/$OphOid", "oppilaitostyyppi": "oppilaitostyyppi_21#1", "children" : []}]}"""
 
   def mockOrganisaatioResponse(oid: OrganisaatioOid, response: String = DefaultResponse): Unit =
     mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), response)

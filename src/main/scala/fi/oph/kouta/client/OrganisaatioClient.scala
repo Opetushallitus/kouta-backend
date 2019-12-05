@@ -50,7 +50,7 @@ object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJ
     find(oid, organisaatiot).map(x => x.oid +: childOidsFlat(x)).getOrElse(Seq()).distinct
 
   private def parentsAndChildren(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
-    find(oid, organisaatiot).map(x => parentOidsFlat(x) ++ Seq(x.oid) ++ childOidsFlat(x)).getOrElse(Seq()).distinct
+    find(oid, organisaatiot).map(x => parentOidsFlat(x) ++ Seq(x.oid) ++ childOidsFlat(x)).getOrElse(Seq()).distinct.filterNot(OphOid.equals)
 
   @tailrec
   private def find(oid: OrganisaatioOid, level: List[OidAndChildren]): Option[OidAndChildren] =
