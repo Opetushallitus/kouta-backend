@@ -39,13 +39,13 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
     case _ => ???
   }
 
-  def searchKeywordsByPrefix(search: KeywordSearch) =
+  def searchKeywordsByPrefix(search: KeywordSearch): DBIO[Vector[String]] =
     searchKeywords(search)(s"${search.term}%")
 
-  def searchKeywordsByMatch(search: KeywordSearch) =
+  def searchKeywordsByMatch(search: KeywordSearch): DBIO[Vector[String]] =
     searchKeywords(search)(s"%${search.term}%")
 
-  private def searchKeywords(search: KeywordSearch)(like: String) = {
+  private def searchKeywords(search: KeywordSearch)(like: String): DBIO[Vector[String]] = {
     val (field, table) = fieldAndTable(search.`type`)
     sql"""select #$field from #$table
           where kieli = ${search.kieli.toString}::kieli
@@ -54,7 +54,7 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
           limit ${search.limit} """.as[String]
   }
 
-  def insertKeywords(`type`: KeywordType, keywords: Seq[Keyword]) = {
+  def insertKeywords(`type`: KeywordType, keywords: Seq[Keyword]): DBIO[Vector[Keyword]] = {
     val (field, table) = fieldAndTable(`type`)
     val pkey = s"${table}_pkey"
     val inserts = keywords.map { case Keyword(kieli, keyword) =>

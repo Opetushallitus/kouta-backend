@@ -2,8 +2,8 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 
-import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -12,6 +12,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait OppilaitoksenOsaDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa]
   def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Option[OppilaitoksenOsa]]
+
+  def getUpdateActionsWithoutModifiedCheck(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Option[OppilaitoksenOsa]]
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa): OppilaitoksenOsa
   def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)]
@@ -36,7 +38,7 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
   override def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        k <- selectOppilaitoksenOsa(oid).as[OppilaitoksenOsa].headOption
+        k <- selectOppilaitoksenOsa(oid)
         l <- selectLastModified(oid)
       } yield (k, l)
     ).get match {
@@ -45,16 +47,17 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
     }
   }
 
-  override def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Option[OppilaitoksenOsa]] = {
-    checkNotModified(oppilaitoksenOsa.oid, notModifiedSince).andThen(
-      for {
-        k <- updateOppilaitoksenOsa(oppilaitoksenOsa)
-      } yield {
-        val modified = k.sorted.lastOption
-        modified.map(oppilaitoksenOsa.withModified)
-      }
-    )
-  }
+  override def getUpdateActionsWithoutModifiedCheck(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Option[OppilaitoksenOsa]] =
+    for {
+      k <- updateOppilaitoksenOsa(oppilaitoksenOsa)
+    } yield {
+      val modified = k.sorted.lastOption
+      modified.map(oppilaitoksenOsa.withModified)
+    }
+
+  override def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Option[OppilaitoksenOsa]] =
+    checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
+      .andThen(getUpdateActionsWithoutModifiedCheck(oppilaitoksenOsa))
 
   override def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): Option[OppilaitoksenOsa] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(oppilaitoksenOsa, notModifiedSince)).get
@@ -94,17 +97,17 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
     sql"""select 1 from oppilaitokset where oid = ${oppilaitoksenOsa.oppilaitosOid}""".as[Int].headOption.map(_.isDefined)
   }
 
-  def selectOppilaitoksenOsa(oid: OrganisaatioOid) = {
+  def selectOppilaitoksenOsa(oid: OrganisaatioOid): DBIO[Option[OppilaitoksenOsa]] = {
     sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, lower(system_time)
-          from oppilaitosten_osat where oid = $oid"""
+          from oppilaitosten_osat where oid = $oid""".as[OppilaitoksenOsa].headOption
   }
 
-  def selectByOppilaitosOid(oppilaitosOid: OrganisaatioOid) = {
+  def selectByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsa]] = {
     sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, lower(system_time)
           from oppilaitosten_osat where oppilaitos_oid = $oppilaitosOid""".as[OppilaitoksenOsa]
   }
 
-  def insertOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa) = {
+  def insertOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Vector[Instant]] = {
     sql"""insert into oppilaitosten_osat (
             oid,
             oppilaitos_oid,
@@ -124,7 +127,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
           returning lower(system_time)""".as[Instant]
   }
 
-  def updateOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa) = {
+  def updateOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Vector[Instant]] = {
     sql"""update oppilaitosten_osat set
               tila = ${oppilaitoksenOsa.tila.toString}::julkaisutila,
               kielivalinta = ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
@@ -139,13 +142,13 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
             returning lower(system_time)""".as[Instant]
   }
 
-  def selectListByOppilaitosOid(oppilaitosOid: OrganisaatioOid) = {
+  def selectListByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsaListItem]] = {
     sql"""select oid, oppilaitos_oid, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from oppilaitosten_osat
           where oppilaitos_oid = $oppilaitosOid""".as[OppilaitoksenOsaListItem]
   }
 
-  def selectListByOppilaitosOidAndOrganisaatioOids(oppilaitosOid: OrganisaatioOid, organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectListByOppilaitosOidAndOrganisaatioOids(oppilaitosOid: OrganisaatioOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[OppilaitoksenOsaListItem]] = {
     sql"""select oid, oppilaitos_oid, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from oppilaitosten_osat
           where organisaatio_oid in (#${createOidInParams(organisaatioOids)})

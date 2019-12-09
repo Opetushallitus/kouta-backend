@@ -30,13 +30,13 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
 
   def teemakuvaPrefix: String
 
-  def themeImagePutActions(entity: T, putActions: T => DBIO[T], updateActions: (T, Instant) => DBIO[Option[T]]): DBIO[T] =
+  def themeImagePutActions(entity: T, putActions: T => DBIO[T], updateActions: T => DBIO[Option[T]]): DBIO[T] =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>
         putActions(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
           .flatMap { added =>
             val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${added.primaryId.get}/$filename")
-            updateActions(added.withMetadata(added.metadata.get.withTeemakuva(Some(url))), Instant.now())
+            updateActions(added.withMetadata(added.metadata.get.withTeemakuva(Some(url))))
               .map { updated =>
                 s3Service.deleteImage(s3Service.getTempKey(filename))
                 updated.get

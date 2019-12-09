@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getPutActions(koulutus: Koulutus): DBIO[Koulutus]
   def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Option[Koulutus]]
+  def getUpdateActionsWithoutModifiedCheck(koulutus: Koulutus): DBIO[Option[Koulutus]]
 
   def put(koulutus: Koulutus): Koulutus
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
@@ -50,17 +51,18 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Option[Koulutus]] = {
-    checkNotModified(koulutus.oid.get, notModifiedSince).andThen(
-      for {
-        k <- updateKoulutus(koulutus)
-        t <- updateKoulutuksenTarjoajat(koulutus)
-      } yield {
-        val modified = (k ++ t).sorted.lastOption
-        modified.map(koulutus.withModified)
-      }
-    )
-  }
+  override def getUpdateActionsWithoutModifiedCheck(koulutus: Koulutus): DBIO[Option[Koulutus]] =
+    for {
+      k <- updateKoulutus(koulutus)
+      t <- updateKoulutuksenTarjoajat(koulutus)
+    } yield {
+      val modified = (k ++ t).sorted.lastOption
+      modified.map(koulutus.withModified)
+    }
+
+  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Option[Koulutus]] =
+    checkNotModified(koulutus.oid.get, notModifiedSince)
+      .andThen(getUpdateActionsWithoutModifiedCheck(koulutus))
 
   override def update(koulutus: Koulutus, notModifiedSince: Instant): Option[Koulutus] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(koulutus, notModifiedSince)).get

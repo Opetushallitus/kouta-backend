@@ -14,6 +14,8 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getPutActions(toteutus: Toteutus): DBIO[Toteutus]
   def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Option[Toteutus]]
 
+  def getUpdateActionsWithoutModifiedCheck(toteutus: Toteutus): DBIO[Option[Toteutus]]
+
   def put(toteutus: Toteutus): Toteutus
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
 
@@ -39,16 +41,18 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def put(toteutus: Toteutus): Toteutus =
     KoutaDatabase.runBlockingTransactionally(getPutActions(toteutus)).get
 
+  override def getUpdateActionsWithoutModifiedCheck(toteutus: Toteutus): DBIO[Option[Toteutus]] =
+    for {
+      t <- updateToteutus(toteutus)
+      tt <- updateToteutuksenTarjoajat(toteutus)
+    } yield {
+      val modified = (t ++ tt).sorted.lastOption
+      modified.map(toteutus.withModified)
+    }
+
   override def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Option[Toteutus]] =
-    checkNotModified(toteutus.oid.get, notModifiedSince).andThen(
-      for {
-        t  <- updateToteutus(toteutus)
-        tt <- updateToteutuksenTarjoajat(toteutus)
-      } yield {
-        val modified = (t ++ tt).sorted.lastOption
-        modified.map(toteutus.withModified)
-      }
-    )
+    checkNotModified(toteutus.oid.get, notModifiedSince)
+      .andThen(getUpdateActionsWithoutModifiedCheck(toteutus))
 
   override def update(toteutus: Toteutus, notModifiedSince: Instant): Option[Toteutus] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(toteutus, notModifiedSince)).get
@@ -64,7 +68,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     }
   }
 
-  private def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIOAction[Vector[Instant], NoStream, Effect] = {
+  private def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Vector[Instant]] = {
     val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _, _) = toteutus
     if(tarjoajat.nonEmpty) {
       combineInstants(tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
@@ -80,25 +84,25 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     KoutaDatabase.runBlockingTransactionally(
       for {
         toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
-        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
-      } yield (toteutukset, tarjoajat)).map {
-        case (toteutukset, tarjoajat) => {
-          toteutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
-        }
-      }.get
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
+      } yield (toteutukset, tarjoajat)
+    ).map {
+      case (toteutukset, tarjoajat) =>
+        toteutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
+    }.get
   }
 
   override def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
         toteutukset <- selectJulkaistutToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
-        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList).as[Tarjoaja]
-      } yield (toteutukset, tarjoajat) ).map {
-        case (toteutukset, tarjoajat) => {
-          toteutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
-      }
+        tarjoajat <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
+      } yield (toteutukset, tarjoajat)
+    ).map {
+      case (toteutukset, tarjoajat) =>
+        toteutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
     }.get
   }
 
@@ -109,12 +113,12 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     KoutaDatabase.runBlockingTransactionally(
       for {
         toteutukset <- selectListItems()
-        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid).toList).as[Tarjoaja]
-      } yield (toteutukset, tarjoajat) ).map {
-        case (toteutukset, tarjoajat) => {
-          toteutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
-        }
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid).toList)
+      } yield (toteutukset, tarjoajat)
+    ).map {
+      case (toteutukset, tarjoajat) =>
+        toteutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
     }.get
 
   override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] = organisaatioOids match {
@@ -195,11 +199,11 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def selectToteutuksenTarjoajat(oid: ToteutusOid) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
-  def selectToteutustenTarjoajat(oids: List[ToteutusOid]) = {
-    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createOidInParams(oids)})"""
+  def selectToteutustenTarjoajat(oids: List[ToteutusOid]): DBIO[Vector[Tarjoaja]] = {
+    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createOidInParams(oids)})""".as[Tarjoaja]
   }
 
-  def insertToteutus(toteutus: Toteutus) = {
+  def insertToteutus(toteutus: Toteutus): DBIO[(ToteutusOid, Instant)] = {
     sql"""insert into toteutukset (
             koulutus_oid,
             tila,
@@ -219,14 +223,14 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           ) returning oid, lower(system_time)""".as[(ToteutusOid, Instant)].head
   }
 
-  def insertToteutuksenTarjoajat(toteutus: Toteutus) = {
+  def insertToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Vector[Instant]] = {
     combineInstants(toteutus.tarjoajat.map(t =>
       sql"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values (${toteutus.oid}, $t, ${toteutus.muokkaaja})
              returning lower(system_time)""".as[Instant]))
   }
 
-  def updateToteutus(toteutus: Toteutus) = {
+  def updateToteutus(toteutus: Toteutus): DBIO[Vector[Instant]] = {
     sql"""update toteutukset set
               koulutus_oid = ${toteutus.koulutusOid},
               tila = ${toteutus.tila.toString}::julkaisutila,
@@ -245,20 +249,20 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             returning lower(system_time)""".as[Instant]
   }
 
-  def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid ) = {
+  def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Vector[Instant]] = {
     sql"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
              on conflict on constraint toteutusten_tarjoajat_pkey do nothing
              returning lower(system_time)""".as[Instant]
   }
 
-  def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]) = {
+  def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]): DBIO[Vector[Instant]] = {
     sql"""delete from toteutusten_tarjoajat
           where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})
           returning now()""".as[Instant]
   }
 
-  def deleteTarjoajat(oid: Option[ToteutusOid]) =
+  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Vector[Instant]] =
     sql"""delete from toteutusten_tarjoajat
           where toteutus_oid = $oid
           returning now()""".as[Instant]
@@ -278,32 +282,32 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
            group by t.oid) m on t.oid = m.oid"""
 
-  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           inner join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
              or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})""".as[ToteutusListItem]
   }
 
-  def selectByKoulutusOid(koulutusOid: KoulutusOid) = {
+  def selectByKoulutusOid(koulutusOid: KoulutusOid): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           where t.koulutus_oid = $koulutusOid""".as[ToteutusListItem]
   }
 
-  def selectByHakuOid(hakuOid: HakuOid) = {
+  def selectByHakuOid(hakuOid: HakuOid): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           inner join hakukohteet h on h.toteutus_oid = t.oid
           where h.haku_oid = $hakuOid""".as[ToteutusListItem]
   }
 
-  def selectByKoulutusOidAndCreatorOrTarjoaja(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByKoulutusOidAndCreatorOrTarjoaja(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           inner join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
           and t.koulutus_oid = $koulutusOid""".as[ToteutusListItem]
   }
 
-  def selectTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid) = {
+  def selectTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): DBIO[Vector[OrganisaatioOid]] = {
     sql"""select distinct tt.tarjoaja_oid
           from toteutusten_tarjoajat tt
           inner join hakukohteet h on tt.toteutus_oid = h.toteutus_oid

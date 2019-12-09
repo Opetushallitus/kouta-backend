@@ -51,7 +51,7 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeOppilaitos,
-      () => themeImagePutActions(oppilaitos, OppilaitosDAO.getPutActions, OppilaitosDAO.getUpdateActions),
+      () => themeImagePutActions(oppilaitos, OppilaitosDAO.getPutActions, OppilaitosDAO.getUpdateActionsWithoutModifiedCheck),
       oppilaitos.oid.toString,
       (added: Oppilaitos) => auditLog.logCreate(added, user))
 
@@ -92,7 +92,7 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeOppilaitos,
-      () => themeImagePutActions(oppilaitoksenOsa, OppilaitoksenOsaDAO.getPutActions, OppilaitoksenOsaDAO.getUpdateActions),
+      () => themeImagePutActions(oppilaitoksenOsa, OppilaitoksenOsaDAO.getPutActions, OppilaitoksenOsaDAO.getUpdateActionsWithoutModifiedCheck),
       oppilaitoksenOsa.oppilaitosOid.toString,
       (added: OppilaitoksenOsa) => auditLog.logCreate(added, user))
 

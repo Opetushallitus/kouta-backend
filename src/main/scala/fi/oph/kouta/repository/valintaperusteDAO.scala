@@ -109,7 +109,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
-  def insertValintaperuste(valintaperuste: Valintaperuste) = {
+  def insertValintaperuste(valintaperuste: Valintaperuste): DBIO[Instant] = {
     sql"""insert into valintaperusteet (
                      id,
                      tila,
@@ -140,14 +140,14 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
          ) returning lower(system_time)""".as[Instant].head
   }
 
-  def insertValintakokeet(valintaperuste: Valintaperuste) = {
+  def insertValintakokeet(valintaperuste: Valintaperuste): DBIO[Vector[Instant]] = {
     val inserts = valintaperuste.valintakokeet.map(k =>
       insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja))
     combineInstants(inserts)
   }
 
 
-  def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid) =
+  def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Vector[Instant]] =
     sql"""insert into valintaperusteiden_valintakokeet (id, valintaperuste_id, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
            values (${valintakoe.id.map(_.toString)}::uuid,
                    ${valintaperusteId.map(_.toString)}::uuid,
@@ -161,13 +161,13 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  julkinen, metadata, sorakuvaus_id, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time)
           from valintaperusteet where id = ${id.toString}::uuid"""
 
-  def selectValintakokeet(id: UUID) = {
+  def selectValintakokeet(id: UUID): DBIO[Vector[Valintakoe]] = {
     sql"""select id, tyyppi_koodi_uri, tilaisuudet
           from valintaperusteiden_valintakokeet
           where valintaperuste_id = ${id.toString}::uuid""".as[Valintakoe]
   }
 
-  def updateValintaperuste(valintaperuste: Valintaperuste) = {
+  def updateValintaperuste(valintaperuste: Valintaperuste): DBIO[Vector[Instant]] = {
     sql"""update valintaperusteet set
                      tila = ${valintaperuste.tila.toString}::julkaisutila,
                      koulutustyyppi = ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
@@ -198,7 +198,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            returning lower(system_time)""".as[Instant]
   }
 
-  def updateValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid) = {
+  def updateValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Vector[Instant]] = {
     sql"""update valintaperusteiden_valintakokeet set
             tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
             tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
@@ -209,7 +209,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
           returning lower(system_time)""".as[Instant]
   }
 
-  def updateValintakokeet(valintaperuste: Valintaperuste) = {
+  def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Vector[Instant]] = {
     val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
 
@@ -224,13 +224,13 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     combineInstants(insertSQL ++ updateSQL :+ deleteSQL)
   }
 
-  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]) = {
+  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]): DBIO[Vector[Instant]] = {
     sql"""delete from valintaperusteiden_valintakokeet
             where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id not in (#${createUUIDInParams(exclude)})
             returning now()""".as[Instant]
   }
 
-  def deleteValintakokeet(valintaperusteId: Option[UUID]) = {
+  def deleteValintakokeet(valintaperusteId: Option[UUID]): DBIO[Vector[Instant]] = {
     sql"""delete from valintaperusteiden_valintakokeet
             where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid
             returning now()""".as[Instant]
@@ -251,20 +251,20 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
            group by vp.id) m on v.id = m.id"""
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           where (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${ophOid})
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           where ( v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${ophOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid) = {
+  def selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
@@ -272,7 +272,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid) = {
+  def selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
@@ -281,7 +281,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
       """.as[ValintaperusteListItem]
   }
 
-  def selectBySorakuvausId(sorakuvausId: UUID) = {
+  def selectBySorakuvausId(sorakuvausId: UUID): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           where v.sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[ValintaperusteListItem]
   }

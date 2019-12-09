@@ -98,7 +98,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
-      () => themeImagePutActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActions),
+      () => themeImagePutActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActionsWithoutModifiedCheck),
       (added: Koulutus) => added.oid.get.toString,
       (added: Koulutus) => auditLog.logCreate(added, user))
 

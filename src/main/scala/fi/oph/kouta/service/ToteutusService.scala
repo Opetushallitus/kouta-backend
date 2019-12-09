@@ -14,6 +14,7 @@ import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
+import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -79,7 +80,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => themeImagePutActions(toteutus, putActions(_, user), updateActions(_, _, user)),
+      () => themeImagePutActions(toteutus, putActions(_, user), updateActionsWithoutModifiedCheck(_, user)),
       (added: Toteutus) => added.oid.get.toString,
       (added: Toteutus) => auditLog.logCreate(added, user))
   }
@@ -92,19 +93,28 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       toteutus.oid.get.toString,
       (updated: Option[Toteutus]) => auditLog.logUpdate(before, updated, user))
 
-  private def updateActions(toteutus: Toteutus, notModifiedSince: Instant, user: User) =
+  private def withKeywordInserts[T](toteutus: Toteutus, user: User)(actions: => DBIO[T]): DBIO[T] = {
     for {
       _ <- insertAsiasanat(toteutus, user)
       _ <- insertAmmattinimikkeet(toteutus, user)
-      t <- ToteutusDAO.getUpdateActions(toteutus, notModifiedSince)
+      t <- actions
     } yield t
+  }
 
-  private def putActions(toteutus: Toteutus, user: User) =
-    for {
-      _ <- insertAsiasanat(toteutus, user)
-      _ <- insertAmmattinimikkeet(toteutus, user)
-      t <- ToteutusDAO.getPutActions(toteutus)
-    } yield t
+  private def putActions(toteutus: Toteutus, user: User): DBIO[Toteutus] =
+    withKeywordInserts(toteutus, user) {
+      ToteutusDAO.getPutActions(toteutus)
+    }
+
+  private def updateActions(toteutus: Toteutus, notModifiedSince: Instant, user: User): DBIO[Option[Toteutus]] =
+    withKeywordInserts(toteutus, user) {
+      ToteutusDAO.getUpdateActions(toteutus, notModifiedSince)
+    }
+
+  private def updateActionsWithoutModifiedCheck(toteutus: Toteutus, user: User): DBIO[Option[Toteutus]] =
+    withKeywordInserts(toteutus, user) {
+      ToteutusDAO.getUpdateActionsWithoutModifiedCheck(toteutus)
+    }
 
   private def insertAsiasanat(toteutus: Toteutus, user: User) =
     keywordService.insert(Asiasana, user, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))

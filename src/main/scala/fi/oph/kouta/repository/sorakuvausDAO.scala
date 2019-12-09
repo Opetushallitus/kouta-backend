@@ -4,12 +4,12 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
+import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import slick.dbio.DBIO
 
 trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus]
@@ -49,10 +49,10 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
 
   override def get(id: UUID): Option[(Sorakuvaus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(for {
-      v <- selectSorakuvaus(id).as[Sorakuvaus].headOption
+      v <- selectSorakuvaus(id)
       l <- selectLastModified(id)
     } yield (v, l) match {
-      case (Some(v), Some(l)) => Some((v, l))
+      case (Some(sorakuvaus), Some(lastModified)) => Some((sorakuvaus, lastModified))
       case _ => None
     }).get
   }
@@ -88,7 +88,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
 
   lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
-  def insertSorakuvaus(sorakuvaus: Sorakuvaus) = {
+  def insertSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Vector[Instant]] = {
     sql"""insert into sorakuvaukset (
                      id,
                      tila,
@@ -111,12 +111,12 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
          ) returning lower(system_time)""".as[Instant]
   }
 
-  def selectSorakuvaus(id: UUID) =
+  def selectSorakuvaus(id: UUID): DBIO[Option[Sorakuvaus]] =
     sql"""select id, tila, nimi, koulutustyyppi, julkinen, kielivalinta,
                  metadata, organisaatio_oid, muokkaaja, lower(system_time)
-          from sorakuvaukset where id = ${id.toString}::uuid"""
+          from sorakuvaukset where id = ${id.toString}::uuid""".as[Sorakuvaus].headOption
 
-  def updateSorakuvaus(sorakuvaus: Sorakuvaus) = {
+  def updateSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Vector[Instant]] = {
     sql"""update sorakuvaukset set
                      tila = ${sorakuvaus.tila.toString}::julkaisutila,
                      nimi = ${toJsonParam(sorakuvaus.nimi)}::jsonb,
@@ -138,13 +138,13 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
            ) returning lower(system_time)""".as[Instant]
   }
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
           where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${ophOid})""".as[SorakuvausListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
           where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${ophOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))

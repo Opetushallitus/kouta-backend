@@ -1,8 +1,9 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.domain.{Ajanjakso, Hakutieto, HakutietoHaku, HakutietoHakukohde}
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.{Ajanjakso, Hakutieto, HakutietoHaku, HakutietoHakukohde}
 import slick.jdbc.PostgresProfile.api._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakutietoDAO {
@@ -61,7 +62,7 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
 
 sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
 
-  def selectHakujenHakutiedot(koulutusOid: KoulutusOid) = {
+  def selectHakujenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakutietoHaku)]] = {
     sql"""select t.oid, h.oid, h.nimi, h.hakutapa_koodi_uri, h.alkamiskausi_koodi_uri, h.alkamisvuosi,
                  h.hakulomaketyyppi, h.hakulomake_ataru_id, h.hakulomake_kuvaus, h.hakulomake_linkki,
                  h.organisaatio_oid, h.muokkaaja, lower(h.system_time)
@@ -73,13 +74,13 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
           and h.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakutietoHaku)]
   }
 
-  def selectHakujenHakuajat(hakutiedot: Seq[(ToteutusOid, HakutietoHaku)]) = {
+  def selectHakujenHakuajat(hakutiedot: Seq[(ToteutusOid, HakutietoHaku)]): DBIO[Vector[Hakuaika]] = {
     sql"""select haku_oid, lower(hakuaika), upper(hakuaika)
           from hakujen_hakuajat
           where haku_oid in (#${createOidInParams(hakutiedot.map(_._2.hakuOid))})""".as[Hakuaika]
   }
 
-  def selectHakukohteidenHakutiedot(koulutusOid: KoulutusOid) = {
+  def selectHakukohteidenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakuOid, HakutietoHakukohde)]] = {
     sql"""select t.oid, h.oid, k.oid, k.nimi, k.alkamiskausi_koodi_uri, k.alkamisvuosi, k.kaytetaan_haun_alkamiskautta,
                  k.hakulomaketyyppi, k.hakulomake_ataru_id, k.hakulomake_kuvaus, k.hakulomake_linkki, k.kaytetaan_haun_hakulomaketta,
                  k.aloituspaikat, k.min_aloituspaikat, k.max_aloituspaikat, k.ensikertalaisen_aloituspaikat, k.min_ensikertalaisen_aloituspaikat,
@@ -92,7 +93,7 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
           and k.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }
 
-  def selectHakukohteidenHakuajat(hakutiedot: Seq[(ToteutusOid, HakuOid, HakutietoHakukohde)]) = {
+  def selectHakukohteidenHakuajat(hakutiedot: Seq[(ToteutusOid, HakuOid, HakutietoHakukohde)]): DBIO[Vector[Hakuaika]] = {
     sql"""select hakukohde_oid, lower(hakuaika), upper(hakuaika)
           from hakukohteiden_hakuajat
           where hakukohde_oid in (#${createOidInParams(hakutiedot.map(_._3.hakukohdeOid))})""".as[Hakuaika]

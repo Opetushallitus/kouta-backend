@@ -12,6 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait OppilaitosDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getPutActions(oppilaitos: Oppilaitos): DBIO[Oppilaitos]
   def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Option[Oppilaitos]]
+  def getUpdateActionsWithoutModifiedCheck(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]]
 
   def put(oppilaitos: Oppilaitos): Oppilaitos
   def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)]
@@ -29,7 +30,7 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
   override def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        k <- selectOppilaitos(oid).as[Oppilaitos].headOption
+        k <- selectOppilaitos(oid)
         l <- selectLastModified(oid)
       } yield (k, l)
     ).get match {
@@ -38,16 +39,17 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
     }
   }
 
-  override def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Option[Oppilaitos]] = {
-    checkNotModified(oppilaitos.oid, notModifiedSince).andThen(
-      for {
-        k <- updateOppilaitos(oppilaitos)
-      } yield {
-        val modified = k.sorted.lastOption
-        modified.map(oppilaitos.withModified)
-      }
-    )
-  }
+  override def getUpdateActionsWithoutModifiedCheck(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]] =
+    for {
+      k <- updateOppilaitos(oppilaitos)
+    } yield {
+      val modified = k.sorted.lastOption
+      modified.map(oppilaitos.withModified)
+    }
+
+  override def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Option[Oppilaitos]] =
+    checkNotModified(oppilaitos.oid, notModifiedSince)
+      .andThen(getUpdateActionsWithoutModifiedCheck(oppilaitos))
 
   override def update(oppilaitos: Oppilaitos, notModifiedSince: Instant): Option[Oppilaitos] =
     KoutaDatabase.runBlockingTransactionally(getUpdateActions(oppilaitos, notModifiedSince)).get
@@ -74,12 +76,12 @@ sealed trait OppilaitosModificationSQL extends SQLHelpers {
 
 sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificationSQL with SQLHelpers {
 
-  def selectOppilaitos(oid: OrganisaatioOid) = {
+  def selectOppilaitos(oid: OrganisaatioOid): DBIO[Option[Oppilaitos]] = {
     sql"""select oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, lower(system_time)
-          from oppilaitokset where oid = $oid"""
+          from oppilaitokset where oid = $oid""".as[Oppilaitos].headOption
   }
 
-  def insertOppilaitos(oppilaitos: Oppilaitos) = {
+  def insertOppilaitos(oppilaitos: Oppilaitos): DBIO[Vector[Instant]] = {
     sql"""insert into oppilaitokset (
             oid,
             tila,
@@ -97,7 +99,7 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
           returning lower(system_time)""".as[Instant]
   }
 
-  def updateOppilaitos(oppilaitos: Oppilaitos) = {
+  def updateOppilaitos(oppilaitos: Oppilaitos): DBIO[Vector[Instant]] = {
     sql"""update oppilaitokset set
               tila = ${oppilaitos.tila.toString}::julkaisutila,
               kielivalinta = ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,

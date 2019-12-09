@@ -8,9 +8,8 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
-import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
+import slick.dbio.DBIO
 import slick.jdbc.{PositionedParameters, SetParameter}
-import slick.sql.SqlStreamingAction
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
@@ -35,7 +34,7 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def toTsrangeString(a: Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
 
-  def combineInstants(instants: Seq[SqlStreamingAction[Vector[Instant], Instant, Effect]]): DBIOAction[Vector[Instant], NoStream, Effect] = {
+  def combineInstants(instants: Seq[DBIO[Vector[Instant]]]): DBIO[Vector[Instant]] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     DBIO.fold(instants, Vector()) { case (first, second) => first ++ second }
   }
