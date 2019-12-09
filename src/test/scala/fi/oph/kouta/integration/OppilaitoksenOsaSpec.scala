@@ -135,7 +135,6 @@ class OppilaitoksenOsaSpec
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksen-osa-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -143,7 +142,6 @@ class OppilaitoksenOsaSpec
     val oid = put(oppilaitoksenOsaWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitoksenOsaWithImage.copy(oid = OrganisaatioOid(oid)))
-    MockS3Client.reset()
   }
 
   "Update oppilaitoksen osa" should "update oppilaitoksen osa" in {
@@ -277,7 +275,6 @@ class OppilaitoksenOsaSpec
     get(oid, oppilaitoksenOsaWithImage.copy(metadata = oppilaitoksenOsa.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/oppilaitoksen-osa-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksen-osa-teemakuva/$oid/image.png"))
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -289,6 +286,5 @@ class OppilaitoksenOsaSpec
 
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitoksenOsaWithImage)
-    MockS3Client.reset()
   }
 }

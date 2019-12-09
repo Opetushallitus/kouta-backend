@@ -137,7 +137,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -145,7 +144,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
-    MockS3Client.reset()
   }
 
   "Update toteutus" should "update toteutus" in {
@@ -306,7 +304,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, toteutusWithImage.copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -318,7 +315,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
     MockS3Client.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
-    MockS3Client.reset()
   }
 
   object ToteutusJsonMethods extends JsonMethods {

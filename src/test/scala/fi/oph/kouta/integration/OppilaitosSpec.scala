@@ -16,10 +16,6 @@ import org.json4s.jackson.Serialization.read
 class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture with Validations {
   override val roleEntities = Seq(Role.Oppilaitos)
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-  }
-
   "Get oppilaitos by oid" should "return 404 if oppilaitos not found" in {
     get(s"$OppilaitosPath/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
@@ -122,7 +118,6 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -130,7 +125,6 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     val oid = put(oppilaitosWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
-    MockS3Client.reset()
   }
 
   "Update oppilaitos" should "update oppilaitos" in {
@@ -258,7 +252,6 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     get(oid, oppilaitosWithImage.copy(metadata = oppilaitos.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/image.png"))
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -270,6 +263,5 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
-    MockS3Client.reset()
   }
 }

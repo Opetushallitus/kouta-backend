@@ -168,7 +168,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -176,7 +175,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val oid = put(koulutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
-    MockS3Client.reset()
   }
 
   "Update koulutus" should "update koulutus" in {
@@ -371,7 +369,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, koulutusWithImage.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -383,6 +380,5 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
-    MockS3Client.reset()
   }
 }

@@ -3,19 +3,10 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.integration.fixture.MockS3Client.Content
 import fi.oph.kouta.integration.fixture.{MockS3Client, UploadFixture}
 import org.json4s.jackson.Serialization.read
-import org.scalactic.source
-import org.scalatest.BeforeAndAfter
 
 case class ImageUrl(url: String)
 
-class UploadSpec extends KoutaIntegrationSpec with UploadFixture with BeforeAndAfter {
-
-  override def beforeAll(): Unit = super.beforeAll()
-
-  override def after(fun: => Any)(implicit pos: source.Position): Unit = {
-    super.after(fun)
-    MockS3Client.reset()
-  }
+class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
 
   "Upload theme image" should "upload image" in {
     post(uri = ThemeImageUploadPath, body = correctTheme, headers = Map("Content-Type" -> "image/png")) {

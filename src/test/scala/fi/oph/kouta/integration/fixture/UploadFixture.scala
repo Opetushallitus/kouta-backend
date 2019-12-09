@@ -8,9 +8,15 @@ import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.integration.fixture.MockS3Client.Content
 import fi.oph.kouta.mocks.MockS3Service
 import fi.oph.kouta.servlet.UploadServlet
+import org.scalatest.BeforeAndAfterEach
 
-trait UploadFixture {
+trait UploadFixture extends BeforeAndAfterEach {
   this: KoutaIntegrationSpec =>
+
+  override def afterEach(): Unit = {
+    super.afterEach()
+    MockS3Client.reset()
+  }
 
   val UploadPath = "/upload"
   val ThemeImageUploadPath = s"$UploadPath/theme-image"

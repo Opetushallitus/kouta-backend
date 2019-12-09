@@ -16,10 +16,6 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-  }
-
   "Get sorakuvaus by id" should "return 404 if sorakuvaus not found" in {
     get(s"/sorakuvaus/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
