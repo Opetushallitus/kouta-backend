@@ -69,7 +69,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
-      DBIO.fold(actions, Vector()) { case (first, second) => first ++ second }
+      combineInstants(actions)
     } else {
       deleteTarjoajat(oid)
     }

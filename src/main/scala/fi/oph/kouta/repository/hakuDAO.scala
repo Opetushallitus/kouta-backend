@@ -221,8 +221,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     if(hakuajat.nonEmpty) {
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
       val deleteSQL = deleteHakuajat(oid, hakuajat)
-
-      DBIO.fold(insertSQL :+ deleteSQL, Vector()) { case (first, second) => first ++ second }
+      combineInstants(insertSQL :+ deleteSQL)
     } else {
       sql"""delete from hakujen_hakuajat where haku_oid = $oid returning now()""".as[Instant]
     }

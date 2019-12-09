@@ -57,11 +57,12 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
   def insertKeywords(`type`: KeywordType, keywords: Seq[Keyword]) = {
     val (field, table) = fieldAndTable(`type`)
     val pkey = s"${table}_pkey"
-    DBIO.fold(keywords.map { case Keyword(kieli, keyword) =>
+    val inserts = keywords.map { case Keyword(kieli, keyword) =>
       sql"""insert into #$table (#$field, kieli)
             values (${keyword.toLowerCase}, ${kieli.toString}::kieli)
             on conflict on constraint #$pkey do nothing
             returning kieli, #$field""".as[Keyword]
-    }, Vector()) { (first, second) => first ++ second }
+    }
+    DBIO.fold(inserts, Vector()) { (first, second) => first ++ second }
   }
 }

@@ -6,7 +6,6 @@ import java.util.UUID
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
-import fi.oph.kouta.util.TimeUtils.localDateTimeToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -144,7 +143,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   def insertValintakokeet(valintaperuste: Valintaperuste) = {
     val inserts = valintaperuste.valintakokeet.map(k =>
       insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja))
-    DBIO.fold(inserts, Vector()) { case (first, second) => first ++ second }
+    combineInstants(inserts)
   }
 
 
@@ -222,7 +221,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
 
-    DBIO.fold(insertSQL ++ updateSQL :+ deleteSQL, Vector()) { case (first, second) => first ++ second }
+    combineInstants(insertSQL ++ updateSQL :+ deleteSQL)
   }
 
   def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]) = {
