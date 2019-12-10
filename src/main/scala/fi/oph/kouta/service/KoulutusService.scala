@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.{KoulutusResult, KoutaIndexClient, OrganisaatioClient}
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
@@ -81,6 +81,19 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Toteutus.readRoles) {
       ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _)
     }
+
+  def search(params: Map[String, String], organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): KoulutusResult = {
+
+    def assocToteutusCounts(r: KoulutusResult): KoulutusResult =
+      r.copy(result = r.result.map {
+          k => k.copy(toteutukset = listToteutukset(k.oid, organisaatioOid).size)
+      })
+
+    list(organisaatioOid).map(_.oid) match {
+      case Nil          => KoulutusResult()
+      case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
+    }
+  }
 
   private def putWithIndexing(koulutus: Koulutus) =
     sqsInTransactionService.runActionAndUpdateIndex(

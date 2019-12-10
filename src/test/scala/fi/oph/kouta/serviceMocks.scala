@@ -12,6 +12,7 @@ import org.mockserver.model.HttpResponse.response
 
 import scala.io.Source
 import fi.vm.sade.utils.slf4j.Logging
+import org.mockserver.model
 
 /* If you need to debug mocks,
    change log4j.logger.org.mockserver=INFO
@@ -32,6 +33,8 @@ sealed trait ServiceMocks extends Logging {
 
   def clearServiceMocks() = mockServer.foreach(_.reset())
 
+  def clearMock(request:model.HttpRequest) = mockServer.foreach(_.clear(request))
+
   protected def getMockPath(key:String) = urlProperties.map(p => new java.net.URL(p.url(key)).getPath).getOrElse("/")
 
   protected def responseFromResource(filename:String) = Source.fromInputStream(
@@ -43,17 +46,19 @@ sealed trait ServiceMocks extends Logging {
     "suunnitellut" -> "true",
     "lakkautetut" -> "false")
 
-  protected def mockGet(key:String, params:Map[String,String], responseString:String) = {
+  protected def mockGet(key:String, params:Map[String,String], responseString:String, statusCode:Int = 200): model.HttpRequest = {
     import scala.collection.JavaConverters._
+    val req: model.HttpRequest = request()
+      .withMethod("GET")
+      //.withSecure(true) TODO: https toimimaan
+      .withPath(getMockPath(key))
+      .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
     mockServer.foreach(_.when(
-      request()
-        .withMethod("GET")
-        //.withSecure(true) TODO: https toimimaan
-        .withPath(getMockPath(key))
-        .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
+      req
     ).respond(
-      response(responseString)
+      response(responseString).withStatusCode(statusCode)
     ))
+    req
   }
 }
 
@@ -86,3 +91,44 @@ trait OrganisaatioServiceMock extends ServiceMocks {
 }
 
 object OrganisaatioServiceMock extends OrganisaatioServiceMock
+
+trait KoutaIndexMock extends ServiceMocks {
+
+  def foo(oid:String) = s"""{
+    "nimi": {
+     "fi": "IB-tutkinto $oid",
+     "sv": "IB-examen $oid",
+     "en": "IB Examination $oid"},
+    "organisaatio": {
+     "paikkakunta": {
+       "koodiUri": "kunta_398",
+       "nimi": {
+         "sv": "Lahtis",
+         "fi": "Lahti"
+       }
+     },
+     "nimi": {
+       "fi": "Koulutuskeskus"
+     },
+     "oid": "1.2.246.562.10.594252633210"
+    },
+    "muokkaaja": {
+     "nimi": "Keijo Antero Kana",
+     "oid": "1.2.246.562.24.62301161440"
+    },
+    "modified": "2019-02-08T09:57",
+    "oid": "$oid",
+    "tila": "julkaistu"}"""
+
+  def createResponse(responseOids: Seq[String]): String = {
+    val result = responseOids.sorted.reverse.map(foo).mkString(",")
+    s"""{"totalCount": ${responseOids.size}, "result": [$result]}"""
+  }
+
+  def mockKoulutusResponse(params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
+    case 200 => mockGet("kouta-index.koulutus.filtered-list", params, createResponse(responseOids))
+    case _   => mockGet("kouta-index.koulutus.filtered-list", params, s"Error $statusCode", statusCode)
+  }
+}
+
+object KoutaIndexMock extends KoutaIndexMock

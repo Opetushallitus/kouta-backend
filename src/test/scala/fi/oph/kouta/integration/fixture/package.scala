@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
-import fi.oph.kouta.servlet.IndexerServlet
+import fi.oph.kouta.servlet.{IndexerServlet, SearchServlet}
 
 package object fixture {
 
@@ -23,4 +23,12 @@ trait IndexerFixture { this: EverythingFixture with KoutaIntegrationSpec =>
 
   addServlet(new IndexerServlet(koulutusService, toteutusService, hakuService,
     valintaperusteService, sorakuvausService, oppilaitosService), IndexerPath)
+}
+
+trait SearchFixture { this: EverythingFixture with KoutaIntegrationSpec =>
+
+  val SearchPath = "/search"
+
+  addServlet(new SearchServlet(koulutusService, toteutusService, hakuService,
+    valintaperusteService, sorakuvausService, oppilaitosService), SearchPath)
 }

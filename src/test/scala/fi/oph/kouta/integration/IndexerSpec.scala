@@ -2,13 +2,13 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{Koulutus, OppilaitoksenOsa, Toteutus}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
 class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec with Validations {
 
-  override val roleEntities = Seq(Role.Koulutus)
+  override val roleEntities = RoleEntity.all
 
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
     val oid = put(koulutus)
@@ -101,5 +101,4 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val oid = OrganisaatioOid("oid")
     get(s"$IndexerPath/oppilaitos/$oid/osat", fakeIndexerSession, 403)
   }
-
 }

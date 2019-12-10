@@ -2,7 +2,6 @@ package fi.oph.kouta.integration
 
 import java.time.{Duration, Instant, ZoneId}
 
-import fi.oph.kouta.OrganisaatioServiceMock.{EvilCousin, EvilGrandChildOid, GrandChildOid}
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
