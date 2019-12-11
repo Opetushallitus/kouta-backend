@@ -40,7 +40,7 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
   def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id(_))
   def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID = put(ValintaperustePath, valintaperuste, sessionId, id(_))
 
-  implicit val equality: Equality[Valintaperuste] = (a: Valintaperuste, b: Any) => b match {
+  implicit val valintaperusteEquality: Equality[Valintaperuste] = (a: Valintaperuste, b: Any) => b match {
     case v: Valintaperuste =>
       val that = a.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)))
       val other = v.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)))

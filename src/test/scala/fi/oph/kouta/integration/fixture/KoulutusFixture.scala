@@ -7,8 +7,9 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.repository.{KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.KoulutusService
-import fi.oph.kouta.servlet.{KoulutusServlet, IndexerServlet}
+import fi.oph.kouta.servlet.{IndexerServlet, KoulutusServlet}
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+import org.scalactic.Equality
 
 import scala.util.Try
 
@@ -32,6 +33,14 @@ trait KoulutusFixture extends KoulutusDbFixture {
   def put(koulutus:Koulutus):String = put(KoulutusPath, koulutus, oid(_))
 
   def put(koulutus: Koulutus, sessionId: UUID): String = put(KoulutusPath, koulutus, sessionId, oid(_))
+
+  implicit val koulutusEquality: Equality[Koulutus] = (a: Koulutus, b: Any) => b match {
+    case _:Koulutus => Equality.default[Koulutus].areEqual(
+      a.copy(tarjoajat = a.tarjoajat.sorted),
+      b.asInstanceOf[Koulutus].copy(tarjoajat = b.asInstanceOf[Koulutus].tarjoajat.sorted)
+    )
+    case _ => false
+  }
 
   def get(oid: String, expected: Koulutus): String =
     get(KoulutusPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))

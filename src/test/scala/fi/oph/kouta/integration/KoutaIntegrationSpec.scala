@@ -3,6 +3,7 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.domain.{Koulutus, Toteutus, Valintaperuste}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
@@ -21,7 +22,14 @@ case class TestUser(oid: String, username: String, sessionId: UUID) {
   val ticket = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
 }
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
+trait DefaultTestImplicits {
+
+  implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = new Ordering[OrganisaatioOid] {
+    def compare(a:OrganisaatioOid, b:OrganisaatioOid): Int = a.s compare b.s
+  }
+}
+
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits {
 
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
   val rootOrganisaatio = KoutaIntegrationSpec.rootOrganisaatio
