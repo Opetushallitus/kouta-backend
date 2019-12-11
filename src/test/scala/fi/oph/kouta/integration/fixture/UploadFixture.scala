@@ -24,7 +24,9 @@ trait UploadFixture {
 
   protected lazy val s3Service: S3Service = MockS3Service
 
-  addServlet(new UploadServlet(s3Service), UploadPath)
+  val MaxSizeInTest = 20000
+
+  addServlet(new UploadServlet(s3Service, MaxSizeInTest), UploadPath)
 
   def getResourceImage(filename: String) = Files.readAllBytes(Paths.get(getClass.getClassLoader.getResource(s"files/$filename").toURI))
 

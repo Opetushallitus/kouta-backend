@@ -13,11 +13,9 @@ case class PayloadTooLargeException(message: String) extends RuntimeException(me
 
 case class MediaNotSupportedException(message: String) extends RuntimeException(message)
 
-class UploadServlet(s3Service: S3Service) extends KoutaServlet {
+class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extends KoutaServlet {
 
   def this() = this(S3Service)
-
-  val maxSize: Int = 2 * 1024 * 1024
 
   val themeMinWidth  = 1260
   val themeMinHeight = 400

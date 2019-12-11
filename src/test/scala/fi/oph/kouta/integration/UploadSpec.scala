@@ -52,7 +52,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture with BeforeAndA
   }
 
   it should "reject too large images" in {
-    val bigImage = new Array[Byte](2 * 1024 * 1024 + 1)
+    val bigImage = new Array[Byte](MaxSizeInTest + 1)
     post(uri = ThemeImageUploadPath, body = bigImage, headers = Map("Content-Type" -> "image/png")) {
       status should equal(413)
     }
@@ -89,7 +89,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture with BeforeAndA
   }
 
   it should "reject nonsense sent as an image" in {
-    val nonsense = Array.fill(20000)((scala.util.Random.nextInt(256) - 128).toByte)
+    val nonsense = Array.fill(MaxSizeInTest)((scala.util.Random.nextInt(256) - 128).toByte)
     post(uri = ThemeImageUploadPath, body = nonsense, headers = Map("Content-Type" -> "image/jpeg")) {
       status should equal(415)
       body should include("image/jpeg")
