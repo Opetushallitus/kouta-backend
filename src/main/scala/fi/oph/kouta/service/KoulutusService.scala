@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.client.{KoulutusResult, KoutaIndexClient, OrganisaatioClient}
+import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
@@ -82,15 +82,15 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _)
     }
 
-  def search(params: Map[String, String], organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): KoulutusResult = {
+  def search(params: Map[String, String], organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): KoulutusSearchResult = {
 
-    def assocToteutusCounts(r: KoulutusResult): KoulutusResult =
+    def assocToteutusCounts(r: KoulutusSearchResult): KoulutusSearchResult =
       r.copy(result = r.result.map {
           k => k.copy(toteutukset = listToteutukset(k.oid, organisaatioOid).size)
       })
 
     list(organisaatioOid).map(_.oid) match {
-      case Nil          => KoulutusResult()
+      case Nil          => KoulutusSearchResult()
       case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
     }
   }

@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.KoutaIndexMock
-import fi.oph.kouta.client.{KoulutusResult, KoutaClientSpec}
+import fi.oph.kouta.domain.KoulutusSearchResult
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
@@ -56,8 +56,8 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
 
     get(s"$SearchPath/koulutus", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
-      debugJson[KoulutusResult](body)
-      val r = read[KoulutusResult](body).result
+      debugJson[KoulutusSearchResult](body)
+      val r = read[KoulutusSearchResult](body).result
       r.map(_.oid.s) should be (List(koid5, koid4, koid2, koid1))
       r.map(_.toteutukset) should be (List(1, 0, 0, 1))
     }
@@ -68,8 +68,8 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
 
     get(s"$SearchPath/koulutus", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (200)
-      debugJson[KoulutusResult](body)
-      val r = read[KoulutusResult](body).result
+      debugJson[KoulutusSearchResult](body)
+      val r = read[KoulutusSearchResult](body).result
       r.map(_.oid.s) should be (List(koid5, koid4, koid3))
       r.map(_.toteutukset) should be (List(0, 1, 1))
     }
@@ -80,15 +80,15 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
 
     get(s"$SearchPath/koulutus", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
-      debugJson[KoulutusResult](body)
-      read[KoulutusResult](body).result.size should be (0)
+      debugJson[KoulutusSearchResult](body)
+      read[KoulutusSearchResult](body).result.size should be (0)
     }
   }
 
   it should "return empty result if there are no allowed koulutukset" in {
     get(s"$SearchPath/koulutus", barams(YoOid), Seq(sessionHeader(readSessions(YoOid)))) {
       status should equal (200)
-      read[KoulutusResult](body).result.size should be (0)
+      read[KoulutusSearchResult](body).result.size should be (0)
     }
   }
 

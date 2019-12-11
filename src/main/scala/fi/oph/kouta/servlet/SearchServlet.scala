@@ -16,27 +16,21 @@ class SearchServlet(koulutusService: KoulutusService,
 
   val SearchParams = Seq("nimi", "muokkaaja", "tila", "arkistoidut", "page", "size", "lng", "order-by", "order")
 
-  registerPath("/search/koulutukset",
-    s"""    get:
-       |      summary: Hakee organisaation koulutuksia annetuilla parametreilla
-       |      operationId: Koulutusten haku
-       |      description: Hakee organisaation koulutukset annetuilla parametreilla
-       |      tags:
-       |        - Search
-       |      parameters:
+  val searchParams =
+    s"""      parameters:
        |        - in: query
        |          name: organisaatioOid
        |          schema:
        |            type: string
        |          required: true
-       |          description: Sen organisaation oid, jonka koulutuksia halutaan hakea
+       |          description: Organisaation oid
        |          example: 1.2.246.562.10.00101010101
        |        - in: query
        |          name: nimi
        |          schema:
        |            type: string
        |          required: false
-       |          description: Suodata annetulla nimellä tai koulutuksen oidilla
+       |          description: Suodata annetulla nimellä tai oidilla
        |          example: Jalkaterapeutti
        |        - in: query
        |          name: muokkaaja
@@ -50,14 +44,14 @@ class SearchServlet(koulutusService: KoulutusService,
        |          schema:
        |            type: string
        |          required: false
-       |          description: Suodata koulutuksen tilalla (julkaistu/tallennettu/arkistoitu)
+       |          description: Suodata tilalla (julkaistu/tallennettu/arkistoitu)
        |          example: Julkaistu
        |        - in: query
        |          name: arkistoidut
        |          schema:
        |            type: boolean
        |          required: false
-       |          description: Näytetäänkö arkistoidut koulutukset
+       |          description: Näytetäänkö arkistoidut
        |          example: true
        |        - in: query
        |          name: page
@@ -94,6 +88,16 @@ class SearchServlet(koulutusService: KoulutusService,
        |          required: false
        |          description: Hakutuloksen järjestys (asc/desc)
        |          example: fi
+       |""".stripMargin
+
+  registerPath("/search/koulutukset",
+    s"""    get:
+       |      summary: Hakee organisaation koulutuksia annetuilla parametreilla
+       |      operationId: Koulutusten haku
+       |      description: Hakee organisaation koulutukset annetuilla parametreilla
+       |      tags:
+       |        - Search
+       |$searchParams
        |      responses:
        |        '200':
        |          description: Ok
@@ -102,7 +106,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |              schema:
        |                type: array
        |                items:
-       |                  $$ref: '#/components/schemas/KoulutusListItem'
+       |                  $$ref: '#/components/schemas/KoulutusSearchResult'
        |""".stripMargin)
   get("/koulutus") {
 
