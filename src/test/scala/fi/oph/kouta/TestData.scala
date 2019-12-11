@@ -235,7 +235,8 @@ object TestData {
 
   val ammValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
-    kielitaitovaatimukset = Seq(Kielitaitovaatimus1))
+    kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))
 
   val AmmValintaperuste = Valintaperuste(
     koulutustyyppi = Amm,

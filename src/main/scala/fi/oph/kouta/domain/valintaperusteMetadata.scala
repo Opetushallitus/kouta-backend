@@ -141,16 +141,17 @@ sealed trait ValintaperusteMetadata {
   def tyyppi: Koulutustyyppi
   def valintatavat: Seq[Valintatapa]
   def kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus]
+  def kuvaus: Kielistetty
 }
 
 sealed trait KorkeakoulutusValintaperusteMetadata extends ValintaperusteMetadata {
   def osaamistaustaKoodiUrit: Seq[String]
-  def kuvaus: Kielistetty
 }
 
 case class AmmatillinenValintaperusteMetadata(tyyppi: Koulutustyyppi = Amm,
                                               valintatavat: Seq[Valintatapa],
-                                              kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus])
+                                              kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
+                                              kuvaus: Kielistetty = Map())
     extends ValintaperusteMetadata
 
 case class YliopistoValintaperusteMetadata(tyyppi: Koulutustyyppi = Yo,
