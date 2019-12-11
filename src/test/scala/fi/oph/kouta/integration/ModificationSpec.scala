@@ -13,10 +13,7 @@ import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
 
-class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
-
-  val AnythingPath = "/indexer"
-  addServlet(new IndexerServlet(), AnythingPath)
+class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
   override def beforeAll() = {
     super.beforeAll()
@@ -86,7 +83,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded") {
+    get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded") {
       status should be(401)
     }
   }
@@ -95,7 +92,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(addTestSession(Role.Koulutus.Crud, OphOid)))) {
+    get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(addTestSession(Role.Koulutus.Crud, OphOid)))) {
       status should be(403)
     }
   }
@@ -104,7 +101,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(addTestSession(Role.Indexer, ChildOid)))) {
+    get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(addTestSession(Role.Indexer, ChildOid)))) {
       status should be(403)
     }
   }
@@ -113,7 +110,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
+    get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should contain theSameElementsAs List(koulutusOids(0), koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
@@ -128,7 +125,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
 
     val lastModifiedEncoded = URLEncoder.encode(timestampBeforeAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
+    get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should contain theSameElementsAs koulutusOids.map(KoulutusOid)
@@ -143,7 +140,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
 
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterAllModifications, "UTF-8")
 
-    get(s"$AnythingPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
+    get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
       result.koulutukset should be(empty)
