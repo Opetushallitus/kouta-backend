@@ -29,7 +29,7 @@ sealed trait DefaultKoutaJsonFormats {
     valintatapaSisaltoSerializer,
     valintaperusteMetadataSerializer)
 
-  private def genericKoutaFormats: Formats = DefaultFormats
+  private def genericKoutaFormats: Formats = DefaultFormats.strict
     .addKeySerializers(Seq(kieliKeySerializer)) ++
     Seq(
       localDateTimeSerializer,

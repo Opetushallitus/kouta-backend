@@ -136,6 +136,36 @@ package object domain {
   case object Yo extends Koulutustyyppi { val name = "yo" }
   case object Amk extends Koulutustyyppi { val name = "amk" }
 
+  val oppilaitostyyppi2koulutustyyppi: Map[String, Koulutustyyppi] = Map(
+    "oppilaitostyyppi_01#1" -> Muu, //Taiteen perusopetuksen oppilaitokset (ei musiikki)
+    "oppilaitostyyppi_11#1" -> Muu, //Peruskoulut
+    "oppilaitostyyppi_12#1" -> Muu, //Peruskouluasteen erityiskoulut
+    "oppilaitostyyppi_15#1" -> Lk, //Lukiot
+    "oppilaitostyyppi_19#1" -> Lk, //Perus- ja lukioasteen koulut
+    "oppilaitostyyppi_21#1" -> Amm, //Ammatilliset oppilaitokset
+    "oppilaitostyyppi_22#1" -> Amm, //Ammatilliset erityisoppilaitokset
+    "oppilaitostyyppi_23#1" -> Amm, //Ammatilliset erikoisoppilaitokset
+    "oppilaitostyyppi_24#1" -> Amm, //Ammatilliset aikuiskoulutuskeskukset
+    "oppilaitostyyppi_28#1" -> Amm, //Palo-, poliisi- ja vartiointialojen oppilaitokset
+    "oppilaitostyyppi_29#1" -> Amm, //Sotilasalan ammatilliset oppilaitokset
+    "oppilaitostyyppi_41#1" -> Amk, //Ammattikorkeakoulut
+    "oppilaitostyyppi_42#1" -> Yo, //Yliopistot
+    "oppilaitostyyppi_43#1" -> Yo, //Sotilaskorkeakoulut
+    "oppilaitostyyppi_45#1" -> Yo, //Lastentarhanopettajaopistot
+    "oppilaitostyyppi_46#1" -> Amk, //Väliaikaiset ammattikorkeakoulut
+    "oppilaitostyyppi_61#1" -> Muu, //Musiikkioppilaitokset
+    "oppilaitostyyppi_62#1" -> Muu, //Liikunnan koulutuskeskukset
+    "oppilaitostyyppi_63#1" -> Muu, //Kansanopistot
+    "oppilaitostyyppi_64#1" -> Muu, //Kansalaisopistot
+    "oppilaitostyyppi_65#1" -> Muu, //Opintokeskukset
+    "oppilaitostyyppi_66#1" -> Muu, //Kesäyliopistot
+    "oppilaitostyyppi_91#1" -> Muu, //Kirjeoppilaitokset
+    "oppilaitostyyppi_92#1" -> Muu, //Neuvontajärjestöt
+    "oppilaitostyyppi_93#1" -> Muu, //Muut koulutuksen järjestäjät
+    "oppilaitostyyppi_99#1" -> Muu, //Muut oppilaitokset
+    "oppilaitostyyppi_XX#1" -> Muu, //Ei tiedossa (oppilaitostyyppi)
+  )
+
   @SwaggerModel(
     """    Hakulomaketyyppi:
       |      type: string
@@ -295,8 +325,8 @@ package object domain {
       |      properties:
       |        otsikkoKoodiUri:
       |          type: string
-      |          description: description: Lisätiedon otsikon koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutuksenlisatiedot/1)
-      |          example: koulutuksenjarjestamisenlisaosiot_3#1
+      |          description: Lisätiedon otsikon koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutuksenlisatiedot/1)
+      |          example: koulutuksenlisatiedot_03#1
       |        teksti:
       |          type: object
       |          description: Lisätiedon teksti eri kielillä. Kielet on määritetty kielivalinnassa.
@@ -361,10 +391,36 @@ package object domain {
       |            example:
       |              - ea596a9c-5940-497e-b5b7-aded3a2352a7
       |              - ea596a9c-5940-497e-b5b7-aded3a2352a8
+      |        oppilaitokset:
+      |          type: array
+      |          items:
+      |            type: string
+      |            example:
+      |              - 1.2.246.562.10.00000000000000000009
+      |              - 1.2.246.562.10.00000000000000000008
       |""")
   case class ListEverything(koulutukset: Seq[KoulutusOid] = Seq(),
                             toteutukset: Seq[ToteutusOid] = Seq(),
                             haut: Seq[HakuOid] = Seq(),
                             hakukohteet: Seq[HakukohdeOid] = Seq(),
-                            valintaperusteet: Seq[UUID] = Seq())
+                            valintaperusteet: Seq[UUID] = Seq(),
+                            oppilaitokset: Seq[OrganisaatioOid] = Seq())
+
+  trait TeemakuvaMetadata[M] {
+    val teemakuva: Option[String]
+
+    def withTeemakuva(teemakuva: Option[String]): M
+  }
+
+  trait HasTeemakuvaMetadata[T, M <: TeemakuvaMetadata[M]] {
+    def metadata: Option[M]
+
+    def withMetadata(metadata: M): T
+  }
+
+  trait HasPrimaryId[ID, T] {
+    def primaryId: Option[ID]
+
+    def withPrimaryID(id: ID): T
+  }
 }

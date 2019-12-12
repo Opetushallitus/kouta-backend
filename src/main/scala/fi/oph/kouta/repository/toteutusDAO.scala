@@ -1,11 +1,11 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-import java.util.ConcurrentModificationException
 
-import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
+import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -24,6 +24,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
   def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
   def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
+  def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -53,13 +54,13 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
-      k <- selectToteutus(oid).as[Toteutus].headOption
-      t <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
+      t <- selectToteutus(oid).as[Toteutus].headOption
+      tt <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
       l <- selectLastModified(oid)
-    } yield (k, t, l) match {
-      case (Some(k), t, Some(l)) => Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), l))
+    } yield (t, tt, l)).get match {
+      case (Some(t), tt, Some(l)) => Some((t.copy(modified = Some(instantToLocalDateTime(l)), tarjoajat = tt.map(_.tarjoajaOid).toList), l))
       case _ => None
-    }).get
+    }
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus) = {
@@ -106,14 +107,29 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
+  private def listWithTarjoajat(selectListItems : () => DBIO[Seq[ToteutusListItem]]): Seq[ToteutusListItem] =
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        toteutukset <- selectListItems()
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid).toList).as[Tarjoaja]
+      } yield (toteutukset, tarjoajat) ).map {
+        case (toteutukset, tarjoajat) => {
+          toteutukset.map(t =>
+            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
+        }
+    }.get
+
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+    listWithTarjoajat(() => selectByOrganisaatioOids(organisaatioOids))
 
   override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem] =
-    KoutaDatabase.runBlocking(selectByKoulutusOid(koulutusOid))
+    listWithTarjoajat(() => selectByKoulutusOid(koulutusOid))
 
   override def listByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] =
-    KoutaDatabase.runBlocking(selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
+    listWithTarjoajat(() => selectByKoulutusOidAndOrganisaatioOids(koulutusOid, organisaatioOids))
+
+  override def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem] =
+    listWithTarjoajat(() => selectByHakuOid(hakuOid))
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
@@ -157,8 +173,19 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           where koulutus_oid = $oid"""
 
   def selectJulkaistutToteutuksetByKoulutusOid(oid: KoulutusOid) =
-    sql"""select oid, koulutus_oid, tila, nimi, metadata, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
-          from toteutukset
+    sql"""select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, m.modified
+          from toteutukset t
+          inner join (
+            select t.oid oid, greatest(
+              max(lower(t.system_time)),
+              max(lower(ta.system_time)),
+              max(upper(th.system_time)),
+              max(upper(tah.system_time))) modified
+            from toteutukset t
+            left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
+            left join toteutukset_history th on t.oid = th.oid
+            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
+            group by t.oid) m on t.oid = m.oid
           where koulutus_oid = $oid
           and tila = 'julkaistu'::julkaisutila"""
 
@@ -226,21 +253,61 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def deleteTarjoajat(oid: Option[ToteutusOid]) = sqlu"""delete from toteutusten_tarjoajat where toteutus_oid = $oid"""
 
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from toteutukset
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ToteutusListItem]
+    sql"""select t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, m.modified
+          from toteutukset t
+          inner join (
+            select t.oid oid, greatest(
+              max(lower(t.system_time)),
+              max(lower(ta.system_time)),
+              max(upper(th.system_time)),
+              max(upper(tah.system_time))) modified
+            from toteutukset t
+            left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
+            left join toteutukset_history th on t.oid = th.oid
+            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
+            group by t.oid) m on t.oid = m.oid
+          where t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOid(koulutusOid: KoulutusOid) = {
-    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from toteutukset
-          where koulutus_oid = $koulutusOid""".as[ToteutusListItem]
+    sql"""select t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, m.modified
+          from toteutukset t
+          inner join (
+            select t.oid oid, greatest(
+              max(lower(t.system_time)),
+              max(lower(ta.system_time)),
+              max(upper(th.system_time)),
+              max(upper(tah.system_time))) modified
+            from toteutukset t
+            left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
+            left join toteutukset_history th on t.oid = th.oid
+            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
+            group by t.oid) m on t.oid = m.oid
+          where t.koulutus_oid = $koulutusOid""".as[ToteutusListItem]
+  }
+
+  def selectByHakuOid(hakuOid: HakuOid) = {
+    sql"""select t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, lower(t.system_time)
+          from toteutukset t
+          inner join hakukohteet h on h.toteutus_oid = t.oid
+          where h.haku_oid = $hakuOid""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOidAndOrganisaatioOids(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, koulutus_oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from toteutukset
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-          and koulutus_oid = $koulutusOid""".as[ToteutusListItem]
+    sql"""select t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, m.modified
+          from toteutukset t
+          inner join (
+            select t.oid oid, greatest(
+              max(lower(t.system_time)),
+              max(lower(ta.system_time)),
+              max(upper(th.system_time)),
+              max(upper(tah.system_time))) modified
+            from toteutukset t
+            left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
+            left join toteutukset_history th on t.oid = th.oid
+            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
+            group by t.oid) m on t.oid = m.oid
+          where t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          and t.koulutus_oid = $koulutusOid""".as[ToteutusListItem]
   }
 }

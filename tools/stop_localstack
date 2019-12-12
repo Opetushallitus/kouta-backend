@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-id_file=".localstack"
+id_file="$HOME/.kouta_localstack"
 
 if [[ -f ${id_file} ]]
 then
@@ -9,6 +9,6 @@ then
     rm ${id_file}
     echo "Localstack stopped"
 else
-    echo "Localstack environment not running. '.localstack' file not found."
+    echo "Localstack environment not running. '${id_file}' file not found."
 fi
 

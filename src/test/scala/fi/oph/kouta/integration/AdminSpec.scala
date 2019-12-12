@@ -12,7 +12,7 @@ class AdminSpec extends KoutaIntegrationSpec {
     }
   }
 
-  it should "have correct database encoding" in {
+  "The database" should "have correct database encoding" in {
     import slick.jdbc.PostgresProfile.api._
     db.runBlocking(sql"""show server_encoding""".as[String].head) should be("UTF8")
     db.runBlocking(sql"""show lc_collate""".as[String].head) should be("C")

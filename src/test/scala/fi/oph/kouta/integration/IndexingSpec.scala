@@ -24,10 +24,6 @@ class IndexingSpec extends KoutaIntegrationSpec
   lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
   lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))}
 
-  lazy val tallennettuHaku: String => Haku = { oid: String =>
-    getIds(haku(oid))
-  }
-
   "Create haku" should "send indexing message after creating haku" in {
     val oid = put(haku)
     eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
@@ -37,9 +33,7 @@ class IndexingSpec extends KoutaIntegrationSpec
     val oid = put(haku)
     eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
 
-    val thisHaku = tallennettuHaku(oid)
-
-    update(thisHaku.copy(tila = Arkistoitu), lastModified = get(oid, thisHaku))
+    update(haku(oid, Arkistoitu), lastModified = get(oid, haku(oid)))
 
     eventuallyIndexingMessages { _ should contain (s"""{"haut":["$oid"]}""") }
   }

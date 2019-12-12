@@ -1,12 +1,14 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-import java.util.{ConcurrentModificationException, UUID}
+import java.util.UUID
+
 import fi.oph.kouta.domain.oid._
-import slick.jdbc.PostgresProfile.api._
-import scala.concurrent.ExecutionContext.Implicits.global
-import fi.oph.kouta.domain.{Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain.{Valintakoe, Valintaperuste, ValintaperusteListItem}
 import slick.dbio.DBIO
+import slick.jdbc.PostgresProfile.api._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def getPutActions(valintaperuste: Valintaperuste): DBIO[UUID]
@@ -27,6 +29,7 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     for {
       id <- DBIO.successful(UUID.randomUUID)
       _  <- insertValintaperuste(valintaperuste.copy(id = Some(id)))
+      _  <- insertValintakokeet(valintaperuste.copy(id = Some(id)))
     } yield id
   }
 
@@ -37,7 +40,8 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     checkNotModified(valintaperuste.id.get, notModifiedSince).andThen(
       for {
         v <- updateValintaperuste(valintaperuste)
-      } yield 0 < v
+        k <- updateValintakokeet(valintaperuste)
+      } yield 0 < v + k.sum
     )
 
   override def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean =
@@ -46,11 +50,12 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
   override def get(id: UUID): Option[(Valintaperuste, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       v <- selectValintaperuste(id).as[Valintaperuste].headOption
+      k <- selectValintakokeet(id)
       l <- selectLastModified(id)
-    } yield (v, l) match {
-      case (Some(v), Some(l)) => Some((v, l))
+    } yield (v, k, l)).map {
+      case (Some(v), k, Some(l)) => Some((v.copy(valintakokeet = k.toList), l))
       case _ => None
-    }).get
+    }.get
   }
 
   override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem] =
@@ -75,9 +80,13 @@ sealed trait ValintaperusteModificationSQL extends SQLHelpers {
   def selectLastModified(id: UUID): DBIO[Option[Instant]] = {
     sql"""select greatest(
             max(lower(vp.system_time)),
-            max(upper(vph.system_time)))
+            max(lower(vk.system_time)),
+            max(upper(vph.system_time)),
+            max(upper(vkh.system_time)))
           from valintaperusteet vp
           left join valintaperusteet_history vph on vp.id = vph.id
+          left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
+          left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
           where vp.id = ${id.toString}::uuid""".as[Option[Instant]].head
   }
 }
@@ -115,10 +124,29 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
          )"""
   }
 
+  def insertValintakokeet(valintaperuste: Valintaperuste) =
+    DBIO.sequence(
+      valintaperuste.valintakokeet.map(k =>
+        insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja)))
+
+  def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid) =
+    sqlu"""insert into valintaperusteiden_valintakokeet (id, valintaperuste_id, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
+           values (${valintakoe.id.map(_.toString)}::uuid,
+                   ${valintaperusteId.map(_.toString)}::uuid,
+                   ${valintakoe.tyyppiKoodiUri},
+                   ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
+                   $muokkaaja)"""
+
   def selectValintaperuste(id: UUID) =
     sql"""select id, tila, koulutustyyppi, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
                  julkinen, metadata, sorakuvaus_id, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time)
           from valintaperusteet where id = ${id.toString}::uuid"""
+
+  def selectValintakokeet(id: UUID) = {
+    sql"""select id, tyyppi_koodi_uri, tilaisuudet
+          from valintaperusteiden_valintakokeet
+          where valintaperuste_id = ${id.toString}::uuid""".as[Valintakoe]
+  }
 
   def updateValintaperuste(valintaperuste: Valintaperuste) = {
     sqlu"""update valintaperusteet set
@@ -148,6 +176,39 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            or muokkaaja is distinct from ${valintaperuste.muokkaaja}
            or kielivalinta is distinct from ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
          )"""
+  }
+
+  def updateValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid) = {
+    sqlu"""update valintaperusteiden_valintakokeet set
+              tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
+              tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
+              muokkaaja = $muokkaaja
+           where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id = ${valintakoe.id.map(_.toString)}::uuid and (
+              tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
+              tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri})"""
+  }
+
+  def updateValintakokeet(valintaperuste: Valintaperuste) = {
+    val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
+    val (insert, update) = valintakokeet.partition(_.id.isEmpty)
+
+    val deleteSQL = if (update.nonEmpty) {
+      deleteValintakokeet(valintaperusteId, update.map(_.id.get))
+    } else {
+      deleteValintakokeet(valintaperusteId)
+    }
+    val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
+    val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
+
+    DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
+  }
+
+  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]) = {
+    sqlu"""delete from valintaperusteiden_valintakokeet where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id not in (#${createUUIDInParams(exclude)})"""
+  }
+
+  def deleteValintakokeet(valintaperusteId: Option[UUID]) = {
+    sqlu"""delete from valintaperusteiden_valintakokeet where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid"""
   }
 
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {

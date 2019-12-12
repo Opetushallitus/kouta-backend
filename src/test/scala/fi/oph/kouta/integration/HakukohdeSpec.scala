@@ -133,7 +133,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     get(oid, updatedHakukohde)
   }
 
-  it should "not update koulutus" in {
+  it should "not update hakukohde" in {
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)

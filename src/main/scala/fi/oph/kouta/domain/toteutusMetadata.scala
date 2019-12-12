@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import java.time.LocalDateTime
+
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.swagger.SwaggerModel
 
@@ -15,11 +17,11 @@ import fi.oph.kouta.swagger.SwaggerModel
     |        opetus:
     |          type: object
     |          $ref: '#/components/schemas/Opetus'
-    |        yhteyshenkilo:
-    |          type: object
-    |          description: Toteutuksen yhteyshenkilön tiedot
-    |          allOf:
-    |            - $ref: '#/components/schemas/Yhteyshenkilo'
+    |        yhteyshenkilot:
+    |          type: array
+    |          description: Lista toteutuksen yhteyshenkilöistä
+    |          items:
+    |            $ref: '#/components/schemas/Yhteyshenkilo'
     |        asiasanat:
     |          type: array
     |          description: Lista toteutukseen liittyvistä asiasanoista, joiden avulla opiskelija voi hakea koulutusta Opintopolusta
@@ -30,14 +32,18 @@ import fi.oph.kouta.swagger.SwaggerModel
     |          description: Lista toteutukseen liittyvistä ammattinimikkeistä, joiden avulla opiskelija voi hakea koulutusta Opintopolusta
     |          items:
     |            $ref: '#/components/schemas/Ammattinimike'
+    |        teemakuva:
+    |          type: string
+    |          description: Toteutuksen Opintopolussa näytettävän teemakuvan URL.
     |""")
-sealed trait ToteutusMetadata {
+sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
-  val yhteyshenkilo: Option[Yhteyshenkilo]
+  val yhteyshenkilot: Seq[Yhteyshenkilo]
+  val teemakuva: Option[String]
 }
 
 @SwaggerModel(
@@ -85,7 +91,10 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         opetus: Option[Opetus] = None,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
-                                        yhteyshenkilo: Option[Yhteyshenkilo] = None) extends ToteutusMetadata
+                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                        teemakuva: Option[String] = None) extends ToteutusMetadata {
+  override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
+}
 
 @SwaggerModel(
   """    YliopistoToteutusMetadata:
@@ -105,9 +114,12 @@ case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      opetus: Option[Opetus] = None,
                                      asiasanat: List[Keyword] = List(),
                                      ammattinimikkeet: List[Keyword] = List(),
-                                     yhteyshenkilo: Option[Yhteyshenkilo] = None,
+                                     yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                     teemakuva: Option[String] = None,
                                      alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                     ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
+                                     ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata {
+  override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
+}
 
 @SwaggerModel(
   """    AmmattikorkeaToteutusMetadata:
@@ -127,9 +139,12 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               opetus: Option[Opetus] = None,
                                               asiasanat: List[Keyword] = List(),
                                               ammattinimikkeet: List[Keyword] = List(),
-                                              yhteyshenkilo: Option[Yhteyshenkilo] = None,
+                                              yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                              teemakuva: Option[String] = None,
                                               alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
+                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata {
+  override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
+}
 
 @SwaggerModel(
   """    Osaamisala:
@@ -244,53 +259,34 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
     |          type: double
     |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
     |          example: 220.50
-    |        alkamiskausiKoodiUri:
+    |        koulutuksenAlkamispaivamaara:
     |          type: string
-    |          description: Koulutuksen toteutuksen alkamiskausi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-    |          example: kausi_k#1
-    |        alkamisvuosi:
+    |          description: Koulutuksen alkamisen päivämäärä
+    |          example: 2019-11-20T12:00
+    |        koulutuksenPaattymispaivamaara:
     |          type: string
-    |          description: Koulutuksen toteutuksen alkamisvuosi
-    |          example: 2020
-    |        alkamisaikaKuvaus:
-    |          type: object
-    |          description: Koulutuksen toteutuksen alkamisaikoja tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-    |          allOf:
-    |            - $ref: '#/components/schemas/Kuvaus'
+    |          description: Koulutuksen päättymisen päivämäärä
+    |          example: 2019-12-20T12:00
     |        lisatiedot:
     |          type: array
     |          description: Koulutuksen toteutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
     |          items:
     |            type: object
     |            $ref: '#/components/schemas/Lisatieto'
-    |        onkoLukuvuosimaksua:
-    |          type: boolean
-    |          description: "Onko koulutuksella lukuvuosimaksua?"
-    |        lukuvuosimaksu:
-    |          type: object
-    |          description: Koulutuksen toteutuksen lukuvuosimaksu eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-    |          allOf:
-    |            - $ref: '#/components/schemas/Teksti'
-    |        lukuvuosimaksuKuvaus:
-    |          type: object
-    |          description: Koulutuksen toteutuksen lukuvuosimaksua tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-    |          allOf:
-    |            - $ref: '#/components/schemas/Kuvaus'
     |        onkoStipendia:
     |          type: boolean
     |          description: "Onko koulutukseen stipendiä?"
     |        stipendinMaara:
-    |          type: object
-    |          description: Koulutuksen toteutuksen stipendin määrä eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-    |          allOf:
-    |            - $ref: '#/components/schemas/Teksti'
+    |          type: double
+    |          description: Koulutuksen toteutuksen stipendin määrä.
+    |          example: 10.0
     |        stipendinKuvaus:
     |          type: object
     |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
     |          allOf:
     |            - $ref: '#/components/schemas/Kuvaus'
     |""")
-case class Opetus(opetuskieliKoodiUrit: Seq[String],
+case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetuskieletKuvaus: Kielistetty = Map(),
                   opetusaikaKoodiUrit: Seq[String] = Seq(),
                   opetusaikaKuvaus: Kielistetty = Map(),
@@ -299,13 +295,9 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String],
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
-                  alkamiskausiKoodiUri: Option[String] = None,
-                  alkamisvuosi: Option[String] = None,
-                  alkamisaikaKuvaus: Kielistetty = Map(),
+                  koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
+                  koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
-                  onkoLukuvuosimaksua: Option[Boolean] = Some(false),
-                  lukuvuosimaksu: Kielistetty = Map(),
-                  lukuvuosimaksuKuvaus: Kielistetty = Map(),
                   onkoStipendia: Option[Boolean] = Some(false),
-                  stipendinMaara: Kielistetty = Map(),
+                  stipendinMaara: Option[Double] = None,
                   stipendinKuvaus: Kielistetty = Map())

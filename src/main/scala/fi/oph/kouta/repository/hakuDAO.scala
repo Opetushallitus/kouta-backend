@@ -1,11 +1,10 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-import java.util.{ConcurrentModificationException, UUID}
 
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem, Valintakoe}
+import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -22,14 +21,13 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
 }
-  
+
 object HakuDAO extends HakuDAO with HakuSQL {
 
   override def getPutActions(haku: Haku): DBIO[HakuOid] =
     for {
       oid <- insertHaku(haku)
       _   <- insertHakuajat(haku.copy(oid = Some(oid)))
-      _   <- insertValintakokeet(haku.copy(oid = Some(oid)))
     } yield oid
 
   override def put(haku: Haku): HakuOid =
@@ -39,12 +37,10 @@ object HakuDAO extends HakuDAO with HakuSQL {
     KoutaDatabase.runBlockingTransactionally( for {
       h <- selectHaku(oid).as[Haku].headOption
       a <- selectHaunHakuajat(oid).as[Hakuaika]
-      k <- selectValintakokeet(oid)
       l <- selectLastModified(oid)
-    } yield (h, a, k, l) ).map {
-      case (Some(h), a, k, Some(l)) => Some((h.copy(
-        hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
-        valintakokeet = k.toList), l))
+    } yield (h, a, l) ).map {
+      case (Some(h), a, Some(l)) =>
+        Some((h.copy(hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList), l))
       case _ => None
     }.get
   }
@@ -54,8 +50,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
       for {
         x <- updateHaku(haku)
         y <- updateHaunHakuajat(haku)
-        z <- updateValintakokeet(haku)
-      } yield 0 < (x + y.sum + z.sum)
+      } yield 0 < (x + y.sum)
     )
 
   override def update(haku: Haku, notModifiedSince: Instant): Boolean =
@@ -148,16 +143,6 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                 ${haku.muokkaaja})"""))
   }
 
-  def insertValintakokeet(haku: Haku) = {
-    DBIO.sequence(
-      haku.valintakokeet.map(k => insertValintakoe(haku.oid, k.copy(id = Some(UUID.randomUUID())), haku.muokkaaja)))
-  }
-
-  def insertValintakoe(oid: Option[HakuOid], valintakoe:Valintakoe, muokkaaja:UserOid) = {
-    sqlu"""insert into hakujen_valintakokeet (id, haku_oid, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
-           values (${valintakoe.id.map(_.toString)}::uuid, ${oid}, ${valintakoe.tyyppiKoodiUri}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, ${muokkaaja})"""
-  }
-
   def selectHaku(oid: HakuOid) = {
     sql"""select oid, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja,
                  ajastettu_julkaisu, alkamiskausi_koodi_uri, alkamisvuosi, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri,
@@ -167,10 +152,6 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def selectHaunHakuajat(oid: HakuOid) = {
     sql"""select haku_oid, lower(hakuaika), upper(hakuaika) from hakujen_hakuajat where haku_oid = $oid"""
-  }
-
-  def selectValintakokeet(oid: HakuOid) = {
-    sql"""select id, tyyppi_koodi_uri, tilaisuudet from hakujen_valintakokeet where haku_oid = $oid""".as[Valintakoe]
   }
 
   def updateHaku(haku: Haku) = {
@@ -223,14 +204,6 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     sqlu"""delete from hakujen_hakuajat where haku_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)})"""
   }
 
-  def deleteValintakokeet(oid: Option[HakuOid], exclude: List[UUID]) = {
-    sqlu"""delete from hakujen_valintakokeet where haku_oid = $oid and id not in (#${createUUIDInParams(exclude)})"""
-  }
-
-  def deleteValintakokeet(oid: Option[HakuOid]) = {
-    sqlu"""delete from hakujen_valintakokeet where haku_oid = $oid"""
-  }
-
   def updateHaunHakuajat(haku: Haku) = {
     val (oid, hakuajat, muokkaaja) = (haku.oid, haku.hakuajat, haku.muokkaaja)
     if(hakuajat.nonEmpty) {
@@ -243,36 +216,39 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     }
   }
 
-  def updateValintakoe(oid: Option[HakuOid], valintakoe: Valintakoe, muokkaaja: UserOid) = {
-    sqlu"""update hakujen_valintakokeet set
-              tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
-              tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
-              muokkaaja = ${muokkaaja}
-           where haku_oid = $oid and id = ${valintakoe.id.map(_.toString)}::uuid and (
-              tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
-              tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri})"""
-  }
-
-  def updateValintakokeet(haku: Haku) = {
-    val (oid, valintakokeet, muokkaaja) = (haku.oid, haku.valintakokeet, haku.muokkaaja)
-    val (insert, update) = valintakokeet.partition(_.id.isEmpty)
-
-    val deleteSQL = if (update.nonEmpty) { deleteValintakokeet(oid, update.map(_.id.get)) } else { deleteValintakokeet(oid) }
-    val insertSQL = insert.map(v => insertValintakoe(oid, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
-    val updateSQL = update.map(v => updateValintakoe(oid, v, muokkaaja))
-
-    DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
-  }
-
   def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from haut
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[HakuListItem]
+    sql"""select ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
+          from haut ha
+          inner join (
+            select ha.oid oid, greatest(
+              max(lower(ha.system_time)),
+              max(lower(hah.system_time)),
+              max(upper(hh.system_time)),
+              max(upper(hhh.system_time))) modified
+            from haut ha
+            left join haut_history hah on ha.oid = hah.oid
+            left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
+            left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
+            group by ha.oid
+          ) m on m.oid = ha.oid
+          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[HakuListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
-    sql"""select haut.oid, haut.nimi, haut.tila, haut.organisaatio_oid, haut.muokkaaja, lower(haut.system_time)
+    sql"""select haut.oid, haut.nimi, haut.tila, haut.organisaatio_oid, haut.muokkaaja, m.modified
           from haut
+          inner join (
+            select ha.oid oid, greatest(
+              max(lower(ha.system_time)),
+              max(lower(hah.system_time)),
+              max(upper(hh.system_time)),
+              max(upper(hhh.system_time))) modified
+            from haut ha
+            left join haut_history hah on ha.oid = hah.oid
+            left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
+            left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
+            group by ha.oid
+          ) m on m.oid = haut.oid
           inner join hakukohteet on hakukohteet.haku_oid = haut.oid
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
           where toteutukset.oid = $toteutusOid""".as[HakuListItem]

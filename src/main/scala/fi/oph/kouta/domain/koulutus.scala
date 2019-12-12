@@ -107,7 +107,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
-                    modified: Option[LocalDateTime]) extends PerustiedotWithOid {
+                    modified: Option[LocalDateTime])
+  extends PerustiedotWithOid with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with HasPrimaryId[KoulutusOid, Koulutus] {
 
   override def validate() = {
     and(super.validate(),
@@ -119,6 +120,12 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           validateIfDefined[Koulutustyyppi](koulutustyyppi, (k) => assertTrue(k == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(k.toString))),
           assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"))))
   }
+
+  override def primaryId: Option[KoulutusOid] = oid
+
+  override def withPrimaryID(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
+
+  override def withMetadata(metadata: KoulutusMetadata): Koulutus = this.copy(metadata = Some(metadata))
 }
 
 @SwaggerModel(
@@ -137,6 +144,14 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
     |            - arkistoitu
     |            - tallennettu
     |          description: Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
+    |        tarjoajat:
+    |          type: array
+    |          description: Koulutusta tarjoavien organisaatioiden yksilöivät organisaatio-oidit
+    |          items:
+    |            type: string
+    |          example:
+    |            - 1.2.246.562.10.00101010101
+    |            - 1.2.246.562.10.00101010102
     |        nimi:
     |          type: object
     |          description: Koulutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -159,6 +174,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
 case class KoulutusListItem(oid: KoulutusOid,
                             nimi: Kielistetty,
                             tila: Julkaisutila,
+                            tarjoajat: List[OrganisaatioOid],
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             modified: LocalDateTime) extends OidListItem

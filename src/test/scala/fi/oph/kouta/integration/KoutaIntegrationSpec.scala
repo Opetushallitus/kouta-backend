@@ -8,7 +8,7 @@ import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.util.{KoutaJsonFormats, TimeUtils}
 import fi.oph.kouta.{MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
@@ -65,6 +65,10 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     super.beforeAll()
     startServiceMocking()
     addTestSessions()
+
+    mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
+    mockSingleOrganisaatioResponses(LonelyOid)
+    mockOrganisaatioResponse(YoOid, responseFromResource("mpkk"))
   }
 
   override def afterAll(): Unit = {
@@ -74,6 +78,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
 
   val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
   val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
+  val YoOid = OrganisaatioOid("1.2.246.562.10.46312206843")
 
   //val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
   val crudSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
@@ -100,14 +105,11 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
   }
 
   def addTestSessions(): Unit = {
-    mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
-    mockSingleOrganisaatioResponses(LonelyOid)
-
     Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid).foreach { org =>
       crudSessions.update(org, addTestSession(roleEntities.map(re => re.Crud.asInstanceOf[Role]), org))
     }
 
-    Seq(ChildOid).foreach { org =>
+    Seq(ChildOid, YoOid).foreach { org =>
       readSessions.update(org, addTestSession(roleEntities.map(_.Read.asInstanceOf[Role]), org))
     }
 
@@ -264,8 +266,8 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
     db.runBlocking(sqlu"""delete from hakukohteet""")
     db.runBlocking(sqlu"""delete from hakujen_hakuajat""")
-    db.runBlocking(sqlu"""delete from hakujen_valintakokeet""")
     db.runBlocking(sqlu"""delete from haut""")
+    db.runBlocking(sqlu"""delete from valintaperusteiden_valintakokeet""")
     db.runBlocking(sqlu"""delete from valintaperusteet""")
     db.runBlocking(sqlu"""delete from toteutusten_tarjoajat""")
     db.runBlocking(sqlu"""delete from toteutukset""")
@@ -305,7 +307,7 @@ sealed trait DatabaseSpec {
   import slick.jdbc.PostgresProfile.api._
 
   implicit val getInstant = slick.jdbc.GetResult[LocalDateTime](r =>
-    LocalDateTime.ofInstant(r.nextTimestamp().toInstant, ZoneId.of("Europe/Helsinki")).withNano(0).withSecond(0))
+    TimeUtils.timeStampToLocalDateTime(r.nextTimestamp()).withNano(0).withSecond(0))
 
   def readModifiedByOid(oid:String, table:String):LocalDateTime = db.runBlocking(
     sql"""select lower(system_time) from #${table} where oid = $oid""".as[LocalDateTime].head)

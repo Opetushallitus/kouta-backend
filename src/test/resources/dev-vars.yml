@@ -9,3 +9,6 @@ kouta_backend_cas_service: http://localhost:8099/kouta-backend/auth/login
 kouta_backend_sqs_endpoint: http://localhost:4576
 kouta_backend_sqs_queue_priority: koutaIndeksoijaPriority
 kouta_backend_sqs_region:
+kouta_backend_s3_region: eu-west-1
+kouta_backend_s3_image_bucket: konfo-files.untuvaopintopolku.fi
+kouta_backend_s3_image_bucket_public_url: https://konfo-files.untuvaopintopolku.fi

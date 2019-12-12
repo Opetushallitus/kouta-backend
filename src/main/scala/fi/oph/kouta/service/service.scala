@@ -5,6 +5,8 @@ import java.time.Instant
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, Koulutustyyppi, TeemakuvaMetadata}
+import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.security.{Authorizable, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validatable
@@ -18,6 +20,39 @@ trait ValidatingService[E <: Validatable] {
     case Right(_) => f(e)
     case Left(list) => throw KoutaValidationException(list)
   }
+}
+
+trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID, T], M <: TeemakuvaMetadata[M]] extends Logging {
+  val s3Service: S3Service
+
+  def teemakuvaPrefix: String
+
+  def checkTeemakuvaInPut(entity: T, put: T => ID, update: (T, Instant) => Boolean): ID =
+    entity.metadata.flatMap(_.teemakuva) match {
+      case Some(s3Service.tempUrl(filename)) =>
+        val id = put(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
+        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/$id/$filename")
+        update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))), Instant.now())
+        s3Service.deleteImage(s3Service.getTempKey(filename))
+        id
+      case Some(s3Service.publicUrl(_)) =>
+        put(entity)
+      case None =>
+        put(entity)
+      case Some(other) =>
+        logger.warn(s"Theme image outside the bucket: $other")
+        put(entity)
+    }
+
+  def checkTeemakuvaInUpdate(entity: T, update: T => Boolean): Boolean =
+    entity.metadata.flatMap(_.teemakuva) match {
+      case Some(s3Service.tempUrl(filename)) =>
+        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename")
+        val changed = update(entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+        s3Service.deleteImage(s3Service.getTempKey(filename))
+        changed
+      case _ => update(entity)
+    }
 }
 
 case class KoutaValidationException(errorMessages:List[String]) extends RuntimeException
@@ -34,7 +69,6 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
           }
         }
     }
-
 
   def authorizePut[E <: Authorizable, I](entity: E)(f: => I)(implicit authenticated: Authenticated): I =
     withAuthorizedChildOrganizationOids(roleEntity.createRoles) { authorizedOrganizations =>
@@ -54,7 +88,6 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
       }
     }
   }
-
 }
 
 trait AuthorizationService extends Logging {
@@ -65,11 +98,16 @@ trait AuthorizationService extends Logging {
 
   /** Checks if the the authenticated user has access to the given organization, then calls f with a sequence of descendants of that organization. */
   def withAuthorizedChildOrganizationOids[R](oid: OrganisaatioOid, roles: Seq[Role])(f: Seq[OrganisaatioOid] => R)(implicit authenticated: Authenticated): R =
+    withAuthorizedChildOrganizationOidsAndOppilaitostyypit(oid, roles) { case (oids, _) =>
+      f(oids)
+    }
+
+  def withAuthorizedChildOrganizationOidsAndOppilaitostyypit[R](oid: OrganisaatioOid, roles: Seq[Role])(f: (Seq[OrganisaatioOid], Seq[Koulutustyyppi]) => R)(implicit authenticated: Authenticated): R =
     withAuthorizedChildOrganizationOids(roles) { children =>
       authorize(oid, children) {
-        OrganisaatioClient.getAllChildOidsFlat(oid) match {
-          case oids if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
-          case oids => f(oids)
+        OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid) match {
+          case (oids, _) if oids.isEmpty => throw OrganizationAuthorizationFailedException(oid)
+          case (oids, t) => f(oids, t)
         }
       }
     }
@@ -77,7 +115,7 @@ trait AuthorizationService extends Logging {
   def withAuthorizedChildOrganizationOids[R](roles: Seq[Role])(f: IterableView[OrganisaatioOid, Iterable[_]] => R)(implicit authenticated: Authenticated): R =
     organizationsForRoles(roles) match {
       case oids if oids.isEmpty => throw RoleAuthorizationFailedException(roles, authenticated.session.roles)
-      case oids                 => f(oids.view ++ lazyFlatChildren(oids))
+      case oids                 => f(oids.view ++ lazyFlatChildren(oids).flatMap(_._1))
     }
 
   def authorize[R](allowedOrganization: OrganisaatioOid, authorizedOrganizations: Iterable[OrganisaatioOid])(r: R): R =
@@ -91,13 +129,13 @@ trait AuthorizationService extends Logging {
       throw OrganizationAuthorizationFailedException(allowedOrganizations, authorizedOrganizations)
     }
 
-  private def organizationsForRoles(roles: Seq[Role])(implicit authenticated: Authenticated): Set[OrganisaatioOid] =
+  protected def organizationsForRoles(roles: Seq[Role])(implicit authenticated: Authenticated): Set[OrganisaatioOid] =
     roles.flatMap { role =>
       authenticated.session.roleMap.get(role)
     }.fold(Set())(_ union _)
 
-  private def lazyFlatChildren(orgs: Set[OrganisaatioOid]): IterableView[OrganisaatioOid, Iterable[_]] =
-    orgs.view.flatMap(oid => OrganisaatioClient.getAllChildOidsFlat(oid).toSet)
+  protected def lazyFlatChildren(orgs: Set[OrganisaatioOid]): IterableView[(Seq[OrganisaatioOid], Seq[Koulutustyyppi]), Iterable[_]] =
+    orgs.view.map(oid => OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid))
 
   def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
     roles.exists { role =>
@@ -117,9 +155,9 @@ abstract class AuthorizationFailedException(message: String) extends RuntimeExce
 case class OrganizationAuthorizationFailedException(message: String) extends AuthorizationFailedException(message)
 
 object OrganizationAuthorizationFailedException {
-  def apply(allowerOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
+  def apply(allowedOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
     OrganizationAuthorizationFailedException(s"Authorization failed, missing organization. " +
-      s"Allowed organizations: ${allowerOrganizationOids.map(_.s).mkString(",")}. " +
+      s"Allowed organizations: ${allowedOrganizationOids.map(_.s).mkString(",")}. " +
       s"Authorized organizations: ${authorizedOrganizations.map(_.s).mkString(",")}.")
 
   def apply(missingOrganizationOid: OrganisaatioOid): OrganizationAuthorizationFailedException =

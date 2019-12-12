@@ -59,7 +59,7 @@ import fi.oph.kouta.validation.IsValid
     |              fi: Suomenkielinen kuvaus
     |              sv: Ruotsinkielinen kuvaus
     |            osaamisalat:
-    |              - koodi: osaamisala_0001#1
+    |              - koodiUri: osaamisala_0001#1
     |                linkki:
     |                  fi: http://osaamisala/linkki/fi
     |                  sv: http://osaamisala/linkki/sv
@@ -122,22 +122,22 @@ import fi.oph.kouta.validation.IsValid
     |                arvo: ravintotiede
     |              - kieli: en
     |                arvo: nutrition
-    |            yhteyshenkilö:
-    |              nimi:
-    |                fi: Aku Ankka
-    |                sv: Kalle Ankka
-    |              titteli:
-    |                fi: Ankka
-    |                sv: Ankka ruotsiksi
-    |              sahkoposti:
-    |                fi: aku.ankka@ankkalinnankoulu.fi
-    |                sv: aku.ankka@ankkalinnankoulu.fi
-    |              puhelinnumero:
-    |                fi: 123
-    |                sv: 223
-    |              wwwSivu:
-    |                fi: http://opintopolku.fi
-    |                sv: http://studieinfo.fi
+    |            yhteyshenkilot:
+    |              - nimi:
+    |                  fi: Aku Ankka
+    |                  sv: Kalle Ankka
+    |                titteli:
+    |                  fi: Ankka
+    |                  sv: Ankka ruotsiksi
+    |                sahkoposti:
+    |                  fi: aku.ankka@ankkalinnankoulu.fi
+    |                  sv: aku.ankka@ankkalinnankoulu.fi
+    |                puhelinnumero:
+    |                  fi: 123
+    |                  sv: 223
+    |                wwwSivu:
+    |                  fi: http://opintopolku.fi
+    |                  sv: http://studieinfo.fi
     |        muokkaaja:
     |          type: string
     |          description: Toteutusta viimeksi muokanneen virkailijan henkilö-oid
@@ -161,7 +161,8 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
-                    modified: Option[LocalDateTime]) extends PerustiedotWithOid {
+                    modified: Option[LocalDateTime])
+  extends PerustiedotWithOid with HasTeemakuvaMetadata[Toteutus, ToteutusMetadata] with HasPrimaryId[ToteutusOid, Toteutus] {
 
   override def validate(): IsValid = and(
      super.validate(),
@@ -169,6 +170,12 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
      validateIfDefined[ToteutusOid](oid, assertValid(_)),
      validateOidList(tarjoajat)
   )
+
+  override def primaryId: Option[ToteutusOid] = oid
+
+  override def withPrimaryID(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))
+
+  override def withMetadata(metadata: ToteutusMetadata): Toteutus = this.copy(metadata = Some(metadata))
 }
 
 @SwaggerModel(
@@ -191,6 +198,14 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
     |            - arkistoitu
     |            - tallennettu
     |          description: Koulutuksen toteutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
+    |        tarjoajat:
+    |          type: array
+    |          description: Koulutusta tarjoavien organisaatioiden yksilöivät organisaatio-oidit
+    |          items:
+    |            type: string
+    |          example:
+    |            - 1.2.246.562.10.00101010101
+    |            - 1.2.246.562.10.00101010102
     |        nimi:
     |          type: object
     |          description: Toteutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
@@ -214,6 +229,7 @@ case class ToteutusListItem(oid: ToteutusOid,
                             koulutusOid: KoulutusOid,
                             nimi: Kielistetty,
                             tila: Julkaisutila,
+                            tarjoajat: List[OrganisaatioOid],
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             modified: LocalDateTime) extends OidListItem

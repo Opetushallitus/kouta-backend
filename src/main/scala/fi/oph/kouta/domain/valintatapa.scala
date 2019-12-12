@@ -3,7 +3,6 @@ package fi.oph.kouta.domain
 import java.util.UUID
 
 import fi.oph.kouta.swagger.SwaggerModel
-import fi.oph.kouta.validation.{IsValid, Validatable}
 
 @SwaggerModel(
   """    Valintatapa:
@@ -13,6 +12,11 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
     |          type: string
     |          description: Valintatapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintatapajono/1)
     |          example: valintatapajono_av#1
+    |        nimi:
+    |          type: object
+    |          description: Valintatapakuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
+    |          allOf:
+    |            - $$ref: '#/components/schemas/Nimi'
     |        kuvaus:
     |          type: object
     |          description: Valintatavan kuvausteksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
@@ -43,83 +47,14 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
     |          description: Valintatavan vähimmäispisteet
     |          example: 10.0
     |""")
-sealed trait Valintatapa extends Validatable {
-  def valintatapaKoodiUri: Option[String]
-  def kuvaus: Kielistetty
-  def sisalto: Seq[ValintatapaSisalto]
-  def kaytaMuuntotaulukkoa: Boolean
-  def kynnysehto: Kielistetty
-  def enimmaispisteet: Option[Double]
-  def vahimmaispisteet: Option[Double]
-
-  override def validate(): IsValid = and(
-    validateIfDefined[String](valintatapaKoodiUri, assertMatch(_, ValintatapajonoKoodiPattern))
-  )
-}
-
-@SwaggerModel(
-  """    AmmatillinenValintatapa:
-    |      type: object
-    |      description: Ammatillisen koulutuksen valintatapakuvaus
-    |      allOf:
-    |        - $ref: '#/components/schemas/Valintatapa'
-    |""")
-case class AmmatillinenValintatapa(valintatapaKoodiUri: Option[String] = None,
-                                   kuvaus: Kielistetty = Map(),
-                                   sisalto: Seq[ValintatapaSisalto],
-                                   kaytaMuuntotaulukkoa: Boolean = false,
-                                   kynnysehto: Kielistetty = Map(),
-                                   enimmaispisteet: Option[Double] = None,
-                                   vahimmaispisteet: Option[Double] = None) extends Valintatapa
-
-@SwaggerModel(
-  """    KorkeakoulutusValintatapa:
-    |      type: object
-    |      description: Korkeakoulutuksen valintatapakuvaus
-    |      allOf:
-    |        - $ref: '#/components/schemas/Valintatapa'
-    |      properties:
-    |        nimi:
-    |          type: object
-    |          description: Valintatapakuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
-    |          allOf:
-    |            - $ref: '#/components/schemas/Nimi'
-    |""")
-sealed trait KorkeakoulutusValintatapa extends Valintatapa {
-  def nimi: Kielistetty
-}
-
-@SwaggerModel(
-  """    AmmattikorkeakouluValintatapa:
-    |      type: object
-    |      description: Ammattikorkeakoulutuksen valintatapakuvaus
-    |      allOf:
-    |        - $ref: '#/components/schemas/KorkeakoulutusValintatapa'
-    |""")
-case class AmmattikorkeakouluValintatapa(nimi: Kielistetty = Map(),
-                                         valintatapaKoodiUri: Option[String] = None,
-                                         kuvaus: Kielistetty = Map(),
-                                         sisalto: Seq[ValintatapaSisalto],
-                                         kaytaMuuntotaulukkoa: Boolean = false,
-                                         kynnysehto: Kielistetty = Map(),
-                                         enimmaispisteet: Option[Double] = None,
-                                         vahimmaispisteet: Option[Double] = None) extends KorkeakoulutusValintatapa
-
-@SwaggerModel(
-  """    YliopistoValintatapa:
-    |      type: object
-    |      description: Yliopistokoulutuksen valintatapakuvaus
-    |      allOf:
-    |        - $ref: '#/components/schemas/KorkeakoulutusValintatapa'
-    |""")
-case class YliopistoValintatapa(nimi: Kielistetty = Map(),
-                                valintatapaKoodiUri: Option[String] = None,
-                                kuvaus: Kielistetty = Map(),
-                                sisalto: Seq[ValintatapaSisalto],
-                                kaytaMuuntotaulukkoa: Boolean = false,
-                                kynnysehto: Kielistetty = Map(),
-                                enimmaispisteet: Option[Double] = None,
-                                vahimmaispisteet: Option[Double] = None) extends KorkeakoulutusValintatapa
+case class Valintatapa(nimi: Kielistetty = Map(),
+                       valintatapaKoodiUri: Option[String] = None,
+                       kuvaus: Kielistetty = Map(),
+                       sisalto: Seq[ValintatapaSisalto],
+                       kaytaMuuntotaulukkoa: Boolean = false,
+                       kynnysehto: Kielistetty = Map(),
+                       enimmaispisteet: Option[Double] = None,
+                       vahimmaispisteet: Option[Double] = None)
 
 sealed trait ValintatapaSisalto
 

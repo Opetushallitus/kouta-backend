@@ -10,6 +10,8 @@ import fi.oph.kouta.security.{CasSession, ServiceTicket}
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
 
+import scala.util.Try
+
 object EmbeddedJettyLauncher extends Logging {
 
   val DefaultPort = "8099"
@@ -31,7 +33,8 @@ object EmbeddedJettyLauncher extends Logging {
 object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupSqsQueues() = {
-    if((new java.io.File(s".localstack")).exists()) {
+    val home = System.getProperty("user.home")
+    if(new java.io.File(s"$home/.kouta_localstack").exists()) {
       logger.warn(s"Localstack is already running. Skipping ./tools/start_localstack....")
     } else {
       logger.info(s"Running ./tools/start_localstack....")
@@ -51,9 +54,11 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
   }
 
   def setupAwsKeysForSqs() = {
-    if(!Option(System.getProperty("aws.accessKeyId", null)).isDefined) {
-      System.setProperty("aws.accessKeyId", "randomKeyIdForLocalstack")
-      System.setProperty("aws.secretKey", "randomKeyForLocalstack")
+    if(System.getProperty("kouta-backend.awsKeys", "false") == "false") {
+      if (!Option(System.getProperty("aws.accessKeyId", null)).isDefined) {
+        System.setProperty("aws.accessKeyId", "randomKeyIdForLocalstack")
+        System.setProperty("aws.secretKey", "randomKeyForLocalstack")
+      }
     }
   }
 
@@ -85,6 +90,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupCasSessionIdForTestDataGenerator()= {
     logger.info(s"Adding session for TestDataGenerator")
+    Try(SessionDAO.delete(UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)))
     SessionDAO.store(
       CasSession(ServiceTicket(""), "", KoutaIntegrationSpec.defaultAuthorities),
       UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)

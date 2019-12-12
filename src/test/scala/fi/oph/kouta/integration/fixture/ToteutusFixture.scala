@@ -10,13 +10,11 @@ import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.ToteutusServlet
 
-object ToteutusServiceIgnoringIndexing extends ToteutusService(SqsInTransactionServiceIgnoringIndexing)
-
 trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
   val ToteutusPath = "/toteutus"
 
-  protected lazy val toteutusService: ToteutusService = ToteutusServiceIgnoringIndexing
+  protected lazy val toteutusService: ToteutusService = new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
 
   addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
 
@@ -48,6 +46,6 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
     val oid = put(toteutus)
     val modified = readModifiedByOid(oid, "toteutukset")
     new ToteutusListItem(ToteutusOid(oid), toteutus.koulutusOid, toteutus.nimi, toteutus.tila,
-      toteutus.organisaatioOid, toteutus.muokkaaja, modified)
+      toteutus.tarjoajat, toteutus.organisaatioOid, toteutus.muokkaaja, modified)
   }
 }

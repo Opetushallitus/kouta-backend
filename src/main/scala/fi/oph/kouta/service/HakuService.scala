@@ -6,7 +6,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 
@@ -43,6 +43,9 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
 
   def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
     withRootAccess(Role.Koulutus.readRoles)(KoulutusDAO.listByHakuOid(hakuOid))
+
+  def listToteutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withRootAccess(Role.Toteutus.readRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
   private def putWithIndexing(haku: Haku) =
     sqsInTransactionService.runActionAndUpdateIndex(

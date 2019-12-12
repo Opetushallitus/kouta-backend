@@ -27,6 +27,8 @@ case class SecurityConfiguration(
 
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
 
+case class S3Configuration(imageBucket: String, imageBucketPublicUrl: String, region: Option[String])
+
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
@@ -44,6 +46,12 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     config.getString("kouta-backend.sqs.queue.priority"),
     scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
     scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
+  )
+
+  val s3Configuration = S3Configuration(
+    config.getString("kouta-backend.s3.imageBucket"),
+    config.getString("kouta-backend.s3.imageBucketPublicUrl"),
+    scala.util.Try(config.getString("kouta-backend.s3.region")).filter(_.trim.nonEmpty).toOption
   )
 
   val securityConfiguration = SecurityConfiguration(

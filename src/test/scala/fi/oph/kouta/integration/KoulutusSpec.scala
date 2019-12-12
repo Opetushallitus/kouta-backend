@@ -1,15 +1,20 @@
 package fi.oph.kouta.integration
 
+import java.time.{Duration, Instant, ZoneId}
+
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
+import fi.oph.kouta.integration.fixture.{KoulutusFixture, MockS3Client, ToteutusFixture, UploadFixture}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
+import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.Validations
 import org.json4s.jackson.Serialization.read
 
-class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with Validations {
+import scala.util.Success
+
+class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with UploadFixture with Validations {
 
   override val roleEntities = Seq(Role.Koulutus)
 
@@ -24,11 +29,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(s"$KoulutusPath/123", headers = Map.empty) {
       status should equal (401)
     }
-  }
-
-  it should "allow any authenticated user to access published koulutus" in {
-    val oid = put(koulutus.copy(julkinen = true))
-    get(oid, otherRoleSession, koulutus(oid).copy(julkinen = true))
   }
 
   it should "allow the user of the koulutus organization to read the koulutus" in {
@@ -63,7 +63,17 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow the indexer to read any koulutus" in {
     val oid = put(koulutus)
-    get(s"$KoulutusPath/$oid", otherRoleSession, 403)
+    get(s"$KoulutusPath/$oid", indexerSession, 200)
+  }
+
+  it should "allow a user of similar oppilaitostyyppi to access public koulutus" in {
+    val oid = put(koulutus.copy(julkinen = true), crudSessions(koulutus.organisaatioOid))
+    get(oid, crudSessions(EvilChildOid), koulutus(oid).copy(julkinen = true))
+  }
+
+  it should "deny an authenticated user of a different oppilaitostyyppi to access public koulutus" in {
+    val oid = put(koulutus.copy(julkinen = true))
+    get(s"$KoulutusPath/$oid", readSessions(YoOid), 403)
   }
 
   "Create koulutus" should "store koulutus" in {
@@ -119,6 +129,25 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow access even if the user is missing rights to some of the tarjoajat" in {
     put(koulutus, crudSessions(ChildOid))
+  }
+
+  it should "copy a temporary image to a permanent location while creating the koulutus" in {
+    saveLocalPng("temp/image.png")
+    val oid = put(koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))))
+
+    get(oid, koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
+    MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
+    MockS3Client.reset()
+  }
+
+  it should "not touch an image that's not in the temporary location" in {
+    val koulutusWithImage = koulutus.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
+    val oid = put(koulutusWithImage)
+    MockS3Client.storage shouldBe empty
+    get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
+    MockS3Client.reset()
   }
 
   "Update koulutus" should "update koulutus" in {
@@ -223,6 +252,29 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, uusiKoulutus)
   }
 
+  it should "update the modified time of the koulutus even when just tarjoajat is updated" in {
+    val oid = put(koulutus)
+
+    setModifiedToPast(oid, "10 minutes") should be(Success(()))
+    val lastModified = get(oid, koulutus(oid))
+    val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
+    Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
+
+    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
+    update(uusiKoulutus, lastModified, expectUpdate = true)
+
+    get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+
+      val koulutus = read[Koulutus](body)
+      koulutus.modified.isDefined should be(true)
+      val modifiedInstant = koulutus.modified.get.atZone(ZoneId.of("Europe/Helsinki")).toInstant
+
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(5)) should equal(1)
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(15)) should equal(-1)
+    }
+  }
+
   it should "delete all tarjoajat and read last modified from history" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
@@ -250,6 +302,32 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       }
       body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
     }
+  }
+
+  it should "copy a temporary image to a permanent location while updating the koulutus" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+
+    saveLocalPng("temp/image.png")
+    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))))
+
+    update(koulutusWithImage, lastModified)
+    get(oid, koulutusWithImage.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
+    MockS3Client.reset()
+  }
+
+  it should "not touch an image that's not in the temporary location" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    val koulutusWithImage = koulutus(oid).copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
+
+    update(koulutusWithImage, lastModified)
+
+    MockS3Client.storage shouldBe empty
+    get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
+    MockS3Client.reset()
   }
 
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
@@ -292,5 +370,17 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "deny access without root organization access to the indexer role" in {
     val oid = KoulutusOid("oid")
     get(s"$KoulutusPath/$oid/toteutukset", fakeIndexerSession, 403)
+  }
+
+  "List koulutukset by tarjoaja" should "list all koulutukset distinct" in {
+    val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)))
+    get(s"$KoulutusPath/tarjoaja/$ChildOid", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[Koulutus]](body).filter(_.oid.get.s == oid).size should equal (1)
+    }
+
+
+
+
   }
 }

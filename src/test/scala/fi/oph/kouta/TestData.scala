@@ -109,9 +109,8 @@ object TestData {
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/hakemusinfo-fi", Sv -> "https://koulu.test/hakemusinfo-sv"),
-    metadata = Some(HakuMetadata(Some(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
+    metadata = Some(HakuMetadata(Seq(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
-    valintakokeet = List(Valintakoe1),
     organisaatioOid = ChildOid,
     muokkaaja = UserOid("5.4.3.2.1"),
     kielivalinta = Seq(Fi, Sv),
@@ -140,6 +139,7 @@ object TestData {
     minEnsikertalaisenAloituspaikat = Some(1),
     maxEnsikertalaisenAloituspaikat = Some(2),
     pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_pk#1", "pohjakoulutusvaatimustoinenaste_yo#1"),
+    pohjakoulutusvaatimusTarkenne = kieliMap("Pohjakoulutusvaatimuksen tarkenne"),
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
     kaytetaanHaunAikataulua = Some(false),
@@ -186,25 +186,7 @@ object TestData {
         Column(index = 0, text = Map(Fi -> "Tekstiä", Sv -> "Tekstiä sv")),
         Column(index = 1, text = Map(Fi -> "Tekstiä 2", Sv -> "Tekstiä 2 sv"))))))
 
-  val AmmValintatapa1 = AmmatillinenValintatapa(
-    valintatapaKoodiUri = Some("valintatapajono_av#1"),
-    kuvaus = kieliMap("kuvaus"),
-    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
-    kaytaMuuntotaulukkoa = false,
-    kynnysehto = kieliMap("kynnysehto"),
-    enimmaispisteet = Some(201.15),
-    vahimmaispisteet = Some(182.1))
-
-  val AmmValintatapa2 = AmmatillinenValintatapa(
-    valintatapaKoodiUri = Some("valintatapajono_tv#1"),
-    kuvaus = kieliMap("kuvaus 2"),
-    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
-    kaytaMuuntotaulukkoa = true,
-    kynnysehto = kieliMap("kynnysehto"),
-    enimmaispisteet = Some(18.1),
-    vahimmaispisteet = Some(10.1))
-
-  val YoValintatapa1 = YliopistoValintatapa(
+  val Valintatapa1 = Valintatapa(
     nimi = kieliMap("Valintatapa1"),
     valintatapaKoodiUri = Some("valintatapajono_av#1"),
     kuvaus = kieliMap("kuvaus"),
@@ -214,7 +196,8 @@ object TestData {
     enimmaispisteet = Some(201.15),
     vahimmaispisteet = Some(182.1))
 
-  val YoValintatapa2 = YliopistoValintatapa(
+  val Valintatapa2 = Valintatapa(
+    nimi = kieliMap("Valintatapa2"),
     valintatapaKoodiUri = Some("valintatapajono_tv#1"),
     kuvaus = kieliMap("kuvaus 2"),
     sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
@@ -245,14 +228,15 @@ object TestData {
             kielitaitovaatimusTaso = Some("A"))))))
 
   val yoValintaperusteMetadata = YliopistoValintaperusteMetadata(
-    valintatavat = Seq(YoValintatapa1, YoValintatapa2),
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     osaamistaustaKoodiUrit = Seq("osaamistausta_001#1"),
     kuvaus = kieliMap("kuvaus"))
 
   val ammValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
-    valintatavat = Seq(AmmValintatapa1, AmmValintatapa2),
-    kielitaitovaatimukset = Seq(Kielitaitovaatimus1))
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))
 
   val AmmValintaperuste = Valintaperuste(
     koulutustyyppi = Amm,
@@ -263,6 +247,7 @@ object TestData {
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     julkinen = true,
+    valintakokeet = List(Valintakoe1),
     metadata = Some(ammValintaperusteMetadata),
     sorakuvausId = None,
     organisaatioOid = ChildOid,
@@ -279,6 +264,7 @@ object TestData {
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_2#1"),
     nimi = kieliMap("nimi"),
     julkinen = true,
+    valintakokeet = List(Valintakoe1),
     metadata = Some(yoValintaperusteMetadata),
     sorakuvausId = None,
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
@@ -314,18 +300,15 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Some(200.5),
-    alkamiskausiKoodiUri = Some("kausi_k#1"),
-    alkamisvuosi = Some("2020"),
-    alkamisaikaKuvaus = Map(Fi -> "Aikakuvaus fi", Sv -> "Aikakuvaus sv"),
+    koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
+    koulutuksenPaattymispaivamaara = Some(inFuture(30000)),
     lisatiedot = Seq(
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
     onkoStipendia = Some(false),
-    onkoLukuvuosimaksua = Some(false),
-    stipendinMaara = Map(Fi -> "100 euroa", Sv -> "100 euro"),
-    lukuvuosimaksu = Map(Fi -> "200 euroa", Sv -> "200 euro")
+    stipendinMaara = Some(100.0),
   )
 
   val AmmToteutuksenMetatieto = AmmatillinenToteutusMetadata(
@@ -336,7 +319,7 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-    yhteyshenkilo = Some(Yhteystieto1))
+    yhteyshenkilot = Seq(Yhteystieto1))
 
   val YoToteutuksenMetaTieto = YliopistoToteutusMetadata(
     kuvaus = Map(),
@@ -353,7 +336,7 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-    yhteyshenkilo = Some(Yhteystieto1))
+    yhteyshenkilot = Seq(Yhteystieto1))
 
   val JulkaistuAmmToteutus = Toteutus(
     oid = None,
