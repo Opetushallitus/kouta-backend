@@ -1,18 +1,17 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
-import fi.oph.kouta.service.{HakuService, KoulutusService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ToteutusService, ValintaperusteService}
 import org.scalatra.{NotFound, Ok}
 
 class SearchServlet(koulutusService: KoulutusService,
                     toteutusService: ToteutusService,
                     hakuService: HakuService,
-                    valintaperusteService: ValintaperusteService,
-                    sorakuvausService: SorakuvausService,
-                    oppilaitosService: OppilaitosService) extends KoutaServlet {
+                    hakukohdeService: HakukohdeService,
+                    valintaperusteService: ValintaperusteService) extends KoutaServlet {
 
-  def this() = this(KoulutusService, ToteutusService, HakuService, ValintaperusteService, SorakuvausService, OppilaitosService)
+  def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
   val SearchParams = Seq("nimi", "muokkaaja", "tila", "arkistoidut", "page", "size", "lng", "order-by", "order")
 
@@ -114,7 +113,119 @@ class SearchServlet(koulutusService: KoulutusService,
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
-      case Some(organisaatioOid) => Ok(koulutusService.search(params.toMap.filterKeys(SearchParams.contains), organisaatioOid))
+      case Some(organisaatioOid) => Ok(koulutusService.search(organisaatioOid, params.toMap.filterKeys(SearchParams.contains)))
+    }
+  }
+
+  registerPath("/search/toteutukset",
+    s"""    get:
+       |      summary: Hakee organisaation toteutuksia annetuilla parametreilla
+       |      operationId: Toteutusten haku
+       |      description: Hakee organisaation toteutukset annetuilla parametreilla
+       |      tags:
+       |        - Search
+       |$searchParams
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/ToteutusSearchResult'
+       |""".stripMargin)
+  get("/toteutus") {
+
+    implicit val authenticated: Authenticated = authenticate
+
+    params.get("organisaatioOid").map(OrganisaatioOid) match {
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(toteutusService.search(organisaatioOid, params.toMap.filterKeys(SearchParams.contains)))
+    }
+  }
+
+  registerPath("/search/haut",
+    s"""    get:
+       |      summary: Hakee organisaation hakuja annetuilla parametreilla
+       |      operationId: Hakujen haku
+       |      description: Hakee organisaation haut annetuilla parametreilla
+       |      tags:
+       |        - Search
+       |$searchParams
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/HakuSearchResult'
+       |""".stripMargin)
+  get("/haku") {
+
+    implicit val authenticated: Authenticated = authenticate
+
+    params.get("organisaatioOid").map(OrganisaatioOid) match {
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(hakuService.search(organisaatioOid, params.toMap.filterKeys(SearchParams.contains)))
+    }
+  }
+
+  registerPath("/search/hakukohteet",
+    s"""    get:
+       |      summary: Hakee organisaation hakukohteita annetuilla parametreilla
+       |      operationId: Hakujen haku
+       |      description: Hakee organisaation hakukohteet annetuilla parametreilla
+       |      tags:
+       |        - Search
+       |$searchParams
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/HakukohdeSearchResult'
+       |""".stripMargin)
+  get("/hakukohde") {
+
+    implicit val authenticated: Authenticated = authenticate
+
+    params.get("organisaatioOid").map(OrganisaatioOid) match {
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(hakukohdeService.search(organisaatioOid, params.toMap.filterKeys(SearchParams.contains)))
+    }
+  }
+
+  registerPath("/search/valintaperusteet",
+    s"""    get:
+       |      summary: Hakee organisaation valintaperustekuvauksia annetuilla parametreilla
+       |      operationId: Valintaperustekuvausten haku
+       |      description: Hakee organisaation valintaperustekuvaukset annetuilla parametreilla
+       |      tags:
+       |        - Search
+       |$searchParams
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: array
+       |                items:
+       |                  $$ref: '#/components/schemas/ValintaperusteSearchResult'
+       |""".stripMargin)
+  get("/valintaperuste") {
+
+    implicit val authenticated: Authenticated = authenticate
+
+    params.get("organisaatioOid").map(OrganisaatioOid) match {
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(valintaperusteService.search(organisaatioOid, params.toMap.filterKeys(SearchParams.contains)))
     }
   }
 }

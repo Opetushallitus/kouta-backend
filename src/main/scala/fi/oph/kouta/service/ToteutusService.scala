@@ -47,6 +47,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     }
   }
 
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ToteutusSearchResult = ???
+
   private def putWithIndexing(toteutus: Toteutus) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,

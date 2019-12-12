@@ -47,6 +47,8 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
   def listToteutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakuSearchResult = ???
+
   private def putWithIndexing(haku: Haku) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,

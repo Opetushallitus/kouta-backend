@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{HakukohdeListItem, IdListItem, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
@@ -42,6 +42,8 @@ abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionSe
     withRootAccess(Role.Hakukohde.readRoles) {
       HakukohdeDAO.listByValintaperusteId(valintaperusteId)
     }
+
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ValintaperusteSearchResult = ???
 
   private def putWithIndexing(valintaperuste: Valintaperuste) =
     sqsInTransactionService.runActionAndUpdateIndex(

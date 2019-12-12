@@ -82,7 +82,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _)
     }
 
-  def search(params: Map[String, String], organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): KoulutusSearchResult = {
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): KoulutusSearchResult = {
 
     def assocToteutusCounts(r: KoulutusSearchResult): KoulutusSearchResult =
       r.copy(result = r.result.map {

@@ -2,8 +2,8 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.domain.Hakukohde
-import fi.oph.kouta.domain.oid.HakukohdeOid
+import fi.oph.kouta.domain.{Hakukohde, HakukohdeSearchResult}
+import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.HakukohdeDAO
@@ -28,6 +28,8 @@ abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get)) {
       withValidation(hakukohde, updateWithIndexing(_, notModifiedSince))
     }
+
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakukohdeSearchResult = ???
 
   private def putWithIndexing(hakukohde: Hakukohde) =
     sqsInTransactionService.runActionAndUpdateIndex(

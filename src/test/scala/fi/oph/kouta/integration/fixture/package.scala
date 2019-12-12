@@ -30,5 +30,5 @@ trait SearchFixture { this: EverythingFixture with KoutaIntegrationSpec =>
   val SearchPath = "/search"
 
   addServlet(new SearchServlet(koulutusService, toteutusService, hakuService,
-    valintaperusteService, sorakuvausService, oppilaitosService), SearchPath)
+    hakukohdeService, valintaperusteService), SearchPath)
 }
