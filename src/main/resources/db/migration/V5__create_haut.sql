@@ -4,10 +4,8 @@ create type hakulomaketyyppi as enum (
   'muu',
   'ei sähköistä'
 );
-alter type hakulomaketyyppi owner to oph;
 
 create sequence haku_oid;
-alter sequence haku_oid owner to oph;
 
 create table haut (
   oid varchar primary key default '1.2.246.562.29.' || lpad(nextval('haku_oid')::text, 20, '0'),
@@ -28,10 +26,8 @@ create table haut (
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table haut owner to oph;
 
 create table haut_history (like haut);
-alter table haut_history owner to oph;
 
 create trigger set_temporal_columns_on_haut_on_insert
   before insert on haut

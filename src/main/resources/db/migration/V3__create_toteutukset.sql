@@ -1,5 +1,4 @@
 create sequence toteutus_oid;
-alter sequence toteutus_oid owner to oph;
 
 create table toteutukset (
   oid varchar primary key default '1.2.246.562.17.' || lpad(nextval('toteutus_oid')::text, 20, '0'),
@@ -11,10 +10,8 @@ create table toteutukset (
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table toteutukset owner to oph;
 
 create table toteutukset_history (like toteutukset);
-alter table toteutukset_history owner to oph;
 
 create trigger set_temporal_columns_on_toteutukset_on_insert
   before insert on toteutukset

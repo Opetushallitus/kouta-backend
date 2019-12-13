@@ -11,10 +11,8 @@ create table hakukohteiden_liitteet(
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table hakukohteiden_liitteet owner to oph;
 
 create table hakukohteiden_liitteet_history (like hakukohteiden_liitteet);
-alter table hakukohteiden_liitteet_history owner to oph;
 
 create trigger set_temporal_columns_on_hakukohteiden_liitteet_on_insert
   before insert on hakukohteiden_liitteet

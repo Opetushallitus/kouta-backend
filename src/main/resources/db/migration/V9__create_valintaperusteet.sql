@@ -13,10 +13,8 @@ create table valintaperusteet(
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table valintaperusteet owner to oph;
 
 create table valintaperusteet_history (like valintaperusteet);
-alter table valintaperusteet_history owner to oph;
 
 create trigger set_temporal_columns_on_valintaperusteet_on_insert
   before insert on valintaperusteet

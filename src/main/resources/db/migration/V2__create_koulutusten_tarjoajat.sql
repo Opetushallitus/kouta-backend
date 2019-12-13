@@ -6,10 +6,8 @@ create table koulutusten_tarjoajat (
   system_time tstzrange not null default tstzrange(now(), null, '[)'),
   primary key (koulutus_oid, tarjoaja_oid)
 );
-alter table koulutusten_tarjoajat owner to oph;
 
 create table koulutusten_tarjoajat_history (like koulutusten_tarjoajat);
-alter table koulutusten_tarjoajat_history owner to oph;
 
 create trigger set_temporal_columns_on_koulutusten_tarjoajat_on_insert
   before insert on koulutusten_tarjoajat

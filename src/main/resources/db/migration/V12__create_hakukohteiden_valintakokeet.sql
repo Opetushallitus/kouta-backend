@@ -7,10 +7,8 @@ create table hakukohteiden_valintakokeet (
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table hakukohteiden_valintakokeet owner to oph;
 
 create table hakukohteiden_valintakokeet_history (like hakukohteiden_valintakokeet);
-alter table hakukohteiden_valintakokeet_history owner to oph;
 
 create trigger set_temporal_columns_on_hakukohteiden_valintakokeet_on_insert
   before insert on hakukohteiden_valintakokeet

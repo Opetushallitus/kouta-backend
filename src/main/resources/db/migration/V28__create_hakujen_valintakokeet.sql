@@ -7,10 +7,8 @@ create table hakujen_valintakokeet (
     transaction_id bigint not null default txid_current(),
     system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table hakujen_valintakokeet owner to oph;
 
 create table hakujen_valintakokeet_history (like hakujen_valintakokeet);
-alter table hakujen_valintakokeet_history owner to oph;
 
 create trigger set_temporal_columns_on_hakujen_valintakokeet_on_insert
     before insert on hakujen_valintakokeet
