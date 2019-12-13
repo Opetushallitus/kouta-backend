@@ -246,7 +246,7 @@ object TestData {
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    julkinen = true,
+    julkinen = false,
     valintakokeet = List(Valintakoe1),
     metadata = Some(ammValintaperusteMetadata),
     sorakuvausId = None,

@@ -61,9 +61,11 @@ case class KoutaValidationException(errorMessages:List[String]) extends RuntimeE
 trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity
 
-  def authorizeGet[E <: Authorizable](entityWithTime: Option[(E, Instant)])(implicit authenticated: Authenticated): Option[(E, Instant)] =
+  def authorizeGet[E <: Authorizable](entityWithTime: Option[(E, Instant)],
+                                      authorizationRules: AutorizationRules = AutorizationRules(roleEntity.readRoles))
+                                     (implicit authenticated: Authenticated): Option[(E, Instant)] =
     entityWithTime.map {
-      case (e, t) => ifAuthorizedOrganizations(Seq(e.organisaatioOid), AutorizationRules(roleEntity.readRoles)) {
+      case (e, t) => ifAuthorizedOrganizations(Seq(e.organisaatioOid), authorizationRules) {
         (e, t)
       }
     }
@@ -84,7 +86,7 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
 
 case class AutorizationRules(requiredRoles: Seq[Role],
                              withParents: Boolean = false,
-                             alternativeRules: Seq[(OrganisaatioOidsAndOppilaitostyypitFlat) => Boolean] = Seq())
+                             alternativeRules: Seq[(Seq[OrganisaatioOid], OrganisaatioOidsAndOppilaitostyypitFlat) => Boolean] = Seq())
 
 trait AuthorizationService extends Logging {
 
@@ -94,6 +96,9 @@ trait AuthorizationService extends Logging {
 
   type OrganisaatioOidsAndOppilaitostyypitFlatView = IterableView[OrganisaatioOidsAndOppilaitostyypitFlat, Iterable[_]]
 
+  def isAuthorized(organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat):  Boolean =
+    oidsAndOppilaitostyypit._1.exists(x => organisaatioOids.exists(_ == x))
+
   def ifAuthorizedOrganizations[R](organisaatioOids: Seq[OrganisaatioOid],
                                    autorizationRules: AutorizationRules)
                                   (f: => R)
@@ -101,16 +106,17 @@ trait AuthorizationService extends Logging {
 
     val AutorizationRules(requiredRoles, withParents, alternativeRules) = autorizationRules
 
-    def isAuthorizedOrg(x: OrganisaatioOid) = x == rootOrganisaatioOid || organisaatioOids.exists(_ == x)
-
-    def authorized(oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView): Boolean =
-      oidsAndOppilaitostyypit.flatMap(_._1).exists(isAuthorizedOrg) || oidsAndOppilaitostyypit.exists(oo => alternativeRules.exists(_(oo)))
+    def authorized(oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView): Boolean = alternativeRules match {
+      case Nil   => oidsAndOppilaitostyypit.exists(isAuthorized(organisaatioOids, _))
+      case rules => oidsAndOppilaitostyypit.exists(oo => rules.exists(_(organisaatioOids, oo)))
+    }
 
     val authorizedOrgs = authenticated.session.getOrganizationsForRoles(requiredRoles)
     lazy val allAuthorizedOidsAndOppilaitostyypit = if(withParents) lazyFlatChildrenAndParents(authorizedOrgs) else lazyFlatChildren(authorizedOrgs)
 
     authorizedOrgs match {
       case _ if authorizedOrgs.isEmpty => throw RoleAuthorizationFailedException(requiredRoles, authenticated.session.roles)
+      case _ if authorizedOrgs.contains(rootOrganisaatioOid) => f
       case _ if authorized(allAuthorizedOidsAndOppilaitostyypit) => f
       case _ => throw OrganizationAuthorizationFailedException(organisaatioOids, authorizedOrgs)
     }
@@ -163,8 +169,8 @@ extends RuntimeException(message)
 object OrganizationAuthorizationFailedException {
 def apply(allowedOrganizationOids: Iterable[OrganisaatioOid], authorizedOrganizations: Iterable[OrganisaatioOid]): OrganizationAuthorizationFailedException =
   OrganizationAuthorizationFailedException(s"Authorization failed, missing organization. " +
-    s"Allowed organizations: ${allowedOrganizationOids.map(_.s).mkString(",")}. " +
-    s"Authorized organizations: ${authorizedOrganizations.map(_.s).mkString(",")}.")
+    s"User asked right to these organizations: ${allowedOrganizationOids.map(_.s).mkString(",")}. " +
+    s"Instead, authorized organizations are: ${authorizedOrganizations.map(_.s).mkString(",")}.")
 
 def apply(missingOrganizationOid: OrganisaatioOid): OrganizationAuthorizationFailedException =
   OrganizationAuthorizationFailedException(s"Authorization failed, unknown organization oid ${missingOrganizationOid.s}")

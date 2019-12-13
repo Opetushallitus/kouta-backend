@@ -2,7 +2,8 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.domain.{Hakukohde, HakukohdeSearchResult}
+import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
@@ -29,7 +30,14 @@ abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService
       withValidation(hakukohde, updateWithIndexing(_, notModifiedSince))
     }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakukohdeSearchResult = ???
+  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByOrganisaatioOids)
+
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakukohdeSearchResult =
+    list(organisaatioOid).map(_.oid) match {
+      case Nil           => HakukohdeSearchResult()
+      case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
+    }
 
   private def putWithIndexing(hakukohde: Hakukohde) =
     sqsInTransactionService.runActionAndUpdateIndex(

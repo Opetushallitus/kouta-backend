@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
+import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -15,9 +16,10 @@ object HakuService extends HakuService(SqsInTransactionService)
 abstract class HakuService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Haku] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Haku
+  protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
 
   def get(oid: HakuOid)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
-    authorizeGet(HakuDAO.get(oid))
+    authorizeGet(HakuDAO.get(oid), AutorizationRules(roleEntity.readRoles, true))
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
     authorizePut(haku) {
@@ -31,7 +33,7 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakuDAO.listByOrganisaatioOids)
+    withAuthorizedOrganizationOids(organisaatioOid, readRules)(HakuDAO.listByOrganisaatioOids)
 
   def listHakukohteet(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid))
@@ -47,7 +49,18 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
   def listToteutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakuSearchResult = ???
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakuSearchResult = {
+
+    def assocHakukohdeCounts(r: HakuSearchResult): HakuSearchResult =
+      r.copy(result = r.result.map {
+        h => h.copy(hakukohteet = listHakukohteet(h.oid, organisaatioOid).size)
+      })
+
+    list(organisaatioOid).map(_.oid) match {
+      case Nil      => HakuSearchResult()
+      case hakuOids => assocHakukohdeCounts(KoutaIndexClient.searchHaut(hakuOids, params))
+    }
+  }
 
   private def putWithIndexing(haku: Haku) =
     sqsInTransactionService.runActionAndUpdateIndex(

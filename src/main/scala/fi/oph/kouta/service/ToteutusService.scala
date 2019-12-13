@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
+import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
@@ -47,7 +48,18 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ToteutusSearchResult = ???
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ToteutusSearchResult = {
+
+    def assocHakukohdeCounts(r: ToteutusSearchResult): ToteutusSearchResult =
+      r.copy(result = r.result.map {
+        t => t.copy(hakukohteet = listHakukohteet(t.oid, organisaatioOid).size)
+      })
+
+    list(organisaatioOid).map(_.oid) match {
+      case Nil          => ToteutusSearchResult()
+      case toteutusOids => assocHakukohdeCounts(KoutaIndexClient.searchToteutukset(toteutusOids, params))
+    }
+  }
 
   private def putWithIndexing(toteutus: Toteutus) =
     sqsInTransactionService.runActionAndUpdateIndex(

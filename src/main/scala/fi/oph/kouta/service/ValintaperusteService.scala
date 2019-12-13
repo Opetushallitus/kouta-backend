@@ -3,6 +3,9 @@ package fi.oph.kouta.service
 import java.time.Instant
 import java.util.UUID
 
+import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -16,9 +19,24 @@ object ValintaperusteService extends ValintaperusteService(SqsInTransactionServi
 abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
+  protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
 
-  def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
-    authorizeGet(ValintaperusteDAO.get(id))
+  lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+
+  def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] = {
+
+    def isValintaperusteAuthorized(valintaperuste: Valintaperuste, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
+      super.isAuthorized(organisaatioOids, oidsAndOppilaitostyypit) match {
+        case false => valintaperuste.julkinen && oidsAndOppilaitostyypit._2.contains(valintaperuste.koulutustyyppi)
+        case true if valintaperuste.organisaatioOid == ophOid => oidsAndOppilaitostyypit._2.contains(valintaperuste.koulutustyyppi)
+        case _ => true
+      }
+    }
+
+    ValintaperusteDAO.get(id).map {
+      case (v, t) => ifAuthorizedOrganizations(Seq(v.organisaatioOid), AutorizationRules(roleEntity.readRoles, true, Seq(isValintaperusteAuthorized(v, _, _))))((v,t))
+    }
+  }
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {
@@ -31,11 +49,13 @@ abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionSe
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(ValintaperusteDAO.listByOrganisaatioOids)
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
+      ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+    }
 
   def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles) {
-      ValintaperusteDAO.ListByOrganisaatioOidAndHaunKohdejoukko(_, hakuOid)
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
+      ValintaperusteDAO.listAllowedByOrganisaatiotAndHaunKohdejoukko(oids, koulutustyypit, hakuOid)
     }
 
   def listHakukohteet(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
@@ -43,7 +63,11 @@ abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionSe
       HakukohdeDAO.listByValintaperusteId(valintaperusteId)
     }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ValintaperusteSearchResult = ???
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ValintaperusteSearchResult =
+    list(organisaatioOid).map(_.id) match {
+      case Nil               => ValintaperusteSearchResult()
+      case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
+    }
 
   private def putWithIndexing(valintaperuste: Valintaperuste) =
     sqsInTransactionService.runActionAndUpdateIndex(

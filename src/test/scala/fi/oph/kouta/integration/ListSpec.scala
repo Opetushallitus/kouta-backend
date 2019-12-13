@@ -45,10 +45,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     s1 = addToList(sorakuvaus(Julkaistu, ParentOid))
     s2 = addToList(sorakuvaus(Arkistoitu, ChildOid))
     s3 = addToList(sorakuvaus(Julkaistu, LonelyOid))
-    v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(sorakuvausId = Some(s1.id)))
-    v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(sorakuvausId = Some(s1.id)))
-    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
-    v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(sorakuvausId = Some(s3.id)))
+    v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(sorakuvausId = Some(s1.id), julkinen = false))
+    v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(sorakuvausId = Some(s1.id), julkinen = true))
+    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None, julkinen = false))
+    v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(sorakuvausId = Some(s3.id), julkinen = false))
     hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
     hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid))
     hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid))
@@ -134,7 +134,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Haku list" should "list all haut for authorized organizations" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h2, h3))
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3))
   }
   it should "list all haut for authorized organizations 2" in {
     list(HakuPath, Map("organisaatioOid" -> LonelyOid.s), List(h4))
@@ -149,32 +149,32 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(HakuPath, Map[String,String](), 401, Map.empty)
   }
   it should "allow access to user of the selected organization" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h2, h3), crudSessions(ChildOid))
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3), crudSessions(ChildOid))
   }
   it should "deny access without access to the given organization" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access for a user of an ancestor organization" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h2, h3), crudSessions(ParentOid))
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3), crudSessions(ParentOid))
   }
-  it should "deny access for a user of a descendant organization" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  it should "allow access for a user of a descendant organization" in {
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3), crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
   it should "allow access to any haku with the indexer role" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h2, h3), indexerSession)
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3), indexerSession)
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3))
   }
   it should "list all valintaperustekuvaukset for authorized organizations 2" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid.s), List(v4))
+    list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid.s), List(v2, v4))
   }
   it should "list all valintaperustekuvaukset that can be joined to given haku" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString), List(v2))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString), List(v1, v2))
   }
   it should "list all valinteperustekuvaukset that can be joiden to given haku even when kohdejoukko is null" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h3.oid.toString), List(v3))
@@ -189,22 +189,22 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(ValintaperustePath, Map[String,String](), 401, Map.empty)
   }
   it should "allow access to user of the selected organization" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3), crudSessions(ChildOid))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3), crudSessions(ChildOid))
   }
   it should "deny access without access to the given organization" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access for a user of an ancestor organization" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3), crudSessions(ParentOid))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3), crudSessions(ParentOid))
   }
-  it should "deny access for a user of a descendant organization" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  it should "allow access for a user of a descendant organization" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3), crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
   it should "allow access to any valintaperuste with the indexer role" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v2, v3), indexerSession)
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3), indexerSession)
   }
 
   "Sorakuvaus list" should "list all sorakuvaukset for authorized organisations" in {

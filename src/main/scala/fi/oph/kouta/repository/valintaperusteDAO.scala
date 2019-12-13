@@ -3,8 +3,9 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.UUID
 
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Valintakoe, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -18,8 +19,8 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem]
-  def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem]
+  def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): Seq[ValintaperusteListItem]
   def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem]
 }
 
@@ -58,11 +59,11 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }.get
   }
 
-  override def listByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[ValintaperusteListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOids(organisaatioOids))
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem] =
+    KoutaDatabase.runBlocking(selectAllowedByOrganisaatiot(organisaatioOids, koulutustyypit))
 
-  override def ListByOrganisaatioOidAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): Seq[ValintaperusteListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids, hakuOid))
+  override def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): Seq[ValintaperusteListItem] =
+    KoutaDatabase.runBlocking(selectAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids, koulutustyypit, hakuOid))
 
   override def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectBySorakuvausId(sorakuvausId))
@@ -92,6 +93,8 @@ sealed trait ValintaperusteModificationSQL extends SQLHelpers {
 }
 
 sealed trait ValintaperusteSQL extends ValintaperusteExtractors with ValintaperusteModificationSQL with SQLHelpers {
+
+  val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
   def insertValintaperuste(valintaperuste: Valintaperuste) = {
     sqlu"""insert into valintaperusteet (
@@ -211,19 +214,23 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     sqlu"""delete from valintaperusteiden_valintakokeet where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid"""
   }
 
-  def selectByOrganisaatioOids(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from valintaperusteet
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ValintaperusteListItem]
+          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${ophOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          or (julkinen  = ${true} and koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
+      """.as[ValintaperusteListItem]
   }
 
-  def selectByOrganisaatioOidsAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid) = {
+  def selectAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid) = {
     sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, lower(v.system_time)
           from valintaperusteet v
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
           and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and v.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[ValintaperusteListItem]
+          and ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${ophOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+      """.as[ValintaperusteListItem]
   }
 
   def selectBySorakuvausId(sorakuvausId: UUID) = {
