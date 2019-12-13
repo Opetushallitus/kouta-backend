@@ -6,10 +6,8 @@ create table hakukohteiden_hakuajat (
   system_time tstzrange not null default tstzrange(now(), null, '[)'),
   primary key (hakukohde_oid, hakuaika)
 );
-alter table hakukohteiden_hakuajat owner to oph;
 
 create table hakukohteiden_hakuajat_history (like hakukohteiden_hakuajat);
-alter table hakukohteiden_hakuajat_history owner to oph;
 
 create trigger set_temporal_columns_on_hakukohteiden_hakuajat_on_insert
   before insert on hakukohteiden_hakuajat

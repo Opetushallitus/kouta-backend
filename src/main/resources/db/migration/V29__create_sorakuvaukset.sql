@@ -11,10 +11,8 @@ create table sorakuvaukset (
     transaction_id bigint not null default txid_current(),
     system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table sorakuvaukset owner to oph;
 
 create table sorakuvaukset_history (like sorakuvaukset);
-alter table sorakuvaukset_history owner to oph;
 
 create trigger set_temporal_columns_on_sorakuvaukset_on_insert
     before insert on sorakuvaukset

@@ -3,7 +3,6 @@ create type liitteen_toimitustapa as enum (
   'hakijapalvelu',
   'osoite'
 );
-alter type liitteen_toimitustapa owner to oph;
 
 create table hakukohteet (
   oid varchar primary key default '1.2.246.562.20.' || lpad(nextval('haku_oid')::text, 20, '0'),
@@ -33,10 +32,8 @@ create table hakukohteet (
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table hakukohteet owner to oph;
 
 create table hakukohteet_history (like hakukohteet);
-alter table hakukohteet_history owner to oph;
 
 create trigger set_temporal_columns_on_hakukohteet_on_insert
   before insert on hakukohteet

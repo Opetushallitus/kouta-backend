@@ -6,17 +6,14 @@ create type koulutustyyppi as enum (
   'lk',
   'muu'
 );
-alter type koulutustyyppi owner to oph;
 
 create type julkaisutila as enum (
   'tallennettu',
   'julkaistu',
   'arkistoitu'
 );
-alter type julkaisutila owner to oph;
 
 create sequence koulutus_oid;
-alter sequence koulutus_oid owner to oph;
 
 create table koulutukset (
   oid varchar primary key default '1.2.246.562.13.' || lpad(nextval('koulutus_oid')::text, 20, '0'),
@@ -30,10 +27,8 @@ create table koulutukset (
   transaction_id bigint not null default txid_current(),
   system_time tstzrange not null default tstzrange(now(), null, '[)')
 );
-alter table koulutukset owner to oph;
 
 create table koulutukset_history (like koulutukset);
-alter table koulutukset_history owner to oph;
 
 create or replace function set_temporal_columns() returns trigger as
 $$

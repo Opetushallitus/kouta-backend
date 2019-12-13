@@ -6,10 +6,8 @@ create table hakujen_hakuajat (
   system_time tstzrange not null default tstzrange(now(), null, '[)'),
   primary key (haku_oid, hakuaika)
 );
-alter table hakujen_hakuajat owner to oph;
 
 create table hakujen_hakuajat_history (like hakujen_hakuajat);
-alter table hakujen_hakuajat_history owner to oph;
 
 create trigger set_temporal_columns_on_hakujen_hakuajat_on_insert
   before insert on hakujen_hakuajat

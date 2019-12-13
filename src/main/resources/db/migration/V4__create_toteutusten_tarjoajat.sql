@@ -6,10 +6,8 @@ create table toteutusten_tarjoajat (
   system_time tstzrange not null default tstzrange(now(), null, '[)'),
   primary key (toteutus_oid, tarjoaja_oid)
 );
-alter table toteutusten_tarjoajat owner to oph;
 
 create table toteutusten_tarjoajat_history (like toteutusten_tarjoajat);
-alter table toteutusten_tarjoajat_history owner to oph;
 
 create trigger set_temporal_columns_on_toteutusten_tarjoajat_on_insert
   before insert on toteutusten_tarjoajat
