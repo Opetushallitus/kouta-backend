@@ -315,7 +315,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     Koulutus(
       Some(KoulutusOid(oid)),
       params(JohtaaTutkintoonKey).toBoolean,
-      Some(Koulutustyyppi.withName(params(KoulutustyyppiKey))),
+      Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(params(KoulutusKoodiUriKey)),
       Julkaisutila.withName(params(TilaKey)),
       params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,

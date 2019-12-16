@@ -56,7 +56,7 @@ object TestData {
   val AmmKoulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
-    koulutustyyppi = Some(Amm),
+    koulutustyyppi = Amm,
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
@@ -74,7 +74,7 @@ object TestData {
   val YoKoulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
-    koulutustyyppi = Some(Yo),
+    koulutustyyppi = Yo,
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
@@ -92,7 +92,7 @@ object TestData {
     kielivalinta = List(Fi, Sv),
     modified = None)
 
-  val MinKoulutus = Koulutus(johtaaTutkintoon = false, muokkaaja = UserOid("1.2.3"), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
+  val MinKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = false, muokkaaja = UserOid("1.2.3"), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
 
   val JulkaistuHaku = new Haku(
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
@@ -279,7 +279,7 @@ object TestData {
     tila = Julkaistu,
     nimi = kieliMap("nimi"),
     koulutustyyppi = Yo,
-    julkinen = true,
+    julkinen = false,
     kielivalinta = List(Fi, Sv),
     metadata = Some(SorakuvausMetadata(kuvaus = kieliMap("kuvaus"))),
     organisaatioOid = ChildOid,

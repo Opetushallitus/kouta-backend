@@ -3,9 +3,11 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.UUID
 
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem}
+import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.{Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import slick.jdbc.PostgresProfile.api._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import slick.dbio.DBIO
 
@@ -17,7 +19,7 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
   def update(valintaperuste: Sorakuvaus, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]): Seq[SorakuvausListItem]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem]
 }
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
@@ -52,8 +54,8 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     }).get
   }
 
-  override def listByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]): Seq[SorakuvausListItem] =
-    KoutaDatabase.runBlocking(selectByOrganisaatioOidsOrJulkinen(organisaatioOids))
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem] =
+    KoutaDatabase.runBlocking(selectAllowedByOrganisaatiot(organisaatioOids, koulutustyypit))
 }
 
 sealed trait SorakuvausModificationSQL extends SQLHelpers {
@@ -76,6 +78,8 @@ sealed trait SorakuvausModificationSQL extends SQLHelpers {
 }
 
 sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificationSQL with SQLHelpers {
+
+  lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
   def insertSorakuvaus(sorakuvaus: Sorakuvaus) = {
     sqlu"""insert into sorakuvaukset (
@@ -127,9 +131,10 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
          )"""
   }
 
-  def selectByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[SorakuvausListItem]
+          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${ophOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          or (julkinen  = ${true} and koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))""".as[SorakuvausListItem]
   }
 }

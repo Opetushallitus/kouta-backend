@@ -26,7 +26,6 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] with Validatio
   }
 
   it should "fail if julkaistu koulutus is invalid" in {
-    assertLeft(amm.copy(koulutustyyppi = None), missingMsg("koulutustyyppi"))
     assertLeft(amm.copy(johtaaTutkintoon = false), invalidTutkintoonjohtavuus("amm"))
     assertLeft(amm.copy(koulutusKoodiUri = None), missingMsg("koulutusKoodiUri"))
     assertLeft(amm.copy(koulutusKoodiUri = Some("mummo")), validationMsg("mummo"))

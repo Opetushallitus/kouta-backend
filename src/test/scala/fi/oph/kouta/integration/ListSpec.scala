@@ -43,7 +43,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
     s1 = addToList(sorakuvaus(Julkaistu, ParentOid))
-    s2 = addToList(sorakuvaus(Arkistoitu, ChildOid))
+    s2 = addToList(sorakuvaus(Arkistoitu, ChildOid).copy(julkinen = true))
     s3 = addToList(sorakuvaus(Julkaistu, LonelyOid))
     v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(sorakuvausId = Some(s1.id), julkinen = false))
     v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(sorakuvausId = Some(s1.id), julkinen = true))
@@ -206,12 +206,18 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "allow access to any valintaperuste with the indexer role" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3), indexerSession)
   }
+  it should "list public valintaperuste with the same koulutustyyppi" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> AmmOid.s), List(v2), readSessions(AmmOid))
+  }
+  it should "not list public valintaperuste with different koulutustyyppi" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> YoOid.s), List(), readSessions(YoOid))
+  }
 
   "Sorakuvaus list" should "list all sorakuvaukset for authorized organisations" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2))
   }
   it should "list all sorakuvaukset for authorized organizations 2" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> LonelyOid.s), List(s3))
+    list(SorakuvausPath, Map("organisaatioOid" -> LonelyOid.s), List(s2, s3))
   }
   it should "return forbidden if oid is unknown" in {
     list(SorakuvausPath, Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -223,22 +229,28 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(SorakuvausPath, Map[String,String](), 401, Map.empty)
   }
   it should "allow access to user of the selected organization" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), crudSessions(ChildOid))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), crudSessions(ChildOid))
   }
   it should "deny access without access to the given organization" in {
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access for a user of an ancestor organization" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), crudSessions(ParentOid))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), crudSessions(ParentOid))
   }
-  it should "deny access for a user of a descendant organization" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  it should "allow access for a user of a descendant organization" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
   it should "allow access to any sorakuvaus with the indexer role" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s2), indexerSession)
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), indexerSession)
+  }
+  it should "list public sorakuvaus with the same koulutustyyppi" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> AmmOid.s), List(s2), readSessions(AmmOid))
+  }
+  it should "not list public sorakuvaus with different koulutustyyppi" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> YoOid.s), List(), readSessions(YoOid))
   }
 
   "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {

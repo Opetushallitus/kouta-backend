@@ -122,7 +122,7 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime]) extends PerustiedotWithId {
+                      modified: Option[LocalDateTime]) extends PerustiedotWithId with MaybeJulkinen {
   override def validate(): IsValid = and(
     super.validate()
   )

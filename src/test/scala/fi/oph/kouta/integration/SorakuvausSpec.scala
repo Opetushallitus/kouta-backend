@@ -46,9 +46,9 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     get(id, crudSessions(ParentOid), sorakuvaus(id))
   }
 
-  it should "deny a user with only access to a descendant organization" in {
+  it should "allow a user with only access to a descendant organization" in {
     val id = put(sorakuvaus)
-    get(s"$SorakuvausPath/$id", crudSessions(GrandChildOid), 403)
+    get(id, crudSessions(GrandChildOid), sorakuvaus(id))
   }
 
   it should "deny a user with the wrong role" in {

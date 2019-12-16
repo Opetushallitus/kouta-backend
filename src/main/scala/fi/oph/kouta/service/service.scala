@@ -6,7 +6,7 @@ import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, Koulutustyyppi, TeemakuvaMetadata}
+import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, Koulutustyyppi, MaybeJulkinen, TeemakuvaMetadata}
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.security.{Authorizable, Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -60,6 +60,16 @@ case class KoutaValidationException(errorMessages:List[String]) extends RuntimeE
 
 trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity
+
+  lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+
+  def getAuthorizationRuleForMaybeJulkinen(entity: MaybeJulkinen)(organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
+    super.isAuthorized(organisaatioOids, oidsAndOppilaitostyypit) match {
+      case false => entity.julkinen && oidsAndOppilaitostyypit._2.contains(entity.koulutustyyppi)
+      case true if entity.organisaatioOid == ophOid => oidsAndOppilaitostyypit._2.contains(entity.koulutustyyppi)
+      case _ => true
+    }
+  }
 
   def authorizeGet[E <: Authorizable](entityWithTime: Option[(E, Instant)],
                                       authorizationRules: AutorizationRules = AutorizationRules(roleEntity.readRoles))

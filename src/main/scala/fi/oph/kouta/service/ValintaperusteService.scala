@@ -4,8 +4,6 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.client.KoutaIndexClient
-import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
-import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -21,22 +19,11 @@ abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionSe
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
 
-  lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
-
-  def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] = {
-
-    def isValintaperusteAuthorized(valintaperuste: Valintaperuste, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
-      super.isAuthorized(organisaatioOids, oidsAndOppilaitostyypit) match {
-        case false => valintaperuste.julkinen && oidsAndOppilaitostyypit._2.contains(valintaperuste.koulutustyyppi)
-        case true if valintaperuste.organisaatioOid == ophOid => oidsAndOppilaitostyypit._2.contains(valintaperuste.koulutustyyppi)
-        case _ => true
-      }
-    }
-
+  def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
     ValintaperusteDAO.get(id).map {
-      case (v, t) => ifAuthorizedOrganizations(Seq(v.organisaatioOid), AutorizationRules(roleEntity.readRoles, true, Seq(isValintaperusteAuthorized(v, _, _))))((v,t))
+      case (v, t) => ifAuthorizedOrganizations(Seq(v.organisaatioOid),
+                                               AutorizationRules(roleEntity.readRoles, true, Seq(getAuthorizationRuleForMaybeJulkinen(v))))((v,t))
     }
-  }
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {

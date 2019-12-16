@@ -155,7 +155,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             kielivalinta)
           values (
             ${koulutus.johtaaTutkintoon},
-            ${koulutus.koulutustyyppi.map(_.toString)}::koulutustyyppi,
+            ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
             ${koulutus.koulutusKoodiUri},
             ${koulutus.tila.toString}::julkaisutila,
             ${toJsonParam(koulutus.nimi)}::jsonb,
@@ -198,7 +198,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   def updateKoulutus(koulutus: Koulutus) = {
     sqlu"""update koulutukset set
               johtaa_tutkintoon = ${koulutus.johtaaTutkintoon},
-              tyyppi = ${koulutus.koulutustyyppi.map(_.toString)}::koulutustyyppi,
+              tyyppi = ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
               koulutus_koodi_uri = ${koulutus.koulutusKoodiUri},
               tila = ${koulutus.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(koulutus.nimi)}::jsonb,
@@ -209,7 +209,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               kielivalinta = ${toJsonParam(koulutus.kielivalinta)}::jsonb
             where oid = ${koulutus.oid}
             and ( johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
-            or tyyppi is distinct from ${koulutus.koulutustyyppi.map(_.toString)}::koulutustyyppi
+            or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
             or koulutus_koodi_uri is distinct from ${koulutus.koulutusKoodiUri}
             or tila is distinct from ${koulutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(koulutus.nimi)}::jsonb

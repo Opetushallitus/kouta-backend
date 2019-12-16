@@ -3,8 +3,6 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
-import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
-import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
@@ -18,27 +16,16 @@ object KoulutusService extends KoulutusService(SqsInTransactionService, S3Servic
 class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
   extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
 
-  lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
-
   protected val roleEntity: RoleEntity = Role.Koulutus
   protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
-  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
-
-    def isKoulutusAuthorized(koulutus: Koulutus, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
-      super.isAuthorized(organisaatioOids, oidsAndOppilaitostyypit) match {
-        case false => koulutus.julkinen && koulutus.koulutustyyppi.exists(oidsAndOppilaitostyypit._2.contains)
-        case true if koulutus.organisaatioOid == ophOid => koulutus.koulutustyyppi.exists(oidsAndOppilaitostyypit._2.contains)
-        case _ => true
-      }
-    }
-
+  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
     KoulutusDAO.get(oid).map {
-      case (k, t) => ifAuthorizedOrganizations(k.tarjoajat :+ k.organisaatioOid, AutorizationRules(roleEntity.readRoles, true, Seq(isKoulutusAuthorized(k, _, _))))((k,t))
+      case (k, t) => ifAuthorizedOrganizations(k.tarjoajat :+ k.organisaatioOid,
+                                               AutorizationRules(roleEntity.readRoles, true, Seq(getAuthorizationRuleForMaybeJulkinen(k))))((k,t))
     }
-  }
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {

@@ -147,7 +147,7 @@ package object koulutus {
 
 case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,
-                    koulutustyyppi: Option[Koulutustyyppi] = None,
+                    koulutustyyppi: Koulutustyyppi,
                     koulutusKoodiUri: Option[String] = None,
                     tila: Julkaisutila = Tallennettu,
                     tarjoajat: List[OrganisaatioOid] = List(),
@@ -158,7 +158,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     modified: Option[LocalDateTime])
-  extends PerustiedotWithOid with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with HasPrimaryId[KoulutusOid, Koulutus] {
+  extends PerustiedotWithOid with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with HasPrimaryId[KoulutusOid, Koulutus] with MaybeJulkinen {
 
   override def validate() = {
     and(super.validate(),
@@ -166,8 +166,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
         validateOidList(tarjoajat),
         validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern)),
         validateIfTrue(Julkaistu == tila, () => and(
-          assertNotOptional(koulutustyyppi, "koulutustyyppi"),
-          validateIfDefined[Koulutustyyppi](koulutustyyppi, (k) => assertTrue(k == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(k.toString))),
+          assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
           assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"),
           validateIfTrue(!KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid),
             () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
