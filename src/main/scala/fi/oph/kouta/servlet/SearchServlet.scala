@@ -107,7 +107,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |                items:
        |                  $$ref: '#/components/schemas/KoulutusSearchResult'
        |""".stripMargin)
-  get("/koulutus") {
+  get("/koulutukset") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -135,7 +135,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |                items:
        |                  $$ref: '#/components/schemas/ToteutusSearchResult'
        |""".stripMargin)
-  get("/toteutus") {
+  get("/toteutukset") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -163,7 +163,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |                items:
        |                  $$ref: '#/components/schemas/HakuSearchResult'
        |""".stripMargin)
-  get("/haku") {
+  get("/haut") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -191,7 +191,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |                items:
        |                  $$ref: '#/components/schemas/HakukohdeSearchResult'
        |""".stripMargin)
-  get("/hakukohde") {
+  get("/hakukohteet") {
 
     implicit val authenticated: Authenticated = authenticate
 
@@ -219,7 +219,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |                items:
        |                  $$ref: '#/components/schemas/ValintaperusteSearchResult'
        |""".stripMargin)
-  get("/valintaperuste") {
+  get("/valintaperusteet") {
 
     implicit val authenticated: Authenticated = authenticate
 
