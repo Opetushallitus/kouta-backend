@@ -47,7 +47,11 @@ package object oppilaitos {
       |        teemakuva:
       |          type: string
       |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
-      |          example: https://konfo-files.opintopolku.fi/oppilaitos-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
+      |          example: https://konfo-files.opintopolku.fi/oppilaitos-teemakuva/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
+      |        logo:
+      |          type: string
+      |          description: Oppilaitoksen Opintopolussa näytettävän logon URL.
+      |          example: https://konfo-files.opintopolku.fi/oppilaitos-logo/1.2.246.562.10.00000000000000000009/ba9dd816-81fb-44ea-aafd-14ee3014e086.png
       |        modified:
       |           type: string
       |           format: date-time
@@ -251,6 +255,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
                       teemakuva: Option[String] = None,
+                      logo: Option[String] = None,
                       modified: Option[LocalDateTime] = None)
   extends Validatable
     with Authorizable
@@ -264,6 +269,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
     assertValid(organisaatioOid, "organisaatioOid"),
     validateIfDefined[OppilaitosMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
+    validateIfDefined[String](logo, assertValidUrl(_, "logo")),
     assertNotEmpty(kielivalinta, "kielivalinta")
   )
 

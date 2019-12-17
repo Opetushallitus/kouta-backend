@@ -17,11 +17,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Service, AuditLog)
 
 class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
-  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with TeemakuvaService[OrganisaatioOid, Oppilaitos] {
+  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
 
   val teemakuvaPrefix = "oppilaitos-teemakuva"
+  val logoPrefix = "oppilaitos-logo"
 
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] =
     authorizeGet(OppilaitosDAO.get(oid))
@@ -52,14 +53,17 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitos)
+        (logo, o)  <- checkAndMaybeClearLogo(o)
         o          <- OppilaitosDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
-        o          <- teema.map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
+        o          <- maybeCopyLogo(logo, o)
+        o          <- teema.orElse(logo).map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
-      } yield (teema, o)
-    }.map { case (teema, o) =>
+      } yield (teema, logo, o)
+    }.map { case (teema, logo, o) =>
       maybeDeleteTempImage(teema)
+      maybeDeleteTempImage(logo)
       o
     }.get
 
@@ -68,12 +72,14 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
       for {
         _          <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
+        (logo, o)  <- checkAndMaybeCopyLogo(o)
         o          <- OppilaitosDAO.getUpdateActions(o)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
-      } yield (teema, o)
-    }.map { case (teema, o) =>
+      } yield (teema, logo, o)
+    }.map { case (teema, logo, o) =>
       maybeDeleteTempImage(teema)
+      maybeDeleteTempImage(logo)
       o
     }.get
 
@@ -120,7 +126,6 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
       maybeDeleteTempImage(teema)
       o
     }.get
-
 
   private def doUpdate(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant, before: OppilaitoksenOsa)(implicit authenticated: Authenticated): Option[OppilaitoksenOsa] =
     KoutaDatabase.runBlockingTransactionally {

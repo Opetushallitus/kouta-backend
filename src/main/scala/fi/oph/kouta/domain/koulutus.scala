@@ -96,7 +96,7 @@ package object koulutus {
       |        teemakuva:
       |          type: string
       |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
-      |          example: https://konfo-files.opintopolku.fi/koulutus-teema/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
+      |          example: https://konfo-files.opintopolku.fi/koulutus-teemakuva/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |        modified:
       |           type: string
       |           format: date-time

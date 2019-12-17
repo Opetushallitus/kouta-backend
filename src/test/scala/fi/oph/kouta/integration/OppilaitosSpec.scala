@@ -127,6 +127,23 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
   }
 
+  it should "copy a temporary logo to a permanent location while creating the oppilaitos" in {
+    saveLocalPng("temp/image.png")
+    val oid = put(oppilaitos.copy(logo = Some(s"$PublicImageServer/temp/image.png")))
+
+    get(oid, oppilaitos(oid).copy(logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/image.png")))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-logo/$oid/image.png"))
+    MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
+  }
+
+  it should "not touch a logo that's not in the temporary location" in {
+    val oppilaitosWithImage = oppilaitos.copy(logo = Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
+    val oid = put(oppilaitosWithImage)
+    MockS3Client.storage shouldBe empty
+    get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+  }
+
   "Update oppilaitos" should "update oppilaitos" in {
     val oid = put(oppilaitos)
     val lastModified = get(oid, oppilaitos(oid))
@@ -263,5 +280,50 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+  }
+
+  it should "copy a temporary logo to a permanent location while updating the oppilaitos" in {
+    val oid = put(oppilaitos)
+    val lastModified = get(oid, oppilaitos(oid))
+
+    saveLocalPng("temp/image.png")
+    val oppilaitosWithLogo = oppilaitos(oid).copy(logo = Some(s"$PublicImageServer/temp/image.png"))
+
+    update(oppilaitosWithLogo, lastModified)
+    get(oid, oppilaitosWithLogo.copy(logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/image.png")))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-logo/$oid/image.png"))
+  }
+
+  it should "not touch a logo that's not in the temporary location" in {
+    val oid = put(oppilaitos)
+    val lastModified = get(oid, oppilaitos(oid))
+    val oppilaitosWithImage = oppilaitos(oid).copy(logo = Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
+
+    update(oppilaitosWithImage, lastModified)
+
+    MockS3Client.storage shouldBe empty
+    get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+  }
+
+  it should "copy both, a temporary teemakuva and a temporary logo, to a permanent location while updating the oppilaitos" in {
+    val oid = put(oppilaitos)
+    val lastModified = get(oid, oppilaitos(oid))
+
+    saveLocalPng("temp/teemakuva.png")
+    saveLocalPng("temp/logo.png")
+    val oppilaitosWithImages = oppilaitos(oid).copy(
+      teemakuva = Some(s"$PublicImageServer/temp/teemakuva.png"),
+      logo = Some(s"$PublicImageServer/temp/logo.png")
+    )
+
+    update(oppilaitosWithImages, lastModified)
+    get(oid, oppilaitosWithImages.copy(
+      teemakuva = Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/teemakuva.png"),
+      logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/logo.png")
+    ))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-logo/$oid/logo.png"))
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/teemakuva.png"))
   }
 }

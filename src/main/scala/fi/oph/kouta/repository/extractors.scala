@@ -263,6 +263,7 @@ trait OppilaitosExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     teemakuva = r.nextStringOption(),
+    logo = r.nextStringOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 }

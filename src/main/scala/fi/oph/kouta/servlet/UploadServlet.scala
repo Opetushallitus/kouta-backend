@@ -10,12 +10,14 @@ import org.scalatra.Ok
 
 import scala.util.{Failure, Try}
 
-class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extends KoutaServlet {
+case class ImageSizeSpecs(maxSize: Int, minWidth: Int, minHeight: Int)
+
+class UploadServlet(s3Service: S3Service) extends KoutaServlet {
 
   def this() = this(S3Service)
 
-  val teemakuvaMinWidth  = 1260
-  val teemakuvaMinHeight = 400
+  val teemakuvaSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = 2 * 1024 * 1024, minWidth = 1260, minHeight = 400)
+  val logoSizes: ImageSizeSpecs  = ImageSizeSpecs(maxSize = 100 * 1024, minWidth = 100, minHeight = 100)
 
   registerPath("/upload/teemakuva",
     """    post:
@@ -41,11 +43,47 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
       |""".stripMargin
   )
   post("/teemakuva") {
-    val length      = checkLength(maxSize)
+    storeTempImage(teemakuvaSizes)
+  }
+
+  registerPath(
+    "/upload/logo",
+    s"""    post:
+       |      summary: Tallenna logo
+       |      operationId: Tallenna logo
+       |      description: Tallenna oppilaitoksen logo väliaikaiseen sijaintiin.
+       |        Logo siirretään lopulliseen sijaintiinsa, kun se asetetaan oppilaitoksen logoksi.
+       |      tags:
+       |        - Upload
+       |      requestBody:
+       |        content:
+       |          'image/jpeg':
+       |            schema:
+       |              type: string
+       |              format: binary
+       |          'image/png':
+       |            schema:
+       |              type: string
+       |              format: binary
+       |          'image/svg':
+       |            schema:
+       |              type: string
+       |              format: binary
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |""".stripMargin
+  )
+  post("/logo") {
+    storeTempImage(logoSizes)
+  }
+
+  private def storeTempImage(sizeSpecs: ImageSizeSpecs) = {
+    val length = checkLength(sizeSpecs.maxSize)
     val contentType = checkContentType()
 
-    val imageData       = readImageDataFromStream(request.inputStream, length)
-    checkImageFormatAndSize(contentType, imageData)
+    val imageData = readImageDataFromStream(request.inputStream, length)
+    checkImageFormatAndSize(contentType, imageData, sizeSpecs)
 
     Ok("url" -> s3Service.storeTempImage(contentType, imageData))
   }
@@ -75,7 +113,7 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
     imageData
   }
 
-  private def checkImageFormatAndSize(imageType: ImageType, imageData: Array[Byte]): Unit = {
+  private def checkImageFormatAndSize(imageType: ImageType, imageData: Array[Byte], sizeSpecs: ImageSizeSpecs): Unit = {
     ImageIO.setUseCache(false)
     val mimeReaders = ImageIO.getImageReadersByMIMEType(imageType.contentType)
     val reader = mimeReaders.next()
@@ -96,11 +134,10 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
 
     val (width, height) = (image.get.getWidth, image.get.getHeight)
 
-    if (width < teemakuvaMinWidth || height < teemakuvaMinHeight) {
+    if (width < sizeSpecs.minWidth || height < sizeSpecs.minHeight) {
       throw new IllegalArgumentException(
-        s"Kuva on väärän kokoinen ($width x $height), kun minimikoko on $teemakuvaMinWidth x $teemakuvaMinHeight"
+        s"Kuva on väärän kokoinen ($width x $height), kun minimikoko on ${sizeSpecs.minWidth} x ${sizeSpecs.minHeight}"
       )
     }
   }
-
 }
