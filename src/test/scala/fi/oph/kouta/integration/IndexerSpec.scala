@@ -54,7 +54,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
 
   "List koulutukset by tarjoaja" should "list all koulutukset distinct" in {
     val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)))
-    get(s"$IndexerPath/koulutus/tarjoaja/$ChildOid", headers = Seq(sessionHeader(indexerSession))) {
+    get(s"$IndexerPath/tarjoaja/$ChildOid/koulutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Koulutus]](body).filter(_.oid.get.s == oid).size should equal (1)
     }

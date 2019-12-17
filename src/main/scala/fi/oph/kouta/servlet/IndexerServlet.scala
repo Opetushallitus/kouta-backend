@@ -48,7 +48,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(ModificationService.getModifiedSince(parseHttpDate(URLDecoder.decode(params("since"), "UTF-8"))))
   }
 
-  registerPath( "/indexer/koulutus/tarjoaja/{:organisaatioOid}",
+  registerPath( "/indexer/tarjoaja/{organisaatioOid}/koulutukset",
     s"""    get:
        |      summary: Hakee julkaistut koulutukset, joissa organisaatio tai sen aliorganisaatio on tarjoajana
        |      operationId: Tarjoajan julkaistut koulutukset
@@ -74,7 +74,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |                items:
        |                  $$ref: '#/components/schemas/KoulutusListItem'
        |""".stripMargin)
-  get("/koulutus/tarjoaja/:organisaatioOid") {
+  get("/tarjoaja/:organisaatioOid/koulutukset") {
 
     implicit val authenticated: Authenticated = authenticate
 
