@@ -94,12 +94,12 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
   }
 
   def selectOppilaitoksenOsa(oid: OrganisaatioOid): DBIO[Option[OppilaitoksenOsa]] = {
-    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, lower(system_time)
+    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, lower(system_time)
           from oppilaitosten_osat where oid = $oid""".as[OppilaitoksenOsa].headOption
   }
 
   def selectByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsa]] = {
-    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, lower(system_time)
+    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, lower(system_time)
           from oppilaitosten_osat where oppilaitos_oid = $oppilaitosOid""".as[OppilaitoksenOsa]
   }
 
@@ -111,7 +111,8 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
              kielivalinta,
              metadata,
              muokkaaja,
-             organisaatio_oid)
+             organisaatio_oid,
+	     teemakuva)
            values (
              ${oppilaitoksenOsa.oid},
              ${oppilaitoksenOsa.oppilaitosOid},
@@ -119,7 +120,8 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
              ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
              ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
              ${oppilaitoksenOsa.muokkaaja},
-             ${oppilaitoksenOsa.organisaatioOid})"""
+             ${oppilaitoksenOsa.organisaatioOid},
+             ${oppilaitoksenOsa.teemakuva})"""
   }
 
   def updateOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Int] = {
@@ -128,12 +130,14 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
               kielivalinta = ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
               metadata = ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
               muokkaaja = ${oppilaitoksenOsa.muokkaaja},
-              organisaatio_oid = ${oppilaitoksenOsa.organisaatioOid}
+              organisaatio_oid = ${oppilaitoksenOsa.organisaatioOid},
+              teemakuva = ${oppilaitoksenOsa.teemakuva}
             where oid = ${oppilaitoksenOsa.oid}
             and (tila is distinct from ${oppilaitoksenOsa.tila.toString}::julkaisutila
             or metadata is distinct from ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid})"""
+            or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid})
+            or teemakuva is distinct from ${oppilaitoksenOsa.teemakuva}"""
   }
 
   def selectListByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsaListItem]] = {

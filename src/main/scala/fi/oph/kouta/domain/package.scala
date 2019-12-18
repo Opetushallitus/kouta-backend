@@ -422,16 +422,10 @@ package object domain {
                             valintaperusteet: Seq[UUID] = Seq(),
                             oppilaitokset: Seq[OrganisaatioOid] = Seq())
 
-  trait TeemakuvaMetadata[M] {
+  trait HasTeemakuva[T] {
     val teemakuva: Option[String]
 
-    def withTeemakuva(teemakuva: Option[String]): M
-  }
-
-  trait HasTeemakuvaMetadata[T, M <: TeemakuvaMetadata[M]] {
-    def metadata: Option[M]
-
-    def withMetadata(metadata: M): T
+    def withTeemakuva(teemakuva: Option[String]): T
   }
 
   trait HasPrimaryId[ID, T] {

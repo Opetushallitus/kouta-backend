@@ -161,7 +161,7 @@ trait ToteutusModificationSQL extends SQLHelpers {
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   val selectToteutusSql =
-    """select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, m.modified
+    """select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, t.teemakuva, m.modified
          from toteutukset t
          inner join (
            select t.oid oid, greatest(
@@ -203,7 +203,8 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             metadata,
             muokkaaja,
             organisaatio_oid,
-            kielivalinta
+            kielivalinta,
+            teemakuva
           ) values (
             ${toteutus.koulutusOid},
             ${toteutus.tila.toString}::julkaisutila,
@@ -211,7 +212,8 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             ${toJsonParam(toteutus.metadata)}::jsonb,
             ${toteutus.muokkaaja},
             ${toteutus.organisaatioOid},
-            ${toJsonParam(toteutus.kielivalinta)}::jsonb
+            ${toJsonParam(toteutus.kielivalinta)}::jsonb,
+            ${toteutus.teemakuva}
           ) returning oid""".as[ToteutusOid].head
   }
 
@@ -230,14 +232,16 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               metadata = ${toJsonParam(toteutus.metadata)}::jsonb,
               muokkaaja = ${toteutus.muokkaaja},
               organisaatio_oid = ${toteutus.organisaatioOid},
-              kielivalinta = ${toJsonParam(toteutus.kielivalinta)}::jsonb
+              kielivalinta = ${toJsonParam(toteutus.kielivalinta)}::jsonb,
+              teemakuva = ${toteutus.teemakuva}
             where oid = ${toteutus.oid}
             and ( koulutus_oid is distinct from ${toteutus.koulutusOid}
             or tila is distinct from ${toteutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(toteutus.nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(toteutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(toteutus.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${toteutus.organisaatioOid} )"""
+            or organisaatio_oid is distinct from ${toteutus.organisaatioOid}
+            or teemakuva is distinct from ${toteutus.teemakuva} )"""
   }
 
   def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {

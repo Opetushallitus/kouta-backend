@@ -92,6 +92,10 @@ package object koulutus {
       |           type: string
       |           description: Koulutuksen luoneen organisaation oid
       |           example: 1.2.246.562.10.00101010101
+      |        teemakuva:
+      |          type: string
+      |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |        modified:
       |           type: string
       |           format: date-time
@@ -152,14 +156,15 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     koulutusKoodiUri: Option[String] = None,
                     tila: Julkaisutila = Tallennettu,
                     tarjoajat: List[OrganisaatioOid] = List(),
-                    nimi:  Kielistetty = Map(),
+                    nimi: Kielistetty = Map(),
                     metadata: Option[KoulutusMetadata] = None,
                     julkinen: Boolean = false,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
+                    teemakuva: Option[String] = None,
                     modified: Option[LocalDateTime])
-  extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with AuthorizableMaybeJulkinen {
+  extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen {
 
   override def validate() = {
     and(super.validate(),
@@ -175,7 +180,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
 
   def withOid(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
 
-  override def withMetadata(metadata: KoulutusMetadata): Koulutus = this.copy(metadata = Some(metadata))
+  override def withTeemakuva(teemakuva: Option[String]): Koulutus = this.copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): Koulutus = this.copy(modified = Some(modified))
 }

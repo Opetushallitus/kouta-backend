@@ -131,16 +131,16 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "copy a temporary image to a permanent location while creating the toteutus" in {
     saveLocalPng("temp/image.png")
-    val oid = put(toteutus(koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))))
+    val oid = put(toteutus(koulutusOid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))
 
-    get(oid, toteutus(oid, koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))))
+    get(oid, toteutus(oid, koulutusOid).withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
   }
 
   it should "not touch an image that's not in the temporary location" in {
-    val toteutusWithImage = toteutus(koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
+    val toteutusWithImage = toteutus(koulutusOid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
     val oid = put(toteutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
@@ -298,10 +298,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, toteutus(oid, koulutusOid))
 
     saveLocalPng("temp/image.png")
-    val toteutusWithImage = toteutus(oid, koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))))
+    val toteutusWithImage = toteutus(oid, koulutusOid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))
 
     update(toteutusWithImage, lastModified)
-    get(oid, toteutusWithImage.copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))))
+    get(oid, toteutusWithImage.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
   }
@@ -309,7 +309,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "not touch an image that's not in the temporary location" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
-    val toteutusWithImage = toteutus(oid, koulutusOid).copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))))
+    val toteutusWithImage = toteutus(oid, koulutusOid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
 
     update(toteutusWithImage, lastModified)
 

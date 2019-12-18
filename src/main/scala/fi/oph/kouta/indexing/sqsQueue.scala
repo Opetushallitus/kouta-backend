@@ -71,6 +71,7 @@ object SqsInTransactionService extends SqsInTransactionService
 
 abstract class SqsInTransactionService extends Logging {
 
+  import fi.oph.kouta.repository.KoutaDatabase
   import slick.dbio.DBIO
 
   def toSQSQueue(priority: Priority, index: IndexType, maybeValue: Option[String]): DBIO[_] =

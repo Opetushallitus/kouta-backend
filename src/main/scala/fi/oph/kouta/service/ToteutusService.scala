@@ -19,7 +19,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object ToteutusService extends ToteutusService(SqsInTransactionService, S3Service, AuditLog, KeywordService)
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog, keywordService: KeywordService)
-  extends ValidatingService[Toteutus] with RoleEntityAuthorizationService with TeemakuvaService[ToteutusOid, Toteutus, ToteutusMetadata] {
+  extends ValidatingService[Toteutus] with RoleEntityAuthorizationService with TeemakuvaService[ToteutusOid, Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
@@ -77,11 +77,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def doPut(toteutus: Toteutus)(implicit authenticated: Authenticated): Toteutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, t) <- checkAndMaybeClearTempImage(toteutus)
+        (teema, t) <- checkAndMaybeClearTeemakuva(toteutus)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getPutActions(t)
-        t          <- maybeCopyThemeImage(teema, t)
+        t          <- maybeCopyTeemakuva(teema, t)
         t          <- teema.map(_ => ToteutusDAO.updateJustToteutus(t)).getOrElse(DBIO.successful(t))
         _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(t))
@@ -93,7 +93,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
-        (teema, t) <- checkAndMaybeCopyTempImage(toteutus)
+        (teema, t) <- checkAndMaybeCopyTeemakuva(toteutus)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getUpdateActions(t)

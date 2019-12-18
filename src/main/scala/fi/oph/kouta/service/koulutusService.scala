@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
 
 class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
-  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
+  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus] {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -95,9 +95,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, k) <- checkAndMaybeClearTempImage(koulutus)
+        (teema, k) <- checkAndMaybeClearTeemakuva(koulutus)
         k          <- KoulutusDAO.getPutActions(k)
-        k          <- maybeCopyThemeImage(teema, k)
+        k          <- maybeCopyTeemakuva(teema, k)
         k          <- teema.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
         _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(k))
@@ -109,7 +109,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
-        (teema, k) <- checkAndMaybeCopyTempImage(koulutus)
+        (teema, k) <- checkAndMaybeCopyTeemakuva(koulutus)
         k          <- KoulutusDAO.getUpdateActions(k)
         _          <- maybeDeleteTempImage(teema)
         _          <- index(k)

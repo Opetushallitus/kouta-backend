@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Service, AuditLog)
 
 class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
-  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with TeemakuvaService[OrganisaatioOid, Oppilaitos, OppilaitosMetadata] {
+  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with TeemakuvaService[OrganisaatioOid, Oppilaitos] {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
 
@@ -51,9 +51,9 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
   private def doPut(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): Oppilaitos =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, o) <- checkAndMaybeClearTempImage(oppilaitos)
+        (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitos)
         o          <- OppilaitosDAO.getPutActions(o)
-        o          <- maybeCopyThemeImage(teema, o)
+        o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
         _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(o))
@@ -65,7 +65,7 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
-        (teema, o) <- checkAndMaybeCopyTempImage(oppilaitos)
+        (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
         o          <- OppilaitosDAO.getUpdateActions(o)
         _          <- maybeDeleteTempImage(teema)
         _          <- index(o)
@@ -82,7 +82,7 @@ object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionS
 class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
   extends ValidatingService[OppilaitoksenOsa]
     with RoleEntityAuthorizationService
-    with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa, OppilaitoksenOsaMetadata] {
+    with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa] {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
 
@@ -105,9 +105,9 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- OppilaitoksenOsaDAO.oppilaitosExists(oppilaitoksenOsa)
-        (teema, o) <- checkAndMaybeClearTempImage(oppilaitoksenOsa)
+        (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitoksenOsa)
         o          <- OppilaitoksenOsaDAO.getPutActions(o)
-        o          <- maybeCopyThemeImage(teema, o)
+        o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
         _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(o))
@@ -119,7 +119,7 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
-        (teema, o) <- checkAndMaybeCopyTempImage(oppilaitoksenOsa)
+        (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
         o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
         _          <- maybeDeleteTempImage(teema)
         _          <- index(o)

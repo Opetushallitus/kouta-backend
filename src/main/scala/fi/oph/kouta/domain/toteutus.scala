@@ -210,8 +210,9 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
+                    teemakuva: Option[String] = None,
                     modified: Option[LocalDateTime])
-  extends PerustiedotWithOid[ToteutusOid, Toteutus] with HasTeemakuvaMetadata[Toteutus, ToteutusMetadata] {
+  extends PerustiedotWithOid[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
 
   override def validate(): IsValid = and(
      super.validate(),
@@ -223,7 +224,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   def withOid(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))
 
-  override def withMetadata(metadata: ToteutusMetadata): Toteutus = this.copy(metadata = Some(metadata))
+  override def withTeemakuva(teemakuva: Option[String]): Toteutus = this.copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): Toteutus = copy(modified = Some(modified))
 }
