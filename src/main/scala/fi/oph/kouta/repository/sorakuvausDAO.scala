@@ -55,7 +55,11 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
   }
 
   override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem] =
-    KoutaDatabase.runBlocking(selectAllowedByOrganisaatiot(organisaatioOids, koulutustyypit))
+    (organisaatioOids, koulutustyypit) match {
+      case (Nil, _) => Seq()
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids))
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit))
+    }
 }
 
 sealed trait SorakuvausModificationSQL extends SQLHelpers {
@@ -131,7 +135,13 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
          )"""
   }
 
-  def selectAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
+    sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
+          from sorakuvaukset
+          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${ophOid})""".as[SorakuvausListItem]
+  }
+
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
           where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${ophOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))

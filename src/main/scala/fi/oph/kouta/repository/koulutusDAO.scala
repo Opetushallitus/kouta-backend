@@ -19,9 +19,8 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def update(koulutus: Koulutus, notModifiedSince: Instant): Boolean
 
-  def listByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
-  def listJulkaistut(): Seq[KoulutusListItem]
 
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
 }
@@ -84,14 +83,12 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       }
     }.get
 
-  override def listByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem] =
-    koulutustyypit match {
-      case Nil => Seq()
-      case _   =>   listWithTarjoajat { selectByOrganisaatioOidsOrJulkinen(organisaatioOids, koulutustyypit) }
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem] =
+    (organisaatioOids, koulutustyypit) match {
+      case (Nil, _) => Seq()
+      case (_, Nil) => listWithTarjoajat { selectByCreatorAndNotOph(organisaatioOids) } //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case _        => listWithTarjoajat { selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit) }
     }
-
-  override def listJulkaistut(): Seq[KoulutusListItem] =
-    listWithTarjoajat(selectJulkaistut())
 
   override def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem] =
     listWithTarjoajat(selectByHakuOid(hakuOid))
@@ -180,8 +177,19 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def findJulkaistutKoulutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select distinct k.oid, k.johtaa_tutkintoon, k.tyyppi, k.koulutus_koodi_uri, k.tila,
-                          k.nimi, k.metadata, k.julkinen, k.muokkaaja, k.organisaatio_oid, k.kielivalinta, lower(k.system_time)
+                          k.nimi, k.metadata, k.julkinen, k.muokkaaja, k.organisaatio_oid, k.kielivalinta, m.modified
           from koulutukset k
+          inner join (
+            select k.oid oid, greatest(
+              max(lower(k.system_time)),
+              max(lower(ta.system_time)),
+              max(upper(kh.system_time)),
+              max(upper(tah.system_time))) modified
+            from koulutukset k
+            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
+            left join koulutukset_history kh on k.oid = kh.oid
+            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+            group by k.oid) m on k.oid = m.oid
           inner join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
           where k.tila = 'julkaistu'::julkaisutila
           and kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})"""
@@ -231,8 +239,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def deleteTarjoajat(oid: Option[KoulutusOid]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
-  def selectByOrganisaatioOidsOrJulkinen(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
-    sql"""select k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
+  val selectKoulutusListSql =
+    s"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
           from koulutukset k
           inner join (
             select k.oid oid, greatest(
@@ -244,31 +252,23 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
             left join koulutukset_history kh on k.oid = kh.oid
             left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
-            group by k.oid) m on k.oid = m.oid
+            group by k.oid) m on k.oid = m.oid"""
+
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
+    sql"""#$selectKoulutusListSql
+          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${ophOid})
+      """.as[KoulutusListItem]
+  }
+
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
+    sql"""#$selectKoulutusListSql
           where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${ophOid} or tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
       """.as[KoulutusListItem]
   }
 
-  def selectJulkaistut() = {
-    sql"""select oid, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from koulutukset
-          where tila = 'julkaistu'::julkaisutila""".as[KoulutusListItem]
-  }
-
   def selectByHakuOid(hakuOid: HakuOid) = {
-    sql"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
-          from koulutukset k
-          inner join (select k.oid oid, greatest(
-            max(lower(k.system_time)),
-            max(lower(ta.system_time)),
-            max(upper(kh.system_time)),
-            max(upper(tah.system_time))) modified
-            from koulutukset k
-            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-            left join koulutukset_history kh on k.oid = kh.oid
-            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
-            group by k.oid) m on k.oid = m.oid
+    sql"""#$selectKoulutusListSql
           inner join toteutukset t on k.oid = t.koulutus_oid
           inner join hakukohteet h on t.oid = h.toteutus_oid
           where h.haku_oid = ${hakuOid.toString}""".as[KoulutusListItem]

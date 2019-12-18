@@ -60,10 +60,18 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
   }
 
   override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem] =
-    KoutaDatabase.runBlocking(selectAllowedByOrganisaatiot(organisaatioOids, koulutustyypit))
+    (organisaatioOids, koulutustyypit) match {
+      case (Nil, _) => Seq()
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit))
+    }
 
   override def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): Seq[ValintaperusteListItem] =
-    KoutaDatabase.runBlocking(selectAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids, koulutustyypit, hakuOid))
+    (organisaatioOids, koulutustyypit) match {
+      case (Nil, _) => Seq()
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids, hakuOid)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids, koulutustyypit, hakuOid))
+    }
 
   override def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem] =
     KoutaDatabase.runBlocking(selectBySorakuvausId(sorakuvausId))
@@ -214,8 +222,8 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     sqlu"""delete from valintaperusteiden_valintakokeet where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid"""
   }
 
-  def selectAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
-    sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, m.modified
+  val selectValintaperusteListSql =
+    s"""select distinct v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, m.modified
           from valintaperusteet v
           inner join (
             select vp.id id, greatest(
@@ -227,27 +235,32 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
             left join valintaperusteet_history vph on vp.id = vph.id
             left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
             left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
-            group by vp.id) m on v.id = m.id
+            group by vp.id) m on v.id = m.id"""
+
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
+    sql"""#$selectValintaperusteListSql
+          where (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${ophOid})
+      """.as[ValintaperusteListItem]
+  }
+
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
+    sql"""#$selectValintaperusteListSql
           where ( v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${ophOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
       """.as[ValintaperusteListItem]
   }
 
-  def selectAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid) = {
-    sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, m.modified
-          from valintaperusteet v
+  def selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid) = {
+    sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
-          inner join (
-            select vp.id id, greatest(
-              max(lower(vp.system_time)),
-              max(lower(vk.system_time)),
-              max(upper(vph.system_time)),
-              max(upper(vkh.system_time))) modified
-            from valintaperusteet vp
-            left join valintaperusteet_history vph on vp.id = vph.id
-            left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
-            left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
-            group by vp.id) m on v.id = m.id
+          where h.oid = $hakuOid
+          and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${ophOid})
+      """.as[ValintaperusteListItem]
+  }
+
+  def selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid) = {
+    sql"""#$selectValintaperusteListSql
+          inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
           and ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${ophOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
@@ -255,19 +268,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   def selectBySorakuvausId(sorakuvausId: UUID) = {
-    sql"""select v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, m.modified
-          from valintaperusteet v
-          inner join (
-            select vp.id id, greatest(
-              max(lower(vp.system_time)),
-              max(lower(vk.system_time)),
-              max(upper(vph.system_time)),
-              max(upper(vkh.system_time))) modified
-            from valintaperusteet vp
-            left join valintaperusteet_history vph on vp.id = vph.id
-            left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
-            left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
-            group by vp.id) m on v.id = m.id
+    sql"""#$selectValintaperusteListSql
           where v.sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[ValintaperusteListItem]
   }
 }

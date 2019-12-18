@@ -39,7 +39,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids, koulutustyypit)
+      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
     }
   }
 
