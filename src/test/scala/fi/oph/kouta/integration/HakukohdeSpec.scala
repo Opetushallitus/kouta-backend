@@ -19,7 +19,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
-    toteutusOid = put(toteutus(koulutusOid))
+    toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid)))
     hakuOid = put(haku)
     valintaperusteId = put(valintaperuste)
   }
@@ -53,6 +53,11 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   it should "allow a user of the hakukohde organization to read the hakukohde" in {
     val oid = put(uusiHakukohde)
     get(oid, crudSessions(hakukohde.organisaatioOid), tallennettuHakukohde(oid))
+  }
+
+  it should "allow a user of toteutuksen tarjoaja organization to read the hakukohde" in {
+    val oid = put(uusiHakukohde)
+    get(oid, crudSessions(AmmOid), tallennettuHakukohde(oid))
   }
 
   it should "deny a user without access to the hakukohde organization" in {
@@ -176,6 +181,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, false, crudSessions(hakukohde.organisaatioOid))
+  }
+
+  it should "allow a user of toteutuksen tarjoaja organization to update the hakukohde" in {
+    val oid = put(uusiHakukohde)
+    val thisHakukohde = tallennettuHakukohde(oid)
+    val lastModified = get(oid, thisHakukohde)
+    update(thisHakukohde, lastModified, false, crudSessions(AmmOid))
   }
 
   it should "deny a user without access to the hakukohde organization" in {

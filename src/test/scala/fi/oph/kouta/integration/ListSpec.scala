@@ -100,7 +100,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Toteutus list" should "list all toteutukset for selected organization" in {
-    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t2, t3))
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t1, t2, t3))
   }
   it should "list all toteutukset for selected organization 2" in {
     list(ToteutusPath, Map("organisaatioOid" -> LonelyOid.s), List(t4))
@@ -115,22 +115,22 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(ToteutusPath, Map[String,String](), 401, Map.empty)
   }
   it should "allow access to user of the selected organization" in {
-    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t2, t3), crudSessions(ChildOid))
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t1, t2, t3), crudSessions(ChildOid))
   }
   it should "deny access without access to the given organization" in {
     list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access for a user of an ancestor organization" in {
-    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t2, t3), crudSessions(ParentOid))
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t1, t2, t3), crudSessions(ParentOid))
   }
-  it should "deny access for a user of a descendant organization" in {
-    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(GrandChildOid))
+  it should "allow access for a user of a descendant organization" in {
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t1, t2, t3), crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
     list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
   it should "allow access to any toteutus with the indexer role" in {
-    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t2, t3), indexerSession)
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t1, t2, t3), indexerSession)
   }
 
   "Haku list" should "list all haut for authorized organizations" in {
@@ -269,8 +269,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid.s), List(t1, t2, t3))
   }
-  it should "not list toteutukset for parent organizations" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> GrandChildOid.s), List(t3))
+  it should "list toteutukset for parent organizations" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> GrandChildOid.s), List(t1, t2, t3))
   }
   it should "return 401 if no session is found" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid.s), 401, Map.empty)
@@ -285,10 +285,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k1.organisaatioOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access to a user of an ancestor organization" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k3.organisaatioOid.s), List(t3), crudSessions(ParentOid))
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k3.organisaatioOid.s), List(t1, t2, t3), crudSessions(ParentOid))
   }
-  it should "deny access to a user of a descendant organization" in {
-    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k1.organisaatioOid.s), 403, crudSessions(GrandChildOid))
+  it should "allow access to a user of a descendant organization" in {
+    list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> k1.organisaatioOid.s), List(t1, t2, t3), crudSessions(GrandChildOid))
   }
   it should "deny access without the toteutus read role" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ChildOid.s), 403, addTestSession(Role.Koulutus.Read, OphOid))

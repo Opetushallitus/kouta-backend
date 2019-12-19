@@ -19,7 +19,7 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   def get(oid: HakuOid)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
-    authorizeGet(HakuDAO.get(oid), AuthorizationRules(roleEntity.readRoles, true))
+    authorizeGet(HakuDAO.get(oid), readRules)
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
     authorizePut(haku) {
@@ -33,14 +33,14 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, readRules)(HakuDAO.listByOrganisaatioOids)
+    withAuthorizedOrganizationOids(organisaatioOid, readRules)(HakuDAO.listByAllowedOrganisaatiot)
 
   def listHakukohteet(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid))
 
   def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      HakukohdeDAO.listByHakuOidAndOrganisaatioOids(hakuOid, _)
+      HakukohdeDAO.listByHakuOidAndAllowedOrganisaatiot(hakuOid, _)
     }
 
   def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =

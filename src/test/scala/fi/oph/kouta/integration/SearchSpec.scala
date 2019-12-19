@@ -1,14 +1,12 @@
 package fi.oph.kouta.integration
 
-import java.util.UUID
-
 import fi.oph.kouta.KoutaIndexMock
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
 import org.mockserver.model
-import org.scalatest.{BeforeAndAfterEach, Ignore}
+import org.scalatest.BeforeAndAfterEach
 
 class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with SearchFixture with KoutaIndexMock with BeforeAndAfterEach  {
 
@@ -82,7 +80,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
       debugJson[KoulutusSearchResult](body)
       val r = read[KoulutusSearchResult](body).result
       r.map(_.oid.s) should be (List(koid6, koid5, koid4, koid2, koid1))
-      r.map(_.toteutukset) should be (List(0, 1, 0, 0, 1))
+      r.map(_.toteutukset) should be (List(0, 1, 0, 1, 1))
     }
   }
 
@@ -130,14 +128,14 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   "Search toteutukset" should "search allowed toteutukset and allowed hakukohde counts 1" in {
-    addMock(mockToteutusResponse(mockParams(List(toid1, toid5)), List(toid1, toid5)))
+    addMock(mockToteutusResponse(mockParams(List(toid1, toid2, toid5)), List(toid1, toid2, toid5)))
 
     get(s"$SearchPath/toteutukset", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
       debugJson[ToteutusSearchResult](body)
       val r = read[ToteutusSearchResult](body).result
-      r.map(_.oid.s) should be (List(toid5, toid1))
-      r.map(_.hakukohteet) should be (List(1, 1))
+      r.map(_.oid.s) should be (List(toid5, toid2, toid1))
+      r.map(_.hakukohteet) should be (List(1, 0, 1))
     }
   }
 
@@ -154,7 +152,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return empty result if there are allowed toteutukset but nothing match kouta index search" in {
-    addMock(mockToteutusResponse(mockParams(List(toid1, toid5)), List()))
+    addMock(mockToteutusResponse(mockParams(List(toid1, toid2, toid5)), List()))
 
     get(s"$SearchPath/toteutukset", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)

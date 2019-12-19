@@ -113,7 +113,8 @@ trait AuthorizationService extends Logging {
   case class AuthorizationRules(requiredRoles: Seq[Role],
                                 withParents: Boolean = false,
                                 withTarjoajat: Boolean = false,
-                                alternativeRules: Seq[AuthorizationRule] = Seq())
+                                alternativeRules: Seq[AuthorizationRule] = Seq(),
+                                alternativeOrganisaatioOids: Seq[OrganisaatioOid] = Seq())
 
   def isAuthorized(organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat):  Boolean =
     oidsAndOppilaitostyypit._1.exists(x => organisaatioOids.exists(_ == x))
@@ -123,10 +124,10 @@ trait AuthorizationService extends Logging {
                                   (f: => R)
                                   (implicit authenticated: Authenticated): R = {
 
-    val AuthorizationRules(requiredRoles, withParents, withTarjoajat, alternativeRules) = authorizationRules
+    val AuthorizationRules(requiredRoles, withParents, withTarjoajat, alternativeRules, alternativeOrganisaatioOids) = authorizationRules
     val organisaatioOids = authorizable match {
-      case a if withTarjoajat => a.getTarjoajat() :+ a.organisaatioOid
-      case a                  => Seq(a.organisaatioOid)
+      case a if withTarjoajat => ( a.getTarjoajat() :+ a.organisaatioOid ) ++ alternativeOrganisaatioOids
+      case a                  => Seq(a.organisaatioOid) ++ alternativeOrganisaatioOids
     }
 
     def authorized(oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView): Boolean = alternativeRules match {
