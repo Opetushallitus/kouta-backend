@@ -242,7 +242,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def selectByToteutusOid(toteutusOid: ToteutusOid) = {
     sql"""#$selectHakuListSql
-          inner join hakukohteet on hakukohteet.haku_oid = haut.oid
+          inner join hakukohteet on hakukohteet.haku_oid = ha.oid
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
           where toteutukset.oid = $toteutusOid""".as[HakuListItem]
   }
