@@ -16,10 +16,10 @@ object HakuService extends HakuService(SqsInTransactionService)
 abstract class HakuService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Haku] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Haku
-  protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   def get(oid: HakuOid)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
-    authorizeGet(HakuDAO.get(oid), AutorizationRules(roleEntity.readRoles, true))
+    authorizeGet(HakuDAO.get(oid), AuthorizationRules(roleEntity.readRoles, true))
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
     authorizePut(haku) {

@@ -17,13 +17,10 @@ object ValintaperusteService extends ValintaperusteService(SqsInTransactionServi
 abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
-  protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
-    ValintaperusteDAO.get(id).map {
-      case (v, t) => ifAuthorizedOrganizations(Seq(v.organisaatioOid),
-                                               AutorizationRules(roleEntity.readRoles, true, Seq(getAuthorizationRuleForMaybeJulkinen(v))))((v,t))
-    }
+    authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, withParents = true, withTarjoajat = false, Seq(authorizationRuleForJulkinen)))
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {

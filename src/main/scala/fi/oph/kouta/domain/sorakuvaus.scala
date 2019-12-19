@@ -126,6 +126,10 @@ case class Sorakuvaus(id: Option[UUID] = None,
   override def validate(): IsValid = and(
     super.validate()
   )
+
+  override def isJulkinen(): Boolean = julkinen
+
+  override def getKoulutustyyppi(): Option[Koulutustyyppi] = Some(koulutustyyppi)
 }
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map())

@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.KoutaIndexClient
-import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.{toteutus, _}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
@@ -21,7 +21,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
   def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] =
-    authorizeGet(ToteutusDAO.get(oid))
+    authorizeGet(ToteutusDAO.get(oid), AuthorizationRules(roleEntity.readRoles, withParents = true, withTarjoajat = true))
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) {
@@ -29,7 +29,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(ToteutusDAO.get(toteutus.oid.get)) {
+    authorizeUpdate(ToteutusDAO.get(toteutus.oid.get), AuthorizationRules(roleEntity.updateRoles, withParents = true, withTarjoajat = true)) {
       withValidation(toteutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
 

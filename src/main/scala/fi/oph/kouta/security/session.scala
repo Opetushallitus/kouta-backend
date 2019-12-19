@@ -1,11 +1,16 @@
 package fi.oph.kouta.security
 
+import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 import scala.util.matching.Regex
 
 trait Authorizable {
   val organisaatioOid: OrganisaatioOid
+
+  def getTarjoajat(): Seq[OrganisaatioOid] = Seq()
+  def isJulkinen(): Boolean = false
+  def getKoulutustyyppi(): Option[Koulutustyyppi] = None
 }
 
 sealed abstract class Role(val name: String) extends Product with Serializable {

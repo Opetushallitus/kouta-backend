@@ -172,6 +172,12 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
             () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
   }
 
+  override def isJulkinen(): Boolean = julkinen
+
+  override def getKoulutustyyppi(): Option[Koulutustyyppi] = Some(koulutustyyppi)
+
+  override def getTarjoajat(): Seq[OrganisaatioOid] = tarjoajat
+
   override def primaryId: Option[KoulutusOid] = oid
 
   override def withPrimaryID(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))

@@ -11,23 +11,18 @@ import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 
-import scala.util.{Failure, Success, Try}
-
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service)
 
 class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
   extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
-  protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
   def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
-    KoulutusDAO.get(oid).map {
-      case (k, t) => ifAuthorizedOrganizations(k.tarjoajat :+ k.organisaatioOid,
-                                               AutorizationRules(roleEntity.readRoles, true, Seq(getAuthorizationRuleForMaybeJulkinen(k))))((k,t))
-    }
+    authorizeGet(KoulutusDAO.get(oid), AuthorizationRules(roleEntity.readRoles, withParents = true, withTarjoajat = true, Seq(authorizationRuleForJulkinen)))
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
@@ -36,12 +31,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    KoulutusDAO.get(koulutus.oid.get) match {
-      case None         => throw new NoSuchElementException
-      case Some((k, _)) => ifAuthorizedOrganizations(Seq(k.organisaatioOid),
-                                                     AutorizationRules(roleEntity.updateRoles, true, Seq(getAuthorizationRuleForMaybeJulkinen(k)))) {
-        withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
-      }
+    authorizeUpdate(KoulutusDAO.get(koulutus.oid.get), AuthorizationRules(roleEntity.updateRoles, withParents = true, withTarjoajat = true, Seq(authorizationRuleForJulkinen))) {
+      withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {

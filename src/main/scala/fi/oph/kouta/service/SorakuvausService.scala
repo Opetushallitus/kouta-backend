@@ -16,13 +16,10 @@ object SorakuvausService extends SorakuvausService(SqsInTransactionService)
 abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
-  protected val readRules: AutorizationRules = AutorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
-    SorakuvausDAO.get(id).map {
-      case (v, t) => ifAuthorizedOrganizations(Seq(v.organisaatioOid),
-                                               AutorizationRules(roleEntity.readRoles, true, Seq(getAuthorizationRuleForMaybeJulkinen(v))))((v,t))
-    }
+    authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, withParents = true, withTarjoajat = false, Seq(authorizationRuleForJulkinen)))
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus) {

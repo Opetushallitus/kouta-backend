@@ -206,6 +206,10 @@ case class Valintaperuste(id: Option[UUID] = None,
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
     ))
   )
+
+  override def isJulkinen(): Boolean = julkinen
+
+  override def getKoulutustyyppi(): Option[Koulutustyyppi] = Some(koulutustyyppi)
 }
 
 case class ValintaperusteListItem(id: UUID,
