@@ -3,13 +3,15 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
-import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.{koulutus, _}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+
+import scala.util.{Failure, Success, Try}
 
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service)
 
@@ -32,9 +34,14 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       withValidation(koulutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
     }
 
+  //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(KoulutusDAO.get(koulutus.oid.get)) {
-      withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
+    KoulutusDAO.get(koulutus.oid.get) match {
+      case None         => throw new NoSuchElementException
+      case Some((k, _)) => ifAuthorizedOrganizations(Seq(k.organisaatioOid),
+                                                     AutorizationRules(roleEntity.updateRoles, true, Seq(getAuthorizationRuleForMaybeJulkinen(k)))) {
+        withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
+      }
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {

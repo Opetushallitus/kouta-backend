@@ -92,6 +92,12 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
         f
       }
     }
+
+  def isAuthorizationException(exception: Throwable) = exception match {
+    case t:OrganizationAuthorizationFailedException => true
+    case t:RoleAuthorizationFailedException => true
+    case _ => false
+  }
 }
 
 case class AutorizationRules(requiredRoles: Seq[Role],

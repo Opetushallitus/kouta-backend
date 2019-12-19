@@ -202,7 +202,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "deny access if the user is missing rights to the koulutus organization" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, crudSessions(EvilChildOid), 403)
+    update(koulutus(oid), lastModified, crudSessions(LonelyOid), 403)
   }
 
   it should "allow access if the user has rights to an ancestor organization" in {
@@ -211,10 +211,26 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
-  it should "deny access if the user only has rights to a descent organization" in {
+  it should "allow access if the user only has rights to a descent organization" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, crudSessions(GrandChildOid), 403)
+    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(GrandChildOid))
+  }
+
+  it should "allow the user of proper koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
+    val oid = put(ophKoulutus, ophSession)
+    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)))
+    val lastModified = get(oid, koulutusWithOid)
+    val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(AmmOid))
+    update(koulutusWithNewTarjoaja, lastModified, expectUpdate = true, crudSessions(AmmOid))
+  }
+
+  it should "deny the user of wrong koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
+    val oid = put(ophKoulutus, ophSession)
+    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)))
+    val lastModified = get(oid, koulutusWithOid)
+    val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(YoOid))
+    update(koulutusWithNewTarjoaja, lastModified, crudSessions(YoOid), 403)
   }
 
   it should "deny access if the user doesn't have update rights" in {
