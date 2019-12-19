@@ -32,8 +32,9 @@ abstract class ImageType(val contentType: String, val extension: String) extends
 object ImageType {
   case object Jpeg extends ImageType("image/jpeg", "jpg")
   case object Png extends ImageType("image/png", "png")
+  case object Svg extends ImageType("image/svg+xml", "svg")
 
-  val allowedTypes = Set(Jpeg, Png)
+  val allowedTypes = Set(Jpeg, Png, Svg)
   val typeMap: Map[String, ImageType] = allowedTypes.map(t => t.contentType -> t).toMap
 
   def get(contentType: String): Option[ImageType] = typeMap.get(contentType)

@@ -65,7 +65,7 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
        |            schema:
        |              type: string
        |              format: binary
-       |          'image/svg':
+       |          'image/svg+xml':
        |            schema:
        |              type: string
        |              format: binary
@@ -79,13 +79,43 @@ class UploadServlet(s3Service: S3Service) extends KoutaServlet {
   }
 
   private def storeTempImage(sizeSpecs: ImageSizeSpecs) = {
-    val length = checkLength(sizeSpecs.maxSize)
-    val contentType = checkContentType()
+    val length    = checkLength(sizeSpecs.maxSize)
+    val imageType = checkContentType()
 
     val imageData = readImageDataFromStream(request.inputStream, length)
-    checkImageFormatAndSize(contentType, imageData, sizeSpecs)
 
-    Ok("url" -> s3Service.storeTempImage(contentType, imageData))
+    imageType match {
+      case ImageType.Svg =>
+        checkSvg(imageData)
+      case _ =>
+        checkImageFormatAndSize(imageType, imageData, sizeSpecs.minWidth, sizeSpecs.minHeight)
+    }
+
+    Ok("url" -> s3Service.storeTempImage(imageType, imageData))
+  }
+
+  private def checkSvg(imageData: Array[Byte]): Unit = {
+    Try[Boolean] {
+      val xml = DtdIgnoringXML.load(new ByteArrayInputStream(imageData))
+      xml.label == "svg"
+    }.toOption.filter(identity).getOrElse {
+      throw MediaNotSupportedException(s"Tiedostoa ei voitu lukea image/svg+xml -kuvana")
+    }
+  }
+
+  import javax.xml.parsers.SAXParser
+
+  import scala.xml.Elem
+  import scala.xml.factory.XMLLoader
+
+  object DtdIgnoringXML extends XMLLoader[Elem] {
+    override def parser: SAXParser = {
+      val f = javax.xml.parsers.SAXParserFactory.newInstance()
+      f.setNamespaceAware(false)
+      f.setValidating(false)
+      f.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+      f.newSAXParser()
+    }
   }
 
   private def checkLength(maxSize: Int): Int = request.contentLength match {

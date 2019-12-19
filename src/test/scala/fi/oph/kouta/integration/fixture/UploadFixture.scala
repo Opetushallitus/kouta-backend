@@ -40,6 +40,8 @@ trait UploadFixture extends BeforeAndAfterEach {
   lazy val tooLargeTeemakuva: Array[Byte] = getResourceImage("too-large-header.png")
   lazy val tooSmallHeader: Array[Byte] = getResourceImage("too-small-header.png")
   lazy val tooSmallLogo: Array[Byte] = getResourceImage("too-small-logo.png")
+  lazy val correctSvgLogo: Array[Byte] = getResourceImage("correct-logo.svg")
+  lazy val randomXml: Array[Byte] = getResourceImage("random-xml.svg")
 
   def saveLocalPng(key: String): Unit = {
     val metadata = new ObjectMetadata()

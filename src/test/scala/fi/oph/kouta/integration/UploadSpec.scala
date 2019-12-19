@@ -178,6 +178,30 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     }
   }
 
+  it should "also accept svg images" in {
+    post(uri = LogoUploadPath, body = correctSvgLogo, headers = Map("Content-Type" -> "image/svg+xml")) {
+      status should equal(200)
+      read[ImageUrl](body).url match {
+        case s3Service.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+          content should not be empty
+          val Content(localData, metadata) = content.get
+          localData should equal(correctSvgLogo)
+          metadata.getCacheControl should equal("max-age=86400")
+          metadata.getContentType should equal("image/svg+xml")
+        case url => fail(s"$url was not an url to the public bucket")
+      }
+    }
+  }
+
+  it should "reject random XML sent as an SVG image" in {
+    post(uri = LogoUploadPath, body = randomXml, headers = Map("Content-Type" -> "image/svg+xml")) {
+      status should equal(415)
+      body should include("image/svg+xml")
+      body should include("ei voitu lukea")
+    }
+  }
+
   it should "reject nonsense sent as an image" in {
     val nonsense = Array.fill(20000)((scala.util.Random.nextInt(256) - 128).toByte)
     post(uri = LogoUploadPath, body = nonsense, headers = Map("Content-Type" -> "image/jpeg")) {
@@ -199,6 +223,14 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     post(uri = LogoUploadPath, body = correctLogo, headers = Map("Content-Type" -> "image/jpeg")) {
       status should equal(415)
       body should include("image/jpeg")
+      body should include("ei voitu lukea")
+    }
+  }
+
+  it should "reject a png image sent as an SVG image" in {
+    post(uri = LogoUploadPath, body = correctLogo, headers = Map("Content-Type" -> "image/svg+xml")) {
+      status should equal(415)
+      body should include("image/svg+xml")
       body should include("ei voitu lukea")
     }
   }
