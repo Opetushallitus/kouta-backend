@@ -5,8 +5,9 @@ import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.images.{LogoService, S3Service, TeemakuvaService}
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
-import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated

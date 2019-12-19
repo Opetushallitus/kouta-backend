@@ -5,19 +5,14 @@ import java.time.Instant
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.Julkaistu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuva, Julkaistu, Oppilaitos}
-import fi.oph.kouta.indexing.S3Service
-import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
-import slick.dbio.DBIO
 
 import scala.collection.IterableView
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Try
 
 trait ValidatingService[E <: Validatable] {
 
@@ -33,101 +28,6 @@ trait ValidatingService[E <: Validatable] {
       case errors => throw KoutaValidationException(errors)
     }
   }
-}
-
-trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with HasModified[T]] extends Logging {
-  val s3Service: S3Service
-
-  def teemakuvaPrefix: String
-
-  def checkTeemakuva(entity: T): DBIO[Option[String]] = checkTempImage("Teemakuva", entity.teemakuva)
-
-  def checkTempImage(field: String, image: Option[String]): DBIO[Option[String]] =
-    Try {
-      image match {
-        case Some(s3Service.tempUrl(filename)) =>
-          Some(filename)
-        case Some(s3Service.publicUrl(_)) =>
-          None
-        case None =>
-          None
-        case Some(other) =>
-          logger.warn(s"$field outside the bucket: $other")
-          None
-      }
-    }.toDBIO
-
-  def maybeClearTeemakuva(teemakuva: Option[String], entity: T): DBIO[T] =
-    Try {
-      teemakuva
-        .map(_ => entity.withTeemakuva(None))
-        .getOrElse(entity)
-    }.toDBIO
-
-  def checkAndMaybeClearTeemakuva(entity: T): DBIO[(Option[String], T)] =
-    for {
-      tempImage <- checkTeemakuva(entity)
-      cleared <- maybeClearTeemakuva(tempImage, entity)
-    } yield (tempImage, cleared)
-
-  def copyTempImage(filename: String, prefix: String, entity: T): String = {
-    s3Service.copyImage(s3Service.getTempKey(filename), s"$prefix/${entity.primaryId.get}/$filename")
-  }
-
-  def maybeCopyTeemakuva(teemakuva: Option[String], entity: T): DBIO[T] =
-    Try {
-      teemakuva
-        .map(filename => copyTempImage(filename, teemakuvaPrefix, entity))
-        .map(url => entity.withTeemakuva(Some(url)))
-        .getOrElse(entity)
-    }.toDBIO
-
-  def checkAndMaybeCopyTeemakuva(entity: T): DBIO[(Option[String], T)] =
-    for {
-      teemakuva <- checkTeemakuva(entity)
-      e         <- maybeCopyTeemakuva(teemakuva, entity)
-    } yield (teemakuva, e)
-
-  def maybeDeleteTempImage(tempImage: Option[String]): Try[_] =
-    Try {
-      tempImage.foreach(filename => s3Service.deleteImage(s3Service.getTempKey(filename)))
-    }.recover {
-      case e => logger.error(s"Exception while deleting $tempImage", e)
-    }
-}
-
-trait LogoService extends TeemakuvaService[OrganisaatioOid, Oppilaitos] {
-
-  def logoPrefix: String
-
-  def checkLogo(oppilaitos: Oppilaitos): DBIO[Option[String]] = checkTempImage("Logo", oppilaitos.logo)
-
-  def maybeClearLogo(logo: Option[String], oppilaitos: Oppilaitos): DBIO[Oppilaitos] =
-    Try {
-      logo
-        .map(_ => oppilaitos.copy(logo = None))
-        .getOrElse(oppilaitos)
-    }.toDBIO
-
-  def checkAndMaybeClearLogo(oppilaitos: Oppilaitos): DBIO[(Option[String], Oppilaitos)] =
-    for {
-      tempImage <- checkLogo(oppilaitos)
-      cleared <- maybeClearLogo(tempImage, oppilaitos)
-    } yield (tempImage, cleared)
-
-  def maybeCopyLogo(logo: Option[String], oppilaitos: Oppilaitos): DBIO[Oppilaitos] =
-    Try {
-      logo
-        .map(filename => copyTempImage(filename, logoPrefix, oppilaitos))
-        .map(url => oppilaitos.copy(logo = Some(url)))
-        .getOrElse(oppilaitos)
-    }.toDBIO
-
-  def checkAndMaybeCopyLogo(oppilaitos: Oppilaitos): DBIO[(Option[String], Oppilaitos)] =
-    for {
-      logo <- checkLogo(oppilaitos)
-      o <- maybeCopyLogo(logo, oppilaitos)
-    } yield (logo, o)
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException

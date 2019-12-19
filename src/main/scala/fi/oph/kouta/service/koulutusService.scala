@@ -6,8 +6,9 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
+import fi.oph.kouta.images.{S3Service, TeemakuvaService}
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
-import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}

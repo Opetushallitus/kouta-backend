@@ -5,7 +5,10 @@ import fi.vm.sade.auditlog.Operation
 abstract class AuditOperation(val name: String) extends Operation
 
 object AuditOperation {
-  case object Login extends AuditOperation("kirjautuminen")
+  case object Login    extends AuditOperation("kirjautuminen")
+  case object S3Upload extends AuditOperation("s3_upload")
+  case object S3Copy   extends AuditOperation("s3_copy")
+  case object S3Delete extends AuditOperation("s3_delete")
 }
 
 trait AuditResourceOperations {

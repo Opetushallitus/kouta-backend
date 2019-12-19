@@ -4,6 +4,7 @@ import java.net.InetAddress
 import java.util.UUID
 
 import fi.oph.kouta.domain.HasPrimaryId
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{CasSession, ServiceTicket, Session}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog._
@@ -13,8 +14,6 @@ import org.slf4j.LoggerFactory
 import slick.dbio.DBIO
 
 import scala.util.Try
-
-import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 
 object AuditLogger extends Logger {
   private val logger = LoggerFactory.getLogger(classOf[Audit])
@@ -59,6 +58,24 @@ class AuditLog(val logger: Logger) extends GsonSupport {
         audit.log(getUser, resource.Update, target.build(), changes)
       }
     }.toDBIO
+
+  def logS3Upload(url: String)(implicit authenticated: Authenticated): Unit = {
+    val target  = new Target.Builder().setField("url", url).build()
+    val changes = new Changes.Builder().added("url", url).build()
+    audit.log(getUser, AuditOperation.S3Upload, target, changes)
+  }
+
+  def logS3Copy(from: String, to: String)(implicit authenticated: Authenticated): Unit = {
+    val target  = new Target.Builder().setField("url", to).build()
+    val changes = new Changes.Builder().updated("url", from, to).build()
+    audit.log(getUser, AuditOperation.S3Copy, target, changes)
+  }
+
+  def logS3Delete(url: String)(implicit authenticated: Authenticated): Unit = {
+    val target  = new Target.Builder().setField("url", url).build()
+    val changes = new Changes.Builder().removed("url", url).build()
+    audit.log(getUser, AuditOperation.S3Delete, target, changes)
+  }
 
   def logLogin(sessionId: UUID, session: CasSession, ticket: ServiceTicket)(implicit request: HttpServletRequest): (UUID, CasSession) = {
     val target  = new Target.Builder().setField("personOid", session.personOid).build()
