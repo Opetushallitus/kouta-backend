@@ -1,6 +1,6 @@
 package fi.oph.kouta
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 
@@ -102,7 +102,7 @@ object TestData {
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
     ajastettuJulkaisu = Some(inFuture()),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
-    alkamisvuosi = Some("2019"),
+    alkamisvuosi = Some(LocalDate.now().getYear.toString),
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     hakulomaketyyppi = Some(EiSähköistä),
@@ -125,7 +125,7 @@ object TestData {
     tila = Julkaistu,
     nimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
     alkamiskausiKoodiUri = Some("kausi_k#1"),
-    alkamisvuosi = Some("2019"),
+    alkamisvuosi = Some(LocalDate.now().getYear.toString),
     kaytetaanHaunAlkamiskautta = Some(false),
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomakeAtaruId = Some(UUID.randomUUID()),
