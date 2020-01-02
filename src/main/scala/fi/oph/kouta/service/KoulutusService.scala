@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
@@ -10,7 +11,6 @@ import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 

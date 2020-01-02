@@ -1,10 +1,10 @@
 package fi.oph.kouta.service
 
+import fi.oph.kouta.auditlog.{AuditLog, AuditResource}
 import fi.oph.kouta.domain.keyword.{Keyword, KeywordSearch, KeywordType}
 import fi.oph.kouta.repository.KeywordDAO
 import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{AuditLog, Resource}
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 import slick.dbio.DBIO
@@ -27,7 +27,7 @@ class KeywordService(auditLog: AuditLog) extends AuthorizationService {
   private def audit(`type`: KeywordType, keywords: Seq[Keyword], user: User): DBIO[_] = {
     val logActions = keywords.map { keyword =>
       val targets = Seq("kieli" -> keyword.kieli.name, `type`.name -> keyword.arvo)
-      auditLog.logCreate(keyword, Resource(`type`), user, targets)
+      auditLog.logCreate(keyword, AuditResource(`type`), user, targets)
     }
     DBIO.sequence(logActions)
   }

@@ -4,6 +4,7 @@ import java.util.UUID
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
@@ -11,7 +12,6 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.HakuServlet
-import fi.oph.kouta.util.AuditLog
 
 trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
 

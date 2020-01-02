@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 import java.util.UUID
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem, ValintaperusteListItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -10,7 +11,6 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
 import fi.oph.kouta.repository.{SorakuvausDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 

@@ -1,11 +1,11 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{MockAuditLogger, MockSecurityContext}
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.AuthServlet
-import fi.oph.kouta.util.AuditLog
 
 class KayttooikeusClientMock(securityContext: SecurityContext, defaultAuthorities: Set[Authority]) extends KayttooikeusClient {
   override def getUserByUsername(username: String): KayttooikeusUserDetails = {

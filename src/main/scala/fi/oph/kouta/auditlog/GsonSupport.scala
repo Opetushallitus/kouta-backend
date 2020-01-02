@@ -1,6 +1,7 @@
-package fi.oph.kouta.util
+package fi.oph.kouta.auditlog
 
 import com.google.gson.{JsonElement, JsonParser}
+import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.write
 
 trait GsonSupport extends KoutaJsonFormats {

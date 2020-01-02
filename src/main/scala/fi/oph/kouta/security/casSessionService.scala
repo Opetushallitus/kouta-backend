@@ -3,10 +3,10 @@ package fi.oph.kouta.security
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.utils.cas.CasClient.Username
 import fi.vm.sade.utils.slf4j.Logging
 import javax.servlet.http.HttpServletRequest

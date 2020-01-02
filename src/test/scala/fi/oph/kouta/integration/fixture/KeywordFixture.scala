@@ -2,11 +2,11 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.service.KeywordService
 import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet}
-import fi.oph.kouta.util.AuditLog
 import org.json4s.jackson.Serialization.read
 
 trait KeywordFixture { this:KoutaIntegrationSpec =>

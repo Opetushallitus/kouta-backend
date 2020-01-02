@@ -2,13 +2,13 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
 import fi.oph.kouta.service.OppilaitosService
 import fi.oph.kouta.servlet.OppilaitosServlet
-import fi.oph.kouta.util.AuditLog
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Random

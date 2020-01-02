@@ -1,4 +1,4 @@
-package fi.oph.kouta.util
+package fi.oph.kouta.auditlog
 
 import java.net.InetAddress
 import java.util.UUID
@@ -29,7 +29,7 @@ class AuditLog(val logger: Logger) extends GsonSupport {
   def init(): Unit = {}
 
   def logCreate[T <: HasPrimaryId[_, T]](added: T, user: User): DBIO[_] = {
-    val resource = Resource(added)
+    val resource = AuditResource(added)
     val target   = getTarget(resource, added.primaryId)
     val changes  = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
     audit.log(user, resource.Create, target.build(), changes)
@@ -39,7 +39,7 @@ class AuditLog(val logger: Logger) extends GsonSupport {
   def logUpdate[T <: HasPrimaryId[_, T]](before: T, after: Option[T], user: User): DBIO[_] = {
     after match {
       case Some(updated) =>
-        val resource = Resource(updated)
+        val resource = AuditResource(updated)
         val target   = getTarget(resource, updated.primaryId)
         val changes  = ChangeFactory.getChanges(before, updated)
         audit.log(user, resource.Update, target.build(), changes)
@@ -49,10 +49,10 @@ class AuditLog(val logger: Logger) extends GsonSupport {
   }
 
   def logCreate[T <: AnyRef](
-      added: T,
-      resource: Resource,
-      user: User,
-      targets: Seq[(String, String)]
+                              added: T,
+                              resource: AuditResource,
+                              user: User,
+                              targets: Seq[(String, String)]
   ): DBIO[Boolean] = {
     val target = new Target.Builder()
     targets.foreach { case (name, value) => target.setField(name, value) }
@@ -65,7 +65,7 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     val target  = new Target.Builder().setField("personOid", session.personOid).build()
     val user    = getUser(sessionId, session)
     val changes = new Changes.Builder().added("ticket", ticket.s).build()
-    audit.log(user, KoutaOperation.Login, target, changes)
+    audit.log(user, AuditOperation.Login, target, changes)
     (sessionId, session)
   }
 
@@ -79,7 +79,7 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     new User(new Oid(userOid), ip, sessionId.toString, userAgent)
   }
 
-  private def getTarget[ID](resource: Resource, targetId: Option[ID]): Target.Builder =
+  private def getTarget[ID](resource: AuditResource, targetId: Option[ID]): Target.Builder =
     new Target.Builder()
       .setField("type", resource.name)
       .setField(resource.idField, targetId.map(_.toString).getOrElse(TargetEpaselva))

@@ -1,20 +1,21 @@
-package fi.oph.kouta.util
+package fi.oph.kouta.auditlog
 
 import cats.data.Chain
+import cats.implicits._
 import diffson.circe._
 import diffson.diff
+import diffson.jsonpatch._
 import diffson.jsonpatch.lcsdiff.remembering.JsonDiffDiff
-import diffson.jsonpatch.{Add, Copy, Move, Remove, Replace}
 import diffson.jsonpointer.Part
 import diffson.lcs.Patience
+import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.auditlog.Changes
 import io.circe.Json
 import io.circe.parser.parse
-import cats.implicits._
 
 import scala.util.Try
 
-object ChangeFactory extends KoutaJsonFormats {
+private[auditlog] object ChangeFactory extends KoutaJsonFormats {
 
   implicit val lcs: Patience[Json] = new Patience[Json]
 

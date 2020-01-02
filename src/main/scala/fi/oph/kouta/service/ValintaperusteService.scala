@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 import java.util.UUID
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
@@ -11,7 +12,6 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.AuditLog
 import fi.vm.sade.auditlog.User
 import javax.servlet.http.HttpServletRequest
 

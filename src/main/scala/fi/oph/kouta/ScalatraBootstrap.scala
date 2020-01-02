@@ -2,7 +2,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.servlet._
 import fi.oph.kouta.SwaggerServlet
-import fi.oph.kouta.util.AuditLog
+import fi.oph.kouta.auditlog.AuditLog
 import fi.vm.sade.utils.slf4j.Logging
 import javax.servlet.ServletContext
 import org.scalatra._
