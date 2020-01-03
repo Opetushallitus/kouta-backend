@@ -2,12 +2,13 @@ package fi.oph.kouta.servlet
 
 import java.text.ParseException
 import java.time.Instant
-import java.util.{ConcurrentModificationException, NoSuchElementException}
+import java.util.ConcurrentModificationException
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.AuthenticationFailedException
 import fi.oph.kouta.service.{KoutaValidationException, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.util.TimeUtils.{parseHttpDate, renderHttpDate}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.MappingException
 import org.scalatra._
@@ -15,8 +16,6 @@ import org.scalatra.json.JacksonJsonSupport
 
 import scala.util.control.NonFatal
 import scala.util.{Failure, Try}
-import fi.oph.kouta.util.TimeUtils.{parseHttpDate, renderHttpDate}
-import org.scalatra.servlet.SizeConstraintExceededException
 
 trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   with Logging with KoutaJsonFormats with CasAuthenticatedServlet {
@@ -82,8 +81,7 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     case e: ParseException => badRequest(e)
     case e: ConcurrentModificationException =>
       Conflict("error" -> e.getMessage)
-    case e: NoSuchElementException =>
-      // TODO: None.get ja muita koodivirheitä palautuu 404:nä. Oma EntityNotFoundException?
+    case e: EntityNotFoundException =>
       NotFound("error" -> e.getMessage)
     case e: PayloadTooLargeException =>
       logger.warn(s"PayloadTooLargeException: ${e.getMessage}")
@@ -123,3 +121,5 @@ class HealthcheckServlet extends KoutaServlet {
 case class PayloadTooLargeException(message: String) extends RuntimeException(message)
 
 case class MediaNotSupportedException(message: String) extends RuntimeException(message)
+
+case class EntityNotFoundException(message: String) extends RuntimeException(message)

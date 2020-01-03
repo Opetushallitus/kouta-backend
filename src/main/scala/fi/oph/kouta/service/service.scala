@@ -9,7 +9,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.validation.Validatable
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
@@ -113,7 +113,7 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
                                             authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.updateRoles))
                                            (f: E => I)(implicit authenticated: Authenticated): I =
     entityForUpdate match {
-      case None         => throw new NoSuchElementException
+      case None         => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
       case Some((e, _)) => ifAuthorized(e, authorizationRules) {
         f(e)
       }

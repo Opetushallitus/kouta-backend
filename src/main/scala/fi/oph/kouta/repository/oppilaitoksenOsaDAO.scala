@@ -4,6 +4,7 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem}
+import fi.oph.kouta.servlet.EntityNotFoundException
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -24,7 +25,7 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
 
   override def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa] =
     checkOppilaitosExists(oppilaitoksenOsa).flatMap {
-      case false => DBIO.failed(new NoSuchElementException(s"""Oppilaitos ${oppilaitoksenOsa.oppilaitosOid} ei löyty kannasta!"""))
+      case false => DBIO.failed(EntityNotFoundException(s"""Oppilaitos ${oppilaitoksenOsa.oppilaitosOid} ei löyty kannasta!"""))
       case true => for {
         _ <- insertOppilaitoksenOsa(oppilaitoksenOsa)
         m <- selectLastModified(oppilaitoksenOsa.oid)
