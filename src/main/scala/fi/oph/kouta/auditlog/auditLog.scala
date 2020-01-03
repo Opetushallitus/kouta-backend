@@ -22,7 +22,7 @@ object AuditLog extends AuditLog(AuditLogger)
 
 class AuditLog(val logger: Logger) extends GsonSupport {
 
-  val audit = new Audit(logger, "kouta-backend", ApplicationType.BACKEND) // TODO: Vai ApplicationType.VIRKAILIJA?
+  val audit = new Audit(logger, "kouta-backend", ApplicationType.VIRKAILIJA)
 
   private val TargetEpaselva = "Tuntematon tai muutosten implikoima kohde"
 

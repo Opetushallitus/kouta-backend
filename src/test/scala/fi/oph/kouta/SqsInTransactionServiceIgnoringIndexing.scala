@@ -12,7 +12,7 @@ object SqsInTransactionServiceIgnoringIndexing extends SqsInTransactionService {
                                           index: IndexType,
                                           action: () => DBIO[R],
                                           getIndexableValue: R => String,
-                                          auditLog: R => DBIO[_] = (_: R) => DBIO.successful(true)): R = // TODO: Poista default kun auditlogitus on laitettu kaikkialle
+                                          auditLog: R => DBIO[_]): R =
     KoutaDatabase.runBlockingTransactionally(
       for {
         result <- action()
