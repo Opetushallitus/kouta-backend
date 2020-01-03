@@ -209,9 +209,7 @@ case class Valintaperuste(id: Option[UUID] = None,
     ))
   )
 
-  override def primaryId: Option[UUID] = id
-
-  override def withPrimaryID(id: UUID): Valintaperuste = copy(id = Some(id))
+  override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
 
   override def withModified(modified: LocalDateTime): Valintaperuste = copy(modified = Some(modified))
 }

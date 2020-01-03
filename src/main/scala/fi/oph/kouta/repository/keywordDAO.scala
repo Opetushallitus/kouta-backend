@@ -8,8 +8,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait KeywordDAO {
   def search(search: KeywordSearch): List[String]
-  def put(`type`: KeywordType, keywords: Seq[Keyword])(auditLog: Seq[Keyword] => DBIO[_]): Seq[Keyword]
-  def putActions(`type`: KeywordType, keywords: Seq[Keyword])(auditLog: Seq[Keyword] => DBIO[_]): DBIO[Vector[Keyword]]
+  def putActions(`type`: KeywordType, keywords: Seq[Keyword]): DBIO[Vector[Keyword]]
 }
 
 object KeywordDAO extends KeywordDAO with KeywordSQL {
@@ -21,14 +20,7 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
       case (l1, l2) => l1.union(l2).distinct.take(search.limit).toList
     }
 
-  override def put(`type`: KeywordType, keywords: Seq[Keyword])(auditLog: Seq[Keyword] => DBIO[_]): Seq[Keyword] =
-    KoutaDatabase.runBlockingTransactionally(putActions(`type`, keywords)(auditLog)).get
-
-  def putActions(`type`: KeywordType, keywords: Seq[Keyword])(auditLog: Seq[Keyword] => DBIO[_]): DBIO[Vector[Keyword]] =
-    for {
-      k <- insertKeywords(`type`, keywords)
-      _ <- auditLog(k)
-    } yield k
+  def putActions(`type`: KeywordType, keywords: Seq[Keyword]): DBIO[Vector[Keyword]] = insertKeywords(`type`, keywords)
 }
 
 sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {

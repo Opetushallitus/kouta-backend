@@ -173,9 +173,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
             () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
   }
 
-  override def primaryId: Option[KoulutusOid] = oid
-
-  override def withPrimaryID(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
+  def withOid(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
 
   override def withMetadata(metadata: KoulutusMetadata): Koulutus = this.copy(metadata = Some(metadata))
 

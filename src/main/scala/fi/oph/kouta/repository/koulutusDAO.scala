@@ -31,8 +31,8 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   override def getPutActions(koulutus: Koulutus): DBIO[Koulutus] =
     for {
       (oid, a) <- insertKoulutus(koulutus)
-      b <- insertKoulutuksenTarjoajat(koulutus.copy(oid = Some(oid)))
-    } yield koulutus.copy(oid = Some(oid), modified = Some(instantToLocalDateTime((a :: b).max)))
+      b <- insertKoulutuksenTarjoajat(koulutus.withOid(oid))
+    } yield koulutus.withOid(oid).withModified((a :: b).max)
 
   override def put(koulutus: Koulutus): Koulutus =
     KoutaDatabase.runBlockingTransactionally(getPutActions(koulutus)).get

@@ -349,11 +349,9 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     ))
   )
 
+  def withOid(oid: HakukohdeOid): Hakukohde = copy(oid = Some(oid))
+
   override def withModified(modified: LocalDateTime): Hakukohde = copy(modified = Some(modified))
-
-  override def primaryId: Option[HakukohdeOid] = oid
-
-  override def withPrimaryID(oid: HakukohdeOid): Hakukohde = copy(oid = Some(oid))
 }
 
 case class Liite(id: Option[UUID] = None,

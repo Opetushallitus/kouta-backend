@@ -48,12 +48,7 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     DBIO.successful(true)
   }
 
-  def logCreate[T <: AnyRef](
-                              added: T,
-                              resource: AuditResource,
-                              user: User,
-                              targets: Seq[(String, String)]
-  ): DBIO[Boolean] = {
+  def logCreate[T <: AnyRef](added: T, resource: AuditResource, user: User, targets: Seq[(String, String)]): DBIO[Boolean] = {
     val target = new Target.Builder()
     targets.foreach { case (name, value) => target.setField(name, value) }
     val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()

@@ -218,9 +218,7 @@ case class Haku(oid: Option[HakuOid] = None,
      ))
   )
 
-  override def primaryId: Option[HakuOid] = oid
-
-  override def withPrimaryID(oid: HakuOid): Haku = copy(oid = Some(oid))
+  def withOid(oid: HakuOid): Haku = copy(oid = Some(oid))
 
   override def withModified(modified: LocalDateTime): Haku = copy(modified = Some(modified))
 }

@@ -220,9 +220,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
      validateOidList(tarjoajat)
   )
 
-  override def primaryId: Option[ToteutusOid] = oid
-
-  override def withPrimaryID(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))
+  def withOid(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))
 
   override def withMetadata(metadata: ToteutusMetadata): Toteutus = this.copy(metadata = Some(metadata))
 

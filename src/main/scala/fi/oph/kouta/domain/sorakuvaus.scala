@@ -130,9 +130,7 @@ case class Sorakuvaus(id: Option[UUID] = None,
 
   override def withModified(modified: LocalDateTime): Sorakuvaus = copy(modified = Some(modified))
 
-  override def primaryId: Option[UUID] = id
-
-  override def withPrimaryID(id: UUID): Sorakuvaus = copy(id = Some(id))
+  override def withId(id: UUID): Sorakuvaus = copy(id = Some(id))
 }
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map())

@@ -31,7 +31,7 @@ object AuditResource {
       case _: domain.OppilaitoksenOsa => OppilaitoksenOsa
       case keyword.Ammattinimike      => Ammattinimike
       case keyword.Asiasana           => Asiasana
-      case r: AuditResource                => r
+      case r: AuditResource           => r
       case _                          => throw new IllegalArgumentException("Resource not found")
     }
   }

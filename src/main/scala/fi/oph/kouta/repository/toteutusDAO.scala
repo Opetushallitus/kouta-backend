@@ -35,8 +35,8 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def getPutActions(toteutus: Toteutus): DBIO[Toteutus] =
     for {
       (oid, t) <- insertToteutus(toteutus)
-      tt <- insertToteutuksenTarjoajat(toteutus.copy(oid = Some(oid)))
-    } yield toteutus.copy(oid = Some(oid)).withModified((t +: tt).max)
+      tt <- insertToteutuksenTarjoajat(toteutus.withOid(oid))
+    } yield toteutus.withOid(oid).withModified((t +: tt).max)
 
   override def put(toteutus: Toteutus): Toteutus =
     KoutaDatabase.runBlockingTransactionally(getPutActions(toteutus)).get

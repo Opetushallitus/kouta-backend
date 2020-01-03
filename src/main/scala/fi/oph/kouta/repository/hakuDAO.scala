@@ -28,8 +28,8 @@ object HakuDAO extends HakuDAO with HakuSQL {
   override def getPutActions(haku: Haku): DBIO[Haku] =
     for {
       (oid, a) <- insertHaku(haku)
-      b <- insertHakuajat(haku.copy(oid = Some(oid)))
-    } yield haku.copy(oid = Some(oid)).withModified((b :+ a).max)
+      b <- insertHakuajat(haku.withOid(oid))
+    } yield haku.withOid(oid).withModified((b :+ a).max)
 
   override def put(haku: Haku): Haku =
     KoutaDatabase.runBlockingTransactionally(getPutActions(haku)).get

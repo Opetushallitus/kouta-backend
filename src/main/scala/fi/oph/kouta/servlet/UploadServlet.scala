@@ -9,10 +9,6 @@ import org.scalatra.Ok
 
 import scala.util.{Failure, Try}
 
-case class PayloadTooLargeException(message: String) extends RuntimeException(message)
-
-case class MediaNotSupportedException(message: String) extends RuntimeException(message)
-
 class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extends KoutaServlet {
 
   def this() = this(S3Service)
