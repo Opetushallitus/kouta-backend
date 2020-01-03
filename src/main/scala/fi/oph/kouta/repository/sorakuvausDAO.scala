@@ -15,10 +15,7 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus]
   def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Option[Sorakuvaus]]
 
-  def put(sorakuvaus: Sorakuvaus): Sorakuvaus
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
-  def update(valintaperuste: Sorakuvaus, notModifiedSince: Instant): Option[Sorakuvaus]
-
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem]
 }
 
@@ -27,25 +24,18 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
   override def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus] = {
     for {
       id <- DBIO.successful(UUID.randomUUID)
-      s <- insertSorakuvaus(sorakuvaus.copy(id = Some(id)))
-    } yield sorakuvaus.copy(id = Some(id)).withModified(s.max)
+      _ <- insertSorakuvaus(sorakuvaus.withId(id))
+      m <- selectLastModified(id)
+    } yield sorakuvaus.withId(id).withModified(m.get)
   }
-
-  override def put(sorakuvaus: Sorakuvaus): Sorakuvaus =
-    KoutaDatabase.runBlockingTransactionally(getPutActions(sorakuvaus)).get
 
   override def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Option[Sorakuvaus]] =
     checkNotModified(sorakuvaus.id.get, notModifiedSince).andThen(
       for {
         v <- updateSorakuvaus(sorakuvaus)
-      } yield {
-        val modified = v.sorted.lastOption
-        modified.map(sorakuvaus.withModified)
-      }
+        m <- selectLastModified(sorakuvaus.id.get)
+      } yield optionWhen(v > 0)(sorakuvaus.withModified(m.get))
     )
-
-  override def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): Option[Sorakuvaus] =
-    KoutaDatabase.runBlockingTransactionally(getUpdateActions(sorakuvaus, notModifiedSince)).get
 
   override def get(id: UUID): Option[(Sorakuvaus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(for {
@@ -88,8 +78,8 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
 
   lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
-  def insertSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Vector[Instant]] = {
-    sql"""insert into sorakuvaukset (
+  def insertSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Int] = {
+    sqlu"""insert into sorakuvaukset (
                      id,
                      tila,
                      nimi,
@@ -107,8 +97,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb,
                      ${toJsonParam(sorakuvaus.metadata)}::jsonb,
                      ${sorakuvaus.organisaatioOid},
-                     ${sorakuvaus.muokkaaja}
-         ) returning lower(system_time)""".as[Instant]
+                     ${sorakuvaus.muokkaaja} )"""
   }
 
   def selectSorakuvaus(id: UUID): DBIO[Option[Sorakuvaus]] =
@@ -116,8 +105,8 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                  metadata, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset where id = ${id.toString}::uuid""".as[Sorakuvaus].headOption
 
-  def updateSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Vector[Instant]] = {
-    sql"""update sorakuvaukset set
+  def updateSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Int] = {
+    sqlu"""update sorakuvaukset set
                      tila = ${sorakuvaus.tila.toString}::julkaisutila,
                      nimi = ${toJsonParam(sorakuvaus.nimi)}::jsonb,
                      koulutustyyppi = ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi,
@@ -134,8 +123,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
              or metadata is distinct from ${toJsonParam(sorakuvaus.metadata)}::jsonb
              or organisaatio_oid is distinct from ${sorakuvaus.organisaatioOid}
              or muokkaaja is distinct from ${sorakuvaus.muokkaaja}
-             or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb
-           ) returning lower(system_time)""".as[Instant]
+             or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb)"""
   }
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[SorakuvausListItem]] = {

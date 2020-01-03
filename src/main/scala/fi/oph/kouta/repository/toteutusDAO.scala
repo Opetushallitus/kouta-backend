@@ -13,13 +13,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getPutActions(toteutus: Toteutus): DBIO[Toteutus]
   def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Option[Toteutus]]
-
   def getUpdateActionsWithoutModifiedCheck(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
-  def put(toteutus: Toteutus): Toteutus
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
-
-  def update(toteutus: Toteutus, notModifiedSince: Instant): Option[Toteutus]
   def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
@@ -34,28 +30,21 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def getPutActions(toteutus: Toteutus): DBIO[Toteutus] =
     for {
-      (oid, t) <- insertToteutus(toteutus)
-      tt <- insertToteutuksenTarjoajat(toteutus.withOid(oid))
-    } yield toteutus.withOid(oid).withModified((t +: tt).max)
-
-  override def put(toteutus: Toteutus): Toteutus =
-    KoutaDatabase.runBlockingTransactionally(getPutActions(toteutus)).get
+      oid <- insertToteutus(toteutus)
+      _   <- insertToteutuksenTarjoajat(toteutus.withOid(oid))
+      m   <- selectLastModified(oid)
+    } yield toteutus.withOid(oid).withModified(m.get)
 
   override def getUpdateActionsWithoutModifiedCheck(toteutus: Toteutus): DBIO[Option[Toteutus]] =
     for {
-      t <- updateToteutus(toteutus)
+      t  <- updateToteutus(toteutus)
       tt <- updateToteutuksenTarjoajat(toteutus)
-    } yield {
-      val modified = (t ++ tt).sorted.lastOption
-      modified.map(toteutus.withModified)
-    }
+      m  <- selectLastModified(toteutus.oid.get)
+    } yield optionWhen(t + tt > 0)(toteutus.withModified(m.get))
 
   override def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Option[Toteutus]] =
     checkNotModified(toteutus.oid.get, notModifiedSince)
       .andThen(getUpdateActionsWithoutModifiedCheck(toteutus))
-
-  override def update(toteutus: Toteutus, notModifiedSince: Instant): Option[Toteutus] =
-    KoutaDatabase.runBlockingTransactionally(getUpdateActions(toteutus, notModifiedSince)).get
 
   override def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
@@ -68,10 +57,11 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     }
   }
 
-  private def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Vector[Instant]] = {
-    val Toteutus(oid, _, _, tarjoajat, _, _, muokkaaja, _, _, _) = toteutus
-    if(tarjoajat.nonEmpty) {
-      combineInstants(tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat))
+  private def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
+    val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
+    if (tarjoajat.nonEmpty) {
+      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
+      sumIntDBIOs(actions)
     } else {
       deleteTarjoajat(oid)
     }
@@ -203,7 +193,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createOidInParams(oids)})""".as[Tarjoaja]
   }
 
-  def insertToteutus(toteutus: Toteutus): DBIO[(ToteutusOid, Instant)] = {
+  def insertToteutus(toteutus: Toteutus): DBIO[ToteutusOid] = {
     sql"""insert into toteutukset (
             koulutus_oid,
             tila,
@@ -220,18 +210,18 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             ${toteutus.muokkaaja},
             ${toteutus.organisaatioOid},
             ${toJsonParam(toteutus.kielivalinta)}::jsonb
-          ) returning oid, lower(system_time)""".as[(ToteutusOid, Instant)].head
+          ) returning oid""".as[ToteutusOid].head
   }
 
-  def insertToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Vector[Instant]] = {
-    combineInstants(toteutus.tarjoajat.map(t =>
-      sql"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
-             values (${toteutus.oid}, $t, ${toteutus.muokkaaja})
-             returning lower(system_time)""".as[Instant]))
+  def insertToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
+    val inserts = toteutus.tarjoajat.map(t =>
+      sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
+             values (${toteutus.oid}, $t, ${toteutus.muokkaaja})""")
+    sumIntDBIOs(inserts)
   }
 
-  def updateToteutus(toteutus: Toteutus): DBIO[Vector[Instant]] = {
-    sql"""update toteutukset set
+  def updateToteutus(toteutus: Toteutus): DBIO[Int] = {
+    sqlu"""update toteutukset set
               koulutus_oid = ${toteutus.koulutusOid},
               tila = ${toteutus.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(toteutus.nimi)}::jsonb,
@@ -245,27 +235,23 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             or nimi is distinct from ${toJsonParam(toteutus.nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(toteutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(toteutus.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${toteutus.organisaatioOid} )
-            returning lower(system_time)""".as[Instant]
+            or organisaatio_oid is distinct from ${toteutus.organisaatioOid} )"""
   }
 
-  def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Vector[Instant]] = {
-    sql"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
+  def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {
+    sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
-             on conflict on constraint toteutusten_tarjoajat_pkey do nothing
-             returning lower(system_time)""".as[Instant]
+             on conflict on constraint toteutusten_tarjoajat_pkey do nothing"""
   }
 
-  def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]): DBIO[Vector[Instant]] = {
-    sql"""delete from toteutusten_tarjoajat
-          where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})
-          returning now()""".as[Instant]
+  def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]): DBIO[Int] = {
+    sqlu"""delete from toteutusten_tarjoajat
+           where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
   }
 
-  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Vector[Instant]] =
-    sql"""delete from toteutusten_tarjoajat
-          where toteutus_oid = $oid
-          returning now()""".as[Instant]
+  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Int] =
+    sqlu"""delete from toteutusten_tarjoajat
+           where toteutus_oid = $oid"""
 
   val selectToteutusListSql =
     """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, m.modified

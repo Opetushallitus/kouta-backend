@@ -34,10 +34,12 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def toTsrangeString(a: Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
 
-  def combineInstants(instants: Seq[DBIO[Vector[Instant]]]): DBIO[Vector[Instant]] = {
+  def sumIntDBIOs(ints: Seq[DBIO[Int]]): DBIO[Int] = {
     import scala.concurrent.ExecutionContext.Implicits.global
-    DBIO.fold(instants, Vector()) { case (first, second) => first ++ second }
+    DBIO.fold(ints, 0)(_ + _)
   }
+
+  def optionWhen[T](cond: Boolean)(result: => T): Option[T] = if(cond) Some(result) else None
 
   implicit object SetInstant extends SetParameter[Instant] {
     def apply(v: Instant, pp: PositionedParameters): Unit = {
