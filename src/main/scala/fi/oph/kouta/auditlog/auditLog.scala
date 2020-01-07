@@ -64,13 +64,15 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     (sessionId, session)
   }
 
-  def getUser(implicit request: HttpServletRequest, authenticated: Authenticated): User =
-    getUser(authenticated.id, authenticated.session)
+  def getUser(implicit authenticated: Authenticated): User =
+    getUser(authenticated.id, authenticated.session, authenticated.userAgent, authenticated.ip)
 
   def getUser(sessionId: UUID, session: Session)(implicit request: HttpServletRequest): User = {
+    getUser(Authenticated(sessionId, session))
+  }
+
+  def getUser(sessionId: UUID, session: Session, userAgent: String, ip: InetAddress): User = {
     val userOid   = session.personOid
-    val userAgent = request.getHeader("User-Agent")
-    val ip        = InetAddress.getByName(request.getRemoteAddr) // TODO: Pitääkö ottaa huomioon proxyt yms?
     new User(new Oid(userOid), ip, sessionId.toString, userAgent)
   }
 

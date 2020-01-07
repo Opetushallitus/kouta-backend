@@ -13,7 +13,6 @@ import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog)
 
@@ -25,13 +24,13 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
     authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
-  def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated, request: HttpServletRequest): UUID =
+  def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {
       withValidation(valintaperuste, putWithIndexing(_, auditLog.getUser))
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
-            (implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
+            (implicit authenticated: Authenticated): Boolean = {
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {  oldValintaperuste =>
       withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldValintaperuste)).nonEmpty
     }

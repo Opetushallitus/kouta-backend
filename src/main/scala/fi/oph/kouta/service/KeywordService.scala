@@ -6,7 +6,6 @@ import fi.oph.kouta.repository.{KeywordDAO, KoutaDatabase}
 import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,7 +16,7 @@ class KeywordService(auditLog: AuditLog) extends AuthorizationService {
 
   def search(search: KeywordSearch): List[String] = KeywordDAO.search(search)
 
-  def store(`type`: KeywordType, keywords: List[Keyword])(implicit authenticated: Authenticated, request: HttpServletRequest): Int =
+  def store(`type`: KeywordType, keywords: List[Keyword])(implicit authenticated: Authenticated): Int =
     withRootAccess(RoleEntity.all.flatMap(_.createRoles)) {
       KoutaDatabase.runBlockingTransactionally(insert(`type`, auditLog.getUser, keywords)).get
     }.size

@@ -13,7 +13,6 @@ import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,12 +31,12 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     authorizeGet(toteutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
   }
 
-  def put(toteutus: Toteutus)(implicit authenticated: Authenticated, request: HttpServletRequest): ToteutusOid =
+  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) {
       withValidation(toteutus, putWithIndexing(_, auditLog.getUser))
     }.oid.get
 
-  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
+  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, rules) { oldToteutus =>

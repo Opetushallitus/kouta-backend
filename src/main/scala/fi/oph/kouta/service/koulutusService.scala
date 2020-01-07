@@ -12,7 +12,6 @@ import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
 
@@ -29,13 +28,13 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     authorizeGet(koulutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime)))
   }
 
-  def put(koulutus: Koulutus)(implicit authenticated: Authenticated, request: HttpServletRequest): KoulutusOid =
+  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
       withValidation(koulutus, putWithIndexing(_, auditLog.getUser))
     }.oid.get
 
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
-  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
+  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))
     authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>

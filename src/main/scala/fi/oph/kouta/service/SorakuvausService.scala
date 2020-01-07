@@ -12,7 +12,6 @@ import fi.oph.kouta.repository.{SorakuvausDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 
 object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog)
 
@@ -24,12 +23,12 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
     authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
-  def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated, request: HttpServletRequest): UUID =
+  def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus) {
       withValidation(sorakuvaus, putWithIndexing(_, auditLog.getUser))
     }.id.get
 
-  def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean =
+  def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) { oldSorakuvaus =>
       withValidation(sorakuvaus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldSorakuvaus))
     }.nonEmpty

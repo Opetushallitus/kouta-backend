@@ -11,7 +11,6 @@ import fi.oph.kouta.repository.{OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 
 object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Service, AuditLog)
 
@@ -25,13 +24,13 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] =
     authorizeGet(OppilaitosDAO.get(oid))
 
-  def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated, request: HttpServletRequest): OrganisaatioOid = {
+  def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid = {
     authorizePut(oppilaitos) {
       withValidation(oppilaitos, putWithIndexing(_, auditLog.getUser))
     }.oid
   }
 
-  def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean =
+  def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid)) { oldOppilaitos =>
       withValidation(oppilaitos, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldOppilaitos))
     }.nonEmpty
@@ -78,12 +77,12 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitoksenOsa, Instant)] =
     authorizeGet(OppilaitoksenOsaDAO.get(oid))
 
-  def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated, request: HttpServletRequest): OrganisaatioOid =
+  def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid =
     authorizePut(oppilaitoksenOsa) {
       withValidation(oppilaitoksenOsa, putWithIndexing(_, auditLog.getUser)).oid
     }
 
-  def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean =
+  def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid)) { oldOsa =>
       withValidation(oppilaitoksenOsa, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldOsa))
     }.nonEmpty

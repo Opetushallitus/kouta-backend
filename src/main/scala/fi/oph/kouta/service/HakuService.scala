@@ -12,7 +12,6 @@ import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 
 object HakuService extends HakuService(SqsInTransactionService, AuditLog)
 
@@ -25,13 +24,13 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
   def get(oid: HakuOid)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
     authorizeGet(HakuDAO.get(oid), readRules)
 
-  def put(haku: Haku)(implicit authenticated: Authenticated, request: HttpServletRequest): HakuOid = {
+  def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
     authorizePut(haku) {
       withValidation(haku, putWithIndexing(_, auditLog.getUser))
     }
   }.oid.get
 
-  def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
+  def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     authorizeUpdate(HakuDAO.get(haku.oid.get)) { oldHaku =>
       withValidation(haku, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldHaku))
     }

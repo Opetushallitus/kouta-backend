@@ -12,7 +12,6 @@ import fi.oph.kouta.repository.{HakukohdeDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import javax.servlet.http.HttpServletRequest
 
 object HakukohdeService extends HakukohdeService(SqsInTransactionService, AuditLog)
 
@@ -23,12 +22,12 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
   def get(oid: HakukohdeOid)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] =
     authorizeGet(HakukohdeDAO.get(oid), AuthorizationRules(roleEntity.readRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(oid)))
 
-  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated, request: HttpServletRequest): HakukohdeOid =
+  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) {
       withValidation(hakukohde, putWithIndexing(_, auditLog.getUser))
     }.oid.get
 
-  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated, request: HttpServletRequest): Boolean = {
+  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), rules) { oldHakuKohde =>
       withValidation(hakukohde, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldHakuKohde))

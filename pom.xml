@@ -68,7 +68,7 @@
             <version>${scala.version}</version>
         </dependency>
 
-        <!-- Utility properties -->
+        <!-- Utility dependencies -->
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-logging_2.12</artifactId>
@@ -97,6 +97,17 @@
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-properties_2.12</artifactId>
             <version>${scala-utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-http</artifactId>
+            <version>0.5.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
@@ -347,6 +358,10 @@
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>log4j-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
