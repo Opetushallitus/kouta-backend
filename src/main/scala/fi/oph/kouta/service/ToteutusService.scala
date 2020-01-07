@@ -12,7 +12,6 @@ import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.auditlog.User
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,14 +32,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) {
-      withValidation(toteutus, putWithIndexing(_, auditLog.getUser))
+      withValidation(toteutus, putWithIndexing)
     }.oid.get
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, rules) { oldToteutus =>
-      withValidation(toteutus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldToteutus)).nonEmpty
+      withValidation(toteutus, updateWithIndexing(_, notModifiedSince, oldToteutus)).nonEmpty
     }
   }
 
@@ -75,49 +74,49 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def putWithIndexing(toteutus: Toteutus, user: User) = {
+  private def putWithIndexing(toteutus: Toteutus)(implicit authenticated: Authenticated) = {
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => themeImagePutActions(toteutus, putActions(_, user), updateActionsWithoutModifiedCheck(_, user)),
+      () => themeImagePutActions(toteutus, putActions(_), updateActionsWithoutModifiedCheck(_)),
       (added: Toteutus) => added.oid.get.toString,
-      (added: Toteutus) => auditLog.logCreate(added, user))
+      (added: Toteutus) => auditLog.logCreate(added))
   }
 
-  private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant, user: User, before: Toteutus) =
+  private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeToteutus,
-      () => themeImageUpdateActions(toteutus, updateActions(_, notModifiedSince, user)),
+      () => themeImageUpdateActions(toteutus, updateActions(_, notModifiedSince)),
       toteutus.oid.get.toString,
-      (updated: Option[Toteutus]) => auditLog.logUpdate(before, updated, user))
+      (updated: Option[Toteutus]) => auditLog.logUpdate(before, updated))
 
-  private def withKeywordInserts[T](toteutus: Toteutus, user: User)(actions: => DBIO[T]): DBIO[T] = {
+  private def withKeywordInserts[T](toteutus: Toteutus)(actions: => DBIO[T])(implicit authenticated: Authenticated): DBIO[T] = {
     for {
-      _ <- insertAsiasanat(toteutus, user)
-      _ <- insertAmmattinimikkeet(toteutus, user)
+      _ <- insertAsiasanat(toteutus)
+      _ <- insertAmmattinimikkeet(toteutus)
       t <- actions
     } yield t
   }
 
-  private def putActions(toteutus: Toteutus, user: User): DBIO[Toteutus] =
-    withKeywordInserts(toteutus, user) {
+  private def putActions(toteutus: Toteutus)(implicit authenticated: Authenticated): DBIO[Toteutus] =
+    withKeywordInserts(toteutus) {
       ToteutusDAO.getPutActions(toteutus)
     }
 
-  private def updateActions(toteutus: Toteutus, notModifiedSince: Instant, user: User): DBIO[Option[Toteutus]] =
-    withKeywordInserts(toteutus, user) {
+  private def updateActions(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): DBIO[Option[Toteutus]] =
+    withKeywordInserts(toteutus) {
       ToteutusDAO.getUpdateActions(toteutus, notModifiedSince)
     }
 
-  private def updateActionsWithoutModifiedCheck(toteutus: Toteutus, user: User): DBIO[Option[Toteutus]] =
-    withKeywordInserts(toteutus, user) {
+  private def updateActionsWithoutModifiedCheck(toteutus: Toteutus)(implicit authenticated: Authenticated): DBIO[Option[Toteutus]] =
+    withKeywordInserts(toteutus) {
       ToteutusDAO.getUpdateActionsWithoutModifiedCheck(toteutus)
     }
 
-  private def insertAsiasanat(toteutus: Toteutus, user: User) =
-    keywordService.insert(Asiasana, user, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))
+  private def insertAsiasanat(toteutus: Toteutus)(implicit authenticated: Authenticated) =
+    keywordService.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))
 
-  private def insertAmmattinimikkeet(toteutus: Toteutus, user: User) =
-    keywordService.insert(Ammattinimike, user, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(Seq()))
+  private def insertAmmattinimikkeet(toteutus: Toteutus)(implicit authenticated: Authenticated) =
+    keywordService.insert(Ammattinimike, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(Seq()))
 }

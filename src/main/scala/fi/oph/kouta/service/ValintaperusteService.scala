@@ -12,7 +12,6 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.auditlog.User
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog)
 
@@ -26,13 +25,13 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {
-      withValidation(valintaperuste, putWithIndexing(_, auditLog.getUser))
+      withValidation(valintaperuste, putWithIndexing)
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {  oldValintaperuste =>
-      withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldValintaperuste)).nonEmpty
+      withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince, oldValintaperuste)).nonEmpty
     }
   }
 
@@ -57,19 +56,19 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
-  private def putWithIndexing(valintaperuste: Valintaperuste, user: User): Valintaperuste =
+  private def putWithIndexing(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeValintaperuste,
       () => ValintaperusteDAO.getPutActions(valintaperuste),
       (added: Valintaperuste) => added.id.get.toString,
-      (added: Valintaperuste) => auditLog.logCreate(added, user))
+      (added: Valintaperuste) => auditLog.logCreate(added))
 
-  private def updateWithIndexing(valintaperuste: Valintaperuste, notModifiedSince: Instant, user: User, before: Valintaperuste) =
+  private def updateWithIndexing(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit authenticated: Authenticated) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeValintaperuste,
       () => ValintaperusteDAO.getUpdateActions(valintaperuste, notModifiedSince),
       valintaperuste.id.get.toString,
-      (updated: Option[Valintaperuste]) => auditLog.logUpdate(before, updated, user))
+      (updated: Option[Valintaperuste]) => auditLog.logUpdate(before, updated))
 }

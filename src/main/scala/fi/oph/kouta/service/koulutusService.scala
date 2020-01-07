@@ -11,7 +11,6 @@ import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.auditlog.User
 
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
 
@@ -30,7 +29,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
-      withValidation(koulutus, putWithIndexing(_, auditLog.getUser))
+      withValidation(koulutus, putWithIndexing)
     }.oid.get
 
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
@@ -38,7 +37,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))
     authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>
-      withValidation(koulutus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldKoulutus))
+      withValidation(koulutus, updateWithIndexing(_, notModifiedSince, oldKoulutus))
     }.nonEmpty
   }
 
@@ -93,19 +92,19 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def getTarjoajat(maybeKoulutusWithTime: Option[(Koulutus, Instant)]): Seq[OrganisaatioOid] =
     maybeKoulutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def putWithIndexing(koulutus: Koulutus, user: User): Koulutus =
+  private def putWithIndexing(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
       () => themeImagePutActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActionsWithoutModifiedCheck),
       (added: Koulutus) => added.oid.get.toString,
-      (added: Koulutus) => auditLog.logCreate(added, user))
+      (added: Koulutus) => auditLog.logCreate(added))
 
-  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, user: User, before: Koulutus): Option[Koulutus] =
+  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit authenticated: Authenticated): Option[Koulutus] =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeKoulutus,
       () => themeImageUpdateActions(koulutus, KoulutusDAO.getUpdateActions(_, notModifiedSince)),
       koulutus.oid.get.toString,
-      (updated: Option[Koulutus]) => auditLog.logUpdate(before, updated, user))
+      (updated: Option[Koulutus]) => auditLog.logUpdate(before, updated))
 }

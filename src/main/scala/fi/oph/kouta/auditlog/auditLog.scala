@@ -28,31 +28,33 @@ class AuditLog(val logger: Logger) extends GsonSupport {
 
   def init(): Unit = {}
 
-  def logCreate[T <: HasPrimaryId[_, T]](added: T, user: User): DBIO[_] = {
+  def logCreate[T <: HasPrimaryId[_, T]](added: T)(implicit authenticated: Authenticated): DBIO[_] = {
     val resource = AuditResource(added)
     val target   = getTarget(resource, added.primaryId)
-    val changes  = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
-    audit.log(user, resource.Create, target.build(), changes)
+    logCreate(added, resource, target)
+  }
+
+  def logCreate[T <: AnyRef](added: T, resource: AuditResource, targets: Seq[(String, String)])(implicit authenticated: Authenticated): DBIO[_] = {
+    val target = new Target.Builder()
+    targets.foreach { case (name, value) => target.setField(name, value) }
+    logCreate(added, resource, target)
+  }
+
+  private def logCreate[T <: AnyRef](added: T, resource: AuditResource, target: Target.Builder)(implicit authenticated: Authenticated): DBIO[_] = {
+    val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
+    audit.log(getUser, resource.Create, target.build(), changes)
     DBIO.successful(true)
   }
 
-  def logUpdate[T <: HasPrimaryId[_, T]](before: T, after: Option[T], user: User): DBIO[_] = {
+  def logUpdate[T <: HasPrimaryId[_, T]](before: T, after: Option[T])(implicit authenticated: Authenticated): DBIO[_] = {
     after match {
       case Some(updated) =>
         val resource = AuditResource(updated)
         val target   = getTarget(resource, updated.primaryId)
         val changes  = ChangeFactory.getChanges(before, updated)
-        audit.log(user, resource.Update, target.build(), changes)
+        audit.log(getUser, resource.Update, target.build(), changes)
       case None =>
     }
-    DBIO.successful(true)
-  }
-
-  def logCreate[T <: AnyRef](added: T, resource: AuditResource, user: User, targets: Seq[(String, String)]): DBIO[Boolean] = {
-    val target = new Target.Builder()
-    targets.foreach { case (name, value) => target.setField(name, value) }
-    val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
-    audit.log(user, resource.Create, target.build(), changes)
     DBIO.successful(true)
   }
 

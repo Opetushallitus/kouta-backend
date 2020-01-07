@@ -10,7 +10,6 @@ import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.auditlog.User
 
 object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Service, AuditLog)
 
@@ -26,13 +25,13 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
 
   def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid = {
     authorizePut(oppilaitos) {
-      withValidation(oppilaitos, putWithIndexing(_, auditLog.getUser))
+      withValidation(oppilaitos, putWithIndexing)
     }.oid
   }
 
   def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid)) { oldOppilaitos =>
-      withValidation(oppilaitos, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldOppilaitos))
+      withValidation(oppilaitos, updateWithIndexing(_, notModifiedSince, oldOppilaitos))
     }.nonEmpty
 
   def getOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
@@ -46,21 +45,21 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
       OppilaitoksenOsaDAO.listByOppilaitosOidAndOrganisaatioOids(oid, _)
     }
 
-  private def putWithIndexing(oppilaitos: Oppilaitos, user: User) =
+  private def putWithIndexing(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeOppilaitos,
       () => themeImagePutActions(oppilaitos, OppilaitosDAO.getPutActions, OppilaitosDAO.getUpdateActionsWithoutModifiedCheck),
       oppilaitos.oid.toString,
-      (added: Oppilaitos) => auditLog.logCreate(added, user))
+      (added: Oppilaitos) => auditLog.logCreate(added))
 
-  private def updateWithIndexing(oppilaitos: Oppilaitos, notModifiedSince: Instant, user: User, before: Oppilaitos): Option[Oppilaitos] =
+  private def updateWithIndexing(oppilaitos: Oppilaitos, notModifiedSince: Instant, before: Oppilaitos)(implicit authenticated: Authenticated): Option[Oppilaitos] =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeOppilaitos,
       () => themeImageUpdateActions(oppilaitos, OppilaitosDAO.getUpdateActions(_, notModifiedSince)),
       oppilaitos.oid.toString,
-      (updated: Option[Oppilaitos]) => auditLog.logUpdate(before, updated, user))
+      (updated: Option[Oppilaitos]) => auditLog.logUpdate(before, updated))
 }
 
 object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3Service, AuditLog)
@@ -79,27 +78,27 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid =
     authorizePut(oppilaitoksenOsa) {
-      withValidation(oppilaitoksenOsa, putWithIndexing(_, auditLog.getUser)).oid
+      withValidation(oppilaitoksenOsa, putWithIndexing).oid
     }
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid)) { oldOsa =>
-      withValidation(oppilaitoksenOsa, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldOsa))
+      withValidation(oppilaitoksenOsa, updateWithIndexing(_, notModifiedSince, oldOsa))
     }.nonEmpty
 
-  private def putWithIndexing(oppilaitoksenOsa: OppilaitoksenOsa, user: User): OppilaitoksenOsa =
+  private def putWithIndexing(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OppilaitoksenOsa =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeOppilaitos,
       () => themeImagePutActions(oppilaitoksenOsa, OppilaitoksenOsaDAO.getPutActions, OppilaitoksenOsaDAO.getUpdateActionsWithoutModifiedCheck),
       oppilaitoksenOsa.oppilaitosOid.toString,
-      (added: OppilaitoksenOsa) => auditLog.logCreate(added, user))
+      (added: OppilaitoksenOsa) => auditLog.logCreate(added))
 
-  private def updateWithIndexing(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant, user: User, before: OppilaitoksenOsa): Option[OppilaitoksenOsa] =
+  private def updateWithIndexing(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant, before: OppilaitoksenOsa)(implicit authenticated: Authenticated): Option[OppilaitoksenOsa] =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeOppilaitos,
       () => themeImageUpdateActions(oppilaitoksenOsa, OppilaitoksenOsaDAO.getUpdateActions(_, notModifiedSince)),
       oppilaitoksenOsa.oppilaitosOid.toString,
-      (updated: Option[OppilaitoksenOsa]) => auditLog.logUpdate(before, updated, user))
+      (updated: Option[OppilaitoksenOsa]) => auditLog.logUpdate(before, updated))
 }

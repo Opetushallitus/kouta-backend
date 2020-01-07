@@ -11,7 +11,6 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
 import fi.oph.kouta.repository.{SorakuvausDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.auditlog.User
 
 object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog)
 
@@ -25,12 +24,12 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus) {
-      withValidation(sorakuvaus, putWithIndexing(_, auditLog.getUser))
+      withValidation(sorakuvaus, putWithIndexing)
     }.id.get
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) { oldSorakuvaus =>
-      withValidation(sorakuvaus, updateWithIndexing(_, notModifiedSince, auditLog.getUser, oldSorakuvaus))
+      withValidation(sorakuvaus, updateWithIndexing(_, notModifiedSince, oldSorakuvaus))
     }.nonEmpty
 
   def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
@@ -43,19 +42,19 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
       SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
     }
 
-  private def putWithIndexing(sorakuvaus: Sorakuvaus, user: User): Sorakuvaus =
+  private def putWithIndexing(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): Sorakuvaus =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeSorakuvaus,
       () => SorakuvausDAO.getPutActions(sorakuvaus),
       (added: Sorakuvaus) => added.id.get.toString,
-      (added: Sorakuvaus) => auditLog.logCreate(added, user))
+      (added: Sorakuvaus) => auditLog.logCreate(added))
 
-  private def updateWithIndexing(sorakuvaus: Sorakuvaus, notModifiedSince: Instant, user: User, before: Sorakuvaus) =
+  private def updateWithIndexing(sorakuvaus: Sorakuvaus, notModifiedSince: Instant, before: Sorakuvaus)(implicit authenticated: Authenticated) =
     sqsInTransactionService.runActionAndUpdateIndex(
       HighPriority,
       IndexTypeSorakuvaus,
       () => SorakuvausDAO.getUpdateActions(sorakuvaus, notModifiedSince),
       sorakuvaus.id.get.toString,
-      (updated: Option[Sorakuvaus]) => auditLog.logUpdate(before, updated, user))
+      (updated: Option[Sorakuvaus]) => auditLog.logUpdate(before, updated))
 }
