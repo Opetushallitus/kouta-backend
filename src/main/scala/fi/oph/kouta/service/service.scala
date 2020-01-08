@@ -30,6 +30,52 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
 
   def teemakuvaPrefix: String
 
+  def checkTempImage(entity: T): DBIO[Option[String]] = {
+    entity.metadata.flatMap(_.teemakuva) match {
+      case Some(s3Service.tempUrl(filename)) =>
+        DBIO.successful(Some(filename))
+      case Some(s3Service.publicUrl(_)) =>
+        DBIO.successful(None)
+      case None =>
+        DBIO.successful(None)
+      case Some(other) =>
+        logger.warn(s"Theme image outside the bucket: $other")
+        DBIO.successful(None)
+    }
+  }
+
+  def maybeClearTempImage(tempImage: Option[String], entity: T): DBIO[T] =
+    DBIO.successful {
+      tempImage
+        .map(_ => entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
+        .getOrElse(entity)
+    }
+
+  def checkAndMaybeClearTempImage(entity: T): DBIO[(Option[String], T)] =
+    for {
+      tempImage <- checkTempImage(entity)
+      cleared <- maybeClearTempImage(tempImage, entity)
+    } yield (tempImage, cleared)
+
+  def maybeCopyThemeImage(tempImage: Option[String], entity: T): DBIO[T] =
+    DBIO.successful {
+      tempImage
+        .map(filename => s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename"))
+        .map(url => entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+        .getOrElse(entity)
+    }
+
+  def checkAndMaybeCopyTempImage(entity: T): DBIO[(Option[String], T)] =
+    for {
+      tempImage <- checkTempImage(entity)
+      themed <- maybeCopyThemeImage(tempImage, entity)
+    } yield (tempImage, themed)
+
+  def maybeDeleteTempImage(tempImage: Option[String]): DBIO[_] =
+    DBIO.successful {
+      tempImage.foreach(filename => s3Service.deleteImage(s3Service.getTempKey(filename)))
+    }
+
   def themeImagePutActions(entity: T, putActions: T => DBIO[T], updateActions: T => DBIO[Option[T]]): DBIO[T] =
     entity.metadata.flatMap(_.teemakuva) match {
       case Some(s3Service.tempUrl(filename)) =>

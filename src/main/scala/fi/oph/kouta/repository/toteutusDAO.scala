@@ -46,6 +46,12 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     checkNotModified(toteutus.oid.get, notModifiedSince)
       .andThen(getUpdateActionsWithoutModifiedCheck(toteutus))
 
+  def rawUpdate(toteutus: Toteutus): DBIO[Toteutus] =
+    for {
+      _  <- updateToteutus(toteutus)
+      m  <- selectLastModified(toteutus.oid.get)
+    } yield toteutus.withModified(m.get)
+
   override def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
       t <- selectToteutus(oid).as[Toteutus].headOption

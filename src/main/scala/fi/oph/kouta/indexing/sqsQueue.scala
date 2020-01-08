@@ -95,13 +95,13 @@ abstract class SqsInTransactionService extends Logging {
         _      <- auditLog(result)
       } yield result ).get
 
-  def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[String] =
+  def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[_] =
     toSQSQueue(priority, index, Seq(value))
 
-  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): DBIO[String] =
+  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): DBIO[_] =
     toSQSQueue(priority, Map(index -> values))
 
-  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): DBIO[String] = {
+  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): DBIO[_] = {
     SqsService.addToQueue(priority, values) match {
       case Left(t) => DBIO.failed(t)
       case Right(s) => DBIO.successful(s)

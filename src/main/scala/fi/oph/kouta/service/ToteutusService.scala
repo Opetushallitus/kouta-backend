@@ -9,7 +9,7 @@ import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, ToteutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import slick.dbio.DBIO
@@ -32,14 +32,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) {
-      withValidation(toteutus, putWithIndexing)
+      withValidation(toteutus, doPut)
     }.oid.get
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, rules) { oldToteutus =>
-      withValidation(toteutus, updateWithIndexing(_, notModifiedSince, oldToteutus)).nonEmpty
+      withValidation(toteutus, doUpdate(_, notModifiedSince, oldToteutus)).nonEmpty
     }
   }
 
@@ -74,22 +74,37 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def putWithIndexing(toteutus: Toteutus)(implicit authenticated: Authenticated) = {
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeToteutus,
-      () => themeImagePutActions(toteutus, putActions(_), updateActionsWithoutModifiedCheck(_)),
-      (added: Toteutus) => added.oid.get.toString,
-      (added: Toteutus) => auditLog.logCreate(added))
-  }
+  private def doPut(toteutus: Toteutus)(implicit authenticated: Authenticated): Toteutus =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        (tempImage, cleared) <- checkAndMaybeClearTempImage(toteutus)
+        _       <- insertAsiasanat(cleared)
+        _       <- insertAmmattinimikkeet(cleared)
+        added   <- ToteutusDAO.getPutActions(cleared)
+        themed  <- maybeCopyThemeImage(tempImage, added)
+        updated <- tempImage.map(_ => ToteutusDAO.rawUpdate(themed)).getOrElse(DBIO.successful(themed))
+        _       <- maybeDeleteTempImage(tempImage)
+        _       <- index(updated)
+        _       <- auditLog.logCreate(updated)
+      } yield updated
+    }.get
 
-  private def updateWithIndexing(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated) =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeToteutus,
-      () => themeImageUpdateActions(toteutus, updateActions(_, notModifiedSince)),
-      toteutus.oid.get.toString,
-      (updated: Option[Toteutus]) => auditLog.logUpdate(before, updated))
+
+  private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated): Option[Toteutus] =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        (tempImage, themed) <- checkAndMaybeCopyTempImage(toteutus)
+        _       <- insertAsiasanat(themed)
+        _       <- insertAmmattinimikkeet(themed)
+        updated <- ToteutusDAO.getUpdateActions(themed, notModifiedSince)
+        _       <- maybeDeleteTempImage(tempImage)
+        _       <- updated.map(t => index(t)).getOrElse(DBIO.successful(true))
+        _       <- updated.map(t => auditLog.logUpdate(before, Some(t))).getOrElse(DBIO.successful(true))
+      } yield updated
+    }.get
+
+  private def index(toteutus: Toteutus): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.oid.get.toString)
 
   private def withKeywordInserts[T](toteutus: Toteutus)(actions: => DBIO[T])(implicit authenticated: Authenticated): DBIO[T] = {
     for {
@@ -98,21 +113,6 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       t <- actions
     } yield t
   }
-
-  private def putActions(toteutus: Toteutus)(implicit authenticated: Authenticated): DBIO[Toteutus] =
-    withKeywordInserts(toteutus) {
-      ToteutusDAO.getPutActions(toteutus)
-    }
-
-  private def updateActions(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): DBIO[Option[Toteutus]] =
-    withKeywordInserts(toteutus) {
-      ToteutusDAO.getUpdateActions(toteutus, notModifiedSince)
-    }
-
-  private def updateActionsWithoutModifiedCheck(toteutus: Toteutus)(implicit authenticated: Authenticated): DBIO[Option[Toteutus]] =
-    withKeywordInserts(toteutus) {
-      ToteutusDAO.getUpdateActionsWithoutModifiedCheck(toteutus)
-    }
 
   private def insertAsiasanat(toteutus: Toteutus)(implicit authenticated: Authenticated) =
     keywordService.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))
