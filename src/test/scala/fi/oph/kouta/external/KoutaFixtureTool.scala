@@ -7,7 +7,7 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.validation.Validatable
+import fi.oph.kouta.validation.{NoErrors, Validatable}
 import org.json4s.jackson.Serialization.{read, write}
 
 import scala.collection.JavaConverters._
@@ -303,8 +303,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   private def toKielivalinta(params:Map[String, String]) = params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_))
 
   private def toJsonIfValid[T <: Validatable](v :T): String = v.validate() match {
-    case Left(value) => throw new RuntimeException(s"""${value.mkString(", ")}""")
-    case Right(_) => toJson(v)
+    case NoErrors => toJson(v)
+    case errors => throw new RuntimeException(s"""${errors.mkString(", ")}""")
   }
 
   def getKoulutus(oid:String) = toJsonIfValid(koulutus(oid))

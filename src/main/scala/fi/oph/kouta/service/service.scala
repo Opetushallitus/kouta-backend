@@ -8,9 +8,10 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
 import fi.oph.kouta.indexing.S3Service
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
-import fi.oph.kouta.validation.Validatable
+import fi.oph.kouta.validation.{NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
@@ -18,13 +19,11 @@ import scala.collection.IterableView
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
-
 trait ValidatingService[E <: Validatable] {
 
-  def withValidation[R](e: E, f: E => R): R = e.validate() match {
-    case Right(_) => f(e)
-    case Left(list) => throw KoutaValidationException(list)
+  def withValidation[R](e:E, f: E => R): R = e.validate() match {
+    case NoErrors => f(e)
+    case errors => throw KoutaValidationException(errors)
   }
 }
 

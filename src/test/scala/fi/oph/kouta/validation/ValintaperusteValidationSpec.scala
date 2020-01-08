@@ -10,28 +10,28 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] wi
   val min = MinYoValintaperuste
 
   it should "fail if perustiedot is invalid" in {
-    assertLeft(max.copy(kielivalinta = Seq()), MissingKielivalinta)
-    assertLeft(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
-    assertLeft(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    assertLeft(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
+    failsValidation(max.copy(kielivalinta = Seq()), MissingKielivalinta)
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
+    failsValidation(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
   }
 
   it should "pass imcomplete valintaperuste if not julkaistu" in {
-    assertRight(min)
+    passesValidation(min)
   }
 
   it should "fail if julkaistu valintaperuste is invalid" in {
-    assertLeft(max.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
-    assertLeft(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
-    assertLeft(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
+    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
+    failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
+    failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
   }
 
   it should "pass valid julkaistu valintaperuste" in {
-    assertRight(max)
+    passesValidation(max)
   }
 
   it should "return multiple error messages" in {
-    assertLeft(max.copy(hakutapaKoodiUri = None, kohdejoukkoKoodiUri = None),
+    failsValidation(max.copy(hakutapaKoodiUri = None, kohdejoukkoKoodiUri = None),
       List(missingMsg("hakutapaKoodiUri"), missingMsg("kohdejoukkoKoodiUri")))
   }
 }
