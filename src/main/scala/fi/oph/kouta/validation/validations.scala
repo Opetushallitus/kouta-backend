@@ -3,6 +3,7 @@ package fi.oph.kouta.validation
 import java.time.LocalDate
 import java.util.UUID
 import java.util.regex.Pattern
+
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.Oid
 
@@ -29,9 +30,7 @@ trait Validations {
   def InvalidHakuaika = "Hakuaika on virheellinen"
   def MissingTarjoajat = "Tarjoajat puuttuvat"
 
-  def toLeft(msg: String) = Left(List(msg))
-
-  def assertTrue(b: Boolean, msg: String): IsValid = Either.cond(b, (), List(msg))
+  def assertTrue(b: Boolean, msg: String): IsValid = if (!b) List(msg) else NoErrors
   def assertNotNegative(i: Int, name: String): IsValid = assertTrue(i >= 0, notNegativeMsg(name))
   def assertOption[E](o: Option[E], f: (E) => Boolean, msg: String, optional: Boolean = true): IsValid = assertTrue(o.map(f).getOrElse(optional), msg)
   def assertOptionPresent[E](o: Option[E], msg: String): IsValid = assertTrue(o.isDefined, msg)
@@ -40,45 +39,32 @@ trait Validations {
   def assertNotOptional[T](value: Option[T], name: String): IsValid = assertTrue(value.isDefined, missingMsg(name))
   def assertNotEmpty[T](s: Seq[T], msg: String): IsValid = assertTrue(s.nonEmpty, msg)
 
-  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(Right(()))
-  def validateIfDefined[T <: Validatable](value: Option[T]): IsValid = value.map(_.validate()).getOrElse(Right(()))
+  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
-  def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = {
-    val messages = values
-      .map(f(_))
-      .collect {
-        case Left(msgList) => msgList
-      }.flatten
+  def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = values.flatMap(f(_)).toList
 
-    Either.cond(messages.isEmpty, (), messages.toList)
-  }
-
-  def validateIfTrue(b: Boolean, f: () => IsValid): IsValid = if (b) {
-    f()
-  } else {
-    Right(())
-  }
+  def validateIfTrue(b: Boolean, f: () => IsValid): IsValid = if(b) f() else NoErrors
 
   def findInvalidOids(l: Seq[Oid]): Seq[Oid] = l.filter(!_.isValid())
   def validateOidList(values: Seq[Oid]): IsValid = findInvalidOids(values) match {
-    case x if !x.isEmpty => toLeft(invalidOidsMsg(x))
-    case _ => Right(())
+    case x if x.isEmpty => NoErrors
+    case oids => List(invalidOidsMsg(oids))
   }
 
   def findPuuttuvatKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] = {
     kielivalinta.diff(k.keySet.toSeq).union(
       k.filter{case (kieli, arvo) => arvo.isEmpty}.keySet.toSeq)}
 
-  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, msg: String): IsValid =
+  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, field: String): IsValid =
     findPuuttuvatKielet(kielivalinta, k) match {
-      case x if !x.isEmpty => toLeft(invalidKielistetty(msg, x))
-      case _ => Right(())
+      case x if x.isEmpty => NoErrors
+      case x   => List(invalidKielistetty(field, x))
     }
 
   def isValidHakuaika(hakuaika: Ajanjakso): Boolean = hakuaika.alkaa.isBefore(hakuaika.paattyy)
   def validateHakuajat(hakuajat: List[Ajanjakso]): IsValid = hakuajat.filterNot(isValidHakuaika) match {
-    case x if x.isEmpty => Right(())
-    case x => toLeft(InvalidHakuaika)
+    case x if x.isEmpty => NoErrors
+    case x => List(InvalidHakuaika)
   }
 
   def isValidAlkamisvuosi(s: String): Boolean = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
@@ -86,6 +72,6 @@ trait Validations {
 
   def validateAtaruId(hakulomaketyyppi: Option[Hakulomaketyyppi], hakulomakeAtaruId: Option[UUID]): IsValid = hakulomaketyyppi match {
     case Some(Ataru) => assertNotOptional(hakulomakeAtaruId, "hakemuspalvelu ID")
-    case _ => Right(())
+    case _ => NoErrors
   }
 }
