@@ -210,7 +210,7 @@ case class Haku(oid: Option[HakuOid] = None,
      validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
      validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
      validateHakuajat(hakuajat),
-     validateIfTrue(tila == Julkaistu, () => and (
+     validateIfJulkaistu(tila, and(
        assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
        assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
        assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),

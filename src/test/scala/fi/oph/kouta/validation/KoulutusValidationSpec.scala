@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.oid._
 class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] with Validations {
 
   val amm = AmmKoulutus
+  val yo = YoKoulutus
   val min = MinKoulutus
 
   it should "fail if perustiedot is invalid" in {
@@ -30,10 +31,39 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] with Validatio
     failsValidation(amm.copy(koulutusKoodiUri = None), missingMsg("koulutusKoodiUri"))
     failsValidation(amm.copy(koulutusKoodiUri = Some("mummo")), validationMsg("mummo"))
     failsValidation(amm.copy(tarjoajat = List("mummo", "varis", "1.2.3").map(OrganisaatioOid)), invalidOidsMsg(List("mummo", "varis").map(OrganisaatioOid)))
+    failsValidation(amm.copy(metadata = None), missingMsg("metadata"))
+    failsValidation(amm.copy(teemakuva = Some("mummo")), invalidUrl("mummo"))
+  }
+
+  it should "fail if metadata is invalid" in {
+    val metadata = amm.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
+    failsValidation(amm.copy(metadata = Some(metadata.copy(tyyppi = Muu))), InvalidMetadataTyyppi)
+    failsValidation(amm.copy(metadata = Some(metadata.copy(kuvaus = Map(Fi -> "kuvaus")))), invalidKielistetty("kuvaus", Seq(Sv)))
+    failsValidation(amm.copy(metadata = Some(metadata.copy(koulutusalaKoodiUrit = Seq("mummo")))), validationMsg("mummo"))
+
+    val missingKielivalintaLisatiedot = Seq(Lisatieto("koulutuksenlisatiedot_32#1", Map(Fi -> "lisatieto")))
+    failsValidation(amm.copy(metadata = Some(metadata.copy(lisatiedot = missingKielivalintaLisatiedot))), invalidKielistetty("lisatieto", Seq(Sv)))
+    passesValidation(amm.copy(tila = Tallennettu).copy(metadata = Some(metadata.copy(lisatiedot = missingKielivalintaLisatiedot))))
+
+    val invalidKoodiLisatieto = Seq(Lisatieto("mummo", Map(Fi -> "lisatieto", Sv -> "lisatieto sv")))
+    failsValidation(amm.copy(metadata = Some(metadata.copy(lisatiedot = invalidKoodiLisatieto))), validationMsg("mummo"))
+  }
+
+  it should "fail if korkeakoulutus metadata is invalid" in {
+    val metadata = yo.metadata.get.asInstanceOf[YliopistoKoulutusMetadata]
+    failsValidation(yo.copy(metadata = Some(metadata.copy(kuvauksenNimi = Map(Fi -> "lisatieto")))), invalidKielistetty("kuvauksenNimi", Seq(Sv)))
+    passesValidation(yo.copy(tila = Tallennettu).copy(metadata = Some(metadata.copy(kuvauksenNimi = Map(Fi -> "lisatieto")))))
+
+    failsValidation(yo.copy(metadata = Some(metadata.copy(tutkintonimikeKoodiUrit = Seq("mummo")))), validationMsg("mummo"))
+    failsValidation(yo.copy(metadata = Some(metadata.copy(opintojenLaajuusKoodiUri = Some("mummo")))), validationMsg("mummo"))
   }
 
   it should "pass valid ammatillinen koulutus" in {
     passesValidation(amm)
+  }
+
+  it should "pass valid korkeakoulutus koulutus" in {
+    passesValidation(yo)
   }
 
   it should "return multiple error messages" in {

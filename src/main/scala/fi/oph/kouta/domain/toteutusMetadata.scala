@@ -244,15 +244,13 @@ package object toteutusMetadata {
   val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
 }
 
-sealed trait ToteutusMetadata extends Validatable {
+sealed trait ToteutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilot: Seq[Yhteyshenkilo]
-
-  override def validate(): IsValid = validateIfDefined(opetus)
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
@@ -319,7 +317,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   stipendinMaara: Option[Double] = None,
                   stipendinKuvaus: Kielistetty = Map()) extends Validatable {
 
-  override def validate(): IsValid = validateIfTrue(!koulutuksenTarkkaAlkamisaika, () => and(
+  override def validate(): IsValid = validateIfTrue(!koulutuksenTarkkaAlkamisaika, and(
     assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
     assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
   ))

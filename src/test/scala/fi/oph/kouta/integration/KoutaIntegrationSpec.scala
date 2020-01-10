@@ -34,7 +34,7 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val rootOrganisaatio = KoutaIntegrationSpec.rootOrganisaatio
   val defaultAuthorities = KoutaIntegrationSpec.defaultAuthorities
 
-  val testUser = TestUser("1.2.246.562.24.0", "testuser", defaultSessionId)
+  val testUser = TestUser(KoutaIntegrationSpec.testUserOid, "testuser", defaultSessionId)
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid, defaultAuthorities), testUser.sessionId)
@@ -62,6 +62,8 @@ object KoutaIntegrationSpec {
 
   val rootOrganisaatio = OrganisaatioOid("1.2.246.562.10.00000000001")
   val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, rootOrganisaatio)).toSet
+
+  val testUserOid = "1.2.246.562.24.0"
 }
 
 trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { this: HttpSpec =>
@@ -224,7 +226,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def update[E <: scala.AnyRef](path: String, entity: E, headers: Iterable[(String, String)], expectUpdate: Boolean): Unit = {
     post(path, bytes(entity), headers) {
-      status should equal(200)
+      withClue(body) {
+        status should equal(200)
+      }
       updated(body) should equal(expectUpdate)
     }
   }

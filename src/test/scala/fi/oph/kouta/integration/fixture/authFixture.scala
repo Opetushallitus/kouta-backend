@@ -10,7 +10,7 @@ import fi.oph.kouta.servlet.AuthServlet
 class KayttooikeusClientMock(securityContext: SecurityContext, defaultAuthorities: Set[Authority]) extends KayttooikeusClient {
   override def getUserByUsername(username: String): KayttooikeusUserDetails = {
     username match {
-      case "testuser" => KayttooikeusUserDetails(defaultAuthorities, "1.2.246.562.24.0")
+      case "testuser" => KayttooikeusUserDetails(defaultAuthorities, KoutaIntegrationSpec.testUserOid)
       case _ => throw new AuthenticationFailedException(s"User not found with username: $username")
     }
   }

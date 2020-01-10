@@ -3,7 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 
-import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.Authorizable
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
@@ -18,7 +18,7 @@ sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPr
   def validate(): IsValid = and(
     assertValid(muokkaaja),
     assertValid(organisaatioOid),
-    validateIfTrue(tila == Julkaistu, () => and(
+    validateIfJulkaistu(tila, and(
       assertTrue(kielivalinta.nonEmpty, MissingKielivalinta),
       validateKielistetty(kielivalinta, nimi, "nimi")
     )))
@@ -30,7 +30,7 @@ abstract class PerustiedotWithOid[ID <: Oid, T] extends Perustiedot[ID, T] {
 
   override def validate(): IsValid = and(
     super.validate(),
-    validateIfDefined[Oid](oid, assertValid(_))
+    validateIfDefined[Oid](oid, assertValid)
   )
 
   override def primaryId: Option[ID] = oid
