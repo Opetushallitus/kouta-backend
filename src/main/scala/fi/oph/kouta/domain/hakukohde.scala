@@ -342,9 +342,9 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
      validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, assertMatch(_, PohjakoulutusvaatimusKoodiPattern)),
      validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
      validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
-     validateIfTrue(tila == Julkaistu, () => and(
-       validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusaika, "liitteiden toimitusaika"))),
-       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, () => assertNotOptional(liitteidenToimitusosoite, "liitteiden toimitusaika"))),
+     validateIfJulkaistu(tila, and(
+       validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, assertNotOptional(liitteidenToimitusaika, "liitteiden toimitusaika"))),
+       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, assertNotOptional(liitteidenToimitusosoite, "liitteiden toimitusaika"))),
        validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
     ))
   )

@@ -252,7 +252,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
   override def validate(): IsValid = and(
     assertValid(muokkaaja),
     assertValid(organisaatioOid),
-    validateIfTrue(tila == Julkaistu, () => and(
+    validateIfJulkaistu(tila, and(
       assertTrue(kielivalinta.nonEmpty, MissingKielivalinta)/*,
       validateIfDefined(metadata, and(
         validateKielistetty(kielivalinta, metadata.get.esittely, "esittely"),
@@ -287,7 +287,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
   override def validate(): IsValid = and(
     assertValid(muokkaaja),
     assertValid(organisaatioOid),
-    validateIfTrue(tila == Julkaistu, () => and(
+    validateIfJulkaistu(tila, and(
       assertTrue(kielivalinta.nonEmpty, MissingKielivalinta)/*,
       validateIfDefined(metadata, and(
         validateKielistetty(kielivalinta, metadata.get.esittely, "esittely"),

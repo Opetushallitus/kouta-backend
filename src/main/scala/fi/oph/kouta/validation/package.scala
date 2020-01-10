@@ -6,7 +6,5 @@ package object validation {
 
   trait Validatable extends Validations {
     def validate(): IsValid
-
-    def and(validations: IsValid*): IsValid = validations.flatten.distinct.toList // TODO: Miksi distinct?
   }
 }

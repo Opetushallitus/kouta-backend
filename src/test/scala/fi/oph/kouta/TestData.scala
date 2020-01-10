@@ -1,13 +1,14 @@
 package fi.oph.kouta
 
-import java.time.{LocalDate, LocalDateTime}
 import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.mocks.OrganisaatioServiceMock.{ChildOid, EvilGrandChildOid, GrandChildOid, EvilCousin}
+import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.OrganisaatioServiceMock.{ChildOid, EvilCousin, EvilGrandChildOid, GrandChildOid}
 
 object TestData {
 
@@ -66,7 +67,7 @@ object TestData {
         Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
-    muokkaaja = UserOid("5.5.5"),
+    muokkaaja = UserOid(KoutaIntegrationSpec.testUserOid),
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     modified = None)
@@ -87,12 +88,17 @@ object TestData {
         Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
-    muokkaaja = UserOid("5.5.5"),
+    muokkaaja = UserOid(KoutaIntegrationSpec.testUserOid),
     organisaatioOid = OrganisaatioOid("1.2"),
     kielivalinta = List(Fi, Sv),
     modified = None)
 
-  val MinKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = false, muokkaaja = UserOid("1.2.3"), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
+  val MinKoulutus = Koulutus(
+    koulutustyyppi = Amm,
+    johtaaTutkintoon = false,
+    muokkaaja = UserOid(KoutaIntegrationSpec.testUserOid),
+    organisaatioOid = OrganisaatioOid("1.2"),
+    modified = None)
 
   val JulkaistuHaku = new Haku(
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),

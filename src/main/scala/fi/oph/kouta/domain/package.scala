@@ -5,6 +5,7 @@ import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils
+import fi.oph.kouta.validation.{IsValid, Validations}
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {
@@ -410,7 +411,12 @@ package object domain {
     val modified: LocalDateTime
   }
 
-  case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty)
+  case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) extends Validations {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+      assertMatch(otsikkoKoodiUri, KoulutuksenLisatiedotOtsikkoKoodiPattern),
+      validateIfJulkaistu(tila, validateKielistetty(kielivalinta, teksti, "lisatieto"))
+    )
+  }
 
   case class Osoite(osoite: Kielistetty = Map(),
                     postinumeroKoodiUri: Option[String])

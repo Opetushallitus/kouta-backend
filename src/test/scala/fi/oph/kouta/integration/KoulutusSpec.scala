@@ -297,11 +297,16 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "update koulutuksen tekstit ja tarjoajat" in {
     val oid = put(koulutus)
+    val metadata = koulutus.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
     val lastModified = get(oid, koulutus(oid))
     val uusiKoulutus = koulutus(oid).copy(
       kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
+      .withMetadata(metadata.copy(
+        lisatiedot = metadata.lisatiedot.map(_.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))),
+        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
+      ))
     update(uusiKoulutus, lastModified, true)
     get(oid, uusiKoulutus)
   }
