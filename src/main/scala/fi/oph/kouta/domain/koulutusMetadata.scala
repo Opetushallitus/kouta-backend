@@ -112,9 +112,9 @@ sealed trait KoulutusMetadata extends TeemakuvaMetadata[KoulutusMetadata] with V
   def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
     assertTrue(tyyppi == koulutustyyppi, InvalidMetadataTyyppi),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus")),
-    all(lisatiedot.map(_.validate(tila, kielivalinta))),
+    validateIfNonEmpty[Lisatieto](lisatiedot, _.validate(tila, kielivalinta)),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, assertMatch(_, KoulutusalaKoodiPattern)),
-    validateIfDefined(teemakuva, validateUrl),
+    validateIfDefined(teemakuva, assertValidUrl),
   )
 }
 

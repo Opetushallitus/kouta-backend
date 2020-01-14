@@ -3,6 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.keyword.Keyword
+import fi.oph.kouta.validation.{IsValid, Validations}
 
 package object toteutusMetadata {
 
@@ -235,7 +236,7 @@ package object toteutusMetadata {
   val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
 }
 
-sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
+sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] with Validations {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
@@ -243,11 +244,27 @@ sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilot: Seq[Yhteyshenkilo]
   val teemakuva: Option[String]
+
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    validateIfDefined[Opetus](opetus, _.validate(tila, kielivalinta)),
+    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, _.validate(tila, kielivalinta)),
+    validateIfDefined(teemakuva, assertValidUrl),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus"),
+      assertNotOptional(opetus, "opetus"),
+    ))
+  )
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
   val alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
   val ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    super.validate(tila, kielivalinta),
+    validateIfNonEmpty[KorkeakouluOsaamisala](alemmanKorkeakoulututkinnonOsaamisalat, _.validate(tila, kielivalinta)),
+    validateIfNonEmpty[KorkeakouluOsaamisala](ylemmanKorkeakoulututkinnonOsaamisalat, _.validate(tila, kielivalinta))
+  )
 }
 
 case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
@@ -259,6 +276,12 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                         teemakuva: Option[String] = None) extends ToteutusMetadata {
   override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    super.validate(tila, kielivalinta),
+    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, _.validate(tila, kielivalinta)),
+    validateIfJulkaistu(tila, assertNotEmpty(osaamisalat, "osaamisalat"))
+  )
 }
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
@@ -285,19 +308,40 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
   override def withTeemakuva(teemakuva: Option[String]): ToteutusMetadata = copy(teemakuva = teemakuva)
 }
 
-trait Osaamisala {
+trait Osaamisala extends Validations {
   val linkki: Kielistetty
   val otsikko: Kielistetty
+
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    validateIfNonEmpty(linkki.values.toSeq, assertValidUrl),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, linkki, "linkki"),
+      validateOptionalKielistetty(kielivalinta, otsikko, "otsikko"),
+    ))
+  )
 }
 
 case class AmmatillinenOsaamisala(koodiUri: String,
                                   linkki: Kielistetty = Map(),
-                                  otsikko: Kielistetty = Map()) extends Osaamisala
+                                  otsikko: Kielistetty = Map()) extends Osaamisala {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    super.validate(tila, kielivalinta),
+    assertMatch(koodiUri, OsaamisalaKoodiPattern)
+  )
+}
 
 case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
                                  kuvaus: Kielistetty = Map(),
                                  linkki: Kielistetty = Map(),
-                                 otsikko: Kielistetty = Map()) extends Osaamisala
+                                 otsikko: Kielistetty = Map()) extends Osaamisala {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    super.validate(tila, kielivalinta),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, nimi, "nimi"),
+      validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus")
+    ))
+  )
+}
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetuskieletKuvaus: Kielistetty = Map(),
@@ -313,4 +357,29 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
-                  stipendinKuvaus: Kielistetty = Map())
+                  stipendinKuvaus: Kielistetty = Map()) extends Validations {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    validateIfNonEmpty[String](opetuskieliKoodiUrit, k => assertMatch(k, OpetuskieliKoodiPattern)),
+    validateIfNonEmpty[String](opetusaikaKoodiUrit, k => assertMatch(k, OpetusaikaKoodiPattern)),
+    validateIfNonEmpty[String](opetustapaKoodiUrit, k => assertMatch(k, OpetustapaKoodiPattern)),
+    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara),
+    validateIfDefined[Double](stipendinMaara, assertNotNegative(_, "stipendinMaara")),
+    validateIfJulkaistu(tila, and(
+      assertNotEmpty(opetuskieliKoodiUrit, "opetuskieliKoodiUrit"),
+      validateOptionalKielistetty(kielivalinta, opetuskieletKuvaus, "opetuskieletKuvaus"),
+      assertNotEmpty(opetusaikaKoodiUrit, "opetusaikaKoodiUrit"),
+      validateOptionalKielistetty(kielivalinta, opetusaikaKuvaus, "opetusaikaKuvaus"),
+      assertNotEmpty(opetustapaKoodiUrit, "opetustapaKoodiUrit"),
+      validateOptionalKielistetty(kielivalinta, opetustapaKuvaus, "opetustapaKuvaus"),
+      assertNotOptional(onkoMaksullinen, "onkoMaksullinen"),
+      validateOptionalKielistetty(kielivalinta, maksullisuusKuvaus, "maksullisuusKuvaus"),
+      validateIfDefined[Double](maksunMaara, assertNotNegative(_, "maksunMaara")),
+      validateIfTrue(onkoMaksullinen.contains(true), assertNotOptional(maksunMaara, "maksunMaara")),
+      assertNotOptional(koulutuksenAlkamispaivamaara, "koulutuksenAlkamispaivamaara"),
+      validateIfNonEmpty[Lisatieto](lisatiedot, _.validate(tila, kielivalinta)),
+      assertNotOptional(onkoStipendia, "onkoStipendia"),
+      validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, "stipendinMaara")),
+      validateOptionalKielistetty(kielivalinta, stipendinKuvaus, "stipendinKuvaus")
+    ))
+  )
+}

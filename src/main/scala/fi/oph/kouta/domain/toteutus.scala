@@ -214,10 +214,11 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
   extends PerustiedotWithOid[ToteutusOid, Toteutus] with HasTeemakuvaMetadata[Toteutus, ToteutusMetadata] {
 
   override def validate(): IsValid = and(
-     super.validate(),
-     assertValid(koulutusOid),
-     validateIfDefined[ToteutusOid](oid, assertValid(_)),
-     validateOidList(tarjoajat)
+    super.validate(),
+    assertValid(koulutusOid),
+    validateOidList(tarjoajat),
+    validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta)),
+    validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
   )
 
   def withOid(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))

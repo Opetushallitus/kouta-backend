@@ -25,6 +25,10 @@ Localstack Docker instanssin komennolla `tools/start_localstack` ja sammutettua
 `tools/stop_localstack` komennolla. Mikäli käytössä on lokaali `konfo-indeksoija` voi sen
 Localstack instanssia käyttää koska komennot ovat identtisiä.
 
+Localstackin käynnistysskripti kirjoittaa `~/.kouta_localstack` -tiedostoon käynnistämänsä dockerin id:n.
+Pysäytysskripti poistaa tuon tiedoston. Jos docker pysähtyy muulla tavalla, on mahdollista, että tuo tiedosto
+jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/stop_localstack`, joka poistaa "haamutiedoston".
+
 ##### Konfigurointi
 
 EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
