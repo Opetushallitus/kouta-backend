@@ -116,7 +116,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   "Update toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
-    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(AmmatillinenToteutusMetadata(
+    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(ammMetatieto.copy(
       asiasanat = List(Keyword(Fi, "robotti")),
       ammattinimikkeet = List(Keyword(Fi, "robotti-insinööri"))
     )))

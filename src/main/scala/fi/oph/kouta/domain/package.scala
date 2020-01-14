@@ -381,7 +381,17 @@ package object domain {
                            titteli: Kielistetty = Map(),
                            sahkoposti: Kielistetty = Map(),
                            puhelinnumero: Kielistetty = Map(),
-                           wwwSivu: Kielistetty = Map())
+                           wwwSivu: Kielistetty = Map()) extends Validations {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = {
+      validateIfJulkaistu(tila, and(
+        validateKielistetty(kielivalinta, nimi, "nimi"),
+        validateOptionalKielistetty(kielivalinta, titteli, "titteli"),
+        validateOptionalKielistetty(kielivalinta, sahkoposti, "sahkoposti"),
+        validateOptionalKielistetty(kielivalinta, puhelinnumero, "puhelinnumero"),
+        validateOptionalKielistetty(kielivalinta, wwwSivu, "wwwSivu")
+      ))
+    }
+  }
 
   case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
 

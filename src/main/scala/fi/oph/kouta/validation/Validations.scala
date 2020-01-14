@@ -1,7 +1,7 @@
 package fi.oph.kouta.validation
 
 import java.net.URL
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 import java.util.regex.Pattern
 
@@ -13,8 +13,7 @@ import scala.util.{Success, Try}
 trait Validations {
   protected def error(msg: String): IsValid = List(msg)
 
-  protected def and(validations: IsValid*): IsValid = all(validations)
-  protected def all(validations: Seq[IsValid]): IsValid = validations.flatten.distinct.toList // TODO: Miksi distinct?
+  protected def and(validations: IsValid*): IsValid = validations.flatten.distinct.toList
 
   protected def validationMsg(value:String) = s"'${value}' ei ole validi"
   protected def missingMsg(name:String) = s"Pakollinen tieto '$name' puuttuu"
@@ -35,23 +34,28 @@ trait Validations {
   protected val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso2_\d+#\d{1,2}""")
   protected val TutkintonimikeKoodiPattern: Pattern = Pattern.compile("""tutkintonimikekk_\d+#\d{1,2}""")
   protected val OpintojenLaajuusKoodiPattern: Pattern = Pattern.compile("""opintojenlaajuus_\d+#\d{1,2}""")
+  protected val OpetuskieliKoodiPattern: Pattern = Pattern.compile("""oppilaitoksenopetuskieli_\d+#\d{1,2}""")
+  protected val OpetusaikaKoodiPattern: Pattern = Pattern.compile("""opetusaikakk_\d+#\d{1,2}""")
+  protected val OpetustapaKoodiPattern: Pattern = Pattern.compile("""opetuspaikkakk_\d+#\d{1,2}""")
+  protected val OsaamisalaKoodiPattern: Pattern = Pattern.compile("""osaamisala_\d+(#\d{1,2})?""")
 
   protected val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
   protected val MissingKielivalinta = "Kielivalinta puuttuu"
   protected val InvalidHakuaika = "Hakuaika on virheellinen"
-  protected val MissingTarjoajat = "Tarjoajat puuttuvat"
+  protected val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
   protected val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"
 
   protected def assertTrue(b: Boolean, msg: String): IsValid = if (b) NoErrors else error(msg)
   protected def assertFalse(b: Boolean, msg: String): IsValid = assertTrue(!b, msg)
   protected def assertNotNegative(i: Int, name: String): IsValid = assertTrue(i >= 0, notNegativeMsg(name))
+  protected def assertNotNegative(i: Double, name: String): IsValid = assertTrue(i >= 0, notNegativeMsg(name))
   protected def assertOption[E](o: Option[E], f: (E) => Boolean, msg: String, optional: Boolean = true): IsValid = assertTrue(o.map(f).getOrElse(optional), msg)
   protected def assertOptionPresent[E](o: Option[E], msg: String): IsValid = assertTrue(o.isDefined, msg)
   protected def assertMatch(value: String, pattern: Pattern): IsValid = assertTrue(pattern.matcher(value).matches(), validationMsg(value))
   protected def assertValid(oid: Oid): IsValid = assertTrue(oid.isValid(), validationMsg(oid.toString))
   protected def assertNotOptional[T](value: Option[T], name: String): IsValid = assertTrue(value.isDefined, missingMsg(name))
-  protected def assertNotEmpty[T](s: Seq[T], msg: String): IsValid = assertTrue(s.nonEmpty, msg)
+  protected def assertNotEmpty[T](value: Seq[T], name: String): IsValid = assertTrue(value.nonEmpty, missingMsg(name))
 
   protected def validateNotOptional[E](o: Option[E], name: String, f: (E) => IsValid): IsValid = and(
     assertNotOptional(o, name),
@@ -99,10 +103,19 @@ trait Validations {
     case _ => NoErrors
   }
 
-  protected def validateUrl(url: String): IsValid = {
+  protected def assertValidUrl(url: String): IsValid = {
     Try(new URL(url)) match {
       case Success(u) if u.getProtocol == "http" || u.getProtocol == "https" => NoErrors
       case _ => error(invalidUrl(url))
     }
+  }
+
+  protected def validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara: Option[LocalDateTime],
+                                            koulutuksenPaattymispaivamaara: Option[LocalDateTime]): IsValid = {
+    koulutuksenAlkamispaivamaara.flatMap(alku =>
+      koulutuksenPaattymispaivamaara.map(loppu =>
+        assertTrue(alku.isBefore(loppu), InvalidKoulutuspaivamaarat)
+      )
+    ).getOrElse(NoErrors)
   }
 }

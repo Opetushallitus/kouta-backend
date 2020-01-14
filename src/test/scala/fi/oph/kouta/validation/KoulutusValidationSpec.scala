@@ -11,7 +11,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] with Validatio
   val min = MinKoulutus
 
   it should "fail if perustiedot is invalid" in {
-    failsValidation(amm.copy(oid = Some(KoulutusOid("moikka"))), validationMsg("moikka"))
+    failsValidation(amm.copy(oid = Some(KoulutusOid("1.2.3"))), validationMsg("1.2.3"))
     failsValidation(amm.copy(kielivalinta = Seq()), MissingKielivalinta)
     failsValidation(amm.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
     failsValidation(amm.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
