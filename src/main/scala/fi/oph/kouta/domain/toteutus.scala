@@ -220,8 +220,6 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
      validateOidList(tarjoajat)
   )
 
-  override def getTarjoajat(): Seq[OrganisaatioOid] = tarjoajat
-
   override def primaryId: Option[ToteutusOid] = oid
 
   override def withPrimaryID(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))

@@ -20,7 +20,7 @@ abstract class ValintaperusteService(sqsInTransactionService: SqsInTransactionSe
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
-    authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, withParents = true, withTarjoajat = false, Seq(authorizationRuleForJulkinen)))
+    authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {

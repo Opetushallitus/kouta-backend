@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
 
 package object sorakuvaus {
@@ -122,14 +123,10 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime]) extends PerustiedotWithId with MaybeJulkinen {
+                      modified: Option[LocalDateTime]) extends PerustiedotWithId with AuthorizableMaybeJulkinen {
   override def validate(): IsValid = and(
     super.validate()
   )
-
-  override def isJulkinen(): Boolean = julkinen
-
-  override def getKoulutustyyppi(): Option[Koulutustyyppi] = Some(koulutustyyppi)
 }
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map())

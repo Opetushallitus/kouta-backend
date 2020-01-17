@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
 
 package object valintaperuste {
@@ -194,7 +195,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
                           kielivalinta: Seq[Kieli] = Seq(),
-                          modified: Option[LocalDateTime]) extends PerustiedotWithId with MaybeJulkinen {
+                          modified: Option[LocalDateTime]) extends PerustiedotWithId with AuthorizableMaybeJulkinen {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -206,10 +207,6 @@ case class Valintaperuste(id: Option[UUID] = None,
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
     ))
   )
-
-  override def isJulkinen(): Boolean = julkinen
-
-  override def getKoulutustyyppi(): Option[Koulutustyyppi] = Some(koulutustyyppi)
 }
 
 case class ValintaperusteListItem(id: UUID,

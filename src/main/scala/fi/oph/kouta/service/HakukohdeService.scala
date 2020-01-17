@@ -18,7 +18,7 @@ abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService
   protected val roleEntity: RoleEntity = Role.Hakukohde
 
   def get(oid: HakukohdeOid)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] =
-    authorizeGet(HakukohdeDAO.get(oid), AuthorizationRules(roleEntity.readRoles, alternativeOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(oid)))
+    authorizeGet(HakukohdeDAO.get(oid), AuthorizationRules(roleEntity.readRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(oid)))
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) {
@@ -26,7 +26,7 @@ abstract class HakukohdeService(sqsInTransactionService: SqsInTransactionService
     }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), AuthorizationRules(roleEntity.updateRoles, alternativeOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))) {
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))) {
       withValidation(hakukohde, updateWithIndexing(_, notModifiedSince))
     }
 

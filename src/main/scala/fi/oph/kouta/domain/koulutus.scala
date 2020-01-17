@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 
 package object koulutus {
 
@@ -158,7 +159,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     modified: Option[LocalDateTime])
-  extends PerustiedotWithOid with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with HasPrimaryId[KoulutusOid, Koulutus] with MaybeJulkinen {
+  extends PerustiedotWithOid with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with HasPrimaryId[KoulutusOid, Koulutus] with AuthorizableMaybeJulkinen {
 
   override def validate() = {
     and(super.validate(),
@@ -171,12 +172,6 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           validateIfTrue(!KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid),
             () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
   }
-
-  override def isJulkinen(): Boolean = julkinen
-
-  override def getKoulutustyyppi(): Option[Koulutustyyppi] = Some(koulutustyyppi)
-
-  override def getTarjoajat(): Seq[OrganisaatioOid] = tarjoajat
 
   override def primaryId: Option[KoulutusOid] = oid
 

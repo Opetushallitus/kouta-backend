@@ -20,21 +20,25 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
-  def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] =
-    authorizeGet(ToteutusDAO.get(oid), AuthorizationRules(roleEntity.readRoles, withParents = true, withTarjoajat = true))
+  def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
+    val toteutusWithTime = ToteutusDAO.get(oid)
+    authorizeGet(toteutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
+  }
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) {
       withValidation(toteutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
     }
 
-  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(ToteutusDAO.get(toteutus.oid.get), AuthorizationRules(roleEntity.updateRoles, withParents = true, withTarjoajat = true)) {
+  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
+    authorizeUpdate(toteutusWithTime, AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))) {
       withValidation(toteutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
+  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(roleEntity.readRoles, withParents = true))(ToteutusDAO.listByAllowedOrganisaatiot)
+    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(ToteutusDAO.listByAllowedOrganisaatiot)
 
   def listHaut(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid))
@@ -60,6 +64,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       case toteutusOids => assocHakukohdeCounts(KoutaIndexClient.searchToteutukset(toteutusOids, params))
     }
   }
+
+  private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
+    maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
   private def putWithIndexing(toteutus: Toteutus) =
     sqsInTransactionService.runActionAndUpdateIndex(

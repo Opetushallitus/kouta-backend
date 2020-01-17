@@ -21,8 +21,10 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
-  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
-    authorizeGet(KoulutusDAO.get(oid), AuthorizationRules(roleEntity.readRoles, withParents = true, withTarjoajat = true, Seq(authorizationRuleForJulkinen)))
+  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
+    val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
+    authorizeGet(koulutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime)))
+  }
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
@@ -30,10 +32,12 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     }
 
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
-  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(KoulutusDAO.get(koulutus.oid.get), AuthorizationRules(roleEntity.updateRoles, withParents = true, withTarjoajat = true, Seq(authorizationRuleForJulkinen))) {
+  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
+    authorizeUpdate(koulutusWithTime, AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))) {
       withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
+  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
@@ -66,7 +70,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid))
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, withParents = true)) {
+    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
       ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, _)
     }
 
@@ -82,6 +86,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
     }
   }
+
+  private def getTarjoajat(maybeKoulutusWithTime: Option[(Koulutus, Instant)]): Seq[OrganisaatioOid] =
+    maybeKoulutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
   private def putWithIndexing(koulutus: Koulutus) =
     sqsInTransactionService.runActionAndUpdateIndex(

@@ -38,9 +38,3 @@ abstract class PerustiedotWithId extends Perustiedot {
 
   override def validate(): IsValid = super.validate()
 }
-
-trait MaybeJulkinen {
-  val julkinen: Boolean
-  val koulutustyyppi: Koulutustyyppi
-  val organisaatioOid: OrganisaatioOid
-}

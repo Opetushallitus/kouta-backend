@@ -8,9 +8,11 @@ import scala.util.matching.Regex
 trait Authorizable {
   val organisaatioOid: OrganisaatioOid
 
-  def getTarjoajat(): Seq[OrganisaatioOid] = Seq()
-  def isJulkinen(): Boolean = false
-  def getKoulutustyyppi(): Option[Koulutustyyppi] = None
+}
+
+trait AuthorizableMaybeJulkinen extends Authorizable {
+  val koulutustyyppi: Koulutustyyppi
+  val julkinen: Boolean
 }
 
 sealed abstract class Role(val name: String) extends Product with Serializable {
