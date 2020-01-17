@@ -87,12 +87,12 @@ package object hakukohde {
       |          example: 50
       |        pohjakoulutusvaatimusKoodiUrit:
       |          type: array
-      |          description: Lista toisen asteen hakukohteen pohjakoulutusvaatimuksista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/pohjakoulutusvaatimustoinenaste/1)
+      |          description: Lista hakukohteen pohjakoulutusvaatimuksista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/pohjakoulutusvaatimuskouta/1)
       |          items:
       |            type: string
       |          example:
-      |            - pohjakoulutusvaatimustoinenaste_pk#1
-      |            - pohjakoulutusvaatimustoinenaste_yo#1
+      |            - pohjakoulutusvaatimuskouta_1#1
+      |            - pohjakoulutusvaatimuskouta_109#1
       |        muuPohjakoulutusvaatimus:
       |          type: object
       |          description: Hakukohteen muiden pohjakoulutusvaatimusten kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
