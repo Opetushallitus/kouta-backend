@@ -240,19 +240,19 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   def deleteTarjoajat(oid: Option[KoulutusOid]) = sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
   val selectKoulutusListSql =
-    s"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
-          from koulutukset k
-          inner join (
-            select k.oid oid, greatest(
-              max(lower(k.system_time)),
-              max(lower(ta.system_time)),
-              max(upper(kh.system_time)),
-              max(upper(tah.system_time))) modified
-            from koulutukset k
-            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-            left join koulutukset_history kh on k.oid = kh.oid
-            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
-            group by k.oid) m on k.oid = m.oid"""
+    """select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
+         from koulutukset k
+         inner join (
+           select k.oid oid, greatest(
+             max(lower(k.system_time)),
+             max(lower(ta.system_time)),
+             max(upper(kh.system_time)),
+             max(upper(tah.system_time))) modified
+           from koulutukset k
+           left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
+           left join koulutukset_history kh on k.oid = kh.oid
+           left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+           group by k.oid) m on k.oid = m.oid"""
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""#$selectKoulutusListSql

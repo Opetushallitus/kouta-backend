@@ -11,28 +11,28 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
   def this() = this(HakukohdeService)
 
   registerPath("/hakukohde/{oid}",
-    s"""    get:
-       |      summary: Hae hakukohteen tiedot
-       |      operationId: Hae hakukohde
-       |      description: Hakee hakukohteen kaikki tiedot
-       |      tags:
-       |        - Hakukohde
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Hakukohde-oid
-       |          example: 1.2.246.562.20.00000000000000000009
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                $$ref: '#/components/schemas/Hakukohde'
-       |""".stripMargin)
+    """    get:
+      |      summary: Hae hakukohteen tiedot
+      |      operationId: Hae hakukohde
+      |      description: Hakee hakukohteen kaikki tiedot
+      |      tags:
+      |        - Hakukohde
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Hakukohde-oid
+      |          example: 1.2.246.562.20.00000000000000000009
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                $ref: '#/components/schemas/Hakukohde'
+      |""".stripMargin)
   get("/:oid") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -44,33 +44,33 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
   }
 
   registerPath( "/hakukohde/",
-    s"""    put:
-       |      summary: Tallenna uusi hakukohde
-       |      operationId: Tallenna uusi hakukohde
-       |      description: Tallenna uuden hakukohteen tiedot.
-       |        Rajapinta palauttaa hakukohteelle generoidun yksilöivän hakukohde-oidin.
-       |      tags:
-       |        - Hakukohde
-       |      requestBody:
-       |        description: Tallennettava hakukohde
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/Hakukohde'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                properties:
-       |                  oid:
-       |                    type: string
-       |                    description: Uuden hakukohteen yksilöivä oid
-       |                    example: 1.2.246.562.20.00000000000000000009
-       |""".stripMargin)
+    """    put:
+      |      summary: Tallenna uusi hakukohde
+      |      operationId: Tallenna uusi hakukohde
+      |      description: Tallenna uuden hakukohteen tiedot.
+      |        Rajapinta palauttaa hakukohteelle generoidun yksilöivän hakukohde-oidin.
+      |      tags:
+      |        - Hakukohde
+      |      requestBody:
+      |        description: Tallennettava hakukohde
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Hakukohde'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden hakukohteen yksilöivä oid
+      |                    example: 1.2.246.562.20.00000000000000000009
+      |""".stripMargin)
   put("/") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -81,24 +81,24 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
   }
 
   registerPath("/hakukohde/",
-    s"""    post:
-       |      summary: Muokkaa olemassa olevaa hakukohdetta
-       |      operationId: Muokkaa hakukohdetta
-       |      description: Muokkaa olemassa olevaa hakukohdetta. Rajapinnalle annetaan hakukohteen kaikki tiedot,
-       |        ja muuttuneet tiedot tallennetaan kantaan.
-       |      tags:
-       |        - Hakukohde
-       |      requestBody:
-       |        description: Muokattavan hakukohteen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/Hakukohde'
-       |      responses:
-       |        '200':
-       |          description: O
-       |""".stripMargin)
+    """    post:
+      |      summary: Muokkaa olemassa olevaa hakukohdetta
+      |      operationId: Muokkaa hakukohdetta
+      |      description: Muokkaa olemassa olevaa hakukohdetta. Rajapinnalle annetaan hakukohteen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - Hakukohde
+      |      requestBody:
+      |        description: Muokattavan hakukohteen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Hakukohde'
+      |      responses:
+      |        '200':
+      |          description: O
+      |""".stripMargin)
   post("/") {
 
     implicit val authenticated: Authenticated = authenticate

@@ -223,19 +223,19 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   val selectValintaperusteListSql =
-    s"""select distinct v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, m.modified
-          from valintaperusteet v
-          inner join (
-            select vp.id id, greatest(
-              max(lower(vp.system_time)),
-              max(lower(vk.system_time)),
-              max(upper(vph.system_time)),
-              max(upper(vkh.system_time))) modified
-            from valintaperusteet vp
-            left join valintaperusteet_history vph on vp.id = vph.id
-            left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
-            left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
-            group by vp.id) m on v.id = m.id"""
+    """select distinct v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, m.modified
+         from valintaperusteet v
+         inner join (
+           select vp.id id, greatest(
+             max(lower(vp.system_time)),
+             max(lower(vk.system_time)),
+             max(upper(vph.system_time)),
+             max(upper(vkh.system_time))) modified
+           from valintaperusteet vp
+           left join valintaperusteet_history vph on vp.id = vph.id
+           left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
+           left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
+           group by vp.id) m on v.id = m.id"""
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""#$selectValintaperusteListSql

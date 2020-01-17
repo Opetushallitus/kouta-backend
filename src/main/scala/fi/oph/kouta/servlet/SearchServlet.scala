@@ -16,78 +16,78 @@ class SearchServlet(koulutusService: KoulutusService,
   val SearchParams = Seq("nimi", "muokkaaja", "tila", "arkistoidut", "page", "size", "lng", "order-by", "order")
 
   val searchParams =
-    s"""      parameters:
-       |        - in: query
-       |          name: organisaatioOid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Organisaation oid
-       |          example: 1.2.246.562.10.00101010101
-       |        - in: query
-       |          name: nimi
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata annetulla nimellä tai oidilla
-       |          example: Jalkaterapeutti
-       |        - in: query
-       |          name: muokkaaja
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata muokkaajan nimellä
-       |          example: Maija
-       |        - in: query
-       |          name: tila
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata tilalla (julkaistu/tallennettu/arkistoitu)
-       |          example: Julkaistu
-       |        - in: query
-       |          name: arkistoidut
-       |          schema:
-       |            type: boolean
-       |          required: false
-       |          description: Näytetäänkö arkistoidut
-       |          example: true
-       |        - in: query
-       |          name: page
-       |          schema:
-       |            type: integer
-       |          required: false
-       |          description: Sivunumero
-       |          example: 2
-       |        - in: query
-       |          name: size
-       |          schema:
-       |            type: integer
-       |          required: false
-       |          description: Sivun koko
-       |          example: 20
-       |        - in: query
-       |          name: lng
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Haun kieli (fi/sv/en)
-       |          example: fi
-       |        - in: query
-       |          name: order-by
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Kenttä, jonka perusteella hakutulos järjestetään (nimi/tila/muokkaaja/modified)
-       |          example: fi
-       |        - in: query
-       |          name: order
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Hakutuloksen järjestys (asc/desc)
-       |          example: fi
-       |""".stripMargin
+    """      parameters:
+      |        - in: query
+      |          name: organisaatioOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Organisaation oid
+      |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: nimi
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Suodata annetulla nimellä tai oidilla
+      |          example: Jalkaterapeutti
+      |        - in: query
+      |          name: muokkaaja
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Suodata muokkaajan nimellä
+      |          example: Maija
+      |        - in: query
+      |          name: tila
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Suodata tilalla (julkaistu/tallennettu/arkistoitu)
+      |          example: Julkaistu
+      |        - in: query
+      |          name: arkistoidut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Näytetäänkö arkistoidut
+      |          example: true
+      |        - in: query
+      |          name: page
+      |          schema:
+      |            type: integer
+      |          required: false
+      |          description: Sivunumero
+      |          example: 2
+      |        - in: query
+      |          name: size
+      |          schema:
+      |            type: integer
+      |          required: false
+      |          description: Sivun koko
+      |          example: 20
+      |        - in: query
+      |          name: lng
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Haun kieli (fi/sv/en)
+      |          example: fi
+      |        - in: query
+      |          name: order-by
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Kenttä, jonka perusteella hakutulos järjestetään (nimi/tila/muokkaaja/modified)
+      |          example: fi
+      |        - in: query
+      |          name: order
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Hakutuloksen järjestys (asc/desc)
+      |          example: fi
+      |""".stripMargin
 
   registerPath("/search/koulutukset",
     s"""    get:

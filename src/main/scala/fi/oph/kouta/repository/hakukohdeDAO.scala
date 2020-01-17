@@ -468,27 +468,27 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   val selectHakukohdeListSql =
-    s"""select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
-          from hakukohteet ha
-          inner join (
-            select ha.oid oid, greatest(
-              max(lower(ha.system_time)),
-              max(lower(hh.system_time)),
-              max(lower(hv.system_time)),
-              max(lower(hl.system_time)),
-              max(upper(hah.system_time)),
-              max(upper(hhh.system_time)),
-              max(upper(hvh.system_time)),
-              max(upper(hlh.system_time))) modified
-            from hakukohteet ha
-            left join hakukohteet_history hah on ha.oid = hah.oid
-            left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
-            left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
-            left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid
-            left join hakukohteiden_valintakokeet_history hvh on ha.oid = hvh.hakukohde_oid
-            left join hakukohteiden_liitteet hl on ha.oid = hl.hakukohde_oid
-            left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
-            group by ha.oid) m on m.oid = ha.oid"""
+    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
+         from hakukohteet ha
+         inner join (
+           select ha.oid oid, greatest(
+             max(lower(ha.system_time)),
+             max(lower(hh.system_time)),
+             max(lower(hv.system_time)),
+             max(lower(hl.system_time)),
+             max(upper(hah.system_time)),
+             max(upper(hhh.system_time)),
+             max(upper(hvh.system_time)),
+             max(upper(hlh.system_time))) modified
+           from hakukohteet ha
+           left join hakukohteet_history hah on ha.oid = hah.oid
+           left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
+           left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
+           left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid
+           left join hakukohteiden_valintakokeet_history hvh on ha.oid = hvh.hakukohde_oid
+           left join hakukohteiden_liitteet hl on ha.oid = hl.hakukohde_oid
+           left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
+           group by ha.oid) m on m.oid = ha.oid"""
 
   def selectByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""#$selectHakukohdeListSql

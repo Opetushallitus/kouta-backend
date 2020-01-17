@@ -104,15 +104,15 @@ object KoutaServlet {
 class HealthcheckServlet extends KoutaServlet {
 
   registerPath("/healthcheck/",
-    s"""    get:
-       |      summary: Healthcheck-rajapinta
-       |      description: Healthcheck-rajapinta
-       |      tags:
-       |        - Admin
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |""".stripMargin)
+    """    get:
+      |      summary: Healthcheck-rajapinta
+      |      description: Healthcheck-rajapinta
+      |      tags:
+      |        - Admin
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
   get("/") {
     Ok("message" -> "ok")
   }

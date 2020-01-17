@@ -220,20 +220,20 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   val selectHakuListSql =
-    s"""select distinct ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
-          from haut ha
-          inner join (
-            select ha.oid oid, greatest(
-              max(lower(ha.system_time)),
-              max(lower(hah.system_time)),
-              max(upper(hh.system_time)),
-              max(upper(hhh.system_time))) modified
-            from haut ha
-            left join haut_history hah on ha.oid = hah.oid
-            left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
-            left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
-            group by ha.oid
-          ) m on m.oid = ha.oid"""
+    """select distinct ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
+         from haut ha
+         inner join (
+           select ha.oid oid, greatest(
+             max(lower(ha.system_time)),
+             max(lower(hah.system_time)),
+             max(upper(hh.system_time)),
+             max(upper(hhh.system_time))) modified
+           from haut ha
+           left join haut_history hah on ha.oid = hah.oid
+           left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
+           left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
+           group by ha.oid
+         ) m on m.oid = ha.oid"""
 
   def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""#$selectHakuListSql

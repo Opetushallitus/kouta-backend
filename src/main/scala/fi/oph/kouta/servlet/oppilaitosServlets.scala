@@ -11,28 +11,28 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   def this() = this(OppilaitosService)
 
   registerPath("/oppilaitos/{oid}",
-    s"""    get:
-       |      summary: Hae oppilaitoksen kuvailutiedot
-       |      operationId: Hae oppilaitos
-       |      description: Hakee oppilaitoksen kuvailutiedot
-       |      tags:
-       |        - Oppilaitos
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Oppilaitoksen organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                $$ref: '#/components/schemas/Oppilaitos'
-       |""".stripMargin)
+    """    get:
+      |      summary: Hae oppilaitoksen kuvailutiedot
+      |      operationId: Hae oppilaitos
+      |      description: Hakee oppilaitoksen kuvailutiedot
+      |      tags:
+      |        - Oppilaitos
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Oppilaitoksen organisaatio-oid
+      |          example: 1.2.246.562.10.00101010101
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                $ref: '#/components/schemas/Oppilaitos'
+      |""".stripMargin)
   get("/:oid") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -44,33 +44,33 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   }
 
   registerPath( "/oppilaitos/",
-    s"""    put:
-       |      summary: Tallenna uusi oppilaitoksen kuvailutieto
-       |      operationId: Tallenna uusi oppilaitos
-       |      description: Tallenna uusi oppilaitoksen kuvailutieto.
-       |        Palauttaa tallennetun oppilaitoksen organisaatio-oidin.
-       |      tags:
-       |        - Oppilaitos
-       |      requestBody:
-       |        description: Tallennettavan oppilaitoksen tiedot
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/Oppilaitos'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                properties:
-       |                  oid:
-       |                    type: string
-       |                    description: Uuden toteutuksen yksilöivä oid
-       |                    example: 1.2.246.562.10.00101010101
-       |""".stripMargin)
+    """    put:
+      |      summary: Tallenna uusi oppilaitoksen kuvailutieto
+      |      operationId: Tallenna uusi oppilaitos
+      |      description: Tallenna uusi oppilaitoksen kuvailutieto.
+      |        Palauttaa tallennetun oppilaitoksen organisaatio-oidin.
+      |      tags:
+      |        - Oppilaitos
+      |      requestBody:
+      |        description: Tallennettavan oppilaitoksen tiedot
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Oppilaitos'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden toteutuksen yksilöivä oid
+      |                    example: 1.2.246.562.10.00101010101
+      |""".stripMargin)
   put("/") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -81,25 +81,25 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   }
 
   registerPath("/oppilaitos/",
-    s"""    post:
-       |      summary: Muokkaa olemassa olevaa oppilaitoksen kuvailutietoa
-       |      operationId: Muokkaa oppilaitosta
-       |      description: Muokkaa olemassa olevaa oppilaitoksen kuvailutietoa.
-       |        Rajapinnalle annetaan oppilaitoksen kaikki tiedot,
-       |        ja muuttuneet tiedot tallennetaan kantaan.
-       |      tags:
-       |        - Oppilaitos
-       |      requestBody:
-       |        description: Muokattavan oppilaitoksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/Oppilaitos'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |""".stripMargin)
+    """    post:
+      |      summary: Muokkaa olemassa olevaa oppilaitoksen kuvailutietoa
+      |      operationId: Muokkaa oppilaitosta
+      |      description: Muokkaa olemassa olevaa oppilaitoksen kuvailutietoa.
+      |        Rajapinnalle annetaan oppilaitoksen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - Oppilaitos
+      |      requestBody:
+      |        description: Muokattavan oppilaitoksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Oppilaitos'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
   post("/") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -110,37 +110,37 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   }
 
   registerPath( "/oppilaitos/{oid}/osat/list",
-    s"""    get:
-       |      summary: Listaa organisaation käytettävissä olevat oppilaitoksen osien kuvailutiedot
-       |      operationId: Listaa oppilaitoksen osat
-       |      description: Listaa ne oppilaitoksen osat, jotka ovat organisaation käytettävissä.
-       |      tags:
-       |        - Oppilaitos
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Oppilaitoksen organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |        - in: query
-       |          name: organisaatioOid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/OppilaitoksenOsaListItem'
-       |""".stripMargin)
+    """    get:
+      |      summary: Listaa organisaation käytettävissä olevat oppilaitoksen osien kuvailutiedot
+      |      operationId: Listaa oppilaitoksen osat
+      |      description: Listaa ne oppilaitoksen osat, jotka ovat organisaation käytettävissä.
+      |      tags:
+      |        - Oppilaitos
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Oppilaitoksen organisaatio-oid
+      |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: organisaatioOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Organisaatio-oid
+      |          example: 1.2.246.562.10.00101010101
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/OppilaitoksenOsaListItem'
+      |""".stripMargin)
   get("/:oid/osat/list") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -157,28 +157,28 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
   def this() = this(OppilaitoksenOsaService)
 
   registerPath("/oppilaitoksen-osa/{oid}",
-    s"""    get:
-       |      summary: Hae oppilaitoksen osan kuvailutiedot
-       |      operationId: Hae oppilaitoksen osa
-       |      description: Hakee oppilaitoksen osan kuvailutiedot
-       |      tags:
-       |        - Oppilaitoksen osa
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Oppilaitoksen organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                $$ref: '#/components/schemas/OppilaitoksenOsa'
-       |""".stripMargin)
+    """    get:
+      |      summary: Hae oppilaitoksen osan kuvailutiedot
+      |      operationId: Hae oppilaitoksen osa
+      |      description: Hakee oppilaitoksen osan kuvailutiedot
+      |      tags:
+      |        - Oppilaitoksen osa
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Oppilaitoksen organisaatio-oid
+      |          example: 1.2.246.562.10.00101010101
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                $ref: '#/components/schemas/OppilaitoksenOsa'
+      |""".stripMargin)
   get("/:oid") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -190,33 +190,33 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
   }
 
   registerPath( "/oppilaitoksen-osa/",
-    s"""    put:
-       |      summary: Tallenna uusi oppilaitoksen osan kuvailutieto
-       |      operationId: Tallenna uusi oppilaitoksen osa
-       |      description: Tallenna uusi oppilaitoksen osan kuvailutieto.
-       |        Palauttaa tallennetun oppilaitoksen osan organisaatio-oidin.
-       |      tags:
-       |        - Oppilaitoksen osa
-       |      requestBody:
-       |        description: Tallennettavan oppilaitoksen osan tiedot
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/OppilaitoksenOsa'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                properties:
-       |                  oid:
-       |                    type: string
-       |                    description: Uuden toteutuksen yksilöivä oid
-       |                    example: 1.2.246.562.10.00101010101
-       |""".stripMargin)
+    """    put:
+      |      summary: Tallenna uusi oppilaitoksen osan kuvailutieto
+      |      operationId: Tallenna uusi oppilaitoksen osa
+      |      description: Tallenna uusi oppilaitoksen osan kuvailutieto.
+      |        Palauttaa tallennetun oppilaitoksen osan organisaatio-oidin.
+      |      tags:
+      |        - Oppilaitoksen osa
+      |      requestBody:
+      |        description: Tallennettavan oppilaitoksen osan tiedot
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/OppilaitoksenOsa'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden toteutuksen yksilöivä oid
+      |                    example: 1.2.246.562.10.00101010101
+      |""".stripMargin)
   put("/") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -227,25 +227,25 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
   }
 
   registerPath("/oppilaitoksen-osa/",
-    s"""    post:
-       |      summary: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa
-       |      operationId: Muokkaa oppilaitoksen osaa
-       |      description: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa.
-       |        Rajapinnalle annetaan oppilaitoksen osan kaikki tiedot,
-       |        ja muuttuneet tiedot tallennetaan kantaan.
-       |      tags:
-       |        - Oppilaitoksen osa
-       |      requestBody:
-       |        description: Muokattavan oppilaitoksen osan kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/OppilaitoksenOsa'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |""".stripMargin)
+    """    post:
+      |      summary: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa
+      |      operationId: Muokkaa oppilaitoksen osaa
+      |      description: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa.
+      |        Rajapinnalle annetaan oppilaitoksen osan kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - Oppilaitoksen osa
+      |      requestBody:
+      |        description: Muokattavan oppilaitoksen osan kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/OppilaitoksenOsa'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
   post("/") {
 
     implicit val authenticated: Authenticated = authenticate

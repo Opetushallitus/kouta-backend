@@ -11,28 +11,28 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   def this() = this(KoulutusService)
 
   registerPath( "/koulutus/{oid}",
-    s"""    get:
-       |      summary: Hae koulutus
-       |      description: Hae koulutuksen tiedot annetulla koulutus-oidilla
-       |      operationId: Hae koulutus
-       |      tags:
-       |        - Koulutus
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Koulutus-oid
-       |          example: 1.2.246.562.13.00000000000000000009
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                $$ref: '#/components/schemas/Koulutus'
-       |""".stripMargin)
+    """    get:
+      |      summary: Hae koulutus
+      |      description: Hae koulutuksen tiedot annetulla koulutus-oidilla
+      |      operationId: Hae koulutus
+      |      tags:
+      |        - Koulutus
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Koulutus-oid
+      |          example: 1.2.246.562.13.00000000000000000009
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                $ref: '#/components/schemas/Koulutus'
+      |""".stripMargin)
   get("/:oid") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -44,33 +44,33 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   }
 
   registerPath( "/koulutus/",
-    s"""    put:
-       |      summary: Tallenna uusi koulutus
-       |      operationId: Tallenna uusi koulutus
-       |      description: Tallenna uuden koulutuksen tiedot.
-       |        Rajapinta palauttaa koulutukselle generoidun yksilöivän koulutus-oidin.
-       |      tags:
-       |        - Koulutus
-       |      requestBody:
-       |        description: Tallennettava koulutus
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/Koulutus'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                properties:
-       |                  oid:
-       |                    type: string
-       |                    description: Uuden koulutuksen yksilöivä oid
-       |                    example: 1.2.246.562.13.00000000000000000009
-       |""".stripMargin)
+    """    put:
+      |      summary: Tallenna uusi koulutus
+      |      operationId: Tallenna uusi koulutus
+      |      description: Tallenna uuden koulutuksen tiedot.
+      |        Rajapinta palauttaa koulutukselle generoidun yksilöivän koulutus-oidin.
+      |      tags:
+      |        - Koulutus
+      |      requestBody:
+      |        description: Tallennettava koulutus
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Koulutus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden koulutuksen yksilöivä oid
+      |                    example: 1.2.246.562.13.00000000000000000009
+      |""".stripMargin)
   put("/") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -81,24 +81,24 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   }
 
   registerPath("/koulutus/",
-    s"""    post:
-       |      summary: Muokkaa olemassa olevaa koulutusta
-       |      operationId: Muokkaa koulutusta
-       |      description: Muokkaa olemassa olevaa koulutusta. Rajapinnalle annetaan koulutuksen kaikki tiedot,
-       |        ja muuttuneet tiedot tallennetaan kantaan.
-       |      tags:
-       |        - Koulutus
-       |      requestBody:
-       |        description: Muokattavan koulutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              $$ref: '#/components/schemas/Koulutus'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |""".stripMargin)
+    """    post:
+      |      summary: Muokkaa olemassa olevaa koulutusta
+      |      operationId: Muokkaa koulutusta
+      |      description: Muokkaa olemassa olevaa koulutusta. Rajapinnalle annetaan koulutuksen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - Koulutus
+      |      requestBody:
+      |        description: Muokattavan koulutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Koulutus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
   post("/") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -109,31 +109,31 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   }
 
   registerPath( "/koulutus/list",
-    s"""    get:
-       |      summary: Listaa organisaation käytettävissä olevat koulutukset
-       |      operationId: Listaa koulutukset
-       |      description: Listaa niiden koulutusten tiedot, jotka ovat organisaation käytettävissä
-       |        esim. uutta toteutusta luotaessa
-       |      tags:
-       |        - Koulutus
-       |      parameters:
-       |        - in: query
-       |          name: organisaatioOid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/KoulutusListItem'
-       |""".stripMargin)
+    """    get:
+      |      summary: Listaa organisaation käytettävissä olevat koulutukset
+      |      operationId: Listaa koulutukset
+      |      description: Listaa niiden koulutusten tiedot, jotka ovat organisaation käytettävissä
+      |        esim. uutta toteutusta luotaessa
+      |      tags:
+      |        - Koulutus
+      |      parameters:
+      |        - in: query
+      |          name: organisaatioOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Organisaatio-oid
+      |          example: 1.2.246.562.10.00101010101
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/KoulutusListItem'
+      |""".stripMargin)
   get("/list") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -145,37 +145,37 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   }
 
   registerPath( "/koulutus/{oid}/toteutukset/list",
-    s"""    get:
-       |      summary: Listaa organisaation käytettävissä olevat tietyn koulutuksen toteutukset
-       |      operationId: Listaa koulutuksen toteutukset
-       |      description: Listaa ne tietyn koulutuksen toteutukset, jotka ovat organisaation käytettävissä.
-       |      tags:
-       |        - Koulutus
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Koulutus-oid
-       |          example: 1.2.246.562.13.00000000000000000009
-       |        - in: query
-       |          name: organisaatioOid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Organisaatio-oid
-       |          example: 1.2.246.562.10.00101010101
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  $$ref: '#/components/schemas/ToteutusListItem'
-       |""".stripMargin)
+    """    get:
+      |      summary: Listaa organisaation käytettävissä olevat tietyn koulutuksen toteutukset
+      |      operationId: Listaa koulutuksen toteutukset
+      |      description: Listaa ne tietyn koulutuksen toteutukset, jotka ovat organisaation käytettävissä.
+      |      tags:
+      |        - Koulutus
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Koulutus-oid
+      |          example: 1.2.246.562.13.00000000000000000009
+      |        - in: query
+      |          name: organisaatioOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Organisaatio-oid
+      |          example: 1.2.246.562.10.00101010101
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/ToteutusListItem'
+      |""".stripMargin)
   get("/:oid/toteutukset/list") {
 
     implicit val authenticated: Authenticated = authenticate

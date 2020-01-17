@@ -20,29 +20,28 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
   val themeMinWidth  = 1260
   val themeMinHeight = 400
 
-  registerPath(
-    "/upload/theme-image",
-    s"""    post:
-       |      summary: Tallenna koulutukselle teemakuva
-       |      operationId: Tallenna koulutukselle teemakuva
-       |      description: Tallenna koulutukselle teemakuva.
-       |        Teemakuva korvaa mahdollisen aikaisemman kuvan.
-       |      tags:
-       |        - Upload
-       |      requestBody:
-       |        content:
-       |          'image/jpeg':
-       |            schema:
-       |              type: string
-       |              format: binary
-       |          'image/png':
-       |            schema:
-       |              type: string
-       |              format: binary
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |""".stripMargin
+  registerPath("/upload/theme-image",
+    """    post:
+      |      summary: Tallenna koulutukselle teemakuva
+      |      operationId: Tallenna koulutukselle teemakuva
+      |      description: Tallenna koulutukselle teemakuva.
+      |        Teemakuva korvaa mahdollisen aikaisemman kuvan.
+      |      tags:
+      |        - Upload
+      |      requestBody:
+      |        content:
+      |          'image/jpeg':
+      |            schema:
+      |              type: string
+      |              format: binary
+      |          'image/png':
+      |            schema:
+      |              type: string
+      |              format: binary
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin
   )
   post("/theme-image") {
     val length      = checkLength(maxSize)
