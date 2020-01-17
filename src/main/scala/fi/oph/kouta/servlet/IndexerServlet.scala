@@ -24,7 +24,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Hae lista muuttuneista
        |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Anything
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: since
@@ -55,7 +55,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      description: Hakee kaikkien niiden koulutusten kaikki tiedot, joissa organisaatio tai sen aliorganisaatio
        |        on tarjoajana ja jotka on julkaistu. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Koulutus
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: organisaatioOid
@@ -87,7 +87,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Hae koulutuksen toteutukset
        |      description: Hakee koulutuksen kaikkien toteutusten kaikki tiedot. Tämä rajapinta on ideksointia varten
        |      tags:
-       |        - Koulutus
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -126,7 +126,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa koulutuksen toteutukset
        |      description: Listaa kaikki koulutuksen toteutukset. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Koulutus
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -158,7 +158,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Hae koulutuksen hakutiedot
        |      description: Hakee koulutuksen kaikki hakutiedot. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Koulutus
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -190,7 +190,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa toteutuksen haut
        |      description: Listaa kaikki toteutukseen liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Toteutus
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -222,7 +222,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa toteutuksen hakukohteet
        |      description: Listaa kaikki toteutukseen liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Toteutus
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -253,7 +253,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa haun hakukohteet
        |      description: Listaa ne hakuun liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Haku
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -284,7 +284,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa haun koulutukset
        |      description: Listaa kaikki hakuun liitetyt koulutukset. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Haku
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -316,7 +316,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa haun toteutukset
        |      description: Listaa kaikki hakuun liitetyt toteutukset. Tämä rajapinta on indeksointia varten
        |      tags:
-       |        - Haku
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -348,7 +348,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Lista valintaperusteen hakukohteet
        |      description: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
-       |        - Valintaperuste
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -380,7 +380,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa sorakuvauksen valintaperusteet
        |      description: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
        |      tags:
-       |        - Sorakuvaus
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -412,7 +412,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Listaa oppilaitoksen osat
        |      description: Listaa oppilaitoksen kaikki osat. Tämä rajapinta on ideksointia varten
        |      tags:
-       |        - Oppilaitos
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid
@@ -444,7 +444,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |      operationId: Hae oppilaitoksen osat
        |      description: Hakee oppilaitoksen kaikkien osien kuvailutiedot. Tämä rajapinta on ideksointia varten
        |      tags:
-       |        - Oppilaitos
+       |        - Indexer
        |      parameters:
        |        - in: path
        |          name: oid

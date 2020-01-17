@@ -164,7 +164,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
        |          name: organisaatioOid
        |          schema:
        |            type: string
-       |          required: false
+       |          required: true
        |          description: Organisaatio-oid
        |          example: 1.2.246.562.10.00101010101
        |      responses:
