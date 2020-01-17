@@ -22,18 +22,13 @@ case class AuthenticationFailedException(msg: String, cause: Throwable) extends 
 
 case class KayttooikeusUserDetails(authorities: Set[Authority], oid: String)
 
-object CasSessionService
-    extends CasSessionService(
-      ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
-      KayttooikeusClient,
-      AuditLog
-    )
+object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
+                                                   KayttooikeusClient,
+                                                   AuditLog)
 
-abstract class CasSessionService(
-    val securityContext: SecurityContext,
-    val userDetailsService: KayttooikeusClient,
-    auditLog: AuditLog
-) extends Logging {
+abstract class CasSessionService(val securityContext: SecurityContext,
+                                 val userDetailsService: KayttooikeusClient,
+                                 auditLog: AuditLog) extends Logging {
   logger.info(s"Using security context ${securityContext.getClass.getSimpleName}")
 
   val serviceIdentifier: String = securityContext.casServiceIdentifier

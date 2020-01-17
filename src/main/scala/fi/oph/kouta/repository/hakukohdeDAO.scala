@@ -6,6 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -164,7 +165,7 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
+sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors with DBIOHelpers {
 
   def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (

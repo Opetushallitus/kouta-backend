@@ -6,6 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -95,7 +96,7 @@ sealed trait ValintaperusteModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait ValintaperusteSQL extends ValintaperusteExtractors with ValintaperusteModificationSQL with SQLHelpers {
+sealed trait ValintaperusteSQL extends ValintaperusteExtractors with ValintaperusteModificationSQL with SQLHelpers with DBIOHelpers {
 
   val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 

@@ -3,6 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 
 import fi.oph.kouta.domain.Oppilaitos
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._

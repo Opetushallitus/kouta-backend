@@ -5,6 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem}
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -88,7 +89,7 @@ trait HakuModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers {
+sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers with DBIOHelpers {
 
   def insertHaku(haku: Haku): DBIO[HakuOid] = {
     sql"""insert into haut ( tila,

@@ -5,6 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -129,7 +130,7 @@ sealed trait KoulutusModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL with SQLHelpers {
+sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL with SQLHelpers with DBIOHelpers {
 
   val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 

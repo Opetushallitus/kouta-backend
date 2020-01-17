@@ -4,6 +4,7 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -162,7 +163,7 @@ trait ToteutusModificationSQL extends SQLHelpers {
 
 }
 
-sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
+sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers with DBIOHelpers {
 
   val selectToteutusSql =
     """select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, m.modified

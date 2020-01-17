@@ -12,13 +12,8 @@ import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
 
-class OppilaitoksenOsaSpec
-  extends KoutaIntegrationSpec
-    with AccessControlSpec
-    with OppilaitoksenOsaFixture
-    with OppilaitosFixture
-    with UploadFixture
-    with Validations {
+class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitoksenOsaFixture
+  with OppilaitosFixture with UploadFixture with Validations {
 
   override val roleEntities = Seq(Role.Oppilaitos)
 

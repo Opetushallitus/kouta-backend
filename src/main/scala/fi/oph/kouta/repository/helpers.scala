@@ -34,13 +34,6 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def toTsrangeString(a: Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
 
-  def sumIntDBIOs(ints: Seq[DBIO[Int]]): DBIO[Int] = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    DBIO.fold(ints, 0)(_ + _)
-  }
-
-  def optionWhen[T](cond: Boolean)(result: => T): Option[T] = if(cond) Some(result) else None
-
   implicit object SetInstant extends SetParameter[Instant] {
     def apply(v: Instant, pp: PositionedParameters): Unit = {
       pp.setObject(OffsetDateTime.ofInstant(v, ZoneId.of("Europe/Helsinki")), JDBCType.TIMESTAMP_WITH_TIMEZONE.getVendorTypeNumber)
@@ -129,5 +122,12 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
     def apply(v: UUID, pp: PositionedParameters) {
       pp.setObject(v, JDBCType.BINARY.getVendorTypeNumber)
     }
+  }
+}
+
+trait DBIOHelpers {
+  def sumIntDBIOs(ints: Seq[DBIO[Int]]): DBIO[Int] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    DBIO.fold(ints, 0)(_ + _)
   }
 }
