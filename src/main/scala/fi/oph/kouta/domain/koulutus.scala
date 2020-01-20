@@ -169,7 +169,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
         validateIfTrue(Julkaistu == tila, () => and(
           assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
           assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"),
-          validateIfTrue(!KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid),
+          validateIfTrue(!OrganisaatioOid("1.2.246.562.10.00000000001").equals(organisaatioOid), //TODO: !KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid), (rikkoo mm. indeksoijan testit)
             () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
   }
 
