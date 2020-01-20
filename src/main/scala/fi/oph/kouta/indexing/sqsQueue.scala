@@ -73,8 +73,11 @@ abstract class SqsInTransactionService extends Logging {
 
   import slick.dbio.DBIO
 
-  def toSQSQueue(priority: Priority, index: IndexType, value: Option[String]): DBIO[_] =
-    value.map(v => toSQSQueue(priority, index, Seq(v))).getOrElse(DBIO.successful(true))
+  def toSQSQueue(priority: Priority, index: IndexType, maybeValue: Option[String]): DBIO[_] =
+    maybeValue match {
+      case Some(value) => toSQSQueue(priority, index, value)
+      case None        => DBIO.successful(true)
+    }
 
   def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[_] =
     toSQSQueue(priority, index, Seq(value))

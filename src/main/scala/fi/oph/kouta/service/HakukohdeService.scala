@@ -49,7 +49,7 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     KoutaDatabase.runBlockingTransactionally {
       for {
         added <- HakukohdeDAO.getPutActions(hakukohde)
-        _     <- index(added)
+        _     <- index(Some(added))
         _     <- auditLog.logCreate(added)
       } yield added
     }.get
@@ -63,9 +63,6 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(hakukohde: Hakukohde): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.oid.get.toString)
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))

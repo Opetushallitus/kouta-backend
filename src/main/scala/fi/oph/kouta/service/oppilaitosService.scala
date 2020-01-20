@@ -56,7 +56,7 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
         themed  <- maybeCopyThemeImage(tempImage, added)
         updated <- tempImage.map(_ => OppilaitosDAO.updateJustOppilaitos(themed)).getOrElse(DBIO.successful(themed))
         _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(updated)
+        _       <- index(Some(updated))
         _       <- auditLog.logCreate(updated)
       } yield updated
     }.get
@@ -72,9 +72,6 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(oppilaitos: Oppilaitos): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.oid.toString)
 
   private def index(oppilaitos: Option[Oppilaitos]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
@@ -113,7 +110,7 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
         themed  <- maybeCopyThemeImage(tempImage, added)
         updated <- tempImage.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(themed)).getOrElse(DBIO.successful(themed))
         _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(updated)
+        _       <- index(Some(updated))
         _       <- auditLog.logCreate(updated)
       } yield updated
     }.get
@@ -129,9 +126,6 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.oid.toString)
 
   private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.map(_.oid.toString))

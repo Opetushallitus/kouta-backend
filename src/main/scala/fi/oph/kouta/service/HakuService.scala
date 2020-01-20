@@ -70,7 +70,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
     KoutaDatabase.runBlockingTransactionally {
       for {
         added <- HakuDAO.getPutActions(haku)
-        _     <- index(added)
+        _     <- index(Some(added))
         _     <- auditLog.logCreate(added)
       } yield added
     }.get
@@ -84,9 +84,6 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(haku: Haku): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.oid.get.toString)
 
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))

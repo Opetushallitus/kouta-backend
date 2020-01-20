@@ -100,7 +100,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         themed  <- maybeCopyThemeImage(tempImage, added)
         updated <- tempImage.map(_ => KoulutusDAO.updateJustKoulutus(themed)).getOrElse(DBIO.successful(themed))
         _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(updated)
+        _       <- index(Some(updated))
         _       <- auditLog.logCreate(updated)
       } yield updated
     }.get
@@ -116,9 +116,6 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(koulutus: Koulutus): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.oid.get.toString)
 
   private def index(koulutus: Option[Koulutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))

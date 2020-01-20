@@ -49,7 +49,7 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
     KoutaDatabase.runBlockingTransactionally {
       for {
         added <- SorakuvausDAO.getPutActions(sorakuvaus)
-        _     <- index(added)
+        _     <- index(Some(added))
         _     <- auditLog.logCreate(added)
       } yield added
     }.get
@@ -63,9 +63,6 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(sorakuvaus: Sorakuvaus): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.id.get.toString)
 
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))

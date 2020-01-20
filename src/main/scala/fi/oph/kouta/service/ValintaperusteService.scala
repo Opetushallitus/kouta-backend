@@ -63,7 +63,7 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     KoutaDatabase.runBlockingTransactionally {
       for {
         added <- ValintaperusteDAO.getPutActions(valintaperuste)
-        _     <- index(added)
+        _     <- index(Some(added))
         _     <- auditLog.logCreate(added)
       } yield added
     }.get
@@ -77,9 +77,6 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(valintaperuste: Valintaperuste): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.id.get.toString)
 
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))

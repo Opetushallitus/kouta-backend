@@ -84,7 +84,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         themed  <- maybeCopyThemeImage(tempImage, added)
         updated <- tempImage.map(_ => ToteutusDAO.updateJustToteutus(themed)).getOrElse(DBIO.successful(themed))
         _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(updated)
+        _       <- index(Some(updated))
         _       <- auditLog.logCreate(updated)
       } yield updated
     }.get
@@ -102,9 +102,6 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
-
-  private def index(toteutus: Toteutus): DBIO[_] =
-    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.oid.get.toString)
 
   private def index(toteutus: Option[Toteutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
