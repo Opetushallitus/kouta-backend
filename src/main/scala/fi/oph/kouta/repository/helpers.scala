@@ -11,6 +11,8 @@ import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 import slick.jdbc.{PositionedParameters, SetParameter}
 
+import scala.util.{Failure, Success, Try}
+
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def createOidInParams(x: Seq[Oid]) = x.find(!_.isValid()) match {
@@ -125,9 +127,24 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   }
 }
 
-trait DBIOHelpers {
+object DBIOHelpers {
   def sumIntDBIOs(ints: Seq[DBIO[Int]]): DBIO[Int] = {
     import scala.concurrent.ExecutionContext.Implicits.global
     DBIO.fold(ints, 0)(_ + _)
   }
+
+  def toDBIO[T](value: Try[T]): DBIO[T] = value match {
+    case Success(v) => DBIO.successful(v)
+    case Failure(e) => DBIO.failed(e)
+  }
+
+  class DbioCapableTry[+T](val t: Try[T]) {
+    def toDBIO: DBIO[T] = t match {
+      case Success(v) => DBIO.successful(v)
+      case Failure(e) => DBIO.failed(e)
+    }
+  }
+
+  import scala.language.implicitConversions
+  implicit def tryToDbioCapableTry[T](t: Try[T]): DbioCapableTry[T] = new DbioCapableTry[T](t)
 }

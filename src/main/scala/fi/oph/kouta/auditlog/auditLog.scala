@@ -12,6 +12,10 @@ import org.ietf.jgss.Oid
 import org.slf4j.LoggerFactory
 import slick.dbio.DBIO
 
+import scala.util.Try
+
+import fi.oph.kouta.repository.DBIOHelpers.tryToDbioCapableTry
+
 object AuditLogger extends Logger {
   private val logger = LoggerFactory.getLogger(classOf[Audit])
 
@@ -40,21 +44,21 @@ class AuditLog(val logger: Logger) extends GsonSupport {
     logCreate(added, resource, target)
   }
 
-  private def logCreate[T <: AnyRef](added: T, resource: AuditResource, target: Target.Builder)(implicit authenticated: Authenticated): DBIO[_] = {
-    val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
-    audit.log(getUser, resource.Create, target.build(), changes)
-    DBIO.successful(true)
-  }
+  private def logCreate[T <: AnyRef](added: T, resource: AuditResource, target: Target.Builder)(implicit authenticated: Authenticated): DBIO[_] =
+    Try {
+      val changes = new Changes.Builder().added(toGson(added).getAsJsonObject).build()
+      audit.log(getUser, resource.Create, target.build(), changes)
+    }.toDBIO
 
-  def logUpdate[T <: HasPrimaryId[_, T]](before: T, after: Option[T])(implicit authenticated: Authenticated): DBIO[_] = {
-    after.foreach { updated =>
-      val resource = AuditResource(updated)
-      val target   = getTarget(resource, updated.primaryId)
-      val changes  = ChangeFactory.getChanges(before, updated)
-      audit.log(getUser, resource.Update, target.build(), changes)
-    }
-    DBIO.successful(true)
-  }
+  def logUpdate[T <: HasPrimaryId[_, T]](before: T, after: Option[T])(implicit authenticated: Authenticated): DBIO[_] =
+    Try {
+      after.foreach { updated =>
+        val resource = AuditResource(updated)
+        val target   = getTarget(resource, updated.primaryId)
+        val changes  = ChangeFactory.getChanges(before, updated)
+        audit.log(getUser, resource.Update, target.build(), changes)
+      }
+    }.toDBIO
 
   def logLogin(sessionId: UUID, session: CasSession, ticket: ServiceTicket)(implicit request: HttpServletRequest): (UUID, CasSession) = {
     val target  = new Target.Builder().setField("personOid", session.personOid).build()

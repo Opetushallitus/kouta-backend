@@ -94,7 +94,7 @@ sealed trait ValintaperusteModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait ValintaperusteSQL extends ValintaperusteExtractors with ValintaperusteModificationSQL with SQLHelpers with DBIOHelpers {
+sealed trait ValintaperusteSQL extends ValintaperusteExtractors with ValintaperusteModificationSQL with SQLHelpers {
 
   val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
@@ -131,7 +131,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   def insertValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
     val inserts = valintaperuste.valintakokeet.map(k =>
       insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja))
-    sumIntDBIOs(inserts)
+    DBIOHelpers.sumIntDBIOs(inserts)
   }
 
 
@@ -205,7 +205,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
 
-    sumIntDBIOs(insertSQL ++ updateSQL :+ deleteSQL)
+    DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL :+ deleteSQL)
   }
 
   def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]): DBIO[Int] = {

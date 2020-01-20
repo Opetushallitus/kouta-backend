@@ -63,7 +63,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
-      sumIntDBIOs(actions)
+      DBIOHelpers.sumIntDBIOs(actions)
     } else {
       deleteTarjoajat(oid)
     }
@@ -158,7 +158,7 @@ trait ToteutusModificationSQL extends SQLHelpers {
 
 }
 
-sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers with DBIOHelpers {
+sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   val selectToteutusSql =
     """select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, m.modified
@@ -219,7 +219,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     val inserts = toteutus.tarjoajat.map(t =>
       sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values (${toteutus.oid}, $t, ${toteutus.muokkaaja})""")
-    sumIntDBIOs(inserts)
+    DBIOHelpers.sumIntDBIOs(inserts)
   }
 
   def updateToteutus(toteutus: Toteutus): DBIO[Int] = {

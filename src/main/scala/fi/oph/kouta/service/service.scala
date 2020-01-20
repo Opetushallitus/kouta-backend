@@ -16,10 +16,13 @@ import slick.dbio.DBIO
 
 import scala.collection.IterableView
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
+
+import fi.oph.kouta.repository.DBIOHelpers.tryToDbioCapableTry
 
 trait ValidatingService[E <: Validatable] {
 
-  def withValidation[R](e:E, f: E => R): R = e.validate() match {
+  def withValidation[R](e: E, f: E => R): R = e.validate() match {
     case Right(_) => f(e)
     case Left(list) => throw KoutaValidationException(list)
   }
@@ -30,26 +33,27 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
 
   def teemakuvaPrefix: String
 
-  def checkTempImage(entity: T): DBIO[Option[String]] = {
-    entity.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        DBIO.successful(Some(filename))
-      case Some(s3Service.publicUrl(_)) =>
-        DBIO.successful(None)
-      case None =>
-        DBIO.successful(None)
-      case Some(other) =>
-        logger.warn(s"Theme image outside the bucket: $other")
-        DBIO.successful(None)
-    }
-  }
+  def checkTempImage(entity: T): DBIO[Option[String]] =
+    Try {
+      entity.metadata.flatMap(_.teemakuva) match {
+        case Some(s3Service.tempUrl(filename)) =>
+          Some(filename)
+        case Some(s3Service.publicUrl(_)) =>
+          None
+        case None =>
+          None
+        case Some(other) =>
+          logger.warn(s"Theme image outside the bucket: $other")
+          None
+      }
+    }.toDBIO
 
   def maybeClearTempImage(tempImage: Option[String], entity: T): DBIO[T] =
-    DBIO.successful {
+    Try {
       tempImage
         .map(_ => entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
         .getOrElse(entity)
-    }
+    }.toDBIO
 
   def checkAndMaybeClearTempImage(entity: T): DBIO[(Option[String], T)] =
     for {
@@ -58,12 +62,12 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
     } yield (tempImage, cleared)
 
   def maybeCopyThemeImage(tempImage: Option[String], entity: T): DBIO[T] =
-    DBIO.successful {
+    Try {
       tempImage
         .map(filename => s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename"))
         .map(url => entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
         .getOrElse(entity)
-    }
+    }.toDBIO
 
   def checkAndMaybeCopyTempImage(entity: T): DBIO[(Option[String], T)] =
     for {
@@ -72,48 +76,9 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
     } yield (tempImage, themed)
 
   def maybeDeleteTempImage(tempImage: Option[String]): DBIO[_] =
-    DBIO.successful {
+    Try {
       tempImage.foreach(filename => s3Service.deleteImage(s3Service.getTempKey(filename)))
-    }
-
-  def themeImagePutActions(entity: T, putActions: T => DBIO[T], updateActions: T => DBIO[Option[T]]): DBIO[T] =
-    entity.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        putActions(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
-          .flatMap { added =>
-            val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${added.primaryId.get}/$filename")
-            updateActions(added.withMetadata(added.metadata.get.withTeemakuva(Some(url))))
-              .map { updated =>
-                s3Service.deleteImage(s3Service.getTempKey(filename))
-                updated.get
-              }
-          }
-      case Some(s3Service.publicUrl(_)) =>
-        putActions(entity)
-      case None =>
-        putActions(entity)
-      case Some(other) =>
-        logger.warn(s"Theme image outside the bucket: $other")
-        putActions(entity)
-    }
-
-  def themeImageUpdateActions(entity: T, updateActions: T => DBIO[Option[T]]): DBIO[Option[T]] =
-    entity.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename")
-        updateActions(entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
-          .map { result =>
-            s3Service.deleteImage(s3Service.getTempKey(filename))
-            result
-          }
-      case Some(s3Service.publicUrl(_)) =>
-        updateActions(entity)
-      case None =>
-        updateActions(entity)
-      case Some(other) =>
-        logger.warn(s"Theme image outside the bucket: $other")
-        updateActions(entity)
-    }
+    }.toDBIO
 }
 
 case class KoutaValidationException(errorMessages:List[String]) extends RuntimeException

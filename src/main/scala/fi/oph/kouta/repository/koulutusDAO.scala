@@ -62,7 +62,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
-      sumIntDBIOs(actions)
+      DBIOHelpers.sumIntDBIOs(actions)
     } else {
       deleteTarjoajat(oid)
     }
@@ -131,7 +131,7 @@ sealed trait KoulutusModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL with SQLHelpers with DBIOHelpers {
+sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL with SQLHelpers {
 
   val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
@@ -164,7 +164,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     val inserts = koulutus.tarjoajat.map(t =>
       sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values (${koulutus.oid}, $t, ${koulutus.muokkaaja})""")
-    sumIntDBIOs(inserts)
+    DBIOHelpers.sumIntDBIOs(inserts)
   }
 
   def selectKoulutus(oid: KoulutusOid) = {

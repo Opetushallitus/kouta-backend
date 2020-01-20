@@ -87,7 +87,7 @@ trait HakuModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers with DBIOHelpers {
+sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers {
 
   def insertHaku(haku: Haku): DBIO[HakuOid] = {
     sql"""insert into haut ( tila,
@@ -207,7 +207,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     if (hakuajat.nonEmpty) {
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
       val deleteSQL = deleteHakuajat(oid, hakuajat)
-      sumIntDBIOs(insertSQL :+ deleteSQL)
+      DBIOHelpers.sumIntDBIOs(insertSQL :+ deleteSQL)
     } else {
       sqlu"""delete from hakujen_hakuajat where haku_oid = $oid"""
     }

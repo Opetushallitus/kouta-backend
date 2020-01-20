@@ -67,7 +67,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
     if (hakuajat.nonEmpty) {
       val actions = hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat)
-      sumIntDBIOs(actions)
+      DBIOHelpers.sumIntDBIOs(actions)
     } else {
       deleteHakuajat(oid)
     }
@@ -81,7 +81,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(v => insertValintakoe(oid, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(oid, v, muokkaaja))
 
-    sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
+    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
   }
 
   private def updateLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
@@ -92,7 +92,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(l => insertLiite(oid, l.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateLiite(oid, v, muokkaaja))
 
-    sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
+    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
   }
 
   override def listByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] = organisaatioOids match {
@@ -163,7 +163,7 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors with DBIOHelpers {
+sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
 
   def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (
@@ -361,7 +361,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def insertLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
     val inserts = hakukohde.liitteet.map(l => insertLiite(hakukohde.oid, l.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja))
-    sumIntDBIOs(inserts)
+    DBIOHelpers.sumIntDBIOs(inserts)
   }
 
   def insertLiite(oid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid): DBIO[Int] = {
