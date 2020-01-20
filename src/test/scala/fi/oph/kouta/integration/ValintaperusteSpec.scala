@@ -15,6 +15,8 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
+  val ophValintaperuste = valintaperuste.copy(julkinen = true, organisaatioOid = rootOrganisaatio)
+
   "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {
     get(s"/valintaperuste/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
@@ -43,14 +45,24 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, crudSessions(ParentOid), valintaperuste(id))
   }
 
-  it should "deny a user with only access to a descendant organization" in {
+  it should "allow a user with only access to a descendant organization" in {
     val id = put(valintaperuste)
-    get(s"$ValintaperustePath/$id", crudSessions(GrandChildOid), 403)
+    get(id, crudSessions(GrandChildOid), valintaperuste(id))
   }
 
   it should "deny a user with the wrong role" in {
     val id = put(valintaperuste)
     get(s"$ValintaperustePath/$id", otherRoleSession, 403)
+  }
+
+  it should "allow the user of proper koulutustyyppi to read julkinen valintaperuste created by oph" in {
+    val id = put(ophValintaperuste)
+    get(id, readSessions(AmmOid), ophValintaperuste.copy(id = Some(id)))
+  }
+
+  it should "deny the user of wrong koulutustyyppi to read julkinen valintaperuste created by oph" in {
+    val id = put(ophValintaperuste)
+    get(s"$ValintaperustePath/$id", readSessions(YoOid), 403)
   }
 
   it should "allow indexer access" in {

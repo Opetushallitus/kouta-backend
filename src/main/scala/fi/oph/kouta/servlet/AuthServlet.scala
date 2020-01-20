@@ -18,24 +18,24 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
   )
 
   registerPath("/auth/login",
-    s"""    get:
-       |      summary: Kirjaudu sisään
-       |      operationId: Kirjaudu sisaan
-       |      description: Kirjaudu sisään
-       |      tags:
-       |        - Auth
-       |      parameters:
-       |        - in: query
-       |          name: ticket
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: CAS-tiketti
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |        '401':
-       |          description: Unauthorized
+    """    get:
+      |      summary: Kirjaudu sisään
+      |      operationId: Kirjaudu sisaan
+      |      description: Kirjaudu sisään
+      |      tags:
+      |        - Auth
+      |      parameters:
+      |        - in: query
+      |          name: ticket
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: CAS-tiketti
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |        '401':
+      |          description: Unauthorized
        |""".stripMargin)
   get("/login") {
 
@@ -58,18 +58,18 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
   }
 
   registerPath("/auth/session",
-    s"""    get:
-       |      summary: Tarkista käyttäjän sessio
-       |      operationId: Tarkista sessio
-       |      description: Tarkista käyttäjän sessio
-       |      tags:
-       |        - Auth
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |        '401':
-       |          description: Unauthorized
-       |""".stripMargin)
+    """    get:
+      |      summary: Tarkista käyttäjän sessio
+      |      operationId: Tarkista sessio
+      |      description: Tarkista käyttäjän sessio
+      |      tags:
+      |        - Auth
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |        '401':
+      |          description: Unauthorized
+      |""".stripMargin)
   get("/session") {
 
     val existingSession = cookies
@@ -84,21 +84,21 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
   }
 
   registerPath("/auth/login",
-    s"""    post:
-       |      summary: Kirjaudu ulos
-       |      operationId: Kirjaudu ulos
-       |      description: Kirjaudu ulos
-       |      tags:
-       |        - Auth
-       |      parameters:
-       |        - in: body
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: logoutRequest
-       |      responses:
-       |        '200':
-       |          description: Ok
+    """    post:
+      |      summary: Kirjaudu ulos
+      |      operationId: Kirjaudu ulos
+      |      description: Kirjaudu ulos
+      |      tags:
+      |        - Auth
+      |      parameters:
+      |        - in: body
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: logoutRequest
+      |      responses:
+      |        '200':
+      |          description: Ok
        |""".stripMargin)
   post("/login") {
 

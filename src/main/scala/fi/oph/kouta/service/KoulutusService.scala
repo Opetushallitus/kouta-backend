@@ -2,8 +2,8 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.client.OrganisaatioClient
-import fi.oph.kouta.domain._
+import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
+import fi.oph.kouta.domain.{koulutus, _}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
@@ -11,55 +11,37 @@ import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 
-trait KoulutusAuthorizationService extends RoleEntityAuthorizationService {
-  protected val roleEntity: RoleEntity = Role.Koulutus
-
-  def authorizeGetKoulutus(koulutusWithTime: Option[(Koulutus, Instant)])(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
-    def allowedByOrgOrJulkinen(koulutus: Koulutus, oids: Set[OrganisaatioOid]): Boolean =
-      lazyFlatChildren(oids).exists {
-        case (orgs, tyypit) =>
-          (koulutus.julkinen && koulutus.koulutustyyppi.exists(tyypit.contains)) || orgs.contains(koulutus.organisaatioOid)
-      }
-
-    koulutusWithTime.map {
-      case (koulutus, lastModified) if hasRootAccess(Role.Koulutus.readRoles) => (koulutus, lastModified)
-      case (koulutus, lastModified) =>
-        organizationsForRoles(Role.Koulutus.readRoles) match {
-          case oids if oids.isEmpty => throw RoleAuthorizationFailedException(Role.Koulutus.readRoles, authenticated.session.roles)
-          case oids =>
-            if (allowedByOrgOrJulkinen(koulutus, oids)) {
-              (koulutus, lastModified)
-            } else {
-              throw OrganizationAuthorizationFailedException(koulutus.organisaatioOid)
-            }
-        }
-    }
-  }
-}
-
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service)
 
 class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service)
-  extends ValidatingService[Koulutus] with KoulutusAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
+  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus, KoulutusMetadata] {
+
+  protected val roleEntity: RoleEntity = Role.Koulutus
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
-  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] =
-    authorizeGetKoulutus(KoulutusDAO.get(oid))
+  def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
+    val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
+    authorizeGet(koulutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime)))
+  }
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
       withValidation(koulutus, checkTeemakuvaInPut(_, putWithIndexing, updateWithIndexing))
     }
 
-  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(KoulutusDAO.get(koulutus.oid.get)) {
+  //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
+  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
+    authorizeUpdate(koulutusWithTime, AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))) {
       withValidation(koulutus, checkTeemakuvaInUpdate(_, updateWithIndexing(_, notModifiedSince)))
     }
+  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
-    withAuthorizedChildOrganizationOidsAndOppilaitostyypit(organisaatioOid, roleEntity.readRoles) { case (oids, koulutustyypit) =>
-      KoulutusDAO.listByOrganisaatioOidsOrJulkinen(oids, koulutustyypit)
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
+      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
     }
   }
 
@@ -85,12 +67,28 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   }
 
   def listToteutukset(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withRootAccess(Role.Toteutus.readRoles)(ToteutusDAO.listByKoulutusOid(oid))
+    withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid))
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedChildOrganizationOids(organisaatioOid, Role.Toteutus.readRoles) {
-      ToteutusDAO.listByKoulutusOidAndOrganisaatioOids(oid, _)
+    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
+      ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, _)
     }
+
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): KoulutusSearchResult = {
+
+    def assocToteutusCounts(r: KoulutusSearchResult): KoulutusSearchResult =
+      r.copy(result = r.result.map {
+          k => k.copy(toteutukset = listToteutukset(k.oid, organisaatioOid).size)
+      })
+
+    list(organisaatioOid).map(_.oid) match {
+      case Nil          => KoulutusSearchResult()
+      case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
+    }
+  }
+
+  private def getTarjoajat(maybeKoulutusWithTime: Option[(Koulutus, Instant)]): Seq[OrganisaatioOid] =
+    maybeKoulutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
   private def putWithIndexing(koulutus: Koulutus) =
     sqsInTransactionService.runActionAndUpdateIndex(

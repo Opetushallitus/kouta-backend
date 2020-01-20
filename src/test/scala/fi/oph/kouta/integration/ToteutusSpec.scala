@@ -39,6 +39,11 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, crudSessions(toteutus.organisaatioOid), toteutus(oid, koulutusOid))
   }
 
+  it should "allow a user of the tarjoaja organization to read the toteutus" in {
+    val oid = put(toteutus(koulutusOid).copy(tarjoajat = List(LonelyOid)))
+    get(oid, crudSessions(LonelyOid), toteutus(oid, koulutusOid).copy(tarjoajat = List(LonelyOid)))
+  }
+
   it should "deny a user without access to the toteutus organization" in {
     val oid = put(toteutus(koulutusOid))
     get(s"$ToteutusPath/$oid", crudSessions(LonelyOid), 403)
@@ -49,9 +54,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, crudSessions(ParentOid), toteutus(oid, koulutusOid))
   }
 
-  it should "deny a user with only access to a descendant organization" in {
+  it should "allow a user with only access to a descendant organization" in {
     val oid = put(toteutus(koulutusOid))
-    get(s"$ToteutusPath/$oid", crudSessions(GrandChildOid), 403)
+    get(oid, crudSessions(GrandChildOid), toteutus(oid, koulutusOid))
   }
 
   it should "deny a user with the wrong role" in {
@@ -177,11 +182,18 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutus, lastModified, false, crudSessions(ParentOid))
   }
 
-  it should "deny a user with only access to a descendant organization" in {
+  it should "allow a user with only access to a descendant organization" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, 403, crudSessions(GrandChildOid))
+    update(thisToteutus, lastModified, false, crudSessions(GrandChildOid))
+  }
+
+  it should "allow a user of the tarjoaja organization to update the toteutus" in {
+    val oid = put(toteutus(koulutusOid).copy(tarjoajat = List(LonelyOid)))
+    val thisToteutus = toteutus(oid, koulutusOid).copy(tarjoajat = List(LonelyOid))
+    val lastModified = get(oid, thisToteutus)
+    update(thisToteutus, lastModified, false, crudSessions(LonelyOid))
   }
 
   it should "deny a user with the wrong role" in {

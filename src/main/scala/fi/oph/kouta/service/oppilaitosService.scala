@@ -37,7 +37,7 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     withRootAccess(indexerRoles)(OppilaitoksenOsaDAO.getByOppilaitosOid(oid))
 
   def listOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsaListItem] =
-    withRootAccess(Role.Oppilaitos.readRoles)(OppilaitoksenOsaDAO.listByOppilaitosOid(oid))
+    withRootAccess(indexerRoles)(OppilaitoksenOsaDAO.listByOppilaitosOid(oid))
 
   def listOppilaitoksenOsat(oid: OrganisaatioOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsaListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Oppilaitos.readRoles) {

@@ -10,14 +10,23 @@ import org.json4s.jackson.JsonMethods._
 
 import scala.annotation.tailrec
 
-object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
+trait OrganisaatioClient {
+  type OrganisaatioOidsAndOppilaitostyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
+}
+
+object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJsonFormats {
   val urlProperties: OphProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   val OphOid: OrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
-  def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): (Seq[OrganisaatioOid], Seq[Koulutustyyppi]) = oid match {
+  def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
     case OphOid => (Seq(OphOid), Koulutustyyppi.values)
     case _ => getHierarkia(oid, orgs => (children(oid, orgs), oppilaitostyypit(oid, orgs)))
+  }
+
+  def getAllChildAndParentOidsWithOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
+    case OphOid => (Seq(OphOid), Koulutustyyppi.values)
+    case _ => getHierarkia(oid, orgs => (parentsAndChildren(oid, orgs), oppilaitostyypit(oid, orgs)))
   }
 
   case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
@@ -43,8 +52,13 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
   private def parentsAndChildren(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
     find(oid, organisaatiot).map(x => parentOidsFlat(x) ++ Seq(x.oid) ++ childOidsFlat(x)).getOrElse(Seq()).distinct
 
+  private def oppilaitostyypit(oid: OrganisaatioOid, organisaatiot: Seq[OidAndChildren]): Seq[Koulutustyyppi] =
+    find(oid, organisaatiot).map{
+      x => parentOppilaitostyypitFlat(x, organisaatiot) ++ Seq(x.oppilaitostyyppi) ++ childOppilaitostyypitFlat(x)
+    }.getOrElse(Seq()).filter(_.isDefined).map(_.get).distinct.map(oppilaitostyyppi2koulutustyyppi)
+
   @tailrec
-  private def find(oid: OrganisaatioOid, level: List[OidAndChildren]): Option[OidAndChildren] =
+  private def find(oid: OrganisaatioOid, level: Seq[OidAndChildren]): Option[OidAndChildren] =
     level.find(_.oid == oid) match {
       case None if level.isEmpty => None
       case Some(c) => Some(c)
@@ -57,21 +71,12 @@ object OrganisaatioClient extends HttpClient with KoutaJsonFormats {
   private def parentOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
     item.parentOidPath.split('/').toSeq.reverse.map(OrganisaatioOid)
 
-  private def oppilaitostyypit(oid: OrganisaatioOid, organisaatiot: Seq[OidAndChildren]): Seq[Koulutustyyppi] =
-    organisaatiot
-      .flatMap(findWithParents(oid, _, Seq()))
-      .flatMap {
-        case (organisaatio, parents) => (parents.map(_.oppilaitostyyppi) :+ organisaatio.oppilaitostyyppi) ++ organisaatio.children.flatMap(childOppilaitostyypitFlat)
-      }.flatten
-      .map(oppilaitostyyppi2koulutustyyppi)
-
   private def childOppilaitostyypitFlat(item: OidAndChildren): Seq[Option[String]] =
     item.children.flatMap(c => c.oppilaitostyyppi +: childOppilaitostyypitFlat(c))
 
-  private def findWithParents(oid: OrganisaatioOid, current: OidAndChildren, parents: Seq[OidAndChildren]): Option[(OidAndChildren, Seq[OidAndChildren])] =
-    current match {
-      case c if c.oid == oid => Some((c, parents))
-      case c if c.children.isEmpty => None
-      case c => c.children.flatMap(child => findWithParents(oid, child, parents :+ c)).headOption
-    }
+  private def parentOppilaitostyypitFlat(item: OidAndChildren, hierarkia: Seq[OidAndChildren]): Seq[Option[String]] =
+    parentOidsFlat(item).map(find(_, hierarkia)).map { _ match {
+      case None => None
+      case Some(org) => org.oppilaitostyyppi
+    }}
 }

@@ -3,6 +3,7 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.domain.{Koulutus, Toteutus, Valintaperuste}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.repository.SessionDAO
@@ -21,7 +22,14 @@ case class TestUser(oid: String, username: String, sessionId: UUID) {
   val ticket = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
 }
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec {
+trait DefaultTestImplicits {
+
+  implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = new Ordering[OrganisaatioOid] {
+    def compare(a:OrganisaatioOid, b:OrganisaatioOid): Int = a.s compare b.s
+  }
+}
+
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits {
 
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
   val rootOrganisaatio = KoutaIntegrationSpec.rootOrganisaatio
@@ -69,6 +77,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
     mockSingleOrganisaatioResponses(LonelyOid)
     mockOrganisaatioResponse(YoOid, responseFromResource("mpkk"))
+    mockOrganisaatioResponse(AmmOid, singleOidOrganisaatioResponse(AmmOid.s))
   }
 
   override def afterAll(): Unit = {
@@ -79,11 +88,13 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
   val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
   val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
   val YoOid = OrganisaatioOid("1.2.246.562.10.46312206843")
+  val AmmOid = OrganisaatioOid("1.2.246.562.10.463122068666")
 
   //val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
   val crudSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
   val readSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
 
+  var ophSession: UUID = _
   var indexerSession: UUID = _
   var fakeIndexerSession: UUID = _
   var otherRoleSession: UUID = _
@@ -105,14 +116,15 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
   }
 
   def addTestSessions(): Unit = {
-    Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid).foreach { org =>
+    Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid, YoOid, AmmOid).foreach { org =>
       crudSessions.update(org, addTestSession(roleEntities.map(re => re.Crud.asInstanceOf[Role]), org))
     }
 
-    Seq(ChildOid, YoOid).foreach { org =>
+    Seq(ChildOid, YoOid, AmmOid).foreach { org =>
       readSessions.update(org, addTestSession(roleEntities.map(_.Read.asInstanceOf[Role]), org))
     }
 
+    ophSession = addTestSession(Role.Paakayttaja, OphOid)
     indexerSession = addTestSession(Role.Indexer, OphOid)
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
     otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)

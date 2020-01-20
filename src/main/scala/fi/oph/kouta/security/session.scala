@@ -1,11 +1,18 @@
 package fi.oph.kouta.security
 
+import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 import scala.util.matching.Regex
 
 trait Authorizable {
   val organisaatioOid: OrganisaatioOid
+
+}
+
+trait AuthorizableMaybeJulkinen extends Authorizable {
+  val koulutustyyppi: Koulutustyyppi
+  val julkinen: Boolean
 }
 
 sealed abstract class Role(val name: String) extends Product with Serializable {
@@ -71,6 +78,9 @@ sealed trait Session {
 
   lazy val roleMap: Map[Role, Set[OrganisaatioOid]] = authorities.groupBy(_.role).mapValues(_.flatMap(_.organisaatioId))
   lazy val roles: Set[Role] = roleMap.keySet
+
+  def getOrganizationsForRoles(requiredRoles: Seq[Role]): Set[OrganisaatioOid] =
+    requiredRoles.flatMap(roleMap.get).fold(Set())(_ union _)
 }
 
 case class ServiceTicket(s: String)

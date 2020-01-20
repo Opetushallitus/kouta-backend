@@ -3,36 +3,36 @@ package fi.oph.kouta.domain
 package object keyword {
 
   val AsiasanaModel =
-    s"""    Asiasana:
-       |      type: object
-       |      properties:
-       |        kieli:
-       |          type: string
-       |          desciption: Asiasanan kieli
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Kieli'
-       |          example: fi
-       |        arvo:
-       |          type: string
-       |          description: Asiasana annetulla kielellä
-       |          example: robotiikka
-       |""".stripMargin
+    """    Asiasana:
+      |      type: object
+      |      properties:
+      |        kieli:
+      |          type: string
+      |          desciption: Asiasanan kieli
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kieli'
+      |          example: fi
+      |        arvo:
+      |          type: string
+      |          description: Asiasana annetulla kielellä
+      |          example: robotiikka
+      |""".stripMargin
 
   val AmmattinimikeModel =
-    s"""    Ammattinimike:
-       |      type: object
-       |      properties:
-       |        kieli:
-       |          type: string
-       |          desciption: Ammattinimikkeen kieli
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Kieli'
-       |          example: fi
-       |        arvo:
-       |          type: string
-       |          description: Ammattinimike annetulla kielellä
-       |          example: insinööri
-       |""".stripMargin
+    """    Ammattinimike:
+      |      type: object
+      |      properties:
+      |        kieli:
+      |          type: string
+      |          desciption: Ammattinimikkeen kieli
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kieli'
+      |          example: fi
+      |        arvo:
+      |          type: string
+      |          description: Ammattinimike annetulla kielellä
+      |          example: insinööri
+      |""".stripMargin
 
   val models = List(AsiasanaModel, AmmattinimikeModel)
 

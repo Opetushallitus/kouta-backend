@@ -3,135 +3,135 @@ package fi.oph.kouta.domain
 package object valintaperusteMetadata {
 
   val ValintaperusteMetadataModel =
-    s"""    ValintaperusteMetadata:
-       |      type: object
-       |      properties:
-       |        kielitaitovaatimukset:
-       |          type: array
-       |          description: Lista valintaperustekuvauksen kielitaitovaatimuksista
-       |          items:
-       |            $$ref: '#/components/schemas/Kielitaitovaatimus'
-       |        valintatavat:
-       |          type: array
-       |          description: Lista valintaperustekuvauksen valintatavoista
-       |          items:
-       |            $$ref: '#/components/schemas/Valintatapa'
-       |""".stripMargin
+    """    ValintaperusteMetadata:
+      |      type: object
+      |      properties:
+      |        kielitaitovaatimukset:
+      |          type: array
+      |          description: Lista valintaperustekuvauksen kielitaitovaatimuksista
+      |          items:
+      |            $ref: '#/components/schemas/Kielitaitovaatimus'
+      |        valintatavat:
+      |          type: array
+      |          description: Lista valintaperustekuvauksen valintatavoista
+      |          items:
+      |            $ref: '#/components/schemas/Valintatapa'
+      |""".stripMargin
 
   val AmmatillinenValintaperusteMetadataModel =
-    s"""    AmmatillinenValintaperusteMetadata:
-       |      type: object
-       |      allOf:
-       |        - $$ref: '#/components/schemas/ValintaperusteMetadata'
-       |      properties:
-       |        tyyppi:
-       |          type: string
-       |          description: Valintaperustekuvauksen metatiedon tyyppi
-       |          example: amm
-       |          enum:
-       |            - amm
-       |""".stripMargin
+    """    AmmatillinenValintaperusteMetadata:
+      |      type: object
+      |      allOf:
+      |        - $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: amm
+      |          enum:
+      |            - amm
+      |""".stripMargin
 
   val KorkeakoulutusValintaperusteMetadataModel =
-    s"""    KorkeakoulutusValintaperusteMetadata:
-       |      type: object
-       |      properties:
-       |        osaamistaustaKoodiUrit:
-       |          type: array
-       |          description: Lista valintaperustekuvauksen osaamistaustoista.
-       |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/osaamistausta/1)
-       |          items:
-       |            - type: string
-       |          example:
-       |            - osaamistausta_001#1
-       |            - osaamistausta_002#1
-       |        kuvaus:
-       |          type: object
-       |          description: Valintaperustekuvauksen kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Kuvaus'
-       |""".stripMargin
+    """    KorkeakoulutusValintaperusteMetadata:
+      |      type: object
+      |      properties:
+      |        osaamistaustaKoodiUrit:
+      |          type: array
+      |          description: Lista valintaperustekuvauksen osaamistaustoista.
+      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/osaamistausta/1)
+      |          items:
+      |            - type: string
+      |          example:
+      |            - osaamistausta_001#1
+      |            - osaamistausta_002#1
+      |        kuvaus:
+      |          type: object
+      |          description: Valintaperustekuvauksen kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
 
   val YliopistoValintaperusteMetadata =
-    s"""    YliopistoValintaperusteMetadata:
-       |      type: object
-       |      allOf:
-       |        - $$ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
-       |      properties:
-       |        tyyppi:
-       |          type: string
-       |          description: Valintaperustekuvauksen metatiedon tyyppi
-       |          example: yo
-       |          enum:
-       |            - yo
-       |""".stripMargin
+    """    YliopistoValintaperusteMetadata:
+      |      type: object
+      |      allOf:
+      |        - $ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: yo
+      |          enum:
+      |            - yo
+      |""".stripMargin
 
   val AmmattikorkeakouluValintaperusteMetadata =
-    s"""    AmmattikorkeakouluValintaperusteMetadata:
-       |      type: object
-       |      allOf:
-       |        - $$ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
-       |      properties:
-       |        tyyppi:
-       |          type: string
-       |          description: Valintaperustekuvauksen metatiedon tyyppi
-       |          example: amk
-       |          enum:
-       |            - amk
-       |""".stripMargin
+    """    AmmattikorkeakouluValintaperusteMetadata:
+      |      type: object
+      |      allOf:
+      |        - $ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: amk
+      |          enum:
+      |            - amk
+      |""".stripMargin
 
   val KielitaitovaatimusModel =
-    s"""    Kielitaitovaatimus:
-       |      type: object
-       |      properties:
-       |        kieliKoodiUri:
-       |          type: string
-       |          description: Kielitaitovaatimuksen kieli.
-       |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
-       |          example: kieli_en#1
-       |        kielitaidonVoiOsoittaa:
-       |          type: array
-       |          description: Lista tavoista, joilla kielitaidon voi osoittaa
-       |          items:
-       |            type: object
-       |            properties:
-       |              kielitaitoKoodiUri:
-       |                type: string
-       |                description: Kielitaidon osoittaminen.
-       |                  Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kielitaidonosoittaminen/1)
-       |                example: kielitaidonosoittaminen_01#1
-       |              lisatieto:
-       |                type: object
-       |                description: Kielitaidon osoittamisen lisätieto eri kielillä.
-       |                allOf:
-       |                  - $$ref: '#/components/schemas/Lisatieto'
-       |        vaatimukset:
-       |          type: array
-       |          description: Lista kielitaitovaatimuksista
-       |          items:
-       |            type: object
-       |            properties:
-       |              kielitaitovaatimusKoodiUri:
-       |                type: string
-       |                description: Kielitaitovaatimuksen koodiUri.
-       |                  Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kielitaitovaatimustyypit/1)
-       |                example: kielitaitovaatimustyypit_01#1
-       |              kielitaitovaatimusKuvaukset:
-       |                type: array
-       |                description: Lista kielitaitovaatimusten kuvauksia eri kielillä.
-       |                items:
-       |                  type: object
-       |                  properties:
-       |                    kielitaitovaatimusKuvausKoodiUri:
-       |                      type: string
-       |                      description: Kielitaitovaatimuksen kuvauksen koodiUri.
-       |                        Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kielitaitovaatimustyypitkuvaus/1)
-       |                      example: kielitaitovaatimustyypitkuvaus_01#1
-       |                    kielitaitovaatimusTaso:
-       |                      type: string
-       |                      description: Kielitaitovaatimuksen taso
-       |                      example: A
-       |""".stripMargin
+    """    Kielitaitovaatimus:
+      |      type: object
+      |      properties:
+      |        kieliKoodiUri:
+      |          type: string
+      |          description: Kielitaitovaatimuksen kieli.
+      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          example: kieli_en#1
+      |        kielitaidonVoiOsoittaa:
+      |          type: array
+      |          description: Lista tavoista, joilla kielitaidon voi osoittaa
+      |          items:
+      |            type: object
+      |            properties:
+      |              kielitaitoKoodiUri:
+      |                type: string
+      |                description: Kielitaidon osoittaminen.
+      |                  Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kielitaidonosoittaminen/1)
+      |                example: kielitaidonosoittaminen_01#1
+      |              lisatieto:
+      |                type: object
+      |                description: Kielitaidon osoittamisen lisätieto eri kielillä.
+      |                allOf:
+      |                  - $ref: '#/components/schemas/Lisatieto'
+      |        vaatimukset:
+      |          type: array
+      |          description: Lista kielitaitovaatimuksista
+      |          items:
+      |            type: object
+      |            properties:
+      |              kielitaitovaatimusKoodiUri:
+      |                type: string
+      |                description: Kielitaitovaatimuksen koodiUri.
+      |                  Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kielitaitovaatimustyypit/1)
+      |                example: kielitaitovaatimustyypit_01#1
+      |              kielitaitovaatimusKuvaukset:
+      |                type: array
+      |                description: Lista kielitaitovaatimusten kuvauksia eri kielillä.
+      |                items:
+      |                  type: object
+      |                  properties:
+      |                    kielitaitovaatimusKuvausKoodiUri:
+      |                      type: string
+      |                      description: Kielitaitovaatimuksen kuvauksen koodiUri.
+      |                        Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kielitaitovaatimustyypitkuvaus/1)
+      |                      example: kielitaitovaatimustyypitkuvaus_01#1
+      |                    kielitaitovaatimusTaso:
+      |                      type: string
+      |                      description: Kielitaitovaatimuksen taso
+      |                      example: A
+      |""".stripMargin
 
   def models = List(ValintaperusteMetadataModel, KielitaitovaatimusModel, AmmatillinenValintaperusteMetadataModel,
     KorkeakoulutusValintaperusteMetadataModel, AmmattikorkeakouluValintaperusteMetadata, YliopistoValintaperusteMetadata)

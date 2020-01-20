@@ -9,6 +9,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.ToteutusServlet
+import org.scalactic.Equality
 
 trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
@@ -27,6 +28,14 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
   def toteutus(oid:String, koulutusOid:String, tila:Julkaisutila): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), tila = tila)
   def toteutus(koulutusOid: String, tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Toteutus =
     toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = organisaatioOid, tila = tila)
+
+  implicit val toteutusEquality: Equality[Toteutus] = (a: Toteutus, b: Any) => b match {
+    case _:Toteutus => Equality.default[Toteutus].areEqual(
+      a.copy(tarjoajat = a.tarjoajat.sorted),
+      b.asInstanceOf[Toteutus].copy(tarjoajat = b.asInstanceOf[Toteutus].tarjoajat.sorted)
+    )
+    case _ => false
+  }
 
   def put(toteutus:Toteutus):String = put(ToteutusPath, toteutus, oid(_))
   def put(toteutus:Toteutus, sessionId: UUID):String = put(ToteutusPath, toteutus, sessionId, oid(_))

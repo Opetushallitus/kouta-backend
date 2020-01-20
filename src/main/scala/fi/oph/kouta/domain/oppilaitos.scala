@@ -9,226 +9,226 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
 package object oppilaitos {
 
   val OppilaitosModel =
-    s"""    Oppilaitos:
-       |      type: object
-       |      properties:
-       |        oid:
-       |          type: string
-       |          description: Oppilaitoksen organisaatio-oid
-       |          example: "1.2.246.562.10.00101010101"
-       |        tila:
-       |          type: string
-       |          example: "julkaistu"
-       |          enum:
-       |            - julkaistu
-       |            - arkistoitu
-       |            - tallennettu
-       |          description: Oppilaitoksen julkaisutila. Jos oppilaitos on julkaistu, se näkyy oppijalle Opintopolussa.
-       |        kielivalinta:
-       |          type: array
-       |          description: Kielet, joille oppilaitoksen kuvailutiedot ja muut tekstit on käännetty
-       |          items:
-       |            $$ref: '#/components/schemas/Kieli'
-       |          example:
-       |            - fi
-       |            - sv
-       |        metadata:
-       |          type: object
-       |          $$ref: '#/components/schemas/OppilaitosMetadata'
-       |        muokkaaja:
-       |          type: string
-       |          description: Oppilaitosta kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid
-       |          example: 1.2.246.562.24.00101010101.
-       |        organisaatioOid:
-       |           type: string
-       |           description: Oppilaitoksen kuvailutiedot luoneen organisaation oid
-       |           example: 1.2.246.562.10.00101010101
-       |        modified:
-       |           type: string
-       |           format: date-time
-       |           description: Oppilaitoksen kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-       |           example: 2019-08-23T09:55
-       |""".stripMargin
+    """    Oppilaitos:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |          description: Oppilaitoksen organisaatio-oid
+      |          example: "1.2.246.562.10.00101010101"
+      |        tila:
+      |          type: string
+      |          example: "julkaistu"
+      |          enum:
+      |            - julkaistu
+      |            - arkistoitu
+      |            - tallennettu
+      |          description: Oppilaitoksen julkaisutila. Jos oppilaitos on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        kielivalinta:
+      |          type: array
+      |          description: Kielet, joille oppilaitoksen kuvailutiedot ja muut tekstit on käännetty
+      |          items:
+      |            $ref: '#/components/schemas/Kieli'
+      |          example:
+      |            - fi
+      |            - sv
+      |        metadata:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosMetadata'
+      |        muokkaaja:
+      |          type: string
+      |          description: Oppilaitosta kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid
+      |          example: 1.2.246.562.24.00101010101.
+      |        organisaatioOid:
+      |           type: string
+      |           description: Oppilaitoksen kuvailutiedot luoneen organisaation oid
+      |           example: 1.2.246.562.10.00101010101
+      |        modified:
+      |           type: string
+      |           format: date-time
+      |           description: Oppilaitoksen kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
+      |           example: 2019-08-23T09:55
+      |""".stripMargin
 
   val OppilaitosMetadataModel =
-    s"""    OppilaitosMetadata:
-       |      type: object
-       |      properties:
-       |        yhteystiedot:
-       |          type: object
-       |          description: Oppilaitoksen Opintopolussa näytettävät yhteystiedot
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Yhteystieto'
-       |        tietoaOpiskelusta:
-       |          type: array
-       |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
-       |          items:
-       |            type: object
-       |            $$ref: '#/components/schemas/Lisatieto'
-       |        esittely:
-       |          type: object
-       |          description: Oppilaitoksen Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Kuvaus'
-       |        opiskelijoita:
-       |          type: integer
-       |          description: Oppilaitoksen opiskelijoiden lkm
-       |        korkeakouluja:
-       |          type: integer
-       |          description: Oppilaitoksen korkeakoulujen lkm
-       |        tiedekuntia:
-       |          type: integer
-       |          description: Oppilaitoksen tiedekuntien lkm
-       |        kampuksia:
-       |          type: integer
-       |          description: Oppilaitoksen kampuksien lkm
-       |        yksikoita:
-       |          type: integer
-       |          description: Oppilaitoksen yksiköiden lkm
-       |        toimipisteita:
-       |          type: integer
-       |          description: Oppilaitoksen toimipisteiden lkm
-       |        akatemioita:
-       |          type: integer
-       |          description: Oppilaitoksen akatemioiden lkm
-       |        teemakuva:
-       |          type: string
-       |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
-       |""".stripMargin
+    """    OppilaitosMetadata:
+      |      type: object
+      |      properties:
+      |        yhteystiedot:
+      |          type: object
+      |          description: Oppilaitoksen Opintopolussa näytettävät yhteystiedot
+      |          allOf:
+      |            - $ref: '#/components/schemas/Yhteystieto'
+      |        tietoaOpiskelusta:
+      |          type: array
+      |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
+      |          items:
+      |            type: object
+      |            $ref: '#/components/schemas/Lisatieto'
+      |        esittely:
+      |          type: object
+      |          description: Oppilaitoksen Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
+      |        opiskelijoita:
+      |          type: integer
+      |          description: Oppilaitoksen opiskelijoiden lkm
+      |        korkeakouluja:
+      |          type: integer
+      |          description: Oppilaitoksen korkeakoulujen lkm
+      |        tiedekuntia:
+      |          type: integer
+      |          description: Oppilaitoksen tiedekuntien lkm
+      |        kampuksia:
+      |          type: integer
+      |          description: Oppilaitoksen kampuksien lkm
+      |        yksikoita:
+      |          type: integer
+      |          description: Oppilaitoksen yksiköiden lkm
+      |        toimipisteita:
+      |          type: integer
+      |          description: Oppilaitoksen toimipisteiden lkm
+      |        akatemioita:
+      |          type: integer
+      |          description: Oppilaitoksen akatemioiden lkm
+      |        teemakuva:
+      |          type: string
+      |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
+      |""".stripMargin
 
   val OppilaitoksenOsaModel =
-    s"""    OppilaitoksenOsa:
-       |      type: object
-       |      properties:
-       |        oid:
-       |          type: string
-       |          description: Oppilaitoksen osan organisaatio-oid
-       |          example: "1.2.246.562.10.00101010102"
-       |        oppilaitosOid:
-       |          type: string
-       |          description: Oppilaitoksen osan oppilaitoksen organisaatio-oid
-       |          example: "1.2.246.562.10.00101010101"
-       |        tila:
-       |          type: string
-       |          example: "julkaistu"
-       |          enum:
-       |            - julkaistu
-       |            - arkistoitu
-       |            - tallennettu
-       |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
-       |        kielivalinta:
-       |          type: array
-       |          description: Kielet, joille oppilaitoksen osan kuvailutiedot ja muut tekstit on käännetty
-       |          items:
-       |            $$ref: '#/components/schemas/Kieli'
-       |          example:
-       |            - fi
-       |            - sv
-       |        metadata:
-       |          type: object
-       |          $$ref: '#/components/schemas/OppilaitoksenOsaMetadata'
-       |        muokkaaja:
-       |          type: string
-       |          description: Oppilaitoksen osan kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid
-       |          example: 1.2.246.562.10.00101010101
-       |        organisaatioOid:
-       |           type: string
-       |           description: Oppilaitoksen osan kuvailutiedot luoneen organisaation oid
-       |           example: 1.2.246.562.10.00101010101
-       |        modified:
-       |           type: string
-       |           format: date-time
-       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-       |           example: 2019-08-23T09:55
-       |""".stripMargin
+    """    OppilaitoksenOsa:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |          description: Oppilaitoksen osan organisaatio-oid
+      |          example: "1.2.246.562.10.00101010102"
+      |        oppilaitosOid:
+      |          type: string
+      |          description: Oppilaitoksen osan oppilaitoksen organisaatio-oid
+      |          example: "1.2.246.562.10.00101010101"
+      |        tila:
+      |          type: string
+      |          example: "julkaistu"
+      |          enum:
+      |            - julkaistu
+      |            - arkistoitu
+      |            - tallennettu
+      |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        kielivalinta:
+      |          type: array
+      |          description: Kielet, joille oppilaitoksen osan kuvailutiedot ja muut tekstit on käännetty
+      |          items:
+      |            $ref: '#/components/schemas/Kieli'
+      |          example:
+      |            - fi
+      |            - sv
+      |        metadata:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitoksenOsaMetadata'
+      |        muokkaaja:
+      |          type: string
+      |          description: Oppilaitoksen osan kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid
+      |          example: 1.2.246.562.10.00101010101
+      |        organisaatioOid:
+      |           type: string
+      |           description: Oppilaitoksen osan kuvailutiedot luoneen organisaation oid
+      |           example: 1.2.246.562.10.00101010101
+      |        modified:
+      |           type: string
+      |           format: date-time
+      |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
+      |           example: 2019-08-23T09:55
+      |""".stripMargin
 
   val OppilaitoksenOsaMetadataModel =
-    s"""    OppilaitoksenOsaMetadata:
-       |      type: object
-       |      properties:
-       |        yhteystiedot:
-       |          type: object
-       |          description: Oppilaitoksen osan Opintopolussa näytettävät yhteystiedot
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Yhteystieto'
-       |        esittely:
-       |          type: object
-       |          description: Oppilaitoksen osan Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Kuvaus'
-       |        kampus:
-       |          type: object
-       |          description: Oppilaitoksen osan kampuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Nimi'
-       |        opiskelijoita:
-       |          type: integer
-       |          description: Oppilaitoksen osan opiskelijoiden lkm
-       |        teemakuva:
-       |          type: string
-       |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
-       |""".stripMargin
+    """    OppilaitoksenOsaMetadata:
+      |      type: object
+      |      properties:
+      |        yhteystiedot:
+      |          type: object
+      |          description: Oppilaitoksen osan Opintopolussa näytettävät yhteystiedot
+      |          allOf:
+      |            - $ref: '#/components/schemas/Yhteystieto'
+      |        esittely:
+      |          type: object
+      |          description: Oppilaitoksen osan Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
+      |        kampus:
+      |          type: object
+      |          description: Oppilaitoksen osan kampuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Nimi'
+      |        opiskelijoita:
+      |          type: integer
+      |          description: Oppilaitoksen osan opiskelijoiden lkm
+      |        teemakuva:
+      |          type: string
+      |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
+      |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
-    s"""    OppilaitoksenOsaListItem:
-       |      type: object
-       |      properties:
-       |        oid:
-       |          type: string
-       |          description: Oppilaitoksen osan organisaatio-oid
-       |          example: "1.2.246.562.10.00101010102"
-       |        oppilaitosOid:
-       |          type: string
-       |          description: Oppilaitoksen osan oppilaitoksen organisaatio-oid
-       |          example: "1.2.246.562.10.00101010101"
-       |        tila:
-       |          type: string
-       |          example: "julkaistu"
-       |          enum:
-       |            - julkaistu
-       |            - arkistoitu
-       |            - tallennettu
-       |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
-       |        muokkaaja:
-       |          type: string
-       |          description: Oppilaitoksen osan kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid
-       |          example: 1.2.246.562.10.00101010101
-       |        organisaatioOid:
-       |           type: string
-       |           description: Oppilaitoksen osan kuvailutiedot luoneen organisaation oid
-       |           example: 1.2.246.562.10.00101010101
-       |        modified:
-       |           type: string
-       |           format: date-time
-       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-       |           example: 2019-08-23T09:55
-       |""".stripMargin
+    """    OppilaitoksenOsaListItem:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |          description: Oppilaitoksen osan organisaatio-oid
+      |          example: "1.2.246.562.10.00101010102"
+      |        oppilaitosOid:
+      |          type: string
+      |          description: Oppilaitoksen osan oppilaitoksen organisaatio-oid
+      |          example: "1.2.246.562.10.00101010101"
+      |        tila:
+      |          type: string
+      |          example: "julkaistu"
+      |          enum:
+      |            - julkaistu
+      |            - arkistoitu
+      |            - tallennettu
+      |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        muokkaaja:
+      |          type: string
+      |          description: Oppilaitoksen osan kuvailutietoja viimeksi muokanneen virkailijan henkilö-oid
+      |          example: 1.2.246.562.10.00101010101
+      |        organisaatioOid:
+      |           type: string
+      |           description: Oppilaitoksen osan kuvailutiedot luoneen organisaation oid
+      |           example: 1.2.246.562.10.00101010101
+      |        modified:
+      |           type: string
+      |           format: date-time
+      |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
+      |           example: 2019-08-23T09:55
+      |""".stripMargin
 
   val YhteystietoModel =
-    s"""    Yhteystieto:
-       |      type: object
-       |      properties:
-       |        osoite:
-       |          type: object
-       |          description: Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Osoite'
-       |        sahkoposti:
-       |          type: object
-       |          description: Opintopolussa näytettävä sähköpostiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
-       |        puhelinnumero:
-       |          type: object
-       |          description: Opintopolussa näytettävä puhelinnumero eri kielillä. Kielet on määritetty kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
-       |        wwwSivu:
-       |          type: object
-       |          description: Opintopolussa näytettävä www-sivu eri kielillä. Kielet on määritetty kielivalinnassa.
-       |          allOf:
-       |            - $$ref: '#/components/schemas/Teksti'
-       |""".stripMargin
+    """    Yhteystieto:
+      |      type: object
+      |      properties:
+      |        osoite:
+      |          type: object
+      |          description: Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Osoite'
+      |        sahkoposti:
+      |          type: object
+      |          description: Opintopolussa näytettävä sähköpostiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |        puhelinnumero:
+      |          type: object
+      |          description: Opintopolussa näytettävä puhelinnumero eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |        wwwSivu:
+      |          type: object
+      |          description: Opintopolussa näytettävä www-sivu eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |""".stripMargin
 
   def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel, OppilaitoksenOsaListItemModel, YhteystietoModel)
 

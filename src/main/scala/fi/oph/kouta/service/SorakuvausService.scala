@@ -16,9 +16,10 @@ object SorakuvausService extends SorakuvausService(SqsInTransactionService)
 abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
-    authorizeGet(SorakuvausDAO.get(id))
+    authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus) {
@@ -31,12 +32,14 @@ abstract class SorakuvausService(sqsInTransactionService: SqsInTransactionServic
     }
 
   def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
-    withRootAccess(Role.Valintaperuste.readRoles) {
+    withRootAccess(indexerRoles) {
       ValintaperusteDAO.listBySorakuvausId(sorakuvausId)
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(SorakuvausDAO.listByOrganisaatioOidsOrJulkinen)
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
+      SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+    }
 
   private def putWithIndexing(sorakuvaus: Sorakuvaus) =
     sqsInTransactionService.runActionAndUpdateIndex(

@@ -251,46 +251,4 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
     MockS3Client.reset()
   }
-
-  "Get oppilaitoksen osat" should "return oppilaitoksen osat for indexer" in {
-    val oid = put(oppilaitos)
-    val anotherOid = put(oppilaitos)
-    val expectedOsat = Seq(put(oppilaitoksenOsa(oid)), put(oppilaitoksenOsa(oid)), put(oppilaitoksenOsa(oid)))
-    val unexpected = put(oppilaitoksenOsa(anotherOid))
-    get(s"$OppilaitosPath/$oid/osat", headers = Seq(sessionHeader(indexerSession))) {
-      status should equal (200)
-      read[List[OppilaitoksenOsa]](body) should contain theSameElementsAs List(
-        oppilaitoksenOsa(expectedOsat(0), oid).copy(modified = Some(readModifiedByOid(expectedOsat(0), "oppilaitosten_osat"))),
-        oppilaitoksenOsa(expectedOsat(1), oid).copy(modified = Some(readModifiedByOid(expectedOsat(1), "oppilaitosten_osat"))),
-        oppilaitoksenOsa(expectedOsat(2), oid).copy(modified = Some(readModifiedByOid(expectedOsat(2), "oppilaitosten_osat")))
-      )
-    }
-  }
-
-  it should "return empty result if oppilaitos has no osat" in {
-    val oid = put(oppilaitos)
-    get(s"$OppilaitosPath/$oid/osat", headers = Seq(sessionHeader(indexerSession))) {
-      status should equal (200)
-      read[List[OppilaitoksenOsa]](body) should contain theSameElementsAs(List())
-    }
-  }
-
-  it should "deny access without a valid session" in {
-    val oid = OrganisaatioOid("oid")
-    get(s"$OppilaitosPath/$oid/osat", headers = Seq()) {
-      withClue(body) {
-        status should equal (401)
-      }
-    }
-  }
-
-  it should "deny access without the indexer role" in {
-    val oid = OrganisaatioOid("oid")
-    get(s"$OppilaitosPath/$oid/osat", defaultSessionId, 403)
-  }
-
-  it should "deny access without root organization access to the indexer role" in {
-    val oid = OrganisaatioOid("oid")
-    get(s"$OppilaitosPath/$oid/osat", fakeIndexerSession, 403)
-  }
 }

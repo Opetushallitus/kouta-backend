@@ -15,6 +15,8 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   def addInvalidHakuaika(haku:Haku) = haku.copy(
     hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
 
+  val ophHaku = haku.copy(organisaatioOid = rootOrganisaatio)
+
   "Get haku by oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(defaultSessionHeader)) {
       status should equal (404)
@@ -44,14 +46,24 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     get(oid, crudSessions(ParentOid), haku(oid))
   }
 
-  it should "deny a user with only access to a descendant organization" in {
+  it should "allow a user with only access to a descendant organization" in {
     val oid = put(haku)
-    get(s"$HakuPath/$oid", crudSessions(GrandChildOid), 403)
+    get(oid, crudSessions(GrandChildOid), haku(oid))
   }
 
   it should "deny a user with the wrong role" in {
     val oid = put(haku)
     get(s"$HakuPath/$oid", otherRoleSession, 403)
+  }
+
+  it should "allow the user of proper koulutustyyppi to read julkinen haku created by oph" in {
+    val oid = put(ophHaku)
+    get(oid, readSessions(AmmOid), ophHaku.copy(oid = Some(HakuOid(oid))))
+  }
+
+  ignore should "deny the user of wrong koulutustyyppi to read julkinen haku created by oph" in {
+    val oid = put(ophHaku)
+    get(s"$HakuPath/$oid", readSessions(YoOid), 403)
   }
 
   it should "allow indexer access" in {

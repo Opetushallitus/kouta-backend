@@ -11,49 +11,49 @@ import scala.util.Try
 class AsiasanaServlet extends KeywordServlet {
 
   registerPath("/asiasana/search/{term}",
-    s"""    get:
-       |      summary: Hakee asiasanoja annetulla hakutermillä
-       |      operationId: Hae asiasanoja
-       |      description: Hakee asiasanoja annetulla hakutermillä
-       |      tags:
-       |        - Asiasana
-       |      parameters:
-       |        - in: path
-       |          name: term
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: hakutermi
-       |          example: robo
-       |        - in: query
-       |          name: kieli
-       |          description: Haettavan asiasanan kieli
-       |          schema:
-       |            type: string
-       |            enum:
-       |              - fi
-       |              - sv
-       |              - en
-       |        - in: query
-       |          name: limit
-       |          description: Palautettavien asiasanojen maksimimäärä
-       |          schema:
-       |            type: integer
-       |          default: 15
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  type: string
-       |                  example:
-       |                    - robotiikka
-       |                    - robotti
-       |
-       |""".stripMargin)
+    """    get:
+      |      summary: Hakee asiasanoja annetulla hakutermillä
+      |      operationId: Hae asiasanoja
+      |      description: Hakee asiasanoja annetulla hakutermillä
+      |      tags:
+      |        - Asiasana
+      |      parameters:
+      |        - in: path
+      |          name: term
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: hakutermi
+      |          example: robo
+      |        - in: query
+      |          name: kieli
+      |          description: Haettavan asiasanan kieli
+      |          schema:
+      |            type: string
+      |            enum:
+      |              - fi
+      |              - sv
+      |              - en
+      |        - in: query
+      |          name: limit
+      |          description: Palautettavien asiasanojen maksimimäärä
+      |          schema:
+      |            type: integer
+      |          default: 15
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  type: string
+      |                  example:
+      |                    - robotiikka
+      |                    - robotti
+      |
+      |""".stripMargin)
   get("/search/:term") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -62,38 +62,38 @@ class AsiasanaServlet extends KeywordServlet {
   }
 
   registerPath("/asiasana/",
-    s"""    post:
-       |      summary: Tallenna asiasanoja
-       |      operationId: Tallenna asiasanoja
-       |      description: Tallenna asiasanoja
-       |      tags:
-       |        - Asiasana
-       |      parameters:
-       |        - in: query
-       |          name: kieli
-       |          description: Tallennettavan asiasanan kieli
-       |          schema:
-       |            type: string
-       |            enum:
-       |              - fi
-       |              - sv
-       |              - en
-       |      requestBody:
-       |        description: Lista tallennettavia asiasanoja
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              type: array
-       |              items:
-       |                type: string
-       |                example:
-       |                  - biologia
-       |                  - genetiikka
-       |      responses:
-       |        '200':
-       |          description: O
-       |""".stripMargin)
+    """    post:
+      |      summary: Tallenna asiasanoja
+      |      operationId: Tallenna asiasanoja
+      |      description: Tallenna asiasanoja
+      |      tags:
+      |        - Asiasana
+      |      parameters:
+      |        - in: query
+      |          name: kieli
+      |          description: Tallennettavan asiasanan kieli
+      |          schema:
+      |            type: string
+      |            enum:
+      |              - fi
+      |              - sv
+      |              - en
+      |      requestBody:
+      |        description: Lista tallennettavia asiasanoja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example:
+      |                  - biologia
+      |                  - genetiikka
+      |      responses:
+      |        '200':
+      |          description: O
+      |""".stripMargin)
   post("/") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -112,49 +112,49 @@ class AsiasanaServlet extends KeywordServlet {
 class AmmattinimikeServlet extends KeywordServlet {
 
   registerPath("/ammattinimike/search/{term}",
-    s"""    get:
-       |      summary: Hakee ammattinimikkeitä annetulla hakutermillä
-       |      operationId: Hae ammattinimikkeita
-       |      description: Hakee ammattinimikkeitä annetulla hakutermillä
-       |      tags:
-       |        - Ammattinimike
-       |      parameters:
-       |        - in: path
-       |          name: term
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: hakutermi
-       |          example: kone
-       |        - in: query
-       |          name: kieli
-       |          description: Haettavan ammattinimikkeen kieli
-       |          schema:
-       |            type: string
-       |            enum:
-       |              - fi
-       |              - sv
-       |              - en
-       |        - in: query
-       |          name: limit
-       |          description: Palautettavien ammattinimikkeiden maksimimäärä
-       |          schema:
-       |            type: integer
-       |          default: 15
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: array
-       |                items:
-       |                  type: string
-       |                  example:
-       |                    - koneinsinööri
-       |                    - koneistaja
-       |
-       |""".stripMargin)
+    """    get:
+      |      summary: Hakee ammattinimikkeitä annetulla hakutermillä
+      |      operationId: Hae ammattinimikkeita
+      |      description: Hakee ammattinimikkeitä annetulla hakutermillä
+      |      tags:
+      |        - Ammattinimike
+      |      parameters:
+      |        - in: path
+      |          name: term
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: hakutermi
+      |          example: kone
+      |        - in: query
+      |          name: kieli
+      |          description: Haettavan ammattinimikkeen kieli
+      |          schema:
+      |            type: string
+      |            enum:
+      |              - fi
+      |              - sv
+      |              - en
+      |        - in: query
+      |          name: limit
+      |          description: Palautettavien ammattinimikkeiden maksimimäärä
+      |          schema:
+      |            type: integer
+      |          default: 15
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  type: string
+      |                  example:
+      |                    - koneinsinööri
+      |                    - koneistaja
+      |
+      |""".stripMargin)
   get("/search/:term") {
 
     implicit val authenticated: Authenticated = authenticate
@@ -163,38 +163,38 @@ class AmmattinimikeServlet extends KeywordServlet {
   }
 
   registerPath("/ammattinimike/",
-    s"""    post:
-       |      summary: Tallenna ammattinimikkeitä
-       |      operationId: Tallenna ammattinimikkeita
-       |      description: Tallenna ammattinimikkeitä
-       |      tags:
-       |        - Ammattinimike
-       |      parameters:
-       |        - in: query
-       |          name: kieli
-       |          description: Tallennettavan ammattinimikkeen kieli
-       |          schema:
-       |            type: string
-       |            enum:
-       |              - fi
-       |              - sv
-       |              - en
-       |      requestBody:
-       |        description: Lista tallennettavia ammattinimikkeitä
-       |        required: true
-       |        content:
-       |          application/json:
-       |            schema:
-       |              type: array
-       |              items:
-       |                type: string
-       |                example:
-       |                  - lähihoitaja
-       |                  - jalkahoitaja
-       |      responses:
-       |        '200':
-       |          description: O
-       |""".stripMargin)
+    """    post:
+      |      summary: Tallenna ammattinimikkeitä
+      |      operationId: Tallenna ammattinimikkeita
+      |      description: Tallenna ammattinimikkeitä
+      |      tags:
+      |        - Ammattinimike
+      |      parameters:
+      |        - in: query
+      |          name: kieli
+      |          description: Tallennettavan ammattinimikkeen kieli
+      |          schema:
+      |            type: string
+      |            enum:
+      |              - fi
+      |              - sv
+      |              - en
+      |      requestBody:
+      |        description: Lista tallennettavia ammattinimikkeitä
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example:
+      |                  - lähihoitaja
+      |                  - jalkahoitaja
+      |      responses:
+      |        '200':
+      |          description: O
+      |""".stripMargin)
   post("/") {
 
     implicit val authenticated: Authenticated = authenticate
