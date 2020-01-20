@@ -47,13 +47,11 @@ class AuditLog(val logger: Logger) extends GsonSupport {
   }
 
   def logUpdate[T <: HasPrimaryId[_, T]](before: T, after: Option[T])(implicit authenticated: Authenticated): DBIO[_] = {
-    after match {
-      case Some(updated) =>
-        val resource = AuditResource(updated)
-        val target   = getTarget(resource, updated.primaryId)
-        val changes  = ChangeFactory.getChanges(before, updated)
-        audit.log(getUser, resource.Update, target.build(), changes)
-      case None =>
+    after.foreach { updated =>
+      val resource = AuditResource(updated)
+      val target   = getTarget(resource, updated.primaryId)
+      val changes  = ChangeFactory.getChanges(before, updated)
+      audit.log(getUser, resource.Update, target.build(), changes)
     }
     DBIO.successful(true)
   }

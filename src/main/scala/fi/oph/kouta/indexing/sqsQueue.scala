@@ -71,29 +71,10 @@ object SqsInTransactionService extends SqsInTransactionService
 
 abstract class SqsInTransactionService extends Logging {
 
-  import fi.oph.kouta.repository.KoutaDatabase
   import slick.dbio.DBIO
 
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  def runActionAndUpdateIndex[R](priority: Priority,
-                                 index: IndexType,
-                                 action: () => DBIO[R],
-                                 indexableValue: String,
-                                 auditLog: R => DBIO[_]): R =
-    runActionAndUpdateIndex(priority, index, action, (_:R) => indexableValue, auditLog)
-
-  def runActionAndUpdateIndex[R](priority: Priority,
-                                 index: IndexType,
-                                 action: () => DBIO[R],
-                                 getIndexableValue: R => String,
-                                 auditLog: R => DBIO[_]): R =
-    KoutaDatabase.runBlockingTransactionally(
-      for {
-        result <- action()
-        _      <- toSQSQueue(priority, index, getIndexableValue(result))
-        _      <- auditLog(result)
-      } yield result ).get
+  def toSQSQueue(priority: Priority, index: IndexType, value: Option[String]): DBIO[_] =
+    value.map(v => toSQSQueue(priority, index, Seq(v))).getOrElse(DBIO.successful(true))
 
   def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[_] =
     toSQSQueue(priority, index, Seq(value))

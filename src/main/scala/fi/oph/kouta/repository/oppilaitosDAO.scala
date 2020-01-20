@@ -3,8 +3,8 @@ package fi.oph.kouta.repository
 import java.time.Instant
 
 import fi.oph.kouta.domain.Oppilaitos
-import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -12,8 +12,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait OppilaitosDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getPutActions(oppilaitos: Oppilaitos): DBIO[Oppilaitos]
-  def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Option[Oppilaitos]]
-  def getUpdateActionsWithoutModifiedCheck(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]]
+  def getUpdateActions(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]]
 
   def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)]
 }
@@ -38,15 +37,17 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
     }
   }
 
-  override def getUpdateActionsWithoutModifiedCheck(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]] =
+  override def getUpdateActions(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]] =
     for {
       k <- updateOppilaitos(oppilaitos)
       m <- selectLastModified(oppilaitos.oid)
     } yield optionWhen(k > 0)(oppilaitos.withModified(m.get))
 
-  override def getUpdateActions(oppilaitos: Oppilaitos, notModifiedSince: Instant): DBIO[Option[Oppilaitos]] =
-    checkNotModified(oppilaitos.oid, notModifiedSince)
-      .andThen(getUpdateActionsWithoutModifiedCheck(oppilaitos))
+  def updateJustOppilaitos(oppilaitos: Oppilaitos): DBIO[Oppilaitos] =
+    for {
+      _ <- updateOppilaitos(oppilaitos)
+      m <- selectLastModified(oppilaitos.oid)
+    } yield oppilaitos.withModified(m.get)
 }
 
 sealed trait OppilaitosModificationSQL extends SQLHelpers {

@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus]
-  def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Option[Sorakuvaus]]
+  def getUpdateActions(sorakuvaus: Sorakuvaus): DBIO[Option[Sorakuvaus]]
 
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem]
@@ -30,13 +30,11 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     } yield sorakuvaus.withId(id).withModified(m.get)
   }
 
-  override def getUpdateActions(sorakuvaus: Sorakuvaus, notModifiedSince: Instant): DBIO[Option[Sorakuvaus]] =
-    checkNotModified(sorakuvaus.id.get, notModifiedSince).andThen(
-      for {
-        v <- updateSorakuvaus(sorakuvaus)
-        m <- selectLastModified(sorakuvaus.id.get)
-      } yield optionWhen(v > 0)(sorakuvaus.withModified(m.get))
-    )
+  override def getUpdateActions(sorakuvaus: Sorakuvaus): DBIO[Option[Sorakuvaus]] =
+    for {
+      v <- updateSorakuvaus(sorakuvaus)
+      m <- selectLastModified(sorakuvaus.id.get)
+    } yield optionWhen(v > 0)(sorakuvaus.withModified(m.get))
 
   override def get(id: UUID): Option[(Sorakuvaus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(for {

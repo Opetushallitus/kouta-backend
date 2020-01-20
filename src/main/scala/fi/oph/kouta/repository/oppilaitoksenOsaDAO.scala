@@ -4,8 +4,8 @@ import java.time.Instant
 
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem}
-import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.servlet.EntityNotFoundException
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -13,8 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait OppilaitoksenOsaDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa]
-  def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Option[OppilaitoksenOsa]]
-  def getUpdateActionsWithoutModifiedCheck(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Option[OppilaitoksenOsa]]
+  def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Option[OppilaitoksenOsa]]
 
   def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)]
   def getByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsa]
@@ -23,15 +22,17 @@ trait OppilaitoksenOsaDAO extends EntityModificationDAO[OrganisaatioOid] {
 }
 
 object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL {
-
-  override def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa] =
+  def oppilaitosExists(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[_] =
     checkOppilaitosExists(oppilaitoksenOsa).flatMap {
       case false => DBIO.failed(EntityNotFoundException(s"""Oppilaitos ${oppilaitoksenOsa.oppilaitosOid} ei löyty kannasta!"""))
-      case true => for {
-        _ <- insertOppilaitoksenOsa(oppilaitoksenOsa)
-        m <- selectLastModified(oppilaitoksenOsa.oid)
-      } yield oppilaitoksenOsa.withModified(m.get)
+      case true => DBIO.successful(true)
     }
+
+  override def getPutActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa] =
+    for {
+      _ <- insertOppilaitoksenOsa(oppilaitoksenOsa)
+      m <- selectLastModified(oppilaitoksenOsa.oid)
+    } yield oppilaitoksenOsa.withModified(m.get)
 
   override def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(
@@ -45,15 +46,17 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
     }
   }
 
-  override def getUpdateActionsWithoutModifiedCheck(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Option[OppilaitoksenOsa]] =
+  override def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Option[OppilaitoksenOsa]] =
     for {
       k <- updateOppilaitoksenOsa(oppilaitoksenOsa)
       m <- selectLastModified(oppilaitoksenOsa.oid)
     } yield optionWhen(k > 0)(oppilaitoksenOsa.withModified(m.get))
 
-  override def getUpdateActions(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant): DBIO[Option[OppilaitoksenOsa]] =
-    checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
-      .andThen(getUpdateActionsWithoutModifiedCheck(oppilaitoksenOsa))
+  def updateJustOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[OppilaitoksenOsa] =
+    for {
+      _ <- updateOppilaitoksenOsa(oppilaitoksenOsa)
+      m <- selectLastModified(oppilaitoksenOsa.oid)
+    } yield oppilaitoksenOsa.withModified(m.get)
 
   override def getByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsa] =
     KoutaDatabase.runBlocking(selectByOppilaitosOid(oppilaitosOid))

@@ -14,8 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getPutActions(koulutus: Koulutus): DBIO[Koulutus]
-  def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Option[Koulutus]]
-  def getUpdateActionsWithoutModifiedCheck(koulutus: Koulutus): DBIO[Option[Koulutus]]
+  def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]]
 
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem]
@@ -46,16 +45,18 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }
   }
 
-  override def getUpdateActionsWithoutModifiedCheck(koulutus: Koulutus): DBIO[Option[Koulutus]] =
+  override def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]] =
     for {
       k <- updateKoulutus(koulutus)
       t <- updateKoulutuksenTarjoajat(koulutus)
       m <- selectLastModified(koulutus.oid.get)
     } yield optionWhen(k + t > 0)(koulutus.withModified(m.get))
 
-  override def getUpdateActions(koulutus: Koulutus, notModifiedSince: Instant): DBIO[Option[Koulutus]] =
-    checkNotModified(koulutus.oid.get, notModifiedSince)
-      .andThen(getUpdateActionsWithoutModifiedCheck(koulutus))
+  def updateJustKoulutus(koulutus: Koulutus): DBIO[Koulutus] =
+    for {
+      _ <- updateKoulutus(koulutus)
+      m <- selectLastModified(koulutus.oid.get)
+    } yield koulutus.withModified(m.get)
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)

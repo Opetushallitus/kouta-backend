@@ -13,8 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getPutActions(toteutus: Toteutus): DBIO[Toteutus]
-  def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Option[Toteutus]]
-  def getUpdateActionsWithoutModifiedCheck(toteutus: Toteutus): DBIO[Option[Toteutus]]
+  def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
   def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
@@ -36,18 +35,14 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       m   <- selectLastModified(oid)
     } yield toteutus.withOid(oid).withModified(m.get)
 
-  override def getUpdateActionsWithoutModifiedCheck(toteutus: Toteutus): DBIO[Option[Toteutus]] =
+  override def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]] =
     for {
       t  <- updateToteutus(toteutus)
       tt <- updateToteutuksenTarjoajat(toteutus)
       m  <- selectLastModified(toteutus.oid.get)
     } yield optionWhen(t + tt > 0)(toteutus.withModified(m.get))
 
-  override def getUpdateActions(toteutus: Toteutus, notModifiedSince: Instant): DBIO[Option[Toteutus]] =
-    checkNotModified(toteutus.oid.get, notModifiedSince)
-      .andThen(getUpdateActionsWithoutModifiedCheck(toteutus))
-
-  def rawUpdate(toteutus: Toteutus): DBIO[Toteutus] =
+  def updateJustToteutus(toteutus: Toteutus): DBIO[Toteutus] =
     for {
       _  <- updateToteutus(toteutus)
       m  <- selectLastModified(toteutus.oid.get)

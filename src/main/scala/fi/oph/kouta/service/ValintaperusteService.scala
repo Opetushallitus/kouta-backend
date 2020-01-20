@@ -9,9 +9,12 @@ import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
-import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import slick.dbio.DBIO
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog)
 
@@ -25,13 +28,13 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {
-      withValidation(valintaperuste, putWithIndexing)
+      withValidation(valintaperuste, doPut)
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {  oldValintaperuste =>
-      withValidation(valintaperuste, updateWithIndexing(_, notModifiedSince, oldValintaperuste)).nonEmpty
+      withValidation(valintaperuste, doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
     }
   }
 
@@ -56,19 +59,28 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
-  private def putWithIndexing(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeValintaperuste,
-      () => ValintaperusteDAO.getPutActions(valintaperuste),
-      (added: Valintaperuste) => added.id.get.toString,
-      (added: Valintaperuste) => auditLog.logCreate(added))
+  private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        added <- ValintaperusteDAO.getPutActions(valintaperuste)
+        _     <- index(added)
+        _     <- auditLog.logCreate(added)
+      } yield added
+    }.get
 
-  private def updateWithIndexing(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit authenticated: Authenticated) =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeValintaperuste,
-      () => ValintaperusteDAO.getUpdateActions(valintaperuste, notModifiedSince),
-      valintaperuste.id.get.toString,
-      (updated: Option[Valintaperuste]) => auditLog.logUpdate(before, updated))
+  private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit authenticated: Authenticated): Option[Valintaperuste] =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        _       <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)
+        updated <- ValintaperusteDAO.getUpdateActions(valintaperuste)
+        _       <- index(updated)
+        _       <- auditLog.logUpdate(before, updated)
+      } yield updated
+    }.get
+
+  private def index(valintaperuste: Valintaperuste): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.id.get.toString)
+
+  private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
 }

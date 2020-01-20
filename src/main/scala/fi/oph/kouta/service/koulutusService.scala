@@ -8,9 +8,12 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
-import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, ToteutusDAO}
+import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import slick.dbio.DBIO
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
 
@@ -29,7 +32,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
-      withValidation(koulutus, putWithIndexing)
+      withValidation(koulutus, doPut)
     }.oid.get
 
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
@@ -37,21 +40,19 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))
     authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>
-      withValidation(koulutus, updateWithIndexing(_, notModifiedSince, oldKoulutus))
+      withValidation(koulutus, doUpdate(_, notModifiedSince, oldKoulutus))
     }.nonEmpty
   }
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] = {
+  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
       KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
     }
-  }
 
-  def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] = {
+  def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] =
     withRootAccess(indexerRoles) {
       KoulutusDAO.getJulkaistutByTarjoajaOids(OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(organisaatioOid)._1)
     }
-  }
 
   def toteutukset(oid: KoulutusOid, vainJulkaistut: Boolean)(implicit authenticated: Authenticated): Seq[Toteutus] =
     withRootAccess(indexerRoles) {
@@ -62,11 +63,10 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       }
     }
 
-  def hakutiedot(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] = {
+  def hakutiedot(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =
     withRootAccess(indexerRoles) {
       HakutietoDAO.getByKoulutusOid(oid)
     }
-  }
 
   def listToteutukset(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid))
@@ -92,19 +92,34 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def getTarjoajat(maybeKoulutusWithTime: Option[(Koulutus, Instant)]): Seq[OrganisaatioOid] =
     maybeKoulutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def putWithIndexing(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeKoulutus,
-      () => themeImagePutActions(koulutus, KoulutusDAO.getPutActions, KoulutusDAO.getUpdateActionsWithoutModifiedCheck),
-      (added: Koulutus) => added.oid.get.toString,
-      (added: Koulutus) => auditLog.logCreate(added))
+  private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        (tempImage, cleared) <- checkAndMaybeClearTempImage(koulutus)
+        added   <- KoulutusDAO.getPutActions(cleared)
+        themed  <- maybeCopyThemeImage(tempImage, added)
+        updated <- tempImage.map(_ => KoulutusDAO.updateJustKoulutus(themed)).getOrElse(DBIO.successful(themed))
+        _       <- maybeDeleteTempImage(tempImage)
+        _       <- index(updated)
+        _       <- auditLog.logCreate(updated)
+      } yield updated
+    }.get
 
-  private def updateWithIndexing(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit authenticated: Authenticated): Option[Koulutus] =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeKoulutus,
-      () => themeImageUpdateActions(koulutus, KoulutusDAO.getUpdateActions(_, notModifiedSince)),
-      koulutus.oid.get.toString,
-      (updated: Option[Koulutus]) => auditLog.logUpdate(before, updated))
+  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit authenticated: Authenticated): Option[Koulutus] =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        _       <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+        (tempImage, themed) <- checkAndMaybeCopyTempImage(koulutus)
+        updated <- KoulutusDAO.getUpdateActions(themed)
+        _       <- maybeDeleteTempImage(tempImage)
+        _       <- index(updated)
+        _       <- auditLog.logUpdate(before, updated)
+      } yield updated
+    }.get
+
+  private def index(koulutus: Koulutus): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.oid.get.toString)
+
+  private def index(koulutus: Option[Koulutus]): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
 }

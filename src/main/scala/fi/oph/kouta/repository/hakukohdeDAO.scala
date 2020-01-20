@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def getPutActions(hakukohde: Hakukohde): DBIO[Hakukohde]
-  def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Option[Hakukohde]]
+  def getUpdateActions(hakukohde: Hakukohde): DBIO[Option[Hakukohde]]
 
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)]
   def listByToteutusOid(oid: ToteutusOid): Seq[HakukohdeListItem]
@@ -37,16 +37,14 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       m <- selectLastModified(oid)
     } yield hakukohde.withOid(oid).withModified(m.get)
 
-  override def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Option[Hakukohde]] =
-    checkNotModified(hakukohde.oid.get, notModifiedSince).andThen(
-      for {
-        hk <- updateHakukohde(hakukohde)
-        ha <- updateHakuajat(hakukohde)
-        vk <- updateValintakokeet(hakukohde)
-        l  <- updateLiitteet(hakukohde)
-        m  <- selectLastModified(hakukohde.oid.get)
-      } yield optionWhen(hk + ha + vk + l > 0)(hakukohde.withModified(m.get))
-    )
+  override def getUpdateActions(hakukohde: Hakukohde): DBIO[Option[Hakukohde]] =
+    for {
+      hk <- updateHakukohde(hakukohde)
+      ha <- updateHakuajat(hakukohde)
+      vk <- updateValintakokeet(hakukohde)
+      l  <- updateLiitteet(hakukohde)
+      m  <- selectLastModified(hakukohde.oid.get)
+    } yield optionWhen(hk + ha + vk + l > 0)(hakukohde.withModified(m.get))
 
   override def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {

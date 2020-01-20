@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def getPutActions(haku: Haku): DBIO[Haku]
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Option[Haku]]
+  def getUpdateActions(haku: Haku): DBIO[Option[Haku]]
 
   def get(oid: HakuOid): Option[(Haku, Instant)]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
@@ -43,14 +43,12 @@ object HakuDAO extends HakuDAO with HakuSQL {
     }.get
   }
 
-  def getUpdateActions(haku: Haku, notModifiedSince: Instant): DBIO[Option[Haku]] =
-    checkNotModified(haku.oid.get, notModifiedSince).andThen(
-      for {
-        x <- updateHaku(haku)
-        y <- updateHaunHakuajat(haku)
-        m <- selectLastModified(haku.oid.get)
-      } yield optionWhen(x + y > 0)(haku.withModified(m.get))
-    )
+  def getUpdateActions(haku: Haku): DBIO[Option[Haku]] =
+    for {
+      x <- updateHaku(haku)
+      y <- updateHaunHakuajat(haku)
+      m <- selectLastModified(haku.oid.get)
+    } yield optionWhen(x + y > 0)(haku.withModified(m.get))
 
   override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] = organisaatioOids match {
     case Nil => Seq()

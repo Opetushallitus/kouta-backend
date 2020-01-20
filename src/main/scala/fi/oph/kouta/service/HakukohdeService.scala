@@ -8,9 +8,12 @@ import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
-import fi.oph.kouta.repository.{HakukohdeDAO, ToteutusDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import slick.dbio.DBIO
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object HakukohdeService extends HakukohdeService(SqsInTransactionService, AuditLog)
 
@@ -23,13 +26,13 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) {
-      withValidation(hakukohde, putWithIndexing)
+      withValidation(hakukohde, doPut)
     }.oid.get
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), rules) { oldHakuKohde =>
-      withValidation(hakukohde, updateWithIndexing(_, notModifiedSince, oldHakuKohde))
+      withValidation(hakukohde, doUpdate(_, notModifiedSince, oldHakuKohde))
     }.nonEmpty
   }
 
@@ -42,19 +45,28 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  private def putWithIndexing(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeHakukohde,
-      () => HakukohdeDAO.getPutActions(hakukohde),
-      (added: Hakukohde) => added.oid.get.toString,
-      (added: Hakukohde) => auditLog.logCreate(added))
+  private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        added <- HakukohdeDAO.getPutActions(hakukohde)
+        _     <- index(added)
+        _     <- auditLog.logCreate(added)
+      } yield added
+    }.get
 
-  private def updateWithIndexing(hakukohde: Hakukohde, notModifiedSince: Instant, before: Hakukohde)(implicit authenticated: Authenticated) =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeHakukohde,
-      () => HakukohdeDAO.getUpdateActions(hakukohde, notModifiedSince),
-      hakukohde.oid.get.toString,
-      (updated: Option[Hakukohde]) => auditLog.logUpdate(before, updated))
+  private def doUpdate(hakukohde: Hakukohde, notModifiedSince: Instant, before: Hakukohde)(implicit authenticated: Authenticated): Option[Hakukohde] =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        _       <- HakukohdeDAO.checkNotModified(hakukohde.oid.get, notModifiedSince)
+        updated <- HakukohdeDAO.getUpdateActions(hakukohde)
+        _       <- index(updated)
+        _       <- auditLog.logUpdate(before, updated)
+      } yield updated
+    }.get
+
+  private def index(hakukohde: Hakukohde): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.oid.get.toString)
+
+  private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
 }

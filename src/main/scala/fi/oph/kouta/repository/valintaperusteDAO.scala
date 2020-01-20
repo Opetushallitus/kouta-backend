@@ -14,7 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def getPutActions(valintaperuste: Valintaperuste): DBIO[Valintaperuste]
-  def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Option[Valintaperuste]]
+  def getUpdateActions(valintaperuste: Valintaperuste): DBIO[Option[Valintaperuste]]
 
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem]
@@ -33,14 +33,12 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     } yield valintaperuste.copy(id = Some(id)).withModified(m.get)
   }
 
-  override def getUpdateActions(valintaperuste: Valintaperuste, notModifiedSince: Instant): DBIO[Option[Valintaperuste]] =
-    checkNotModified(valintaperuste.id.get, notModifiedSince).andThen(
-      for {
-        v <- updateValintaperuste(valintaperuste)
-        k <- updateValintakokeet(valintaperuste)
-        m <- selectLastModified(valintaperuste.id.get)
-      } yield optionWhen(v + k > 0)(valintaperuste.withModified(m.get))
-    )
+  override def getUpdateActions(valintaperuste: Valintaperuste): DBIO[Option[Valintaperuste]] =
+    for {
+      v <- updateValintaperuste(valintaperuste)
+      k <- updateValintakokeet(valintaperuste)
+      m <- selectLastModified(valintaperuste.id.get)
+    } yield optionWhen(v + k > 0)(valintaperuste.withModified(m.get))
 
   override def get(id: UUID): Option[(Valintaperuste, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(

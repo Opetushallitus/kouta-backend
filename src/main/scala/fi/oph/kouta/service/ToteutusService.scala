@@ -82,29 +82,32 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         _       <- insertAmmattinimikkeet(cleared)
         added   <- ToteutusDAO.getPutActions(cleared)
         themed  <- maybeCopyThemeImage(tempImage, added)
-        updated <- tempImage.map(_ => ToteutusDAO.rawUpdate(themed)).getOrElse(DBIO.successful(themed))
+        updated <- tempImage.map(_ => ToteutusDAO.updateJustToteutus(themed)).getOrElse(DBIO.successful(themed))
         _       <- maybeDeleteTempImage(tempImage)
         _       <- index(updated)
         _       <- auditLog.logCreate(updated)
       } yield updated
     }.get
 
-
   private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated): Option[Toteutus] =
     KoutaDatabase.runBlockingTransactionally {
       for {
+        _       <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
         (tempImage, themed) <- checkAndMaybeCopyTempImage(toteutus)
         _       <- insertAsiasanat(themed)
         _       <- insertAmmattinimikkeet(themed)
-        updated <- ToteutusDAO.getUpdateActions(themed, notModifiedSince)
+        updated <- ToteutusDAO.getUpdateActions(themed)
         _       <- maybeDeleteTempImage(tempImage)
-        _       <- updated.map(t => index(t)).getOrElse(DBIO.successful(true))
-        _       <- updated.map(t => auditLog.logUpdate(before, Some(t))).getOrElse(DBIO.successful(true))
+        _       <- index(updated)
+        _       <- auditLog.logUpdate(before, updated)
       } yield updated
     }.get
 
   private def index(toteutus: Toteutus): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.oid.get.toString)
+
+  private def index(toteutus: Option[Toteutus]): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
 
   private def withKeywordInserts[T](toteutus: Toteutus)(actions: => DBIO[T])(implicit authenticated: Authenticated): DBIO[T] = {
     for {
