@@ -53,20 +53,20 @@ sealed trait SessionSQL extends SQLHelpers {
   protected def storeCasSession(id: UUID,
                                 ticket: String,
                                 personOid: String,
-                                authorities: Set[Authority]) = {
+                                authorities: Set[Authority]): DBIO[_] = {
     DBIO.seq(
       sqlu"""insert into sessions (id, cas_ticket, person) values ($id, $ticket, $personOid)""",
       DBIO.sequence(authorities.map(a => sqlu"""insert into authorities (session, authority) values ($id, ${a.authority})""").toSeq)
     )
   }
 
-  protected def deleteSession(id: UUID) =
+  protected def deleteSession(id: UUID): DBIO[Boolean] =
     sqlu"""delete from sessions where id = $id""".map(_ > 0)
 
-  protected def deleteSession(ticket: ServiceTicket) =
+  protected def deleteSession(ticket: ServiceTicket): DBIO[Boolean] =
     sqlu"""delete from sessions where cas_ticket = ${ticket.s}""".map(_ > 0)
 
-  protected def getSession(id: UUID) =
+  protected def getSession(id: UUID): DBIO[Option[(Option[String], String)]] =
     getSessionQuery(id)
       .flatMap {
         case None =>
@@ -75,16 +75,16 @@ sealed trait SessionSQL extends SQLHelpers {
           updateLastRead(id).andThen(DBIO.successful(Some(t)))
       }
 
-  private def getSessionQuery(id: UUID) =
+  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String)]] =
     sql"""select cas_ticket, person from sessions
           where id = $id and last_read > now() - interval '60 minutes'"""
       .as[(Option[String], String)].headOption
 
-  private def updateLastRead(id: UUID) =
+  private def updateLastRead(id: UUID): DBIO[Int] =
     sqlu"""update sessions set last_read = now()
            where id = $id and last_read < now() - interval '30 minutes'"""
 
-  protected def searchAuthoritiesBySession(sessionId: UUID) =
+  protected def searchAuthoritiesBySession(sessionId: UUID): DBIO[Vector[String]] =
     sql"""select authority from authorities where session = $sessionId""".as[String]
 
 }

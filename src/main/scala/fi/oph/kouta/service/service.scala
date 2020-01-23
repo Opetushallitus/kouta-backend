@@ -6,54 +6,79 @@ import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
+import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.validation.Validatable
 import fi.vm.sade.utils.slf4j.Logging
+import slick.dbio.DBIO
 
 import scala.collection.IterableView
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
+
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 
 trait ValidatingService[E <: Validatable] {
 
-  def withValidation[R](e:E, f: E => R): R = e.validate() match {
+  def withValidation[R](e: E, f: E => R): R = e.validate() match {
     case Right(_) => f(e)
     case Left(list) => throw KoutaValidationException(list)
   }
 }
 
-trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID, T], M <: TeemakuvaMetadata[M]] extends Logging {
+trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID, T] with HasModified[T], M <: TeemakuvaMetadata[M]] extends Logging {
   val s3Service: S3Service
 
   def teemakuvaPrefix: String
 
-  def checkTeemakuvaInPut(entity: T, put: T => ID, update: (T, Instant) => Boolean): ID =
-    entity.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        val id = put(entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
-        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/$id/$filename")
-        update(entity.withPrimaryID(id).withMetadata(entity.metadata.get.withTeemakuva(Some(url))), Instant.now())
-        s3Service.deleteImage(s3Service.getTempKey(filename))
-        id
-      case Some(s3Service.publicUrl(_)) =>
-        put(entity)
-      case None =>
-        put(entity)
-      case Some(other) =>
-        logger.warn(s"Theme image outside the bucket: $other")
-        put(entity)
-    }
+  def checkTempImage(entity: T): DBIO[Option[String]] =
+    Try {
+      entity.metadata.flatMap(_.teemakuva) match {
+        case Some(s3Service.tempUrl(filename)) =>
+          Some(filename)
+        case Some(s3Service.publicUrl(_)) =>
+          None
+        case None =>
+          None
+        case Some(other) =>
+          logger.warn(s"Theme image outside the bucket: $other")
+          None
+      }
+    }.toDBIO
 
-  def checkTeemakuvaInUpdate(entity: T, update: T => Boolean): Boolean =
-    entity.metadata.flatMap(_.teemakuva) match {
-      case Some(s3Service.tempUrl(filename)) =>
-        val url = s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename")
-        val changed = update(entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
-        s3Service.deleteImage(s3Service.getTempKey(filename))
-        changed
-      case _ => update(entity)
-    }
+  def maybeClearTempImage(tempImage: Option[String], entity: T): DBIO[T] =
+    Try {
+      tempImage
+        .map(_ => entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
+        .getOrElse(entity)
+    }.toDBIO
+
+  def checkAndMaybeClearTempImage(entity: T): DBIO[(Option[String], T)] =
+    for {
+      tempImage <- checkTempImage(entity)
+      cleared <- maybeClearTempImage(tempImage, entity)
+    } yield (tempImage, cleared)
+
+  def maybeCopyThemeImage(tempImage: Option[String], entity: T): DBIO[T] =
+    Try {
+      tempImage
+        .map(filename => s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename"))
+        .map(url => entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+        .getOrElse(entity)
+    }.toDBIO
+
+  def checkAndMaybeCopyTempImage(entity: T): DBIO[(Option[String], T)] =
+    for {
+      tempImage <- checkTempImage(entity)
+      themed <- maybeCopyThemeImage(tempImage, entity)
+    } yield (tempImage, themed)
+
+  def maybeDeleteTempImage(tempImage: Option[String]): DBIO[_] =
+    Try {
+      tempImage.foreach(filename => s3Service.deleteImage(s3Service.getTempKey(filename)))
+    }.toDBIO
 }
 
 case class KoutaValidationException(errorMessages:List[String]) extends RuntimeException
@@ -97,11 +122,11 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
 
   def authorizeUpdate[E <: Authorizable, I](entityForUpdate: => Option[(E, Instant)],
                                             authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.updateRoles))
-                                           (f: => I)(implicit authenticated: Authenticated): I =
+                                           (f: E => I)(implicit authenticated: Authenticated): I =
     entityForUpdate match {
-      case None         => throw new NoSuchElementException
+      case None         => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
       case Some((e, _)) => ifAuthorized(e, authorizationRules) {
-        f
+        f(e)
       }
     }
 }

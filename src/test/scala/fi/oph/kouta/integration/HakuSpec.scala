@@ -1,9 +1,12 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
+
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -76,6 +79,13 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     get(oid, haku(oid))
   }
 
+  it should "write create haku to audit log" in {
+    MockAuditLogger.clean()
+    val oid = put(haku.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    MockAuditLogger.find(oid, "haku_create") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "return 401 without a valid session" in {
     put(HakuPath, bytes(haku), Seq(jsonHeader)) {
       status should equal(401)
@@ -124,11 +134,23 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     get(oid, thisHaku.copy(tila = Arkistoitu))
   }
 
+  it should "write haku update to audit log" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    MockAuditLogger.clean()
+    update(thisHaku.copy(tila = Arkistoitu, modified = Some(LocalDateTime.parse("1000-01-01T12:00:00"))), lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "haku_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "not update haku" in {
     val oid = put(haku)
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
+    MockAuditLogger.clean()
     update(thisHaku, lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, thisHaku) should equal (lastModified)
   }
 
@@ -251,6 +273,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     update(updatedPvmHaku, lastModified)
     get(oid, updatedPvmHaku)
   }
+
   it should "delete all hakuajat if none is given" in {
     val oid = put(haku)
     val thisHaku = haku(oid)

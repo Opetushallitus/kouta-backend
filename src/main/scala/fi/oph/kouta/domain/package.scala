@@ -4,6 +4,7 @@ import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.util.TimeUtils
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {
@@ -437,5 +438,11 @@ package object domain {
     def primaryId: Option[ID]
 
     def withPrimaryID(id: ID): T
+  }
+
+  trait HasModified[T] {
+    def modified: Option[LocalDateTime]
+    def withModified(modified: LocalDateTime): T
+    def withModified(modified: Instant): T = withModified(TimeUtils.instantToLocalDateTime(modified))
   }
 }

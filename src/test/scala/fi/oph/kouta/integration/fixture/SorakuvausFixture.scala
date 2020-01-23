@@ -2,20 +2,21 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import fi.oph.kouta.service.SorakuvausService
 import fi.oph.kouta.servlet.SorakuvausServlet
-
-object SorakuvausServiceIgnoringIndexing extends SorakuvausService(SqsInTransactionServiceIgnoringIndexing)
 
 trait SorakuvausFixture { this: KoutaIntegrationSpec =>
 
   val SorakuvausPath = "/sorakuvaus"
 
-  protected lazy val sorakuvausService: SorakuvausService = SorakuvausServiceIgnoringIndexing
+  protected lazy val sorakuvausService: SorakuvausService =
+    new SorakuvausService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger))
 
   addServlet(new SorakuvausServlet(sorakuvausService), SorakuvausPath)
 

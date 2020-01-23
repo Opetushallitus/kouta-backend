@@ -2,11 +2,11 @@ package fi.oph.kouta.indexing
 
 import com.amazonaws.regions.RegionUtils
 import com.amazonaws.services.sqs.AmazonSQSClient
-import io.atlassian.aws.sqs.SQSClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.indexing.indexing._
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.AmazonClientConnectionDef
+import io.atlassian.aws.sqs.SQSClient
 
 import scala.util.{Failure, Success, Try}
 
@@ -42,8 +42,8 @@ object SqsService extends Logging {
   }
 
   private def createMessage(stuff: Map[IndexType, Seq[String]]): Either[Throwable, String] = {
-    import org.json4s.jackson.JsonMethods.{compact, render}
     import org.json4s.JsonDSL._
+    import org.json4s.jackson.JsonMethods.{compact, render}
     Try(compact(render(stuff))).recoverWith {
       case t:Throwable =>
         logger.error(s"Unable to create SQS message for oids [${stuff.values.flatten.mkString(",")}]", t)
@@ -72,37 +72,20 @@ object SqsInTransactionService extends SqsInTransactionService
 abstract class SqsInTransactionService extends Logging {
 
   import slick.dbio.DBIO
-  import fi.oph.kouta.repository.KoutaDatabase
-  import scala.concurrent.ExecutionContext.Implicits.global
 
-  def runActionAndUpdateIndex[R](priority: Priority,
-                                 index: IndexType,
-                                 action: () => DBIO[R],
-                                 indexableValue: String): R =
-    runActionAndUpdateIndex(priority, index, action, (r:R) => indexableValue)
+  def toSQSQueue(priority: Priority, index: IndexType, maybeValue: Option[String]): DBIO[_] =
+    maybeValue match {
+      case Some(value) => toSQSQueue(priority, index, value)
+      case None        => DBIO.successful(true)
+    }
 
-  def runActionAndUpdateIndex[R](priority: Priority,
-                                 index: IndexType,
-                                 action: () => DBIO[R]): R =
-    runActionAndUpdateIndex(priority, index, action, (r:R) => r.toString)
-
-  def runActionAndUpdateIndex[R](priority: Priority,
-                                 index: IndexType,
-                                 action: () => DBIO[R],
-                                 getIndexableValue: (R) => String): R =
-    KoutaDatabase.runBlockingTransactionally(
-      for {
-        result <- action()
-        _      <- toSQSQueue(priority, index, getIndexableValue(result))
-      } yield result ).get
-
-  def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[String] =
+  def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[_] =
     toSQSQueue(priority, index, Seq(value))
 
-  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): DBIO[String] =
+  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): DBIO[_] =
     toSQSQueue(priority, Map(index -> values))
 
-  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): DBIO[String] = {
+  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): DBIO[_] = {
     SqsService.addToQueue(priority, values) match {
       case Left(t) => DBIO.failed(t)
       case Right(s) => DBIO.successful(s)

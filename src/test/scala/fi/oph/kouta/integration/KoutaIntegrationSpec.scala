@@ -6,11 +6,11 @@ import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, s
 import fi.oph.kouta.domain.{Koulutus, Toteutus, Valintaperuste}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
+import fi.oph.kouta.mocks.{MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.{KoutaJsonFormats, TimeUtils}
-import fi.oph.kouta.{MockSecurityContext, OrganisaatioServiceMock}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
@@ -35,7 +35,7 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val rootOrganisaatio = KoutaIntegrationSpec.rootOrganisaatio
   val defaultAuthorities = KoutaIntegrationSpec.defaultAuthorities
 
-  val testUser = TestUser("test-user-oid", "testuser", defaultSessionId)
+  val testUser = TestUser("1.2.246.562.24.0", "testuser", defaultSessionId)
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid, defaultAuthorities), testUser.sessionId)
@@ -268,11 +268,11 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 sealed trait DatabaseSpec {
 
   import fi.oph.kouta.repository.KoutaDatabase
+  import slick.jdbc.PostgresProfile.api._
 
   lazy val db = KoutaDatabase
 
   def truncateDatabase() = {
-    import slick.jdbc.PostgresProfile.api._
     db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet""")
     db.runBlocking(sqlu"""delete from hakukohteiden_liitteet""")
     db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
@@ -309,16 +309,13 @@ sealed trait DatabaseSpec {
   }
 
   def deleteAsiasanat() = {
-    import slick.jdbc.PostgresProfile.api._
     db.runBlocking(sqlu"""delete from asiasanat""")
     db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 
   import java.time._
 
-  import slick.jdbc.PostgresProfile.api._
-
-  implicit val getInstant = slick.jdbc.GetResult[LocalDateTime](r =>
+  implicit val getLocalDateTime = slick.jdbc.GetResult[LocalDateTime](r =>
     TimeUtils.timeStampToLocalDateTime(r.nextTimestamp()).withNano(0).withSecond(0))
 
   def readModifiedByOid(oid:String, table:String):LocalDateTime = db.runBlocking(

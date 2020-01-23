@@ -2,12 +2,14 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
-import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
 import fi.oph.kouta.service.OppilaitosService
 import fi.oph.kouta.servlet.OppilaitosServlet
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Random
 
@@ -15,7 +17,8 @@ trait OppilaitosFixture { this: KoutaIntegrationSpec =>
 
   val OppilaitosPath = "/oppilaitos"
 
-  protected lazy val oppilaitosService: OppilaitosService = new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
+  protected lazy val oppilaitosService: OppilaitosService =
+    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3Service, new AuditLog(MockAuditLogger))
 
   addServlet(new OppilaitosServlet(oppilaitosService), OppilaitosPath)
 

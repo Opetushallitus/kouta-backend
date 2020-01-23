@@ -2,9 +2,11 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
 import fi.oph.kouta.service.OppilaitoksenOsaService
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -15,7 +17,8 @@ trait OppilaitoksenOsaFixture { this: KoutaIntegrationSpec =>
 
   val OppilaitoksenOsaPath = "/oppilaitoksen-osa"
 
-  protected lazy val oppilaitoksenOsaService: OppilaitoksenOsaService = new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
+  protected lazy val oppilaitoksenOsaService: OppilaitoksenOsaService =
+    new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3Service, new AuditLog(MockAuditLogger))
 
   addServlet(new OppilaitoksenOsaServlet(oppilaitoksenOsaService), OppilaitoksenOsaPath)
 

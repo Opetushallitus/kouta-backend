@@ -94,6 +94,7 @@ package object oppilaitos {
       |        teemakuva:
       |          type: string
       |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val OppilaitoksenOsaModel =
@@ -167,6 +168,7 @@ package object oppilaitos {
       |        teemakuva:
       |          type: string
       |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -244,6 +246,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
   extends Validatable
     with Authorizable
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
+    with HasModified[Oppilaitos]
     with HasTeemakuvaMetadata[Oppilaitos, OppilaitosMetadata] {
 
   override def validate(): IsValid = and(
@@ -263,6 +266,8 @@ case class Oppilaitos(oid: OrganisaatioOid,
   override def withPrimaryID(oid: OrganisaatioOid): Oppilaitos = copy(oid = oid)
 
   override def withMetadata(metadata: OppilaitosMetadata): Oppilaitos = copy(metadata = Some(metadata))
+
+  override def withModified(modified: LocalDateTime): Oppilaitos = copy(modified = Some(modified))
 }
 
 case class OppilaitoksenOsa(oid: OrganisaatioOid,
@@ -276,6 +281,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
   extends Validatable
     with Authorizable
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
+    with HasModified[OppilaitoksenOsa]
     with HasTeemakuvaMetadata[OppilaitoksenOsa, OppilaitoksenOsaMetadata] {
 
   override def validate(): IsValid = and(
@@ -295,6 +301,8 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
   override def withPrimaryID(oid: OrganisaatioOid): OppilaitoksenOsa = copy(oid = oid)
 
   override def withMetadata(metadata: OppilaitoksenOsaMetadata): OppilaitoksenOsa = copy(metadata = Some(metadata))
+
+  override def withModified(modified: LocalDateTime): OppilaitoksenOsa = copy(modified = Some(modified))
 }
 
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),

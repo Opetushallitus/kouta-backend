@@ -7,7 +7,7 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.OrganisaatioServiceMock.{ChildOid, EvilGrandChildOid, GrandChildOid, EvilCousin}
+import fi.oph.kouta.mocks.OrganisaatioServiceMock.{ChildOid, EvilGrandChildOid, GrandChildOid, EvilCousin}
 
 object TestData {
 

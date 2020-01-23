@@ -4,20 +4,20 @@ import java.util.UUID
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.SQLHelpers
 import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.HakuServlet
-
-object HakuServiceIgnoringIndexing extends HakuService(SqsInTransactionServiceIgnoringIndexing)
 
 trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
 
   val HakuPath = "/haku"
 
-  protected lazy val hakuService: HakuService = HakuServiceIgnoringIndexing
+  protected lazy val hakuService: HakuService = new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger))
 
   addServlet(new HakuServlet(hakuService), HakuPath)
 

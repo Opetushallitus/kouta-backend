@@ -6,21 +6,18 @@ import java.util.UUID
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
-import slick.sql.{SqlAction, SqlStreamingAction}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
-  def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid]
-  def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean]
+  def getPutActions(hakukohde: Hakukohde): DBIO[Hakukohde]
+  def getUpdateActions(hakukohde: Hakukohde): DBIO[Option[Hakukohde]]
 
-  def put(hakukohde: Hakukohde): HakukohdeOid
   def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)]
-  def update(haku: Hakukohde, notModifiedSince: Instant): Boolean
-
   def listByToteutusOid(oid: ToteutusOid): Seq[HakukohdeListItem]
   def listByToteutusOidAndAllowedOrganisaatiot(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[HakukohdeListItem]
@@ -31,26 +28,23 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
-  override def getPutActions(hakukohde: Hakukohde): DBIO[HakukohdeOid] =
+  override def getPutActions(hakukohde: Hakukohde): DBIO[Hakukohde] =
     for {
       oid <- insertHakukohde(hakukohde)
-      _   <- insertHakuajat(hakukohde.copy(oid = Some(oid)))
-      _   <- insertValintakokeet(hakukohde.copy(oid = Some(oid)))
-      _   <- insertLiitteet(hakukohde.copy(oid = Some(oid)))
-    } yield oid
+      _ <- insertHakuajat(hakukohde.withOid(oid))
+      _ <- insertValintakokeet(hakukohde.withOid(oid))
+      _ <- insertLiitteet(hakukohde.withOid(oid))
+      m <- selectLastModified(oid)
+    } yield hakukohde.withOid(oid).withModified(m.get)
 
-  override def getUpdateActions(hakukohde: Hakukohde, notModifiedSince: Instant): DBIO[Boolean] =
-    checkNotModified(hakukohde.oid.get, notModifiedSince).andThen(
-      for {
-        hk <- updateHakukohde(hakukohde)
-        ha <- updateHakuajat(hakukohde)
-        vk <- updateValintakokeet(hakukohde)
-        li <- updateLiitteet(hakukohde)
-      } yield 0 < (hk + ha.sum + vk.sum + li.sum)
-    )
-
-  override def put(hakukohde: Hakukohde): HakukohdeOid =
-    KoutaDatabase.runBlockingTransactionally(getPutActions(hakukohde)).get
+  override def getUpdateActions(hakukohde: Hakukohde): DBIO[Option[Hakukohde]] =
+    for {
+      hk <- updateHakukohde(hakukohde)
+      ha <- updateHakuajat(hakukohde)
+      vk <- updateValintakokeet(hakukohde)
+      l  <- updateLiitteet(hakukohde)
+      m  <- selectLastModified(hakukohde.oid.get)
+    } yield optionWhen(hk + ha + vk + l > 0)(hakukohde.withModified(m.get))
 
   override def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
@@ -69,19 +63,17 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     }
   }
 
-  override def update(hakukohde: Hakukohde, notModifiedSince: Instant): Boolean =
-    KoutaDatabase.runBlockingTransactionally(getUpdateActions(hakukohde, notModifiedSince)).get
-
-  private def updateHakuajat(hakukohde: Hakukohde) = {
+  private def updateHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
-    if(hakuajat.nonEmpty) {
-      DBIO.sequence( hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat))
+    if (hakuajat.nonEmpty) {
+      val actions = hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat)
+      DBIOHelpers.sumIntDBIOs(actions)
     } else {
-      DBIO.sequence(List(deleteHakuajat(oid)))
+      deleteHakuajat(oid)
     }
   }
 
-  private def updateValintakokeet(hakukohde: Hakukohde) = {
+  private def updateValintakokeet(hakukohde: Hakukohde): DBIO[Int] = {
     val (oid, valintakokeet, muokkaaja) = (hakukohde.oid, hakukohde.valintakokeet, hakukohde.muokkaaja)
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
 
@@ -89,10 +81,10 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(v => insertValintakoe(oid, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(oid, v, muokkaaja))
 
-    DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
+    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
   }
 
-  private def updateLiitteet(hakukohde: Hakukohde) = {
+  private def updateLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
     val (oid, liitteet, muokkaaja) = (hakukohde.oid, hakukohde.liitteet, hakukohde.muokkaaja)
     val (insert, update) = liitteet.partition(_.id.isEmpty)
 
@@ -100,7 +92,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(l => insertLiite(oid, l.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateLiite(oid, v, muokkaaja))
 
-    DBIO.sequence(List(deleteSQL) ++ insertSQL ++ updateSQL)
+    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
   }
 
   override def listByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] = organisaatioOids match {
@@ -132,19 +124,19 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
   def selectModifiedSince(since: Instant): DBIO[Seq[HakukohdeOid]] = {
-    sql"""select oid from hakukohteet where ${since} < lower(system_time)
+    sql"""select oid from hakukohteet where $since < lower(system_time)
           union
           select oid from hakukohteet_history where $since <@ system_time
           union
-          select hakukohde_oid from hakukohteiden_hakuajat where ${since} < lower(system_time)
+          select hakukohde_oid from hakukohteiden_hakuajat where $since < lower(system_time)
           union
           select hakukohde_oid from hakukohteiden_hakuajat_history where $since <@ system_time
           union
-          select hakukohde_oid from hakukohteiden_valintakokeet where ${since} < lower(system_time)
+          select hakukohde_oid from hakukohteiden_valintakokeet where $since < lower(system_time)
           union
           select hakukohde_oid from hakukohteiden_valintakokeet_history where $since <@ system_time
           union
-          select hakukohde_oid from hakukohteiden_liitteet where ${since} < lower(system_time)
+          select hakukohde_oid from hakukohteiden_liitteet where $since < lower(system_time)
           union
           select hakukohde_oid from hakukohteiden_liitteet_history where $since <@ system_time""".as[HakukohdeOid]
   }
@@ -173,7 +165,7 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
 
 sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
 
-  def insertHakukohde(hakukohde: Hakukohde) = {
+  def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (
             toteutus_oid,
             haku_oid,
@@ -243,7 +235,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           ) returning oid""".as[HakukohdeOid].head
   }
 
-  def updateHakukohde(hakukohde: Hakukohde) = {
+  def updateHakukohde(hakukohde: Hakukohde): DBIO[Int] = {
     sqlu"""update hakukohteet set
               toteutus_oid = ${hakukohde.toteutusOid},
               haku_oid = ${hakukohde.hakuOid},
@@ -311,7 +303,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or organisaatio_oid is distinct from ${hakukohde.organisaatioOid})"""
   }
 
-  def selectHakukohde(oid: HakukohdeOid) = {
+  def selectHakukohde(oid: HakukohdeOid): DBIO[Option[Hakukohde]] = {
     sql"""select oid,
              toteutus_oid,
              haku_oid,
@@ -348,107 +340,112 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              lower(system_time) from hakukohteet where oid = $oid""".as[Hakukohde].headOption
   }
 
-  def insertHakuajat(hakukohde: Hakukohde) = {
-    DBIO.sequence(
-      hakukohde.hakuajat.map(t =>
-        sqlu"""insert into hakukohteiden_hakuajat (hakukohde_oid, hakuaika, muokkaaja)
-               values (${hakukohde.oid}, tsrange(${formatTimestampParam(Some(t.alkaa))}::timestamp,
-                                                 ${formatTimestampParam(Some(t.paattyy))}::timestamp, '[)'), ${hakukohde.muokkaaja})"""))
+  def insertHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
+    val inserts = hakukohde.hakuajat.map(t =>
+      sqlu"""insert into hakukohteiden_hakuajat (hakukohde_oid, hakuaika, muokkaaja)
+              values (${hakukohde.oid}, tsrange(${formatTimestampParam(Some(t.alkaa))}::timestamp,
+                                                ${formatTimestampParam(Some(t.paattyy))}::timestamp, '[)'), ${hakukohde.muokkaaja})""")
+
+    DBIO.sequence(inserts).map(_.sum)
   }
 
-  def insertValintakokeet(hakukohde: Hakukohde) = {
-    DBIO.sequence(
-      hakukohde.valintakokeet.map(k => insertValintakoe(hakukohde.oid, k.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja)))
+  def insertValintakokeet(hakukohde: Hakukohde): DBIO[Int] = {
+    val inserts = hakukohde.valintakokeet.map(k => insertValintakoe(hakukohde.oid, k.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja))
+    DBIO.sequence(inserts).map(_.sum)
   }
 
-  def insertValintakoe(oid: Option[HakukohdeOid], valintakoe:Valintakoe, muokkaaja:UserOid) = {
+  def insertValintakoe(oid: Option[HakukohdeOid], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""insert into hakukohteiden_valintakokeet (id, hakukohde_oid, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
-               values (${valintakoe.id.map(_.toString)}::uuid, ${oid}, ${valintakoe.tyyppiKoodiUri}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, ${muokkaaja})"""
+               values (${valintakoe.id.map(_.toString)}::uuid, $oid, ${valintakoe.tyyppiKoodiUri}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, $muokkaaja)"""
   }
 
-  def insertLiitteet(hakukohde: Hakukohde) = {
-    DBIO.sequence(
-      hakukohde.liitteet.map(l => insertLiite(hakukohde.oid, l.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja)))
+  def insertLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
+    val inserts = hakukohde.liitteet.map(l => insertLiite(hakukohde.oid, l.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja))
+    DBIOHelpers.sumIntDBIOs(inserts)
   }
 
-  def insertLiite(oid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid) = {
-      sqlu"""insert into hakukohteiden_liitteet (
-                id,
-                hakukohde_oid,
-                tyyppi_koodi_uri,
-                nimi,
-                kuvaus,
-                toimitusaika,
-                toimitustapa,
-                toimitusosoite,
-                muokkaaja
-             ) values (
-                ${liite.id.map(_.toString)}::uuid,
-                ${oid},
-                ${liite.tyyppiKoodiUri},
-                ${toJsonParam(liite.nimi)}::jsonb,
-                ${toJsonParam(liite.kuvaus)}::jsonb,
-                ${formatTimestampParam(liite.toimitusaika)}::timestamp,
-                ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa,
-                ${toJsonParam(liite.toimitusosoite)}::jsonb,
-                ${muokkaaja})"""
+  def insertLiite(oid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid): DBIO[Int] = {
+    sqlu"""insert into hakukohteiden_liitteet (
+             id,
+             hakukohde_oid,
+             tyyppi_koodi_uri,
+             nimi,
+             kuvaus,
+             toimitusaika,
+             toimitustapa,
+             toimitusosoite,
+             muokkaaja
+           ) values (
+             ${liite.id.map(_.toString)}::uuid,
+             $oid,
+             ${liite.tyyppiKoodiUri},
+             ${toJsonParam(liite.nimi)}::jsonb,
+             ${toJsonParam(liite.kuvaus)}::jsonb,
+             ${formatTimestampParam(liite.toimitusaika)}::timestamp,
+             ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa,
+             ${toJsonParam(liite.toimitusosoite)}::jsonb,
+             $muokkaaja)"""
   }
 
-  def selectHakuajat(oid: HakukohdeOid) = {
+  def selectHakuajat(oid: HakukohdeOid): DBIO[Vector[Hakuaika]] = {
     sql"""select hakukohde_oid, lower(hakuaika), upper(hakuaika) from hakukohteiden_hakuajat where hakukohde_oid = $oid""".as[Hakuaika]
   }
 
-  def selectValintakokeet(oid: HakukohdeOid) = {
+  def selectValintakokeet(oid: HakukohdeOid): DBIO[Vector[Valintakoe]] = {
     sql"""select id, tyyppi_koodi_uri, tilaisuudet from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
   }
 
-  def selectLiitteet(oid: HakukohdeOid) = {
+  def selectLiitteet(oid: HakukohdeOid): DBIO[Vector[Liite]] = {
     sql"""select id, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
           from hakukohteiden_liitteet where hakukohde_oid = $oid""".as[Liite]
   }
 
-  def insertHakuaika(oid: Option[HakukohdeOid], hakuaika: Ajanjakso, muokkaaja: UserOid) = {
+  def insertHakuaika(oid: Option[HakukohdeOid], hakuaika: Ajanjakso, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""insert into hakukohteiden_hakuajat (hakukohde_oid, hakuaika, muokkaaja)
-               values ($oid, tsrange(${formatTimestampParam(Some(hakuaika.alkaa))}::timestamp,
-                                     ${formatTimestampParam(Some(hakuaika.paattyy))}::timestamp, '[)'), $muokkaaja)
-               on conflict on constraint hakukohteiden_hakuajat_pkey do nothing"""
+              values ($oid, tsrange(${formatTimestampParam(Some(hakuaika.alkaa))}::timestamp,
+                                    ${formatTimestampParam(Some(hakuaika.paattyy))}::timestamp, '[)'), $muokkaaja)
+              on conflict on constraint hakukohteiden_hakuajat_pkey do nothing"""
   }
 
-  def deleteHakuajat(oid: Option[HakukohdeOid], exclude: List[Ajanjakso]): SqlAction[Int, NoStream, Effect] = {
-    sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid and hakuaika not in (#${createRangeInParams(exclude)})"""
+  def deleteHakuajat(oid: Option[HakukohdeOid], exclude: List[Ajanjakso]): DBIO[Int] = {
+    sqlu"""delete from hakukohteiden_hakuajat
+           where hakukohde_oid = $oid
+           and hakuaika not in (#${createRangeInParams(exclude)})"""
   }
 
-  def deleteHakuajat(oid: Option[HakukohdeOid]) = {
+  def deleteHakuajat(oid: Option[HakukohdeOid]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid"""
   }
 
-  def deleteValintakokeet(oid: Option[HakukohdeOid], exclude: List[UUID]) = {
-    sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid and id not in (#${createUUIDInParams(exclude)})"""
+  def deleteValintakokeet(oid: Option[HakukohdeOid], exclude: List[UUID]): DBIO[Int] = {
+    sqlu"""delete from hakukohteiden_valintakokeet
+           where hakukohde_oid = $oid
+           and id not in (#${createUUIDInParams(exclude)})"""
   }
 
-  def updateValintakoe(oid: Option[HakukohdeOid], valintakoe: Valintakoe, muokkaaja: UserOid) = {
+  def updateValintakoe(oid: Option[HakukohdeOid], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""update hakukohteiden_valintakokeet set
               tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
               tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
-              muokkaaja = ${muokkaaja}
+              muokkaaja = $muokkaaja
            where hakukohde_oid = $oid and id = ${valintakoe.id.map(_.toString)}::uuid and (
               tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
               tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri})"""
   }
 
-  def deleteValintakokeet(oid: Option[HakukohdeOid]) = {
+  def deleteValintakokeet(oid: Option[HakukohdeOid]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_valintakokeet where hakukohde_oid = $oid"""
   }
 
-  def deleteLiitteet(oid: Option[HakukohdeOid]) = {
+  def deleteLiitteet(oid: Option[HakukohdeOid]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid"""
   }
 
-  def deleteLiitteet(oid: Option[HakukohdeOid], exclude: List[UUID]) = {
+  def deleteLiitteet(oid: Option[HakukohdeOid], exclude: List[UUID]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${createUUIDInParams(exclude)})"""
   }
 
-  def updateLiite(oid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid) = {
+  def updateLiite(oid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""update hakukohteiden_liitteet set
                 tyyppi_koodi_uri = ${liite.tyyppiKoodiUri},
                 nimi = ${toJsonParam(liite.nimi)}::jsonb,
@@ -456,9 +453,9 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
                 toimitusaika = ${formatTimestampParam(liite.toimitusaika)}::timestamp,
                 toimitustapa = ${liite.toimitustapa.map(_.toString)}::liitteen_toimitustapa,
                 toimitusosoite = ${toJsonParam(liite.toimitusosoite)}::jsonb,
-                muokkaaja = ${muokkaaja}
+                muokkaaja = $muokkaaja
               where id = ${liite.id.map(_.toString)}::uuid
-                and hakukohde_oid = ${oid}
+                and hakukohde_oid = $oid
                 and ( tyyppi_koodi_uri is distinct from ${liite.tyyppiKoodiUri}
                       or nimi is distinct from ${toJsonParam(liite.nimi)}::jsonb
                       or kuvaus is distinct from ${toJsonParam(liite.kuvaus)}::jsonb
@@ -490,36 +487,36 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
            left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
            group by ha.oid) m on m.oid = ha.oid"""
 
-  def selectByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
           and ha.haku_oid = $hakuOid""".as[HakukohdeListItem]
   }
 
-  def selectByHakuOid(hakuOid: HakuOid) = {
+  def selectByHakuOid(hakuOid: HakuOid): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           where ha.haku_oid = $hakuOid""".as[HakukohdeListItem]
   }
 
-  def selectByToteutusOid(toteutusOid: ToteutusOid) = {
+  def selectByToteutusOid(toteutusOid: ToteutusOid): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           where ha.toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
   }
 
-  def selectByToteutusOidAndAllowedOrganisaatiot(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): SqlStreamingAction[Seq[HakukohdeListItem], HakukohdeListItem, Effect] = {
+  def selectByToteutusOidAndAllowedOrganisaatiot(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
           and ha.toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
   }
 
-  def selectByValintaperusteId(valintaperusteId: UUID) = {
+  def selectByValintaperusteId(valintaperusteId: UUID): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           where ha.valintaperuste_id = ${valintaperusteId.toString}::uuid""".as[HakukohdeListItem]
   }
 
-  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))""".as[HakukohdeListItem]

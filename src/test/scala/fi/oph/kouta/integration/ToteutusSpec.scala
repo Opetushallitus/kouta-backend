@@ -1,9 +1,12 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
+
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -79,6 +82,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid)))
   }
 
+
+  it should "write create toteutus to audit log" in {
+    MockAuditLogger.clean()
+    val oid = put(toteutus(koulutusOid).withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    MockAuditLogger.find(oid, "toteutus_create") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "return 401 if no session is found" in {
     put(ToteutusPath, bytes(toteutus(koulutusOid))) {
       status should equal (401)
@@ -126,7 +137,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -134,7 +144,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
-    MockS3Client.reset()
   }
 
   "Update toteutus" should "update toteutus" in {
@@ -144,12 +153,23 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, toteutus(oid, koulutusOid, Arkistoitu))
   }
 
-  it should "not update koulutus" in {
+  it should "not update toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
+    MockAuditLogger.clean()
     update(thisToteutus, lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, thisToteutus)
+  }
+
+  it should "write toteutus update to audit log" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    MockAuditLogger.clean()
+    update(toteutus(oid, koulutusOid, Arkistoitu).copy(modified = Some(LocalDateTime.parse("1000-01-01T12:00:00"))), lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "toteutus_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
   }
 
   it should "return 401 if no session is found" in {
@@ -284,7 +304,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, toteutusWithImage.copy(metadata = toteutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -296,7 +315,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
     MockS3Client.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
-    MockS3Client.reset()
   }
 
   object ToteutusJsonMethods extends JsonMethods {

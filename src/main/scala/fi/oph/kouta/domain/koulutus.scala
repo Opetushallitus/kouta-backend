@@ -159,7 +159,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     modified: Option[LocalDateTime])
-  extends PerustiedotWithOid with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with HasPrimaryId[KoulutusOid, Koulutus] with AuthorizableMaybeJulkinen {
+  extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuvaMetadata[Koulutus, KoulutusMetadata] with AuthorizableMaybeJulkinen {
 
   override def validate() = {
     and(super.validate(),
@@ -173,11 +173,11 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
             () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
   }
 
-  override def primaryId: Option[KoulutusOid] = oid
-
-  override def withPrimaryID(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
+  def withOid(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
 
   override def withMetadata(metadata: KoulutusMetadata): Koulutus = this.copy(metadata = Some(metadata))
+
+  override def withModified(modified: LocalDateTime): Koulutus = this.copy(modified = Some(modified))
 }
 
 case class KoulutusListItem(oid: KoulutusOid,

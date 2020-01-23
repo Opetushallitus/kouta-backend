@@ -1,10 +1,13 @@
 package fi.oph.kouta.servlet
 
+import java.net.InetAddress
 import java.util.UUID
 
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{AuthenticationFailedException, Session}
+import fi.vm.sade.javautils.http.HttpServletRequestUtils
 import fi.vm.sade.utils.slf4j.Logging
+import javax.servlet.http.HttpServletRequest
 import org.scalatra._
 
 trait CasAuthenticatedServlet {
@@ -24,22 +27,21 @@ trait CasAuthenticatedServlet {
 
     logger.debug("Session found {}", session)
 
-    Authenticated.tupled(session.getOrElse(throw new AuthenticationFailedException(s"No session found. Session cookie: ${sessionCookie}. Session attribute: ${sessionAttribute}.")))
-  }
-
-  /*
-    protected def auditInfo(implicit authenticated: Authenticated): AuditInfo = {
-      AuditInfo(
-        Authenticated.unapply(authenticated).get, InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request)),
-          request.headers.get("User-Agent").getOrElse(throw new IllegalArgumentException("Otsake User-Agent on pakollinen."))
-      )
+    session match {
+      case None =>
+        throw new AuthenticationFailedException(s"No session found. Session cookie: ${sessionCookie}. Session attribute: ${sessionAttribute}.")
+      case Some((id, s)) =>
+        Authenticated(id, s)
     }
-  */
+  }
 }
 
-case class Authenticated(id: UUID, session: Session) {
+case class Authenticated(id: UUID, session: Session, userAgent: String, ip: InetAddress)
 
-
-
-
+object Authenticated {
+  def apply(id: UUID, session: Session)(implicit request: HttpServletRequest): Authenticated = {
+    val userAgent = Option(request.getHeader("User-Agent")).getOrElse(throw new IllegalArgumentException("Otsake User-Agent on pakollinen."))
+    val ip = InetAddress.getByName(HttpServletRequestUtils.getRemoteAddress(request))
+    new Authenticated(id, session, userAgent, ip)
+  }
 }

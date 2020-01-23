@@ -176,7 +176,7 @@ package object valintaperuste {
       |           format: date-time
       |           description: Valintaperustekuvauksen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55
-       |""".stripMargin
+      |""".stripMargin
 
   def models = List(ValintaperusteModel, ValintaperusteListItemModel)
 }
@@ -195,7 +195,8 @@ case class Valintaperuste(id: Option[UUID] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
                           kielivalinta: Seq[Kieli] = Seq(),
-                          modified: Option[LocalDateTime]) extends PerustiedotWithId with AuthorizableMaybeJulkinen {
+                          modified: Option[LocalDateTime])
+  extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -207,6 +208,10 @@ case class Valintaperuste(id: Option[UUID] = None,
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
     ))
   )
+
+  override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
+
+  override def withModified(modified: LocalDateTime): Valintaperuste = copy(modified = Some(modified))
 }
 
 case class ValintaperusteListItem(id: UUID,

@@ -3,11 +3,13 @@ package fi.oph.kouta.security
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
 import fi.vm.sade.utils.cas.CasClient.Username
 import fi.vm.sade.utils.slf4j.Logging
+import javax.servlet.http.HttpServletRequest
 import scalaz.concurrent.Task
 
 import scala.concurrent.duration.Duration
@@ -21,9 +23,12 @@ case class AuthenticationFailedException(msg: String, cause: Throwable) extends 
 case class KayttooikeusUserDetails(authorities: Set[Authority], oid: String)
 
 object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
-                                                   KayttooikeusClient)
+                                                   KayttooikeusClient,
+                                                   AuditLog)
 
-abstract class CasSessionService(val securityContext: SecurityContext, val userDetailsService: KayttooikeusClient) extends Logging {
+abstract class CasSessionService(val securityContext: SecurityContext,
+                                 val userDetailsService: KayttooikeusClient,
+                                 auditLog: AuditLog) extends Logging {
   logger.info(s"Using security context ${securityContext.getClass.getSimpleName}")
 
   val serviceIdentifier: String = securityContext.casServiceIdentifier
@@ -47,10 +52,11 @@ abstract class CasSessionService(val securityContext: SecurityContext, val userD
     (id, session)
   }
 
-  private def createSession(ticket: ServiceTicket): Either[Throwable, (UUID, CasSession)] = {
+  private def createSession(ticket: ServiceTicket)(implicit request: HttpServletRequest): Either[Throwable, (UUID, CasSession)] = {
     validateServiceTicket(ticket)
       .map(userDetailsService.getUserByUsername)
       .map(storeSession(ticket, _))
+      .map { case (id, session) => auditLog.logLogin(id, session, ticket) }
   }
 
   private def getSession(id: UUID): Either[Throwable, (UUID, Session)] =
@@ -58,7 +64,7 @@ abstract class CasSessionService(val securityContext: SecurityContext, val userD
       .map(session => (id, session))
       .toRight(new AuthenticationFailedException(s"Session $id doesn't exist"))
 
-  def getSession(ticket: Option[ServiceTicket], id: Option[UUID]): Either[Throwable, (UUID, Session)] = {
+  def getSession(ticket: Option[ServiceTicket], id: Option[UUID])(implicit request: HttpServletRequest): Either[Throwable, (UUID, Session)] = {
     logger.trace(s"Getting session with ticket $ticket and session id $id")
     (ticket, id) match {
       case (None, None) =>

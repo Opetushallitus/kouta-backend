@@ -22,6 +22,7 @@
 
         <!-- Utility properties -->
         <scala-utils.version>0.0.1-SNAPSHOT</scala-utils.version>
+        <auditlogger.version>8.3.1-SNAPSHOT</auditlogger.version>
         <json4s.version>3.6.7</json4s.version>
         <logback-access.version>1.2.3</logback-access.version>
 
@@ -67,7 +68,7 @@
             <version>${scala.version}</version>
         </dependency>
 
-        <!-- Utility properties -->
+        <!-- Utility dependencies -->
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-logging_2.12</artifactId>
@@ -98,6 +99,17 @@
             <version>${scala-utils.version}</version>
         </dependency>
         <dependency>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-http</artifactId>
+            <version>0.5.0-SNAPSHOT</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-io</groupId>
+                    <artifactId>commons-io</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.json4s</groupId>
             <artifactId>json4s-jackson_2.12</artifactId>
             <version>${json4s.version}</version>
@@ -112,6 +124,37 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
             <version>${logback-access.version}</version>
+        </dependency>
+
+        <!-- Audit logger -->
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>auditlogger</artifactId>
+            <version>${auditlogger.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.5</version>
+        </dependency>
+
+        <!-- Diffson for calculating audit log changes -->
+        <dependency>
+            <groupId>org.gnieh</groupId>
+            <artifactId>diffson-circe_2.12</artifactId>
+            <version>4.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scala-lang</groupId>
+                    <artifactId>scala-library</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Cas related dependencies -->
@@ -316,6 +359,10 @@
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>log4j-api</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -510,7 +557,7 @@
         <dependency>
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
-            <version>5.5.0</version>
+            <version>5.5.1</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

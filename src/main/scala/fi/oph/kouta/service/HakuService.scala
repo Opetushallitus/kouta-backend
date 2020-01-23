@@ -2,18 +2,23 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, ToteutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import slick.dbio.DBIO
 
-object HakuService extends HakuService(SqsInTransactionService)
+import scala.concurrent.ExecutionContext.Implicits.global
 
-abstract class HakuService(sqsInTransactionService: SqsInTransactionService) extends ValidatingService[Haku] with RoleEntityAuthorizationService {
+object HakuService extends HakuService(SqsInTransactionService, AuditLog)
+
+class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog)
+  extends ValidatingService[Haku] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Haku
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -21,16 +26,15 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
   def get(oid: HakuOid)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
     authorizeGet(HakuDAO.get(oid), readRules)
 
-  def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
+  def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid =
     authorizePut(haku) {
-      withValidation(haku, putWithIndexing)
-    }
-  }
+      withValidation(haku, doPut)
+    }.oid.get
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(HakuDAO.get(haku.oid.get)) {
-      withValidation(haku, updateWithIndexing(_, notModifiedSince))
-    }
+    authorizeUpdate(HakuDAO.get(haku.oid.get)) { oldHaku =>
+      withValidation(haku, doUpdate(_, notModifiedSince, oldHaku))
+    }.nonEmpty
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules)(HakuDAO.listByAllowedOrganisaatiot)
@@ -62,16 +66,25 @@ abstract class HakuService(sqsInTransactionService: SqsInTransactionService) ext
     }
   }
 
-  private def putWithIndexing(haku: Haku) =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeHaku,
-      () => HakuDAO.getPutActions(haku))
+  private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        h <- HakuDAO.getPutActions(haku)
+        _ <- index(Some(h))
+        _ <- auditLog.logCreate(h)
+      } yield h
+    }.get
 
-  private def updateWithIndexing(haku: Haku, notModifiedSince: Instant) =
-    sqsInTransactionService.runActionAndUpdateIndex(
-      HighPriority,
-      IndexTypeHaku,
-      () => HakuDAO.getUpdateActions(haku, notModifiedSince),
-      haku.oid.get.toString)
+  private def doUpdate(haku: Haku, notModifiedSince: Instant, before: Haku)(implicit authenticated: Authenticated): Option[Haku] =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        _ <- HakuDAO.checkNotModified(haku.oid.get, notModifiedSince)
+        h <- HakuDAO.getUpdateActions(haku)
+        _ <- index(h)
+        _ <- auditLog.logUpdate(before, h)
+      } yield h
+    }.get
+
+  private def index(haku: Option[Haku]): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
 }

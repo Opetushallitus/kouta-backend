@@ -4,6 +4,7 @@ import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.timeStampToLocalDateTime
@@ -21,6 +22,7 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getOrganisaatioOidResult: GetResult[OrganisaatioOid] = GetResult(r => OrganisaatioOid(r.nextString()))
 
   implicit val getInstantOptionResult: GetResult[Option[Instant]] = GetResult(r => r.nextTimestampOption().map(_.toInstant))
+  implicit val getInstantResult: GetResult[Instant] = GetResult(r => r.nextTimestamp().toInstant)
 
   implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => new Tarjoaja(GenericOid(r.nextString()), OrganisaatioOid(r.nextString())))
 
@@ -33,6 +35,8 @@ trait ExtractorBase extends KoutaJsonFormats {
     tyyppiKoodiUri = r.nextStringOption(),
     tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List())
   ))
+
+  implicit val getKeywordResult: GetResult[Keyword] = GetResult(r => Keyword(Kieli.withName(r.nextString()), r.nextString()))
 
   def extractArray[U](o: Option[Object]): Seq[U] = o
     .map(_.asInstanceOf[org.postgresql.jdbc.PgArray])

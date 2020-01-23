@@ -8,7 +8,10 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
+import slick.dbio.DBIO
 import slick.jdbc.{PositionedParameters, SetParameter}
+
+import scala.util.{Failure, Success, Try}
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
@@ -122,4 +125,26 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
       pp.setObject(v, JDBCType.BINARY.getVendorTypeNumber)
     }
   }
+}
+
+object DBIOHelpers {
+  def sumIntDBIOs(ints: Seq[DBIO[Int]]): DBIO[Int] = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    DBIO.fold(ints, 0)(_ + _)
+  }
+
+  def toDBIO[T](value: Try[T]): DBIO[T] = value match {
+    case Success(v) => DBIO.successful(v)
+    case Failure(e) => DBIO.failed(e)
+  }
+
+  class DBIOCapableTry[+T](val t: Try[T]) {
+    def toDBIO: DBIO[T] = t match {
+      case Success(v) => DBIO.successful(v)
+      case Failure(e) => DBIO.failed(e)
+    }
+  }
+
+  import scala.language.implicitConversions
+  implicit def try2DBIOCapableTry[T](t: Try[T]): DBIOCapableTry[T] = new DBIOCapableTry[T](t)
 }

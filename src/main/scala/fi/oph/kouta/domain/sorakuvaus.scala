@@ -123,10 +123,14 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime]) extends PerustiedotWithId with AuthorizableMaybeJulkinen {
+                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableMaybeJulkinen {
   override def validate(): IsValid = and(
     super.validate()
   )
+
+  override def withModified(modified: LocalDateTime): Sorakuvaus = copy(modified = Some(modified))
+
+  override def withId(id: UUID): Sorakuvaus = copy(id = Some(id))
 }
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map())

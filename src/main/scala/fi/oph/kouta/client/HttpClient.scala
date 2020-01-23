@@ -1,7 +1,6 @@
 package fi.oph.kouta.client
 
 import java.util.{Map => JavaMap}
-import java.util.NoSuchElementException
 
 import fi.vm.sade.utils.http.DefaultHttpClient
 import scalaj.http.HttpOptions._

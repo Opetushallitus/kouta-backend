@@ -1,10 +1,12 @@
 package fi.oph.kouta.integration
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations
@@ -89,6 +91,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(uusiHakukohde)
     get(oid, tallennettuHakukohde(oid))
   }
+  it should "write create hakukohde to audit log" in {
+    MockAuditLogger.clean()
+    val oid = put(uusiHakukohde.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    get(oid, tallennettuHakukohde(oid))
+    MockAuditLogger.find(oid, "hakukohde_create") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
 
   it should "return 401 if a valid session is not found" in {
     put(uri = s"$HakukohdePath", bytes(uusiHakukohde), Seq(jsonHeader)) {
@@ -138,11 +147,23 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     get(oid, updatedHakukohde)
   }
 
+  it should "write hakukohde update to audit log" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu, modified = Some(LocalDateTime.parse("1000-01-01T12:00:00")))
+    MockAuditLogger.clean()
+    update(updatedHakukohde, lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "hakukohde_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "not update hakukohde" in {
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
+    MockAuditLogger.clean()
     update(thisHakukohde, lastModified, expectUpdate = false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, thisHakukohde)
   }
 

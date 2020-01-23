@@ -3,12 +3,14 @@ package fi.oph.kouta.servlet
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.keyword._
 import fi.oph.kouta.domain.{Fi, Kieli}
-import fi.oph.kouta.service.KeywordService._
+import fi.oph.kouta.service.KeywordService
 import org.scalatra.Ok
 
 import scala.util.Try
 
-class AsiasanaServlet extends KeywordServlet {
+class AsiasanaServlet(keywordService: KeywordService) extends KeywordServlet {
+
+  def this() = this(KeywordService)
 
   registerPath("/asiasana/search/{term}",
     """    get:
@@ -58,7 +60,7 @@ class AsiasanaServlet extends KeywordServlet {
 
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(search(parseAsiasanaSearch()))
+    Ok(keywordService.search(parseAsiasanaSearch()))
   }
 
   registerPath("/asiasana/",
@@ -99,7 +101,7 @@ class AsiasanaServlet extends KeywordServlet {
     implicit val authenticated: Authenticated = authenticate
 
     val kieli = parseKieliParam("kieli", Fi)
-    Ok(store(Asiasana, bodyToKeywords(kieli)))
+    Ok(keywordService.store(Asiasana, bodyToKeywords(kieli)))
   }
 
   private def parseAsiasanaSearch(): KeywordSearch = KeywordSearch(
@@ -109,7 +111,9 @@ class AsiasanaServlet extends KeywordServlet {
     parseIntParam("limit", 15))
 }
 
-class AmmattinimikeServlet extends KeywordServlet {
+class AmmattinimikeServlet(keywordService: KeywordService) extends KeywordServlet {
+
+  def this() = this(KeywordService)
 
   registerPath("/ammattinimike/search/{term}",
     """    get:
@@ -159,7 +163,7 @@ class AmmattinimikeServlet extends KeywordServlet {
 
     implicit val authenticated: Authenticated = authenticate
 
-    Ok(search(parseAmmattinimikeSearch()))
+    Ok(keywordService.search(parseAmmattinimikeSearch()))
   }
 
   registerPath("/ammattinimike/",
@@ -200,7 +204,7 @@ class AmmattinimikeServlet extends KeywordServlet {
     implicit val authenticated: Authenticated = authenticate
 
     val kieli = parseKieliParam("kieli", Fi)
-    Ok(store(Ammattinimike, bodyToKeywords(kieli)))
+    Ok(keywordService.store(Ammattinimike, bodyToKeywords(kieli)))
   }
 
   def parseAmmattinimikeSearch(): KeywordSearch = KeywordSearch(

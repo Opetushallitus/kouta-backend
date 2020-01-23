@@ -1,11 +1,12 @@
 package fi.oph.kouta.integration
 
-import java.time.{Duration, Instant, ZoneId}
+import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, MockS3Client, ToteutusFixture, UploadFixture}
+import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
@@ -116,6 +117,13 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     }
   }
 
+  it should "write create koulutus to audit log" in {
+    MockAuditLogger.clean()
+    val oid = put(koulutus.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    MockAuditLogger.find(oid, "koulutus_create") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "return 401 without a session" in {
     put(KoulutusPath, bytes(koulutus), Seq(jsonHeader)) {
       withClue(body) {
@@ -160,7 +168,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -168,7 +175,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val oid = put(koulutusWithImage)
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
-    MockS3Client.reset()
   }
 
   "Update koulutus" should "update koulutus" in {
@@ -178,10 +184,21 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, koulutus(oid, Arkistoitu))
   }
 
+  it should "write koulutus update to audit log" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
+    MockAuditLogger.clean()
+    update(koulutus(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "koulutus_update") shouldBe defined
+    MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
   it should "not update koulutus" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
+    MockAuditLogger.clean()
     update(koulutus(oid), lastModified, false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, koulutus(oid))
   }
 
@@ -352,7 +369,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, koulutusWithImage.copy(metadata = koulutus.metadata.map(_.withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
-    MockS3Client.reset()
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -364,6 +380,5 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
-    MockS3Client.reset()
   }
 }

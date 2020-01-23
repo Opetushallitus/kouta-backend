@@ -3,14 +3,22 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.integration.fixture.AuthFixture
+import fi.oph.kouta.mocks.MockAuditLogger
+import org.scalatest.BeforeAndAfterEach
 
-class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
+class AuthSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfterEach {
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    MockAuditLogger.clean()
+  }
 
   "Get session" should "return 200 if the session is active" in {
     get(sessionPath, headers = defaultHeaders) {
       body should include(testUser.oid)
       status should equal(200)
     }
+    MockAuditLogger.logs shouldBe empty
   }
 
   it should "return 401 if no session or the session is not active" in {
@@ -35,6 +43,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
       body should include(testUser.oid)
       status should equal(200)
     }
+    MockAuditLogger.logs shouldBe empty
   }
 
   it should "reject an invalid session id" in {
@@ -61,6 +70,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
       header.get("Set-Cookie") should not be empty
       header("Set-Cookie")
     }
+    MockAuditLogger.find(testUser.ticket, testUser.oid, "kirjautuminen") shouldBe defined
 
     val sessionId = getSessionFromCookies(cookieHeader)
     sessionId should not be empty
@@ -83,6 +93,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
       status should equal(200)
       body should include(testUser.oid)
     }
+    MockAuditLogger.logs shouldBe empty
   }
 
   it should "create a new session from a CAS ticket also when an unknown session id is provided" in {
@@ -97,6 +108,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
       header.get("Set-Cookie") should not be empty
       header("Set-Cookie")
     }
+    MockAuditLogger.find(testUser.ticket, testUser.oid, "kirjautuminen") shouldBe defined
     val sessionId = getSessionFromCookies(cookieHeader)
     sessionId should not be empty
 

@@ -4,10 +4,12 @@ import java.util.UUID
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData._
+import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.service.ToteutusService
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.service.{KeywordService, ToteutusService}
 import fi.oph.kouta.servlet.ToteutusServlet
 import org.scalactic.Equality
 
@@ -15,7 +17,9 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
   val ToteutusPath = "/toteutus"
 
-  protected lazy val toteutusService: ToteutusService = new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service)
+  private lazy val auditLog = new AuditLog(MockAuditLogger)
+  protected lazy val toteutusService: ToteutusService =
+    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service, auditLog, new KeywordService(auditLog))
 
   addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
 
