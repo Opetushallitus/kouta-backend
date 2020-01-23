@@ -95,26 +95,26 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (tempImage, cleared) <- checkAndMaybeClearTempImage(koulutus)
-        added   <- KoulutusDAO.getPutActions(cleared)
-        themed  <- maybeCopyThemeImage(tempImage, added)
-        updated <- tempImage.map(_ => KoulutusDAO.updateJustKoulutus(themed)).getOrElse(DBIO.successful(themed))
-        _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(Some(updated))
-        _       <- auditLog.logCreate(updated)
-      } yield updated
+        (teema, k) <- checkAndMaybeClearTempImage(koulutus)
+        k          <- KoulutusDAO.getPutActions(k)
+        k          <- maybeCopyThemeImage(teema, k)
+        k          <- teema.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
+        _          <- maybeDeleteTempImage(teema)
+        _          <- index(Some(k))
+        _          <- auditLog.logCreate(k)
+      } yield k
     }.get
 
   private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit authenticated: Authenticated): Option[Koulutus] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _       <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
-        (tempImage, themed) <- checkAndMaybeCopyTempImage(koulutus)
-        updated <- KoulutusDAO.getUpdateActions(themed)
-        _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(updated)
-        _       <- auditLog.logUpdate(before, updated)
-      } yield updated
+        _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+        (teema, k) <- checkAndMaybeCopyTempImage(koulutus)
+        k          <- KoulutusDAO.getUpdateActions(k)
+        _          <- maybeDeleteTempImage(teema)
+        _          <- index(k)
+        _          <- auditLog.logUpdate(before, k)
+      } yield k
     }.get
 
   private def index(koulutus: Option[Koulutus]): DBIO[_] =

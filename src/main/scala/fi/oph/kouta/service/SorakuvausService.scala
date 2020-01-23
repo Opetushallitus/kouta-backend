@@ -48,20 +48,20 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
   private def doPut(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): Sorakuvaus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        added <- SorakuvausDAO.getPutActions(sorakuvaus)
-        _     <- index(Some(added))
-        _     <- auditLog.logCreate(added)
-      } yield added
+        s <- SorakuvausDAO.getPutActions(sorakuvaus)
+        _ <- index(Some(s))
+        _ <- auditLog.logCreate(s)
+      } yield s
     }.get
 
   private def doUpdate(sorakuvaus: Sorakuvaus, notModifiedSince: Instant, before: Sorakuvaus)(implicit authenticated: Authenticated): Option[Sorakuvaus] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _       <- SorakuvausDAO.checkNotModified(sorakuvaus.id.get, notModifiedSince)
-        updated <- SorakuvausDAO.getUpdateActions(sorakuvaus)
-        _       <- index(updated)
-        _       <- auditLog.logUpdate(before, updated)
-      } yield updated
+        _ <- SorakuvausDAO.checkNotModified(sorakuvaus.id.get, notModifiedSince)
+        s <- SorakuvausDAO.getUpdateActions(sorakuvaus)
+        _ <- index(s)
+        _ <- auditLog.logUpdate(before, s)
+      } yield s
     }.get
 
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =

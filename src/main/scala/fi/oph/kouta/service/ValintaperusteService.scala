@@ -62,20 +62,20 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        added <- ValintaperusteDAO.getPutActions(valintaperuste)
-        _     <- index(Some(added))
-        _     <- auditLog.logCreate(added)
-      } yield added
+        v <- ValintaperusteDAO.getPutActions(valintaperuste)
+        _ <- index(Some(v))
+        _ <- auditLog.logCreate(v)
+      } yield v
     }.get
 
   private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit authenticated: Authenticated): Option[Valintaperuste] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _       <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)
-        updated <- ValintaperusteDAO.getUpdateActions(valintaperuste)
-        _       <- index(updated)
-        _       <- auditLog.logUpdate(before, updated)
-      } yield updated
+        _ <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)
+        v <- ValintaperusteDAO.getUpdateActions(valintaperuste)
+        _ <- index(v)
+        _ <- auditLog.logUpdate(before, v)
+      } yield v
     }.get
 
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =

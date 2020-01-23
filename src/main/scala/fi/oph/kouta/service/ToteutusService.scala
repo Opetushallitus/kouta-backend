@@ -77,42 +77,34 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
   private def doPut(toteutus: Toteutus)(implicit authenticated: Authenticated): Toteutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (tempImage, cleared) <- checkAndMaybeClearTempImage(toteutus)
-        _       <- insertAsiasanat(cleared)
-        _       <- insertAmmattinimikkeet(cleared)
-        added   <- ToteutusDAO.getPutActions(cleared)
-        themed  <- maybeCopyThemeImage(tempImage, added)
-        updated <- tempImage.map(_ => ToteutusDAO.updateJustToteutus(themed)).getOrElse(DBIO.successful(themed))
-        _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(Some(updated))
-        _       <- auditLog.logCreate(updated)
-      } yield updated
+        (teema, t) <- checkAndMaybeClearTempImage(toteutus)
+        _          <- insertAsiasanat(t)
+        _          <- insertAmmattinimikkeet(t)
+        t          <- ToteutusDAO.getPutActions(t)
+        t          <- maybeCopyThemeImage(teema, t)
+        t          <- teema.map(_ => ToteutusDAO.updateJustToteutus(t)).getOrElse(DBIO.successful(t))
+        _          <- maybeDeleteTempImage(teema)
+        _          <- index(Some(t))
+        _          <- auditLog.logCreate(t)
+      } yield t
     }.get
 
   private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated): Option[Toteutus] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _       <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
-        (tempImage, themed) <- checkAndMaybeCopyTempImage(toteutus)
-        _       <- insertAsiasanat(themed)
-        _       <- insertAmmattinimikkeet(themed)
-        updated <- ToteutusDAO.getUpdateActions(themed)
-        _       <- maybeDeleteTempImage(tempImage)
-        _       <- index(updated)
-        _       <- auditLog.logUpdate(before, updated)
-      } yield updated
+        _          <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
+        (teema, t) <- checkAndMaybeCopyTempImage(toteutus)
+        _          <- insertAsiasanat(t)
+        _          <- insertAmmattinimikkeet(t)
+        t          <- ToteutusDAO.getUpdateActions(t)
+        _          <- maybeDeleteTempImage(teema)
+        _          <- index(t)
+        _          <- auditLog.logUpdate(before, t)
+      } yield t
     }.get
 
   private def index(toteutus: Option[Toteutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
-
-  private def withKeywordInserts[T](toteutus: Toteutus)(actions: => DBIO[T])(implicit authenticated: Authenticated): DBIO[T] = {
-    for {
-      _ <- insertAsiasanat(toteutus)
-      _ <- insertAmmattinimikkeet(toteutus)
-      t <- actions
-    } yield t
-  }
 
   private def insertAsiasanat(toteutus: Toteutus)(implicit authenticated: Authenticated) =
     keywordService.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))

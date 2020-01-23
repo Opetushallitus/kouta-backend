@@ -4,11 +4,16 @@ import java.util.UUID
 
 import fi.oph.kouta.integration.fixture.AuthFixture
 import fi.oph.kouta.mocks.MockAuditLogger
+import org.scalatest.BeforeAndAfterEach
 
-class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
+class AuthSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfterEach {
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    MockAuditLogger.clean()
+  }
 
   "Get session" should "return 200 if the session is active" in {
-    MockAuditLogger.clean()
     get(sessionPath, headers = defaultHeaders) {
       body should include(testUser.oid)
       status should equal(200)
@@ -34,7 +39,6 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "reuse an existing session" in {
-    MockAuditLogger.clean()
     get(loginPath, headers = defaultHeaders) {
       body should include(testUser.oid)
       status should equal(200)
@@ -59,7 +63,6 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "create a new session from a verifiable CAS ticket" in {
-    MockAuditLogger.clean()
     val cookieHeader = get(loginPath, params = Seq("ticket" -> testUser.ticket), headers = Seq(jsonHeader)) {
       body should include(testUser.oid)
       status should equal(200)
@@ -86,7 +89,6 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "reuse an existing session even if a ticket is provided" in {
-    MockAuditLogger.clean()
     get(loginPath, params = Seq("ticket" -> "invalid"), headers = defaultHeaders) {
       status should equal(200)
       body should include(testUser.oid)
@@ -95,7 +97,6 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture {
   }
 
   it should "create a new session from a CAS ticket also when an unknown session id is provided" in {
-    MockAuditLogger.clean()
     val cookieHeader = get(
       loginPath,
       params = Seq("ticket" -> testUser.ticket),

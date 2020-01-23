@@ -48,20 +48,20 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        added <- HakukohdeDAO.getPutActions(hakukohde)
-        _     <- index(Some(added))
-        _     <- auditLog.logCreate(added)
-      } yield added
+        h <- HakukohdeDAO.getPutActions(hakukohde)
+        _ <- index(Some(h))
+        _ <- auditLog.logCreate(h)
+      } yield h
     }.get
 
   private def doUpdate(hakukohde: Hakukohde, notModifiedSince: Instant, before: Hakukohde)(implicit authenticated: Authenticated): Option[Hakukohde] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _       <- HakukohdeDAO.checkNotModified(hakukohde.oid.get, notModifiedSince)
-        updated <- HakukohdeDAO.getUpdateActions(hakukohde)
-        _       <- index(updated)
-        _       <- auditLog.logUpdate(before, updated)
-      } yield updated
+        _ <- HakukohdeDAO.checkNotModified(hakukohde.oid.get, notModifiedSince)
+        h <- HakukohdeDAO.getUpdateActions(hakukohde)
+        _ <- index(h)
+        _ <- auditLog.logUpdate(before, h)
+      } yield h
     }.get
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =

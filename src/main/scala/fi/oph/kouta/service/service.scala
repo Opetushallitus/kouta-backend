@@ -18,7 +18,7 @@ import scala.collection.IterableView
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-import fi.oph.kouta.repository.DBIOHelpers.tryToDbioCapableTry
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 
 trait ValidatingService[E <: Validatable] {
 

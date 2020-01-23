@@ -69,20 +69,20 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
   private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        added <- HakuDAO.getPutActions(haku)
-        _     <- index(Some(added))
-        _     <- auditLog.logCreate(added)
-      } yield added
+        h <- HakuDAO.getPutActions(haku)
+        _ <- index(Some(h))
+        _ <- auditLog.logCreate(h)
+      } yield h
     }.get
 
   private def doUpdate(haku: Haku, notModifiedSince: Instant, before: Haku)(implicit authenticated: Authenticated): Option[Haku] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _       <- HakuDAO.checkNotModified(haku.oid.get, notModifiedSince)
-        updated <- HakuDAO.getUpdateActions(haku)
-        _       <- index(updated)
-        _       <- auditLog.logUpdate(before, updated)
-      } yield updated
+        _ <- HakuDAO.checkNotModified(haku.oid.get, notModifiedSince)
+        h <- HakuDAO.getUpdateActions(haku)
+        _ <- index(h)
+        _ <- auditLog.logUpdate(before, h)
+      } yield h
     }.get
 
   private def index(haku: Option[Haku]): DBIO[_] =

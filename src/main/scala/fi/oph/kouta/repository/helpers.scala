@@ -138,7 +138,7 @@ object DBIOHelpers {
     case Failure(e) => DBIO.failed(e)
   }
 
-  class DbioCapableTry[+T](val t: Try[T]) {
+  class DBIOCapableTry[+T](val t: Try[T]) {
     def toDBIO: DBIO[T] = t match {
       case Success(v) => DBIO.successful(v)
       case Failure(e) => DBIO.failed(e)
@@ -146,5 +146,5 @@ object DBIOHelpers {
   }
 
   import scala.language.implicitConversions
-  implicit def tryToDbioCapableTry[T](t: Try[T]): DbioCapableTry[T] = new DbioCapableTry[T](t)
+  implicit def try2DBIOCapableTry[T](t: Try[T]): DBIOCapableTry[T] = new DBIOCapableTry[T](t)
 }

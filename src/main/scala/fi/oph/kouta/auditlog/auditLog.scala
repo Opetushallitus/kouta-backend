@@ -14,7 +14,7 @@ import slick.dbio.DBIO
 
 import scala.util.Try
 
-import fi.oph.kouta.repository.DBIOHelpers.tryToDbioCapableTry
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 
 object AuditLogger extends Logger {
   private val logger = LoggerFactory.getLogger(classOf[Audit])

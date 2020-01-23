@@ -28,6 +28,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
     deleteAsiasanat()
     storeAsiasanat()
     storeAmmattinimikkeet()
+    MockAuditLogger.clean()
   }
 
   "Asiasana search" should "search asiasanat" in {
@@ -105,7 +106,6 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   "Create toteutus" should "store ammattinimikkeet ja asiasanat in toteutus" in {
     searchAsiasanat("robo", List())
     searchAmmattinimikkeet("insinööri", List())
-    MockAuditLogger.clean()
     put(toteutus(koulutusOid))
     MockAuditLogger.find("asiasana", "fi", "robotiikka", "asiasana_create") shouldBe defined
     MockAuditLogger.find("ammattinimike", "fi", "koneinsinööri", "ammattinimike_create") shouldBe defined
@@ -132,7 +132,6 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
     import slick.jdbc.PostgresProfile.api._
     val value = ammattinimikkeet.head.toLowerCase
     db.runBlocking(sql"""select count(*) from ammattinimikkeet where ammattinimike = ${value}""".as[Int].head) should be(1)
-    MockAuditLogger.clean()
     post(AmmattinimikePath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
@@ -141,7 +140,6 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   }
 
   it should "write to audit log" in {
-    MockAuditLogger.clean()
     post(AmmattinimikePath, bytes(List("lisätty-ammattinimike")), headers = Seq(defaultSessionHeader)) {
       withClue(body) {
         status should equal(200)
@@ -168,7 +166,6 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
     import slick.jdbc.PostgresProfile.api._
     val value = asiasanat.head.toLowerCase
     db.runBlocking(sql"""select count(*) from asiasanat where asiasana = ${value}""".as[Int].head) should be(1)
-    MockAuditLogger.clean()
     post(AsiasanaPath, bytes(List(value)), headers = Seq(defaultSessionHeader)) {
       withClue(body) {
         status should equal(200)
@@ -179,7 +176,6 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   }
 
   it should "write to audit log" in {
-    MockAuditLogger.clean()
     post(AsiasanaPath, bytes(List("lisätty-asiasana")), headers = Seq(defaultSessionHeader)) {
       withClue(body) {
         status should equal(200)
