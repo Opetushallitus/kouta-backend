@@ -3,6 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.keyword.Keyword
+import fi.oph.kouta.validation.{IsValid, Validatable}
 
 package object toteutusMetadata {
 
@@ -308,10 +309,25 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
+                  koulutuksenTarkkaAlkamisaika: Boolean = false,
                   koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
                   koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
                   koulutuksenAlkamiskausi: Option[String] = None,
+                  koulutuksenAlkamisvuosi: Option[Int] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
-                  stipendinKuvaus: Kielistetty = Map())
+                  stipendinKuvaus: Kielistetty = Map()) extends Validatable {
+
+  override def validate(): IsValid = and(
+    super.validate(),
+    if (koulutuksenTarkkaAlkamisaika) {
+      Right(())
+    } else {
+      and(
+        assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
+        assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
+      )
+    }
+  )
+}
