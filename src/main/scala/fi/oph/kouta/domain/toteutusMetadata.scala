@@ -147,7 +147,7 @@ package object toteutusMetadata {
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkin otsikko
       |          allOf:
       |            - $ref: '#/components/schemas/Teksti'
-       |""".stripMargin
+      |""".stripMargin
 
   val Osaamisala =
     """    Osaamisala:
@@ -319,15 +319,12 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   stipendinMaara: Option[Double] = None,
                   stipendinKuvaus: Kielistetty = Map()) extends Validatable {
 
-  override def validate(): IsValid = and(
-    super.validate(),
-    if (koulutuksenTarkkaAlkamisaika) {
-      Right(())
-    } else {
-      and(
-        assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
-        assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
-      )
-    }
-  )
+  override def validate(): IsValid = if (koulutuksenTarkkaAlkamisaika) {
+    Right(())
+  } else {
+    and(
+      assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
+      assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
+    )
+  }
 }
