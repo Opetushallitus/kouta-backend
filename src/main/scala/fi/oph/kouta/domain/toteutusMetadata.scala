@@ -319,12 +319,9 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   stipendinMaara: Option[Double] = None,
                   stipendinKuvaus: Kielistetty = Map()) extends Validatable {
 
-  override def validate(): IsValid = if (koulutuksenTarkkaAlkamisaika) {
-    Right(())
-  } else {
-    and(
-      assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
-      assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
-    )
-  }
+  override def validate(): IsValid = validateIfTrue(!koulutuksenTarkkaAlkamisaika, () => and(
+    assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
+    assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
+  ))
+
 }
