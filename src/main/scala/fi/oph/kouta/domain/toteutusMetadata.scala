@@ -3,6 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.keyword.Keyword
+import fi.oph.kouta.validation.{IsValid, Validatable}
 
 package object toteutusMetadata {
 
@@ -61,6 +62,10 @@ package object toteutusMetadata {
       |          type: double
       |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
       |          example: 220.50
+      |        koulutuksenTarkkaAlkamisaika:
+      |          type: string
+      |          description: Jos alkamisaika on tiedossa niin alkamis- ja päättymispäivämäärä on pakollinen. Muussa tapauksessa kausi ja vuosi on pakollisia tietoja.
+      |          example: true
       |        koulutuksenAlkamispaivamaara:
       |          type: string
       |          description: Koulutuksen alkamisen päivämäärä
@@ -69,6 +74,14 @@ package object toteutusMetadata {
       |          type: string
       |          description: Koulutuksen päättymisen päivämäärä
       |          example: 2019-12-20T12:00
+      |        koulutuksenAlkamiskausi:
+      |          type: string
+      |          description: Koulutuksen alkamiskausi (koodistoarvo)
+      |          example: kausi_k#1
+      |        koulutuksenAlkamisvuosi:
+      |          type: string
+      |          description: Koulutuksen alkamisvuosi
+      |          example: 2020
       |        lisatiedot:
       |          type: array
       |          description: Koulutuksen toteutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
@@ -146,7 +159,7 @@ package object toteutusMetadata {
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkin otsikko
       |          allOf:
       |            - $ref: '#/components/schemas/Teksti'
-       |""".stripMargin
+      |""".stripMargin
 
   val Osaamisala =
     """    Osaamisala:
@@ -235,7 +248,7 @@ package object toteutusMetadata {
   val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
 }
 
-sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
+sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] with Validatable {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
@@ -243,6 +256,8 @@ sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilot: Seq[Yhteyshenkilo]
   val teemakuva: Option[String]
+
+  override def validate(): IsValid = validateIfDefined(opetus)
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
@@ -308,9 +323,19 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
+                  koulutuksenTarkkaAlkamisaika: Boolean = false,
                   koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
                   koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
+                  koulutuksenAlkamiskausi: Option[String] = None,
+                  koulutuksenAlkamisvuosi: Option[Int] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
-                  stipendinKuvaus: Kielistetty = Map())
+                  stipendinKuvaus: Kielistetty = Map()) extends Validatable {
+
+  override def validate(): IsValid = validateIfTrue(!koulutuksenTarkkaAlkamisaika, () => and(
+    assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
+    assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
+  ))
+
+}
