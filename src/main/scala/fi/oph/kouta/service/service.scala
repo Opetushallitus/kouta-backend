@@ -88,7 +88,7 @@ trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with Ha
     }
 }
 
-case class KoutaValidationException(errorMessages: List[String]) extends RuntimeException
+case class KoutaValidationException(errorMessages: Seq[String]) extends RuntimeException
 
 trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity

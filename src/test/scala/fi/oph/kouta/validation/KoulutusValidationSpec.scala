@@ -15,6 +15,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] with Validatio
     failsValidation(amm.copy(kielivalinta = Seq()), MissingKielivalinta)
     failsValidation(amm.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
     failsValidation(amm.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
+    failsValidation(amm.copy(nimi = Map()), invalidKielistetty("nimi", Seq(Fi, Sv)))
     failsValidation(amm.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
   }
 

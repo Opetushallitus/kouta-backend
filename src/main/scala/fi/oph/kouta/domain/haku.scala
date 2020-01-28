@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.{IsValid, Validations}
 
 package object haku {
 
@@ -201,21 +201,25 @@ case class Haku(oid: Option[HakuOid] = None,
                 modified: Option[LocalDateTime])
   extends PerustiedotWithOid[HakuOid, Haku] {
 
-  override def validate(): IsValid = and (
-     super.validate(),
-     validateIfDefined[HakuOid](oid, assertValid(_)),
-     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
-     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
-     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
-     validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
-     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
-     validateHakuajat(hakuajat),
-     validateIfJulkaistu(tila, and(
-       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
-       validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
-     ))
+  override def validate(): IsValid = and(
+    super.validate(),
+    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
+    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
+    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
+    validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
+    validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
+    validateHakuajat(hakuajat),
+    validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta)),
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
+      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
+      assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
+      validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
+      validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), and( // Yhteishaku
+        assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri"),
+        assertNotOptional(alkamisvuosi, "alkamisvuosi")
+      ))
+    ))
   )
 
   def withOid(oid: HakuOid): Haku = copy(oid = Some(oid))
@@ -231,4 +235,9 @@ case class HakuListItem(oid: HakuOid,
                         modified: LocalDateTime) extends OidListItem
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq())
+                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends Validations {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, _.validate(tila, kielivalinta)),
+    validateHakuajat(tulevaisuudenAikataulu)
+  )
+}

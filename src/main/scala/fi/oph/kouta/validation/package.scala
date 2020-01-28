@@ -1,7 +1,7 @@
 package fi.oph.kouta
 
 package object validation {
-  type IsValid = List[String]
+  type IsValid = Seq[String]
   val NoErrors: IsValid = Nil
 
   trait Validatable extends Validations {

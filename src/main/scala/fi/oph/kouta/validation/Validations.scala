@@ -13,7 +13,7 @@ import scala.util.{Success, Try}
 trait Validations {
   protected def error(msg: String): IsValid = List(msg)
 
-  protected def and(validations: IsValid*): IsValid = validations.flatten.distinct.toList
+  protected def and(validations: IsValid*): IsValid = validations.flatten.distinct
 
   protected def validationMsg(value:String) = s"'${value}' ei ole validi"
   protected def missingMsg(name:String) = s"Pakollinen tieto '$name' puuttuu"
@@ -64,7 +64,7 @@ trait Validations {
 
   protected def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
-  protected def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = values.flatMap(f(_)).toList
+  protected def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = values.flatMap(f(_))
 
   protected def validateIfTrue(b: Boolean, f: => IsValid): IsValid = if(b) f else NoErrors
 
@@ -90,7 +90,7 @@ trait Validations {
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, field))
 
   protected def isValidHakuaika(hakuaika: Ajanjakso): Boolean = hakuaika.alkaa.isBefore(hakuaika.paattyy)
-  protected def validateHakuajat(hakuajat: List[Ajanjakso]): IsValid = hakuajat.filterNot(isValidHakuaika) match {
+  protected def validateHakuajat(hakuajat: Seq[Ajanjakso]): IsValid = hakuajat.filterNot(isValidHakuaika) match {
     case x if x.isEmpty => NoErrors
     case _ => error(InvalidHakuaika)
   }
@@ -98,8 +98,17 @@ trait Validations {
   protected def isValidAlkamisvuosi(s: String): Boolean = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
   protected def validateAlkamisvuosi(alkamisvuosi: String): IsValid = assertTrue(isValidAlkamisvuosi(alkamisvuosi), validationMsg(alkamisvuosi))
 
-  protected def validateAtaruId(hakulomaketyyppi: Option[Hakulomaketyyppi], hakulomakeAtaruId: Option[UUID]): IsValid = hakulomaketyyppi match {
-    case Some(Ataru) => assertNotOptional(hakulomakeAtaruId, "hakemuspalvelu ID")
+  protected def validateHakulomake(hakulomaketyyppi: Option[Hakulomaketyyppi],
+                                   hakulomakeAtaruId: Option[UUID],
+                                   hakulomakeKuvaus: Kielistetty,
+                                   hakulomakeLinkki: Kielistetty,
+                                   kielivalinta: Seq[Kieli]): IsValid = hakulomaketyyppi match {
+    case Some(MuuHakulomake) => and(
+      validateKielistetty(kielivalinta, hakulomakeLinkki, "hakulomakeLinkki"),
+      hakulomakeLinkki.flatMap { case (_, u) => assertValidUrl(u) }.toSeq
+    )
+    case Some(Ataru) => assertNotOptional(hakulomakeAtaruId, "hakulomakeAtaruId")
+    case Some(EiSähköistä) => validateOptionalKielistetty(kielivalinta, hakulomakeKuvaus, "hakulomakeKuvaus")
     case _ => NoErrors
   }
 

@@ -345,7 +345,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
      validateIfJulkaistu(tila, and(
        validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, assertNotOptional(liitteidenToimitusaika, "liitteiden toimitusaika"))),
        validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, assertNotOptional(liitteidenToimitusosoite, "liitteiden toimitusaika"))),
-       validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
+       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta)
     ))
   )
 
