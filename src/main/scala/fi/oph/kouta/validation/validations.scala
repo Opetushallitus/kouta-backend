@@ -53,9 +53,10 @@ trait Validations {
     Either.cond(messages.isEmpty, (), messages.toList)
   }
 
-  def validateIfTrue(b: Boolean, f: () => IsValid): IsValid = b match {
-    case true => f()
-    case _ => Right(())
+  def validateIfTrue(b: Boolean, f: () => IsValid): IsValid = if (b) {
+    f()
+  } else {
+    Right(())
   }
 
   def findInvalidOids(l: Seq[Oid]): Seq[Oid] = l.filter(!_.isValid())
