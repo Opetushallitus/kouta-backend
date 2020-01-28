@@ -62,6 +62,10 @@ package object toteutusMetadata {
       |          type: double
       |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
       |          example: 220.50
+      |        koulutuksenTarkkaAlkamisaika:
+      |          type: string
+      |          description: Jos alkamisaika on tiedossa niin alkamis- ja päättymispäivämäärä on pakollinen. Muussa tapauksessa kausi ja vuosi on pakollisia tietoja.
+      |          example: true
       |        koulutuksenAlkamispaivamaara:
       |          type: string
       |          description: Koulutuksen alkamisen päivämäärä
@@ -70,6 +74,14 @@ package object toteutusMetadata {
       |          type: string
       |          description: Koulutuksen päättymisen päivämäärä
       |          example: 2019-12-20T12:00
+      |        koulutuksenAlkamiskausi:
+      |          type: string
+      |          description: Koulutuksen alkamiskausi (koodistoarvo)
+      |          example: kausi_k#1
+      |        koulutuksenAlkamisvuosi:
+      |          type: string
+      |          description: Koulutuksen alkamisvuosi
+      |          example: 2020
       |        lisatiedot:
       |          type: array
       |          description: Koulutuksen toteutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
