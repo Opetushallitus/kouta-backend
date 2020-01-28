@@ -236,7 +236,7 @@ package object toteutusMetadata {
   val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
 }
 
-sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
+sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] with Validatable {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
@@ -244,6 +244,8 @@ sealed trait ToteutusMetadata extends TeemakuvaMetadata[ToteutusMetadata] {
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilot: Seq[Yhteyshenkilo]
   val teemakuva: Option[String]
+
+  override def validate(): IsValid = validateIfDefined(opetus)
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {

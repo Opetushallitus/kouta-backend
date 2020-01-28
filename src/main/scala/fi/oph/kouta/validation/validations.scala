@@ -3,7 +3,6 @@ package fi.oph.kouta.validation
 import java.time.LocalDate
 import java.util.UUID
 import java.util.regex.Pattern
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.Oid
 
@@ -42,6 +41,7 @@ trait Validations {
   def assertNotEmpty[T](s: Seq[T], msg: String): IsValid = assertTrue(s.nonEmpty, msg)
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(Right(()))
+  def validateIfDefined[T <: Validatable](value: Option[T]): IsValid = value.map(_.validate()).getOrElse(Right(()))
 
   def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = {
     val messages = values
