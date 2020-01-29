@@ -40,11 +40,11 @@ sealed trait ServiceMocks extends Logging {
   protected def responseFromResource(filename:String) = Source.fromInputStream(
     getClass().getClassLoader().getResourceAsStream(s"data/$filename.json")).mkString
 
-  protected def organisaationServiceParams(oid: OrganisaatioOid) = Map(
+  protected def organisaationServiceParams(oid: OrganisaatioOid, lakkautetut: Boolean = false) = Map(
     "oid" -> oid.s,
     "aktiiviset" -> "true",
     "suunnitellut" -> "true",
-    "lakkautetut" -> "false")
+    "lakkautetut" -> lakkautetut.toString)
 
   protected def mockGet(key:String, params:Map[String,String], responseString:String, statusCode:Int = 200): model.HttpRequest = {
     import scala.collection.JavaConverters._
@@ -77,8 +77,8 @@ trait OrganisaatioServiceMock extends ServiceMocks {
 
   def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid", "parentOidPath": "$oid/$OphOid", "oppilaitostyyppi": "oppilaitostyyppi_21#1", "children" : []}]}"""
 
-  def mockOrganisaatioResponse(oid: OrganisaatioOid, response: String = DefaultResponse): Unit =
-    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid), response)
+  def mockOrganisaatioResponse(oid: OrganisaatioOid, response: String = DefaultResponse, lakkautetut: Boolean = false): Unit =
+    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid, lakkautetut), response)
 
   def mockOrganisaatioResponses(oids: OrganisaatioOid*): Unit = oids.foreach(mockOrganisaatioResponse(_))
 

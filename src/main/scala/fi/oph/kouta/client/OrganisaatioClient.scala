@@ -19,6 +19,11 @@ object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJ
 
   val OphOid: OrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
+  def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
+    case OphOid => Seq(OphOid)
+    case _ => getHierarkia(oid, orgs => children(oid, orgs), lakkautetut)
+  }
+
   def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
     case OphOid => (Seq(OphOid), Koulutustyyppi.values)
     case _ => getHierarkia(oid, orgs => (children(oid, orgs), oppilaitostyypit(oid, orgs)))
@@ -32,19 +37,19 @@ object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJ
   case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
   case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String, oppilaitostyyppi: Option[String])
 
-  private def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R) = {
-    val url = urlProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid.toString))
+  private def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R, lakkautetut: Boolean = false) = {
+    val url = urlProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid.toString, lakkautetut))
     get(url, followRedirects = true) { response =>
       result(parse(response).extract[OrganisaatioResponse].organisaatiot)
     }
   }
 
-  private def queryParams(oid: String) =
+  private def queryParams(oid: String, lakkautetut: Boolean = false) =
     toQueryParams(
       "oid" -> oid,
       "aktiiviset" -> "true",
       "suunnitellut" -> "true",
-      "lakkautetut" -> "false")
+      "lakkautetut" -> lakkautetut.toString)
 
   private def children(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
     find(oid, organisaatiot).map(x => x.oid +: childOidsFlat(x)).getOrElse(Seq()).distinct
