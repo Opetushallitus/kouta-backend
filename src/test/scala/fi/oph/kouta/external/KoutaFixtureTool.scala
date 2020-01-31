@@ -783,6 +783,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakutietoHakukohde(
       HakukohdeOid(oid),
       toKielistetty(kielivalinta, params(NimiKey)),
+      params.get(ValintaperusteIdKey).map(UUID.fromString),
       Some(params(AlkamiskausiKoodiUriKey)),
       Some(params(AlkamisvuosiKey)),
       params.get(KaytetaanHaunAlkamiskauttaKey).map(_.toBoolean),
@@ -795,6 +796,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(EnsikertalaisenAloituspaikatKey).toInt),
       Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
+      params.get(PohjakoulutusvaatimusKoodiUritKey) match {
+        case None => List[String]()
+        case Some(x) if x.trim == "" => List[String]()
+        case Some(x)  => x.split(",").map(_.trim).toList
+      },
+      toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       Some(parseModified(params(ModifiedKey)))

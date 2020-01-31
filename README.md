@@ -64,3 +64,5 @@ Lokaaliin kouta-backendiin saa generoitua testidataa ajamalla ```TestDataGenerat
 ### Riippuvuuksien tarkistaminen
 
 ```mvn enforcer:enforce```
+
+
