@@ -11,7 +11,7 @@ import org.scalatest.BeforeAndAfterEach
 class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with SearchFixture with KoutaIndexMock with BeforeAndAfterEach  {
 
   override val roleEntities = RoleEntity.all
-  override val DebugJson = true
+  override val DebugJson = false
 
   var koid1, koid2, koid3, koid4, koid5, koid6: String = null
   var toid1, toid2, toid3, toid4, toid5: String = null

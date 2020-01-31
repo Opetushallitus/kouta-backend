@@ -541,10 +541,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
   def getKoulutuksetByTarjoajat(tarjoajaOids: String) = {
     val oids = tarjoajaOids.split(',')
-    println(oids)
     toJson(
       koulutukset.filter {
-        case (_, params) => !params(TarjoajatKey).split(',').intersect(oids).isEmpty
+        case (_, params) => !params(TarjoajatKey).split(',').intersect(oids).isEmpty && params(TilaKey) == Julkaistu.name
       }.map {
         case (oid, _) => koulutus(oid)
       }
