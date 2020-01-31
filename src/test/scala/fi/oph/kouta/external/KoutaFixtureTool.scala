@@ -318,7 +318,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(params(KoulutusKoodiUriKey)),
       Julkaisutila.withName(params(TilaKey)),
-      params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,
+      params.get(TarjoajatKey) match {
+        case None => List[OrganisaatioOid]()
+        case Some(x) if x.trim == "" => List[OrganisaatioOid]()
+        case Some(x)  => x.split(",").map(_.trim).map(OrganisaatioOid(_)).toList
+      },
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[KoulutusMetadata]),
       params(JulkinenKey).toBoolean,
