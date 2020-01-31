@@ -1,8 +1,9 @@
 package fi.oph.kouta.integration
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.client.HaunOhjausparametrit
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
@@ -84,6 +85,15 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val oid = put(haku.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
     MockAuditLogger.find(oid, "haku_create") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
+  }
+
+  it should "set haun ohjausparametrit" in {
+    val oid = HakuOid(put(haku))
+    ohjausparametritClient.mockedValues(oid) should equal(HaunOhjausparametrit(
+      hakuOid = oid,
+      paikanVastaanottoPaattyy = Some(Instant.ofEpochMilli(46800000L)),
+      hakijakohtainenPaikanVastaanottoaika = Some(14),
+      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1612130399000L))))
   }
 
   it should "return 401 without a valid session" in {

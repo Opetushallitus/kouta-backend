@@ -3,21 +3,25 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.{HaunOhjausparametrit, KoutaIndexClient, OhjausparametritClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
+import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 
-object HakuService extends HakuService(SqsInTransactionService, AuditLog)
+object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient)
 
-class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog)
+class HakuService(sqsInTransactionService: SqsInTransactionService,
+                  auditLog: AuditLog,
+                  ohjausparametritClient: OhjausparametritClient)
   extends ValidatingService[Haku] with RoleEntityAuthorizationService {
 
   override val roleEntity: RoleEntity = Role.Haku
@@ -70,6 +74,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
     KoutaDatabase.runBlockingTransactionally {
       for {
         h <- HakuDAO.getPutActions(haku)
+        _ <- setHaunOhjausparametrit(h)
         _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
       } yield h
@@ -87,4 +92,12 @@ class HakuService(sqsInTransactionService: SqsInTransactionService, auditLog: Au
 
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
+
+  private def setHaunOhjausparametrit(haku: Haku): DBIO[Unit] =
+    Try(ohjausparametritClient.postHaunOhjausparametrit(HaunOhjausparametrit(
+      hakuOid = haku.oid.get,
+      paikanVastaanottoPaattyy = Some(Instant.ofEpochMilli(46800000L)), // 1970-01-01T15:00+02
+      hakijakohtainenPaikanVastaanottoaika = Some(14),
+      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1612130399000L)))) // 2021-01-31T23:59:59+02
+    ).toDBIO
 }

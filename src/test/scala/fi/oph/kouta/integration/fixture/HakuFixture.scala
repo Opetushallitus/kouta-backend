@@ -9,7 +9,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient}
 import fi.oph.kouta.repository.{HakuDAO, SQLHelpers}
 import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.HakuServlet
@@ -19,7 +19,8 @@ trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
 
   val HakuPath = "/haku"
 
-  protected lazy val hakuService: HakuService = new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger))
+  val ohjausparametritClient: MockOhjausparametritClient.type = MockOhjausparametritClient
+  protected lazy val hakuService: HakuService = new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient)
 
   addServlet(new HakuServlet(hakuService), HakuPath)
 
