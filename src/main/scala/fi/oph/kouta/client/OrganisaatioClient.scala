@@ -49,7 +49,7 @@ object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJ
       "oid" -> oid,
       "aktiiviset" -> "true",
       "suunnitellut" -> "true",
-      "lakkautetut" -> lakkautetut.toString)
+      "lakkautetut" -> Option(lakkautetut).map(_.toString).getOrElse("false"))
 
   private def children(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
     find(oid, organisaatiot).map(x => x.oid +: childOidsFlat(x)).getOrElse(Seq()).distinct
