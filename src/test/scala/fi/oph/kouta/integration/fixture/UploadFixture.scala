@@ -19,7 +19,7 @@ trait UploadFixture extends BeforeAndAfterEach {
   }
 
   val UploadPath = "/upload"
-  val ThemeImageUploadPath = s"$UploadPath/theme-image"
+  val TeemakuvaUploadPath = s"$UploadPath/teemakuva"
 
   val ImageBucket = MockS3Service.config.imageBucket
   val PublicImageServer = MockS3Service.config.imageBucketPublicUrl
@@ -32,24 +32,24 @@ trait UploadFixture extends BeforeAndAfterEach {
 
   def getResourceImage(filename: String) = Files.readAllBytes(Paths.get(getClass.getClassLoader.getResource(s"files/$filename").toURI))
 
-  lazy val correctTheme: Array[Byte] = getResourceImage("correct-header.png")
-  lazy val correctJpgTheme: Array[Byte] = getResourceImage("correct-header.jpg")
-  lazy val tooLargeTheme: Array[Byte] = getResourceImage("too-large-header.png")
+  lazy val correctTeemakuva: Array[Byte] = getResourceImage("correct-header.png")
+  lazy val correctJpgTeemakuva: Array[Byte] = getResourceImage("correct-header.jpg")
+  lazy val tooLargeTeemakuva: Array[Byte] = getResourceImage("too-large-header.png")
   lazy val tooSmallHeader: Array[Byte] = getResourceImage("too-small-header.png")
 
   def saveLocalPng(key: String): Unit = {
     val metadata = new ObjectMetadata()
     metadata.setCacheControl("max-age=1337")
     metadata.setContentType("image/png")
-    MockS3Client.putLocal(ImageBucket, key, correctTheme, metadata)
+    MockS3Client.putLocal(ImageBucket, key, correctTeemakuva, metadata)
   }
 
   def checkLocalPng(content: Option[Content]) = {
     content should not be empty
     val Content(imageData, returnedMeta) = content.get
-    imageData should equal(correctTheme)
+    imageData should equal(correctTeemakuva)
     returnedMeta.getCacheControl should equal("max-age=1337")
-    returnedMeta.getContentLength should equal(correctTheme.length)
+    returnedMeta.getContentLength should equal(correctTeemakuva.length)
     returnedMeta.getContentType should equal("image/png")
   }
 

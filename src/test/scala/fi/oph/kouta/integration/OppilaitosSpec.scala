@@ -109,7 +109,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     }
   }
 
-  it should "copy a temporary theme image to a permanent location while creating the oppilaitos" in {
+  it should "copy a temporary teemakuva to a permanent location while creating the oppilaitos" in {
     saveLocalPng("temp/image.png")
     val oid = put(oppilaitos.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))
 
@@ -119,7 +119,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
   }
 
-  it should "not touch a theme image that's not in the temporary location" in {
+  it should "not touch a teemakuva that's not in the temporary location" in {
     val oppilaitosWithImage = oppilaitos.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
     val oid = put(oppilaitosWithImage)
     MockS3Client.storage shouldBe empty
@@ -240,7 +240,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     }
   }
 
-  it should "copy a temporary theme image to a permanent location while updating the oppilaitos" in {
+  it should "copy a temporary teemakuva to a permanent location while updating the oppilaitos" in {
     val oid = put(oppilaitos)
     val lastModified = get(oid, oppilaitos(oid))
 
@@ -253,7 +253,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/image.png"))
   }
 
-  it should "not touch a theme image that's not in the temporary location" in {
+  it should "not touch a teemakuva that's not in the temporary location" in {
     val oid = put(oppilaitos)
     val lastModified = get(oid, oppilaitos(oid))
     val oppilaitosWithImage = oppilaitos(oid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))

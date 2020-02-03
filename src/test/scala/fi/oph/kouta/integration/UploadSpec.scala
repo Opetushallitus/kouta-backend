@@ -8,15 +8,15 @@ case class ImageUrl(url: String)
 
 class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
 
-  "Upload theme image" should "upload image" in {
-    post(uri = ThemeImageUploadPath, body = correctTheme, headers = Map("Content-Type" -> "image/png")) {
+  "Upload teemakuva" should "upload image" in {
+    post(uri = TeemakuvaUploadPath, body = correctTeemakuva, headers = Map("Content-Type" -> "image/png")) {
       status should equal(200)
       read[ImageUrl](body).url match {
         case s3Service.tempUrl(filename) =>
           val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
           content should not be empty
           val Content(localData, metadata) = content.get
-          localData should equal(correctTheme)
+          localData should equal(correctTeemakuva)
           metadata.getCacheControl should equal("max-age=86400")
           metadata.getContentType should equal("image/png")
         case url => fail(s"$url was not an url to the public bucket")
@@ -25,7 +25,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   }
 
   it should "reject requests without a Content-Type header" in {
-    post(uri = ThemeImageUploadPath, body = correctTheme, headers = None) {
+    post(uri = TeemakuvaUploadPath, body = correctTeemakuva, headers = None) {
       withClue(body) {
         status should equal(400)
       }
@@ -34,7 +34,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   }
 
   it should "reject requests with an unsupported Content-Type header" in {
-    post(uri = ThemeImageUploadPath, body = correctTheme, headers = Map("Content-Type" -> "image/bmp")) {
+    post(uri = TeemakuvaUploadPath, body = correctTeemakuva, headers = Map("Content-Type" -> "image/bmp")) {
       withClue(body) {
         status should equal(415)
       }
@@ -44,34 +44,34 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
 
   it should "reject too large images" in {
     val bigImage = new Array[Byte](MaxSizeInTest + 1)
-    post(uri = ThemeImageUploadPath, body = bigImage, headers = Map("Content-Type" -> "image/png")) {
+    post(uri = TeemakuvaUploadPath, body = bigImage, headers = Map("Content-Type" -> "image/png")) {
       status should equal(413)
     }
   }
 
   it should "reject zero-size images" in {
     val zeroImage = new Array[Byte](0)
-    post(uri = ThemeImageUploadPath, body = zeroImage, headers = Map("Content-Type" -> "image/png")) {
+    post(uri = TeemakuvaUploadPath, body = zeroImage, headers = Map("Content-Type" -> "image/png")) {
       status should equal(400)
     }
   }
 
   it should "reject images that have too few pixels" in {
-    post(uri = ThemeImageUploadPath, body = tooSmallHeader, headers = Map("Content-Type" -> "image/png")) {
+    post(uri = TeemakuvaUploadPath, body = tooSmallHeader, headers = Map("Content-Type" -> "image/png")) {
       status should equal(400)
       body should include("väärän kokoinen")
     }
   }
 
   it should "also accept jpeg images" in {
-    post(uri = ThemeImageUploadPath, body = correctJpgTheme, headers = Map("Content-Type" -> "image/jpeg")) {
+    post(uri = TeemakuvaUploadPath, body = correctJpgTeemakuva, headers = Map("Content-Type" -> "image/jpeg")) {
       status should equal(200)
       read[ImageUrl](body).url match {
         case s3Service.tempUrl(filename) =>
           val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
           content should not be empty
           val Content(localData, metadata) = content.get
-          localData should equal(correctJpgTheme)
+          localData should equal(correctJpgTeemakuva)
           metadata.getCacheControl should equal("max-age=86400")
           metadata.getContentType should equal("image/jpeg")
         case url => fail(s"$url was not an url to the public bucket")
@@ -81,7 +81,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
 
   it should "reject nonsense sent as an image" in {
     val nonsense = Array.fill(MaxSizeInTest)((scala.util.Random.nextInt(256) - 128).toByte)
-    post(uri = ThemeImageUploadPath, body = nonsense, headers = Map("Content-Type" -> "image/jpeg")) {
+    post(uri = TeemakuvaUploadPath, body = nonsense, headers = Map("Content-Type" -> "image/jpeg")) {
       status should equal(415)
       body should include("image/jpeg")
       body should include("ei voitu lukea")
@@ -89,7 +89,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   }
 
   it should "reject a jpeg image sent as a png" in {
-    post(uri = ThemeImageUploadPath, body = correctJpgTheme, headers = Map("Content-Type" -> "image/png")) {
+    post(uri = TeemakuvaUploadPath, body = correctJpgTeemakuva, headers = Map("Content-Type" -> "image/png")) {
       status should equal(415)
       body should include("image/png")
       body should include("ei voitu lukea")
@@ -97,7 +97,7 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   }
 
   it should "reject a png image sent as a jpeg" in {
-    post(uri = ThemeImageUploadPath, body = correctTheme, headers = Map("Content-Type" -> "image/jpeg")) {
+    post(uri = TeemakuvaUploadPath, body = correctTeemakuva, headers = Map("Content-Type" -> "image/jpeg")) {
       status should equal(415)
       body should include("image/jpeg")
       body should include("ei voitu lukea")

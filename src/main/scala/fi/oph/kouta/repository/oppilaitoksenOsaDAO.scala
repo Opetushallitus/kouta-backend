@@ -112,7 +112,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
              metadata,
              muokkaaja,
              organisaatio_oid,
-	     teemakuva)
+             teemakuva)
            values (
              ${oppilaitoksenOsa.oid},
              ${oppilaitoksenOsa.oppilaitosOid},
