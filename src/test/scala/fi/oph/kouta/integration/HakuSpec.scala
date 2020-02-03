@@ -16,9 +16,6 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   override val roleEntities = Seq(Role.Haku)
 
-  def addInvalidHakuaika(haku:Haku) = haku.copy(
-    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
-
   val ophHaku = haku.copy(organisaatioOid = rootOrganisaatio)
 
   "Get haku by oid" should "return 404 if haku not found" in {
@@ -128,11 +125,12 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "validate new haku" in {
-    put(HakuPath, bytes(addInvalidHakuaika(haku)), Seq(jsonHeader, defaultSessionHeader)) {
+    val invalidHakuajat = TestData.getInvalidHakuajat
+    put(HakuPath, bytes(haku.copy(hakuajat = invalidHakuajat)), Seq(jsonHeader, defaultSessionHeader)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
     }
   }
 
@@ -258,13 +256,14 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "validate updated haku" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
-    val lastModified = get(oid, thisHaku)
-    post(HakuPath, bytes(addInvalidHakuaika(thisHaku)), headersIfUnmodifiedSince(lastModified)) {
+    val lastModified = get(oid, haku(oid))
+    val invalidHakuajat = TestData.getInvalidHakuajat
+    val thisHaku = haku(oid).copy(hakuajat = invalidHakuajat)
+    post(HakuPath, bytes(thisHaku), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
     }
   }
 

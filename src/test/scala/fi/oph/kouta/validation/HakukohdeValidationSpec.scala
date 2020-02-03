@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import java.time.Instant
+import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
@@ -13,7 +13,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
   val min = MinHakukohde
 
   it should "fail if perustiedot is invalid" in {
-    failsValidation(max.copy(oid = Some(HakukohdeOid("moikka"))), validationMsg("moikka"))
+    failsValidation(max.copy(oid = Some(HakukohdeOid("1.2.3"))), validationMsg("1.2.3"))
     failsValidation(max.copy(kielivalinta = Seq()), MissingKielivalinta)
     failsValidation(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
     failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
@@ -24,16 +24,99 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
     passesValidation(min)
   }
 
-  it should "fail if hakukohde oid is invalid" in {
-    failsValidation(min.copy(oid = Some(HakukohdeOid("1.2.3"))), validationMsg("1.2.3"))
+  it should "fail if haku oid is invalid" in {
+    failsValidation(min.copy(hakuOid = HakuOid("2.3.4")), validationMsg("2.3.4"))
+  }
+
+  it should "fail if toteutus oid is invalid" in {
+    failsValidation(min.copy(toteutusOid = ToteutusOid("3.4.5")), validationMsg("3.4.5"))
+  }
+
+  it should "fail if tallennettu hakukohde has invalid information" in {
+    failsValidation(min.copy(alkamiskausiKoodiUri = Some("tintti")), validationMsg("tintti"))
+
+    val invalidHakuajat = TestData.getInvalidHakuajat
+    failsValidation(min.copy(hakuajat = invalidHakuajat), invalidAjanjakso(invalidHakuajat.head, "Hakuaika"))
+
+    failsValidation(min.copy(pohjakoulutusvaatimusKoodiUrit = Seq("tintti", "huuhkaja")),
+      validationMsg("tintti"), validationMsg("huuhkaja"))
+
+    failsValidation(min.copy(aloituspaikat = Some(-1)), notNegativeMsg("aloituspaikat"))
+    failsValidation(min.copy(minAloituspaikat = Some(-1)), notNegativeMsg("minAloituspaikat"))
+    failsValidation(min.copy(maxAloituspaikat = Some(-1)), notNegativeMsg("maxAloituspaikat"))
+    failsValidation(min.copy(minAloituspaikat = Some(90), maxAloituspaikat = Some(1)), minmaxMsg("Aloituspaikat"))
+    failsValidation(min.copy(ensikertalaisenAloituspaikat = Some(-1)), notNegativeMsg("ensikertalaisenAloituspaikat"))
+    failsValidation(min.copy(minEnsikertalaisenAloituspaikat = Some(-1)), notNegativeMsg("minEnsikertalaisenAloituspaikat"))
+    failsValidation(min.copy(maxEnsikertalaisenAloituspaikat = Some(-1)), notNegativeMsg("maxEnsikertalaisenAloituspaikat"))
+    failsValidation(min.copy(minEnsikertalaisenAloituspaikat = Some(90), maxEnsikertalaisenAloituspaikat = Some(1)), minmaxMsg("EnsikertalaisenAloituspaikat"))
   }
 
   it should "fail if julkaistu hakukohde is invalid" in {
-    failsValidation(max.copy(alkamiskausiKoodiUri = Some("tintti")), validationMsg("tintti"))
+    passesValidation(max.copy(tila = Tallennettu, alkamisvuosi = Some("20180")))
     failsValidation(max.copy(alkamisvuosi = Some("20180")), validationMsg("20180"))
+
+    passesValidation(max.copy(tila = Tallennettu, alkamisvuosi = Some("2017")))
     failsValidation(max.copy(alkamisvuosi = Some("2017")), validationMsg("2017"))
-    failsValidation(max.copy(pohjakoulutusvaatimusKoodiUrit = Seq("hessu")), validationMsg("hessu"))
-    failsValidation(max.copy(hakuajat = List(Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000)))), InvalidHakuaika)
+
+    val past = inPast()
+    passesValidation(max.copy(tila = Tallennettu, liitteidenToimitusaika = Some(past)))
+    failsValidation(max.copy(liitteidenToimitusaika = Some(past)), pastDateMsg(past, "liitteidenToimitusaika"))
+
+    passesValidation(max.copy(tila = Julkaistu, liitteetOnkoSamaToimitusaika = Some(false), liitteidenToimitusaika = None))
+    passesValidation(max.copy(tila = Tallennettu, liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None))
+    failsValidation(max.copy(liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None), missingMsg("liitteidenToimitusaika"))
+
+    passesValidation(max.copy(tila = Julkaistu, liitteetOnkoSamaToimitusosoite = Some(false), liitteidenToimitusosoite = None))
+    passesValidation(max.copy(tila = Tallennettu, liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitusosoite = None))
+    failsValidation(max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitusosoite = None), missingMsg("liitteidenToimitusosoite"))
+
+    passesValidation(max.copy(tila = Tallennettu, pohjakoulutusvaatimusKoodiUrit = Seq()))
+    failsValidation(max.copy(pohjakoulutusvaatimusKoodiUrit = Seq()), missingMsg("pohjakoulutusvaatimusKoodiUrit"))
+
+    passesValidation(max.copy(tila = Tallennettu, pohjakoulutusvaatimusTarkenne = Map(Fi -> "tarkenne")))
+    failsValidation(max.copy(pohjakoulutusvaatimusTarkenne = Map(Fi -> "tarkenne")), invalidKielistetty("pohjakoulutusvaatimusTarkenne", Seq(Sv)))
+
+    passesValidation(max.copy(tila = Julkaistu, kaytetaanHaunAikataulua = Some(true), hakuajat = List()))
+    passesValidation(max.copy(tila = Tallennettu, kaytetaanHaunAikataulua = Some(false), hakuajat = List()))
+    failsValidation(max.copy(kaytetaanHaunAikataulua = Some(false), hakuajat = List()), missingMsg("hakuajat"))
+
+    val pastHakuaika = Ajanjakso(inPast(2000), inPast(1000))
+    passesValidation(max.copy(tila = Arkistoitu, hakuajat = List(pastHakuaika)))
+    failsValidation(max.copy(hakuajat = List(pastHakuaika)), pastAjanjaksoMsg(pastHakuaika, "Hakuaika"))
+  }
+
+  it should "validate hakulomake information of a julkaistu hakukohde" in {
+    val hakulomakeLinkki: Kielistetty = Map(Fi -> "http://lomake.fi/fi", Sv -> "http://lomake.fi/sv")
+    passesValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = hakulomakeLinkki))
+    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = hakulomakeLinkki - Fi), invalidKielistetty("hakulomakeLinkki", Seq(Fi)))
+    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = hakulomakeLinkki + (Fi -> "linkki")), invalidUrl("linkki"))
+
+    passesValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = Some(UUID.randomUUID)))
+    failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None), missingMsg("hakulomakeAtaruId"))
+
+    passesValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))
+    failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus", Sv -> "")), invalidKielistetty("hakulomakeKuvaus", Seq(Sv)))
+
+    passesValidation(max.copy(hakulomaketyyppi = None))
+  }
+
+  it should "validate liitteet" in {
+    failsValidation(min.copy(liitteet = List(Liite1.copy(tyyppiKoodiUri = Some("2.3.4")))), validationMsg("2.3.4"))
+    failsValidation(min.copy(liitteet = List(Liite1.copy(toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar")))))), invalidEmail("foo@bar"))
+    failsValidation(min.copy(liitteet = List(Liite1.copy(toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1.copy(postinumeroKoodiUri = Some("laama"))))))), validationMsg("laama"))
+
+    failsValidation(max.copy(liitteet = List(Liite1.copy(toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1.copy(osoite = Map(Fi -> "Katu 1"))))))), invalidKielistetty("osoite", Seq(Sv)))
+    failsValidation(max.copy(liitteet = List(Liite1.copy(toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1.copy(postinumeroKoodiUri = None)))))), missingMsg("postinumeroKoodiUri"))
+    failsValidation(max.copy(liitteet = List(Liite1.copy(nimi = Map(Fi -> "nimi")))), invalidKielistetty("nimi", Seq(Sv)))
+    failsValidation(max.copy(liitteet = List(Liite1.copy(kuvaus = Map(Fi -> "kuvaus")))), invalidKielistetty("kuvaus", Seq(Sv)))
+
+    val past = inPast(1000)
+    failsValidation(max.copy(liitteet = List(Liite1.copy(toimitusaika = Some(past)))), pastDateMsg(past, "toimitusaika"))
+    failsValidation(max.copy(liitteet = List(Liite1.copy(toimitustapa = Some(MuuOsoite), toimitusosoite = None))), missingMsg("toimitusosoite"))
+  }
+
+  it should "validate valintakokeet" in {
+    failsValidation(min.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("koodi")))), validationMsg("koodi"))
   }
 
   it should "pass valid julkaistu hakukohde" in {
@@ -42,6 +125,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] with Validat
 
   it should "return multiple error messages" in {
     failsValidation(max.copy(aloituspaikat = Some(-1), liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None),
-      List(notNegativeMsg("aloituspaikat"), missingMsg("liitteiden toimitusaika")))
+      notNegativeMsg("aloituspaikat"), missingMsg("liitteidenToimitusaika"))
   }
 }

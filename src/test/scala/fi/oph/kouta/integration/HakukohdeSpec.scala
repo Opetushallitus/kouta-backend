@@ -35,9 +35,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))
   }
 
-  def addInvalidHakuaika(hakukohde:Hakukohde) = hakukohde.copy(
-    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
-
   "Get hakukohde by oid" should "return 404 if hakukohde not found" in {
     get(s"$HakukohdePath/123", headers = Seq(defaultSessionHeader)) {
       status should equal (404)
@@ -131,11 +128,12 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "validate new hakukohde" in {
-    put(HakukohdePath, bytes(addInvalidHakuaika(uusiHakukohde)), List(jsonHeader, defaultSessionHeader)) {
+    val invalidHakuajat = TestData.getInvalidHakuajat
+    put(HakukohdePath, bytes(uusiHakukohde.copy(hakuajat = invalidHakuajat)), List(jsonHeader, defaultSessionHeader)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
     }
   }
 
@@ -262,7 +260,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
     Thread.sleep(1500)
-    val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List())
+    val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde) should not equal lastModified
   }
@@ -281,11 +279,12 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   it should "validate updated hakukohde" in {
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
-    post(HakukohdePath, bytes(addInvalidHakuaika(tallennettuHakukohde(oid))), headersIfUnmodifiedSince(lastModified)) {
+    val invalidHakuajat = TestData.getInvalidHakuajat
+    post(HakukohdePath, bytes(tallennettuHakukohde(oid).copy(hakuajat = invalidHakuajat)), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(InvalidHakuaika))
+      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
     }
   }
 
@@ -294,8 +293,8 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val tallennettu = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
-      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("tyyyyppi_1#2"))),
-      liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.now()))))
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2"))),
+      liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.inFuture(9000)))))
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, getIds(muokattuHakukohde))
   }
@@ -304,7 +303,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(uusiHakukohde)
     val tallennettu = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettu)
-    val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List())
+    val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde)
   }

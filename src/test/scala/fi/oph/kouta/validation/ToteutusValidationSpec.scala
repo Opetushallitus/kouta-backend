@@ -134,6 +134,6 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] with Validatio
 
   it should "return multiple error messages" in {
     failsValidation(min.copy(oid = Some(ToteutusOid("kurppa")), muokkaaja = UserOid("Hannu Hanhi")),
-      List(validationMsg("kurppa"), validationMsg("Hannu Hanhi")))
+      validationMsg("kurppa"), validationMsg("Hannu Hanhi"))
   }
 }

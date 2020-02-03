@@ -208,7 +208,7 @@ case class Haku(oid: Option[HakuOid] = None,
     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
     validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
-    validateHakuajat(hakuajat),
+    validateIfNonEmpty[Ajanjakso](hakuajat, validateAjanjakso(_, "Hakuaika")),
     validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta)),
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
@@ -238,6 +238,6 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends Validations {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, _.validate(tila, kielivalinta)),
-    validateHakuajat(tulevaisuudenAikataulu)
+    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, validateAjanjakso(_, "tulevaisuudenAikataulu"))
   )
 }

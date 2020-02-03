@@ -18,15 +18,26 @@ class ValidationsSpec extends ScalatraFlatSpec with Validations {
   }
 
   "validateKielistetty" should "return all kielet when kielistetty is an empty map" in {
-    validateKielistetty(Seq(Fi, Sv), Map(), "test") should contain (invalidKielistetty("test", Seq(Fi, Sv)))
+    validateKielistetty(Seq(Fi, Sv), Map(), "test") should contain(invalidKielistetty("test", Seq(Fi, Sv)))
   }
 
   it should "return the missing kielet when there are some texts" in {
-    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text"), "test") should contain (invalidKielistetty("test", Seq(Sv)))
+    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text"), "test") should contain(invalidKielistetty("test", Seq(Sv)))
   }
 
   it should "return the missing kielet when there are some empty texts" in {
-    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> ""), "test") should contain (invalidKielistetty("test", Seq(Sv)))
+    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> ""), "test") should contain(invalidKielistetty("test", Seq(Sv)))
   }
 
+  "assertValidEmail" should "accept an email with a plus" in {
+    assertValidEmail("foo+bar@example.com") shouldEqual NoErrors
+  }
+
+  it should "fail an email without a TLD" in {
+    assertValidEmail("foo@bar") should contain theSameElementsAs Seq(invalidEmail("foo@bar"))
+  }
+
+  it should "accept an email with a funny TLD" in {
+    assertValidEmail("foo@bar.pics") shouldEqual NoErrors
+  }
 }

@@ -58,8 +58,8 @@ package object toteutus {
       |            osaamisalat:
       |              - koodiUri: osaamisala_0001#1
       |                linkki:
-      |                  fi: http://osaamisala/linkki/fi
-      |                  sv: http://osaamisala/linkki/sv
+      |                  fi: http://osaamisala.fi/linkki/fi
+      |                  sv: http://osaamisala.fi/linkki/sv
       |                otsikko:
       |                  fi: Katso osaamisalan tarkempi kuvaus tästä
       |                  sv: Katso osaamisalan tarkempi kuvaus tästä ruotsiksi

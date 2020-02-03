@@ -14,8 +14,11 @@ object TestData {
 
   def now() = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
   def inFuture(s:Long = 500) = LocalDateTime.now().plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
+  def inPast(s:Long = 500) = LocalDateTime.now().minusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
 
   def kieliMap(text: String): Kielistetty = Map(Fi -> s"$text fi", Sv -> s"$text sv")
+
+  def getInvalidHakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000)))
 
   val Osoite1 = Osoite(
     osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"),
@@ -30,7 +33,7 @@ object TestData {
 
   val Liite1 = Liite(
     id = None,
-    tyyppiKoodiUri = Some("moi"),
+    tyyppiKoodiUri = Some("liitetyypitamm_2#1"),
     nimi = Map(Fi -> "liite 1 Fi", Sv -> "liite 1 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
     toimitusaika = Some(inFuture()),
@@ -39,7 +42,7 @@ object TestData {
 
   val Liite2 = Liite(
     id = None,
-    tyyppiKoodiUri = Some("terve"),
+    tyyppiKoodiUri = Some("liitetyypitamm_1#1"),
     nimi = Map(Fi -> "liite 2 Fi", Sv -> "liite 2 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
     toimitusaika = None,
@@ -321,7 +324,7 @@ object TestData {
   val AmmToteutuksenMetatieto = AmmatillinenToteutusMetadata(
     kuvaus = Map(),
     osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
-      linkki = Map(Fi -> "http://osaamisala/linkki/fi", Sv -> "http://osaamisala/linkki/sv"),
+      linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
       otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
@@ -331,12 +334,12 @@ object TestData {
   val YoToteutuksenMetaTieto = YliopistoToteutusMetadata(
     kuvaus = Map(),
     alemmanKorkeakoulututkinnonOsaamisalat = Seq(KorkeakouluOsaamisala(
-      linkki = Map(Fi -> "http://osaamisala/linkki/fi", Sv -> "http://osaamisala/linkki/sv"),
+      linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
       otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"),
       nimi = Map(Fi -> "Nimi", Sv -> "Namn"),
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"))),
     ylemmanKorkeakoulututkinnonOsaamisalat = Seq(KorkeakouluOsaamisala(
-      linkki = Map(Fi -> "http://osaamisala/linkki/fi", Sv -> "http://osaamisala/linkki/sv"),
+      linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
       otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"),
       nimi = Map(Fi -> "Nimi", Sv -> "Namn"),
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"))),

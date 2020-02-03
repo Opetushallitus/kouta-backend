@@ -44,6 +44,7 @@
         <jetty.version>9.4.17.v20190418</jetty.version>
 
         <commons.io.version>2.6</commons.io.version>
+        <commons.validator.version>1.6</commons.validator.version>
 
         <!-- Plugin properties -->
         <enforce.java.version>[1.8,)</enforce.java.version>
@@ -120,6 +121,21 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-access</artifactId>
             <version>${logback-access.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-validator</groupId>
+            <artifactId>commons-validator</artifactId>
+            <version>${commons.validator.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Audit logger -->

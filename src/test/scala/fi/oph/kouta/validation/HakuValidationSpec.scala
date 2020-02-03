@@ -41,12 +41,14 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] with Validations {
     failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
     failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
     failsValidation(max.copy(hakulomaketyyppi = None), missingMsg("hakulomaketyyppi"))
-    failsValidation(max.copy(hakuajat = List(Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000)))), InvalidHakuaika)
+    val ajanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
+    failsValidation(max.copy(hakuajat = List(ajanjakso)), invalidAjanjakso(ajanjakso, "Hakuaika"))
   }
 
   it should "fail if metadata is invalid" in {
-    val metadata = max.metadata.get.copy(tulevaisuudenAikataulu = List(Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))))
-    failsValidation(max.copy(metadata = Some(metadata)), InvalidHakuaika)
+    val ajanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
+    val metadata = max.metadata.get.copy(tulevaisuudenAikataulu = List(ajanjakso))
+    failsValidation(max.copy(metadata = Some(metadata)), invalidAjanjakso(ajanjakso, "tulevaisuudenAikataulu"))
   }
 
   it should "fail if yhteyshenkilot has other info, but no name" in {
@@ -75,6 +77,6 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] with Validations {
 
   it should "return multiple error messages" in {
     failsValidation(min.copy(hakutapaKoodiUri = Some("korppi"), alkamisvuosi = Some("2017")),
-      List(validationMsg("korppi"), validationMsg("2017")))
+      validationMsg("korppi"), validationMsg("2017"))
   }
 }

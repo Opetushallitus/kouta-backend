@@ -397,11 +397,27 @@ package object domain {
 
   case class Valintakoe(id: Option[UUID] = None,
                         tyyppiKoodiUri: Option[String] = None,
-                        tilaisuudet: List[Valintakoetilaisuus] = List())
+                        tilaisuudet: List[Valintakoetilaisuus] = List()) extends Validations {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and (
+      validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, ValintakokeenTyyppiKoodiPattern)),
+      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, _.validate(tila, kielivalinta))
+    )
+  }
 
   case class Valintakoetilaisuus(osoite: Option[Osoite],
                                  aika: Option[Ajanjakso] = None,
-                                 lisatietoja: Kielistetty = Map())
+                                 lisatietoja: Kielistetty = Map()) extends Validations {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+      validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta)),
+      validateIfDefined[Ajanjakso](aika, validateAjanjakso(_, "aika")),
+      validateIfJulkaistu(tila, and(
+        assertNotOptional(osoite, "osoite"),
+        validateIfDefined[Ajanjakso](aika, assertAjanjaksoEndsInFuture(_, "Aika")),
+        assertNotOptional(aika, "aika")
+      ))
+    )
+
+  }
 
   abstract class OidListItem {
     val oid: Oid
@@ -429,7 +445,15 @@ package object domain {
   }
 
   case class Osoite(osoite: Kielistetty = Map(),
-                    postinumeroKoodiUri: Option[String])
+                    postinumeroKoodiUri: Option[String]) extends Validations {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+      validateIfDefined[String](postinumeroKoodiUri, assertMatch(_, PostinumeroKoodiPattern)),
+      validateIfJulkaistu(tila, and(
+        validateKielistetty(kielivalinta, osoite, "osoite"),
+        assertNotOptional(postinumeroKoodiUri, "postinumeroKoodiUri")
+      ))
+    )
+  }
 
   case class ListEverything(koulutukset: Seq[KoulutusOid] = Seq(),
                             toteutukset: Seq[ToteutusOid] = Seq(),

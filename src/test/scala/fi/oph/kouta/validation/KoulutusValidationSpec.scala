@@ -69,6 +69,6 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] with Validatio
 
   it should "return multiple error messages" in {
     failsValidation(min.copy(koulutusKoodiUri = Some("ankka"), oid = Some(KoulutusOid("2017"))),
-      List(validationMsg("ankka"), validationMsg("2017")))
+      validationMsg("ankka"), validationMsg("2017"))
   }
 }

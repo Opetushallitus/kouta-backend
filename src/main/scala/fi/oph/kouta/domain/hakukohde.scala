@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.{IsValid, Validations}
 
 package object hakukohde {
 
@@ -332,20 +332,32 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      modified: Option[LocalDateTime]) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
-     super.validate(),
-     validateIfDefined[HakukohdeOid](oid, assertValid(_)),
-     assertValid(toteutusOid),
-     assertValid(hakuOid),
-     validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
-     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
-     validateHakuajat(hakuajat),
-     validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, assertMatch(_, PohjakoulutusvaatimusKoodiPattern)),
-     validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
-     validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
-     validateIfJulkaistu(tila, and(
-       validateIfDefined[Boolean](liitteetOnkoSamaToimitusaika, validateIfTrue(_, assertNotOptional(liitteidenToimitusaika, "liitteiden toimitusaika"))),
-       validateIfDefined[Boolean](liitteetOnkoSamaToimitusosoite, validateIfTrue(_, assertNotOptional(liitteidenToimitusosoite, "liitteiden toimitusaika"))),
-       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta)
+    super.validate(),
+    assertValid(toteutusOid),
+    assertValid(hakuOid),
+    validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
+    validateIfNonEmpty[Ajanjakso](hakuajat, validateAjanjakso(_, "Hakuaika")),
+    validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, assertMatch(_, PohjakoulutusvaatimusKoodiPattern)),
+    validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
+    validateIfDefined[Int](minAloituspaikat, assertNotNegative(_, "minAloituspaikat")),
+    validateIfDefined[Int](maxAloituspaikat, assertNotNegative(_, "maxAloituspaikat")),
+    validateMinMax(minAloituspaikat, maxAloituspaikat, "Aloituspaikat"),
+    validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
+    validateIfDefined[Int](minEnsikertalaisenAloituspaikat, assertNotNegative(_, "minEnsikertalaisenAloituspaikat")),
+    validateIfDefined[Int](maxEnsikertalaisenAloituspaikat, assertNotNegative(_, "maxEnsikertalaisenAloituspaikat")),
+    validateMinMax(minEnsikertalaisenAloituspaikat, maxEnsikertalaisenAloituspaikat, "EnsikertalaisenAloituspaikat"),
+    validateIfNonEmpty[Liite](liitteet, _.validate(tila, kielivalinta)),
+    validateIfNonEmpty[Valintakoe](valintakokeet, _.validate(tila, kielivalinta)),
+    validateIfJulkaistu(tila, and(
+      validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi),
+      validateIfDefined[LocalDateTime](liitteidenToimitusaika, assertInFuture(_, "liitteidenToimitusaika")),
+      validateIfTrue(liitteetOnkoSamaToimitusaika.contains(true), assertNotOptional(liitteidenToimitusaika, "liitteidenToimitusaika")),
+      validateIfTrue(liitteetOnkoSamaToimitusosoite.contains(true), assertNotOptional(liitteidenToimitusosoite, "liitteidenToimitusosoite")),
+      validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
+      assertNotEmpty(pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
+      validateOptionalKielistetty(kielivalinta, pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
+      validateIfTrue(kaytetaanHaunAikataulua.contains(false), assertNotEmpty(hakuajat, "hakuajat")),
+      validateIfNonEmpty[Ajanjakso](hakuajat, assertAjanjaksoEndsInFuture(_, "Hakuaika"))
     ))
   )
 
@@ -360,10 +372,28 @@ case class Liite(id: Option[UUID] = None,
                  kuvaus: Kielistetty = Map(),
                  toimitusaika: Option[LocalDateTime] = None,
                  toimitustapa: Option[LiitteenToimitustapa] = None,
-                 toimitusosoite: Option[LiitteenToimitusosoite] = None)
+                 toimitusosoite: Option[LiitteenToimitusosoite] = None) extends Validations {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = {
+    and(
+      validateIfDefined[LiitteenToimitusosoite](toimitusosoite, _.validate(tila, kielivalinta)),
+      validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, LiiteTyyppiKoodiPattern)),
+      validateIfJulkaistu(tila, and(
+        validateOptionalKielistetty(kielivalinta, nimi, "nimi"),
+        validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus"),
+        validateIfDefined[LocalDateTime](toimitusaika, assertInFuture(_, "toimitusaika")),
+        validateIfTrue(toimitustapa.contains(MuuOsoite), assertNotOptional(toimitusosoite, "toimitusosoite"))
+      ))
+    )
+  }
+}
 
 case class LiitteenToimitusosoite(osoite: Osoite,
-                                  sahkoposti: Option[String] = None)
+                                  sahkoposti: Option[String] = None) extends Validations {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    osoite.validate(tila, kielivalinta),
+    validateIfDefined(sahkoposti, assertValidEmail)
+  )
+}
 
 case class HakukohdeListItem(oid: HakukohdeOid,
                              toteutusOid: ToteutusOid,
