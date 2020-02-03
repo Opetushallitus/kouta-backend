@@ -10,9 +10,9 @@ import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
-class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture with Validations {
+class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture {
 
   override val roleEntities = Seq(Role.Haku)
 

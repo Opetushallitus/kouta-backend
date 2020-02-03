@@ -6,8 +6,9 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.validation.Validations._
 
-class HakuValidationSpec extends BaseValidationSpec[Haku] with Validations {
+class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
   val max = JulkaistuHaku
   val min = MinHaku

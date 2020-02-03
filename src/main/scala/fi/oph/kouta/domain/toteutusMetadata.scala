@@ -3,7 +3,8 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.validation.{IsValid, Validations}
+import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object toteutusMetadata {
 
@@ -244,7 +245,7 @@ package object toteutusMetadata {
   val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
 }
 
-sealed trait ToteutusMetadata extends Validations {
+sealed trait ToteutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
@@ -305,7 +306,7 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                               ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
 
-trait Osaamisala extends Validations {
+trait Osaamisala {
   val linkki: Kielistetty
   val otsikko: Kielistetty
 
@@ -357,8 +358,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
-                  stipendinKuvaus: Kielistetty = Map()) extends Validations {
-
+                  stipendinKuvaus: Kielistetty = Map()) {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
     validateIfNonEmpty[String](opetuskieliKoodiUrit, k => assertMatch(k, OpetuskieliKoodiPattern)),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, k => assertMatch(k, OpetusaikaKoodiPattern)),

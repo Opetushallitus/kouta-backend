@@ -10,9 +10,9 @@ import fi.oph.kouta.integration.fixture.SorakuvausFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
-class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with SorakuvausFixture with Validations {
+class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with SorakuvausFixture {
 
   override val roleEntities = Seq(Role.Valintaperuste)
 

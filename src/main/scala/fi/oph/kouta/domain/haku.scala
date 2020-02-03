@@ -4,7 +4,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.{IsValid, Validations}
+import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object haku {
 
@@ -235,7 +236,7 @@ case class HakuListItem(oid: HakuOid,
                         modified: LocalDateTime) extends OidListItem
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends Validations {
+                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, _.validate(tila, kielivalinta)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, validateAjanjakso(_, "tulevaisuudenAikataulu"))

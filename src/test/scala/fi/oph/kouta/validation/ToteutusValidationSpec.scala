@@ -3,11 +3,12 @@ package fi.oph.kouta.validation
 import java.time.LocalDateTime
 
 import fi.oph.kouta.TestData._
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.validation.Validations._
 import org.scalatest.Assertion
 
-class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] with Validations {
+class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 
   val amm = JulkaistuAmmToteutus
   val ammMetadata = AmmToteutuksenMetatieto

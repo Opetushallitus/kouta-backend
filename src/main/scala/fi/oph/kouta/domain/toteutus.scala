@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object toteutus {
 

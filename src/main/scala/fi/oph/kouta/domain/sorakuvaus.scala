@@ -6,6 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object sorakuvaus {
 

@@ -10,9 +10,9 @@ import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, 
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
-class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture with Validations {
+class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture {
   override val roleEntities = Seq(Role.Oppilaitos)
 
   "Get oppilaitos by oid" should "return 404 if oppilaitos not found" in {

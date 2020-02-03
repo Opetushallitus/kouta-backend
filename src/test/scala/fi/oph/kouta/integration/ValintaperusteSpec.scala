@@ -11,9 +11,9 @@ import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
-class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture with Validations {
+class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture {
 
   override val roleEntities = Seq(Role.Valintaperuste)
 

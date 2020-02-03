@@ -2,10 +2,11 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
+import fi.oph.kouta.validation.Validations._
 import org.scalatest.Assertion
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-class ValintakoeValidationSpec extends ScalatraFlatSpec with Validations {
+class ValintakoeValidationSpec extends ScalatraFlatSpec {
 
   val DefaultKielivalinta = Seq(Fi, Sv)
 

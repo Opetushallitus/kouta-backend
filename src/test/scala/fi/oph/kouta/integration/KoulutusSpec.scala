@@ -10,12 +10,12 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.Serialization.read
 
 import scala.util.Success
 
-class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with UploadFixture with Validations {
+class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Koulutus)
 

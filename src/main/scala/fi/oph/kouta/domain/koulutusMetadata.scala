@@ -1,6 +1,7 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.validation.{IsValid, Validations}
+import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object koulutusMetadata {
 
@@ -102,7 +103,7 @@ package object koulutusMetadata {
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, YliopistoKoulutusMetadataModel)
 }
 
-sealed trait KoulutusMetadata extends Validations {
+sealed trait KoulutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val lisatiedot: Seq[Lisatieto]

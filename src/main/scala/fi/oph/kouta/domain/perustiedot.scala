@@ -5,6 +5,7 @@ import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.Authorizable
+import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
 sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPrimaryId[ID, T] with HasModified[T] {

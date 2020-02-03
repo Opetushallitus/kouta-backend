@@ -1,10 +1,11 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{Fi, Sorakuvaus, Sv}
 import fi.oph.kouta.TestData.{MinSorakuvaus, YoSorakuvaus}
 import fi.oph.kouta.domain.oid.UserOid
+import fi.oph.kouta.domain.{Fi, Sorakuvaus, Sv}
+import fi.oph.kouta.validation.Validations._
 
-class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] with Validations {
+class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
 
   val max = YoSorakuvaus
   val min = MinSorakuvaus

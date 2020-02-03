@@ -5,7 +5,8 @@ import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.{IsValid, Validations}
+import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {
@@ -381,7 +382,7 @@ package object domain {
                            titteli: Kielistetty = Map(),
                            sahkoposti: Kielistetty = Map(),
                            puhelinnumero: Kielistetty = Map(),
-                           wwwSivu: Kielistetty = Map()) extends Validations {
+                           wwwSivu: Kielistetty = Map()) {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = {
       validateIfJulkaistu(tila, and(
         validateKielistetty(kielivalinta, nimi, "nimi"),
@@ -397,7 +398,7 @@ package object domain {
 
   case class Valintakoe(id: Option[UUID] = None,
                         tyyppiKoodiUri: Option[String] = None,
-                        tilaisuudet: List[Valintakoetilaisuus] = List()) extends Validations {
+                        tilaisuudet: List[Valintakoetilaisuus] = List()) {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and (
       validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, ValintakokeenTyyppiKoodiPattern)),
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, _.validate(tila, kielivalinta))
@@ -406,7 +407,7 @@ package object domain {
 
   case class Valintakoetilaisuus(osoite: Option[Osoite],
                                  aika: Option[Ajanjakso] = None,
-                                 lisatietoja: Kielistetty = Map()) extends Validations {
+                                 lisatietoja: Kielistetty = Map()) {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
       validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta)),
       validateIfDefined[Ajanjakso](aika, validateAjanjakso(_, "aika")),
@@ -437,7 +438,7 @@ package object domain {
     val modified: LocalDateTime
   }
 
-  case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) extends Validations {
+  case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
       assertMatch(otsikkoKoodiUri, KoulutuksenLisatiedotOtsikkoKoodiPattern),
       validateIfJulkaistu(tila, validateKielistetty(kielivalinta, teksti, "lisatieto"))
@@ -445,7 +446,7 @@ package object domain {
   }
 
   case class Osoite(osoite: Kielistetty = Map(),
-                    postinumeroKoodiUri: Option[String]) extends Validations {
+                    postinumeroKoodiUri: Option[String]) {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
       validateIfDefined[String](postinumeroKoodiUri, assertMatch(_, PostinumeroKoodiPattern)),
       validateIfJulkaistu(tila, and(

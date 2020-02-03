@@ -4,11 +4,10 @@ import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.IndexingFixture
-import fi.oph.kouta.validation.Validations
 import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
 
 class IndexingSpec extends KoutaIntegrationSpec
-  with IndexingFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
+  with IndexingFixture with KonfoIndexingQueues with EventuallyMessages {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId: UUID = _

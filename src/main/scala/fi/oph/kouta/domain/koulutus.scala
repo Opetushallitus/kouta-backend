@@ -3,8 +3,9 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
+import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object koulutus {
 

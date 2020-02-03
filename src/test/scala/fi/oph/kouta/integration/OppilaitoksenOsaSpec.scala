@@ -10,10 +10,10 @@ import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, 
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
 class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitoksenOsaFixture
-  with OppilaitosFixture with UploadFixture with Validations {
+  with OppilaitosFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Oppilaitos)
 

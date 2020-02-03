@@ -9,11 +9,11 @@ import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
-  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with UploadFixture with Validations {
+  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Toteutus)
 

@@ -1,9 +1,10 @@
 package fi.oph.kouta.validation
 
 import fi.oph.kouta.domain.{Fi, Sv}
+import fi.oph.kouta.validation.Validations._
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-class ValidationsSpec extends ScalatraFlatSpec with Validations {
+class ValidationsSpec extends ScalatraFlatSpec {
 
   "findPuuttuvatKielet" should "return all kielet when kielistetty is an empty map" in {
     findPuuttuvatKielet(Seq(Fi, Sv), Map()) should contain theSameElementsAs Seq(Fi, Sv)

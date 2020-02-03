@@ -3,8 +3,9 @@ package fi.oph.kouta.validation
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.validation.Validations._
 
-class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] with Validations {
+class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
   val amm = AmmKoulutus
   val yo = YoKoulutus
