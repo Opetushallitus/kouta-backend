@@ -76,9 +76,9 @@ trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with Ha
 
   def checkAndMaybeCopyTeemakuva(entity: T): DBIO[(Option[String], T)] =
     for {
-      teema <- checkTeemakuva(entity)
-      e <- maybeCopyTeemakuva(teema, entity)
-    } yield (teema, e)
+      teemakuva <- checkTeemakuva(entity)
+      e         <- maybeCopyTeemakuva(teemakuva, entity)
+    } yield (teemakuva, e)
 
   def maybeDeleteTempImage(tempImage: Option[String]): DBIO[_] =
     Try {
