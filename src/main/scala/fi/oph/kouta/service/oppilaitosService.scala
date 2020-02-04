@@ -55,10 +55,12 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
         o          <- OppilaitosDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
-      } yield o
+      } yield (teema, o)
+    }.map { case (teema, o) =>
+      maybeDeleteTempImage(teema)
+      o
     }.get
 
   private def doUpdate(oppilaitos: Oppilaitos, notModifiedSince: Instant, before: Oppilaitos)(implicit authenticated: Authenticated): Option[Oppilaitos] =
@@ -67,10 +69,12 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
         _          <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
         o          <- OppilaitosDAO.getUpdateActions(o)
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
-      } yield o
+      } yield (teema, o)
+    }.map { case (teema, o) =>
+      maybeDeleteTempImage(teema)
+      o
     }.get
 
   private def index(oppilaitos: Option[Oppilaitos]): DBIO[_] =
@@ -109,11 +113,14 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
         o          <- OppilaitoksenOsaDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
-      } yield o
+      } yield (teema, o)
+    }.map { case (teema, o) =>
+      maybeDeleteTempImage(teema)
+      o
     }.get
+
 
   private def doUpdate(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant, before: OppilaitoksenOsa)(implicit authenticated: Authenticated): Option[OppilaitoksenOsa] =
     KoutaDatabase.runBlockingTransactionally {
@@ -121,10 +128,12 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
         _          <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
         o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
-      } yield o
+      } yield (teema, o)
+    }.map { case (teema, o) =>
+      maybeDeleteTempImage(teema)
+      o
     }.get
 
   private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): DBIO[_] =

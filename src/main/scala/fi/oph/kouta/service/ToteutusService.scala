@@ -83,10 +83,12 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         t          <- ToteutusDAO.getPutActions(t)
         t          <- maybeCopyTeemakuva(teema, t)
         t          <- teema.map(_ => ToteutusDAO.updateJustToteutus(t)).getOrElse(DBIO.successful(t))
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(t))
         _          <- auditLog.logCreate(t)
-      } yield t
+      } yield (teema, t)
+    }.map { case (teema, t) =>
+      maybeDeleteTempImage(teema)
+      t
     }.get
 
   private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated): Option[Toteutus] =
@@ -97,10 +99,12 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getUpdateActions(t)
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(t)
         _          <- auditLog.logUpdate(before, t)
-      } yield t
+      } yield (teema, t)
+    }.map { case (teema, t) =>
+      maybeDeleteTempImage(teema)
+      t
     }.get
 
   private def index(toteutus: Option[Toteutus]): DBIO[_] =

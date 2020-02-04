@@ -80,10 +80,12 @@ trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with Ha
       e         <- maybeCopyTeemakuva(teemakuva, entity)
     } yield (teemakuva, e)
 
-  def maybeDeleteTempImage(tempImage: Option[String]): DBIO[_] =
+  def maybeDeleteTempImage(tempImage: Option[String]): Try[_] =
     Try {
       tempImage.foreach(filename => s3Service.deleteImage(s3Service.getTempKey(filename)))
-    }.toDBIO
+    }.recover {
+      case e => logger.error(s"Exception while deleting $tempImage", e)
+    }
 }
 
 case class KoutaValidationException(errorMessages: List[String]) extends RuntimeException

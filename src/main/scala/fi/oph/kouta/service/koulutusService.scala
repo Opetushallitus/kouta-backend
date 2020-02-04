@@ -99,10 +99,12 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         k          <- KoulutusDAO.getPutActions(k)
         k          <- maybeCopyTeemakuva(teema, k)
         k          <- teema.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(Some(k))
         _          <- auditLog.logCreate(k)
-      } yield k
+      } yield (teema, k)
+    }.map { case (teema, k) =>
+      maybeDeleteTempImage(teema)
+      k
     }.get
 
   private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit authenticated: Authenticated): Option[Koulutus] =
@@ -111,10 +113,12 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
         _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
         (teema, k) <- checkAndMaybeCopyTeemakuva(koulutus)
         k          <- KoulutusDAO.getUpdateActions(k)
-        _          <- maybeDeleteTempImage(teema)
         _          <- index(k)
         _          <- auditLog.logUpdate(before, k)
-      } yield k
+      } yield (teema, k)
+    }.map { case (teema, k) =>
+      maybeDeleteTempImage(teema)
+      k
     }.get
 
   private def index(koulutus: Option[Koulutus]): DBIO[_] =
