@@ -43,6 +43,10 @@ package object oppilaitos {
       |           type: string
       |           description: Oppilaitoksen kuvailutiedot luoneen organisaation oid
       |           example: 1.2.246.562.10.00101010101
+      |        teemakuva:
+      |          type: string
+      |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/oppilaitos-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |        modified:
       |           type: string
       |           format: date-time
@@ -91,10 +95,6 @@ package object oppilaitos {
       |        akatemioita:
       |          type: integer
       |          description: Oppilaitoksen akatemioiden lkm
-      |        teemakuva:
-      |          type: string
-      |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
-      |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val OppilaitoksenOsaModel =
@@ -136,6 +136,10 @@ package object oppilaitos {
       |           type: string
       |           description: Oppilaitoksen osan kuvailutiedot luoneen organisaation oid
       |           example: 1.2.246.562.10.00101010101
+      |        teemakuva:
+      |          type: string
+      |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/oppilaitoksen-osa-teemakuva/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |        modified:
       |           type: string
       |           format: date-time
@@ -165,10 +169,6 @@ package object oppilaitos {
       |        opiskelijoita:
       |          type: integer
       |          description: Oppilaitoksen osan opiskelijoiden lkm
-      |        teemakuva:
-      |          type: string
-      |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
-      |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -233,7 +233,6 @@ package object oppilaitos {
       |""".stripMargin
 
   def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel, OppilaitoksenOsaListItemModel, YhteystietoModel)
-
 }
 
 case class Oppilaitos(oid: OrganisaatioOid,
@@ -242,12 +241,13 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       kielivalinta: Seq[Kieli] = Seq(),
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
+                      teemakuva: Option[String] = None,
                       modified: Option[LocalDateTime] = None)
   extends Validatable
     with Authorizable
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
     with HasModified[Oppilaitos]
-    with HasTeemakuvaMetadata[Oppilaitos, OppilaitosMetadata] {
+    with HasTeemakuva[Oppilaitos] {
 
   override def validate(): IsValid = and(
     assertValid(muokkaaja),
@@ -265,7 +265,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
 
   override def withPrimaryID(oid: OrganisaatioOid): Oppilaitos = copy(oid = oid)
 
-  override def withMetadata(metadata: OppilaitosMetadata): Oppilaitos = copy(metadata = Some(metadata))
+  override def withTeemakuva(teemakuva: Option[String]): Oppilaitos = copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): Oppilaitos = copy(modified = Some(modified))
 }
@@ -277,12 +277,13 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             kielivalinta: Seq[Kieli] = Seq(),
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
+                            teemakuva: Option[String] = None,
                             modified: Option[LocalDateTime] = None)
   extends Validatable
     with Authorizable
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
     with HasModified[OppilaitoksenOsa]
-    with HasTeemakuvaMetadata[OppilaitoksenOsa, OppilaitoksenOsaMetadata] {
+    with HasTeemakuva[OppilaitoksenOsa] {
 
   override def validate(): IsValid = and(
     assertValid(muokkaaja),
@@ -300,7 +301,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
 
   override def withPrimaryID(oid: OrganisaatioOid): OppilaitoksenOsa = copy(oid = oid)
 
-  override def withMetadata(metadata: OppilaitoksenOsaMetadata): OppilaitoksenOsa = copy(metadata = Some(metadata))
+  override def withTeemakuva(teemakuva: Option[String]): OppilaitoksenOsa = copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): OppilaitoksenOsa = copy(modified = Some(modified))
 }
@@ -314,18 +315,12 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
                               kampuksia: Option[Integer] = None,
                               yksikoita: Option[Integer] = None,
                               toimipisteita: Option[Integer] = None,
-                              akatemioita: Option[Integer] = None,
-                              teemakuva: Option[String] = None) extends TeemakuvaMetadata[OppilaitosMetadata] {
-  override def withTeemakuva(teemakuva: Option[String]): OppilaitosMetadata = copy(teemakuva = teemakuva)
-}
+                              akatemioita: Option[Integer] = None)
 
 case class OppilaitoksenOsaMetadata(yhteystiedot: Option[Yhteystieto] = None,
                                     opiskelijoita: Option[Integer] = None,
                                     kampus: Kielistetty = Map(),
-                                    esittely: Kielistetty = Map(),
-                                    teemakuva: Option[String] = None) extends TeemakuvaMetadata[OppilaitoksenOsaMetadata] {
-  override def withTeemakuva(teemakuva: Option[String]): OppilaitoksenOsaMetadata = copy(teemakuva = teemakuva)
-}
+                                    esittely: Kielistetty = Map())
 
 case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
                                     oppilaitosOid: OrganisaatioOid,

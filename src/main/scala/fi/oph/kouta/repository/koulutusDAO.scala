@@ -146,7 +146,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             julkinen,
             muokkaaja,
             organisaatio_oid,
-            kielivalinta)
+            kielivalinta,
+            teemakuva)
           values (
             ${koulutus.johtaaTutkintoon},
             ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
@@ -157,7 +158,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.julkinen},
             ${koulutus.muokkaaja},
             ${koulutus.organisaatioOid},
-            ${toJsonParam(koulutus.kielivalinta)}::jsonb) returning oid""".as[KoulutusOid].head
+            ${toJsonParam(koulutus.kielivalinta)}::jsonb,
+            ${koulutus.teemakuva}) returning oid""".as[KoulutusOid].head
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
@@ -168,14 +170,14 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def selectKoulutus(oid: KoulutusOid) = {
-    sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila,
-                 nimi, metadata, julkinen, muokkaaja, organisaatio_oid, kielivalinta, lower(system_time)
+    sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata,
+                 julkinen, muokkaaja, organisaatio_oid, kielivalinta, teemakuva, lower(system_time)
           from koulutukset where oid = $oid"""
   }
 
   def findJulkaistutKoulutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select distinct k.oid, k.johtaa_tutkintoon, k.tyyppi, k.koulutus_koodi_uri, k.tila,
-                          k.nimi, k.metadata, k.julkinen, k.muokkaaja, k.organisaatio_oid, k.kielivalinta, m.modified
+    sql"""select distinct k.oid, k.johtaa_tutkintoon, k.tyyppi, k.koulutus_koodi_uri, k.tila, k.nimi, k.metadata,
+                          k.julkinen, k.muokkaaja, k.organisaatio_oid, k.kielivalinta, k.teemakuva, m.modified
           from koulutukset k
           inner join (
             select k.oid oid, greatest(
@@ -212,7 +214,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               julkinen = ${koulutus.julkinen},
               muokkaaja = ${koulutus.muokkaaja},
               organisaatio_oid = ${koulutus.organisaatioOid},
-              kielivalinta = ${toJsonParam(koulutus.kielivalinta)}::jsonb
+              kielivalinta = ${toJsonParam(koulutus.kielivalinta)}::jsonb,
+              teemakuva = ${koulutus.teemakuva}
             where oid = ${koulutus.oid}
             and ( johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
@@ -222,6 +225,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or julkinen is distinct from ${koulutus.julkinen}
             or metadata is distinct from ${toJsonParam(koulutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(koulutus.kielivalinta)}::jsonb
+            or teemakuva is distinct from ${koulutus.teemakuva}
             or organisaatio_oid is distinct from ${koulutus.organisaatioOid})"""
   }
 

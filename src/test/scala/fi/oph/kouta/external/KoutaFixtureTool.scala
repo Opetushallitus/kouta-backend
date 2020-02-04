@@ -151,6 +151,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val MetadataKey = "metadata"
   val SorakuvausIdKey = "sorakuvaus"
   val OppilaitosOidKey = "oppilaitosOid"
+  val TeemakuvaKey = "teemakuva"
 
   def formatModified(date:LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
   def parseModified(date:String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
@@ -166,6 +167,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MuokkaajaKey -> "1.2.3",
     OrganisaatioKey -> "1.2.246.562.10.67476956288",
     KielivalintaKey -> "fi,sv",
+    TeemakuvaKey -> "https://testi.domain/koulutus-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.AmmKoulutus.metadata))
   )
@@ -177,6 +179,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MuokkaajaKey -> "1.2.3",
     OrganisaatioKey -> "1.2.246.562.10.67476956288",
     KielivalintaKey -> "fi,sv",
+    TeemakuvaKey -> "https://testi.domain/toteutus-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.AmmToteutuksenMetatieto)
   ))
@@ -286,6 +289,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MuokkaajaKey -> "1.2.3",
     OrganisaatioKey -> "1.2.246.562.10.67476956288",
     KielivalintaKey -> "fi,sv",
+    TeemakuvaKey -> "https://testi.domain/oppilaitos-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.JulkaistuOppilaitos.metadata.get)
   ))
@@ -295,6 +299,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MuokkaajaKey -> "1.2.3",
     OrganisaatioKey -> "1.2.246.562.10.67476956288",
     KielivalintaKey -> "fi,sv",
+    TeemakuvaKey -> "https://testi.domain/oppilaitoksen-osa-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.JulkaistuOppilaitoksenOsa.metadata.get)
   ))
@@ -329,6 +334,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
+      params.get(TeemakuvaKey),
       Some(parseModified(params(ModifiedKey))))
   }
 
@@ -347,6 +353,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
+      params.get(TeemakuvaKey),
       Some(parseModified(params(ModifiedKey))))
   }
 
@@ -468,6 +475,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
+      params.get(TeemakuvaKey),
       Some(parseModified(params(ModifiedKey)))
     ))
   }
@@ -484,6 +492,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
+      params.get(TeemakuvaKey),
       Some(parseModified(params(ModifiedKey)))
     )
   }

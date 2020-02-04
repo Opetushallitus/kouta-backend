@@ -25,10 +25,6 @@ package object koulutusMetadata {
       |          items:
       |            type: object
       |            $ref: '#/components/schemas/Lisatieto'
-      |        teemakuva:
-      |          type: string
-      |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
-      |          example: https://konfo-files.opintopolku.fi/koulutus-teema/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val KorkeakouluMetadataModel =
@@ -100,12 +96,11 @@ package object koulutusMetadata {
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, YliopistoKoulutusMetadataModel)
 }
 
-sealed trait KoulutusMetadata extends TeemakuvaMetadata[KoulutusMetadata] {
+sealed trait KoulutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Map[Kieli, String]
   val lisatiedot: Seq[Lisatieto]
   val koulutusalaKoodiUrit: Seq[String]
-  val teemakuva: Option[String]
 }
 
 trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
@@ -117,29 +112,20 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
 case class AmmatillinenKoulutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         kuvaus: Map[Kieli, String] = Map(),
                                         lisatiedot: Seq[Lisatieto] = Seq(),
-                                        koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                        teemakuva: Option[String] = None) extends KoulutusMetadata {
-  override def withTeemakuva(teemakuva: Option[String]): AmmatillinenKoulutusMetadata = copy(teemakuva = teemakuva)
-}
+                                        koulutusalaKoodiUrit: Seq[String] = Seq()) extends KoulutusMetadata
 
 case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Map[Kieli, String] = Map(),
                                      lisatiedot: Seq[Lisatieto] = Seq(),
                                      koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                     teemakuva: Option[String] = None,
                                      tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                      opintojenLaajuusKoodiUri: Option[String] = None,
-                                     kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata {
-  override def withTeemakuva(teemakuva: Option[String]): YliopistoKoulutusMetadata = copy(teemakuva = teemakuva)
-}
+                                     kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Map[Kieli, String] = Map(),
                                               lisatiedot: Seq[Lisatieto] = Seq(),
                                               koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                              teemakuva: Option[String] = None,
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                               opintojenLaajuusKoodiUri: Option[String] = None,
-                                              kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata {
-  override def withTeemakuva(teemakuva: Option[String]): AmmattikorkeakouluKoulutusMetadata = copy(teemakuva = teemakuva)
-}
+                                              kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata

@@ -13,10 +13,10 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
 
   def this() = this(S3Service)
 
-  val themeMinWidth  = 1260
-  val themeMinHeight = 400
+  val teemakuvaMinWidth  = 1260
+  val teemakuvaMinHeight = 400
 
-  registerPath("/upload/theme-image",
+  registerPath("/upload/teemakuva",
     """    post:
       |      summary: Tallenna teemakuva
       |      operationId: Tallenna teemakuva
@@ -39,7 +39,7 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
       |          description: Ok
       |""".stripMargin
   )
-  post("/theme-image") {
+  post("/teemakuva") {
     val length      = checkLength(maxSize)
     val contentType = checkContentType(s3Service.allowedImageTypes)
 
@@ -87,9 +87,9 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
         Failure(MediaNotSupportedException(s"Tiedostoa ei voitu lukea $contentType -kuvana"))
     }.get
 
-    if (width < themeMinWidth || height < themeMinHeight) {
+    if (width < teemakuvaMinWidth || height < teemakuvaMinHeight) {
       throw new IllegalArgumentException(
-        s"Kuva on väärän kokoinen ($width x $height), kun minimikoko on $themeMinWidth x $themeMinHeight"
+        s"Kuva on väärän kokoinen ($width x $height), kun minimikoko on $teemakuvaMinWidth x $teemakuvaMinHeight"
       )
     }
   }

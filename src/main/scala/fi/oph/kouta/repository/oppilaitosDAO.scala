@@ -72,7 +72,7 @@ sealed trait OppilaitosModificationSQL extends SQLHelpers {
 sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificationSQL with SQLHelpers {
 
   def selectOppilaitos(oid: OrganisaatioOid): DBIO[Option[Oppilaitos]] = {
-    sql"""select oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, lower(system_time)
+    sql"""select oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, lower(system_time)
           from oppilaitokset where oid = $oid""".as[Oppilaitos].headOption
   }
 
@@ -83,14 +83,16 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
             kielivalinta,
             metadata,
             muokkaaja,
-            organisaatio_oid)
+            organisaatio_oid,
+            teemakuva)
           values (
             ${oppilaitos.oid},
             ${oppilaitos.tila.toString}::julkaisutila,
             ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
             ${toJsonParam(oppilaitos.metadata)}::jsonb,
             ${oppilaitos.muokkaaja},
-            ${oppilaitos.organisaatioOid})"""
+            ${oppilaitos.organisaatioOid},
+            ${oppilaitos.teemakuva})"""
   }
 
   def updateOppilaitos(oppilaitos: Oppilaitos): DBIO[Int] = {
@@ -99,11 +101,13 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
               kielivalinta = ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
               metadata = ${toJsonParam(oppilaitos.metadata)}::jsonb,
               muokkaaja = ${oppilaitos.muokkaaja},
-              organisaatio_oid = ${oppilaitos.organisaatioOid}
+              organisaatio_oid = ${oppilaitos.organisaatioOid},
+              teemakuva = ${oppilaitos.teemakuva}
             where oid = ${oppilaitos.oid}
             and ( tila is distinct from ${oppilaitos.tila.toString}::julkaisutila
             or metadata is distinct from ${toJsonParam(oppilaitos.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(oppilaitos.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid})"""
+            or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid})
+            or teemakuva is distinct from ${oppilaitos.teemakuva}"""
   }
 }

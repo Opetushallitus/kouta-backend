@@ -6,8 +6,9 @@ import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuvaMetadata, TeemakuvaMetadata}
+import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuva}
 import fi.oph.kouta.indexing.S3Service
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.validation.Validatable
@@ -18,8 +19,6 @@ import scala.collection.IterableView
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
-
 trait ValidatingService[E <: Validatable] {
 
   def withValidation[R](e: E, f: E => R): R = e.validate() match {
@@ -28,14 +27,16 @@ trait ValidatingService[E <: Validatable] {
   }
 }
 
-trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID, T] with HasModified[T], M <: TeemakuvaMetadata[M]] extends Logging {
+trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with HasModified[T]] extends Logging {
   val s3Service: S3Service
 
   def teemakuvaPrefix: String
 
-  def checkTempImage(entity: T): DBIO[Option[String]] =
+  def checkTeemakuva(entity: T): DBIO[Option[String]] = checkTempImage("Teemakuva", entity.teemakuva)
+
+  def checkTempImage(field: String, image: Option[String]): DBIO[Option[String]] =
     Try {
-      entity.metadata.flatMap(_.teemakuva) match {
+      image match {
         case Some(s3Service.tempUrl(filename)) =>
           Some(filename)
         case Some(s3Service.publicUrl(_)) =>
@@ -43,45 +44,51 @@ trait TeemakuvaService[ID, T <: HasTeemakuvaMetadata[T, M] with HasPrimaryId[ID,
         case None =>
           None
         case Some(other) =>
-          logger.warn(s"Theme image outside the bucket: $other")
+          logger.warn(s"$field outside the bucket: $other")
           None
       }
     }.toDBIO
 
-  def maybeClearTempImage(tempImage: Option[String], entity: T): DBIO[T] =
+  def maybeClearTeemakuva(teemakuva: Option[String], entity: T): DBIO[T] =
     Try {
-      tempImage
-        .map(_ => entity.withMetadata(entity.metadata.get.withTeemakuva(None)))
+      teemakuva
+        .map(_ => entity.withTeemakuva(None))
         .getOrElse(entity)
     }.toDBIO
 
-  def checkAndMaybeClearTempImage(entity: T): DBIO[(Option[String], T)] =
+  def checkAndMaybeClearTeemakuva(entity: T): DBIO[(Option[String], T)] =
     for {
-      tempImage <- checkTempImage(entity)
-      cleared <- maybeClearTempImage(tempImage, entity)
+      tempImage <- checkTeemakuva(entity)
+      cleared <- maybeClearTeemakuva(tempImage, entity)
     } yield (tempImage, cleared)
 
-  def maybeCopyThemeImage(tempImage: Option[String], entity: T): DBIO[T] =
+  def copyTempImage(filename: String, prefix: String, entity: T): String = {
+    s3Service.copyImage(s3Service.getTempKey(filename), s"$prefix/${entity.primaryId.get}/$filename")
+  }
+
+  def maybeCopyTeemakuva(teemakuva: Option[String], entity: T): DBIO[T] =
     Try {
-      tempImage
-        .map(filename => s3Service.copyImage(s3Service.getTempKey(filename), s"$teemakuvaPrefix/${entity.primaryId.get}/$filename"))
-        .map(url => entity.withMetadata(entity.metadata.get.withTeemakuva(Some(url))))
+      teemakuva
+        .map(filename => copyTempImage(filename, teemakuvaPrefix, entity))
+        .map(url => entity.withTeemakuva(Some(url)))
         .getOrElse(entity)
     }.toDBIO
 
-  def checkAndMaybeCopyTempImage(entity: T): DBIO[(Option[String], T)] =
+  def checkAndMaybeCopyTeemakuva(entity: T): DBIO[(Option[String], T)] =
     for {
-      tempImage <- checkTempImage(entity)
-      themed <- maybeCopyThemeImage(tempImage, entity)
-    } yield (tempImage, themed)
+      teemakuva <- checkTeemakuva(entity)
+      e         <- maybeCopyTeemakuva(teemakuva, entity)
+    } yield (teemakuva, e)
 
-  def maybeDeleteTempImage(tempImage: Option[String]): DBIO[_] =
+  def maybeDeleteTempImage(tempImage: Option[String]): Try[_] =
     Try {
       tempImage.foreach(filename => s3Service.deleteImage(s3Service.getTempKey(filename)))
-    }.toDBIO
+    }.recover {
+      case e => logger.error(s"Exception while deleting $tempImage", e)
+    }
 }
 
-case class KoutaValidationException(errorMessages:List[String]) extends RuntimeException
+case class KoutaValidationException(errorMessages: List[String]) extends RuntimeException
 
 trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity

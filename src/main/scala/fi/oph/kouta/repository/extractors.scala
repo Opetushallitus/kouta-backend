@@ -65,6 +65,7 @@ trait KoulutusExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
+    teemakuva = r.nextStringOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))))
 
   implicit val getKoulutusListItem: GetResult[KoulutusListItem] = GetResult(r => KoulutusListItem(
@@ -89,6 +90,7 @@ trait ToteutusExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
+    teemakuva = r.nextStringOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
@@ -260,6 +262,7 @@ trait OppilaitosExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
+    teemakuva = r.nextStringOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 }
@@ -273,6 +276,7 @@ trait OppilaitoksenOsaExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
+    teemakuva = r.nextStringOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
