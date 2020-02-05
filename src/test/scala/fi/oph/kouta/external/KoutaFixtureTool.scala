@@ -325,6 +325,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/oppilaitos-teemakuva/oid/kuva.jpg",
+    LogoKey -> "https://testi.fi/oppilaitos-logo/oid/logo.png",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.JulkaistuOppilaitos.metadata.get)
   )
