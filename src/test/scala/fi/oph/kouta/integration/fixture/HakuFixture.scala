@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
@@ -9,9 +10,10 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.MockAuditLogger
-import fi.oph.kouta.repository.SQLHelpers
+import fi.oph.kouta.repository.{HakuDAO, SQLHelpers}
 import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.HakuServlet
+import fi.oph.kouta.util.TimeUtils
 
 trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
 
@@ -30,8 +32,8 @@ trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
 
   def put(haku: Haku): String = put(HakuPath, haku, oid)
   def put(haku: Haku, sessionId: UUID): String = put(HakuPath, haku, sessionId, oid)
-  def get(oid: String, expected: Haku): String = get(HakuPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "haut"))))
-  def get(oid: String, sessionId: UUID, expected: Haku): String = get(HakuPath, oid, sessionId, expected.copy(modified = Some(readModifiedByOid(oid, "haut"))))
+  def get(oid: String, expected: Haku): String = get(HakuPath, oid, expected.copy(modified = Some(readHakuModified(oid))))
+  def get(oid: String, sessionId: UUID, expected: Haku): String = get(HakuPath, oid, sessionId, expected.copy(modified = Some(readHakuModified(oid))))
   def update(haku: Haku, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(HakuPath, haku, lastModified, sessionId, expectedStatus)
   def update(haku: Haku, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(HakuPath, haku, lastModified, expectUpdate, sessionId)
   def update(haku: Haku, lastModified: String, expectUpdate: Boolean): Unit = update(HakuPath, haku, lastModified, expectUpdate)
@@ -39,7 +41,11 @@ trait HakuFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
 
   def addToList(haku: Haku) = {
     val oid = put(haku)
-    val modified = readModifiedByOid(oid, "haut")
+    val modified = readHakuModified(oid)
     HakuListItem(HakuOid(oid), haku.nimi, haku.tila, haku.organisaatioOid, haku.muokkaaja, modified)
   }
+
+  def readHakuModified(oid: String): LocalDateTime = readHakuModified(HakuOid(oid))
+  def readHakuModified(oid: HakuOid): LocalDateTime =
+    TimeUtils.instantToModifiedAt(db.runBlocking(HakuDAO.selectLastModified(oid)).get)
 }

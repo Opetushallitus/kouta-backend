@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
@@ -7,8 +8,10 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.service.OppilaitosService
 import fi.oph.kouta.servlet.OppilaitosServlet
+import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Random
@@ -35,12 +38,15 @@ trait OppilaitosFixture { this: KoutaIntegrationSpec =>
   def put(oppilaitos: Oppilaitos): String = put(OppilaitosPath, oppilaitos, oid(_))
   def put(oppilaitos: Oppilaitos, sessionId: UUID): String = put(OppilaitosPath, oppilaitos, sessionId, oid(_))
 
-  def get(oid: String, expected: Oppilaitos): String = get(OppilaitosPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "oppilaitokset"))))
-  def get(oid: String, sessionId: UUID, expected: Oppilaitos): String = get(OppilaitosPath, oid, sessionId, expected.copy(modified = Some(readModifiedByOid(oid, "oppilaitokset"))))
+  def get(oid: String, expected: Oppilaitos): String = get(OppilaitosPath, oid, expected.copy(modified = Some(readOppilaitosModified(oid))))
+  def get(oid: String, sessionId: UUID, expected: Oppilaitos): String = get(OppilaitosPath, oid, sessionId, expected.copy(modified = Some(readOppilaitosModified(oid))))
 
   def update(oppilaitos: Oppilaitos, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(OppilaitosPath, oppilaitos, lastModified, sessionId, expectedStatus)
   def update(oppilaitos: Oppilaitos, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(OppilaitosPath, oppilaitos, lastModified, expectUpdate, sessionId)
   def update(oppilaitos: Oppilaitos, lastModified: String, expectUpdate: Boolean): Unit = update(OppilaitosPath, oppilaitos, lastModified, expectUpdate)
   def update(oppilaitos: Oppilaitos, lastModified: String): Unit = update(oppilaitos, lastModified, true)
 
+  def readOppilaitosModified(oid: String): LocalDateTime = readOppilaitosModified(OrganisaatioOid(oid))
+  def readOppilaitosModified(oid: OrganisaatioOid): LocalDateTime =
+    TimeUtils.instantToModifiedAt(db.runBlocking(OppilaitosDAO.selectLastModified(oid)).get)
 }

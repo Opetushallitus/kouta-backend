@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
@@ -7,9 +8,10 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
-import fi.oph.kouta.repository.{KoulutusExtractors, SQLHelpers}
+import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.KoulutusService
 import fi.oph.kouta.servlet.KoulutusServlet
+import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 
@@ -45,10 +47,10 @@ trait KoulutusFixture extends KoulutusDbFixture {
   }
 
   def get(oid: String, expected: Koulutus): String =
-    get(KoulutusPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
+    get(KoulutusPath, oid, expected.copy(modified = Some(readKoulutusModified(oid))))
 
   def get(oid: String, sessionId: UUID, expected: Koulutus): String =
-    get(KoulutusPath, oid, sessionId, expected.copy(modified = Some(readModifiedByOid(oid, "koulutukset"))))
+    get(KoulutusPath, oid, sessionId, expected.copy(modified = Some(readKoulutusModified(oid))))
 
   def update(koulutus: Koulutus, lastModified: String, sessionId: UUID, expectedStatus: Int): Unit =
     update(KoulutusPath, koulutus, lastModified, sessionId, expectedStatus)
@@ -64,9 +66,13 @@ trait KoulutusFixture extends KoulutusDbFixture {
 
   def addToList(koulutus:Koulutus) = {
     val oid = put(koulutus)
-    val modified = readModifiedByOid(oid, "koulutukset")
+    val modified = readKoulutusModified(oid)
     new KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
   }
+
+  def readKoulutusModified(oid: String): LocalDateTime = readKoulutusModified(KoulutusOid(oid))
+  def readKoulutusModified(oid: KoulutusOid): LocalDateTime =
+    TimeUtils.instantToModifiedAt(db.runBlocking(KoulutusDAO.selectLastModified(oid)).get)
 }
 
 trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers { this: KoutaIntegrationSpec =>
