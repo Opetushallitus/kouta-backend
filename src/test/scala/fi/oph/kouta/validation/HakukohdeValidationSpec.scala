@@ -37,7 +37,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     failsValidation(min.copy(alkamiskausiKoodiUri = Some("tintti")), validationMsg("tintti"))
 
     val invalidHakuajat = TestData.getInvalidHakuajat
-    failsValidation(min.copy(hakuajat = invalidHakuajat), invalidAjanjakso(invalidHakuajat.head, "Hakuaika"))
+    failsValidation(min.copy(hakuajat = invalidHakuajat), invalidAjanjaksoMsg(invalidHakuajat.head, "Hakuaika"))
 
     failsValidation(min.copy(pohjakoulutusvaatimusKoodiUrit = Seq("tintti", "huuhkaja")),
       validationMsg("tintti"), validationMsg("huuhkaja"))
@@ -45,11 +45,11 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     failsValidation(min.copy(aloituspaikat = Some(-1)), notNegativeMsg("aloituspaikat"))
     failsValidation(min.copy(minAloituspaikat = Some(-1)), notNegativeMsg("minAloituspaikat"))
     failsValidation(min.copy(maxAloituspaikat = Some(-1)), notNegativeMsg("maxAloituspaikat"))
-    failsValidation(min.copy(minAloituspaikat = Some(90), maxAloituspaikat = Some(1)), minmaxMsg("Aloituspaikat"))
+    failsValidation(min.copy(minAloituspaikat = Some(90), maxAloituspaikat = Some(1)), minmaxMsg("minAloituspaikat", "maxAloituspaikat"))
     failsValidation(min.copy(ensikertalaisenAloituspaikat = Some(-1)), notNegativeMsg("ensikertalaisenAloituspaikat"))
     failsValidation(min.copy(minEnsikertalaisenAloituspaikat = Some(-1)), notNegativeMsg("minEnsikertalaisenAloituspaikat"))
     failsValidation(min.copy(maxEnsikertalaisenAloituspaikat = Some(-1)), notNegativeMsg("maxEnsikertalaisenAloituspaikat"))
-    failsValidation(min.copy(minEnsikertalaisenAloituspaikat = Some(90), maxEnsikertalaisenAloituspaikat = Some(1)), minmaxMsg("EnsikertalaisenAloituspaikat"))
+    failsValidation(min.copy(minEnsikertalaisenAloituspaikat = Some(90), maxEnsikertalaisenAloituspaikat = Some(1)), minmaxMsg("minEnsikertalaisenAloituspaikat","maxEnsikertalaisenAloituspaikat"))
   }
 
   it should "fail if julkaistu hakukohde is invalid" in {

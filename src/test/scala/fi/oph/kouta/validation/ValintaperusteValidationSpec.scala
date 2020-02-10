@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.TestData.{MinYoValintaperuste, YoValintaperuste}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.validation.Validations._
@@ -21,10 +21,25 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
     passesValidation(min)
   }
 
+  it should "fail if any valintaperuste is invalid" in {
+    failsValidation(min.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
+    failsValidation(min.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
+    failsValidation(min.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
+  }
+
+  it should "validate valintakokeet" in {
+    failsValidation(min.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("koodi")))), validationMsg("koodi"))
+  }
+
+  it should "validate metadata" in {
+    val invalidMetadata = AmmValintaperusteMetadata.copy(valintatavat = Seq(Valintatapa1.copy(valintatapaKoodiUri = Some("virhe"))))
+    failsValidation(min.copy(metadata = Some(invalidMetadata)), validationMsg("virhe"))
+  }
+
   it should "fail if julkaistu valintaperuste is invalid" in {
-    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
-    failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
-    failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
+    failsValidation(max.copy(hakutapaKoodiUri = None), missingMsg("hakutapaKoodiUri"))
+    failsValidation(max.copy(kohdejoukkoKoodiUri = None), missingMsg("kohdejoukkoKoodiUri"))
+    failsValidation(max.copy(sorakuvausId = None), missingMsg("sorakuvausId"))
   }
 
   it should "pass valid julkaistu valintaperuste" in {

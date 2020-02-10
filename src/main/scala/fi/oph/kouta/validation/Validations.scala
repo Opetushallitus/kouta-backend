@@ -24,10 +24,10 @@ object Validations {
   def invalidTutkintoonjohtavuus(tyyppi: String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
   def invalidUrl(url: String) = s"'${url}' ei ole validi URL"
   def invalidEmail(email: String) = s"'${email}' ei ole validi email"
-  def invalidAjanjakso(ajanjakso: Ajanjakso, field: String) = s"$field ${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
+  def invalidAjanjaksoMsg(ajanjakso: Ajanjakso, field: String) = s"$field ${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
   def pastAjanjaksoMsg(ajanjakso: Ajanjakso, field: String) = s"$field ${ajanjakso.alkaa} - ${ajanjakso.paattyy} on menneisyydessä"
   def pastDateMsg(date: LocalDateTime, field: String) = s"$field ($date) on menneisyydessä"
-  def minmaxMsg(basename: String) = s"min$basename on suurempi kuin max$basename"
+  def minmaxMsg(minName: String, maxName: String) = s"$minName on suurempi kuin $maxName"
 
   val KoulutusKoodiPattern: Pattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val HakutapaKoodiPattern: Pattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
@@ -35,7 +35,7 @@ object Validations {
   val KohdejoukkoKoodiPattern: Pattern = Pattern.compile("""haunkohdejoukko_\d+#\d{1,2}""")
   val KohdejoukonTarkenneKoodiPattern: Pattern = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
   val PohjakoulutusvaatimusKoodiPattern: Pattern = Pattern.compile("""pohjakoulutusvaatimustoinenaste_\w+#\d{1,2}""")
-  val ValintatapajonoKoodiPattern: Pattern = Pattern.compile("""valintatapajono_\w{2}\d{1,2}""")
+  val ValintatapajonoKoodiPattern: Pattern = Pattern.compile("""valintatapajono_\w{2}#\d{1,2}""")
   val KoulutuksenLisatiedotOtsikkoKoodiPattern: Pattern = Pattern.compile("""koulutuksenlisatiedot_\d+#\d{1,2}""")
   val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso2_\d+#\d{1,2}""")
   val TutkintonimikeKoodiPattern: Pattern = Pattern.compile("""tutkintonimikekk_\d+#\d{1,2}""")
@@ -47,6 +47,11 @@ object Validations {
   val PostinumeroKoodiPattern: Pattern = Pattern.compile("""posti_\d{5}(#\d{1,2})?""")
   val LiiteTyyppiKoodiPattern: Pattern = Pattern.compile("""liitetyypitamm_\d+(#\d{1,2})?""")
   val ValintakokeenTyyppiKoodiPattern: Pattern = Pattern.compile("""valintakokeentyyppi_\d+(#\d{1,2})?""")
+  val KieliKoodiPattern: Pattern = Pattern.compile("""kieli_\w+(#\d{1,2})?""")
+  val KielitaitoKoodiPattern: Pattern = Pattern.compile("""kielitaidonosoittaminen_\d+(#\d{1,2})?""")
+  val KielitaitovaatimusKoodiPattern: Pattern = Pattern.compile("""kielitaitovaatimustyypit_\d+(#\d{1,2})?""")
+  val KielitaitovaatimusKuvausKoodiPattern: Pattern = Pattern.compile("""kielitaitovaatimustyypitkuvaus_\d+(#\d{1,2})?""")
+  val OsaamistaustaKoodiPattern: Pattern = Pattern.compile("""osaamistausta_\d+(#\d{1,2})?""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
@@ -98,7 +103,7 @@ object Validations {
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, field))
 
   def validateAjanjakso(ajanjakso: Ajanjakso, field: String): IsValid =
-    assertTrue(ajanjakso.alkaa.isBefore(ajanjakso.paattyy), invalidAjanjakso(ajanjakso, field))
+    assertTrue(ajanjakso.alkaa.isBefore(ajanjakso.paattyy), invalidAjanjaksoMsg(ajanjakso, field))
 
   def assertAjanjaksoEndsInFuture(ajanjakso: Ajanjakso, field: String): IsValid =
     assertTrue(ajanjakso.paattyy.isAfter(LocalDateTime.now()), pastAjanjaksoMsg(ajanjakso, field))
@@ -135,8 +140,11 @@ object Validations {
     ).getOrElse(NoErrors)
   }
 
-  def validateMinMax(min: Option[Int], max: Option[Int], basename: String): IsValid = (min, max) match {
-    case (Some(min), Some(max)) => assertTrue(min <= max, minmaxMsg(basename))
+  def validateMinMax[T](min: Option[T], max: Option[T], basename: String)(implicit n: Numeric[T]): IsValid =
+    validateMinMax(min, max, s"min$basename", s"max$basename")
+
+  def validateMinMax[T](min: Option[T], max: Option[T], minName: String, maxName: String)(implicit n: Numeric[T]): IsValid = (min, max) match {
+    case (Some(min), Some(max)) => assertTrue(n.toDouble(min) <= n.toDouble(max), minmaxMsg(minName, maxName))
     case _ => NoErrors
   }
 

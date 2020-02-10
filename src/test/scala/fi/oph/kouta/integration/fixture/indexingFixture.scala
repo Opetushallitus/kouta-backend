@@ -7,7 +7,7 @@ import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3Se
 import fi.oph.kouta.service._
 
 trait IndexingFixture extends KoulutusFixtureWithIndexing with HakuFixtureWithIndexing with ToteutusFixtureWithIndexing
-  with ValintaperusteFixtureWithIndexing with HakukohdeFixtureWithIndexing {
+  with ValintaperusteFixtureWithIndexing with HakukohdeFixtureWithIndexing with SorakuvausFixture {
   this: KoutaIntegrationSpec =>
 }
 

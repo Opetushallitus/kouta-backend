@@ -35,13 +35,16 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   var timestampAfterInserts = ""
   var timestampAfterAllModifications = ""
 
+  var sorakuvausId: UUID = _
+
   def createTestData(n: Int = 10) = {
     timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
     koulutusOids = nTimes(() => put(koulutus.copy(tila = Tallennettu)), n)
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid)))
     hakuOids = nTimes(() => put(haku), n)
-    valintaperusteIds = nTimes(() => put(valintaperuste), n)
+    sorakuvausId = put(sorakuvaus)
+    valintaperusteIds = nTimes(() => put(valintaperuste(sorakuvausId)), n)
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) => put(hakukohde(oid, hakuOids(i), valintaperusteIds(i))) }
     Thread.sleep(1000)
     timestampAfterInserts = renderHttpDate(now())
@@ -77,7 +80,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def updateInHakukohteenHakuajatTable(i: Int) = update(iHakukohde(i).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(5000)))), timestampAfterInserts)
   def updateInHakukohteenLiitteetTable(i: Int) = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"liitetyypitamm_$i#1")))), timestampAfterInserts)
   def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"valintakokeentyyppi_$i#1")))), timestampAfterInserts)
-  def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), Arkistoitu), timestampAfterInserts)
+  def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), sorakuvausId, Arkistoitu), timestampAfterInserts)
 
   "Modified since" should "return 401 without a valid session" in {
 

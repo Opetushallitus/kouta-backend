@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
 
 package object hakukohde {
@@ -373,7 +373,7 @@ case class Liite(id: Option[UUID] = None,
                  kuvaus: Kielistetty = Map(),
                  toimitusaika: Option[LocalDateTime] = None,
                  toimitustapa: Option[LiitteenToimitustapa] = None,
-                 toimitusosoite: Option[LiitteenToimitusosoite] = None) {
+                 toimitusosoite: Option[LiitteenToimitusosoite] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = {
     and(
       validateIfDefined[LiitteenToimitusosoite](toimitusosoite, _.validate(tila, kielivalinta)),
@@ -389,7 +389,7 @@ case class Liite(id: Option[UUID] = None,
 }
 
 case class LiitteenToimitusosoite(osoite: Osoite,
-                                  sahkoposti: Option[String] = None) {
+                                  sahkoposti: Option[String] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
     osoite.validate(tila, kielivalinta),
     validateIfDefined(sahkoposti, assertValidEmail)

@@ -204,9 +204,12 @@ case class Valintaperuste(id: Option[UUID] = None,
     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
+    validateIfNonEmpty[Valintakoe](valintakokeet, _.validate(tila, kielivalinta)),
+    validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta)),
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
+      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
+      assertNotOptional(sorakuvausId, "sorakuvausId")
     ))
   )
 

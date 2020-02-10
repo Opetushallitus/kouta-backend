@@ -14,6 +14,7 @@ import fi.oph.kouta.servlet.ValintaperusteServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
+import slick.jdbc.GetResult
 
 trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
@@ -23,22 +24,30 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
   addServlet(new ValintaperusteServlet(valintaperusteService), ValintaperustePath)
 
-  val valintaperuste = TestData.AmmValintaperuste
+  private val valintaperuste = TestData.AmmValintaperuste
+  val valintaperuste2 = TestData.AmmValintaperuste
 
   def getIds(valintaperuste: Valintaperuste): Valintaperuste = {
     import slick.jdbc.PostgresProfile.api._
+
+    implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
+      UUID.fromString(r.nextString())
+    })
+
     valintaperuste.copy(
       valintakokeet = valintaperuste.valintakokeet.map(valintakoe => valintakoe.copy(id = db.runBlocking(
         sql"""select id from valintaperusteiden_valintakokeet
               where valintaperuste_id = ${valintaperuste.id.map(_.toString)}::uuid
-                and tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString)))
+                and tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString))),
+      sorakuvausId = db.runBlocking(sql"select sorakuvaus_id from valintaperusteet where id = ${valintaperuste.id.map(_.toString)}::uuid".as[UUID].headOption)
     )
   }
 
-  def tallennettuValintaperuste(id: UUID): Valintaperuste = getIds(valintaperuste(id))
+  def tallennettuValintaperuste(id: UUID): Valintaperuste = getIds(valintaperuste.copy(id = Some(id)))
 
-  def valintaperuste(id:UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
-  def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
+  def valintaperuste(sorakuvausId: UUID): Valintaperuste = valintaperuste.copy(sorakuvausId = Some(sorakuvausId))
+  def valintaperuste(id:UUID, sorakuvausId: UUID): Valintaperuste = valintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId))
+  def valintaperuste(id:UUID, sorakuvausId: UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId), tila = tila)
 
   def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id(_))
   def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID = put(ValintaperustePath, valintaperuste, sessionId, id(_))
@@ -59,8 +68,8 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
   def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
   def update(valintaperuste: Valintaperuste, lastModified: String): Unit = update(valintaperuste, lastModified, true)
 
-  def valintaperuste(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
-    valintaperuste.copy(organisaatioOid = organisaatioOid, tila = tila)
+  def valintaperuste(sorakuvausId: Option[UUID], tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
+    valintaperuste.copy(sorakuvausId = sorakuvausId, organisaatioOid = organisaatioOid, tila = tila)
 
   def addToList(valintaperuste:Valintaperuste) = {
     val id = put(valintaperuste)

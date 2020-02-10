@@ -215,34 +215,35 @@ object TestData {
     enimmaispisteet = Some(18.1),
     vahimmaispisteet = Some(10.1))
 
-  val Kielitaitovaatimus1 = new ValintaperusteKielitaitovaatimus(
+  val Kielitaitovaatimus1 = ValintaperusteKielitaitovaatimus(
     kieliKoodiUri = Some("kieli_en#1"),
     kielitaidonVoiOsoittaa = Seq(
-      new Kielitaito(kielitaitoKoodiUri = Some("kielitaidonosoittaminen_01#1") ),
-      new Kielitaito(kielitaitoKoodiUri = Some("kielitaidonosoittaminen_03#1"), lisatieto = Map( Fi -> "muu", Sv -> "muu sv"))),
+      Kielitaito(kielitaitoKoodiUri = Some("kielitaidonosoittaminen_01#1") ),
+      Kielitaito(kielitaitoKoodiUri = Some("kielitaidonosoittaminen_03#1"), lisatieto = Map( Fi -> "muu", Sv -> "muu sv"))),
     vaatimukset = Seq(
-      new Kielitaitovaatimus(
+      Kielitaitovaatimus(
         kielitaitovaatimusKoodiUri = Some("kielitaitovaatimustyypit_01#1"),
-        kielitaitovaatimusKuvaukset = Seq(new KielitaitovaatimusKuvaus(
-          kielitaitovaatimusKuvausKoodiUri = Some("kielitaitovaatimustyypitkuvaus_01#1"),
-          kielitaitovaatimusTaso = Some("1")))),
-      new Kielitaitovaatimus(
+        kielitaitovaatimusKuvaukset = Seq(
+          KielitaitovaatimusKuvaus(
+            kielitaitovaatimusKuvausKoodiUri = Some("kielitaitovaatimustyypitkuvaus_01#1"),
+            kielitaitovaatimusTaso = Some("1")))),
+      Kielitaitovaatimus(
         kielitaitovaatimusKoodiUri = Some("kielitaitovaatimustyypit_02#1"),
         kielitaitovaatimusKuvaukset = Seq(
-          new KielitaitovaatimusKuvaus(
+          KielitaitovaatimusKuvaus(
             kielitaitovaatimusKuvausKoodiUri = Some("kielitaitovaatimustyypitkuvaus_01#1"),
             kielitaitovaatimusTaso = Some("A")),
-          new KielitaitovaatimusKuvaus(
+          KielitaitovaatimusKuvaus(
             kielitaitovaatimusKuvausKoodiUri = Some("kielitaitovaatimustyypitkuvaus_02#1"),
             kielitaitovaatimusTaso = Some("A"))))))
 
-  val yoValintaperusteMetadata = YliopistoValintaperusteMetadata(
+  val YoValintaperusteMetadata = YliopistoValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     osaamistaustaKoodiUrit = Seq("osaamistausta_001#1"),
     kuvaus = kieliMap("kuvaus"))
 
-  val ammValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
+  val AmmValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))
@@ -257,8 +258,8 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     julkinen = false,
     valintakokeet = List(Valintakoe1),
-    metadata = Some(ammValintaperusteMetadata),
-    sorakuvausId = None,
+    metadata = Some(AmmValintaperusteMetadata),
+    sorakuvausId = Some(UUID.randomUUID()),
     organisaatioOid = ChildOid,
     muokkaaja = UserOid("2.1.2.1.2"),
     kielivalinta = List(Fi, Sv),
@@ -274,8 +275,8 @@ object TestData {
     nimi = kieliMap("nimi"),
     julkinen = true,
     valintakokeet = List(Valintakoe1),
-    metadata = Some(yoValintaperusteMetadata),
-    sorakuvausId = None,
+    metadata = Some(YoValintaperusteMetadata),
+    sorakuvausId = Some(UUID.randomUUID()),
     organisaatioOid = OrganisaatioOid("1.2.3.4"),
     muokkaaja = UserOid("2.1.2.1.2"),
     kielivalinta = List(Fi, Sv),

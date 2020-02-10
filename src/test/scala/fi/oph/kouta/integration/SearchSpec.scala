@@ -13,11 +13,11 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   override val roleEntities = RoleEntity.all
   override val DebugJson = false
 
-  var koid1, koid2, koid3, koid4, koid5, koid6: String = null
-  var toid1, toid2, toid3, toid4, toid5: String = null
-  var hoid1, hoid2, hoid3: String = null
-  var hkoid1, hkoid2, hkoid3, hkoid4, hkoid5: String = null
-  var vpid1, vpid2, vpid3, vpid4, vpid5: String = null
+  var koid1, koid2, koid3, koid4, koid5, koid6: String = _
+  var toid1, toid2, toid3, toid4, toid5: String = _
+  var hoid1, hoid2, hoid3: String = _
+  var hkoid1, hkoid2, hkoid3, hkoid4, hkoid5: String = _
+  var vpid1, vpid2, vpid3, vpid4, vpid5: String = _
 
   val params = Map("nimi" -> "Hassu", "page" -> "1")
 
@@ -27,7 +27,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
 
   var mocks: Seq[model.HttpRequest] = Seq()
 
-  def addMock(mockRequest: model.HttpRequest) =
+  def addMock(mockRequest: model.HttpRequest): Unit =
     mocks = mocks ++ Seq(mockRequest)
 
   override def beforeAll(): Unit = {
@@ -65,11 +65,13 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
     hkoid4 = put(hakukohde.copy(toteutusOid = ToteutusOid(toid3), hakuOid = HakuOid(hoid3), organisaatioOid = LonelyOid))
     hkoid5 = put(hakukohde.copy(toteutusOid = ToteutusOid(toid5), hakuOid = HakuOid(hoid3), organisaatioOid = GrandChildOid))
 
-    vpid1 = put(valintaperuste.copy(organisaatioOid = GrandChildOid, julkinen = false)).toString
-    vpid2 = put(valintaperuste.copy(organisaatioOid = ParentOid, julkinen = false)).toString
-    vpid3 = put(valintaperuste.copy(organisaatioOid = OphOid, julkinen = false)).toString
-    vpid4 = put(valintaperuste.copy(organisaatioOid = LonelyOid, julkinen = false)).toString
-    vpid5 = put(valintaperuste.copy(organisaatioOid = LonelyOid, julkinen = true)).toString
+    val sorakuvausId = put(sorakuvaus)
+
+    vpid1 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = GrandChildOid, julkinen = false)).toString
+    vpid2 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = ParentOid, julkinen = false)).toString
+    vpid3 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = OphOid, julkinen = false)).toString
+    vpid4 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = LonelyOid, julkinen = false)).toString
+    vpid5 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = LonelyOid, julkinen = true)).toString
   }
 
   "Search koulutukset" should "search allowed koulutukset and allowed toteutus counts 1" in {

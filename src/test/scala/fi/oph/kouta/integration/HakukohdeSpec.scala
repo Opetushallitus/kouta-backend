@@ -23,7 +23,8 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     koulutusOid = put(koulutus)
     toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid)))
     hakuOid = put(haku)
-    valintaperusteId = put(valintaperuste)
+    val sorakuvausId = put(sorakuvaus)
+    valintaperusteId = put(valintaperuste(sorakuvausId))
   }
 
   override def afterAll(): Unit = {
@@ -133,7 +134,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
+      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head, "Hakuaika")))
     }
   }
 
@@ -284,7 +285,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
+      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head, "Hakuaika")))
     }
   }
 

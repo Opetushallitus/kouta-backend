@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
 
 package object haku {
@@ -207,11 +207,12 @@ case class Haku(oid: Option[HakuOid] = None,
     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
-    validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
     validateIfNonEmpty[Ajanjakso](hakuajat, validateAjanjakso(_, "Hakuaika")),
     validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta)),
     validateIfJulkaistu(tila, and(
+      validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi),
+      validateIfNonEmpty[Ajanjakso](hakuajat, assertAjanjaksoEndsInFuture(_, "Hakuaika")),
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
@@ -236,9 +237,12 @@ case class HakuListItem(oid: HakuOid,
                         modified: LocalDateTime) extends OidListItem
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) {
+                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, _.validate(tila, kielivalinta)),
-    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, validateAjanjakso(_, "tulevaisuudenAikataulu"))
+    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, validateAjanjakso(_, "tulevaisuudenAikataulu")),
+    validateIfJulkaistu(tila,
+      validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, assertAjanjaksoEndsInFuture(_, "tulevaisuudenAikataulu"))
+    )
   )
 }

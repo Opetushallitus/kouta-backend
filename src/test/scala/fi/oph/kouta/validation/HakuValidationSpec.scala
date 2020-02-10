@@ -30,26 +30,38 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     failsValidation(min.copy(oid = Some(HakuOid("1.2.3"))), validationMsg("1.2.3"))
   }
 
+  it should "pass non-julkaistu haku even if alkamisvuosi is invalid" in {
+    passesValidation(min.copy(alkamisvuosi = Some("2017")))
+    passesValidation(min.copy(alkamisvuosi = Some("20180")))
+  }
+
   it should "fail if julkaistu haku is invalid" in {
     failsValidation(max.copy(hakutapaKoodiUri = None), missingMsg("hakutapaKoodiUri"))
     failsValidation(max.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
+
     failsValidation(max.copy(alkamiskausiKoodiUri = Some("tintti")), validationMsg("tintti"))
     failsValidation(max.copy(alkamiskausiKoodiUri = None, hakutapaKoodiUri = Some("hakutapa_01#1")), missingMsg("alkamiskausiKoodiUri"))
+
     failsValidation(max.copy(alkamisvuosi = None, hakutapaKoodiUri = Some("hakutapa_01#1")), missingMsg("alkamisvuosi"))
     failsValidation(max.copy(alkamisvuosi = Some("20180")), validationMsg("20180"))
     failsValidation(max.copy(alkamisvuosi = Some("2017")), validationMsg("2017"))
+
     failsValidation(max.copy(kohdejoukkoKoodiUri = None), missingMsg("kohdejoukkoKoodiUri"))
     failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
     failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
     failsValidation(max.copy(hakulomaketyyppi = None), missingMsg("hakulomaketyyppi"))
-    val ajanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
-    failsValidation(max.copy(hakuajat = List(ajanjakso)), invalidAjanjakso(ajanjakso, "Hakuaika"))
+
+    val invalidAjanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
+    failsValidation(max.copy(hakuajat = List(invalidAjanjakso)), invalidAjanjaksoMsg(invalidAjanjakso, "Hakuaika"))
+
+    val pastAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = TestData.inPast(100))
+    failsValidation(max.copy(hakuajat = List(pastAjanjakso)), pastAjanjaksoMsg(pastAjanjakso, "Hakuaika"))
   }
 
   it should "fail if metadata is invalid" in {
     val ajanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
     val metadata = max.metadata.get.copy(tulevaisuudenAikataulu = List(ajanjakso))
-    failsValidation(max.copy(metadata = Some(metadata)), invalidAjanjakso(ajanjakso, "tulevaisuudenAikataulu"))
+    failsValidation(max.copy(metadata = Some(metadata)), invalidAjanjaksoMsg(ajanjakso, "tulevaisuudenAikataulu"))
   }
 
   it should "fail if yhteyshenkilot has other info, but no name" in {
@@ -77,7 +89,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "return multiple error messages" in {
-    failsValidation(min.copy(hakutapaKoodiUri = Some("korppi"), alkamisvuosi = Some("2017")),
+    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi"), alkamisvuosi = Some("2017")),
       validationMsg("korppi"), validationMsg("2017"))
   }
 }

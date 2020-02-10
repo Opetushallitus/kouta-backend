@@ -2,6 +2,9 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 
+import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
+import fi.oph.kouta.validation.Validations._
+
 package object valintatapa {
 
   val ValintatapaModel =
@@ -113,19 +116,57 @@ case class Valintatapa(nimi: Kielistetty = Map(),
                        kaytaMuuntotaulukkoa: Boolean = false,
                        kynnysehto: Kielistetty = Map(),
                        enimmaispisteet: Option[Double] = None,
-                       vahimmaispisteet: Option[Double] = None)
+                       vahimmaispisteet: Option[Double] = None) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    validateKielistetty(kielivalinta, nimi, "nimi"),
+    validateIfDefined[String](valintatapaKoodiUri, assertMatch(_, ValintatapajonoKoodiPattern)),
+    validateIfNonEmpty[ValintatapaSisalto](sisalto, _.validate(tila, kielivalinta)),
+    validateIfDefined[Double](enimmaispisteet, assertNotNegative(_, "enimmaispisteet")),
+    validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, "vahimmaispisteet")),
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(valintatapaKoodiUri, "valintatapaKoodiUri"),
+      validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus"),
+      validateOptionalKielistetty(kielivalinta, kynnysehto, "kynnysehto"),
+      validateMinMax(vahimmaispisteet, enimmaispisteet, "vahimmaispisteet", "enimmaispisteet")
+    ))
+  )
 
-sealed trait ValintatapaSisalto
+}
+
+sealed trait ValintatapaSisalto extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid
+}
+
+case class ValintatapaSisaltoTeksti(teksti: Kielistetty) extends ValintatapaSisalto {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid =
+    validateIfJulkaistu(tila,
+      validateKielistetty(kielivalinta, teksti, "teksti")
+    )
+}
 
 case class Taulukko(id: Option[UUID],
                     nimi: Kielistetty = Map(),
-                    rows: Seq[Row] = Seq()) extends ValintatapaSisalto
-
-case class ValintatapaSisaltoTeksti(teksti: Kielistetty) extends ValintatapaSisalto
+                    rows: Seq[Row] = Seq()) extends ValintatapaSisalto {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, nimi, "nimi")),
+    validateIfNonEmpty[Row](rows, _.validate(tila, kielivalinta))
+  )
+}
 
 case class Row(index: Int,
                isHeader: Boolean = false,
-               columns: Seq[Column] = Seq())
+               columns: Seq[Column] = Seq()) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+    assertNotNegative(index, s"row $index"),
+    validateIfNonEmpty[Column](columns, _.validate(tila, kielivalinta, index))
+  )
+}
 
 case class Column(index: Int,
-                  text: Kielistetty = Map())
+                  text: Kielistetty = Map()) {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], row: Int): IsValid = and(
+    assertNotNegative(index, s"row $row column $index"),
+    validateOptionalKielistetty(kielivalinta, text, s"row $row column $index text")
+  )
+
+}

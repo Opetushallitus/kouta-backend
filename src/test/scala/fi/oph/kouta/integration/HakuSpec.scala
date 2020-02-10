@@ -130,7 +130,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
+      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head, "Hakuaika")))
     }
   }
 
@@ -263,7 +263,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjakso(invalidHakuajat.head, "Hakuaika")))
+      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head, "Hakuaika")))
     }
   }
 
