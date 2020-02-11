@@ -113,7 +113,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validateErrorBody(missingMsg("koulutusKoodiUri")))
+      body should equal(validateErrorBody(missingMsg, "koulutusKoodiUri"))
     }
   }
 
@@ -359,7 +359,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
+      body should equal(validateErrorBody(missingMsg, "koulutusKoodiUri"))
     }
   }
 

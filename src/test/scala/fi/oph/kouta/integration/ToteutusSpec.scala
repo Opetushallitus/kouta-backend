@@ -101,7 +101,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
+      body should equal (validateErrorBody(validationMsg("katkarapu"), "tarjoajat[0]"))
     }
   }
 
@@ -289,7 +289,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
+      body should equal (validateErrorBody(validationMsg("katkarapu"), "tarjoajat[0]"))
     }
   }
 

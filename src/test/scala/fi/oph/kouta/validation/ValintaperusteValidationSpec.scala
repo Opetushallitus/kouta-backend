@@ -11,10 +11,10 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
   val min = MinYoValintaperuste
 
   it should "fail if perustiedot is invalid" in {
-    failsValidation(max.copy(kielivalinta = Seq()), MissingKielivalinta)
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    failsValidation(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
+    failsValidation(max.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
   it should "pass imcomplete valintaperuste if not julkaistu" in {
@@ -22,24 +22,24 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
   }
 
   it should "fail if any valintaperuste is invalid" in {
-    failsValidation(min.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
-    failsValidation(min.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
-    failsValidation(min.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
+    failsValidation(min.copy(hakutapaKoodiUri = Some("korppi")), "hakutapaKoodiUri", validationMsg("korppi"))
+    failsValidation(min.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
+    failsValidation(min.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), "kohdejoukonTarkenneKoodiUri", validationMsg("tonttu"))
   }
 
   it should "validate valintakokeet" in {
-    failsValidation(min.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("koodi")))), validationMsg("koodi"))
+    failsValidation(min.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("koodi")))), "valintakokeet[0].tyyppiKoodiUri", validationMsg("koodi"))
   }
 
   it should "validate metadata" in {
     val invalidMetadata = AmmValintaperusteMetadata.copy(valintatavat = Seq(Valintatapa1.copy(valintatapaKoodiUri = Some("virhe"))))
-    failsValidation(min.copy(metadata = Some(invalidMetadata)), validationMsg("virhe"))
+    failsValidation(min.copy(metadata = Some(invalidMetadata)), "metadata.valintatavat[0].valintatapaKoodiUri", validationMsg("virhe"))
   }
 
   it should "fail if julkaistu valintaperuste is invalid" in {
-    failsValidation(max.copy(hakutapaKoodiUri = None), missingMsg("hakutapaKoodiUri"))
-    failsValidation(max.copy(kohdejoukkoKoodiUri = None), missingMsg("kohdejoukkoKoodiUri"))
-    failsValidation(max.copy(sorakuvausId = None), missingMsg("sorakuvausId"))
+    failsValidation(max.copy(hakutapaKoodiUri = None), "hakutapaKoodiUri", missingMsg)
+    failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
+    failsValidation(max.copy(sorakuvausId = None), "sorakuvausId", missingMsg)
   }
 
   it should "pass valid julkaistu valintaperuste" in {
@@ -48,7 +48,7 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
 
   it should "return multiple error messages" in {
     failsValidation(max.copy(hakutapaKoodiUri = None, kohdejoukkoKoodiUri = None),
-      missingMsg("hakutapaKoodiUri"), missingMsg("kohdejoukkoKoodiUri"))
+      ("hakutapaKoodiUri", missingMsg), ("kohdejoukkoKoodiUri", missingMsg))
   }
 }
 

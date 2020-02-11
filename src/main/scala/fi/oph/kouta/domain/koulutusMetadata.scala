@@ -109,11 +109,11 @@ sealed trait KoulutusMetadata {
   val lisatiedot: Seq[Lisatieto]
   val koulutusalaKoodiUrit: Seq[String]
 
-  def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    assertTrue(tyyppi == koulutustyyppi, InvalidMetadataTyyppi),
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus")),
-    validateIfNonEmpty[Lisatieto](lisatiedot, _.validate(tila, kielivalinta)),
-    validateIfNonEmpty[String](koulutusalaKoodiUrit, assertMatch(_, KoulutusalaKoodiPattern)),
+  def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    assertTrue(tyyppi == koulutustyyppi, s"$path.tyyppi", InvalidMetadataTyyppi),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
+    validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _))
   )
 }
 
@@ -122,11 +122,11 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
   val tutkintonimikeKoodiUrit: Seq[String]
   val opintojenLaajuusKoodiUri: Option[String]
 
-  override def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    super.validate(koulutustyyppi, tila, kielivalinta),
-    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvauksenNimi, "kuvauksenNimi")),
-    validateIfNonEmpty[String](tutkintonimikeKoodiUrit, assertMatch(_, TutkintonimikeKoodiPattern)),
-    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern))
+  override def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(koulutustyyppi, tila, kielivalinta, path),
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi")),
+    validateIfNonEmpty[String](tutkintonimikeKoodiUrit, s"$path.tutkintonimikeKoodiUrit", assertMatch(_, TutkintonimikeKoodiPattern, _)),
+    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri"))
   )
 }
 

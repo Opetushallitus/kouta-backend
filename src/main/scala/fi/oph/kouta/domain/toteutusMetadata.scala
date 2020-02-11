@@ -3,8 +3,8 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 package object toteutusMetadata {
 
@@ -253,12 +253,12 @@ sealed trait ToteutusMetadata extends ValidatableSubEntity {
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilot: Seq[Yhteyshenkilo]
 
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    validateIfDefined[Opetus](opetus, _.validate(tila, kielivalinta)),
-    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, _.validate(tila, kielivalinta)),
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[Opetus](opetus, _.validate(tila, kielivalinta, s"$path.opetus")),
+    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfJulkaistu(tila, and(
-      validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus"),
-      assertNotOptional(opetus, "opetus"),
+      validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+      assertNotOptional(opetus, s"$path.opetus"),
     ))
   )
 }
@@ -267,10 +267,10 @@ trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
   val alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
   val ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
 
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    super.validate(tila, kielivalinta),
-    validateIfNonEmpty[KorkeakouluOsaamisala](alemmanKorkeakoulututkinnonOsaamisalat, _.validate(tila, kielivalinta)),
-    validateIfNonEmpty[KorkeakouluOsaamisala](ylemmanKorkeakoulututkinnonOsaamisalat, _.validate(tila, kielivalinta))
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfNonEmpty[KorkeakouluOsaamisala](alemmanKorkeakoulututkinnonOsaamisalat, s"$path.alemmanKorkeakoulututkinnonOsaamisalat", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[KorkeakouluOsaamisala](ylemmanKorkeakoulututkinnonOsaamisalat, s"$path.ylemmanKorkeakoulututkinnonOsaamisalat", _.validate(tila, kielivalinta, _)),
   )
 }
 
@@ -281,10 +281,10 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    super.validate(tila, kielivalinta),
-    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, _.validate(tila, kielivalinta)),
-    validateIfJulkaistu(tila, assertNotEmpty(osaamisalat, "osaamisalat"))
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat",_.validate(tila, kielivalinta, _)),
+    validateIfJulkaistu(tila, assertNotEmpty(osaamisalat, s"$path.osaamisalat"))
   )
 }
 
@@ -310,11 +310,11 @@ trait Osaamisala extends ValidatableSubEntity {
   val linkki: Kielistetty
   val otsikko: Kielistetty
 
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    validateIfNonEmpty(linkki.values.toSeq, assertValidUrl),
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfNonEmpty(linkki, s"$path.linkki", assertValidUrl _),
     validateIfJulkaistu(tila, and(
-      validateOptionalKielistetty(kielivalinta, linkki, "linkki"),
-      validateOptionalKielistetty(kielivalinta, otsikko, "otsikko"),
+      validateOptionalKielistetty(kielivalinta, linkki, s"$path.linkki"),
+      validateOptionalKielistetty(kielivalinta, otsikko, s"$path.otsikko"),
     ))
   )
 }
@@ -322,9 +322,9 @@ trait Osaamisala extends ValidatableSubEntity {
 case class AmmatillinenOsaamisala(koodiUri: String,
                                   linkki: Kielistetty = Map(),
                                   otsikko: Kielistetty = Map()) extends Osaamisala {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    super.validate(tila, kielivalinta),
-    assertMatch(koodiUri, OsaamisalaKoodiPattern)
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    assertMatch(koodiUri, OsaamisalaKoodiPattern, s"$path.koodiUri")
   )
 }
 
@@ -332,11 +332,11 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
                                  kuvaus: Kielistetty = Map(),
                                  linkki: Kielistetty = Map(),
                                  otsikko: Kielistetty = Map()) extends Osaamisala {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    super.validate(tila, kielivalinta),
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
-      validateKielistetty(kielivalinta, nimi, "nimi"),
-      validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus")
+      validateKielistetty(kielivalinta, nimi, s"$path.nimi"),
+      validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
     ))
   )
 }
@@ -359,38 +359,36 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
                   stipendinKuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    validateIfNonEmpty[String](opetuskieliKoodiUrit, k => assertMatch(k, OpetuskieliKoodiPattern)),
-    validateIfNonEmpty[String](opetusaikaKoodiUrit, k => assertMatch(k, OpetusaikaKoodiPattern)),
-    validateIfNonEmpty[String](opetustapaKoodiUrit, k => assertMatch(k, OpetustapaKoodiPattern)),
-    validateIfDefined[String](koulutuksenAlkamiskausi, k => assertMatch(k, KausiKoodiPattern)),
-    validateIfDefined[Int](koulutuksenAlkamisvuosi, k => assertMatch(k.toString, VuosiPattern)),
-    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara),
-    validateIfNonEmpty[Lisatieto](lisatiedot, _.validate(tila, kielivalinta)),
-    validateIfDefined[Double](stipendinMaara, assertNotNegative(_, "stipendinMaara")),
-    validateIfDefined[Double](maksunMaara, assertNotNegative(_, "maksunMaara")),
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
+    validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
+    validateIfNonEmpty[String](opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit", assertMatch(_, OpetustapaKoodiPattern, _)),
+    validateIfDefined[String](koulutuksenAlkamiskausi, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausi")),
+    validateIfDefined[Int](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
+    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
+    validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[Double](stipendinMaara, assertNotNegative(_, s"$path.stipendinMaara")),
+    validateIfDefined[Double](maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
     validateIfJulkaistu(tila, and(
-      assertNotEmpty(opetuskieliKoodiUrit, "opetuskieliKoodiUrit"),
-      validateOptionalKielistetty(kielivalinta, opetuskieletKuvaus, "opetuskieletKuvaus"),
-      assertNotEmpty(opetusaikaKoodiUrit, "opetusaikaKoodiUrit"),
-      validateOptionalKielistetty(kielivalinta, opetusaikaKuvaus, "opetusaikaKuvaus"),
-      assertNotEmpty(opetustapaKoodiUrit, "opetustapaKoodiUrit"),
-      validateOptionalKielistetty(kielivalinta, opetuskieletKuvaus, "opetuskieletKuvaus"),
-      validateOptionalKielistetty(kielivalinta, opetusaikaKuvaus, "opetusaikaKuvaus"),
-      validateOptionalKielistetty(kielivalinta, opetustapaKuvaus, "opetustapaKuvaus"),
-      assertNotOptional(onkoMaksullinen, "onkoMaksullinen"),
-      validateOptionalKielistetty(kielivalinta, maksullisuusKuvaus, "maksullisuusKuvaus"),
-      validateIfTrue(onkoMaksullinen.contains(true), assertNotOptional(maksunMaara, "maksunMaara")),
-      validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, "koulutuksenAlkamispaivamaara")),
-      validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, "koulutuksenPaattymispaivamaara")),
-      assertNotOptional(onkoStipendia, "onkoStipendia"),
-      validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, "stipendinMaara")),
-      validateOptionalKielistetty(kielivalinta, stipendinKuvaus, "stipendinKuvaus"),
+      assertNotEmpty(opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit"),
+      assertNotEmpty(opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit"),
+      assertNotEmpty(opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit"),
+      validateOptionalKielistetty(kielivalinta, opetuskieletKuvaus, s"$path.opetuskieletKuvaus"),
+      validateOptionalKielistetty(kielivalinta, opetusaikaKuvaus, s"$path.opetusaikaKuvaus"),
+      validateOptionalKielistetty(kielivalinta, opetustapaKuvaus, s"$path.opetustapaKuvaus"),
+      assertNotOptional(onkoMaksullinen, s"$path.onkoMaksullinen"),
+      validateOptionalKielistetty(kielivalinta, maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
+      validateIfTrue(onkoMaksullinen.contains(true), assertNotOptional(maksunMaara, s"$path.maksunMaara")),
+      validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
+      validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")),
+      assertNotOptional(onkoStipendia, s"$path.onkoStipendia"),
+      validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
+      validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
       if (koulutuksenTarkkaAlkamisaika) {
-        assertNotOptional(koulutuksenAlkamispaivamaara, "koulutuksenAlkamispaivamaara")
+        assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
       } else and(
-        assertNotOptional(koulutuksenAlkamiskausi, "koulutuksenAlkamiskausi"),
-        assertNotOptional(koulutuksenAlkamisvuosi, "koulutuksenAlkamisvuosi")
+        assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"),
+        assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi")
       )
     ))
   )

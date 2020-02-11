@@ -221,10 +221,10 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   override def validate(): IsValid = and(
     super.validate(),
-    assertValid(koulutusOid),
-    validateOidList(tarjoajat),
-    validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta)),
-    validateIfDefined[String](teemakuva, assertValidUrl),
+    assertValid(koulutusOid, "koulutusOid"),
+    validateOidList(tarjoajat, "tarjoajat"),
+    validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
     validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
   )
 

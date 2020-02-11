@@ -8,22 +8,22 @@ class ValintaperusteMetadataValidationSpec extends SubEntityValidationSpec[Valin
 
   "ValintaperusteMetadata validation" should "validate valintatavat" in {
     val metadata = AmmValintaperusteMetadata.copy(valintatavat = Seq(Valintatapa1.copy(valintatapaKoodiUri = Some("virhe"))))
-    failsValidation(Tallennettu, metadata, validationMsg("virhe"))
+    failsValidation(Tallennettu, metadata, "valintatavat[0].valintatapaKoodiUri", validationMsg("virhe"))
   }
 
   it should "validate kielitaitovaatimukset" in {
     val metadata = AmmValintaperusteMetadata.copy(kielitaitovaatimukset = Seq(Kielitaitovaatimus1.copy(kieliKoodiUri = Some("virhe"))))
-    failsValidation(Tallennettu, metadata, validationMsg("virhe"))
+    failsValidation(Tallennettu, metadata, "kielitaitovaatimukset[0].kieliKoodiUri", validationMsg("virhe"))
   }
 
   it should "validate kuvaus if julkaistu" in {
     passesValidation(Tallennettu, AmmValintaperusteMetadata.copy(kuvaus = Map(Fi -> "kuvaus")))
-    failsValidation(Julkaistu, AmmValintaperusteMetadata.copy(kuvaus = Map(Fi -> "kuvaus")), invalidKielistetty("kuvaus", Seq(Sv)))
+    failsValidation(Julkaistu, AmmValintaperusteMetadata.copy(kuvaus = Map(Fi -> "kuvaus")), "kuvaus", invalidKielistetty(Seq(Sv)))
   }
 
   it should "validate osaamistaustaKoodiUrit for KorkeakoulutusValintaperusteMetadata" in {
     val metadata = YoValintaperusteMetadata.copy(osaamistaustaKoodiUrit = Seq("virhe"))
-    failsValidation(Tallennettu, metadata, validationMsg("virhe"))
+    failsValidation(Tallennettu, metadata, "osaamistaustaKoodiUrit[0]", validationMsg("virhe"))
   }
 }
 
@@ -33,16 +33,20 @@ class ValintaperusteKielitaitovaatimusValidationSpec extends SubEntityValidation
   }
 
   it should "fail if kieliKoodiUri is invalid" in {
-    failsValidation(Tallennettu, Kielitaitovaatimus1.copy(kieliKoodiUri = Some("virhe")), validationMsg("virhe"))
+    failsValidation(Tallennettu, Kielitaitovaatimus1.copy(kieliKoodiUri = Some("virhe")), "kieliKoodiUri", validationMsg("virhe"))
   }
 
   it should "validate kielitaidonVoiOsoittaa" in {
-    failsValidation(Tallennettu, Kielitaitovaatimus1.copy(kielitaidonVoiOsoittaa = Seq(Kielitaito(Some("virhe")))), validationMsg("virhe"))
+    failsValidation(
+      Tallennettu,
+      Kielitaitovaatimus1.copy(kielitaidonVoiOsoittaa = Seq(Kielitaito(Some("virhe")))),
+      "kielitaidonVoiOsoittaa[0].kielitaitoKoodiUri",
+      validationMsg("virhe"))
   }
 
   it should "fail if kieliKoodiUri is missing in a julkaistu valintaperusteKielitaitovaatimus" in {
     passesValidation(Tallennettu, Kielitaitovaatimus1.copy(kieliKoodiUri = None))
-    failsValidation(Julkaistu, Kielitaitovaatimus1.copy(kieliKoodiUri = None), missingMsg("kieliKoodiUri"))
+    failsValidation(Julkaistu, Kielitaitovaatimus1.copy(kieliKoodiUri = None), "kieliKoodiUri", missingMsg)
   }
 }
 
@@ -54,12 +58,12 @@ class KielitaitoValidationSpec extends SubEntityValidationSpec[Kielitaito] {
   }
 
   it should "fail if kielitaitoKoodiUri is invalid" in {
-    failsValidation(Tallennettu, kielitaito.copy(kielitaitoKoodiUri = Some("virhe")), validationMsg("virhe"))
+    failsValidation(Tallennettu, kielitaito.copy(kielitaitoKoodiUri = Some("virhe")), "kielitaitoKoodiUri", validationMsg("virhe"))
   }
 
   it should "fail if a julkaistu kielitaito has invalid lisatieto" in {
     passesValidation(Tallennettu, kielitaito.copy(lisatieto = Map(Fi -> "lisatieto")))
-    failsValidation(Julkaistu, kielitaito.copy(lisatieto = Map(Fi -> "lisatieto")), invalidKielistetty("lisatieto", Seq(Sv)))
+    failsValidation(Julkaistu, kielitaito.copy(lisatieto = Map(Fi -> "lisatieto")), "lisatieto", invalidKielistetty(Seq(Sv)))
   }
 }
 
@@ -76,7 +80,7 @@ class KielitaitovaatimusValidationSpec extends SubEntityValidationSpec[Kielitait
   }
 
   it should "fail if kielitaitovaatimusKoodiUri is invalid" in {
-    failsValidation(Tallennettu, kielitaitovaatimus.copy(kielitaitovaatimusKoodiUri = Some("virhe")), validationMsg("virhe"))
+    failsValidation(Tallennettu, kielitaitovaatimus.copy(kielitaitovaatimusKoodiUri = Some("virhe")), "kielitaitovaatimusKoodiUri", validationMsg("virhe"))
   }
 
   it should "pass if kielitaitovaatimusKoodiUri is missing" in {
@@ -85,7 +89,11 @@ class KielitaitovaatimusValidationSpec extends SubEntityValidationSpec[Kielitait
 
   it should "validate kielitaitovaatimusKuvaukset" in {
     val kielitaitovaatimusKuvaukset = Seq(KielitaitovaatimusKuvaus(kielitaitovaatimusKuvausKoodiUri = Some("virhe")))
-    failsValidation(Tallennettu, kielitaitovaatimus.copy(kielitaitovaatimusKuvaukset = kielitaitovaatimusKuvaukset), validationMsg("virhe"))
+    failsValidation(
+      Tallennettu,
+      kielitaitovaatimus.copy(kielitaitovaatimusKuvaukset = kielitaitovaatimusKuvaukset),
+      "kielitaitovaatimusKuvaukset[0].kielitaitovaatimusKuvausKoodiUri",
+      validationMsg("virhe"))
   }
 
   it should "pass if kielitaitovaatimusKuvaukset is empty" in {
@@ -103,7 +111,7 @@ class KielitaitovaatimusKuvausValidationSpec extends SubEntityValidationSpec[Kie
   }
 
   it should "fail if kielitaitovaatimusKuvausKoodiUri is invalid" in {
-    failsValidation(Tallennettu, kielitaitovaatimusKuvaus.copy(kielitaitovaatimusKuvausKoodiUri = Some("virhe")), validationMsg("virhe"))
+    failsValidation(Tallennettu, kielitaitovaatimusKuvaus.copy(kielitaitovaatimusKuvausKoodiUri = Some("virhe")), "kielitaitovaatimusKuvausKoodiUri", validationMsg("virhe"))
   }
 
   it should "pass if kielitaitovaatimusKuvausKoodiUri is invalid" in {

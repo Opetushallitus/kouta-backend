@@ -11,10 +11,10 @@ class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
   val min = MinSorakuvaus
 
   it should "fail if perustiedot is invalid" in {
-    failsValidation(max.copy(kielivalinta = Seq()), MissingKielivalinta)
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    failsValidation(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
+    failsValidation(max.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
   it should "pass imcomplete sorakuvaus if not julkaistu" in {

@@ -139,7 +139,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 
@@ -265,7 +265,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 }

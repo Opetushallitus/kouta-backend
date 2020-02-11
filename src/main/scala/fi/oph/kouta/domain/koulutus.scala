@@ -169,15 +169,15 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
 
   override def validate(): IsValid = {
     and(super.validate(),
-      validateOidList(tarjoajat),
-      validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern)),
-      validateIfDefined[KoulutusMetadata](metadata, _.validate(koulutustyyppi, tila, kielivalinta)),
+      validateOidList(tarjoajat, "tarjoajat"),
+      validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern, "koulutusKoodiUri")),
+      validateIfDefined[KoulutusMetadata](metadata, _.validate(koulutustyyppi, tila, kielivalinta, "metadata")),
       validateIfJulkaistu(tila, and(
-        assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
+        assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         validateIfTrue(koulutustyyppi == Amm, assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
         assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"),
         assertNotOptional(metadata, "metadata"),
-        validateIfDefined(teemakuva, assertValidUrl),
+        validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
         validateIfTrue(!OrganisaatioOid("1.2.246.562.10.00000000001").equals(organisaatioOid), //TODO: !KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid), (rikkoo mm. indeksoijan testit)
           assertNotEmpty(tarjoajat, "tarjoajat")))
       )

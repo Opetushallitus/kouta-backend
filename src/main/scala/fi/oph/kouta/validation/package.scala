@@ -3,7 +3,7 @@ package fi.oph.kouta
 import fi.oph.kouta.domain.{Julkaisutila, Kieli}
 
 package object validation {
-  type IsValid = Seq[String]
+  type IsValid = Seq[ValidationError]
   val NoErrors: IsValid = Nil
 
   trait Validatable {
@@ -11,6 +11,10 @@ package object validation {
   }
 
   trait ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid
+  }
+
+  case class ValidationError(path: String, msg: String) {
+    override def toString: String = s"""{"path":"$path","msg":"$msg"}"""
   }
 }

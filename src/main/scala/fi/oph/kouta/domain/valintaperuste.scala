@@ -201,11 +201,11 @@ case class Valintaperuste(id: Option[UUID] = None,
 
   override def validate(): IsValid = and(
     super.validate(),
-    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
-    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
-    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
-    validateIfNonEmpty[Valintakoe](valintakokeet, _.validate(tila, kielivalinta)),
-    validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta)),
+    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
+    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
+    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
+    validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),

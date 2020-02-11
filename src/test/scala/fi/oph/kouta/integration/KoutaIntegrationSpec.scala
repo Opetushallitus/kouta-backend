@@ -10,6 +10,7 @@ import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.validation.ValidationError
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
@@ -153,9 +154,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def errorBody(expected: String): String = s"""{"error":"${expected}"}"""
 
-  def validateErrorBody(expected: List[String]): String = s"""[${expected.map(s => s""""$s"""").mkString(",")}]"""
+  def validateErrorBody(expected: List[ValidationError]): String = "[" + expected.map(_.toString).mkString(",") + "]"
 
-  def validateErrorBody(expected: String): String = validateErrorBody(List(expected))
+  def validateErrorBody(expected: String, path: String): String = validateErrorBody(List(ValidationError(path, expected)))
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 

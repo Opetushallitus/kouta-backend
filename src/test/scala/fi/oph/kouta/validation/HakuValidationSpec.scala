@@ -14,12 +14,12 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   val min = MinHaku
 
   it should "fail if perustiedot is invalid" in {
-    failsValidation(max.copy(oid = Some(HakuOid("moikka"))), validationMsg("moikka"))
-    failsValidation(max.copy(kielivalinta = Seq()), MissingKielivalinta)
-    failsValidation(max.copy(nimi = Map()), invalidKielistetty("nimi", Seq(Fi, Sv)))
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    failsValidation(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
+    failsValidation(max.copy(oid = Some(HakuOid("moikka"))), "oid", validationMsg("moikka"))
+    failsValidation(max.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(max.copy(nimi = Map()), "nimi", invalidKielistetty(Seq(Fi, Sv)))
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
   it should "pass imcomplete haku if not julkaistu" in {
@@ -27,7 +27,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail if haku oid is invalid" in {
-    failsValidation(min.copy(oid = Some(HakuOid("1.2.3"))), validationMsg("1.2.3"))
+    failsValidation(min.copy(oid = Some(HakuOid("1.2.3"))), "oid", validationMsg("1.2.3"))
   }
 
   it should "pass non-julkaistu haku even if alkamisvuosi is invalid" in {
@@ -36,46 +36,46 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail if julkaistu haku is invalid" in {
-    failsValidation(max.copy(hakutapaKoodiUri = None), missingMsg("hakutapaKoodiUri"))
-    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi")), validationMsg("korppi"))
+    failsValidation(max.copy(hakutapaKoodiUri = None), "hakutapaKoodiUri", missingMsg)
+    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi")), "hakutapaKoodiUri", validationMsg("korppi"))
 
-    failsValidation(max.copy(alkamiskausiKoodiUri = Some("tintti")), validationMsg("tintti"))
-    failsValidation(max.copy(alkamiskausiKoodiUri = None, hakutapaKoodiUri = Some("hakutapa_01#1")), missingMsg("alkamiskausiKoodiUri"))
+    failsValidation(max.copy(alkamiskausiKoodiUri = Some("tintti")), "alkamiskausiKoodiUri", validationMsg("tintti"))
+    failsValidation(max.copy(alkamiskausiKoodiUri = None, hakutapaKoodiUri = Some("hakutapa_01#1")), "alkamiskausiKoodiUri", missingMsg)
 
-    failsValidation(max.copy(alkamisvuosi = None, hakutapaKoodiUri = Some("hakutapa_01#1")), missingMsg("alkamisvuosi"))
-    failsValidation(max.copy(alkamisvuosi = Some("20180")), validationMsg("20180"))
-    failsValidation(max.copy(alkamisvuosi = Some("2017")), validationMsg("2017"))
+    failsValidation(max.copy(alkamisvuosi = None, hakutapaKoodiUri = Some("hakutapa_01#1")), "alkamisvuosi", missingMsg)
+    failsValidation(max.copy(alkamisvuosi = Some("20180")), "alkamisvuosi", validationMsg("20180"))
+    failsValidation(max.copy(alkamisvuosi = Some("2017")), "alkamisvuosi", validationMsg("2017"))
 
-    failsValidation(max.copy(kohdejoukkoKoodiUri = None), missingMsg("kohdejoukkoKoodiUri"))
-    failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), validationMsg("kerttu"))
-    failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), validationMsg("tonttu"))
-    failsValidation(max.copy(hakulomaketyyppi = None), missingMsg("hakulomaketyyppi"))
+    failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
+    failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
+    failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), "kohdejoukonTarkenneKoodiUri", validationMsg("tonttu"))
+    failsValidation(max.copy(hakulomaketyyppi = None), "hakulomaketyyppi", missingMsg)
 
     val invalidAjanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
-    failsValidation(max.copy(hakuajat = List(invalidAjanjakso)), invalidAjanjaksoMsg(invalidAjanjakso, "Hakuaika"))
+    failsValidation(max.copy(hakuajat = List(invalidAjanjakso)), "hakuajat[0]", invalidAjanjaksoMsg(invalidAjanjakso))
 
     val pastAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = TestData.inPast(100))
-    failsValidation(max.copy(hakuajat = List(pastAjanjakso)), pastAjanjaksoMsg(pastAjanjakso, "Hakuaika"))
+    failsValidation(max.copy(hakuajat = List(pastAjanjakso)), "hakuajat[0]", pastAjanjaksoMsg(pastAjanjakso))
   }
 
   it should "fail if metadata is invalid" in {
     val ajanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
     val metadata = max.metadata.get.copy(tulevaisuudenAikataulu = List(ajanjakso))
-    failsValidation(max.copy(metadata = Some(metadata)), invalidAjanjaksoMsg(ajanjakso, "tulevaisuudenAikataulu"))
+    failsValidation(max.copy(metadata = Some(metadata)), "metadata.tulevaisuudenAikataulu[0]", invalidAjanjaksoMsg(ajanjakso))
   }
 
   it should "fail if yhteyshenkilot has other info, but no name" in {
     val metadata = max.metadata.get.copy(yhteyshenkilot = Seq(Yhteyshenkilo(sahkoposti = Map(Fi -> "sahkoposti", Sv -> "email"))))
-    failsValidation(max.copy(metadata = Some(metadata)), invalidKielistetty("nimi", Seq(Fi, Sv)))
+    failsValidation(max.copy(metadata = Some(metadata)), "metadata.yhteyshenkilot[0].nimi", invalidKielistetty(Seq(Fi, Sv)))
   }
 
 
     it should "fail if hakulomake is invalid" in {
-    failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None), missingMsg("hakulomakeAtaruId"))
-    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi")), invalidKielistetty("hakulomakeLinkki", Seq(Sv)))
-    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map()), invalidKielistetty("hakulomakeLinkki", Seq(Fi, Sv)))
-    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi", Sv -> "virhe")), invalidUrl("virhe"))
-    failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus")), invalidKielistetty("hakulomakeKuvaus", Seq(Sv)))
+    failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None), "hakulomakeAtaruId", missingMsg)
+    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi")), "hakulomakeLinkki", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map()), "hakulomakeLinkki", invalidKielistetty(Seq(Fi, Sv)))
+    failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi", Sv -> "virhe")), "hakulomakeLinkki", invalidUrl("virhe"))
+    failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus")), "hakulomakeKuvaus", invalidKielistetty(Seq(Sv)))
   }
 
   it should "pass valid hakulomake" in {
@@ -90,6 +90,6 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
   it should "return multiple error messages" in {
     failsValidation(max.copy(hakutapaKoodiUri = Some("korppi"), alkamisvuosi = Some("2017")),
-      validationMsg("korppi"), validationMsg("2017"))
+      ("hakutapaKoodiUri", validationMsg("korppi")), ("alkamisvuosi", validationMsg("2017")))
   }
 }

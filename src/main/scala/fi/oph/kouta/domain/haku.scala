@@ -204,15 +204,15 @@ case class Haku(oid: Option[HakuOid] = None,
 
   override def validate(): IsValid = and(
     super.validate(),
-    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
-    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
-    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
-    validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
-    validateIfNonEmpty[Ajanjakso](hakuajat, validateAjanjakso(_, "Hakuaika")),
-    validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta)),
+    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
+    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
+    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
+    validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, "alkamiskausiKoodiUri")),
+    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", validateAjanjakso),
+    validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
-      validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi),
-      validateIfNonEmpty[Ajanjakso](hakuajat, assertAjanjaksoEndsInFuture(_, "Hakuaika")),
+      validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_, "alkamisvuosi")),
+      validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", assertAjanjaksoEndsInFuture),
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
@@ -238,11 +238,11 @@ case class HakuListItem(oid: HakuOid,
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, _.validate(tila, kielivalinta)),
-    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, validateAjanjakso(_, "tulevaisuudenAikataulu")),
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", validateAjanjakso),
     validateIfJulkaistu(tila,
-      validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, assertAjanjaksoEndsInFuture(_, "tulevaisuudenAikataulu"))
+      validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", assertAjanjaksoEndsInFuture)
     )
   )
 }

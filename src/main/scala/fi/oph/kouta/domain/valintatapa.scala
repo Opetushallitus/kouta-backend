@@ -117,56 +117,53 @@ case class Valintatapa(nimi: Kielistetty = Map(),
                        kynnysehto: Kielistetty = Map(),
                        enimmaispisteet: Option[Double] = None,
                        vahimmaispisteet: Option[Double] = None) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateKielistetty(kielivalinta, nimi, "nimi"),
-    validateIfDefined[String](valintatapaKoodiUri, assertMatch(_, ValintatapajonoKoodiPattern)),
-    validateIfNonEmpty[ValintatapaSisalto](sisalto, _.validate(tila, kielivalinta)),
-    validateIfDefined[Double](enimmaispisteet, assertNotNegative(_, "enimmaispisteet")),
-    validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, "vahimmaispisteet")),
+    validateIfDefined[String](valintatapaKoodiUri, assertMatch(_, ValintatapajonoKoodiPattern, s"$path.valintatapaKoodiUri")),
+    validateIfNonEmpty[ValintatapaSisalto](sisalto, s"$path.sisalto", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[Double](enimmaispisteet, assertNotNegative(_, s"$path.enimmaispisteet")),
+    validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, s"$path.vahimmaispisteet")),
     validateIfJulkaistu(tila, and(
-      assertNotOptional(valintatapaKoodiUri, "valintatapaKoodiUri"),
-      validateOptionalKielistetty(kielivalinta, kuvaus, "kuvaus"),
-      validateOptionalKielistetty(kielivalinta, kynnysehto, "kynnysehto"),
-      validateMinMax(vahimmaispisteet, enimmaispisteet, "vahimmaispisteet", "enimmaispisteet")
+      assertNotOptional(valintatapaKoodiUri, s"$path.valintatapaKoodiUri"),
+      validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto"),
+      validateMinMax(vahimmaispisteet, enimmaispisteet, s"$path.vahimmaispisteet")
     ))
   )
 
 }
 
-sealed trait ValintatapaSisalto extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid
-}
+sealed trait ValintatapaSisalto extends ValidatableSubEntity
 
 case class ValintatapaSisaltoTeksti(teksti: Kielistetty) extends ValintatapaSisalto {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid =
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
     validateIfJulkaistu(tila,
-      validateKielistetty(kielivalinta, teksti, "teksti")
+      validateKielistetty(kielivalinta, teksti, s"$path.teksti")
     )
 }
 
 case class Taulukko(id: Option[UUID],
                     nimi: Kielistetty = Map(),
                     rows: Seq[Row] = Seq()) extends ValintatapaSisalto {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, nimi, "nimi")),
-    validateIfNonEmpty[Row](rows, _.validate(tila, kielivalinta))
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi")),
+    validateIfNonEmpty[Row](rows, s"$path.rows", _.validate(tila, kielivalinta, _))
   )
 }
 
 case class Row(index: Int,
                isHeader: Boolean = false,
                columns: Seq[Column] = Seq()) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
-    assertNotNegative(index, s"row $index"),
-    validateIfNonEmpty[Column](columns, _.validate(tila, kielivalinta, index))
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    assertNotNegative(index, s"$path.index"),
+    validateIfNonEmpty[Column](columns, s"$path.columns", _.validate(tila, kielivalinta, _))
   )
 }
 
 case class Column(index: Int,
                   text: Kielistetty = Map()) {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], row: Int): IsValid = and(
-    assertNotNegative(index, s"row $row column $index"),
-    validateOptionalKielistetty(kielivalinta, text, s"row $row column $index text")
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    assertNotNegative(index, s"$path.index"),
+    validateOptionalKielistetty(kielivalinta, text, s"$path.text")
   )
-
 }

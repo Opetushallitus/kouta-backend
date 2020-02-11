@@ -134,7 +134,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head, "Hakuaika")))
+      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
     }
   }
 
@@ -285,7 +285,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head, "Hakuaika")))
+      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
     }
   }
 

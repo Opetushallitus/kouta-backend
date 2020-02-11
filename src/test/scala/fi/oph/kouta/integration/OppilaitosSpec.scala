@@ -105,7 +105,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 
@@ -236,7 +236,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 

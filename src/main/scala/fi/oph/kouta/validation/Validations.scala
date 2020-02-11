@@ -12,22 +12,21 @@ object Validations {
   private val urlValidator = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
 
-  def error(msg: String): IsValid = List(msg)
+  def error(path: String, msg: String): IsValid = List(ValidationError(path, msg))
 
   def and(validations: IsValid*): IsValid = validations.flatten.distinct
 
   def validationMsg(value: String) = s"'${value}' ei ole validi"
-  def missingMsg(name: String) = s"Pakollinen tieto '$name' puuttuu"
-  def invalidOidsMsg(oids: Seq[Oid]) = s"Arvot [${oids.map(_.toString).mkString(",")}] eivät ole valideja oideja"
-  def notNegativeMsg(name: String) = s"'$name' ei voi olla negatiivinen"
-  def invalidKielistetty(field: String, values: Seq[Kieli]) = s"Kielistetystä kentästä $field puuttuu arvo kielillä [${values.mkString(",")}]"
+  def missingMsg = s"Pakollinen tieto puuttuu"
+  val notNegativeMsg = s"ei voi olla negatiivinen"
+  def invalidKielistetty(values: Seq[Kieli]) = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]"
   def invalidTutkintoonjohtavuus(tyyppi: String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
   def invalidUrl(url: String) = s"'${url}' ei ole validi URL"
   def invalidEmail(email: String) = s"'${email}' ei ole validi email"
-  def invalidAjanjaksoMsg(ajanjakso: Ajanjakso, field: String) = s"$field ${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
-  def pastAjanjaksoMsg(ajanjakso: Ajanjakso, field: String) = s"$field ${ajanjakso.alkaa} - ${ajanjakso.paattyy} on menneisyydessä"
-  def pastDateMsg(date: LocalDateTime, field: String) = s"$field ($date) on menneisyydessä"
-  def minmaxMsg(minName: String, maxName: String) = s"$minName on suurempi kuin $maxName"
+  def invalidAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
+  def pastAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} päättyy menneisyydessä"
+  def pastDateMsg(date: LocalDateTime) = s"$date on menneisyydessä"
+  def minmaxMsg(minValue: Any, maxValue: Any) = s"$minValue on suurempi kuin $maxValue"
 
   val KoulutusKoodiPattern: Pattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val HakutapaKoodiPattern: Pattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
@@ -55,99 +54,94 @@ object Validations {
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
-  val MissingKielivalinta = "Kielivalinta puuttuu"
   val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
   val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"
 
-  def assertTrue(b: Boolean, msg: String): IsValid = if (b) NoErrors else error(msg)
-  def assertFalse(b: Boolean, msg: String): IsValid = assertTrue(!b, msg)
-  def assertNotNegative(i: Int, name: String): IsValid = assertTrue(i >= 0, notNegativeMsg(name))
-  def assertNotNegative(i: Double, name: String): IsValid = assertTrue(i >= 0, notNegativeMsg(name))
-  def assertOption[E](o: Option[E], f: (E) => Boolean, msg: String, optional: Boolean = true): IsValid = assertTrue(o.map(f).getOrElse(optional), msg)
-  def assertOptionPresent[E](o: Option[E], msg: String): IsValid = assertTrue(o.isDefined, msg)
-  def assertMatch(value: String, pattern: Pattern): IsValid = assertTrue(pattern.matcher(value).matches(), validationMsg(value))
-  def assertValid(oid: Oid): IsValid = assertTrue(oid.isValid(), validationMsg(oid.toString))
-  def assertNotOptional[T](value: Option[T], name: String): IsValid = assertTrue(value.isDefined, missingMsg(name))
-  def assertNotEmpty[T](value: Seq[T], name: String): IsValid = assertTrue(value.nonEmpty, missingMsg(name))
+  def assertTrue(b: Boolean, path: String, msg: String): IsValid = if (b) NoErrors else error(path, msg)
+  def assertNotNegative(i: Int, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
+  def assertNotNegative(i: Double, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
+  def assertMatch(value: String, pattern: Pattern, path: String): IsValid = assertTrue(pattern.matcher(value).matches(), path, validationMsg(value))
+  def assertValid(oid: Oid, path: String): IsValid = assertTrue(oid.isValid(), path, validationMsg(oid.toString))
+  def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
+  def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
 
-  def validateNotOptional[E](o: Option[E], name: String, f: (E) => IsValid): IsValid = and(
-    assertNotOptional(o, name),
-    validateIfDefined(o, f)
-  )
+  def validateIfDefined[T](value: Option[T], f: (T) => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
-  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
+  def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
+    values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
 
-  def validateIfNonEmpty[T](values: Seq[T], f: T => IsValid): IsValid = values.flatMap(f(_))
+  def validateIfNonEmpty(k: Kielistetty, path: String, f: (String, String) => IsValid): IsValid =
+    k.flatMap { case (k, v) => f(v, s"$path.$k") }.toSeq
 
   def validateIfTrue(b: Boolean, f: => IsValid): IsValid = if(b) f else NoErrors
 
   def validateIfJulkaistu(tila: Julkaisutila, f: => IsValid): IsValid = validateIfTrue(tila == Julkaistu, f)
 
-  def findInvalidOids(l: Seq[Oid]): Seq[Oid] = l.filter(!_.isValid())
-  def validateOidList(values: Seq[Oid]): IsValid = findInvalidOids(values) match {
-    case x if x.isEmpty => NoErrors
-    case oids => error(invalidOidsMsg(oids))
-  }
+  def validateOidList(values: Seq[Oid], path: String): IsValid = validateIfNonEmpty(values, path, assertValid _)
 
   def findPuuttuvatKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] = {
     kielivalinta.diff(k.keySet.toSeq).union(
-      k.filter{case (kieli, arvo) => arvo.isEmpty}.keySet.toSeq)}
+      k.filter { case (_, arvo) => arvo.isEmpty }.keySet.toSeq)
+  }
 
-  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, field: String): IsValid =
+  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     findPuuttuvatKielet(kielivalinta, k) match {
       case x if x.isEmpty => NoErrors
-      case kielet         => error(invalidKielistetty(field, kielet))
+      case kielet         => error(path, invalidKielistetty(kielet))
     }
 
-  def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, field: String): IsValid =
-    validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, field))
+  def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
+    validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
 
-  def validateAjanjakso(ajanjakso: Ajanjakso, field: String): IsValid =
-    assertTrue(ajanjakso.alkaa.isBefore(ajanjakso.paattyy), invalidAjanjaksoMsg(ajanjakso, field))
+  def validateAjanjakso(ajanjakso: Ajanjakso, path: String): IsValid =
+    assertTrue(ajanjakso.alkaa.isBefore(ajanjakso.paattyy), path, invalidAjanjaksoMsg(ajanjakso))
 
-  def assertAjanjaksoEndsInFuture(ajanjakso: Ajanjakso, field: String): IsValid =
-    assertTrue(ajanjakso.paattyy.isAfter(LocalDateTime.now()), pastAjanjaksoMsg(ajanjakso, field))
+  def assertAjanjaksoEndsInFuture(ajanjakso: Ajanjakso, path: String): IsValid =
+    assertTrue(ajanjakso.paattyy.isAfter(LocalDateTime.now()), path, pastAjanjaksoMsg(ajanjakso))
 
-  def assertHakuajatInFuture(hakuajat: Seq[Ajanjakso]): IsValid =
-    hakuajat.flatMap(ajanjakso => assertTrue(ajanjakso.paattyy.isAfter(LocalDateTime.now()), validationMsg(ajanjakso.toString)))
+  def assertHakuajatInFuture(hakuajat: Seq[Ajanjakso], path: String): IsValid = {
+    def assertAjanjaksoInFuture(a: Ajanjakso, p: String): IsValid =
+      assertTrue(a.paattyy.isAfter(LocalDateTime.now()), p, validationMsg(a.toString))
+
+    validateIfNonEmpty(hakuajat, path, assertAjanjaksoInFuture _)
+  }
 
   def isValidAlkamisvuosi(s: String): Boolean = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
-  def validateAlkamisvuosi(alkamisvuosi: String): IsValid = assertTrue(isValidAlkamisvuosi(alkamisvuosi), validationMsg(alkamisvuosi))
+  def validateAlkamisvuosi(alkamisvuosi: String, path: String): IsValid =
+    assertTrue(isValidAlkamisvuosi(alkamisvuosi), path, validationMsg(alkamisvuosi))
 
   def validateHakulomake(hakulomaketyyppi: Option[Hakulomaketyyppi],
-                                   hakulomakeAtaruId: Option[UUID],
-                                   hakulomakeKuvaus: Kielistetty,
-                                   hakulomakeLinkki: Kielistetty,
-                                   kielivalinta: Seq[Kieli]): IsValid = hakulomaketyyppi match {
+                         hakulomakeAtaruId: Option[UUID],
+                         hakulomakeKuvaus: Kielistetty,
+                         hakulomakeLinkki: Kielistetty,
+                         kielivalinta: Seq[Kieli]): IsValid = hakulomaketyyppi match {
     case Some(MuuHakulomake) => and(
       validateKielistetty(kielivalinta, hakulomakeLinkki, "hakulomakeLinkki"),
-      hakulomakeLinkki.flatMap { case (_, u) => assertValidUrl(u) }.toSeq
+      hakulomakeLinkki.flatMap { case (_, u) => assertValidUrl(u, "hakulomakeLinkki") }.toSeq
     )
     case Some(Ataru) => assertNotOptional(hakulomakeAtaruId, "hakulomakeAtaruId")
     case Some(EiSähköistä) => validateOptionalKielistetty(kielivalinta, hakulomakeKuvaus, "hakulomakeKuvaus")
     case _ => NoErrors
   }
 
-  def assertValidUrl(url: String): IsValid = assertTrue(urlValidator.isValid(url), invalidUrl(url))
-  def assertValidEmail(email: String): IsValid = assertTrue(emailValidator.isValid(email), invalidEmail(email))
+  def assertValidUrl(url: String, path: String): IsValid = assertTrue(urlValidator.isValid(url), path, invalidUrl(url))
+  def assertValidEmail(email: String, path: String): IsValid = assertTrue(emailValidator.isValid(email), path, invalidEmail(email))
 
   def validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara: Option[LocalDateTime],
-                                            koulutuksenPaattymispaivamaara: Option[LocalDateTime]): IsValid = {
+                                  koulutuksenPaattymispaivamaara: Option[LocalDateTime],
+                                  alkamisPath: String): IsValid = {
     koulutuksenAlkamispaivamaara.flatMap(alku =>
       koulutuksenPaattymispaivamaara.map(loppu =>
-        assertTrue(alku.isBefore(loppu), InvalidKoulutuspaivamaarat)
+        assertTrue(alku.isBefore(loppu), alkamisPath, InvalidKoulutuspaivamaarat)
       )
     ).getOrElse(NoErrors)
   }
 
-  def validateMinMax[T](min: Option[T], max: Option[T], basename: String)(implicit n: Numeric[T]): IsValid =
-    validateMinMax(min, max, s"min$basename", s"max$basename")
-
-  def validateMinMax[T](min: Option[T], max: Option[T], minName: String, maxName: String)(implicit n: Numeric[T]): IsValid = (min, max) match {
-    case (Some(min), Some(max)) => assertTrue(n.toDouble(min) <= n.toDouble(max), minmaxMsg(minName, maxName))
+  def validateMinMax[T](min: Option[T], max: Option[T], minPath: String)(implicit n: Numeric[T]): IsValid = (min, max) match {
+    case (Some(min), Some(max)) => assertTrue(n.toDouble(min) <= n.toDouble(max), minPath, minmaxMsg(min, max))
     case _ => NoErrors
   }
 
-  def assertInFuture(date: LocalDateTime, field: String): IsValid =
-    assertTrue(date.isAfter(LocalDateTime.now()), pastDateMsg(date, field))
+  def assertInFuture(date: LocalDateTime, path: String): IsValid =
+    assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 }

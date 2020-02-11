@@ -251,10 +251,11 @@ case class Oppilaitos(oid: OrganisaatioOid,
     with HasTeemakuva[Oppilaitos] {
 
   override def validate(): IsValid = and(
-    assertValid(muokkaaja),
-    assertValid(organisaatioOid),
+    assertValid(muokkaaja, "muokkaaja"),
+    assertValid(organisaatioOid, "organisaatioOid"),
     validateIfJulkaistu(tila, and(
-      assertTrue(kielivalinta.nonEmpty, MissingKielivalinta)/*,
+      assertNotEmpty(kielivalinta, "kielivalinta"),
+      /*
       validateIfDefined(metadata, and(
         validateKielistetty(kielivalinta, metadata.get.esittely, "esittely"),
         validateKielistetty(kielivalinta, metadata.get.wwwSivu, "wwwSivu"),
@@ -287,10 +288,11 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
     with HasTeemakuva[OppilaitoksenOsa] {
 
   override def validate(): IsValid = and(
-    assertValid(muokkaaja),
-    assertValid(organisaatioOid),
+    assertValid(muokkaaja, "muokkaaja"),
+    assertValid(organisaatioOid, "organisaatioOid"),
     validateIfJulkaistu(tila, and(
-      assertTrue(kielivalinta.nonEmpty, MissingKielivalinta)/*,
+      assertNotEmpty(kielivalinta, "kielivalinta"),
+      /*
       validateIfDefined(metadata, and(
         validateKielistetty(kielivalinta, metadata.get.esittely, "esittely"),
         validateKielistetty(kielivalinta, metadata.get.wwwSivu, "wwwSivu"),

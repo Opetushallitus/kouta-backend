@@ -17,10 +17,10 @@ sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPr
   val modified: Option[LocalDateTime]
 
   def validate(): IsValid = and(
-    assertValid(muokkaaja),
-    assertValid(organisaatioOid),
+    assertValid(muokkaaja, "muokkaaja"),
+    assertValid(organisaatioOid, "organisaatioOid"),
     validateIfJulkaistu(tila, and(
-      assertTrue(kielivalinta.nonEmpty, MissingKielivalinta),
+      assertNotEmpty(kielivalinta, "kielivalinta"),
       validateKielistetty(kielivalinta, nimi, "nimi")
     )))
 }
@@ -31,7 +31,7 @@ abstract class PerustiedotWithOid[ID <: Oid, T] extends Perustiedot[ID, T] {
 
   override def validate(): IsValid = and(
     super.validate(),
-    validateIfDefined[Oid](oid, assertValid)
+    validateIfDefined[Oid](oid, assertValid(_, "oid"))
   )
 
   override def primaryId: Option[ID] = oid

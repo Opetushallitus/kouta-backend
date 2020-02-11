@@ -11,7 +11,7 @@ import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
-import fi.oph.kouta.validation.{NoErrors, Validatable}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
@@ -88,7 +88,7 @@ trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with Ha
     }
 }
 
-case class KoutaValidationException(errorMessages: Seq[String]) extends RuntimeException
+case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException
 
 trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity
