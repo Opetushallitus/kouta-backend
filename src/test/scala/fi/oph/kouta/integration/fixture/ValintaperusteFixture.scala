@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
@@ -7,8 +8,10 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.repository.ValintaperusteDAO
 import fi.oph.kouta.service.ValintaperusteService
 import fi.oph.kouta.servlet.ValintaperusteServlet
+import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 
@@ -48,8 +51,8 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
     case _ => false
   }
 
-  def get(id: UUID, expected: Valintaperuste): String = get(ValintaperustePath, id, expected.copy(modified = Some(readModifiedById(id, "valintaperusteet"))))
-  def get(id: UUID, sessionId: UUID, expected: Valintaperuste): String = get(ValintaperustePath, id, sessionId, expected.copy(modified = Some(readModifiedById(id, "valintaperusteet"))))
+  def get(id: UUID, expected: Valintaperuste): String = get(ValintaperustePath, id, expected.copy(modified = Some(readValintaperusteModified(id))))
+  def get(id: UUID, sessionId: UUID, expected: Valintaperuste): String = get(ValintaperustePath, id, sessionId, expected.copy(modified = Some(readValintaperusteModified(id))))
 
   def update(valintaperuste: Valintaperuste, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, sessionId, expectedStatus)
   def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate, sessionId)
@@ -61,8 +64,12 @@ trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
 
   def addToList(valintaperuste:Valintaperuste) = {
     val id = put(valintaperuste)
-    val modified = readModifiedById(id, "valintaperusteet")
+    val modified = readValintaperusteModified(id)
     ValintaperusteListItem(id, valintaperuste.nimi, valintaperuste.tila,
       valintaperuste.organisaatioOid, valintaperuste.muokkaaja, modified)
   }
+
+  def readValintaperusteModified(id: String): LocalDateTime = readValintaperusteModified(UUID.fromString(id))
+  def readValintaperusteModified(id: UUID): LocalDateTime =
+    TimeUtils.instantToModifiedAt(db.runBlocking(ValintaperusteDAO.selectLastModified(id)).get)
 }

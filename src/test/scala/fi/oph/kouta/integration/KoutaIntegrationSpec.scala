@@ -3,14 +3,13 @@ package fi.oph.kouta.integration
 import java.util.UUID
 
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
-import fi.oph.kouta.domain.{Koulutus, Toteutus, Valintaperuste}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.mocks.{MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.util.{KoutaJsonFormats, TimeUtils}
+import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
@@ -312,15 +311,4 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from asiasanat""")
     db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
-
-  import java.time._
-
-  implicit val getLocalDateTime = slick.jdbc.GetResult[LocalDateTime](r =>
-    TimeUtils.timeStampToLocalDateTime(r.nextTimestamp()).withNano(0).withSecond(0))
-
-  def readModifiedByOid(oid:String, table:String):LocalDateTime = db.runBlocking(
-    sql"""select lower(system_time) from #${table} where oid = $oid""".as[LocalDateTime].head)
-
-  def readModifiedById(id:UUID, table:String):LocalDateTime = db.runBlocking(
-    sql"""select lower(system_time) from #${table} where id = ${id.toString}::uuid""".as[LocalDateTime].head)
 }

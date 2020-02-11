@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
@@ -9,8 +10,10 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.repository.ToteutusDAO
 import fi.oph.kouta.service.{KeywordService, ToteutusService}
 import fi.oph.kouta.servlet.ToteutusServlet
+import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
 
 trait ToteutusFixture { this: KoutaIntegrationSpec =>
@@ -45,10 +48,10 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
   def put(toteutus:Toteutus, sessionId: UUID):String = put(ToteutusPath, toteutus, sessionId, oid(_))
 
   def get(oid: String, expected: Toteutus): String =
-    get(ToteutusPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "toteutukset"))))
+    get(ToteutusPath, oid, expected.copy(modified = Some(readToteutusModified(oid))))
 
   def get(oid: String, sessionId: UUID, expected: Toteutus): String =
-    get(ToteutusPath, oid, sessionId, expected.copy(modified = Some(readModifiedByOid(oid, "toteutukset"))))
+    get(ToteutusPath, oid, sessionId, expected.copy(modified = Some(readToteutusModified(oid))))
 
   def update(toteutus:Toteutus, lastModified:String, expectedStatus: Int, sessionId: UUID): Unit = update(ToteutusPath, toteutus, lastModified, sessionId, expectedStatus)
   def update(toteutus:Toteutus, lastModified:String, expectUpdate:Boolean, sessionId: UUID): Unit = update(ToteutusPath, toteutus, lastModified, expectUpdate, sessionId)
@@ -57,8 +60,12 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
   def addToList(toteutus:Toteutus) = {
     val oid = put(toteutus)
-    val modified = readModifiedByOid(oid, "toteutukset")
+    val modified = readToteutusModified(oid)
     new ToteutusListItem(ToteutusOid(oid), toteutus.koulutusOid, toteutus.nimi, toteutus.tila,
       toteutus.tarjoajat, toteutus.organisaatioOid, toteutus.muokkaaja, modified)
   }
+
+  def readToteutusModified(oid: String): LocalDateTime = readToteutusModified(ToteutusOid(oid))
+  def readToteutusModified(oid: ToteutusOid): LocalDateTime =
+    TimeUtils.instantToModifiedAt(db.runBlocking(ToteutusDAO.selectLastModified(oid)).get)
 }

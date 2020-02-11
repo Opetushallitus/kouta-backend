@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
@@ -7,8 +8,10 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.repository.OppilaitoksenOsaDAO
 import fi.oph.kouta.service.OppilaitoksenOsaService
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
+import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Random
@@ -36,8 +39,8 @@ trait OppilaitoksenOsaFixture { this: KoutaIntegrationSpec =>
   def put(oppilaitoksenOsa: OppilaitoksenOsa): String = put(OppilaitoksenOsaPath, oppilaitoksenOsa, oid(_))
   def put(oppilaitoksenOsa: OppilaitoksenOsa, sessionId: UUID): String = put(OppilaitoksenOsaPath, oppilaitoksenOsa, sessionId, oid(_))
 
-  def get(oid: String, expected: OppilaitoksenOsa): String = get(OppilaitoksenOsaPath, oid, expected.copy(modified = Some(readModifiedByOid(oid, "oppilaitosten_osat"))))
-  def get(oid: String, sessionId: UUID, expected: OppilaitoksenOsa): String = get(OppilaitoksenOsaPath, oid, sessionId, expected.copy(modified = Some(readModifiedByOid(oid, "oppilaitosten_osat"))))
+  def get(oid: String, expected: OppilaitoksenOsa): String = get(OppilaitoksenOsaPath, oid, expected.copy(modified = Some(readOppilaitoksenOsaModified(oid))))
+  def get(oid: String, sessionId: UUID, expected: OppilaitoksenOsa): String = get(OppilaitoksenOsaPath, oid, sessionId, expected.copy(modified = Some(readOppilaitoksenOsaModified(oid))))
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(OppilaitoksenOsaPath, oppilaitoksenOsa, lastModified, sessionId, expectedStatus)
   def update(oppilaitoksenOsa: OppilaitoksenOsa, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(OppilaitoksenOsaPath, oppilaitoksenOsa, lastModified, expectUpdate, sessionId)
@@ -46,8 +49,12 @@ trait OppilaitoksenOsaFixture { this: KoutaIntegrationSpec =>
 
   def addToList(oppilaitoksenOsa: OppilaitoksenOsa) = {
     val oid = put(oppilaitoksenOsa)
-    val modified = readModifiedByOid(oid, "oppilaitosten_osat")
+    val modified = readOppilaitoksenOsaModified(oid)
     OppilaitoksenOsaListItem(OrganisaatioOid(oid), oppilaitoksenOsa.oppilaitosOid, oppilaitoksenOsa.tila,
       oppilaitoksenOsa.organisaatioOid, oppilaitoksenOsa.muokkaaja, modified)
   }
+
+  def readOppilaitoksenOsaModified(oid: String): LocalDateTime = readOppilaitoksenOsaModified(OrganisaatioOid(oid))
+  def readOppilaitoksenOsaModified(oid: OrganisaatioOid): LocalDateTime =
+    TimeUtils.instantToModifiedAt(db.runBlocking(OppilaitoksenOsaDAO.selectLastModified(oid)).get)
 }

@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
@@ -7,9 +8,11 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.MockAuditLogger
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.service.SorakuvausService
 import fi.oph.kouta.servlet.SorakuvausServlet
+import fi.oph.kouta.util.TimeUtils
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 trait SorakuvausFixture { this: KoutaIntegrationSpec =>
 
@@ -31,8 +34,8 @@ trait SorakuvausFixture { this: KoutaIntegrationSpec =>
   def put(sorakuvaus: Sorakuvaus): UUID = put(SorakuvausPath, sorakuvaus, id(_))
   def put(sorakuvaus: Sorakuvaus, sessionId: UUID): UUID = put(SorakuvausPath, sorakuvaus, sessionId, id(_))
 
-  def get(id: UUID, expected: Sorakuvaus): String = get(SorakuvausPath, id, expected.copy(modified = Some(readModifiedById(id, "sorakuvaukset"))))
-  def get(id: UUID, sessionId: UUID, expected: Sorakuvaus): String = get(SorakuvausPath, id, sessionId, expected.copy(modified = Some(readModifiedById(id, "sorakuvaukset"))))
+  def get(id: UUID, expected: Sorakuvaus): String = get(SorakuvausPath, id, expected.copy(modified = Some(readSorakuvausModified(id))))
+  def get(id: UUID, sessionId: UUID, expected: Sorakuvaus): String = get(SorakuvausPath, id, sessionId, expected.copy(modified = Some(readSorakuvausModified(id))))
 
   def update(sorakuvaus: Sorakuvaus, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(SorakuvausPath, sorakuvaus, lastModified, sessionId, expectedStatus)
   def update(sorakuvaus: Sorakuvaus, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(SorakuvausPath, sorakuvaus, lastModified, expectUpdate, sessionId)
@@ -41,8 +44,12 @@ trait SorakuvausFixture { this: KoutaIntegrationSpec =>
 
   def addToList(sorakuvaus: Sorakuvaus) = {
     val id = put(sorakuvaus)
-    val modified = readModifiedById(id, "sorakuvaukset")
+    val modified = readSorakuvausModified(id)
     SorakuvausListItem(id, sorakuvaus.nimi, sorakuvaus.tila,
       sorakuvaus.organisaatioOid, sorakuvaus.muokkaaja, modified)
   }
+
+  def readSorakuvausModified(id: String): LocalDateTime = readSorakuvausModified(UUID.fromString(id))
+  def readSorakuvausModified(id: UUID): LocalDateTime =
+    TimeUtils.instantToModifiedAt(db.runBlocking(SorakuvausDAO.selectLastModified(id)).get)
 }

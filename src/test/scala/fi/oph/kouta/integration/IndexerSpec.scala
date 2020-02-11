@@ -18,9 +18,9 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs(List(
-        toteutus(t1, oid).copy(modified = Some(readModifiedByOid(t1, "toteutukset"))),
-        toteutus(t2, oid).copy(modified = Some(readModifiedByOid(t2, "toteutukset"))),
-        toteutus(t3, oid).copy(modified = Some(readModifiedByOid(t3, "toteutukset")))
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)))
       ))
     }
   }
@@ -69,9 +69,9 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/oppilaitos/$oid/osat", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[OppilaitoksenOsa]](body) should contain theSameElementsAs List(
-        oppilaitoksenOsa(expectedOsat(0), oid).copy(modified = Some(readModifiedByOid(expectedOsat(0), "oppilaitosten_osat"))),
-        oppilaitoksenOsa(expectedOsat(1), oid).copy(modified = Some(readModifiedByOid(expectedOsat(1), "oppilaitosten_osat"))),
-        oppilaitoksenOsa(expectedOsat(2), oid).copy(modified = Some(readModifiedByOid(expectedOsat(2), "oppilaitosten_osat")))
+        oppilaitoksenOsa(expectedOsat(0), oid).copy(modified = Some(readOppilaitoksenOsaModified(expectedOsat(0)))),
+        oppilaitoksenOsa(expectedOsat(1), oid).copy(modified = Some(readOppilaitoksenOsaModified(expectedOsat(1)))),
+        oppilaitoksenOsa(expectedOsat(2), oid).copy(modified = Some(readOppilaitoksenOsaModified(expectedOsat(2))))
       )
     }
   }
