@@ -2,7 +2,7 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData.{MinSorakuvaus, YoSorakuvaus}
 import fi.oph.kouta.domain.oid.UserOid
-import fi.oph.kouta.domain.{Fi, Sorakuvaus, Sv}
+import fi.oph.kouta.domain.{Fi, Sorakuvaus, SorakuvausMetadata, Sv, Tallennettu}
 import fi.oph.kouta.validation.Validations._
 
 class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
@@ -23,5 +23,15 @@ class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
 
   it should "pass valid julkaistu sorakuvaus" in {
     passesValidation(max)
+  }
+
+  it should "validate kuvaus from metadata" in {
+    val metadata = Some(SorakuvausMetadata(kuvaus = Map(Fi -> "kuvaus")))
+    failsValidation(max.copy(metadata = metadata), "metadata.kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if metadata is missing from a julkaistu sorakuvaus" in {
+    passesValidation(max.copy(metadata = None, tila = Tallennettu))
+    failsValidation(max.copy(metadata = None), "metadata", missingMsg)
   }
 }
