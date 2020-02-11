@@ -41,4 +41,18 @@ class ValidationsSpec extends ScalatraFlatSpec {
   it should "accept an email with a funny TLD" in {
     assertValidEmail("foo@bar.pics", "test") shouldEqual NoErrors
   }
+
+  "assertValidUrl" should "accept a valid url" in {
+    assertValidUrl("https://www.google.fi", "url") shouldEqual NoErrors
+  }
+
+  it should "fail an invalid url" in {
+    assertValidUrl("urli", "url") should contain theSameElementsAs Seq(ValidationError("url", invalidUrl("urli")))
+  }
+
+  it should "fail an url without the protocol" in {
+    assertValidUrl("www.url.fi", "url") should contain theSameElementsAs Seq(ValidationError("url", invalidUrl("www.url.fi")))
+  }
+
+
 }

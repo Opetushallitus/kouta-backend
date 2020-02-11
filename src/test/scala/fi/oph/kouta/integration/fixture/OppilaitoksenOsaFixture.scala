@@ -27,7 +27,7 @@ trait OppilaitoksenOsaFixture { this: KoutaIntegrationSpec =>
 
   private lazy val random = new Random()
 
-  def oppilaitoksenOsa = TestData.JulkaistuOppilaitoksenOsa.copy(oid = OrganisaatioOid(s"1.2.246.562.10.000${random.nextInt()}"))
+  def oppilaitoksenOsa = TestData.JulkaistuOppilaitoksenOsa.copy(oid = OrganisaatioOid(s"1.2.246.562.10.000${random.nextInt().abs}"))
 
   def oppilaitoksenOsa(oppilaitosOid: String): OppilaitoksenOsa = oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid))
   def oppilaitoksenOsa(oid: String, oppilaitosOid: String): OppilaitoksenOsa = oppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), oppilaitosOid = OrganisaatioOid(oppilaitosOid))

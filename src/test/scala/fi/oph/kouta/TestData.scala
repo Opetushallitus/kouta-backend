@@ -375,7 +375,7 @@ object TestData {
     metadata = Some(OppilaitosMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),
-        wwwSivu = Map(Fi -> "www.oppilaitos.fi", Sv -> "www.oppilaitos.sv"),
+        wwwSivu = Map(Fi -> "http://www.oppilaitos.fi", Sv -> "http://www.oppilaitos.sv"),
         puhelinnumero = Map(Fi -> "123", Sv -> "123"),
         sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
       tietoaOpiskelusta = Seq(
@@ -407,7 +407,7 @@ object TestData {
     metadata = Some(OppilaitoksenOsaMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),
-        wwwSivu = Map(Fi -> "www.tiedekunta.fi", Sv -> "www.tiedekunta.sv"),
+        wwwSivu = Map(Fi -> "https://www.tiedekunta.fi", Sv -> "https://www.tiedekunta.sv"),
         puhelinnumero = Map(Fi -> "123", Sv -> "123"),
         sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
       esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),

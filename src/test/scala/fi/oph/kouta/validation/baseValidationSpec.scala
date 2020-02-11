@@ -26,21 +26,22 @@ abstract class BaseValidationSpec[E <: Validatable] extends ScalatraFlatSpec {
 abstract class SubEntityValidationSpec[E <: ValidatableSubEntity] extends ScalatraFlatSpec {
 
   val DefaultKielivalinta = Seq(Fi, Sv)
+  val pathPrefix = "path"
 
   def failsValidation(tila: Julkaisutila, e: E, path: String, expected: String): Assertion =
-    e.validate(tila, DefaultKielivalinta, "path") match {
+    e.validate(tila, DefaultKielivalinta, pathPrefix) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
-      case errors => errors should contain theSameElementsAs Seq(ValidationError("path." + path, expected))
+      case errors => errors should contain theSameElementsAs Seq(ValidationError(s"$pathPrefix.$path", expected))
     }
 
   def failsValidation(tila: Julkaisutila, e: E, expected: (String, String), moreExpected: (String, String)*): Assertion =
-    failsValidation(tila, e, (expected +: moreExpected).map { case (path, value) => ValidationError("path." + path, value) })
+    failsValidation(tila, e, (expected +: moreExpected).map { case (path, value) => ValidationError(s"$pathPrefix.$path", value) })
 
   def failsValidation(tila: Julkaisutila, e: E, expected: Seq[ValidationError]): Assertion =
-    e.validate(tila, DefaultKielivalinta, "path") match {
+    e.validate(tila, DefaultKielivalinta, pathPrefix) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors => errors should contain theSameElementsAs expected
     }
 
-  def passesValidation(tila: Julkaisutila, e: E): Assertion = e.validate(tila, DefaultKielivalinta, "path") should equal(NoErrors)
+  def passesValidation(tila: Julkaisutila, e: E): Assertion = e.validate(tila, DefaultKielivalinta, pathPrefix) should equal(NoErrors)
 }
