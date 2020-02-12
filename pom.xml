@@ -501,6 +501,11 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>1.9.4</version>
+            </dependency>
+            <dependency>
                 <groupId>org.http4s</groupId>
                 <artifactId>http4s-core_2.12</artifactId>
                 <version>0.16.6a</version>
