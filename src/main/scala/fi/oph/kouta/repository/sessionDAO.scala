@@ -10,7 +10,6 @@ import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.util.Try
 
 trait SessionDAO {
   def delete(ticket: ServiceTicket): Boolean
@@ -72,19 +71,23 @@ sealed trait SessionSQL extends SQLHelpers {
     getSessionQuery(id)
       .flatMap {
         case None =>
-          deleteSession(id).andThen(DBIO.successful(None))
-        case Some(t) =>
-          updateLastRead(id).andThen(DBIO.successful(Some(t)))
+          deleteSession(id).map(_ => None)
+        case Some((ticket, person, needs_update)) if needs_update =>
+          updateLastRead(id).map {
+            case n if n > 0 => Some((ticket, person))
+            case _          => None
+          }
+        case Some((ticket, person, _)) =>
+          DBIO.successful(Some((ticket, person)))
       }
 
-  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String)]] =
-    sql"""select cas_ticket, person from sessions
+  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String, Boolean)]] =
+    sql"""select cas_ticket, person, last_read < now() - interval '30 minutes' from sessions
           where id = $id and last_read > now() - interval '60 minutes'"""
-      .as[(Option[String], String)].headOption
+      .as[(Option[String], String, Boolean)].headOption
 
   private def updateLastRead(id: UUID): DBIO[Int] =
-    sqlu"""update sessions set last_read = now()
-           where id = $id and last_read < now() - interval '30 minutes'"""
+    sqlu"""update sessions set last_read = now() where id = $id"""
 
   protected def searchAuthoritiesBySession(sessionId: UUID): DBIO[Vector[String]] =
     sql"""select authority from authorities where session = $sessionId""".as[String]
