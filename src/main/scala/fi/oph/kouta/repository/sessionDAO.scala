@@ -6,9 +6,11 @@ import java.util.concurrent.TimeUnit
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket, Session}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
+import scala.util.Try
 
 trait SessionDAO {
   def delete(ticket: ServiceTicket): Boolean
@@ -25,22 +27,22 @@ object SessionDAO extends SessionDAO with SessionSQL {
   override def store(session: Session): UUID = session match {
     case CasSession(ServiceTicket(ticket), personOid, authorities) =>
       val id = UUID.randomUUID()
-      runBlockingTransactionally(storeCasSession(id, ticket, personOid, authorities), timeout = Duration(1, TimeUnit.MINUTES))
+      runBlockingTransactionally(storeCasSession(id, ticket, personOid, authorities), timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted)
         .map(_ => id).get
   }
 
   override def store(session: CasSession, id: UUID): UUID =
-    runBlockingTransactionally(storeCasSession(id, session.casTicket.s, session.personOid, session.authorities), timeout = Duration(1, TimeUnit.MINUTES))
+    runBlockingTransactionally(storeCasSession(id, session.casTicket.s, session.personOid, session.authorities), timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted)
       .map(_ => id).get
 
   override def delete(id: UUID): Boolean =
-    runBlockingTransactionally(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS)).get
+    runBlockingTransactionally(deleteSession(id), timeout = Duration(10, TimeUnit.SECONDS), ReadCommitted).get
 
   override def delete(ticket: ServiceTicket): Boolean =
-    runBlockingTransactionally(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS)).get
+    runBlockingTransactionally(deleteSession(ticket), timeout = Duration(10, TimeUnit.SECONDS), ReadCommitted).get
 
   override def get(id: UUID): Option[Session] = {
-    runBlocking(getSession(id), timeout = Duration(2, TimeUnit.SECONDS)).map {
+    runBlockingTransactionally(getSession(id), timeout = Duration(2, TimeUnit.SECONDS), ReadCommitted).get.map {
       case (casTicket, personOid) =>
         val authorities = runBlocking(searchAuthoritiesBySession(id), Duration(2, TimeUnit.SECONDS))
         CasSession(ServiceTicket(casTicket.get), personOid, authorities.map(Authority(_)).toSet)
