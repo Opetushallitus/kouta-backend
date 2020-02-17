@@ -37,18 +37,14 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(teemakuva = Some("mummo")), "teemakuva", invalidUrl("mummo"))
   }
 
-  it should "fail if metadata is invalid" in {
+  it should "validate metadata" in {
+    val metadata = amm.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
+    failsValidation(amm.copy(metadata = Some(metadata.copy(kuvaus = Map(Fi -> "kuvaus")))), "metadata.kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if the tyyppi of the metadata differs from the tyyppi of the koulutus" in {
     val metadata = amm.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
     failsValidation(amm.copy(metadata = Some(metadata.copy(tyyppi = Muu))), "metadata.tyyppi", InvalidMetadataTyyppi)
-    failsValidation(amm.copy(metadata = Some(metadata.copy(kuvaus = Map(Fi -> "kuvaus")))), "metadata.kuvaus", invalidKielistetty(Seq(Sv)))
-    failsValidation(amm.copy(metadata = Some(metadata.copy(koulutusalaKoodiUrit = Seq("mummo")))), "metadata.koulutusalaKoodiUrit[0]", validationMsg("mummo"))
-
-    val missingKielivalintaLisatiedot = Seq(Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_32#1", teksti = Map(Fi -> "lisatieto")))
-    failsValidation(amm.copy(metadata = Some(metadata.copy(lisatiedot = missingKielivalintaLisatiedot))), "metadata.lisatiedot[0].teksti", invalidKielistetty(Seq(Sv)))
-    passesValidation(amm.copy(tila = Tallennettu, metadata = Some(metadata.copy(lisatiedot = missingKielivalintaLisatiedot))))
-
-    val invalidKoodiLisatieto = Seq(Lisatieto("mummo", Map(Fi -> "lisatieto", Sv -> "lisatieto sv")))
-    failsValidation(amm.copy(metadata = Some(metadata.copy(lisatiedot = invalidKoodiLisatieto))), "metadata.lisatiedot[0].otsikkoKoodiUri", validationMsg("mummo"))
   }
 
   it should "fail if korkeakoulutus metadata is invalid" in {
@@ -71,5 +67,47 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
   it should "return multiple error messages" in {
     failsValidation(min.copy(koulutusKoodiUri = Some("ankka"), oid = Some(KoulutusOid("2017"))),
       ("koulutusKoodiUri", validationMsg("ankka")), ("oid", validationMsg("2017")))
+  }
+}
+
+class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMetadata] {
+
+  val amm = AmmKoulutus.metadata.get
+  val yo = YoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata]
+  val min = AmmatillinenKoulutusMetadata()
+
+  "Koulutus metadata validator" should "pass a valid metadata" in {
+    passesValidation(Julkaistu, amm)
+  }
+
+  it should "fail if kuvaus has missing languages in a julkaistu koulutus" in {
+    passesValidation(Tallennettu, min.copy(kuvaus = Map(Fi -> "kuvaus")))
+    failsValidation(Julkaistu, min.copy(kuvaus = Map(Fi -> "kuvaus")), "kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if any koulutusalaKoodiUrit are invalid" in {
+    failsValidation(Tallennettu, min.copy(koulutusalaKoodiUrit = Seq("mummo")), "koulutusalaKoodiUrit[0]", validationMsg("mummo"))
+  }
+
+  it should "validate lisatiedot" in {
+    val missingKielivalintaLisatiedot = Seq(Lisatieto(otsikkoKoodiUri = "invalid", teksti = Map(Fi -> "lisatieto", Sv -> "lisatieto")))
+    failsValidation(Tallennettu, min.copy(lisatiedot = missingKielivalintaLisatiedot), "lisatiedot[0].otsikkoKoodiUri", validationMsg("invalid"))
+  }
+
+  "Korkeakoulutus koulutus metadata validator" should "pass a valid korkeakoulutus metadata" in {
+    passesValidation(Julkaistu, yo)
+  }
+
+  it should "fail if kuvauksen nimi has missing languages in a julkaistu koulutus" in {
+    passesValidation(Tallennettu, yo.copy(kuvauksenNimi = Map(Fi -> "kuvauksenNimi")))
+    failsValidation(Julkaistu, yo.copy(kuvauksenNimi = Map(Fi -> "kuvauksenNimi")), "kuvauksenNimi", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if any tutkintonimikeKoodiUrit are invalid" in {
+    failsValidation(Tallennettu, yo.copy(tutkintonimikeKoodiUrit = Seq("mummo")), "tutkintonimikeKoodiUrit[0]", validationMsg("mummo"))
+  }
+
+  it should "fail if any opintojenLaajuusKoodiUri is invalid" in {
+    failsValidation(Tallennettu, yo.copy(opintojenLaajuusKoodiUri = Some("mummo")), "opintojenLaajuusKoodiUri", validationMsg("mummo"))
   }
 }

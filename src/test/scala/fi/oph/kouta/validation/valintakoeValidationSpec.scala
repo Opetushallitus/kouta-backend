@@ -101,3 +101,23 @@ class OsoiteValidationSpec extends SubEntityValidationSpec[Osoite] {
     failsValidation(Julkaistu, Osoite1.copy(postinumeroKoodiUri = None), "postinumeroKoodiUri", missingMsg)
   }
 }
+
+class LisatietoValidationSpec extends SubEntityValidationSpec[Lisatieto] {
+  val max = Lisatieto(
+    otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
+    teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv")
+  )
+
+  "Lisatieto validator" should "pass a valid lisatieto" in {
+    passesValidation(Julkaistu, max)
+  }
+
+  it should "fail if otsikkoKoodiUri is invalid" in {
+    failsValidation(Tallennettu, max.copy(otsikkoKoodiUri = "mummo"), "otsikkoKoodiUri", validationMsg("mummo"))
+  }
+
+  it should "fail if teksti has missing languages in a julkaistu lisatieto" in {
+    passesValidation(Tallennettu, max.copy(teksti = Map(Fi -> "teksti")))
+    failsValidation(Julkaistu, max.copy(teksti = Map(Fi -> "teksti")), "teksti", invalidKielistetty(Seq(Sv)))
+  }
+}

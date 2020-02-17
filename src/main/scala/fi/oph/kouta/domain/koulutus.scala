@@ -97,6 +97,10 @@ package object koulutus {
       |          type: string
       |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
       |          example: https://konfo-files.opintopolku.fi/koulutus-teemakuva/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
+      |        ePerusteId:
+      |          type: number
+      |          description: Koulutuksen käyttämän ePerusteen id.
+      |          example: 4804100
       |        modified:
       |           type: string
       |           format: date-time
@@ -165,6 +169,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
+                    ePerusteId: Option[Long] = None,
                     modified: Option[LocalDateTime])
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
@@ -172,16 +177,18 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
       validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern, "koulutusKoodiUri")),
-      validateIfDefined[KoulutusMetadata](metadata, _.validate(koulutustyyppi, tila, kielivalinta, "metadata")),
+      validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+      validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
+      validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
       validateIfJulkaistu(tila, and(
         assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         validateIfTrue(koulutustyyppi == Amm, assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
-        assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"),
+        validateIfTrue(koulutustyyppi == Amm, assertNotOptional(ePerusteId, "ePerusteId")),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
         validateIfTrue(!OrganisaatioOid("1.2.246.562.10.00000000001").equals(organisaatioOid), //TODO: !KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid), (rikkoo mm. indeksoijan testit)
-          assertNotEmpty(tarjoajat, "tarjoajat")))
-      )
+          assertNotEmpty(tarjoajat, "tarjoajat"))
+      ))
     )
   }
 

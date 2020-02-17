@@ -66,6 +66,7 @@ trait KoulutusExtractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
+    ePerusteId = r.nextLongOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))))
 
   implicit val getKoulutusListItem: GetResult[KoulutusListItem] = GetResult(r => KoulutusListItem(
