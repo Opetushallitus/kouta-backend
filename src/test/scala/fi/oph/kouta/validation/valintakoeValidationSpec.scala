@@ -59,6 +59,11 @@ class ValintakoetilaisuusValidationSpec extends SubEntityValidationSpec[Valintak
     passesValidation(Tallennettu, Valintakoetilaisuus1.copy(aika = None))
     failsValidation(Julkaistu, Valintakoetilaisuus1.copy(aika = None), "aika", missingMsg)
   }
+
+  it should "fail if lisatietoja is missing languages when julkaistu" in {
+    passesValidation(Tallennettu, Valintakoetilaisuus1.copy(lisatietoja = Map(Fi -> "lisatietoja fi")))
+    failsValidation(Julkaistu, Valintakoetilaisuus1.copy(lisatietoja = Map(Fi -> "lisatietoja fi")), "lisatietoja", invalidKielistetty(Seq(Sv)))
+  }
 }
 
 class OsoiteValidationSpec extends SubEntityValidationSpec[Osoite] {

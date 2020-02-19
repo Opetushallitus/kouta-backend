@@ -93,12 +93,6 @@ object Validations {
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
 
-  def validateAjanjakso(ajanjakso: Ajanjakso, path: String): IsValid =
-    assertTrue(ajanjakso.alkaa.isBefore(ajanjakso.paattyy), path, invalidAjanjaksoMsg(ajanjakso))
-
-  def assertAjanjaksoEndsInFuture(ajanjakso: Ajanjakso, path: String): IsValid =
-    assertTrue(ajanjakso.paattyy.isAfter(LocalDateTime.now()), path, pastAjanjaksoMsg(ajanjakso))
-
   def assertHakuajatInFuture(hakuajat: Seq[Ajanjakso], path: String): IsValid = {
     def assertAjanjaksoInFuture(a: Ajanjakso, p: String): IsValid =
       assertTrue(a.paattyy.isAfter(LocalDateTime.now()), p, validationMsg(a.toString))

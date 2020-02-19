@@ -394,7 +394,12 @@ package object domain {
     }
   }
 
-  case class Ajanjakso(alkaa:LocalDateTime, paattyy:LocalDateTime)
+  case class Ajanjakso(alkaa: LocalDateTime, paattyy: LocalDateTime) extends ValidatableSubEntity {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+      assertTrue(alkaa.isBefore(paattyy), path, invalidAjanjaksoMsg(this)),
+      validateIfJulkaistu(tila, assertTrue(paattyy.isAfter(LocalDateTime.now()), path, pastAjanjaksoMsg(this)))
+    )
+  }
 
   case class Valintakoe(id: Option[UUID] = None,
                         tyyppiKoodiUri: Option[String] = None,
@@ -410,11 +415,11 @@ package object domain {
                                  lisatietoja: Kielistetty = Map()) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta, s"$path.osoite")),
-      validateIfDefined[Ajanjakso](aika, validateAjanjakso(_, s"$path.aika")),
+      validateIfDefined[Ajanjakso](aika, _.validate(tila, kielivalinta, s"$path.aika")),
       validateIfJulkaistu(tila, and(
         assertNotOptional(osoite, s"$path.osoite"),
-        validateIfDefined[Ajanjakso](aika, assertAjanjaksoEndsInFuture(_, s"$path.aika")),
-        assertNotOptional(aika, s"$path.aika")
+        assertNotOptional(aika, s"$path.aika"),
+        validateOptionalKielistetty(kielivalinta, lisatietoja, s"$path.lisatietoja")
       ))
     )
   }

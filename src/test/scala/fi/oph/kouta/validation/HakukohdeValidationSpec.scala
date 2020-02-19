@@ -77,6 +77,9 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     passesValidation(max.copy(tila = Tallennettu, pohjakoulutusvaatimusTarkenne = Map(Fi -> "tarkenne")))
     failsValidation(max.copy(pohjakoulutusvaatimusTarkenne = Map(Fi -> "tarkenne")), "pohjakoulutusvaatimusTarkenne", invalidKielistetty(Seq(Sv)))
 
+    passesValidation(max.copy(tila = Tallennettu, muuPohjakoulutusvaatimus = Map(Fi -> "tarkenne")))
+    failsValidation(max.copy(muuPohjakoulutusvaatimus = Map(Fi -> "tarkenne")), "muuPohjakoulutusvaatimus", invalidKielistetty(Seq(Sv)))
+
     passesValidation(max.copy(tila = Julkaistu, kaytetaanHaunAikataulua = Some(true), hakuajat = List()))
     passesValidation(max.copy(tila = Tallennettu, kaytetaanHaunAikataulua = Some(false), hakuajat = List()))
     failsValidation(max.copy(kaytetaanHaunAikataulua = Some(false), hakuajat = List()), "hakuajat", missingMsg)

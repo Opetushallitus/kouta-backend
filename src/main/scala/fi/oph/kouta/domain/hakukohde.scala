@@ -337,7 +337,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     assertValid(toteutusOid, "toteutusOid"),
     assertValid(hakuOid, "hakuOid"),
     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, "alkamiskausiKoodiUri")),
-    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", validateAjanjakso),
+    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit", assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)),
     validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
     validateIfDefined[Int](minAloituspaikat, assertNotNegative(_, "minAloituspaikat")),
@@ -357,8 +357,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
       assertNotEmpty(pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
       validateOptionalKielistetty(kielivalinta, pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
+      validateOptionalKielistetty(kielivalinta, muuPohjakoulutusvaatimus, "muuPohjakoulutusvaatimus"),
       validateIfTrue(kaytetaanHaunAikataulua.contains(false), assertNotEmpty(hakuajat, "hakuajat")),
-      validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", assertAjanjaksoEndsInFuture)
     ))
   )
 

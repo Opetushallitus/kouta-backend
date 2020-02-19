@@ -19,9 +19,9 @@ sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPr
   def validate(): IsValid = and(
     assertValid(muokkaaja, "muokkaaja"),
     assertValid(organisaatioOid, "organisaatioOid"),
+    validateKielistetty(kielivalinta, nimi, "nimi"),
     validateIfJulkaistu(tila, and(
-      assertNotEmpty(kielivalinta, "kielivalinta"),
-      validateKielistetty(kielivalinta, nimi, "nimi")
+      assertNotEmpty(kielivalinta, "kielivalinta")
     )))
 }
 
