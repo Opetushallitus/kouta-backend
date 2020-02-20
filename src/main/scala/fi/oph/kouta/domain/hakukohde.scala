@@ -358,7 +358,15 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
       assertNotEmpty(pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
       validateOptionalKielistetty(kielivalinta, pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
       validateOptionalKielistetty(kielivalinta, muuPohjakoulutusvaatimus, "muuPohjakoulutusvaatimus"),
+      assertNotOptional(kaytetaanHaunAikataulua, "kaytetaanHaunAikataulua"),
+      assertNotOptional(kaytetaanHaunHakulomaketta, "kaytetaanHaunHakulomaketta"),
+      assertNotOptional(kaytetaanHaunAlkamiskautta, "kaytetaanHaunAlkamiskautta"),
       validateIfTrue(kaytetaanHaunAikataulua.contains(false), assertNotEmpty(hakuajat, "hakuajat")),
+      validateIfTrue(kaytetaanHaunHakulomaketta.contains(false), assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")),
+      validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), and(
+        assertNotOptional(alkamisvuosi, "alkamisvuosi"),
+        assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri")
+      )),
     ))
   )
 

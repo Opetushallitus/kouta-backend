@@ -76,6 +76,13 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     passesValidation(max.copy(tila = Julkaistu, kaytetaanHaunAikataulua = Some(true), hakuajat = List()))
     passesValidation(max.copy(tila = Tallennettu, kaytetaanHaunAikataulua = Some(false), hakuajat = List()))
     failsValidation(max.copy(kaytetaanHaunAikataulua = Some(false), hakuajat = List()), "hakuajat", missingMsg)
+    failsValidation(max.copy(kaytetaanHaunAikataulua = None), "kaytetaanHaunAikataulua", missingMsg)
+
+    passesValidation(max.copy(tila = Julkaistu, kaytetaanHaunAlkamiskautta = Some(true), alkamisvuosi = None))
+    passesValidation(max.copy(tila = Tallennettu, kaytetaanHaunAlkamiskautta = Some(false), alkamisvuosi = None))
+    failsValidation(max.copy(kaytetaanHaunAlkamiskautta = Some(false), alkamisvuosi = None), "alkamisvuosi", missingMsg)
+    failsValidation(max.copy(kaytetaanHaunAlkamiskautta = Some(false), alkamiskausiKoodiUri = None), "alkamiskausiKoodiUri", missingMsg)
+    failsValidation(max.copy(kaytetaanHaunAlkamiskautta = None), "kaytetaanHaunAlkamiskautta", missingMsg)
   }
 
   it should "validate hakulomake information of a julkaistu hakukohde" in {
@@ -90,7 +97,10 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     passesValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))
     failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus", Sv -> "")), "hakulomakeKuvaus", invalidKielistetty(Seq(Sv)))
 
-    passesValidation(max.copy(hakulomaketyyppi = None))
+    failsValidation(max.copy(kaytetaanHaunHakulomaketta = Some(false), hakulomaketyyppi = None), "hakulomaketyyppi", missingMsg)
+    failsValidation(max.copy(kaytetaanHaunHakulomaketta = None), "kaytetaanHaunHakulomaketta", missingMsg)
+
+    passesValidation(max.copy(kaytetaanHaunHakulomaketta = Some(true), hakulomaketyyppi = None))
   }
 
   it should "validate liitteet" in {

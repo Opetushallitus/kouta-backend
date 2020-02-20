@@ -206,6 +206,7 @@ case class Valintaperuste(id: Option[UUID] = None,
     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
     validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfDefined[ValintaperusteMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)),
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
