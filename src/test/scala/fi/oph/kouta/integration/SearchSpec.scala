@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.KoutaIndexMock

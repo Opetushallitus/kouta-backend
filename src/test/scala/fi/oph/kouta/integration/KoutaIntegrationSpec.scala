@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
@@ -32,10 +33,9 @@ trait DefaultTestImplicits {
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits {
 
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
-  val rootOrganisaatio = KoutaIntegrationSpec.rootOrganisaatio
   val defaultAuthorities = KoutaIntegrationSpec.defaultAuthorities
 
-  val testUser = TestUser(KoutaIntegrationSpec.testUserOid, "testuser", defaultSessionId)
+  val testUser = TestUser(TestUserOid.s, "testuser", defaultSessionId)
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid, defaultAuthorities), testUser.sessionId)
@@ -60,11 +60,7 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
 
 object KoutaIntegrationSpec {
   val serviceIdentifier = "testService"
-
-  val rootOrganisaatio = OrganisaatioOid("1.2.246.562.10.00000000001")
-  val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, rootOrganisaatio)).toSet
-
-  val testUserOid = "1.2.246.562.24.0"
+  val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, OphOid)).toSet
 }
 
 trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { this: HttpSpec =>
@@ -86,11 +82,6 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     super.afterAll()
     stopServiceMocking()
   }
-
-  val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
-  val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
-  val YoOid = OrganisaatioOid("1.2.246.562.10.46312206843")
-  val AmmOid = OrganisaatioOid("1.2.246.562.10.463122068666")
 
   //val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
   val crudSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty

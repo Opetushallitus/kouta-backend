@@ -32,7 +32,7 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
   }
 
   it should "validate metadata" in {
-    val invalidMetadata = AmmValintaperusteMetadata.copy(valintatavat = Seq(Valintatapa1.copy(valintatapaKoodiUri = Some("virhe"))))
+    val invalidMetadata = YoValintaperusteMetadata.copy(valintatavat = Seq(Valintatapa1.copy(valintatapaKoodiUri = Some("virhe"))))
     failsValidation(min.copy(metadata = Some(invalidMetadata)), "metadata.valintatavat[0].valintatapaKoodiUri", validationMsg("virhe"))
   }
 

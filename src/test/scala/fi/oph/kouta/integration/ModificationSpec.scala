@@ -5,10 +5,10 @@ import java.time.Instant.now
 import java.util.UUID
 
 import fi.oph.kouta.TestData.inFuture
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.Role
-import fi.oph.kouta.servlet.IndexerServlet
 import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
@@ -69,10 +69,10 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   }
 
   def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
+  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
   def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInToteutusTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
+  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
   def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInHakuTable(i: Int) = update(haku(hakuOids(i), Arkistoitu), timestampAfterInserts)
   def updateInHakuHakuajatTable(i: Int) = update(haku(hakuOids(i)).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(5000)))), timestampAfterInserts)

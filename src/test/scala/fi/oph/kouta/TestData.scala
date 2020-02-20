@@ -4,11 +4,28 @@ import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.OrganisaatioServiceMock.{ChildOid, EvilCousin, EvilGrandChildOid, GrandChildOid}
+
+object TestOids {
+  val OphOid = OrganisaatioOid("1.2.246.562.10.00000000001")
+  val ParentOid = OrganisaatioOid("1.2.246.562.10.594252633210")
+  val ChildOid = OrganisaatioOid("1.2.246.562.10.81934895871")
+  val EvilChildOid = OrganisaatioOid("1.2.246.562.10.66634895871")
+  val GrandChildOid = OrganisaatioOid("1.2.246.562.10.67603619189")
+  val EvilGrandChildOid = OrganisaatioOid("1.2.246.562.10.66603619189")
+  val EvilCousin = OrganisaatioOid("1.2.246.562.10.66634895666")
+
+  val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
+  val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
+  val YoOid = OrganisaatioOid("1.2.246.562.10.46312206843")
+  val AmmOid = OrganisaatioOid("1.2.246.562.10.463122068666")
+  val OtherOid = OrganisaatioOid("1.2.246.562.10.67476956288")
+
+  val TestUserOid = UserOid("1.2.246.562.24.10000000000")
+}
 
 object TestData {
 
@@ -71,7 +88,7 @@ object TestData {
         Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
-    muokkaaja = UserOid(KoutaIntegrationSpec.testUserOid),
+    muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     modified = None)
@@ -91,17 +108,17 @@ object TestData {
       lisatiedot = Seq(
         Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
-    tarjoajat = List("1.2", "2.2", "3.2").map(OrganisaatioOid),
-    muokkaaja = UserOid(KoutaIntegrationSpec.testUserOid),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     modified = None)
 
   val MinKoulutus = Koulutus(
     koulutustyyppi = Amm,
     johtaaTutkintoon = false,
-    muokkaaja = UserOid(KoutaIntegrationSpec.testUserOid),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
     modified = None)
 
   val JulkaistuHaku = new Haku(
@@ -122,11 +139,11 @@ object TestData {
     metadata = Some(HakuMetadata(Seq(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
     organisaatioOid = ChildOid,
-    muokkaaja = UserOid("5.4.3.2.1"),
+    muokkaaja = TestUserOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 
-  val MinHaku = new Haku(muokkaaja = UserOid("9.9.9.9.9"), organisaatioOid = OrganisaatioOid("5.5.5"), modified = None)
+  val MinHaku = new Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None)
 
   val JulkaistuHakukohde = new Hakukohde(
     oid = None,
@@ -162,14 +179,14 @@ object TestData {
     liitteet = List(Liite1, Liite2),
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
-    muokkaaja = UserOid("1.2.3.2.1"),
+    muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 
   val MinHakukohde = new Hakukohde(
-    muokkaaja = UserOid("7.7.7.7"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
     toteutusOid = ToteutusOid("1.2.246.562.17.123"),
     hakuOid = HakuOid("1.2.246.562.29.123"),
     modified = None)
@@ -262,7 +279,7 @@ object TestData {
     metadata = Some(AmmValintaperusteMetadata),
     sorakuvausId = Some(UUID.randomUUID()),
     organisaatioOid = ChildOid,
-    muokkaaja = UserOid("2.1.2.1.2"),
+    muokkaaja = TestUserOid,
     kielivalinta = List(Fi, Sv),
     modified = None)
 
@@ -278,12 +295,12 @@ object TestData {
     valintakokeet = List(Valintakoe1),
     metadata = Some(YoValintaperusteMetadata),
     sorakuvausId = Some(UUID.randomUUID()),
-    organisaatioOid = OrganisaatioOid("1.2.3.4"),
-    muokkaaja = UserOid("2.1.2.1.2"),
+    organisaatioOid = ChildOid,
+    muokkaaja = TestUserOid,
     kielivalinta = List(Fi, Sv),
     modified = None)
 
-  val MinYoValintaperuste = Valintaperuste(koulutustyyppi = Yo, muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"), modified = None)
+  val MinYoValintaperuste = Valintaperuste(koulutustyyppi = Yo, muokkaaja = TestUserOid, organisaatioOid = ChildOid, modified = None)
 
   val YoSorakuvaus = Sorakuvaus(
     id = None,
@@ -294,12 +311,12 @@ object TestData {
     kielivalinta = List(Fi, Sv),
     metadata = Some(SorakuvausMetadata(kuvaus = kieliMap("kuvaus"))),
     organisaatioOid = ChildOid,
-    muokkaaja = UserOid("2.1.2.1.2"),
+    muokkaaja = TestUserOid,
     modified = None)
 
   val AmmSorakuvaus = YoSorakuvaus.copy(koulutustyyppi = Amm)
 
-  val MinSorakuvaus = Sorakuvaus(koulutustyyppi = Yo, muokkaaja = UserOid("7.7.7.7.7"), organisaatioOid = OrganisaatioOid("1.2.1.2"), modified = None)
+  val MinSorakuvaus = Sorakuvaus(koulutustyyppi = Yo, muokkaaja = TestUserOid, organisaatioOid = ChildOid, modified = None)
 
   val ToteutuksenOpetus = Opetus(
     opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1"),
@@ -354,10 +371,10 @@ object TestData {
     oid = None,
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     tila = Julkaistu,
-    tarjoajat = List("1.2.3.3", "1.2.3.4").map(OrganisaatioOid),
+    tarjoajat = List(OtherOid, AmmOid),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
-    muokkaaja = UserOid("1.2.3.4"),
+    muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None)
@@ -365,8 +382,8 @@ object TestData {
   val JulkaistuYoToteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetaTieto))
 
   val MinToteutus = new Toteutus(
-    muokkaaja = UserOid("5.4.3.2"),
-    organisaatioOid = OrganisaatioOid("1.2"),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     modified = None)
 
@@ -392,14 +409,14 @@ object TestData {
       akatemioita = Some(1))),
     kielivalinta = Seq(Fi, Sv),
     organisaatioOid = ChildOid,
-    muokkaaja = UserOid("5.4.3.2"),
+    muokkaaja = TestUserOid,
     modified = None)
 
   val MinOppilaitos = Oppilaitos(
     oid = ChildOid,
     tila = Tallennettu,
     organisaatioOid = ChildOid,
-    muokkaaja = UserOid("5.4.3.2"))
+    muokkaaja = TestUserOid)
 
   val JulkaistuOppilaitoksenOsa = OppilaitoksenOsa(
     oid = GrandChildOid,
@@ -416,7 +433,7 @@ object TestData {
       kampus = Map(Fi -> "Kampus fi", Sv -> "Kampus sv"))),
     kielivalinta = Seq(Fi, Sv),
     organisaatioOid = ChildOid,
-    muokkaaja = UserOid("5.4.3.2"),
+    muokkaaja = TestUserOid,
     modified = None)
 
   val MinOppilaitoksenOsa = OppilaitoksenOsa(
@@ -424,5 +441,5 @@ object TestData {
     oppilaitosOid = ChildOid,
     tila = Tallennettu,
     organisaatioOid = ChildOid,
-    muokkaaja = UserOid("5.4.3.2"))
+    muokkaaja = TestUserOid)
 }

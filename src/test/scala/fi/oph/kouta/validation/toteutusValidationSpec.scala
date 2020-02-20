@@ -32,7 +32,7 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail if julkaistu toteutus is invalid" in {
     failsValidation(amm.copy(tarjoajat = List("mummo", "varis", "1.2.3").map(OrganisaatioOid)),
-      ("tarjoajat[0]", validationMsg("mummo")), ("tarjoajat[1]", validationMsg("varis")))
+      ("tarjoajat[0]", validationMsg("mummo")), ("tarjoajat[1]", validationMsg("varis")), ("tarjoajat[2]", validationMsg("1.2.3")))
 
     failsValidation(amm.copy(metadata = None), "metadata", missingMsg)
     failsValidation(amm.copy(teemakuva = Some("url")), "teemakuva", invalidUrl("url"))

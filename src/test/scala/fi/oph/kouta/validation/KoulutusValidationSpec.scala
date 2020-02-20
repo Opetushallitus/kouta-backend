@@ -33,7 +33,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(koulutusKoodiUri = None), "koulutusKoodiUri", missingMsg)
     failsValidation(amm.copy(koulutusKoodiUri = Some("mummo")), "koulutusKoodiUri", validationMsg("mummo"))
     failsValidation(amm.copy(tarjoajat = List("mummo", "varis", "1.2.3").map(OrganisaatioOid)),
-      ("tarjoajat[0]", validationMsg("mummo")), ("tarjoajat[1]", validationMsg("varis")))
+      ("tarjoajat[0]", validationMsg("mummo")), ("tarjoajat[1]", validationMsg("varis")), ("tarjoajat[2]", validationMsg("1.2.3")))
     failsValidation(amm.copy(metadata = None), "metadata", missingMsg)
     failsValidation(amm.copy(teemakuva = Some("mummo")), "teemakuva", invalidUrl("mummo"))
   }

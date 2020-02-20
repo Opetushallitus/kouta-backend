@@ -3,6 +3,7 @@ package fi.oph.kouta.integration
 import java.time.LocalDateTime
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
@@ -18,7 +19,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   override val roleEntities = Seq(Role.Toteutus)
 
-  var koulutusOid = ""
+  var koulutusOid: String = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -276,7 +277,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "description"))),
-      tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
+      tarjoajat = List(LonelyOid, OtherOid, AmmOid))
     update(uusiToteutus, lastModified, true)
     get(oid, uusiToteutus)
   }
@@ -292,7 +293,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = UserOid("5.4.3.2"), koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
+    val unfinishedToteutus = new Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None)
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
     val newKoulutusOid = put(koulutus)

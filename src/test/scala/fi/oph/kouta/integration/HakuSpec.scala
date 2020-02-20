@@ -4,6 +4,7 @@ import java.time.{Instant, LocalDateTime}
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.client.HaunOhjausparametrit
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
@@ -16,7 +17,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   override val roleEntities = Seq(Role.Haku)
 
-  val ophHaku = haku.copy(organisaatioOid = rootOrganisaatio)
+  val ophHaku = haku.copy(organisaatioOid = OphOid)
 
   "Get haku by oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(defaultSessionHeader)) {
@@ -259,10 +260,10 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = new Haku(muokkaaja = UserOid("9.9.9.9.9"), organisaatioOid = OrganisaatioOid("5.5.5"), modified = None)
+    val unfinishedHaku = Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None)
     val oid = put(unfinishedHaku)
     val lastModified = get(oid, unfinishedHaku.copy(oid = Some(HakuOid(oid))))
-    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = OrganisaatioOid("6.6.6"))
+    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = AmmOid)
     update(newUnfinishedHaku, lastModified)
     get(oid, newUnfinishedHaku)
   }

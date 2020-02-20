@@ -5,8 +5,9 @@ import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.MinYoValintaperuste
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{SorakuvausFixture, ValintaperusteFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -17,7 +18,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
-  def ophValintaperuste(sorakuvausId: UUID) = valintaperuste(sorakuvausId).copy(julkinen = true, organisaatioOid = rootOrganisaatio)
+  def ophValintaperuste(sorakuvausId: UUID) = valintaperuste(sorakuvausId).copy(julkinen = true, organisaatioOid = OphOid)
 
   var sorakuvausId: UUID = _
 
@@ -269,7 +270,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val unfinishedValintaperuste = MinYoValintaperuste
     val id = put(unfinishedValintaperuste)
     val lastModified = get(id, unfinishedValintaperuste.copy(id = Some(id)))
-    val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatioOid = OrganisaatioOid("6.6.6.6.6"))
+    val newUnfinishedValintaperuste = unfinishedValintaperuste.copy(id = Some(id), organisaatioOid = LonelyOid)
     update(newUnfinishedValintaperuste, lastModified)
     get(id, newUnfinishedValintaperuste)
   }

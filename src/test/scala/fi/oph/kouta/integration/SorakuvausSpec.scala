@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.SorakuvausFixture
@@ -213,7 +214,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val unfinishedSorakuvaus = TestData.MinSorakuvaus
     val id = put(unfinishedSorakuvaus)
     val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id)))
-    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = OrganisaatioOid("6.6.6.6.6"))
+    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid)
     update(newUnfinishedSorakuvaus, lastModified)
     get(id, newUnfinishedSorakuvaus)
   }

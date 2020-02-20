@@ -4,12 +4,12 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
@@ -281,8 +281,8 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "store and update unfinished hakukohde" in {
-    val unfinishedHakukohde = Hakukohde(muokkaaja = UserOid("7.7.7.7"), toteutusOid = ToteutusOid(toteutusOid),
-      hakuOid = HakuOid(hakuOid), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
+    val unfinishedHakukohde = Hakukohde(muokkaaja = TestUserOid, toteutusOid = ToteutusOid(toteutusOid),
+      hakuOid = HakuOid(hakuOid), organisaatioOid = ChildOid, modified = None)
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid))))
     val newToteutusOid = put(toteutus(koulutusOid))

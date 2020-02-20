@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -172,8 +173,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
     JulkinenKey -> "false",
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/koulutus-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
@@ -186,8 +187,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/toteutus-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
@@ -199,8 +200,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultHakuScala = Map[String, String](
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     HakutapaKoodiUriKey -> "hakutapa_03#1",
@@ -226,8 +227,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultHakukohdeScala = Map[String, String](
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     AlkamiskausiKoodiUriKey -> "kausi_k#1",
@@ -271,8 +272,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KoulutustyyppiKey -> Amm.name,
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     HakutapaKoodiUriKey -> "hakutapa_01#1",
@@ -293,8 +294,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     KoulutustyyppiKey -> Amm.name,
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     JulkinenKey -> "false",
@@ -306,8 +307,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
   val DefaultOppilaitosScala = Map[String, String](
     TilaKey -> Julkaistu.name,
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/oppilaitos-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
@@ -318,8 +319,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
   val DefaultOppilaitoksenOsaScala = Map[String, String](
     TilaKey -> Julkaistu.name,
-    MuokkaajaKey -> "1.2.3",
-    OrganisaatioKey -> "1.2.246.562.10.67476956288",
+    MuokkaajaKey -> TestUserOid.s,
+    OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/oppilaitoksen-osa-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),

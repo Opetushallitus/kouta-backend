@@ -1,12 +1,11 @@
 package fi.oph.kouta.client
 
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Lk, Yo}
 import fi.oph.kouta.mocks.OrganisaatioServiceMock
 
 class OrganisaatioClientSpec extends KoutaClientSpec with OrganisaatioServiceMock {
-
-  val YoOid = OrganisaatioOid("1.2.246.562.10.46312206843")
 
   "getAllChildOidsAndOppilaitostyypitFlat" should "return flat list of child organisations" in {
     mockOrganisaatioResponse(ChildOid)

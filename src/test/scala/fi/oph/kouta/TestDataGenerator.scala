@@ -6,6 +6,7 @@ import java.util.UUID
 
 import fi.oph.kouta.EmbeddedJettyLauncher.{DefaultPort, TestDataGeneratorSessionId}
 import fi.oph.kouta.TestData._
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
@@ -37,7 +38,7 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   val DebugOids = false
 
-  val userOid = "1.2.246.562.24.62301161440"
+  val userOid = UserOid("1.2.246.562.24.62301161440")
 
   def main(args: Array[String]) {
     println(s"Generating test data to path $KoutaBackendPath")
@@ -65,8 +66,8 @@ object TestDataGenerator extends KoutaJsonFormats {
     println(s"Koulutukset, toteutukset ja hakukohteet ready...")
 
     println(s"Generating oppilaitokset...")
-    val oppilaitosOid0 = "1.2.246.562.10.81934895871"
-    val oppilaitosOid1 = "1.2.246.562.10.67476956288"
+    val oppilaitosOid0 = ChildOid.s
+    val oppilaitosOid1 = OtherOid.s
 
     putUnlessExists("/oppilaitos", oppilaitos(oppilaitosOid0), oppilaitosOid0)
     putUnlessExists("/oppilaitoksen-osa", oppilaitoksenOsa("1.2.246.562.10.76662434703", oppilaitosOid0), "1.2.246.562.10.76662434703")
@@ -85,14 +86,14 @@ object TestDataGenerator extends KoutaJsonFormats {
     oid
   }
 
-  private val organisaatioOids = Seq("1.2.246.562.10.67476956288", "1.2.246.562.10.594252633210")
+  private val organisaatioOids = Seq(OtherOid, ParentOid)
 
   def organisaatioOid(i: Int) = organisaatioOids(i % 2)
 
   def getTarjoajat(i: Int) = i % 4 match {
-    case 0 => List("1.2.246.562.10.23178783348", "1.2.246.562.10.69157007167").map(OrganisaatioOid)
-    case 2 => List("1.2.246.562.10.23178783348", "1.2.246.562.10.875704637010").map(OrganisaatioOid)
-    case _ => List("1.2.246.562.10.94169710632", "1.2.246.562.10.69157007167").map(OrganisaatioOid)
+    case 0 => List(GrandChildOid, EvilGrandChildOid)
+    case 2 => List(GrandChildOid, EvilCousin)
+    case _ => List(LonelyOid, EvilGrandChildOid)
   }
 
   private def koulutusNimi(i: Int) = shuffle(List[Kielistetty](
@@ -107,17 +108,17 @@ object TestDataGenerator extends KoutaJsonFormats {
       nimi = koulutusNimi(i),
       tila = shuffle(Julkaisutila.values()).head,
       julkinen = (i % 4 == 0),
-      organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
-      tarjoajat = List(OrganisaatioOid(organisaatioOid(i))),
-      muokkaaja = UserOid(userOid)
+      organisaatioOid = organisaatioOid(i),
+      tarjoajat = List(organisaatioOid(i)),
+      muokkaaja = userOid
     )
     case _ => YoKoulutus.copy(
       nimi = koulutusNimi(i),
       tila = shuffle(Julkaisutila.values()).head,
       julkinen = (i % 4 == 0),
-      organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
-      tarjoajat = List(OrganisaatioOid(organisaatioOid(i))),
-      muokkaaja = UserOid(userOid)
+      organisaatioOid = organisaatioOid(i),
+      tarjoajat = List(organisaatioOid(i)),
+      muokkaaja = userOid
     )
   }
 
@@ -133,24 +134,24 @@ object TestDataGenerator extends KoutaJsonFormats {
       nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
       tila = shuffle(Julkaisutila.values()).head,
       koulutusOid = KoulutusOid(koulutusOid),
-      organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
+      organisaatioOid = organisaatioOid(i),
       tarjoajat = getTarjoajat(i),
-      muokkaaja = UserOid(userOid),
+      muokkaaja = userOid,
       metadata = Some(updateAsiasanat(JulkaistuAmmToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata])))
     case 1 => JulkaistuYoToteutus.copy(
       nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
       tila = shuffle(Julkaisutila.values()).head,
       koulutusOid = KoulutusOid(koulutusOid),
-      organisaatioOid = OrganisaatioOid(organisaatioOid(i)),
+      organisaatioOid = organisaatioOid(i),
       tarjoajat = getTarjoajat(i),
-      muokkaaja = UserOid(userOid))
+      muokkaaja = userOid)
   }
 
   def haku(i: Int) = JulkaistuHaku.copy(
     nimi = Map(Fi -> s"Haku $i", Sv -> s"Haku $i sv"),
     tila = shuffle(Julkaisutila.values()).head,
     hakuajat = List(Ajanjakso(alkaa = inPast(), paattyy = inFuture())),
-    organisaatioOid = OrganisaatioOid(organisaatioOid(i))
+    organisaatioOid = organisaatioOid(i)
   )
 
   def hakukohde(i: Int, j: Int, k: Int, toteutusOid: String, hakuOid: String, valintaperusteId: String) = JulkaistuHakukohde.copy(
@@ -167,7 +168,7 @@ object TestDataGenerator extends KoutaJsonFormats {
   def sorakuvaus(i: Int) = AmmSorakuvaus.copy(
     nimi = Map(Fi -> s"Sorakuvaus $i", Sv -> s"Sorakuvaus $i sv"),
     tila = shuffle(Julkaisutila.values()).head,
-    organisaatioOid = OrganisaatioOid(organisaatioOid(i))
+    organisaatioOid = organisaatioOid(i)
   )
 
   def valintaperuste(i: Int, sorakuvausId: String) = i % 2 match {
@@ -175,12 +176,12 @@ object TestDataGenerator extends KoutaJsonFormats {
       nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
       tila = shuffle(Julkaisutila.values()).head,
       sorakuvausId = Some(UUID.fromString(sorakuvausId)),
-      organisaatioOid = OrganisaatioOid(organisaatioOid(i)))
+      organisaatioOid = organisaatioOid(i))
     case 1 => YoValintaperuste.copy(
       nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
       tila = shuffle(Julkaisutila.values()).head,
       sorakuvausId = Some(UUID.fromString(sorakuvausId)),
-      organisaatioOid = OrganisaatioOid(organisaatioOid(i)))
+      organisaatioOid = organisaatioOid(i))
   }
 
   def oppilaitos(oid: String) = JulkaistuOppilaitos.copy(

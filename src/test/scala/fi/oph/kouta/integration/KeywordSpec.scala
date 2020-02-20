@@ -2,8 +2,9 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
+import fi.oph.kouta.TestOids.ParentOid
+import fi.oph.kouta.domain.Fi
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role

@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
@@ -243,7 +244,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     val unfinishedOppilaitoksenOsa = TestData.MinOppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid))
     val oid = put(unfinishedOppilaitoksenOsa)
     val lastModified = get(oid, unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid)))
-    val newUnfinishedOppilaitoksenOsa = unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), organisaatioOid = OrganisaatioOid("6.6.6.6.6"))
+    val newUnfinishedOppilaitoksenOsa = unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), organisaatioOid = LonelyOid)
     update(newUnfinishedOppilaitoksenOsa, lastModified)
     get(oid, newUnfinishedOppilaitoksenOsa)
   }
