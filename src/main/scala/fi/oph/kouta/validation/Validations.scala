@@ -24,8 +24,8 @@ object Validations {
   def invalidUrl(url: String) = s"'${url}' ei ole validi URL"
   def invalidEmail(email: String) = s"'${email}' ei ole validi email"
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
-  def pastAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} päättyy menneisyydessä"
   def pastDateMsg(date: LocalDateTime) = s"$date on menneisyydessä"
+  def pastDateMsg(date: String) = s"$date on menneisyydessä"
   def minmaxMsg(minValue: Any, maxValue: Any) = s"$minValue on suurempi kuin $maxValue"
 
   val KoulutusKoodiPattern: Pattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
@@ -93,16 +93,8 @@ object Validations {
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
 
-  def assertHakuajatInFuture(hakuajat: Seq[Ajanjakso], path: String): IsValid = {
-    def assertAjanjaksoInFuture(a: Ajanjakso, p: String): IsValid =
-      assertTrue(a.paattyy.isAfter(LocalDateTime.now()), p, validationMsg(a.toString))
-
-    validateIfNonEmpty(hakuajat, path, assertAjanjaksoInFuture _)
-  }
-
-  def isValidAlkamisvuosi(s: String): Boolean = VuosiPattern.matcher(s).matches && LocalDate.now().getYear <= Integer.parseInt(s)
-  def validateAlkamisvuosi(alkamisvuosi: String, path: String): IsValid =
-    assertTrue(isValidAlkamisvuosi(alkamisvuosi), path, validationMsg(alkamisvuosi))
+  def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
+    assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))
 
   def validateHakulomake(hakulomaketyyppi: Option[Hakulomaketyyppi],
                          hakulomakeAtaruId: Option[UUID],

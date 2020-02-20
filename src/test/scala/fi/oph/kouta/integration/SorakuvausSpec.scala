@@ -112,7 +112,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 
@@ -225,7 +225,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 }

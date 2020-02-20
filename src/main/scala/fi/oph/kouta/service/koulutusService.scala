@@ -32,7 +32,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) {
-      withValidation(koulutus, doPut)
+      withValidation(koulutus, None, doPut)
     }.oid.get
 
   //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
@@ -40,7 +40,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))
     authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>
-      withValidation(koulutus, doUpdate(_, notModifiedSince, oldKoulutus))
+      withValidation(koulutus, Some(oldKoulutus), doUpdate(_, notModifiedSince, oldKoulutus))
     }.nonEmpty
   }
 

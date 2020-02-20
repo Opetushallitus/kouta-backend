@@ -21,6 +21,18 @@ class ValintakoeValidationSpec extends SubEntityValidationSpec[Valintakoe] {
       "tilaisuudet[0].osoite.postinumeroKoodiUri",
       validationMsg("mummo"))
   }
+
+  "Valintakoe on julkaisu validation" should "pass a valid valintakoe" in {
+    passesOnJulkaisuValidation(Valintakoe1)
+  }
+
+  it should "validate tilaisuudet" in {
+    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = inPast(2000))
+    val tilaisuus = Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
+    val koe = Valintakoe1.copy(tilaisuudet = List(tilaisuus))
+    passesValidation(Julkaistu, koe)
+    failsOnJulkaisuValidation(koe, "tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy))
+  }
 }
 
 class ValintakoetilaisuusValidationSpec extends SubEntityValidationSpec[Valintakoetilaisuus] {
@@ -49,12 +61,6 @@ class ValintakoetilaisuusValidationSpec extends SubEntityValidationSpec[Valintak
     failsValidation(Julkaistu, Valintakoetilaisuus1.copy(osoite = None), "osoite", missingMsg)
   }
 
-  it should "fail if aika ends in the past when julkaistu" in {
-    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = inPast(2000))
-    passesValidation(Tallennettu, Valintakoetilaisuus1.copy(aika = Some(ajanjakso)))
-    failsValidation(Julkaistu, Valintakoetilaisuus1.copy(aika = Some(ajanjakso)), "aika", pastAjanjaksoMsg(ajanjakso))
-  }
-
   it should "fail if aika is missing when julkaistu" in {
     passesValidation(Tallennettu, Valintakoetilaisuus1.copy(aika = None))
     failsValidation(Julkaistu, Valintakoetilaisuus1.copy(aika = None), "aika", missingMsg)
@@ -63,6 +69,16 @@ class ValintakoetilaisuusValidationSpec extends SubEntityValidationSpec[Valintak
   it should "fail if lisatietoja is missing languages when julkaistu" in {
     passesValidation(Tallennettu, Valintakoetilaisuus1.copy(lisatietoja = Map(Fi -> "lisatietoja fi")))
     failsValidation(Julkaistu, Valintakoetilaisuus1.copy(lisatietoja = Map(Fi -> "lisatietoja fi")), "lisatietoja", invalidKielistetty(Seq(Sv)))
+  }
+
+  "Valintakoetilaisuus on julkaisu validation" should "pass a valid valintakoetilaisuus" in {
+    passesOnJulkaisuValidation(Valintakoetilaisuus1)
+  }
+
+  it should "fail if aika ends in the past" in {
+    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = inPast(2000))
+    passesValidation(Julkaistu, Valintakoetilaisuus1.copy(aika = Some(ajanjakso)))
+    failsOnJulkaisuValidation(Valintakoetilaisuus1.copy(aika = Some(ajanjakso)), "aika.paattyy", pastDateMsg(ajanjakso.paattyy))
   }
 }
 

@@ -17,7 +17,7 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
     failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
-  it should "pass imcomplete valintaperuste if not julkaistu" in {
+  it should "pass incomplete valintaperuste if not julkaistu" in {
     passesValidation(min)
   }
 

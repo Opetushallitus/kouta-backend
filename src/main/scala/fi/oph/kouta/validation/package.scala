@@ -7,11 +7,17 @@ package object validation {
   val NoErrors: IsValid = Nil
 
   trait Validatable {
+    val tila: Julkaisutila
+
     def validate(): IsValid
+
+    def validateOnJulkaisu(): IsValid = NoErrors
   }
 
   trait ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid
+
+    def validateOnJulkaisu(path: String): IsValid = NoErrors
   }
 
   case class ValidationError(path: String, msg: String) {

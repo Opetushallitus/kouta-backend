@@ -12,6 +12,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
   val max = JulkaistuHaku
   val min = MinHaku
+  val pastAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = TestData.inPast(100))
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(max.copy(oid = Some(HakuOid("moikka"))), "oid", validationMsg("moikka"))
@@ -22,7 +23,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
-  it should "pass imcomplete haku if not julkaistu" in {
+  it should "pass incomplete haku if not julkaistu" in {
     passesValidation(min)
   }
 
@@ -44,7 +45,6 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
     failsValidation(max.copy(alkamisvuosi = None, hakutapaKoodiUri = Some("hakutapa_01#1")), "alkamisvuosi", missingMsg)
     failsValidation(max.copy(alkamisvuosi = Some("20180")), "alkamisvuosi", validationMsg("20180"))
-    failsValidation(max.copy(alkamisvuosi = Some("2017")), "alkamisvuosi", validationMsg("2017"))
 
     failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
     failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
@@ -53,9 +53,6 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
     val invalidAjanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
     failsValidation(max.copy(hakuajat = List(invalidAjanjakso)), "hakuajat[0]", invalidAjanjaksoMsg(invalidAjanjakso))
-
-    val pastAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = TestData.inPast(100))
-    failsValidation(max.copy(hakuajat = List(pastAjanjakso)), "hakuajat[0]", pastAjanjaksoMsg(pastAjanjakso))
   }
 
   it should "fail if metadata is invalid" in {
@@ -69,8 +66,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     failsValidation(max.copy(metadata = Some(metadata)), "metadata.yhteyshenkilot[0].nimi", invalidKielistetty(Seq(Fi, Sv)))
   }
 
-
-    it should "fail if hakulomake is invalid" in {
+  it should "fail if hakulomake is invalid" in {
     failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None), "hakulomakeAtaruId", missingMsg)
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi")), "hakulomakeLinkki", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map()), "hakulomakeLinkki", invalidKielistetty(Seq(Fi, Sv)))
@@ -89,7 +85,55 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "return multiple error messages" in {
-    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi"), alkamisvuosi = Some("2017")),
-      ("hakutapaKoodiUri", validationMsg("korppi")), ("alkamisvuosi", validationMsg("2017")))
+    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi"), alkamisvuosi = Some("02017")),
+      ("hakutapaKoodiUri", validationMsg("korppi")), ("alkamisvuosi", validationMsg("02017")))
+  }
+
+  "Haku on julkaisu validation" should "pass a valid haku" in {
+    passesOnJulkaisuValidation(max)
+  }
+
+  it should "fail if alkamisvuosi is in the past" in {
+    passesValidation(max.copy(tila = Julkaistu, alkamisvuosi = Some("2017")))
+    failsOnJulkaisuValidation(max.copy(alkamisvuosi = Some("2017")), "alkamisvuosi", pastDateMsg("2017"))
+  }
+
+  it should "fail if hakuajat are in the past" in {
+    passesValidation(max.copy(tila = Julkaistu, hakuajat = List(pastAjanjakso)))
+    failsOnJulkaisuValidation(max.copy(hakuajat = List(pastAjanjakso)), "hakuajat[0].paattyy", pastDateMsg(pastAjanjakso.paattyy))
+  }
+
+  it should "validate metadata" in {
+    val metadata = max.metadata.get.copy(tulevaisuudenAikataulu = Seq(pastAjanjakso))
+    passesValidation(max.copy(tila = Julkaistu, metadata = Some(metadata)))
+    failsOnJulkaisuValidation(max.copy(metadata = Some(metadata)), "metadata.tulevaisuudenAikataulu[0].paattyy", pastDateMsg(pastAjanjakso.paattyy))
+  }
+}
+
+class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
+  val metadata = JulkaistuHaku.metadata.get
+  val pastAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = TestData.inPast(100))
+
+  "HakuMetadata validation" should "pass a valid haku metadata" in {
+    passesValidation(Julkaistu, metadata)
+  }
+
+  it should "validate yhteyshenkilot" in {
+    val m = metadata.copy(yhteyshenkilot = Seq(Yhteyshenkilo(sahkoposti = Map(Fi -> "sahkoposti", Sv -> "email"))))
+    failsValidation(Julkaistu, m, "yhteyshenkilot[0].nimi", invalidKielistetty(Seq(Fi, Sv)))
+  }
+
+  it should "validate tulevaisuudenAikataulu" in {
+    val ajanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = TestData.inFuture(9000))
+    failsValidation(Tallennettu, metadata.copy(tulevaisuudenAikataulu = List(ajanjakso)), "tulevaisuudenAikataulu[0]", invalidAjanjaksoMsg(ajanjakso))
+  }
+
+  "HakuMetadata on julkaisu validation" should "pass a valid haku metadata" in {
+    passesOnJulkaisuValidation(metadata)
+  }
+
+  it should "validate tulevaisuudenAikataulu" in {
+    passesValidation(Julkaistu, metadata.copy(tulevaisuudenAikataulu = List(pastAjanjakso)))
+    failsOnJulkaisuValidation(metadata.copy(tulevaisuudenAikataulu = List(pastAjanjakso)), "tulevaisuudenAikataulu[0].paattyy", pastDateMsg(pastAjanjakso.paattyy))
   }
 }

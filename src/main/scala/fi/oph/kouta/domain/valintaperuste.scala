@@ -213,6 +213,9 @@ case class Valintaperuste(id: Option[UUID] = None,
     ))
   )
 
+  override def validateOnJulkaisu(): IsValid =
+    validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validateOnJulkaisu(_))
+
   override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
 
   override def withModified(modified: LocalDateTime): Valintaperuste = copy(modified = Some(modified))

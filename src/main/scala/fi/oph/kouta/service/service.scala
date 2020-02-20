@@ -6,7 +6,7 @@ import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuva}
+import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuva, Julkaistu}
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
@@ -21,9 +21,17 @@ import scala.util.Try
 
 trait ValidatingService[E <: Validatable] {
 
-  def withValidation[R](e:E, f: E => R): R = e.validate() match {
-    case NoErrors => f(e)
-    case errors => throw KoutaValidationException(errors)
+  def withValidation[R](e: E, oldE: Option[E], f: E => R): R = {
+    val errors = if (!oldE.contains(Julkaistu) && e.tila == Julkaistu) {
+      e.validate() ++ e.validateOnJulkaisu()
+    } else {
+      e.validate()
+    }
+
+    errors match {
+      case NoErrors => f(e)
+      case errors => throw KoutaValidationException(errors)
+    }
   }
 }
 

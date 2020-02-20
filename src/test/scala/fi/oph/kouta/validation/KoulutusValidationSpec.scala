@@ -20,7 +20,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
-  it should "pass imcomplete koulutus if not julkaistu" in {
+  it should "pass incomplete koulutus if not julkaistu" in {
     passesValidation(min)
   }
 

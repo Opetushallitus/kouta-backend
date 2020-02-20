@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.integration.fixture.{SorakuvausFixture, ValintaperusteFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -139,7 +139,23 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
+    }
+  }
+
+  it should "validate dates only when adding a new julkaistu valintaperuste" in {
+    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = TestData.inPast(2000))
+    val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
+    val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
+    val thisValintaperuste = valintaperuste(sorakuvausId).copy(valintakokeet = List(koe))
+
+    put(thisValintaperuste.copy(tila = Tallennettu))
+
+    put(ValintaperustePath, bytes(thisValintaperuste.copy(tila = Julkaistu)), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
     }
   }
 
@@ -265,7 +281,28 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua"), "organisaatioOid"))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
+
+  it should "validate dates only when moving from other states to julkaistu" in {
+    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = TestData.inPast(2000))
+    val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
+    val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
+    val thisValintaperuste = valintaperuste(sorakuvausId).copy(valintakokeet = List(koe), tila = Tallennettu)
+
+    val id = put(thisValintaperuste)
+    val thisValintaperusteWithOid = thisValintaperuste.copy(id = Some(id))
+    val lastModified = get(id, thisValintaperusteWithOid)
+
+    post(ValintaperustePath, bytes(thisValintaperusteWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
+    }
+
+    update(thisValintaperusteWithOid.copy(tila = Arkistoitu), lastModified)
+  }
+
 }

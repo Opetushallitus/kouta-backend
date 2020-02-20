@@ -395,19 +395,22 @@ package object domain {
   }
 
   case class Ajanjakso(alkaa: LocalDateTime, paattyy: LocalDateTime) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      assertTrue(alkaa.isBefore(paattyy), path, invalidAjanjaksoMsg(this)),
-      validateIfJulkaistu(tila, assertTrue(paattyy.isAfter(LocalDateTime.now()), path, pastAjanjaksoMsg(this)))
-    )
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
+      assertTrue(alkaa.isBefore(paattyy), path, invalidAjanjaksoMsg(this))
+
+    override def validateOnJulkaisu(path: String): IsValid = assertInFuture(paattyy, s"$path.paattyy")
   }
 
   case class Valintakoe(id: Option[UUID] = None,
                         tyyppiKoodiUri: Option[String] = None,
                         tilaisuudet: List[Valintakoetilaisuus] = List()) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and (
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, ValintakokeenTyyppiKoodiPattern, s"$path.tyyppiKoodiUri")),
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _))
     )
+
+    override def validateOnJulkaisu(path: String): IsValid =
+      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validateOnJulkaisu(_))
   }
 
   case class Valintakoetilaisuus(osoite: Option[Osoite],
@@ -422,6 +425,9 @@ package object domain {
         validateOptionalKielistetty(kielivalinta, lisatietoja, s"$path.lisatietoja")
       ))
     )
+
+    override def validateOnJulkaisu(path: String): IsValid =
+      validateIfDefined[Ajanjakso](aika, _.validateOnJulkaisu(s"$path.aika"))
   }
 
   abstract class OidListItem {

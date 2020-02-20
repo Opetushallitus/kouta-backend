@@ -28,13 +28,13 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) {
-      withValidation(valintaperuste, doPut)
+      withValidation(valintaperuste, None, doPut)
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {  oldValintaperuste =>
-      withValidation(valintaperuste, doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
+      withValidation(valintaperuste, Some(oldValintaperuste), doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
     }
   }
 

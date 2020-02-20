@@ -228,6 +228,9 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
     validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
   )
 
+  override def validateOnJulkaisu(): IsValid =
+    validateIfDefined[ToteutusMetadata](metadata, _.validateOnJulkaisu("metadata"))
+
   def withOid(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))
 
   override def withTeemakuva(teemakuva: Option[String]): Toteutus = this.copy(teemakuva = teemakuva)

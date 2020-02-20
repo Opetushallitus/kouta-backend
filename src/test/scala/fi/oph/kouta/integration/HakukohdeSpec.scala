@@ -9,6 +9,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
+import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
@@ -134,7 +135,20 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+    }
+  }
+
+  it should "validate dates only when adding a new julkaistu hakukohde" in {
+    val thisHakukohde = uusiHakukohde.copy(alkamisvuosi = Some("2017"))
+
+    put(thisHakukohde.copy(tila = Tallennettu))
+
+    put(HakukohdePath, bytes(thisHakukohde.copy(tila = Julkaistu)), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
     }
   }
 
@@ -285,8 +299,25 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
     }
+  }
+
+  it should "validate dates only when moving from other states to julkaistu" in {
+    val thisHakukohde = uusiHakukohde.copy(alkamisvuosi = Some("2017"), tila = Tallennettu, liitteet = List(), valintakokeet = List())
+
+    val oid = put(thisHakukohde)
+    val thisHakukohdeWithOid = thisHakukohde.copy(oid = Some(HakukohdeOid(oid)))
+    val lastModified = get(oid, thisHakukohdeWithOid)
+
+    post(HakukohdePath, bytes(thisHakukohdeWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
+    }
+
+    update(thisHakukohdeWithOid.copy(tila = Arkistoitu), lastModified)
   }
 
   it should "update hakukohteen liitteet ja valintakokeet" in {

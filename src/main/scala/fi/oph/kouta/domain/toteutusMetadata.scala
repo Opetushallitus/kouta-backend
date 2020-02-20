@@ -261,6 +261,9 @@ sealed trait ToteutusMetadata extends ValidatableSubEntity {
       assertNotOptional(opetus, s"$path.opetus"),
     ))
   )
+
+  override def validateOnJulkaisu(path: String): IsValid =
+    validateIfDefined[Opetus](opetus, _.validateOnJulkaisu(s"$path.opetus"))
 }
 
 trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
@@ -379,17 +382,20 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       assertNotOptional(onkoMaksullinen, s"$path.onkoMaksullinen"),
       validateOptionalKielistetty(kielivalinta, maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
       validateIfTrue(onkoMaksullinen.contains(true), assertNotOptional(maksunMaara, s"$path.maksunMaara")),
-      validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
-      validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")),
       assertNotOptional(onkoStipendia, s"$path.onkoStipendia"),
       validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
       validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
       if (koulutuksenTarkkaAlkamisaika) {
-        assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
+        assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")
       } else and(
         assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"),
         assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi")
       )
     ))
+  )
+
+  override def validateOnJulkaisu(path: String): IsValid = and(
+    validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
+    validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")),
   )
 }

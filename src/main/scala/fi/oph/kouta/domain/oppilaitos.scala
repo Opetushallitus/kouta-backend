@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.Authorizable
 import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
-import fi.oph.kouta.validation.{IsValid, Validatable, ValidatableSubEntity}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidatableSubEntity}
 
 package object oppilaitos {
 

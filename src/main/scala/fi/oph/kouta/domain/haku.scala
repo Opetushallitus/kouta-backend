@@ -211,7 +211,7 @@ case class Haku(oid: Option[HakuOid] = None,
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
-      validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_, "alkamisvuosi")),
+      validateIfDefined[String](alkamisvuosi, assertMatch(_, VuosiPattern,"alkamisvuosi")),
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
@@ -221,6 +221,12 @@ case class Haku(oid: Option[HakuOid] = None,
         assertNotOptional(alkamisvuosi, "alkamisvuosi")
       ))
     ))
+  )
+
+  override def validateOnJulkaisu(): IsValid = and(
+    validateIfDefined[String](alkamisvuosi, assertAlkamisvuosiInFuture(_, "alkamisvuosi")),
+    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
+    validateIfDefined[HakuMetadata](metadata, _.validateOnJulkaisu("metadata"))
   )
 
   def withOid(oid: HakuOid): Haku = copy(oid = Some(oid))
@@ -241,4 +247,7 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
   )
+
+  override def validateOnJulkaisu(path: String): IsValid =
+    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_))
 }

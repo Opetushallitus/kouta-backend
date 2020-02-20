@@ -17,7 +17,7 @@ class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
     failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
-  it should "pass imcomplete sorakuvaus if not julkaistu" in {
+  it should "pass incomplete sorakuvaus if not julkaistu" in {
     passesValidation(min)
   }
 

@@ -160,18 +160,6 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Julkaistu, opetus.copy(koulutuksenAlkamispaivamaara = None), "koulutuksenAlkamispaivamaara", missingMsg)
   }
 
-  it should "fail a julkaistu opetus if koulutuksen koulutuksenAlkamispaivamaara is in the past" in {
-    passesValidation(Arkistoitu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast)))
-    failsValidation(Julkaistu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast)), "koulutuksenAlkamispaivamaara", pastDateMsg(moreInPast))
-  }
-
-  it should "fail a julkaistu opetus if koulutuksen koulutuksenPaattymispaivamaara is in the past" in {
-    passesValidation(Arkistoitu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast), koulutuksenPaattymispaivamaara = Some(past)))
-
-    failsValidation(Julkaistu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast), koulutuksenPaattymispaivamaara = Some(past)),
-      ("koulutuksenAlkamispaivamaara", pastDateMsg(moreInPast)), ("koulutuksenPaattymispaivamaara", pastDateMsg(past)))
-  }
-
   it should "fail if onkoStipendia is missing in a julkaistu opetus" in {
     passesValidation(Tallennettu, opetus.copy(onkoStipendia = None))
     failsValidation(Julkaistu, opetus.copy(onkoStipendia = None), "onkoStipendia", missingMsg)
@@ -188,5 +176,21 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
 
     failsValidation(Julkaistu, opetus.copy(lisatiedot = Seq(lisatieto.copy(otsikkoKoodiUri = "mummo"))), "lisatiedot[0].otsikkoKoodiUri", validationMsg("mummo"))
     failsValidation(Julkaistu, opetus.copy(lisatiedot = Seq(lisatieto.copy(teksti = Map(Fi -> "lisatieto")))), "lisatiedot[0].teksti", invalidKielistetty(Seq(Sv)))
+  }
+
+  "Opetus on julkaisu validation" should "pass a valid opetus" in {
+    passesOnJulkaisuValidation(opetus)
+  }
+
+  it should "fail a julkaistu opetus if koulutuksen koulutuksenAlkamispaivamaara is in the past" in {
+    passesValidation(Julkaistu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast)))
+    failsOnJulkaisuValidation(opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast)), "koulutuksenAlkamispaivamaara", pastDateMsg(moreInPast))
+  }
+
+  it should "fail a julkaistu opetus if koulutuksen koulutuksenPaattymispaivamaara is in the past" in {
+    passesValidation(Arkistoitu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast), koulutuksenPaattymispaivamaara = Some(past)))
+
+    failsOnJulkaisuValidation(opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast), koulutuksenPaattymispaivamaara = Some(past)),
+      ("koulutuksenAlkamispaivamaara", pastDateMsg(moreInPast)), ("koulutuksenPaattymispaivamaara", pastDateMsg(past)))
   }
 }

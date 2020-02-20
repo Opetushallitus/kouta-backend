@@ -154,9 +154,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def errorBody(expected: String): String = s"""{"error":"${expected}"}"""
 
-  def validateErrorBody(expected: List[ValidationError]): String = "[" + expected.map(_.toString).mkString(",") + "]"
+  def validationErrorBody(expected: List[ValidationError]): String = "[" + expected.map(_.toString).mkString(",") + "]"
 
-  def validateErrorBody(expected: String, path: String): String = validateErrorBody(List(ValidationError(path, expected)))
+  def validationErrorBody(expected: String, path: String): String = validationErrorBody(List(ValidationError(path, expected)))
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 

@@ -27,12 +27,12 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus) {
-      withValidation(sorakuvaus, doPut)
+      withValidation(sorakuvaus, None, doPut)
     }.id.get
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) { oldSorakuvaus =>
-      withValidation(sorakuvaus, doUpdate(_, notModifiedSince, oldSorakuvaus))
+      withValidation(sorakuvaus, Some(oldSorakuvaus), doUpdate(_, notModifiedSince, oldSorakuvaus))
     }.nonEmpty
 
   def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =

@@ -32,12 +32,12 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid =
     authorizePut(haku) {
-      withValidation(haku, doPut)
+      withValidation(haku, None, doPut)
     }.oid.get
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(HakuDAO.get(haku.oid.get)) { oldHaku =>
-      withValidation(haku, doUpdate(_, notModifiedSince, oldHaku))
+      withValidation(haku, Some(oldHaku), doUpdate(_, notModifiedSince, oldHaku))
     }.nonEmpty
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =

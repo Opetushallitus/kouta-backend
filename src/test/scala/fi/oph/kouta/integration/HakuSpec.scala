@@ -130,7 +130,20 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+    }
+  }
+
+  it should "validate dates only when adding a new julkaistu haku" in {
+    val thisHaku = haku.copy(alkamisvuosi = Some("2017"))
+
+    put(thisHaku.copy(tila = Tallennettu))
+
+    put(HakuPath, bytes(thisHaku.copy(tila = Julkaistu)), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
     }
   }
 
@@ -263,9 +276,27 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
     }
   }
+
+  it should "validate dates only when moving from other states to julkaistu" in {
+    val thisHaku = haku.copy(alkamisvuosi = Some("2017"), tila = Tallennettu)
+
+    val oid = put(thisHaku)
+    val thisHakuWithOid = thisHaku.copy(oid = Some(HakuOid(oid)))
+    val lastModified = get(oid, thisHakuWithOid)
+
+    post(HakuPath, bytes(thisHakuWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
+    }
+
+    update(thisHakuWithOid.copy(tila = Arkistoitu), lastModified)
+  }
+
 
   it should "update haun päivämäärät" in {
     val pvmHaku = haku.copy(
