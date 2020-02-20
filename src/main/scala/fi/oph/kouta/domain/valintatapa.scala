@@ -137,9 +137,7 @@ sealed trait ValintatapaSisalto extends ValidatableSubEntity
 
 case class ValintatapaSisaltoTeksti(teksti: Kielistetty) extends ValintatapaSisalto {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
-    validateIfJulkaistu(tila,
-      validateKielistetty(kielivalinta, teksti, s"$path.teksti")
-    )
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, teksti, s"$path.teksti"))
 }
 
 case class Taulukko(id: Option[UUID],

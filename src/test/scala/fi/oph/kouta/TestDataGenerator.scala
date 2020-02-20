@@ -23,7 +23,7 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   def inPast() = LocalDateTime.now().minusWeeks(2).truncatedTo(ChronoUnit.MINUTES)
   def now() = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-  def inFuture() = LocalDateTime.now().plusWeeks(2).truncatedTo(ChronoUnit.MINUTES)
+  def inFuture(weeks: Int = 2) = LocalDateTime.now().plusWeeks(weeks).truncatedTo(ChronoUnit.MINUTES)
 
   val KoutaBackendPath = System.getProperty(
     "test-data-generator.path",
@@ -160,7 +160,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     toteutusOid = ToteutusOid(toteutusOid),
     hakuOid = HakuOid(hakuOid),
     valintaperusteId = Some(UUID.fromString(valintaperusteId)),
-    hakuajat = shuffle(List(List(Ajanjakso(alkaa = inPast(), paattyy = now())), List(Ajanjakso(alkaa = inPast(), paattyy = inFuture())))).head,
+    hakuajat = shuffle(List(List(Ajanjakso(alkaa = inPast(), paattyy = inFuture(1))), List(Ajanjakso(alkaa = inPast(), paattyy = inFuture(3))))).head,
     kaytetaanHaunAikataulua = shuffle(List(Some(false), Some(true))).head,
     organisaatioOid = getTarjoajat(i)(k)
   )
