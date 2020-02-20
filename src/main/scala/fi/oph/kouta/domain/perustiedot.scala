@@ -20,9 +20,8 @@ sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPr
     assertValid(muokkaaja, "muokkaaja"),
     assertValid(organisaatioOid, "organisaatioOid"),
     validateKielistetty(kielivalinta, nimi, "nimi"),
-    validateIfJulkaistu(tila, and(
-      assertNotEmpty(kielivalinta, "kielivalinta")
-    )))
+    validateIfJulkaistu(tila, assertNotEmpty(kielivalinta, "kielivalinta"))
+  )
 }
 
 abstract class PerustiedotWithOid[ID <: Oid, T] extends Perustiedot[ID, T] {

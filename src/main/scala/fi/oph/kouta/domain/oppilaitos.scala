@@ -264,9 +264,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
     assertValid(organisaatioOid, "organisaatioOid"),
     validateIfDefined[OppilaitosMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-    validateIfJulkaistu(tila, and(
-      assertNotEmpty(kielivalinta, "kielivalinta")
-    )))
+    validateIfJulkaistu(tila, assertNotEmpty(kielivalinta, "kielivalinta")))
 
   override def primaryId: Option[OrganisaatioOid] = Some(oid)
 
@@ -299,9 +297,8 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
     assertValid(organisaatioOid, "organisaatioOid"),
     validateIfDefined[OppilaitoksenOsaMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-    validateIfJulkaistu(tila, and(
-      assertNotEmpty(kielivalinta, "kielivalinta")
-    )))
+    validateIfJulkaistu(tila, assertNotEmpty(kielivalinta, "kielivalinta"))
+  )
 
   override def primaryId: Option[OrganisaatioOid] = Some(oid)
 
@@ -332,9 +329,7 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
     validateIfDefined[Integer](yksikoita,     assertNotNegative(_, s"$path.yksikoita")),
     validateIfDefined[Integer](toimipisteita, assertNotNegative(_, s"$path.toimipisteita")),
     validateIfDefined[Integer](akatemioita,   assertNotNegative(_, s"$path.akatemioita")),
-    validateIfJulkaistu(tila, and(
-      validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely")
-    ))
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"))
   )
 }
 

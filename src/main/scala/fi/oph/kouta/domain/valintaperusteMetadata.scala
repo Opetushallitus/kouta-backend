@@ -1,7 +1,7 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 package object valintaperusteMetadata {
 
@@ -211,8 +211,7 @@ case class Kielitaitovaatimus(kielitaitovaatimusKoodiUri: Option[String] = None,
 
 case class KielitaitovaatimusKuvaus(kielitaitovaatimusKuvausKoodiUri: Option[String] = None,
                                     kielitaitovaatimusTaso: Option[String] = None) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
     validateIfDefined[String](kielitaitovaatimusKuvausKoodiUri, assertMatch(_, KielitaitovaatimusKuvausKoodiPattern, s"$path.kielitaitovaatimusKuvausKoodiUri"))
-  )
 
 }
