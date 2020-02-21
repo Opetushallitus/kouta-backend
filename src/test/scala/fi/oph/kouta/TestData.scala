@@ -31,7 +31,6 @@ object TestData {
 
   def now() = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
   def inFuture(s:Long = 500) = LocalDateTime.now().plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
-  def inFutureDays(days: Int) = LocalDateTime.now().plusDays(days).truncatedTo(ChronoUnit.MINUTES)
   def inPast(s:Long = 500) = LocalDateTime.now().minusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
 
   def kieliMap(text: String): Kielistetty = Map(Fi -> s"$text fi", Sv -> s"$text sv")

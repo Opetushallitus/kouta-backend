@@ -213,12 +213,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakulomakeIdKey -> "dcd38a87-912e-4e91-8840-99c7e242dd53",
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
-    HakukohteenLiittamisenTakarajaKey -> formatModified(TestData.inFutureDays(1)),
-    HakukohteenMuokkaamisenTakarajaKey -> formatModified(TestData.inFutureDays(2)),
-    HakuaikaAlkaaKey -> formatModified(TestData.inFutureDays(4)),
-    HakuaikaPaattyyKey -> formatModified(TestData.inFutureDays(34)),
+    HakukohteenLiittamisenTakarajaKey -> "2029-10-11T12:00",
+    HakukohteenMuokkaamisenTakarajaKey -> "2029-10-12T12:00",
+    HakuaikaAlkaaKey -> "2029-10-10T12:00",
+    HakuaikaPaattyyKey -> "2029-11-10T12:00",
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
-      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = TestData.inFutureDays(365), paattyy = TestData.inFutureDays(372)))
+      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = parseModified("2029-10-10T12:00"), paattyy = parseModified("2029-12-10T12:00")))
     )),
   )
 
@@ -251,18 +251,18 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     PohjakoulutusvaatimusTarkenneKey -> "Pohjakoulutusvaatimuksen tarkenne",
     ToinenAsteOnkoKaksoistutkintoKey -> "false",
     KaytetaanHaunAikatauluaKey -> "false",
-    HakuaikaAlkaaKey -> formatModified(TestData.inFutureDays(30)),
-    HakuaikaPaattyyKey -> formatModified(TestData.inFutureDays(31)),
+    HakuaikaAlkaaKey -> "2029-10-10T12:00",
+    HakuaikaPaattyyKey -> "2029-11-10T12:00",
     ValintaperusteIdKey -> UUID.randomUUID().toString,
     LiitteetOnkoSamaToimitusaikaKey -> "true",
     LiitteetOnkoSamaToimitusosoiteKey -> "false",
-    LiitteidenToimitusaikaKey -> "2020-10-13T12:00",
+    LiitteidenToimitusaikaKey -> "2029-10-13T12:00",
     LiitteetKey -> write(List(TestData.Liite1.copy(id = Some(UUID.fromString("de7e733b-36a2-4d3f-ac71-32ccae96dc32")),
-      toimitusaika = Some(TestData.inFutureDays(30))),
+      toimitusaika = Some(parseModified("2029-02-05T09:58"))),
       TestData.Liite2.copy(id = Some(UUID.fromString("59b5a1c9-316b-4007-a14e-cc2b617bab46"))))),
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
-      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(TestData.inFutureDays(30), TestData.inFutureDays(31)))))
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2029-02-05T09:49"), parseModified("2029-02-05T09:58")))))
     )))
   )
 
@@ -284,7 +284,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     SorakuvausIdKey -> UUID.randomUUID().toString,
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
-      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(TestData.inFutureDays(3), TestData.inFutureDays(4)))))
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2029-02-05T09:49"), parseModified("2029-02-05T09:58")))))
     )))
   )
 
