@@ -1,6 +1,7 @@
 package fi.oph.kouta.external
 
-import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.util.UUID
 
 import fi.oph.kouta.TestData
@@ -162,8 +163,20 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val OppilaitosOidKey = "oppilaitosOid"
   val TeemakuvaKey = "teemakuva"
 
-  def formatModified(date:LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
-  def parseModified(date:String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
+  def formatModified(date: LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
+
+  def parseModified(date: String) = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
+
+  def testDate(time: LocalTime, daysInFuture: Int): LocalDateTime =
+    LocalDate.now().plusDays(daysInFuture).atTime(time).truncatedTo(ChronoUnit.MINUTES)
+
+  def testDate(time: String, daysInFuture: Int): LocalDateTime =
+    testDate(LocalTime.parse(time), daysInFuture)
+
+  val startTime1 = testDate("09:49", 1)
+  val endTime1 = testDate("09:58", 1)
+  val time3 = testDate("09:58", 3)
+  val thisYear = LocalDate.now().getYear.toString
 
   val DefaultKoulutusScala = Map[String, String](
     JohtaaTutkintoonKey -> "true",
@@ -206,19 +219,19 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ModifiedKey -> formatModified(LocalDateTime.now()),
     HakutapaKoodiUriKey -> "hakutapa_03#1",
     AlkamiskausiKoodiUriKey -> "kausi_k#1",
-    AlkamisvuosiKey -> "2020",
+    AlkamisvuosiKey -> thisYear,
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_02#2",
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#11",
     HakulomaketyyppiKey -> EiSähköistä.toString,
     HakulomakeIdKey -> "dcd38a87-912e-4e91-8840-99c7e242dd53",
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
-    HakukohteenLiittamisenTakarajaKey -> "2029-10-11T12:00",
-    HakukohteenMuokkaamisenTakarajaKey -> "2029-10-12T12:00",
-    HakuaikaAlkaaKey -> "2029-10-10T12:00",
-    HakuaikaPaattyyKey -> "2029-11-10T12:00",
+    HakukohteenLiittamisenTakarajaKey -> formatModified(startTime1),
+    HakukohteenMuokkaamisenTakarajaKey -> formatModified(endTime1),
+    HakuaikaAlkaaKey -> formatModified(startTime1),
+    HakuaikaPaattyyKey -> formatModified(endTime1),
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
-      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = parseModified("2029-10-10T12:00"), paattyy = parseModified("2029-12-10T12:00")))
+      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = startTime1, paattyy = endTime1))
     )),
   )
 
@@ -232,15 +245,15 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     AlkamiskausiKoodiUriKey -> "kausi_k#1",
-    AlkamisvuosiKey -> "2020",
+    AlkamisvuosiKey -> thisYear,
     KaytetaanHaunAlkamiskauttaKey -> "false",
     HakulomaketyyppiKey -> EiSähköistä.toString,
     HakulomakeIdKey -> "369221b1-07d0-4b7a-89bc-04b670d8cff2",
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
     KaytetaanHaunHakulomakettaKey -> "false",
-    HakuaikaAlkaaKey -> "2019-10-10T12:00",
-    HakuaikaPaattyyKey -> "2019-11-10T12:00",
+    HakuaikaAlkaaKey -> formatModified(startTime1),
+    HakuaikaPaattyyKey -> formatModified(endTime1),
     AloituspaikatKey -> "100",
     MinAloituspaikatKey -> "99",
     MaxAloituspaikatKey -> "101",
@@ -251,18 +264,18 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     PohjakoulutusvaatimusTarkenneKey -> "Pohjakoulutusvaatimuksen tarkenne",
     ToinenAsteOnkoKaksoistutkintoKey -> "false",
     KaytetaanHaunAikatauluaKey -> "false",
-    HakuaikaAlkaaKey -> "2029-10-10T12:00",
-    HakuaikaPaattyyKey -> "2029-11-10T12:00",
+    HakuaikaAlkaaKey -> formatModified(startTime1),
+    HakuaikaPaattyyKey -> formatModified(endTime1),
     ValintaperusteIdKey -> UUID.randomUUID().toString,
     LiitteetOnkoSamaToimitusaikaKey -> "true",
     LiitteetOnkoSamaToimitusosoiteKey -> "false",
-    LiitteidenToimitusaikaKey -> "2029-10-13T12:00",
+    LiitteidenToimitusaikaKey -> formatModified(time3),
     LiitteetKey -> write(List(TestData.Liite1.copy(id = Some(UUID.fromString("de7e733b-36a2-4d3f-ac71-32ccae96dc32")),
-      toimitusaika = Some(parseModified("2029-02-05T09:58"))),
+      toimitusaika = Some(endTime1)),
       TestData.Liite2.copy(id = Some(UUID.fromString("59b5a1c9-316b-4007-a14e-cc2b617bab46"))))),
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
-      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2029-02-05T09:49"), parseModified("2029-02-05T09:58")))))
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, endTime1))))
     )))
   )
 
@@ -284,7 +297,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     SorakuvausIdKey -> UUID.randomUUID().toString,
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
-      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(parseModified("2029-02-05T09:49"), parseModified("2029-02-05T09:58")))))
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, endTime1))))
     )))
   )
 
