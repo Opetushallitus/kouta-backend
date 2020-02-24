@@ -1,5 +1,7 @@
 cas.url={{cas_url}}
 kouta-backend.cas.service={{kouta_backend_cas_service}}
+kouta-backend.cas.username={{kouta_backend_cas_username}}
+kouta-backend.cas.password={{kouta_backend_cas_password}}
 
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
 kouta-backend.db.user={{postgres_app_user}}
@@ -30,5 +32,8 @@ kouta-index.hakukohde.filtered-list=https://{{host_virkailija}}/kouta-index/haku
 kouta-index.valintaperuste.filtered-list=https://{{host_virkailija}}/kouta-index/valintaperuste/filtered-list
 kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kayttooikeus-service/userDetails/$1
 organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/hierarkia/hae
+
+ohjausparametrit-service.service=https://{{host_virkailija}}/ohjausparametrit-service
+ohjausparametrit-service.parametri=https://{{host_virkailija}}/ohjausparametrit-service/api/v1/rest/parametri/$1
 
 root.organisaatio.oid=1.2.246.562.10.00000000001

@@ -29,6 +29,8 @@ case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String]
 
 case class S3Configuration(imageBucket: String, imageBucketPublicUrl: String, region: Option[String])
 
+case class OhjausparametritClientConfiguration(username: String, password: String)
+
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
@@ -59,6 +61,11 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     casServiceIdentifier = config.getString("kouta-backend.cas.service"),
     kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername"),
     rootOrganisaatio = OrganisaatioOid(config.getString("root.organisaatio.oid"))
+  )
+
+  val ohjausparametritClientConfiguration = OhjausparametritClientConfiguration(
+    username = config.getString("kouta-backend.cas.username"),
+    password = config.getString("kouta-backend.cas.password")
   )
 }
 
