@@ -14,6 +14,7 @@ import fi.oph.kouta.servlet.Authenticated
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
 
@@ -42,6 +43,27 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>
       withValidation(koulutus, doUpdate(_, notModifiedSince, oldKoulutus))
     }.nonEmpty
+  }
+
+  def update(oid: KoulutusOid, update: Koulutus => Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    def rulesFor(k : Koulutus) = AuthorizationRules(roleEntity.updateRoles,
+      allowAccessToParentOrganizations = true,
+      Seq(AuthorizationRuleForJulkinen),
+      getTarjoajat(Some(k, notModifiedSince)))
+
+    def authenticateUpdate(oldKoulutus: Koulutus) : Koulutus = {
+      authorizeUpdate(Some(oldKoulutus, notModifiedSince), rulesFor(oldKoulutus)) {
+        _ => {
+          val newKoulutus = update(oldKoulutus)
+          authorizeUpdate(Some(newKoulutus, notModifiedSince), rulesFor(newKoulutus)) {
+            _ =>
+              withValidation(newKoulutus, identity)
+          }
+        }
+      }
+    }
+
+    doUpdate(oid, authenticateUpdate).nonEmpty
   }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
@@ -119,6 +141,16 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
     }.map { case (teema, k) =>
       maybeDeleteTempImage(teema)
       k
+    }.get
+
+  private def doUpdate(oid: KoulutusOid, update: Koulutus => Koulutus)(implicit authenticated: Authenticated): Option[Koulutus] =
+    KoutaDatabase.runBlockingTransactionally {
+      for {
+        koulutus   <- KoulutusDAO.getActions(oid)
+        k          <- KoulutusDAO.getUpdateActions(update(koulutus))
+        _          <- index(k)
+        _          <- auditLog.logUpdate(koulutus, k)
+      } yield k
     }.get
 
   private def index(koulutus: Option[Koulutus]): DBIO[_] =

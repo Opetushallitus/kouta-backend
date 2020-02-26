@@ -15,6 +15,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getPutActions(koulutus: Koulutus): DBIO[Koulutus]
   def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]]
+  def getActions(oid: KoulutusOid): DBIO[Koulutus]
 
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[KoulutusListItem]
@@ -23,6 +24,11 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
+
+  override def getActions(oid: KoulutusOid): DBIO[Koulutus] =
+    for {
+      k <- selectKoulutus(oid).as[Koulutus].head
+    } yield k
 
   override def getPutActions(koulutus: Koulutus): DBIO[Koulutus] =
     for {
