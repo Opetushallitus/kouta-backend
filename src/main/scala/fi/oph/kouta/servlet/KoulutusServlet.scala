@@ -225,7 +225,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   }
 
   registerPath("/koulutus/{oid}/tarjoajat/{tarjoajaOid}",
-    s"""    put:
+    s"""    delete:
        |      summary: Poistaa koulutuksen tarjoajan
        |      operationId: Poistaa koulutuksen tarjoajan
        |      description: Poistaa koulutuksen tarjoajan
