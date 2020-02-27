@@ -27,15 +27,21 @@ object S3ClientFactory {
 
 object S3Service extends S3Service(S3ClientFactory.create())
 
+abstract class ImageType(val contentType: String, val extension: String) extends Product with Serializable
+
+object ImageType {
+  case object Jpeg extends ImageType("image/jpeg", "jpg")
+  case object Png extends ImageType("image/png", "png")
+
+  val allowedTypes = Set(Jpeg, Png)
+  val typeMap: Map[String, ImageType] = allowedTypes.map(t => t.contentType -> t).toMap
+
+  def get(contentType: String): Option[ImageType] = typeMap.get(contentType)
+}
+
 class S3Service(private val s3Client: AmazonS3) extends Logging {
 
   lazy val config: S3Configuration = KoutaConfigurationFactory.configuration.s3Configuration
-
-  type ContentType = String
-  type Extension = String
-
-  val allowedExtensions: Map[ContentType, Extension] = Map("image/jpeg" -> "jpg", "image/png" -> "png")
-  val allowedImageTypes: Set[ContentType] = allowedExtensions.keySet
 
   def getPublicUrl(key: String) = s"${config.imageBucketPublicUrl}/$key"
 
@@ -44,15 +50,15 @@ class S3Service(private val s3Client: AmazonS3) extends Logging {
   lazy val publicUrl: Regex = s"${config.imageBucketPublicUrl}/(.*)".r
   lazy val tempUrl: Regex = s"${config.imageBucketPublicUrl}/temp/(.*)".r
 
-  def storeTempImage(contentType: ContentType, imageData: Array[Byte]): String = {
-    val extension = allowedExtensions(contentType)
+  def storeTempImage(imageType: ImageType, imageData: Array[Byte]): String = {
+    val extension = imageType.extension
     val key = getTempKey(s"${UUID.randomUUID}.$extension")
-    storeImage(key, contentType, imageData)
+    storeImage(key, imageType, imageData)
   }
 
-  def storeImage(key: String, contentType: ContentType, imageData: Array[Byte]): String = {
+  def storeImage(key: String, imageType: ImageType, imageData: Array[Byte]): String = {
     val metadata = new ObjectMetadata()
-    metadata.setContentType(contentType)
+    metadata.setContentType(imageType.contentType)
     metadata.setContentLength(imageData.length)
     metadata.setCacheControl("max-age=86400") // 24 hours
 
