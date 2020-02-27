@@ -3,8 +3,9 @@ package fi.oph.kouta.servlet
 import java.io._
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.indexing.S3Service
+import fi.oph.kouta.indexing.{ImageType, S3Service}
 import javax.imageio.ImageIO
+import javax.imageio.stream.ImageInputStream
 import org.scalatra.Ok
 
 import scala.util.{Failure, Try}
@@ -41,7 +42,7 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
   )
   post("/teemakuva") {
     val length      = checkLength(maxSize)
-    val contentType = checkContentType(s3Service.allowedImageTypes)
+    val contentType = checkContentType()
 
     val imageData       = readImageDataFromStream(request.inputStream, length)
     checkImageFormatAndSize(contentType, imageData)
@@ -57,12 +58,12 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
     case _ => throw new IllegalArgumentException(s"Virheellinen Content-Length -otsake")
   }
 
-  private def checkContentType(allowedImageTypes: Set[String]): String = request.contentType match {
-    case Some(t) if allowedImageTypes.contains(t) => t
-    case None    => throw new IllegalArgumentException("Otsake Content-Type puuttuu")
-    case Some(t) =>
+  private def checkContentType(): ImageType = request.contentType.map(ImageType.get) match {
+    case Some(Some(t)) => t
+    case None          => throw new IllegalArgumentException("Otsake Content-Type puuttuu")
+    case Some(None)    =>
       throw MediaNotSupportedException(
-        s"Kuvamuoto $t ei ole tuettu. Sallitut muodot ovat: ${allowedImageTypes.mkString(", ")}"
+        s"Kuvamuoto ${request.contentType} ei ole tuettu. Sallitut muodot ovat: ${ImageType.allowedTypes.mkString(", ")}"
       )
   }
 
@@ -74,18 +75,26 @@ class UploadServlet(s3Service: S3Service, maxSize: Int = 2 * 1024 * 1024) extend
     imageData
   }
 
-  private def checkImageFormatAndSize(contentType: String, imageData: Array[Byte]): Unit = {
-    val (width, height) = Try {
-      val mimeReaders = ImageIO.getImageReadersByMIMEType(contentType)
-      val reader      = mimeReaders.next()
+  private def checkImageFormatAndSize(imageType: ImageType, imageData: Array[Byte]): Unit = {
+    ImageIO.setUseCache(false)
+    val mimeReaders = ImageIO.getImageReadersByMIMEType(imageType.contentType)
+    val reader = mimeReaders.next()
+    val image = Try {
       reader.setInput(ImageIO.createImageInputStream(new ByteArrayInputStream(imageData)))
-      val image = reader.read(reader.getMinIndex)
-
-      (image.getWidth, image.getHeight)
+      reader.read(reader.getMinIndex)
     }.recoverWith {
-      case _: Exception =>
-        Failure(MediaNotSupportedException(s"Tiedostoa ei voitu lukea $contentType -kuvana"))
-    }.get
+      case e: Exception =>
+        logger.warn("Exception while reading image", e)
+        Failure(MediaNotSupportedException(s"Tiedostoa ei voitu lukea ${imageType.contentType} -kuvana"))
+    }
+
+    reader.getInput match {
+      case stream: ImageInputStream => stream.close()
+      case _ =>
+    }
+    reader.dispose()
+
+    val (width, height) = (image.get.getWidth, image.get.getHeight)
 
     if (width < teemakuvaMinWidth || height < teemakuvaMinHeight) {
       throw new IllegalArgumentException(
