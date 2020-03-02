@@ -12,7 +12,7 @@ class OppilaitoksenOsaValidationSpec extends BaseValidationSpec[OppilaitoksenOsa
 
   it should "fail if perustiedot are invalid" in {
     failsValidation(max.copy(oid = OrganisaatioOid("virhe")), "oid", validationMsg("virhe"))
-    failsValidation(max.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(max.copy(organisaatioOid = OrganisaatioOid("virhe")), "organisaatioOid", validationMsg("virhe"))
     failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }

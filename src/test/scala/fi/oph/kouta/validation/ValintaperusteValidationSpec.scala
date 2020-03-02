@@ -11,8 +11,8 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
   val min = MinYoValintaperuste
 
   it should "fail if perustiedot is invalid" in {
-    failsValidation(max.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }

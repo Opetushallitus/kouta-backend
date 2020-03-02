@@ -15,8 +15,8 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(max.copy(oid = Some(HakukohdeOid("1.2.3"))), "oid", validationMsg("1.2.3"))
-    failsValidation(max.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
-    failsValidation(max.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }

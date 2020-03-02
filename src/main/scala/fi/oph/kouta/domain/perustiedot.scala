@@ -20,7 +20,7 @@ sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPr
     assertValid(muokkaaja, "muokkaaja"),
     assertValid(organisaatioOid, "organisaatioOid"),
     validateKielistetty(kielivalinta, nimi, "nimi"),
-    validateIfJulkaistu(tila, assertNotEmpty(kielivalinta, "kielivalinta"))
+    assertNotEmpty(kielivalinta, "kielivalinta")
   )
 }
 
