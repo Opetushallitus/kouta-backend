@@ -4,15 +4,16 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
-class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture with Validations {
+class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture {
   override val roleEntities = Seq(Role.Oppilaitos)
 
   "Get oppilaitos by oid" should "return 404 if oppilaitos not found" in {
@@ -105,7 +106,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 
@@ -224,7 +225,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     val unfinishedOppilaitos = TestData.MinOppilaitos
     val oid = put(unfinishedOppilaitos)
     val lastModified = get(oid, unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid)))
-    val newUnfinishedOppilaitos = unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), organisaatioOid = OrganisaatioOid("6.6.6.6.6"))
+    val newUnfinishedOppilaitos = unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), organisaatioOid = LonelyOid)
     update(newUnfinishedOppilaitos, lastModified)
     get(oid, newUnfinishedOppilaitos)
   }
@@ -236,7 +237,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 

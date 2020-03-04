@@ -3,21 +3,23 @@ package fi.oph.kouta.integration
 import java.time.LocalDateTime
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.ValidationError
+import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
-  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with UploadFixture with Validations {
+  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Toteutus)
 
-  var koulutusOid = ""
+  var koulutusOid: String = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -101,7 +103,25 @@ class ToteutusSpec extends KoutaIntegrationSpec
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
+      body should equal (validationErrorBody(validationMsg("katkarapu"), "tarjoajat[0]"))
+    }
+  }
+
+  it should "validate dates only when adding a new julkaistu toteutus" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
+    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
+
+    put(thisToteutus.copy(tila = Tallennettu))
+
+    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(List(
+        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+      )))
     }
   }
 
@@ -256,8 +276,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, thisToteutus)
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      metadata = Some(thisToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(kuvaus = Map(Fi -> "kuvaus", En -> "description"))),
-      tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
+      metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "description"))),
+      tarjoajat = List(LonelyOid, OtherOid, AmmOid))
     update(uusiToteutus, lastModified, true)
     get(oid, uusiToteutus)
   }
@@ -273,7 +293,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = UserOid("5.4.3.2"), koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
+    val unfinishedToteutus = new Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
     val newKoulutusOid = put(koulutus)
@@ -289,8 +309,31 @@ class ToteutusSpec extends KoutaIntegrationSpec
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(invalidOidsMsg(List("katkarapu").map(OrganisaatioOid))))
+      body should equal (validationErrorBody(validationMsg("katkarapu"), "tarjoajat[0]"))
     }
+  }
+
+  it should "validate dates only when moving from other states to julkaistu" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
+    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
+
+    val oid = put(thisToteutus)
+    val thisToteutusWithOid = toteutus(oid, koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
+
+    val lastModified = get(oid, thisToteutusWithOid)
+
+    post(ToteutusPath, bytes(thisToteutusWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(List(
+        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+      )))
+    }
+
+    update(thisToteutusWithOid.copy(tila = Arkistoitu), lastModified)
   }
 
   it should "copy a temporary image to a permanent location while updating the toteutus" in {

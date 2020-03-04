@@ -4,15 +4,16 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.Arkistoitu
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.SorakuvausFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
-class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with SorakuvausFixture with Validations {
+class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with SorakuvausFixture {
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
@@ -112,7 +113,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 
@@ -213,7 +214,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val unfinishedSorakuvaus = TestData.MinSorakuvaus
     val id = put(unfinishedSorakuvaus)
     val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id)))
-    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = OrganisaatioOid("6.6.6.6.6"))
+    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid)
     update(newUnfinishedSorakuvaus, lastModified)
     get(id, newUnfinishedSorakuvaus)
   }
@@ -225,7 +226,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(validationMsg("saippua")))
+      body should equal (validationErrorBody(validationMsg("saippua"), "organisaatioOid"))
     }
   }
 }

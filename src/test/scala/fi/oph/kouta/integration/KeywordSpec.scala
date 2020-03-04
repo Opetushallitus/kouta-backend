@@ -2,8 +2,9 @@ package fi.oph.kouta.integration
 
 import java.util.UUID
 
+import fi.oph.kouta.TestOids.ParentOid
+import fi.oph.kouta.domain.Fi
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, Fi}
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -116,7 +117,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   "Update toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
-    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(AmmatillinenToteutusMetadata(
+    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(ammMetatieto.copy(
       asiasanat = List(Keyword(Fi, "robotti")),
       ammattinimikkeet = List(Keyword(Fi, "robotti-insinööri"))
     )))

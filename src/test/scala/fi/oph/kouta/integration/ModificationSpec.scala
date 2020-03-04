@@ -5,10 +5,10 @@ import java.time.Instant.now
 import java.util.UUID
 
 import fi.oph.kouta.TestData.inFuture
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.Role
-import fi.oph.kouta.servlet.IndexerServlet
 import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
@@ -35,13 +35,16 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   var timestampAfterInserts = ""
   var timestampAfterAllModifications = ""
 
+  var sorakuvausId: UUID = _
+
   def createTestData(n: Int = 10) = {
     timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
     koulutusOids = nTimes(() => put(koulutus.copy(tila = Tallennettu)), n)
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid)))
     hakuOids = nTimes(() => put(haku), n)
-    valintaperusteIds = nTimes(() => put(valintaperuste), n)
+    sorakuvausId = put(sorakuvaus)
+    valintaperusteIds = nTimes(() => put(valintaperuste(sorakuvausId)), n)
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) => put(hakukohde(oid, hakuOids(i), valintaperusteIds(i))) }
     Thread.sleep(1000)
     timestampAfterInserts = renderHttpDate(now())
@@ -66,18 +69,18 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   }
 
   def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
+  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
   def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInToteutusTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List("9.8.7.6.5").map(OrganisaatioOid)), timestampAfterInserts)
+  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
   def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInHakuTable(i: Int) = update(haku(hakuOids(i), Arkistoitu), timestampAfterInserts)
   def updateInHakuHakuajatTable(i: Int) = update(haku(hakuOids(i)).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(5000)))), timestampAfterInserts)
   def updateInHakukohdeTable(i: Int) = update(iHakukohde(i).copy(tila = Arkistoitu), timestampAfterInserts)
   def updateInHakukohteenHakuajatTable(i: Int) = update(iHakukohde(i).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(5000)))), timestampAfterInserts)
-  def updateInHakukohteenLiitteetTable(i: Int) = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"tyyppi_$i#1")))), timestampAfterInserts)
-  def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"tyyppi_$i#1")))), timestampAfterInserts)
-  def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), Arkistoitu), timestampAfterInserts)
+  def updateInHakukohteenLiitteetTable(i: Int) = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"liitetyypitamm_$i#1")))), timestampAfterInserts)
+  def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"valintakokeentyyppi_$i#1")))), timestampAfterInserts)
+  def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), sorakuvausId, Arkistoitu), timestampAfterInserts)
 
   "Modified since" should "return 401 without a valid session" in {
 

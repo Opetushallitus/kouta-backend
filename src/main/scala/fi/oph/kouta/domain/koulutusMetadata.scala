@@ -1,5 +1,8 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
+
 package object koulutusMetadata {
 
   val KoulutusMetadataModel =
@@ -25,6 +28,10 @@ package object koulutusMetadata {
       |          items:
       |            type: object
       |            $ref: '#/components/schemas/Lisatieto'
+      |        teemakuva:
+      |          type: string
+      |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/koulutus-teema/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val KorkeakouluMetadataModel =
@@ -98,34 +105,48 @@ package object koulutusMetadata {
 
 sealed trait KoulutusMetadata {
   val tyyppi: Koulutustyyppi
-  val kuvaus: Map[Kieli, String]
+  val kuvaus: Kielistetty
   val lisatiedot: Seq[Lisatieto]
   val koulutusalaKoodiUrit: Seq[String]
+
+  def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    assertTrue(tyyppi == koulutustyyppi, s"$path.tyyppi", InvalidMetadataTyyppi),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
+    validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _))
+  )
 }
 
 trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
-  val kuvauksenNimi: Map[Kieli, String]
+  val kuvauksenNimi: Kielistetty
   val tutkintonimikeKoodiUrit: Seq[String]
   val opintojenLaajuusKoodiUri: Option[String]
+
+  override def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(koulutustyyppi, tila, kielivalinta, path),
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi")),
+    validateIfNonEmpty[String](tutkintonimikeKoodiUrit, s"$path.tutkintonimikeKoodiUrit", assertMatch(_, TutkintonimikeKoodiPattern, _)),
+    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri"))
+  )
 }
 
 case class AmmatillinenKoulutusMetadata(tyyppi: Koulutustyyppi = Amm,
-                                        kuvaus: Map[Kieli, String] = Map(),
+                                        kuvaus: Kielistetty = Map(),
                                         lisatiedot: Seq[Lisatieto] = Seq(),
                                         koulutusalaKoodiUrit: Seq[String] = Seq()) extends KoulutusMetadata
 
 case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
-                                     kuvaus: Map[Kieli, String] = Map(),
+                                     kuvaus: Kielistetty = Map(),
                                      lisatiedot: Seq[Lisatieto] = Seq(),
                                      koulutusalaKoodiUrit: Seq[String] = Seq(),
                                      tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                      opintojenLaajuusKoodiUri: Option[String] = None,
-                                     kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata
+                                     kuvauksenNimi: Kielistetty = Map()) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
-                                              kuvaus: Map[Kieli, String] = Map(),
+                                              kuvaus: Kielistetty = Map(),
                                               lisatiedot: Seq[Lisatieto] = Seq(),
                                               koulutusalaKoodiUrit: Seq[String] = Seq(),
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                               opintojenLaajuusKoodiUri: Option[String] = None,
-                                              kuvauksenNimi: Map[Kieli, String] = Map()) extends KorkeakoulutusKoulutusMetadata
+                                              kuvauksenNimi: Kielistetty = Map()) extends KorkeakoulutusKoulutusMetadata

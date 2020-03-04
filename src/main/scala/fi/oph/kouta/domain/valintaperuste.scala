@@ -6,6 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object valintaperuste {
 
@@ -200,14 +201,21 @@ case class Valintaperuste(id: Option[UUID] = None,
 
   override def validate(): IsValid = and(
     super.validate(),
-    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
-    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
-    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
-    validateIfTrue(Julkaistu == tila, () => and(
+    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
+    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
+    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
+    validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfDefined[ValintaperusteMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)),
+    validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
+      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
+      assertNotOptional(sorakuvausId, "sorakuvausId")
     ))
   )
+
+  override def validateOnJulkaisu(): IsValid =
+    validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validateOnJulkaisu(_))
 
   override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
 

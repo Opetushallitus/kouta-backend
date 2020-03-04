@@ -6,12 +6,12 @@ import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuva}
+import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuva, Julkaistu}
 import fi.oph.kouta.indexing.S3Service
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
-import fi.oph.kouta.validation.Validatable
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
@@ -21,9 +21,17 @@ import scala.util.Try
 
 trait ValidatingService[E <: Validatable] {
 
-  def withValidation[R](e: E, f: E => R): R = e.validate() match {
-    case Right(_) => f(e)
-    case Left(list) => throw KoutaValidationException(list)
+  def withValidation[R](e: E, oldE: Option[E], f: E => R): R = {
+    val errors = if (!oldE.contains(Julkaistu) && e.tila == Julkaistu) {
+      e.validate() ++ e.validateOnJulkaisu()
+    } else {
+      e.validate()
+    }
+
+    errors match {
+      case NoErrors => f(e)
+      case errors => throw KoutaValidationException(errors)
+    }
   }
 }
 
@@ -88,7 +96,7 @@ trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with Ha
     }
 }
 
-case class KoutaValidationException(errorMessages: List[String]) extends RuntimeException
+case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException
 
 trait RoleEntityAuthorizationService extends AuthorizationService {
   protected val roleEntity: RoleEntity

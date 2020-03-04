@@ -3,6 +3,7 @@ package fi.oph.kouta.integration
 import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, MockS3Client, ToteutusFixture, UploadFixture}
@@ -10,16 +11,16 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.Serialization.read
 
 import scala.util.Success
 
-class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with UploadFixture with Validations {
+class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Koulutus)
 
-  val ophKoulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = rootOrganisaatio, tarjoajat = List(), julkinen = true)
+  val ophKoulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
@@ -113,7 +114,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validateErrorBody(missingMsg("koulutusKoodiUri")))
+      body should equal(validationErrorBody(missingMsg, "koulutusKoodiUri"))
     }
   }
 
@@ -297,11 +298,16 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "update koulutuksen tekstit ja tarjoajat" in {
     val oid = put(koulutus)
+    val metadata = koulutus.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
     val lastModified = get(oid, koulutus(oid))
     val uusiKoulutus = koulutus(oid).copy(
       kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
+      tarjoajat = List(LonelyOid, OtherOid, AmmOid),
+      metadata = Some(metadata.copy(
+        lisatiedot = metadata.lisatiedot.map(_.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))),
+        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
+      )))
     update(uusiKoulutus, lastModified, true)
     get(oid, uusiKoulutus)
   }
@@ -314,7 +320,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
     Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
 
-    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List("2.2", "3.2", "4.2").map(OrganisaatioOid))
+    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, OtherOid, AmmOid))
     update(uusiKoulutus, lastModified, expectUpdate = true)
 
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
@@ -339,7 +345,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = new Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = UserOid("5.4.3.2.1"), organisaatioOid = OrganisaatioOid("1.2"), modified = None)
+    val unfinishedKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = TestUserOid, organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "koulutus"))
     val oid = put(unfinishedKoulutus)
     val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
     val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid)), johtaaTutkintoon = false)
@@ -354,7 +360,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(missingMsg("koulutusKoodiUri")))
+      body should equal(validationErrorBody(missingMsg, "koulutusKoodiUri"))
     }
   }
 

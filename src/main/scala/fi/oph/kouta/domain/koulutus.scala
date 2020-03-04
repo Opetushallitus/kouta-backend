@@ -2,9 +2,10 @@ package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 
-import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
+import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object koulutus {
 
@@ -166,16 +167,21 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     modified: Option[LocalDateTime])
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen {
 
-  override def validate() = {
+  override def validate(): IsValid = {
     and(super.validate(),
-        validateIfDefined[KoulutusOid](oid, assertValid(_)),
-        validateOidList(tarjoajat),
-        validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern)),
-        validateIfTrue(Julkaistu == tila, () => and(
-          assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
-          assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"),
-          validateIfTrue(!OrganisaatioOid("1.2.246.562.10.00000000001").equals(organisaatioOid), //TODO: !KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid), (rikkoo mm. indeksoijan testit)
-            () => assertNotEmpty(tarjoajat, MissingTarjoajat)))))
+      validateOidList(tarjoajat, "tarjoajat"),
+      validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern, "koulutusKoodiUri")),
+      validateIfDefined[KoulutusMetadata](metadata, _.validate(koulutustyyppi, tila, kielivalinta, "metadata")),
+      validateIfJulkaistu(tila, and(
+        assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
+        validateIfTrue(koulutustyyppi == Amm, assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
+        assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri"),
+        assertNotOptional(metadata, "metadata"),
+        validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
+        validateIfTrue(!OrganisaatioOid("1.2.246.562.10.00000000001").equals(organisaatioOid), //TODO: !KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid), (rikkoo mm. indeksoijan testit)
+          assertNotEmpty(tarjoajat, "tarjoajat")))
+      )
+    )
   }
 
   def withOid(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))

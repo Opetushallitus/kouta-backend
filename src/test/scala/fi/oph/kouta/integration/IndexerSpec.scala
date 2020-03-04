@@ -1,12 +1,12 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{Koulutus, OppilaitoksenOsa, Toteutus}
-import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
 
-class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec with Validations {
+class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec {
 
   override val roleEntities = RoleEntity.all
 
@@ -85,7 +85,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
   }
 
   it should "deny access without a valid session" in {
-    val oid = OrganisaatioOid("oid")
+    val oid = ChildOid
     get(s"$IndexerPath/oppilaitos/$oid/osat", headers = Seq()) {
       withClue(body) {
         status should equal (401)
@@ -94,12 +94,12 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
   }
 
   it should "deny access without the indexer role" in {
-    val oid = OrganisaatioOid("oid")
+    val oid = ChildOid
     get(s"$IndexerPath/oppilaitos/$oid/osat", defaultSessionId, 403)
   }
 
   it should "deny access without root organization access to the indexer role" in {
-    val oid = OrganisaatioOid("oid")
+    val oid = ChildOid
     get(s"$IndexerPath/oppilaitos/$oid/osat", fakeIndexerSession, 403)
   }
 }

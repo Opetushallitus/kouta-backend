@@ -1,14 +1,26 @@
 package fi.oph.kouta
 
+import fi.oph.kouta.domain.{Julkaisutila, Kieli}
+
 package object validation {
-  type IsValid = Either[List[String],Unit]
+  type IsValid = Seq[ValidationError]
+  val NoErrors: IsValid = Nil
 
-  trait Validatable extends Validations {
-    def validate():IsValid
+  trait Validatable {
+    val tila: Julkaisutila
 
-    def and(validations: IsValid*): IsValid = validations collect { case Left(msgList) => msgList } match {
-      case l if l.isEmpty => Right(())
-      case l => Left(l.flatten.distinct.toList)
-    }
+    def validate(): IsValid
+
+    def validateOnJulkaisu(): IsValid = NoErrors
+  }
+
+  trait ValidatableSubEntity {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid
+
+    def validateOnJulkaisu(path: String): IsValid = NoErrors
+  }
+
+  case class ValidationError(path: String, msg: String) {
+    override def toString: String = s"""{"path":"$path","msg":"$msg"}"""
   }
 }

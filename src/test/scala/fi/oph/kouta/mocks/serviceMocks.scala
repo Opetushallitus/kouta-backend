@@ -1,5 +1,6 @@
 package fi.oph.kouta.mocks
 
+import fi.oph.kouta.TestOids.OphOid
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.vm.sade.properties.OphProperties
@@ -63,14 +64,6 @@ sealed trait ServiceMocks extends Logging {
 }
 
 trait OrganisaatioServiceMock extends ServiceMocks {
-
-  val OphOid = OrganisaatioOid("1.2.246.562.10.00000000001")
-  val ParentOid = OrganisaatioOid("1.2.246.562.10.594252633210")
-  val ChildOid = OrganisaatioOid("1.2.246.562.10.81934895871")
-  val EvilChildOid = OrganisaatioOid("1.2.246.562.10.66634895871")
-  val GrandChildOid = OrganisaatioOid("1.2.246.562.10.67603619189")
-  val EvilGrandChildOid = OrganisaatioOid("1.2.246.562.10.66603619189")
-  val EvilCousin = OrganisaatioOid("1.2.246.562.10.66634895666")
 
   val NotFoundOrganisaatioResponse = s"""{ "numHits": 0, "organisaatiot": []}"""
   lazy val DefaultResponse = responseFromResource("organisaatio")

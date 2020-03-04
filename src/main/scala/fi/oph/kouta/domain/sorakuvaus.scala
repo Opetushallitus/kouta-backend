@@ -5,7 +5,8 @@ import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
-import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
+import fi.oph.kouta.validation.Validations._
 
 package object sorakuvaus {
 
@@ -125,7 +126,9 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       muokkaaja: UserOid,
                       modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableMaybeJulkinen {
   override def validate(): IsValid = and(
-    super.validate()
+    super.validate(),
+    validateIfDefined[SorakuvausMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
   )
 
   override def withModified(modified: LocalDateTime): Sorakuvaus = copy(modified = Some(modified))
@@ -133,7 +136,10 @@ case class Sorakuvaus(id: Option[UUID] = None,
   override def withId(id: UUID): Sorakuvaus = copy(id = Some(id))
 }
 
-case class SorakuvausMetadata(kuvaus: Kielistetty = Map())
+case class SorakuvausMetadata(kuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
+}
 
 case class SorakuvausListItem(id: UUID,
                               nimi: Kielistetty,

@@ -32,14 +32,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) {
-      withValidation(toteutus, doPut)
+      withValidation(toteutus, None, doPut)
     }.oid.get
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, rules) { oldToteutus =>
-      withValidation(toteutus, doUpdate(_, notModifiedSince, oldToteutus)).nonEmpty
+      withValidation(toteutus, Some(oldToteutus), doUpdate(_, notModifiedSince, oldToteutus)).nonEmpty
     }
   }
 

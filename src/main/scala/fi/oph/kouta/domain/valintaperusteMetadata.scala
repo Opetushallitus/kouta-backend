@@ -1,5 +1,8 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
+
 package object valintaperusteMetadata {
 
   val ValintaperusteMetadataModel =
@@ -137,15 +140,26 @@ package object valintaperusteMetadata {
     KorkeakoulutusValintaperusteMetadataModel, AmmattikorkeakouluValintaperusteMetadata, YliopistoValintaperusteMetadata)
 }
 
-sealed trait ValintaperusteMetadata {
+sealed trait ValintaperusteMetadata extends ValidatableSubEntity {
   def tyyppi: Koulutustyyppi
   def valintatavat: Seq[Valintatapa]
   def kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus]
   def kuvaus: Kielistetty
+
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfNonEmpty[Valintatapa](valintatavat, s"$path.valintatavat", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[ValintaperusteKielitaitovaatimus](kielitaitovaatimukset, s"$path.kielitaitovaatimukset", _.validate(tila, kielivalinta, _)),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
+  )
 }
 
 sealed trait KorkeakoulutusValintaperusteMetadata extends ValintaperusteMetadata {
   def osaamistaustaKoodiUrit: Seq[String]
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfNonEmpty[String](osaamistaustaKoodiUrit, s"$path.osaamistaustaKoodiUrit", assertMatch(_, OsaamistaustaKoodiPattern, _))
+  )
 }
 
 case class AmmatillinenValintaperusteMetadata(tyyppi: Koulutustyyppi = Amm,
@@ -170,13 +184,34 @@ case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk
 
 case class ValintaperusteKielitaitovaatimus(kieliKoodiUri: Option[String] = None,
                                             kielitaidonVoiOsoittaa: Seq[Kielitaito] = Seq(),
-                                            vaatimukset: Seq[Kielitaitovaatimus] = Seq())
+                                            vaatimukset: Seq[Kielitaitovaatimus] = Seq()) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[String](kieliKoodiUri, assertMatch(_, KieliKoodiPattern, s"$path.kieliKoodiUri")),
+    validateIfNonEmpty[Kielitaito](kielitaidonVoiOsoittaa, s"$path.kielitaidonVoiOsoittaa", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[Kielitaitovaatimus](vaatimukset, s"$path.vaatimukset", _.validate(tila, kielivalinta, _)),
+    validateIfJulkaistu(tila, assertNotOptional(kieliKoodiUri, s"$path.kieliKoodiUri"))
+  )
+}
 
 case class Kielitaito(kielitaitoKoodiUri: Option[String] = None,
-                      lisatieto: Kielistetty = Map())
+                      lisatieto: Kielistetty = Map()) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[String](kielitaitoKoodiUri, assertMatch(_, KielitaitoKoodiPattern, s"$path.kielitaitoKoodiUri")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatieto, s"$path.lisatieto"))
+  )
+}
 
 case class Kielitaitovaatimus(kielitaitovaatimusKoodiUri: Option[String] = None,
-                              kielitaitovaatimusKuvaukset: Seq[KielitaitovaatimusKuvaus] = Seq())
+                              kielitaitovaatimusKuvaukset: Seq[KielitaitovaatimusKuvaus] = Seq()) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[String](kielitaitovaatimusKoodiUri, assertMatch(_, KielitaitovaatimusKoodiPattern, s"$path.kielitaitovaatimusKoodiUri")),
+    validateIfNonEmpty[KielitaitovaatimusKuvaus](kielitaitovaatimusKuvaukset, s"$path.kielitaitovaatimusKuvaukset", _.validate(tila, kielivalinta, _))
+  )
+}
 
 case class KielitaitovaatimusKuvaus(kielitaitovaatimusKuvausKoodiUri: Option[String] = None,
-                                    kielitaitovaatimusTaso: Option[String] = None)
+                                    kielitaitovaatimusTaso: Option[String] = None) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
+    validateIfDefined[String](kielitaitovaatimusKuvausKoodiUri, assertMatch(_, KielitaitovaatimusKuvausKoodiPattern, s"$path.kielitaitovaatimusKuvausKoodiUri"))
+
+}

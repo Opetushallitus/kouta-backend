@@ -4,22 +4,20 @@ import java.time.{Instant, LocalDateTime}
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.client.HaunOhjausparametrit
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations._
 
-class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture with Validations {
+class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture {
 
   override val roleEntities = Seq(Role.Haku)
 
-  def addInvalidHakuaika(haku:Haku) = haku.copy(
-    hakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000))))
-
-  val ophHaku = haku.copy(organisaatioOid = rootOrganisaatio)
+  val ophHaku = haku.copy(organisaatioOid = OphOid)
 
   "Get haku by oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(defaultSessionHeader)) {
@@ -128,11 +126,25 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "validate new haku" in {
-    put(HakuPath, bytes(addInvalidHakuaika(haku)), Seq(jsonHeader, defaultSessionHeader)) {
+    val invalidHakuajat = TestData.getInvalidHakuajat
+    put(HakuPath, bytes(haku.copy(hakuajat = invalidHakuajat)), Seq(jsonHeader, defaultSessionHeader)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(InvalidHakuaika))
+      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+    }
+  }
+
+  it should "validate dates only when adding a new julkaistu haku" in {
+    val thisHaku = haku.copy(alkamisvuosi = Some("2017"))
+
+    put(thisHaku.copy(tila = Tallennettu))
+
+    put(HakuPath, bytes(thisHaku.copy(tila = Julkaistu)), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
     }
   }
 
@@ -248,25 +260,44 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = new Haku(muokkaaja = UserOid("9.9.9.9.9"), organisaatioOid = OrganisaatioOid("5.5.5"), modified = None)
+    val unfinishedHaku = Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "haku"))
     val oid = put(unfinishedHaku)
     val lastModified = get(oid, unfinishedHaku.copy(oid = Some(HakuOid(oid))))
-    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = OrganisaatioOid("6.6.6"))
+    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = AmmOid)
     update(newUnfinishedHaku, lastModified)
     get(oid, newUnfinishedHaku)
   }
 
   it should "validate updated haku" in {
     val oid = put(haku)
-    val thisHaku = haku(oid)
-    val lastModified = get(oid, thisHaku)
-    post(HakuPath, bytes(addInvalidHakuaika(thisHaku)), headersIfUnmodifiedSince(lastModified)) {
+    val lastModified = get(oid, haku(oid))
+    val invalidHakuajat = TestData.getInvalidHakuajat
+    val thisHaku = haku(oid).copy(hakuajat = invalidHakuajat)
+    post(HakuPath, bytes(thisHaku), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validateErrorBody(InvalidHakuaika))
+      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
     }
   }
+
+  it should "validate dates only when moving from other states to julkaistu" in {
+    val thisHaku = haku.copy(alkamisvuosi = Some("2017"), tila = Tallennettu)
+
+    val oid = put(thisHaku)
+    val thisHakuWithOid = thisHaku.copy(oid = Some(HakuOid(oid)))
+    val lastModified = get(oid, thisHakuWithOid)
+
+    post(HakuPath, bytes(thisHakuWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
+    }
+
+    update(thisHakuWithOid.copy(tila = Arkistoitu), lastModified)
+  }
+
 
   it should "update haun päivämäärät" in {
     val pvmHaku = haku.copy(

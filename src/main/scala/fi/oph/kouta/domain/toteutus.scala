@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.Validations._
 
 package object toteutus {
 
@@ -58,8 +59,8 @@ package object toteutus {
       |            osaamisalat:
       |              - koodiUri: osaamisala_0001#1
       |                linkki:
-      |                  fi: http://osaamisala/linkki/fi
-      |                  sv: http://osaamisala/linkki/sv
+      |                  fi: http://osaamisala.fi/linkki/fi
+      |                  sv: http://osaamisala.fi/linkki/sv
       |                otsikko:
       |                  fi: Katso osaamisalan tarkempi kuvaus tästä
       |                  sv: Katso osaamisalan tarkempi kuvaus tästä ruotsiksi
@@ -219,12 +220,16 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
   extends PerustiedotWithOid[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
 
   override def validate(): IsValid = and(
-     super.validate(),
-     assertValid(koulutusOid),
-     validateIfTrue(tila == Julkaistu, () => validateIfDefined(metadata)),
-     validateIfDefined[ToteutusOid](oid, assertValid(_)),
-     validateOidList(tarjoajat)
+    super.validate(),
+    assertValid(koulutusOid, "koulutusOid"),
+    validateOidList(tarjoajat, "tarjoajat"),
+    validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
+    validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
   )
+
+  override def validateOnJulkaisu(): IsValid =
+    validateIfDefined[ToteutusMetadata](metadata, _.validateOnJulkaisu("metadata"))
 
   def withOid(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))
 

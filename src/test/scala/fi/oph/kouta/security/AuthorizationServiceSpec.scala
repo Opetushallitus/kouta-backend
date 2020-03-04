@@ -3,6 +3,7 @@ package fi.oph.kouta.security
 import java.net.InetAddress
 import java.util.UUID
 
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoutaClientSpec
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.mocks.OrganisaatioServiceMock

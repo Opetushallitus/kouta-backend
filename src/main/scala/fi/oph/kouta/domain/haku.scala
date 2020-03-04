@@ -4,7 +4,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
+import fi.oph.kouta.validation.Validations._
 
 package object haku {
 
@@ -201,21 +202,31 @@ case class Haku(oid: Option[HakuOid] = None,
                 modified: Option[LocalDateTime])
   extends PerustiedotWithOid[HakuOid, Haku] {
 
-  override def validate(): IsValid = and (
-     super.validate(),
-     validateIfDefined[HakuOid](oid, assertValid(_)),
-     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern)),
-     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern)),
-     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern)),
-     validateIfDefined[String](alkamisvuosi, validateAlkamisvuosi(_)),
-     validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern)),
-     validateHakuajat(hakuajat),
-     validateIfTrue(tila == Julkaistu, () => and (
-       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
-       validateAtaruId(hakulomaketyyppi, hakulomakeAtaruId)
-     ))
+  override def validate(): IsValid = and(
+    super.validate(),
+    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
+    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
+    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
+    validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, "alkamiskausiKoodiUri")),
+    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfJulkaistu(tila, and(
+      validateIfDefined[String](alkamisvuosi, assertMatch(_, VuosiPattern,"alkamisvuosi")),
+      assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
+      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
+      assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
+      validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
+      validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), and( // Yhteishaku
+        assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri"),
+        assertNotOptional(alkamisvuosi, "alkamisvuosi")
+      ))
+    ))
+  )
+
+  override def validateOnJulkaisu(): IsValid = and(
+    validateIfDefined[String](alkamisvuosi, assertAlkamisvuosiInFuture(_, "alkamisvuosi")),
+    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
+    validateIfDefined[HakuMetadata](metadata, _.validateOnJulkaisu("metadata"))
   )
 
   def withOid(oid: HakuOid): Haku = copy(oid = Some(oid))
@@ -231,4 +242,12 @@ case class HakuListItem(oid: HakuOid,
                         modified: LocalDateTime) extends OidListItem
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq())
+                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
+  )
+
+  override def validateOnJulkaisu(path: String): IsValid =
+    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_))
+}

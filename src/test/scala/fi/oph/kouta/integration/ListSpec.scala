@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Role, RoleEntity}
@@ -45,10 +46,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     s1 = addToList(sorakuvaus(Julkaistu, ParentOid))
     s2 = addToList(sorakuvaus(Arkistoitu, ChildOid).copy(julkinen = true))
     s3 = addToList(sorakuvaus(Julkaistu, LonelyOid))
-    v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(sorakuvausId = Some(s1.id), julkinen = false))
-    v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(sorakuvausId = Some(s1.id), julkinen = true))
-    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None, julkinen = false))
-    v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(sorakuvausId = Some(s3.id), julkinen = false))
+    v1 = addToList(valintaperuste(Some(s1.id), Julkaistu, ParentOid).copy(julkinen = false))
+    v2 = addToList(valintaperuste(Some(s1.id), Arkistoitu, ChildOid).copy(julkinen = true))
+    v3 = addToList(valintaperuste(None, Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None, julkinen = false))
+    v4 = addToList(valintaperuste(Some(s3.id), Julkaistu, LonelyOid).copy(julkinen = false))
     hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
     hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid))
     hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid))

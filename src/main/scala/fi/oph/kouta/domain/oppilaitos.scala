@@ -4,7 +4,8 @@ import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.Authorizable
-import fi.oph.kouta.validation.{IsValid, Validatable}
+import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidatableSubEntity}
 
 package object oppilaitos {
 
@@ -95,6 +96,10 @@ package object oppilaitos {
       |        akatemioita:
       |          type: integer
       |          description: Oppilaitoksen akatemioiden lkm
+      |        teemakuva:
+      |          type: string
+      |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val OppilaitoksenOsaModel =
@@ -169,6 +174,10 @@ package object oppilaitos {
       |        opiskelijoita:
       |          type: integer
       |          description: Oppilaitoksen osan opiskelijoiden lkm
+      |        teemakuva:
+      |          type: string
+      |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
+      |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -250,16 +259,13 @@ case class Oppilaitos(oid: OrganisaatioOid,
     with HasTeemakuva[Oppilaitos] {
 
   override def validate(): IsValid = and(
-    assertValid(muokkaaja),
-    assertValid(organisaatioOid),
-    validateIfTrue(tila == Julkaistu, () => and(
-      assertTrue(kielivalinta.nonEmpty, MissingKielivalinta)/*,
-      validateIfDefined(metadata, and(
-        validateKielistetty(kielivalinta, metadata.get.esittely, "esittely"),
-        validateKielistetty(kielivalinta, metadata.get.wwwSivu, "wwwSivu"),
-        validateKielistetty(kielivalinta, metadata.get., "esittely"),
-      ))*/
-    )))
+    assertValid(oid, "oid"),
+    assertValid(muokkaaja, "muokkaaja"),
+    assertValid(organisaatioOid, "organisaatioOid"),
+    validateIfDefined[OppilaitosMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
+    assertNotEmpty(kielivalinta, "kielivalinta")
+  )
 
   override def primaryId: Option[OrganisaatioOid] = Some(oid)
 
@@ -286,16 +292,14 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
     with HasTeemakuva[OppilaitoksenOsa] {
 
   override def validate(): IsValid = and(
-    assertValid(muokkaaja),
-    assertValid(organisaatioOid),
-    validateIfTrue(tila == Julkaistu, () => and(
-      assertTrue(kielivalinta.nonEmpty, MissingKielivalinta)/*,
-      validateIfDefined(metadata, and(
-        validateKielistetty(kielivalinta, metadata.get.esittely, "esittely"),
-        validateKielistetty(kielivalinta, metadata.get.wwwSivu, "wwwSivu"),
-        validateKielistetty(kielivalinta, metadata.get., "esittely"),
-      ))*/
-    )))
+    assertValid(oid, "oid"),
+    assertValid(oppilaitosOid, "oppilaitosOid"),
+    assertValid(muokkaaja, "muokkaaja"),
+    assertValid(organisaatioOid, "organisaatioOid"),
+    validateIfDefined[OppilaitoksenOsaMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+    validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
+    assertNotEmpty(kielivalinta, "kielivalinta")
+  )
 
   override def primaryId: Option[OrganisaatioOid] = Some(oid)
 
@@ -315,12 +319,34 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
                               kampuksia: Option[Integer] = None,
                               yksikoita: Option[Integer] = None,
                               toimipisteita: Option[Integer] = None,
-                              akatemioita: Option[Integer] = None)
+                              akatemioita: Option[Integer] = None) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfNonEmpty[Lisatieto](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[Yhteystieto](yhteystiedot, _.validate(tila, kielivalinta, s"$path.yhteystiedot")),
+    validateIfDefined[Integer](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
+    validateIfDefined[Integer](korkeakouluja, assertNotNegative(_, s"$path.korkeakouluja")),
+    validateIfDefined[Integer](tiedekuntia,   assertNotNegative(_, s"$path.tiedekuntia")),
+    validateIfDefined[Integer](kampuksia,     assertNotNegative(_, s"$path.kampuksia")),
+    validateIfDefined[Integer](yksikoita,     assertNotNegative(_, s"$path.yksikoita")),
+    validateIfDefined[Integer](toimipisteita, assertNotNegative(_, s"$path.toimipisteita")),
+    validateIfDefined[Integer](akatemioita,   assertNotNegative(_, s"$path.akatemioita")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"))
+  )
+}
 
 case class OppilaitoksenOsaMetadata(yhteystiedot: Option[Yhteystieto] = None,
                                     opiskelijoita: Option[Integer] = None,
                                     kampus: Kielistetty = Map(),
-                                    esittely: Kielistetty = Map())
+                                    esittely: Kielistetty = Map()) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[Yhteystieto](yhteystiedot, _.validate(tila, kielivalinta, s"$path.yhteystiedot")),
+    validateIfDefined[Integer](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, kampus, s"$path.kampus"),
+      validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely")
+    ))
+  )
+}
 
 case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
                                     oppilaitosOid: OrganisaatioOid,
@@ -332,4 +358,15 @@ case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
 case class Yhteystieto(osoite: Option[Osoite] = None,
                        wwwSivu: Kielistetty = Map(),
                        puhelinnumero: Kielistetty = Map(),
-                       sahkoposti: Kielistetty = Map())
+                       sahkoposti: Kielistetty = Map()) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta, s"$path.osoite")),
+    validateIfNonEmpty(wwwSivu, s"$path.wwwSivu", assertValidUrl _),
+    validateIfNonEmpty(sahkoposti, s"$path.sahkoposti", assertValidEmail _),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, wwwSivu, s"$path.wwwSivu"),
+      validateOptionalKielistetty(kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
+      validateOptionalKielistetty(kielivalinta, sahkoposti, s"$path.sahkoposti")
+    ))
+  )
+}

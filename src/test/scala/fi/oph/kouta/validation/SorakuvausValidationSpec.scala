@@ -1,26 +1,37 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{Fi, Sorakuvaus, Sv}
 import fi.oph.kouta.TestData.{MinSorakuvaus, YoSorakuvaus}
 import fi.oph.kouta.domain.oid.UserOid
+import fi.oph.kouta.domain.{Fi, Sorakuvaus, SorakuvausMetadata, Sv, Tallennettu}
+import fi.oph.kouta.validation.Validations._
 
-class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] with Validations {
+class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
 
   val max = YoSorakuvaus
   val min = MinSorakuvaus
 
   it should "fail if perustiedot is invalid" in {
-    assertLeft(max.copy(kielivalinta = Seq()), MissingKielivalinta)
-    assertLeft(max.copy(nimi = Map(Fi -> "nimi")), invalidKielistetty("nimi", Seq(Sv)))
-    assertLeft(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), invalidKielistetty("nimi", Seq(Sv)))
-    assertLeft(max.copy(muokkaaja = UserOid("moikka")), validationMsg("moikka"))
+    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
-  it should "pass imcomplete sorakuvaus if not julkaistu" in {
-    assertRight(min)
+  it should "pass incomplete sorakuvaus if not julkaistu" in {
+    passesValidation(min)
   }
 
   it should "pass valid julkaistu sorakuvaus" in {
-    assertRight(max)
+    passesValidation(max)
+  }
+
+  it should "validate kuvaus from metadata" in {
+    val metadata = Some(SorakuvausMetadata(kuvaus = Map(Fi -> "kuvaus")))
+    failsValidation(max.copy(metadata = metadata), "metadata.kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if metadata is missing from a julkaistu sorakuvaus" in {
+    passesValidation(max.copy(metadata = None, tila = Tallennettu))
+    failsValidation(max.copy(metadata = None), "metadata", missingMsg)
   }
 }

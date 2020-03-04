@@ -4,21 +4,22 @@ import java.util.UUID
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.IndexingFixture
-import fi.oph.kouta.validation.Validations
 import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
 
 class IndexingSpec extends KoutaIntegrationSpec
-  with IndexingFixture with Validations with KonfoIndexingQueues with EventuallyMessages {
+  with IndexingFixture with KonfoIndexingQueues with EventuallyMessages {
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId: UUID = _
+  var sorakuvausId: UUID = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)
-    valintaperusteId = put(valintaperuste)
+    sorakuvausId = put(sorakuvaus)
+    valintaperusteId = put(valintaperuste(sorakuvausId))
   }
 
   lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
@@ -66,15 +67,15 @@ class IndexingSpec extends KoutaIntegrationSpec
   }
 
   "Create valintaperuste" should "send indexing message after creating valintaperuste" in {
-    val oid = put(valintaperuste)
-    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$oid"]}""") }
+    val id = put(valintaperuste(sorakuvausId))
+    eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
 
   "Update valintaperuste"  should "send indexing message after updating valintaperuste" in {
-    val id = put(valintaperuste)
+    val id = put(valintaperuste(sorakuvausId))
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
 
-    update(valintaperuste(id, Arkistoitu), lastModified = get(id, valintaperuste(id)))
+    update(valintaperuste(id, sorakuvausId = sorakuvausId, Arkistoitu), lastModified = get(id, valintaperuste(id, sorakuvausId)))
 
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
