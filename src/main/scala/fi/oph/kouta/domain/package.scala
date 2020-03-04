@@ -490,4 +490,9 @@ package object domain {
     def withModified(modified: LocalDateTime): T
     def withModified(modified: Instant): T = withModified(TimeUtils.instantToLocalDateTime(modified))
   }
+
+  trait HasMuokkaaja[T] {
+    def muokkaaja: UserOid
+    def withMuokkaaja(muokkaaja: UserOid): T
+  }
 }

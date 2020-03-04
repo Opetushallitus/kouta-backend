@@ -19,7 +19,6 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(amm.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
-    failsValidation(amm.copy(muokkaaja = UserOid("moikka")), "muokkaaja", validationMsg("moikka"))
   }
 
   it should "pass incomplete toteutus if not julkaistu" in {
@@ -83,8 +82,8 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   }
 
   it should "return multiple error messages" in {
-    failsValidation(min.copy(oid = Some(ToteutusOid("kurppa")), muokkaaja = UserOid("Hannu Hanhi")),
-      ("oid", validationMsg("kurppa")), ("muokkaaja", validationMsg("Hannu Hanhi")))
+    failsValidation(min.copy(oid = Some(ToteutusOid("kurppa")), koulutusOid = KoulutusOid("Hannu Hanhi")),
+      ("oid", validationMsg("kurppa")), ("koulutusOid", validationMsg("Hannu Hanhi")))
   }
 }
 

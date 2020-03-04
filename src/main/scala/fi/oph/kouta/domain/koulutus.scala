@@ -190,6 +190,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   override def withTeemakuva(teemakuva: Option[String]): Koulutus = this.copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): Koulutus = this.copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): Koulutus = this.copy(muokkaaja = oid)
 }
 
 case class KoulutusListItem(oid: KoulutusOid,

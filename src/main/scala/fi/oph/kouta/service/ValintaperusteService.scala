@@ -62,7 +62,8 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        v <- ValintaperusteDAO.getPutActions(valintaperuste)
+        v <- setMuokkaajaFromSession(valintaperuste)
+        v <- ValintaperusteDAO.getPutActions(v)
         _ <- index(Some(v))
         _ <- auditLog.logCreate(v)
       } yield v
@@ -72,7 +73,8 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)
-        v <- ValintaperusteDAO.getUpdateActions(valintaperuste)
+        v <- setMuokkaajaFromSession(valintaperuste)
+        v <- ValintaperusteDAO.getUpdateActions(v)
         _ <- index(v)
         _ <- auditLog.logUpdate(before, v)
       } yield v

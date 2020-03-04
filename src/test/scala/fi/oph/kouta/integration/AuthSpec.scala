@@ -15,7 +15,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfter
 
   "Get session" should "return 200 if the session is active" in {
     get(sessionPath, headers = defaultHeaders) {
-      body should include(testUser.oid)
+      body should include(testUser.oid.s)
       status should equal(200)
     }
     MockAuditLogger.logs shouldBe empty
@@ -40,7 +40,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfter
 
   it should "reuse an existing session" in {
     get(loginPath, headers = defaultHeaders) {
-      body should include(testUser.oid)
+      body should include(testUser.oid.s)
       status should equal(200)
     }
     MockAuditLogger.logs shouldBe empty
@@ -64,20 +64,20 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfter
 
   it should "create a new session from a verifiable CAS ticket" in {
     val cookieHeader = get(loginPath, params = Seq("ticket" -> testUser.ticket), headers = Seq(jsonHeader)) {
-      body should include(testUser.oid)
+      body should include(testUser.oid.s)
       status should equal(200)
 
       header.get("Set-Cookie") should not be empty
       header("Set-Cookie")
     }
-    MockAuditLogger.find(testUser.ticket, testUser.oid, "kirjautuminen") shouldBe defined
+    MockAuditLogger.find(testUser.ticket, testUser.oid.s, "kirjautuminen") shouldBe defined
 
     val sessionId = getSessionFromCookies(cookieHeader)
     sessionId should not be empty
 
     get(sessionPath, headers = Seq(sessionHeader(sessionId.get))) {
       status should equal(200)
-      body should include(testUser.oid)
+      body should include(testUser.oid.s)
     }
   }
 
@@ -91,7 +91,7 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfter
   it should "reuse an existing session even if a ticket is provided" in {
     get(loginPath, params = Seq("ticket" -> "invalid"), headers = defaultHeaders) {
       status should equal(200)
-      body should include(testUser.oid)
+      body should include(testUser.oid.s)
     }
     MockAuditLogger.logs shouldBe empty
   }
@@ -103,18 +103,18 @@ class AuthSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfter
       headers = Seq(jsonHeader, sessionHeader(UUID.randomUUID()))
     ) {
       status should equal(200)
-      body should include(testUser.oid)
+      body should include(testUser.oid.s)
 
       header.get("Set-Cookie") should not be empty
       header("Set-Cookie")
     }
-    MockAuditLogger.find(testUser.ticket, testUser.oid, "kirjautuminen") shouldBe defined
+    MockAuditLogger.find(testUser.ticket, testUser.oid.s, "kirjautuminen") shouldBe defined
     val sessionId = getSessionFromCookies(cookieHeader)
     sessionId should not be empty
 
     get(sessionPath, headers = Seq(sessionHeader(sessionId.get))) {
       status should equal(200)
-      body should include(testUser.oid)
+      body should include(testUser.oid.s)
     }
   }
 

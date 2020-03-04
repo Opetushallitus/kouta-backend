@@ -7,7 +7,7 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{SorakuvausFixture, ValintaperusteFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -88,6 +88,12 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, valintaperuste(id, sorakuvausId))
   }
 
+  it should "read muokkaaja from the session" in {
+    val sorakuvausId = put(sorakuvaus)
+    val id = put(valintaperuste(sorakuvausId).copy(muokkaaja = UserOid("random")))
+    get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = testUser.oid))
+  }
+
   it should "write create valintaperuste in log" in {
     val sorakuvausId = put(sorakuvaus)
     MockAuditLogger.clean()
@@ -165,6 +171,14 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     update(valintaperuste(id, sorakuvausId, Arkistoitu), lastModified)
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val id = put(valintaperuste(sorakuvausId), crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = userOid))
+    update(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write valintaperuste update to audit log" in {

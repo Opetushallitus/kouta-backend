@@ -48,7 +48,8 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        h <- HakukohdeDAO.getPutActions(hakukohde)
+        h <- setMuokkaajaFromSession(hakukohde)
+        h <- HakukohdeDAO.getPutActions(h)
         _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
       } yield h
@@ -58,7 +59,8 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- HakukohdeDAO.checkNotModified(hakukohde.oid.get, notModifiedSince)
-        h <- HakukohdeDAO.getUpdateActions(hakukohde)
+        h <- setMuokkaajaFromSession(hakukohde)
+        h <- HakukohdeDAO.getUpdateActions(h)
         _ <- index(h)
         _ <- auditLog.logUpdate(before, h)
       } yield h

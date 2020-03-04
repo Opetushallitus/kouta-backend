@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.Arkistoitu
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -71,6 +71,11 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   "Create oppilaitoksen osa" should "store oppilaitoksen osa" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(oppilaitoksenOsa(oppilaitosOid).copy(muokkaaja = UserOid("random")))
+    get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = testUser.oid))
   }
 
   it should "return 401 if no session is found" in {
@@ -145,6 +150,14 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
     update(oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu), lastModified)
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(oppilaitoksenOsa(oppilaitosOid), crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = userOid))
+    update(oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write oppilaitoksen osa update to audit log" in {

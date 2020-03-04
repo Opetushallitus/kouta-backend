@@ -179,7 +179,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
              or metadata is distinct from ${toJsonParam(valintaperuste.metadata)}::jsonb
              or sorakuvaus_id is distinct from ${valintaperuste.sorakuvausId.map(_.toString)}::uuid
              or organisaatio_oid is distinct from ${valintaperuste.organisaatioOid}
-             or muokkaaja is distinct from ${valintaperuste.muokkaaja}
              or kielivalinta is distinct from ${toJsonParam(valintaperuste.kielivalinta)}::jsonb )"""
   }
 

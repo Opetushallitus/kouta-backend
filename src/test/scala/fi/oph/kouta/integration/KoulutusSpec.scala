@@ -81,8 +81,9 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "allow a user of other organization but similar oppilaitostyyppi to access public koulutus" in {
-    val oid = put(koulutus.copy(julkinen = true), crudSessions(koulutus.organisaatioOid))
-    get(oid, readSessions(AmmOid), koulutus(oid).copy(julkinen = true))
+    val sessionId = crudSessions(koulutus.organisaatioOid)
+    val oid = put(koulutus.copy(julkinen = true), sessionId)
+    get(oid, readSessions(AmmOid), koulutus(oid).copy(julkinen = true, muokkaaja = userOidForTestSessionId(sessionId)))
   }
 
   it should "deny an authenticated user of a different oppilaitostyyppi to access public koulutus" in {
@@ -95,9 +96,14 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, koulutus(oid))
   }
 
+  it should "read muokkaaja from the session" in {
+    val oid = put(koulutus.copy(muokkaaja = UserOid("random")))
+    get(oid, koulutus(oid).copy(muokkaaja = testUser.oid))
+  }
+
   it should "allow oph to create julkaistu koulutus without tarjoajat" in {
     val oid = put(ophKoulutus, ophSession)
-    get(oid, ophKoulutus.copy(Some(KoulutusOid(oid))))
+    get(oid, ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = userOidForTestSessionId(ophSession)))
   }
 
   it should "deny other users to create julkaistu koulutus without tarjoajat" in {
@@ -185,6 +191,14 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, koulutus(oid, Arkistoitu))
   }
 
+  it should "read muokkaaja from the session" in {
+    val oid = put(koulutus, crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(oid, koulutus(oid).copy(muokkaaja = userOid))
+    update(koulutus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    get(oid, koulutus(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
+  }
+
   it should "write koulutus update to audit log" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
@@ -237,7 +251,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow the user of proper koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
     val oid = put(ophKoulutus, ophSession)
-    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)))
+    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = userOidForTestSessionId(ophSession))
     val lastModified = get(oid, koulutusWithOid)
     val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(AmmOid))
     update(koulutusWithNewTarjoaja, lastModified, expectUpdate = true, crudSessions(AmmOid))
@@ -245,7 +259,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "deny the user of wrong koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
     val oid = put(ophKoulutus, ophSession)
-    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)))
+    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = userOidForTestSessionId(ophSession))
     val lastModified = get(oid, koulutusWithOid)
     val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(YoOid))
     update(koulutusWithNewTarjoaja, lastModified, crudSessions(YoOid), 403)

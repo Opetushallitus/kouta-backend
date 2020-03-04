@@ -79,11 +79,15 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, toteutus(oid, koulutusOid))
   }
 
+  it should "read muokkaaja from the session" in {
+    val oid = put(toteutus(koulutusOid).copy(muokkaaja = UserOid("random")))
+    get(oid, toteutus(oid, koulutusOid).copy(muokkaaja = testUser.oid))
+  }
+
   it should "store korkeakoulutus toteutus" in {
     val oid = put(TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid)))
     get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid)))
   }
-
 
   it should "write create toteutus to audit log" in {
     MockAuditLogger.clean()
@@ -171,6 +175,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
     get(oid, toteutus(oid, koulutusOid, Arkistoitu))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(toteutus(koulutusOid), crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid).copy(muokkaaja = userOid))
+    update(toteutus(oid, koulutusOid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    get(oid, toteutus(oid, koulutusOid, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "not update toteutus" in {

@@ -73,7 +73,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        h <- HakuDAO.getPutActions(haku)
+        h <- setMuokkaajaFromSession(haku)
+        h <- HakuDAO.getPutActions(h)
         _ <- setHaunOhjausparametrit(h)
         _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
@@ -84,7 +85,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- HakuDAO.checkNotModified(haku.oid.get, notModifiedSince)
-        h <- HakuDAO.getUpdateActions(haku)
+        h <- setMuokkaajaFromSession(haku)
+        h <- HakuDAO.getUpdateActions(h)
         _ <- index(h)
         _ <- auditLog.logUpdate(before, h)
       } yield h

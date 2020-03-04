@@ -53,7 +53,8 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
   private def doPut(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): Oppilaitos =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitos)
+        o          <- setMuokkaajaFromSession(oppilaitos)
+        (teema, o) <- checkAndMaybeClearTeemakuva(o)
         (logo, o)  <- checkAndMaybeClearLogo(o)
         o          <- OppilaitosDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
@@ -72,7 +73,8 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
-        (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
+        o          <- setMuokkaajaFromSession(oppilaitos)
+        (teema, o) <- checkAndMaybeCopyTeemakuva(o)
         (logo, o)  <- checkAndMaybeCopyLogo(o)
         o          <- OppilaitosDAO.getUpdateActions(o)
         _          <- index(o)
@@ -116,7 +118,8 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- OppilaitoksenOsaDAO.oppilaitosExists(oppilaitoksenOsa)
-        (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitoksenOsa)
+        o          <- setMuokkaajaFromSession(oppilaitoksenOsa)
+        (teema, o) <- checkAndMaybeClearTeemakuva(o)
         o          <- OppilaitoksenOsaDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
@@ -132,7 +135,8 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
-        (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
+        o          <- setMuokkaajaFromSession(oppilaitoksenOsa)
+        (teema, o) <- checkAndMaybeCopyTeemakuva(o)
         o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)

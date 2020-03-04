@@ -220,6 +220,8 @@ case class Valintaperuste(id: Option[UUID] = None,
   override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
 
   override def withModified(modified: LocalDateTime): Valintaperuste = copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): Valintaperuste = this.copy(muokkaaja = oid)
 }
 
 case class ValintaperusteListItem(id: UUID,

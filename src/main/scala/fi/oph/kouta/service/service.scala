@@ -5,16 +5,19 @@ import java.time.Instant
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.Julkaistu
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.{HasMuokkaaja, Julkaistu}
+import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
+import slick.dbio.DBIO
 
 import scala.collection.IterableView
+import scala.util.Try
 
-trait ValidatingService[E <: Validatable] {
+trait ValidatingService[E <: Validatable with HasMuokkaaja[E]] {
 
   def withValidation[R](e: E, oldE: Option[E], f: E => R): R = {
     val errors = if (!oldE.contains(Julkaistu) && e.tila == Julkaistu) {
@@ -28,6 +31,11 @@ trait ValidatingService[E <: Validatable] {
       case errors => throw KoutaValidationException(errors)
     }
   }
+
+  def setMuokkaajaFromSession(t: E)(implicit authenticated: Authenticated): DBIO[E] =
+    Try {
+      t.withMuokkaaja(UserOid(authenticated.session.personOid))
+    }.toDBIO
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException

@@ -48,7 +48,8 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
   private def doPut(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): Sorakuvaus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        s <- SorakuvausDAO.getPutActions(sorakuvaus)
+        s <- setMuokkaajaFromSession(sorakuvaus)
+        s <- SorakuvausDAO.getPutActions(s)
         _ <- index(Some(s))
         _ <- auditLog.logCreate(s)
       } yield s
@@ -58,7 +59,8 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- SorakuvausDAO.checkNotModified(sorakuvaus.id.get, notModifiedSince)
-        s <- SorakuvausDAO.getUpdateActions(sorakuvaus)
+        s <- setMuokkaajaFromSession(sorakuvaus)
+        s <- SorakuvausDAO.getUpdateActions(s)
         _ <- index(s)
         _ <- auditLog.logUpdate(before, s)
       } yield s

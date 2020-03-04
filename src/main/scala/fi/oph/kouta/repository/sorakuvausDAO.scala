@@ -121,7 +121,6 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
              or julkinen is distinct from ${sorakuvaus.julkinen}
              or metadata is distinct from ${toJsonParam(sorakuvaus.metadata)}::jsonb
              or organisaatio_oid is distinct from ${sorakuvaus.organisaatioOid}
-             or muokkaaja is distinct from ${sorakuvaus.muokkaaja}
              or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb)"""
   }
 

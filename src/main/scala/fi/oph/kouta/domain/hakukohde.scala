@@ -355,6 +355,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   def withOid(oid: HakukohdeOid): Hakukohde = copy(oid = Some(oid))
 
   override def withModified(modified: LocalDateTime): Hakukohde = copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
 }
 
 case class Liite(id: Option[UUID] = None,

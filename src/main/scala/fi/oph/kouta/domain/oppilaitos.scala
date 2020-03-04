@@ -261,11 +261,11 @@ case class Oppilaitos(oid: OrganisaatioOid,
     with Authorizable
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
     with HasModified[Oppilaitos]
+    with HasMuokkaaja[Oppilaitos]
     with HasTeemakuva[Oppilaitos] {
 
   override def validate(): IsValid = and(
     assertValid(oid, "oid"),
-    assertValid(muokkaaja, "muokkaaja"),
     assertValid(organisaatioOid, "organisaatioOid"),
     validateIfDefined[OppilaitosMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
@@ -280,6 +280,8 @@ case class Oppilaitos(oid: OrganisaatioOid,
   override def withTeemakuva(teemakuva: Option[String]): Oppilaitos = copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): Oppilaitos = copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): Oppilaitos = this.copy(muokkaaja = oid)
 }
 
 case class OppilaitoksenOsa(oid: OrganisaatioOid,
@@ -295,12 +297,12 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
     with Authorizable
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
     with HasModified[OppilaitoksenOsa]
+    with HasMuokkaaja[OppilaitoksenOsa]
     with HasTeemakuva[OppilaitoksenOsa] {
 
   override def validate(): IsValid = and(
     assertValid(oid, "oid"),
     assertValid(oppilaitosOid, "oppilaitosOid"),
-    assertValid(muokkaaja, "muokkaaja"),
     assertValid(organisaatioOid, "organisaatioOid"),
     validateIfDefined[OppilaitoksenOsaMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
@@ -314,6 +316,8 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
   override def withTeemakuva(teemakuva: Option[String]): OppilaitoksenOsa = copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): OppilaitoksenOsa = copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = oid)
 }
 
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),

@@ -4,7 +4,7 @@ import java.util.UUID
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.mocks.{MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
@@ -19,7 +19,7 @@ import org.scalatra.test.scalatest.ScalatraFlatSpec
 import scala.collection.mutable
 import scala.reflect.Manifest
 
-case class TestUser(oid: String, username: String, sessionId: UUID) {
+case class TestUser(oid: UserOid, username: String, sessionId: UUID) {
   val ticket = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
 }
 
@@ -35,10 +35,10 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
   val defaultAuthorities = KoutaIntegrationSpec.defaultAuthorities
 
-  val testUser = TestUser(TestUserOid.s, "testuser", defaultSessionId)
+  val testUser = TestUser(TestUserOid, "testuser", defaultSessionId)
 
   def addDefaultSession(): Unit =  {
-    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid, defaultAuthorities), testUser.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid.s, defaultAuthorities), testUser.sessionId)
   }
 
   override def beforeAll(): Unit = {
@@ -94,11 +94,15 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
 
   def addTestSession(authorities: Authority*): UUID = {
     val sessionId = UUID.randomUUID()
-    val oid = s"1.2.246.562.24.${math.abs(sessionId.getLeastSignificantBits.toInt)}"
+    val oid = userOidForTestSessionId(sessionId)
     val user = TestUser(oid, s"user-$oid", sessionId)
-    SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid, authorities.toSet), user.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid.s, authorities.toSet), user.sessionId)
     sessionId
   }
+
+  private val userOidLength = "1.2.246.562.24.12345678901".length
+  def userOidForTestSessionId(sessionId: UUID): UserOid =
+    UserOid(f"1.2.246.562.24.${math.abs(sessionId.getLeastSignificantBits)}%011d".substring(0, userOidLength))
 
   def addTestSession(role: Role, organisaatioOid: OrganisaatioOid): UUID =
     addTestSession(Seq(role), organisaatioOid)

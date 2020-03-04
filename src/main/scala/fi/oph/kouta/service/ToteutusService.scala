@@ -78,7 +78,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   private def doPut(toteutus: Toteutus)(implicit authenticated: Authenticated): Toteutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, t) <- checkAndMaybeClearTeemakuva(toteutus)
+        t          <- setMuokkaajaFromSession(toteutus)
+        (teema, t) <- checkAndMaybeClearTeemakuva(t)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getPutActions(t)
@@ -96,7 +97,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
-        (teema, t) <- checkAndMaybeCopyTeemakuva(toteutus)
+        t          <- setMuokkaajaFromSession(toteutus)
+        (teema, t) <- checkAndMaybeCopyTeemakuva(t)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getUpdateActions(t)

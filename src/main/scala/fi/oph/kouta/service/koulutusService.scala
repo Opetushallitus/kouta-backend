@@ -119,7 +119,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, k) <- checkAndMaybeClearTeemakuva(koulutus)
+        k          <- setMuokkaajaFromSession(koulutus)
+        (teema, k) <- checkAndMaybeClearTeemakuva(k)
         k          <- KoulutusDAO.getPutActions(k)
         k          <- maybeCopyTeemakuva(teema, k)
         k          <- teema.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
@@ -135,7 +136,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
-        (teema, k) <- checkAndMaybeCopyTeemakuva(koulutus)
+        k          <- setMuokkaajaFromSession(koulutus)
+        (teema, k) <- checkAndMaybeCopyTeemakuva(k)
         k          <- KoulutusDAO.getUpdateActions(k)
         _          <- index(k)
         _          <- auditLog.logUpdate(before, k)
