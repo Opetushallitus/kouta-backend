@@ -1,10 +1,11 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
-import fi.oph.kouta.service.OrganisaatioServiceImpl
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
+
+import scala.util.Try
 
 case class KoutaDatabaseConfiguration(
   url: String,
@@ -21,8 +22,15 @@ case class KoutaDatabaseConfiguration(
 case class SecurityConfiguration(
   casUrl: String,
   casServiceIdentifier: String,
-  kayttooikeusUrl: String
-)
+  kayttooikeusUrl: String,
+  useSecureCookies: Boolean
+) {
+  def sessionCookieName: String = if (useSecureCookies) {
+    "__Secure-session"
+  } else {
+    "session"
+  }
+}
 
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
 
@@ -45,20 +53,21 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
 
   val indexingConfiguration = IndexingConfiguration(
     config.getString("kouta-backend.sqs.queue.priority"),
-    scala.util.Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
-    scala.util.Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
+    Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
+    Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
 
   val s3Configuration = S3Configuration(
     config.getString("kouta-backend.s3.imageBucket"),
     config.getString("kouta-backend.s3.imageBucketPublicUrl"),
-    scala.util.Try(config.getString("kouta-backend.s3.region")).filter(_.trim.nonEmpty).toOption
+    Try(config.getString("kouta-backend.s3.region")).filter(_.trim.nonEmpty).toOption
   )
 
   val securityConfiguration = SecurityConfiguration(
     casUrl = config.getString("cas.url"),
     casServiceIdentifier = config.getString("kouta-backend.cas.service"),
-    kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername")
+    kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername"),
+    useSecureCookies = !("false".equals(System.getProperty("kouta-backend.useSecureCookies")))
   )
 
   val ohjausparametritClientConfiguration = OhjausparametritClientConfiguration(

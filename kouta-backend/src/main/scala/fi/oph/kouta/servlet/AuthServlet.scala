@@ -11,12 +11,6 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
 
   def this() = this(CasSessionService)
 
-  override implicit val cookieOptions: CookieOptions = CookieOptions(
-    path = "/kouta-backend",
-    secure = false,
-    httpOnly = true
-  )
-
   registerPath("/auth/login",
     """    get:
       |      summary: Kirjaudu sisään
@@ -41,18 +35,14 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
 
     val ticket = params.get("ticket").map(ServiceTicket)
 
-    val existingSession = cookies
-      .get("session")
-      .orElse(Option(request.getAttribute("session")).map(_.toString))
-      .map(UUID.fromString)
-
-    casSessionService.getSession(ticket, existingSession) match {
+    casSessionService.getSession(ticket, getExistingSession) match {
       case Left(_) if ticket.isEmpty =>
         Found(s"${casSessionService.casUrl}/login?service=${casSessionService.serviceIdentifier}")
       case Left(t) => throw t
       case Right((id, session)) =>
-        cookies += ("session" -> id.toString)
-        request.setAttribute("session", id.toString)
+        // Lisätään cookie käsin, koska Scalatran cookiet ei tue SameSite-attribuuttia
+        response.setHeader("Set-Cookie", cookieValue(id))
+
         Ok(Map("personOid" -> session.personOid))
     }
   }
@@ -72,12 +62,7 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
       |""".stripMargin)
   get("/session") {
 
-    val existingSession = cookies
-      .get("session")
-      .orElse(Option(request.getAttribute("session")).map(_.toString))
-      .map(UUID.fromString)
-
-    casSessionService.getSession(None, existingSession) match {
+    casSessionService.getSession(None, getExistingSession) match {
       case Left(t) => throw t
       case Right((_, session)) => Ok(Map("personOid" -> session.personOid))
     }
@@ -110,5 +95,13 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
 
     casSessionService.deleteSession(ServiceTicket(ticket))
     NoContent()
+  }
+
+  private def getExistingSession: Option[UUID] =
+    cookies.get(sessionCookieName).map(UUID.fromString)
+
+  private def cookieValue(id: UUID): String = {
+    val cookie = s"$sessionCookieName=${id.toString};Path=/kouta-backend;HttpOnly;SameSite=Strict"
+    if (securityConfiguration.useSecureCookies) s"$cookie;Secure" else cookie
   }
 }

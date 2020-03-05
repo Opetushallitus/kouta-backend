@@ -44,6 +44,7 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    System.setProperty("kouta-backend.useSecureCookies", "false")
     Option(System.getProperty("kouta-backend.test-postgres-port")) match {
       case Some(port) => setupWithTemplate(port.toInt)
       case None => setupWithEmbeddedPostgres()
