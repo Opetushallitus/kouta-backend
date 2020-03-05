@@ -144,6 +144,27 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
         f(e)
       }
     }
+
+  def authorizeUpdate[E <: Authorizable, I](entityForUpdate: => Option[(E, Instant)],
+                                            authorizationRules: List[AuthorizationRules])
+                                           (f: E => I)(implicit authenticated: Authenticated): I = {
+    def checkRules(rule: AuthorizationRules,rules: List[AuthorizationRules], e: E): I = {
+      if(rules.isEmpty) {
+        ifAuthorized(e, rule)(f(e))
+      } else {
+        ifAuthorized(e, rule)(checkRules(rules.head,rules.tail,e))
+      }
+    }
+    entityForUpdate match {
+      case None         => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+      case Some((e, _)) =>
+        authorizationRules match {
+          case Nil => throw EntityNotFoundException(s"Ei päivitettävää")
+          case rule :: rules => checkRules(rule, rules, e)
+        }
+    }
+  }
+
 }
 
 trait AuthorizationService extends Logging {
