@@ -30,6 +30,7 @@ trait KoulutusFixture extends KoulutusDbFixture {
   val yoKoulutus = TestData.YoKoulutus
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
+  def muokkaus(k: Koulutus): Koulutus = k.copy(nimi = k.nimi.map{case (k, v) => k -> (v + v) })
   def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
   def koulutus(julkinen:Boolean, organisaatioOid: OrganisaatioOid, tila:Julkaisutila):Koulutus =
     koulutus.copy(julkinen = julkinen, organisaatioOid = organisaatioOid, tila = tila)

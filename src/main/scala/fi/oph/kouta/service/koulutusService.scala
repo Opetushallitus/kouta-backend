@@ -10,7 +10,8 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -18,7 +19,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
 
 class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
-  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus] {
+  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus] with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -35,13 +36,34 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Se
       withValidation(koulutus, None, doPut)
     }.oid.get
 
-  //TODO: Tarkista oikeudet, kun tarjoajien lisäämiseen tarkoitettu rajapinta tulee käyttöön
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(koulutus.oid.get)
-    val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime))
-    authorizeUpdate(koulutusWithTime, rules) { oldKoulutus =>
-      withValidation(koulutus, Some(oldKoulutus), doUpdate(_, notModifiedSince, oldKoulutus))
-    }.nonEmpty
+    val koulutusWithInstant = KoulutusDAO.get(koulutus.oid.get)
+
+    def authorizedForOids(oids: Set[OrganisaatioOid]) = if(oids.nonEmpty) Some(AuthorizationRules(
+      roleEntity.updateRoles,
+      allowAccessToParentOrganizations = true,
+      Seq(AuthorizationRuleForJulkinen),
+      oids.toSeq)) else None
+
+    koulutusWithInstant match {
+      case Some((oldKoulutus, _)) =>
+        val newTarjoajat = koulutus.tarjoajat.toSet
+        val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+
+        val updatesOnKoulutus = oldKoulutus.copy(modified=None, tarjoajat = List()) != koulutus.copy(tarjoajat = List())
+        val rulesForUpdatingKoulutus = if(updatesOnKoulutus) Some(AuthorizationRules(roleEntity.updateRoles)) else None
+
+        val rulesForAddedTarjoajat = authorizedForOids(newTarjoajat diff oldTarjoajat)
+        val rulesForRemovedTarjoajat = authorizedForOids(oldTarjoajat diff newTarjoajat)
+
+        val rules: List[AuthorizationRules] =
+          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+
+        rules.nonEmpty && authorizeUpdate(koulutusWithInstant, rules) { _ =>
+          withValidation(koulutus, Some(oldKoulutus), doUpdate(_, notModifiedSince, oldKoulutus)).nonEmpty
+        }
+      case _ => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+    }
   }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =

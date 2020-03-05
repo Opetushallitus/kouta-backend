@@ -214,25 +214,25 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "allow access if the user has rights to the koulutus organization" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(ChildOid))
+    update(muokkaus(koulutus(oid)), lastModified, expectUpdate = true, crudSessions(ChildOid))
   }
 
   it should "deny access if the user is missing rights to the koulutus organization" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, crudSessions(LonelyOid), 403)
+    update(muokkaus(koulutus(oid)), lastModified, crudSessions(LonelyOid), 403)
   }
 
   it should "allow access if the user has rights to an ancestor organization" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(ParentOid))
+    update(muokkaus(koulutus(oid)), lastModified, expectUpdate = true, crudSessions(ParentOid))
   }
 
   it should "allow access if the user only has rights to a descent organization" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, expectUpdate = false, crudSessions(GrandChildOid))
+    update(koulutus(oid).copy(tarjoajat = GrandChildOid :: koulutus(oid).tarjoajat), lastModified, expectUpdate = false, crudSessions(GrandChildOid))
   }
 
   it should "allow the user of proper koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
@@ -254,13 +254,13 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "deny access if the user doesn't have update rights" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, readSessions(ChildOid), 403)
+    update(muokkaus(koulutus(oid)), lastModified, readSessions(ChildOid), 403)
   }
 
   it should "deny access for the indexer" in {
     val oid = put(koulutus)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, indexerSession, 403)
+    update(muokkaus(koulutus(oid)), lastModified, indexerSession, 403)
   }
 
   it should "allow access even if the user doesn't have rights to a tarjoaja organization being removed" in {
