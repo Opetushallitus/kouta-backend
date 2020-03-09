@@ -61,6 +61,18 @@ sealed trait ServiceMocks extends Logging {
     ))
     req
   }
+
+  protected def mockPost(key: String, params: Map[String, String], responseString: String, statusCode: Int = 200): model.HttpRequest = {
+    val req: model.HttpRequest = request()
+      .withMethod("POST")
+      .withPath(getMockPath(key))
+    mockServer.foreach(_.when(
+      req
+    ).respond(
+      response(responseString).withStatusCode(statusCode)
+    ))
+    req
+  }
 }
 
 trait OrganisaatioServiceMock extends ServiceMocks {
@@ -146,29 +158,29 @@ trait KoutaIndexMock extends ServiceMocks {
     s"""{"totalCount": ${responseOids.size}, "result": [$result]}"""
   }
 
-  def mockKoulutusResponse(params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
-    case 200 => mockGet("kouta-index.koulutus.filtered-list", params, createResponse(responseOids))
-    case _   => mockGet("kouta-index.koulutus.filtered-list", params, s"Error $statusCode", statusCode)
+  def mockKoulutusResponse(body: String, params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
+    case 200 => mockPost("kouta-index.koulutus.filtered-list", params, createResponse(responseOids))
+    case _   => mockPost("kouta-index.koulutus.filtered-list", params, s"Error $statusCode", statusCode)
   }
 
-  def mockToteutusResponse(params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
-    case 200 => mockGet("kouta-index.toteutus.filtered-list", params, createResponse(responseOids))
-    case _   => mockGet("kouta-index.toteutus.filtered-list", params, s"Error $statusCode", statusCode)
+  def mockToteutusResponse(body: String, params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
+    case 200 => mockPost("kouta-index.toteutus.filtered-list", params, createResponse(responseOids))
+    case _   => mockPost("kouta-index.toteutus.filtered-list", params, s"Error $statusCode", statusCode)
   }
 
-  def mockHakuResponse(params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
-    case 200 => mockGet("kouta-index.haku.filtered-list", params, createResponse(responseOids))
-    case _   => mockGet("kouta-index.haku.filtered-list", params, s"Error $statusCode", statusCode)
+  def mockHakuResponse(body: String, params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
+    case 200 => mockPost("kouta-index.haku.filtered-list", params, createResponse(responseOids))
+    case _   => mockPost("kouta-index.haku.filtered-list", params, s"Error $statusCode", statusCode)
   }
 
-  def mockHakukohdeResponse(params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
-    case 200 => mockGet("kouta-index.hakukohde.filtered-list", params, createResponse(responseOids))
-    case _   => mockGet("kouta-index.hakukohde.filtered-list", params, s"Error $statusCode", statusCode)
+  def mockHakukohdeResponse(body: String, params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
+    case 200 => mockPost("kouta-index.hakukohde.filtered-list", params, createResponse(responseOids))
+    case _   => mockPost("kouta-index.hakukohde.filtered-list", params, s"Error $statusCode", statusCode)
   }
 
-  def mockValintaperusteResponse(params: Map[String, String], responseIds: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
-    case 200 => mockGet("kouta-index.valintaperuste.filtered-list", params, createResponse(responseIds, false))
-    case _   => mockGet("kouta-index.valintaperuste.filtered-list", params, s"Error $statusCode", statusCode)
+  def mockValintaperusteResponse(body: String, params: Map[String, String], responseIds: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest = statusCode match {
+    case 200 => mockPost("kouta-index.valintaperuste.filtered-list", params, createResponse(responseIds, false))
+    case _   => mockPost("kouta-index.valintaperuste.filtered-list", params, s"Error $statusCode", statusCode)
   }
 }
 
