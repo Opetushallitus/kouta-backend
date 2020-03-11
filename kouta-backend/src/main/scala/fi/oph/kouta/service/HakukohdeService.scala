@@ -26,13 +26,15 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) { h =>
-      withValidation(h, None, doPut)
+      withValidation(h, None)(doPut(h))
     }.oid.get
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
-      withValidation(h, Some(oldHakukohde), doUpdate(_, notModifiedSince, oldHakukohde))
+      withValidation(h, Some(oldHakukohde)) {
+        doUpdate(h, notModifiedSince, oldHakukohde)
+      }
     }.nonEmpty
   }
 

@@ -29,14 +29,16 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) { v =>
-      withValidation(v, None, doPut)
+      withValidation(v, None)(doPut(v))
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get), valintaperuste) { (oldValintaperuste, v) =>
-      withValidation(v, Some(oldValintaperuste), doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
-    }
+      withValidation(v, Some(oldValintaperuste)) {
+        doUpdate(v, notModifiedSince, oldValintaperuste)
+      }
+    }.nonEmpty
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>

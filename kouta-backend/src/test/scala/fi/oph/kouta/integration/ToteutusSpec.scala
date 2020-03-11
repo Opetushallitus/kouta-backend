@@ -10,7 +10,7 @@ import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.ValidationError
+import fi.oph.kouta.validation.{IsValid, ValidationError}
 import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.JsonMethods
 
@@ -85,8 +85,23 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "store korkeakoulutus toteutus" in {
+    val koulutusOid = put(TestData.YoKoulutus)
     val oid = put(TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid)))
     get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid)))
+  }
+
+  it should "fail to store toteutus if koulutus does not exist" in {
+    put(ToteutusPath, toteutus, 400, Seq(ValidationError("koulutusOid", s"Koulutusta (${toteutus.koulutusOid}) ei ole olemassa")))
+  }
+
+  it should "fail to store toteutus if toteutus tyyppi does not match koulutustyyppi of koulutus" in {
+    val toteutus = TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
+    put(ToteutusPath, toteutus, 400, Seq(ValidationError("metadata.tyyppi", s"Tyyppi ei vastaa koulutuksen ($koulutusOid) tyyppiä")))
+  }
+
+  it should "fail to store julkaistu toteutus if the koulutus is not yet julkaistu" in {
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu))
+    put(ToteutusPath, toteutus(koulutusOid), 400, Seq(ValidationError("tila", s"Koulutusta ($koulutusOid) ei ole vielä julkaistu")))
   }
 
   it should "write create toteutus to audit log" in {
@@ -193,6 +208,26 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutus, lastModified, false)
     MockAuditLogger.logs shouldBe empty
     get(oid, thisToteutus)
+  }
+
+  it should "fail to update if toteutus tyyppi does not match koulutustyyppi of koulutus" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(TestData.YoToteutuksenMetatieto))
+    update(ToteutusPath, thisToteutus, lastModified, 400, Seq(ValidationError("metadata.tyyppi", s"Tyyppi ei vastaa koulutuksen ($koulutusOid) tyyppiä")))
+  }
+
+  it should "fail to update julkaistu toteutus if the koulutus is not yet julkaistu" in {
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu))
+    val oid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
+    val lastModified = get(oid, toteutus(oid, koulutusOid).copy(tila = Tallennettu))
+    update(ToteutusPath, toteutus(oid, koulutusOid), lastModified, 400, Seq(ValidationError("tila", s"Koulutusta ($koulutusOid) ei ole vielä julkaistu")))
+  }
+
+  it should "fail to update toteutus if koulutus does not exist" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    update(ToteutusPath, toteutus(oid, "1.2.246.562.13.123"), lastModified,400, Seq(ValidationError("koulutusOid", s"Koulutusta (1.2.246.562.13.123) ei ole olemassa")))
   }
 
   it should "write toteutus update to audit log" in {

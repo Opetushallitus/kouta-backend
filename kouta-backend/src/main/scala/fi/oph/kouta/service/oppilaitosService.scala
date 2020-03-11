@@ -30,13 +30,15 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
 
   def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid = {
     authorizePut(oppilaitos) { o =>
-      withValidation(o, None, doPut)
+      withValidation(o, None)(doPut(o))
     }.oid
   }
 
   def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid), oppilaitos) { (oldOppilaitos, o) =>
-      withValidation(o, Some(oldOppilaitos), doUpdate(_, notModifiedSince, oldOppilaitos))
+      withValidation(o, Some(oldOppilaitos)) {
+        doUpdate(o, notModifiedSince, oldOppilaitos)
+      }
     }.nonEmpty
 
   def getOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
@@ -104,12 +106,14 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid =
     authorizePut(oppilaitoksenOsa) { o =>
-      withValidation(o, None, doPut).oid
+      withValidation(o, None)(doPut(o)).oid
     }
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), oppilaitoksenOsa) { (oldOsa, o) =>
-      withValidation(o, Some(oldOsa), doUpdate(_, notModifiedSince, oldOsa))
+      withValidation(o, Some(oldOsa)) {
+        doUpdate(o, notModifiedSince, oldOsa)
+      }
     }.nonEmpty
 
   private def doPut(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OppilaitoksenOsa =
