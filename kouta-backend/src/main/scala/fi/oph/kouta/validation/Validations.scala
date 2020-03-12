@@ -17,7 +17,7 @@ object Validations {
   def and(validations: IsValid*): IsValid = validations.flatten.distinct
 
   def validationMsg(value: String) = s"'${value}' ei ole validi"
-  def missingMsg = s"Pakollinen tieto puuttuu"
+  val missingMsg = s"Pakollinen tieto puuttuu"
   val notNegativeMsg = s"ei voi olla negatiivinen"
   def invalidKielistetty(values: Seq[Kieli]) = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]"
   def invalidTutkintoonjohtavuus(tyyppi: String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
@@ -27,6 +27,14 @@ object Validations {
   def pastDateMsg(date: LocalDateTime) = s"$date on menneisyydessä"
   def pastDateMsg(date: String) = s"$date on menneisyydessä"
   def minmaxMsg(minValue: Any, maxValue: Any) = s"$minValue on suurempi kuin $maxValue"
+  def notYetJulkaistu(field: String, id: Any) = s"$field ($id) ei ole vielä julkaistu"
+  def nonExistent(field: String, id: Any) = s"$field ($id) ei ole olemassa"
+  def tyyppiMismatch(field: String, id: Any) = s"Tyyppi ei vastaa $field ($id) tyyppiä"
+  def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any) =
+    s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä"
+
+  val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
+  val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"
 
   val KoulutusKoodiPattern: Pattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val HakutapaKoodiPattern: Pattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
@@ -54,9 +62,6 @@ object Validations {
   val OsaamistaustaKoodiPattern: Pattern = Pattern.compile("""osaamistausta_\d+(#\d{1,2})?""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
-
-  val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
-  val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"
 
   def assertTrue(b: Boolean, path: String, msg: String): IsValid = if (b) NoErrors else error(path, msg)
   def assertNotNegative(i: Int, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)

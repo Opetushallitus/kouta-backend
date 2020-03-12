@@ -13,6 +13,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO, KoulutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -82,14 +83,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
   private def checkKoulutus(toteutus: Toteutus): Unit = {
-    val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map(_._1).getOrElse(singleError("koulutusOid", s"Koulutusta (${toteutus.koulutusOid}) ei ole olemassa"))
+    val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map(_._1).getOrElse(singleError("koulutusOid", Validations.nonExistent("Koulutusta", toteutus.koulutusOid)))
     if (koulutus.tila != Julkaistu && toteutus.tila == Julkaistu) {
-      singleError("tila", s"Koulutusta (${toteutus.koulutusOid}) ei ole vielä julkaistu")
+      singleError("tila", Validations.notYetJulkaistu("Koulutusta", toteutus.koulutusOid))
     }
 
     toteutus.metadata.map(_.tyyppi) collect {
       case tyyppi if tyyppi != koulutus.koulutustyyppi =>
-        singleError("metadata.tyyppi", s"Tyyppi ei vastaa koulutuksen (${toteutus.koulutusOid}) tyyppiä")
+        singleError("metadata.tyyppi", Validations.tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
     }
   }
 
