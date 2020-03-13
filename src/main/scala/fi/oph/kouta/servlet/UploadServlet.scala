@@ -1,14 +1,14 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.images.ImageService
+import fi.oph.kouta.images.{ImageServlet, S3ImageService}
 import org.scalatra.Ok
 
 case class ImageSizeSpecs(maxSize: Int, minWidth: Int, minHeight: Int)
 
-class UploadServlet(imageService: ImageService) extends KoutaServlet {
+class UploadServlet(val s3ImageService: S3ImageService) extends KoutaServlet with ImageServlet {
 
-  def this() = this(ImageService)
+  def this() = this(S3ImageService)
 
   val teemakuvaSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = 2 * 1024 * 1024, minWidth = 1260, minHeight = 400)
   val logoSizes: ImageSizeSpecs      = ImageSizeSpecs(maxSize = 100 * 1024, minWidth = 100, minHeight = 100)
@@ -38,7 +38,7 @@ class UploadServlet(imageService: ImageService) extends KoutaServlet {
   )
   post("/teemakuva") {
     implicit val authenticated: Authenticated = authenticate
-    Ok("url" -> imageService.storeTempImage(teemakuvaSizes))
+    Ok("url" -> storeTempImage(teemakuvaSizes))
   }
 
   registerPath("/upload/logo",
@@ -70,6 +70,6 @@ class UploadServlet(imageService: ImageService) extends KoutaServlet {
   )
   post("/logo") {
     implicit val authenticated: Authenticated = authenticate
-    Ok("url" -> imageService.storeTempImage(logoSizes))
+    Ok("url" -> storeTempImage(logoSizes))
   }
 }

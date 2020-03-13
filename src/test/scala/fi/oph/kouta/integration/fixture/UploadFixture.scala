@@ -3,11 +3,10 @@ package fi.oph.kouta.integration.fixture
 import java.nio.file.{Files, Paths}
 
 import com.amazonaws.services.s3.model.ObjectMetadata
-import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.images.{ImageService, S3Service}
+import fi.oph.kouta.images.{ImageServlet, S3ImageService}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.integration.fixture.MockS3Client.Content
-import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.mocks.MockS3ImageService
 import fi.oph.kouta.servlet.{ImageSizeSpecs, UploadServlet}
 import org.scalatest.BeforeAndAfterEach
 
@@ -23,11 +22,10 @@ trait UploadFixture extends BeforeAndAfterEach {
   val TeemakuvaUploadPath = s"$UploadPath/teemakuva"
   val LogoUploadPath      = s"$UploadPath/logo"
 
-  val ImageBucket       = MockS3Service.config.imageBucket
-  val PublicImageServer = MockS3Service.config.imageBucketPublicUrl
+  val ImageBucket       = MockS3ImageService.config.imageBucket
+  val PublicImageServer = MockS3ImageService.config.imageBucketPublicUrl
 
-  protected lazy val s3Service: S3Service       = MockS3Service
-  protected lazy val imageService: ImageService = new ImageService(s3Service, new AuditLog(MockAuditLogger))
+  protected lazy val s3ImageService: S3ImageService = MockS3ImageService
 
   val MaxSizeInTest = 20000
 
@@ -61,7 +59,7 @@ trait UploadFixture extends BeforeAndAfterEach {
     returnedMeta.getContentType should equal("image/png")
   }
 
-  object TestUploadServlet extends UploadServlet(imageService) {
+  object TestUploadServlet extends UploadServlet(s3ImageService) {
     override val teemakuvaSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = MaxSizeInTest, minWidth = 1260, minHeight = 400)
     override val logoSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = MaxSizeInTest, minWidth = 100, minHeight = 100)
   }

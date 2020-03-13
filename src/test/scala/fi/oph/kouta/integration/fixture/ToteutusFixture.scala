@@ -9,7 +9,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.ToteutusDAO
 import fi.oph.kouta.service.{KeywordService, ToteutusService}
 import fi.oph.kouta.servlet.ToteutusServlet
@@ -22,7 +22,7 @@ trait ToteutusFixture { this: KoutaIntegrationSpec =>
 
   private lazy val auditLog = new AuditLog(MockAuditLogger)
   protected lazy val toteutusService: ToteutusService =
-    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service, auditLog, new KeywordService(auditLog))
+    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog, new KeywordService(auditLog))
 
   addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
 

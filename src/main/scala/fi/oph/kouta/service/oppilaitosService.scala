@@ -5,7 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.images.{LogoService, S3Service, TeemakuvaService}
+import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
@@ -15,9 +15,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Service, AuditLog)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog)
 
-class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
+class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
   extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
@@ -88,9 +88,9 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
 }
 
-object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3Service, AuditLog)
+object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog)
 
-class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
+class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
   extends ValidatingService[OppilaitoksenOsa]
     with RoleEntityAuthorizationService
     with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa] {

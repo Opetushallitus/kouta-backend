@@ -13,18 +13,18 @@ trait LogoService extends TeemakuvaService[OrganisaatioOid, Oppilaitos] {
 
   def logoPrefix: String
 
-  def checkLogo(oppilaitos: Oppilaitos): DBIO[Option[String]] = checkTempImage("Logo", oppilaitos.logo)
+  private def parseTempLogo(oppilaitos: Oppilaitos): DBIO[Option[String]] = parseTempImage("Logo", oppilaitos.logo)
 
-  def maybeClearLogo(logo: Option[String], oppilaitos: Oppilaitos): DBIO[Oppilaitos] =
-    Try {
+  private def maybeClearLogo(logo: Option[String], oppilaitos: Oppilaitos): DBIO[Oppilaitos] =
+    DBIO.successful {
       logo
         .map(_ => oppilaitos.copy(logo = None))
         .getOrElse(oppilaitos)
-    }.toDBIO
+    }
 
   def checkAndMaybeClearLogo(oppilaitos: Oppilaitos): DBIO[(Option[String], Oppilaitos)] =
     for {
-      tempImage <- checkLogo(oppilaitos)
+      tempImage <- parseTempLogo(oppilaitos)
       cleared <- maybeClearLogo(tempImage, oppilaitos)
     } yield (tempImage, cleared)
 
@@ -38,7 +38,7 @@ trait LogoService extends TeemakuvaService[OrganisaatioOid, Oppilaitos] {
 
   def checkAndMaybeCopyLogo(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): DBIO[(Option[String], Oppilaitos)] =
     for {
-      logo <- checkLogo(oppilaitos)
-      o    <- maybeCopyLogo(logo, oppilaitos)
-    } yield (logo, o)
+      tempImage <- parseTempLogo(oppilaitos)
+      o         <- maybeCopyLogo(tempImage, oppilaitos)
+    } yield (tempImage, o)
 }

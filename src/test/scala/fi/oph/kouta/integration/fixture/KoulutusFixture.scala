@@ -7,7 +7,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.KoulutusService
 import fi.oph.kouta.servlet.KoulutusServlet
@@ -22,7 +22,7 @@ trait KoulutusFixture extends KoulutusDbFixture {
 
   val KoulutusPath = "/koulutus"
 
-  protected lazy val koulutusService: KoulutusService = new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3Service, new AuditLog(MockAuditLogger))
+  protected lazy val koulutusService: KoulutusService = new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger))
 
   addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
 

@@ -6,7 +6,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
-import fi.oph.kouta.images.{S3Service, TeemakuvaService}
+import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
@@ -17,9 +17,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object KoulutusService extends KoulutusService(SqsInTransactionService, S3Service, AuditLog)
+object KoulutusService extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog)
 
-class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
+class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
   extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus] with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus

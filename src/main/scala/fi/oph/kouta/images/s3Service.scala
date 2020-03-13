@@ -27,22 +27,9 @@ object S3ClientFactory {
     )
 }
 
-object S3Service extends S3Service(S3ClientFactory.create(), AuditLog)
+object S3ImageService extends S3ImageService(S3ClientFactory.create(), AuditLog)
 
-abstract class ImageType(val contentType: String, val extension: String) extends Product with Serializable
-
-object ImageType {
-  case object Jpeg extends ImageType("image/jpeg", "jpg")
-  case object Png extends ImageType("image/png", "png")
-  case object Svg extends ImageType("image/svg+xml", "svg")
-
-  val allowedTypes = Set(Jpeg, Png, Svg)
-  val typeMap: Map[String, ImageType] = allowedTypes.map(t => t.contentType -> t).toMap
-
-  def get(contentType: String): Option[ImageType] = typeMap.get(contentType)
-}
-
-class S3Service(private val s3Client: AmazonS3, auditLog: AuditLog) extends Logging {
+class S3ImageService(private val s3Client: AmazonS3, auditLog: AuditLog) extends Logging {
 
   lazy val config: S3Configuration = KoutaConfigurationFactory.configuration.s3Configuration
 
@@ -53,20 +40,20 @@ class S3Service(private val s3Client: AmazonS3, auditLog: AuditLog) extends Logg
   lazy val publicUrl: Regex = s"${config.imageBucketPublicUrl}/(.*)".r
   lazy val tempUrl: Regex = s"${config.imageBucketPublicUrl}/temp/(.*)".r
 
-  def storeTempImage(imageType: ImageType, imageData: Array[Byte])(implicit authenticated: Authenticated): String = {
-    val extension = imageType.extension
+  def storeTempImage(image: Image)(implicit authenticated: Authenticated): String = {
+    val extension = image.format.extension
     val key = getTempKey(s"${UUID.randomUUID}.$extension")
-    storeImage(key, imageType, imageData)
+    storeImage(key, image)
   }
 
-  def storeImage(key: String, imageType: ImageType, imageData: Array[Byte])(implicit authenticated: Authenticated): String = {
+  def storeImage(key: String, image: Image)(implicit authenticated: Authenticated): String = {
     val metadata = new ObjectMetadata()
-    metadata.setContentType(imageType.contentType)
-    metadata.setContentLength(imageData.length)
+    metadata.setContentType(image.format.contentType)
+    metadata.setContentLength(image.data.length)
     metadata.setCacheControl("max-age=86400") // 24 hours
 
     s3Client.putObject(
-      new PutObjectRequest(config.imageBucket, key, new ByteArrayInputStream(imageData), metadata)
+      new PutObjectRequest(config.imageBucket, key, new ByteArrayInputStream(image.data), metadata)
         .withCannedAcl(CannedAccessControlList.PublicRead)
     )
 

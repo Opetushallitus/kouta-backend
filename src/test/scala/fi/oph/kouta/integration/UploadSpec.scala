@@ -12,8 +12,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     post(uri = TeemakuvaUploadPath, body = correctTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
       status should equal(200)
       read[ImageUrl](body).url match {
-        case s3Service.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+        case s3ImageService.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
           content should not be empty
           val Content(localData, metadata) = content.get
           localData should equal(correctTeemakuva)
@@ -73,8 +73,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     post(uri = TeemakuvaUploadPath, body = correctJpgTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/jpeg")) {
       status should equal(200)
       read[ImageUrl](body).url match {
-        case s3Service.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+        case s3ImageService.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
           content should not be empty
           val Content(localData, metadata) = content.get
           localData should equal(correctJpgTeemakuva)
@@ -114,8 +114,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     post(uri = LogoUploadPath, body = correctLogo, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
       status should equal(200)
       read[ImageUrl](body).url match {
-        case s3Service.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+        case s3ImageService.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
           content should not be empty
           val Content(localData, metadata) = content.get
           localData should equal(correctLogo)
@@ -178,8 +178,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     post(uri = LogoUploadPath, body = correctJpgTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/jpeg")) {
       status should equal(200)
       read[ImageUrl](body).url match {
-        case s3Service.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+        case s3ImageService.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
           content should not be empty
           val Content(localData, metadata) = content.get
           localData should equal(correctJpgTeemakuva)
@@ -194,8 +194,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     post(uri = LogoUploadPath, body = correctSvgLogo, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/svg+xml")) {
       status should equal(200)
       read[ImageUrl](body).url match {
-        case s3Service.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3Service.getTempKey(filename))
+        case s3ImageService.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
           content should not be empty
           val Content(localData, metadata) = content.get
           localData should equal(correctSvgLogo)

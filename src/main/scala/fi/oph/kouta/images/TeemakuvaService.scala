@@ -10,18 +10,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
 trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with HasModified[T]] extends Logging {
-  val s3Service: S3Service
+  val s3ImageService: S3ImageService
 
   def teemakuvaPrefix: String
 
-  def checkTeemakuva(entity: T): DBIO[Option[String]] = checkTempImage("Teemakuva", entity.teemakuva)
+  private def parseTempTeemakuva(entity: T): DBIO[Option[String]] = parseTempImage("Teemakuva", entity.teemakuva)
 
-  def checkTempImage(field: String, image: Option[String]): DBIO[Option[String]] =
+  protected def parseTempImage(field: String, image: Option[String]): DBIO[Option[String]] =
     Try {
       image match {
-        case Some(s3Service.tempUrl(filename)) =>
+        case Some(s3ImageService.tempUrl(filename)) =>
           Some(filename)
-        case Some(s3Service.publicUrl(_)) =>
+        case Some(s3ImageService.publicUrl(_)) =>
           None
         case None =>
           None
@@ -31,22 +31,21 @@ trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with Ha
       }
     }.toDBIO
 
-  def maybeClearTeemakuva(teemakuva: Option[String], entity: T): DBIO[T] =
-    Try {
+  private def maybeClearTeemakuva(teemakuva: Option[String], entity: T): DBIO[T] =
+    DBIO.successful(
       teemakuva
         .map(_ => entity.withTeemakuva(None))
         .getOrElse(entity)
-    }.toDBIO
+    )
 
   def checkAndMaybeClearTeemakuva(entity: T): DBIO[(Option[String], T)] =
     for {
-      tempImage <- checkTeemakuva(entity)
+      tempImage <- parseTempTeemakuva(entity)
       cleared   <- maybeClearTeemakuva(tempImage, entity)
     } yield (tempImage, cleared)
 
-  def copyTempImage(filename: String, prefix: String, entity: T)(implicit authenticated: Authenticated): String = {
-    s3Service.copyImage(s3Service.getTempKey(filename), s"$prefix/${entity.primaryId.get}/$filename")
-  }
+  protected def copyTempImage(filename: String, prefix: String, entity: T)(implicit authenticated: Authenticated): String =
+    s3ImageService.copyImage(s3ImageService.getTempKey(filename), s"$prefix/${entity.primaryId.get}/$filename")
 
   def maybeCopyTeemakuva(teemakuva: Option[String], entity: T)(implicit authenticated: Authenticated): DBIO[T] =
     Try {
@@ -58,12 +57,12 @@ trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with Ha
 
   def checkAndMaybeCopyTeemakuva(entity: T)(implicit authenticated: Authenticated): DBIO[(Option[String], T)] =
     for {
-      teemakuva <- checkTeemakuva(entity)
+      teemakuva <- parseTempTeemakuva(entity)
       e         <- maybeCopyTeemakuva(teemakuva, entity)
     } yield (teemakuva, e)
 
   def maybeDeleteTempImage(teemakuva: Option[String])(implicit authenticated: Authenticated): DBIO[_] =
     Try {
-      teemakuva.foreach(filename => s3Service.deleteImage(s3Service.getTempKey(filename)))
+      teemakuva.foreach(filename => s3ImageService.deleteImage(s3ImageService.getTempKey(filename)))
     }.toDBIO
 }
