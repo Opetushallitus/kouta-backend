@@ -30,8 +30,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
     addServlet(new ValintaperusteServlet(valintaperusteService), ValintaperustePath)
   }
 
-  private val valintaperuste = TestData.AmmValintaperuste
-  val valintaperuste2 = TestData.AmmValintaperuste
+  val valintaperuste = TestData.AmmValintaperuste
 
   def getIds(valintaperuste: Valintaperuste): Valintaperuste = {
     import slick.jdbc.PostgresProfile.api._

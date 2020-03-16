@@ -2,7 +2,6 @@ package fi.oph.kouta.integration
 
 import java.time.LocalDateTime
 
-import fi.oph.kouta.{TestData, TestOids}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -10,8 +9,9 @@ import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.{IsValid, ValidationError, Validations}
+import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.{TestData, TestOids}
 import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
@@ -91,17 +91,17 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "fail to store toteutus if koulutus does not exist" in {
-    put(ToteutusPath, toteutus, 400, Seq(ValidationError("koulutusOid", Validations.nonExistent("Koulutusta", toteutus.koulutusOid))))
+    put(ToteutusPath, toteutus, 400, "koulutusOid", nonExistent("Koulutusta", toteutus.koulutusOid))
   }
 
   it should "fail to store toteutus if toteutus tyyppi does not match koulutustyyppi of koulutus" in {
     val toteutus = TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
-    put(ToteutusPath, toteutus, 400, Seq(ValidationError("metadata.tyyppi", s"Tyyppi ei vastaa koulutuksen ($koulutusOid) tyyppiä")))
+    put(ToteutusPath, toteutus, 400, "metadata.tyyppi", s"Tyyppi ei vastaa koulutuksen ($koulutusOid) tyyppiä")
   }
 
   it should "fail to store julkaistu toteutus if the koulutus is not yet julkaistu" in {
     val koulutusOid = put(koulutus.copy(tila = Tallennettu))
-    put(ToteutusPath, toteutus(koulutusOid), 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Koulutusta", koulutusOid))))
+    put(ToteutusPath, toteutus(koulutusOid), 400, "tila", notYetJulkaistu("Koulutusta", koulutusOid))
   }
 
   it should "write create toteutus to audit log" in {
@@ -214,21 +214,21 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(TestData.YoToteutuksenMetatieto))
-    update(ToteutusPath, thisToteutus, lastModified, 400, Seq(ValidationError("metadata.tyyppi", Validations.tyyppiMismatch("koulutuksen", koulutusOid))))
+    update(ToteutusPath, thisToteutus, lastModified, 400, "metadata.tyyppi", tyyppiMismatch("koulutuksen", koulutusOid))
   }
 
   it should "fail to update julkaistu toteutus if the koulutus is not yet julkaistu" in {
     val koulutusOid = put(koulutus.copy(tila = Tallennettu))
     val oid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
     val lastModified = get(oid, toteutus(oid, koulutusOid).copy(tila = Tallennettu))
-    update(ToteutusPath, toteutus(oid, koulutusOid), lastModified, 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Koulutusta", koulutusOid))))
+    update(ToteutusPath, toteutus(oid, koulutusOid), lastModified, 400, "tila", notYetJulkaistu("Koulutusta", koulutusOid))
   }
 
   it should "fail to update toteutus if koulutus does not exist" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val randomOid = TestOids.randomKoulutusOid.s
-    update(ToteutusPath, toteutus(oid, randomOid), lastModified,400, Seq(ValidationError("koulutusOid", Validations.nonExistent("Koulutusta", randomOid))))
+    update(ToteutusPath, toteutus(oid, randomOid), lastModified,400, "koulutusOid", nonExistent("Koulutusta", randomOid))
   }
 
   it should "write toteutus update to audit log" in {

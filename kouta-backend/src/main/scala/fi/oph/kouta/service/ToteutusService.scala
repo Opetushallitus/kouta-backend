@@ -83,7 +83,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
   private def checkKoulutus(toteutus: Toteutus): Unit = {
-    val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map(_._1).getOrElse(singleError("koulutusOid", Validations.nonExistent("Koulutusta", toteutus.koulutusOid)))
+    val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map(_._1)
+      .getOrElse(singleError("koulutusOid", Validations.nonExistent("Koulutusta", toteutus.koulutusOid)))
+
     if (koulutus.tila != Julkaistu && toteutus.tila == Julkaistu) {
       singleError("tila", Validations.notYetJulkaistu("Koulutusta", toteutus.koulutusOid))
     }

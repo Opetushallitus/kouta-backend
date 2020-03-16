@@ -42,7 +42,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   it should "allow a user of the valintaperuste organization to read the valintaperuste" in {
     val id = put(valintaperuste(sorakuvausId))
-    get(id, crudSessions(valintaperuste2.organisaatioOid), valintaperuste(id, sorakuvausId))
+    get(id, crudSessions(valintaperuste.organisaatioOid), valintaperuste(id, sorakuvausId))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
@@ -94,7 +94,22 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = testUser.oid))
   }
 
-  it should "write create valintaperuste in log" in {
+  it should "fail to store valintaperuste if sorakuvaus doesn't exist" in {
+    val sorakuvausId = UUID.randomUUID()
+    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "sorakuvausId", nonExistent("Sorakuvausta", sorakuvausId))
+  }
+
+  it should "fail to store julkaistu valintaperuste if sorakuvaus is not yet julkaistu" in {
+    val sorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
+    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "tila", notYetJulkaistu("Sorakuvausta", sorakuvausId))
+  }
+
+  it should "fail to store valintaperuste if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
+    val sorakuvausId = put(TestData.YoSorakuvaus)
+    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
+  }
+
+  it should "write create valintaperuste in audit log" in {
     val sorakuvausId = put(sorakuvaus)
     MockAuditLogger.clean()
     val id = put(valintaperuste(sorakuvausId).withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
@@ -118,7 +133,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   it should "allow a user of the valintaperuste organization to create the valintaperuste" in {
     val sorakuvausId = put(sorakuvaus)
-    put(valintaperuste(sorakuvausId), crudSessions(valintaperuste2.organisaatioOid))
+    put(valintaperuste(sorakuvausId), crudSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
@@ -181,6 +196,23 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
+  it should "fail to update valintaperuste if sorakuvaus doesn't exist" in {
+    val id = put(valintaperuste(sorakuvausId))
+    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val nonExistentSorakuvausId = UUID.randomUUID()
+    update(ValintaperustePath, valintaperuste(id, nonExistentSorakuvausId), lastModified, 400, "sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId))
+  }
+
+  it should "fail to update julkaistu valintaperuste if sorakuvaus is not yet julkaistu" in {
+    val sorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
+    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "tila", notYetJulkaistu("Sorakuvausta", sorakuvausId))
+  }
+
+  it should "fail to update valintaperuste if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
+    val sorakuvausId = put(TestData.YoSorakuvaus)
+    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
+  }
+
   it should "write valintaperuste update to audit log" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
@@ -210,7 +242,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "allow a user of the valintaperuste organization to update the valintaperuste" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(valintaperuste2.organisaatioOid))
+    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
@@ -331,5 +363,4 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
     update(getIds(thisValintaperusteWithOid.copy(tila = Arkistoitu)), lastModified)
   }
-
 }

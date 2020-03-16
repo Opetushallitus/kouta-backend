@@ -100,37 +100,38 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   it should "fail to store hakukohde if the toteutus does not exist" in {
     val toteutusOid = TestOids.randomToteutusOid.s
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, Seq(ValidationError("toteutusOid", Validations.nonExistent("Toteutusta", toteutusOid))))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
   }
 
   it should "fail to store hakukohde if the haku does not exist" in {
     val hakuOid = TestOids.randomHakuOid.s
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, Seq(ValidationError("hakuOid", Validations.nonExistent("Hakua", hakuOid))))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "hakuOid", nonExistent("Hakua", hakuOid))
   }
 
   it should "fail to store hakukohde if the valintaperuste does not exist" in {
     val valintaperusteId = UUID.randomUUID()
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, Seq(ValidationError("valintaperusteId", Validations.nonExistent("Valintaperustetta", valintaperusteId))))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId))
   }
 
   it should "fail to store julkaistu hakukohde if the toteutus is not yet julkaistu" in {
     val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Toteutusta", toteutusOid))))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
   }
 
   it should "fail to store julkaistu hakukohde if the haku is not yet julkaistu" in {
     val hakuOid = put(haku.copy(tila = Tallennettu))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Hakua", hakuOid))))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Hakua", hakuOid))
   }
 
   it should "fail to store julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
     val valintaperusteId = put(valintaperuste(sorakuvausId).copy(tila = Tallennettu, metadata = None))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Valintaperustetta", valintaperusteId))))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Valintaperustetta", valintaperusteId))
   }
 
   it should "fail to store hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
+    val sorakuvausId = put(TestData.YoSorakuvaus)
     val valintaperusteId = put(valintaperuste(sorakuvausId).copy(koulutustyyppi = Yo, metadata = Some(TestData.YoValintaperusteMetadata)))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, Seq(ValidationError("valintaperusteId", s"Toteutuksen ($toteutusOid) tyyppi ei vastaa valintaperusteen ($valintaperusteId) tyyppiä")))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", s"Toteutuksen ($toteutusOid) tyyppi ei vastaa valintaperusteen ($valintaperusteId) tyyppiä")
   }
 
   it should "write create hakukohde to audit log" in {
@@ -217,7 +218,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val toteutusOid = TestOids.randomToteutusOid
     val updatedHakukohde = tallennettuHakukohde(oid).copy(toteutusOid = toteutusOid)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, Seq(ValidationError("toteutusOid", Validations.nonExistent("Toteutusta", toteutusOid))))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
   }
 
   it should "fail to update hakukohde if the haku does not exist" in {
@@ -225,7 +226,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val hakuOid = TestOids.randomHakuOid
     val updatedHakukohde = tallennettuHakukohde(oid).copy(hakuOid = hakuOid)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, Seq(ValidationError("hakuOid", Validations.nonExistent("Hakua", hakuOid))))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "hakuOid", nonExistent("Hakua", hakuOid))
   }
 
   it should "fail to update hakukohde if the valintaperuste does not exist" in {
@@ -234,7 +235,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val lastModified = get(oid, savedHakukohde)
     val valintaperusteId = UUID.randomUUID()
     val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, Seq(ValidationError("valintaperusteId", Validations.nonExistent("Valintaperustetta", valintaperusteId))))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId))
   }
 
   it should "fail to update julkaistu hakukohde if the toteutus is not yet julkaistu" in {
@@ -243,7 +244,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val savedHakukohde = tallennettuHakukohde(oid).copy(toteutusOid = ToteutusOid(toteutusOid), tila = Tallennettu)
     val lastModified = get(oid, savedHakukohde)
     val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Toteutusta", toteutusOid))))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
   }
 
   it should "fail to update julkaistu hakukohde if the haku is not yet julkaistu" in {
@@ -252,7 +253,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val savedHakukohde = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), tila = Tallennettu)
     val lastModified = get(oid, savedHakukohde)
     val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Hakua", hakuOid))))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Hakua", hakuOid))
   }
 
   it should "fail to update julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
@@ -261,16 +262,17 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val savedHakukohde = tallennettuHakukohde(oid).copy(valintaperusteId = Some(valintaperusteId), tila = Tallennettu)
     val lastModified = get(oid, savedHakukohde)
     val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, Seq(ValidationError("tila", Validations.notYetJulkaistu("Valintaperustetta", valintaperusteId))))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Valintaperustetta", valintaperusteId))
   }
 
   it should "fail to update hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
     val oid = put(hakukohde(toteutusOid, hakuOid))
     val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
     val lastModified = get(oid, savedHakukohde)
+    val sorakuvausId = put(TestData.YoSorakuvaus)
     val valintaperusteId = put(TestData.YoValintaperuste.copy(sorakuvausId = Some(sorakuvausId)))
     val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, Seq(ValidationError("valintaperusteId", Validations.tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
   }
 
   it should "write hakukohde update to audit log" in {

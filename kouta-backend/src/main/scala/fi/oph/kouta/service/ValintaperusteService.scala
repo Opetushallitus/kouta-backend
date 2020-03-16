@@ -6,12 +6,13 @@ import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
+import fi.oph.kouta.domain.{HakukohdeListItem, Julkaistu, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, SorakuvausDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,13 +30,17 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) { v =>
-      withValidation(v, None)(doPut(v))
+      withValidation(valintaperuste, None) {
+        checkSorakuvaus(v)
+        doPut(v)
+      }
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get), valintaperuste) { (oldValintaperuste, v) =>
       withValidation(v, Some(oldValintaperuste)) {
+        checkSorakuvaus(v)
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
     }.nonEmpty
@@ -59,6 +64,20 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     list(organisaatioOid).map(_.id) match {
       case Nil               => ValintaperusteSearchResult()
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
+    }
+
+  private def checkSorakuvaus(valintaperuste: Valintaperuste): Unit =
+    valintaperuste.sorakuvausId.foreach { sorakuvausId =>
+      val sorakuvaus = SorakuvausDAO.get(sorakuvausId).map(_._1)
+        .getOrElse(singleError("sorakuvausId", Validations.nonExistent("Sorakuvausta", sorakuvausId)))
+
+      if (sorakuvaus.tila != Julkaistu && valintaperuste.tila == Julkaistu) {
+        singleError("tila", Validations.notYetJulkaistu("Sorakuvausta", sorakuvausId))
+      }
+
+      if (valintaperuste.koulutustyyppi != sorakuvaus.koulutustyyppi) {
+        singleError("koulutustyyppi", Validations.tyyppiMismatch("sorakuvauksen", sorakuvausId))
+      }
     }
 
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
