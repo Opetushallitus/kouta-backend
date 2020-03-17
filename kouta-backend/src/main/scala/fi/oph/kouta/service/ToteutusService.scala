@@ -84,15 +84,15 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   private def checkKoulutus(toteutus: Toteutus): Unit = {
     val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map(_._1)
-      .getOrElse(singleError("koulutusOid", Validations.nonExistent("Koulutusta", toteutus.koulutusOid)))
+      .getOrElse(singleValidationError("koulutusOid", Validations.nonExistent("Koulutusta", toteutus.koulutusOid)))
 
     if (koulutus.tila != Julkaistu && toteutus.tila == Julkaistu) {
-      singleError("tila", Validations.notYetJulkaistu("Koulutusta", toteutus.koulutusOid))
+      singleValidationError("tila", Validations.notYetJulkaistu("Koulutusta", toteutus.koulutusOid))
     }
 
     toteutus.metadata.map(_.tyyppi) collect {
       case tyyppi if tyyppi != koulutus.koulutustyyppi =>
-        singleError("metadata.tyyppi", Validations.tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
+        singleValidationError("metadata.tyyppi", Validations.tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
     }
   }
 

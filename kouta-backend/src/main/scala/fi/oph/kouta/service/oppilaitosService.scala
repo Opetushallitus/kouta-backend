@@ -11,6 +11,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -106,22 +107,35 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid =
     authorizePut(oppilaitoksenOsa) { o =>
-      withValidation(o, None)(doPut(o)).oid
-    }
+      withValidation(oppilaitoksenOsa, None) {
+        checkOppilaitos(o)
+        doPut(o)
+      }
+    }.oid
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), oppilaitoksenOsa) { (oldOsa, o) =>
       withValidation(o, Some(oldOsa)) {
+        checkOppilaitos(o)
         doUpdate(o, notModifiedSince, oldOsa)
       }
     }.nonEmpty
 
+  private def checkOppilaitos(oppilaitoksenOsa: OppilaitoksenOsa): Unit = {
+    val oppilaitos = OppilaitosDAO.get(oppilaitoksenOsa.oppilaitosOid).map(_._1)
+      .getOrElse(singleValidationError("oppilaitosOid", Validations.nonExistent("Oppilaitosta", oppilaitoksenOsa.oppilaitosOid)))
+
+    if (oppilaitos.tila != Julkaistu && oppilaitoksenOsa.tila == Julkaistu) {
+      singleValidationError("oppilaitosOid", Validations.notYetJulkaistu("Oppilaitosta", oppilaitoksenOsa.oppilaitosOid))
+    }
+  }
+
   private def doPut(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OppilaitoksenOsa =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _ <- OppilaitoksenOsaDAO.oppilaitosExists(oppilaitoksenOsa)
+        _          <- OppilaitoksenOsaDAO.oppilaitosExists(oppilaitoksenOsa)
         (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitoksenOsa)
-        o <- OppilaitoksenOsaDAO.getPutActions(o)
+        o          <- OppilaitoksenOsaDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
         _          <- index(Some(o))
@@ -135,9 +149,9 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
   private def doUpdate(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant, before: OppilaitoksenOsa)(implicit authenticated: Authenticated): Option[OppilaitoksenOsa] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _ <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
+        _          <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
-        o <- OppilaitoksenOsaDAO.getUpdateActions(o)
+        o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, o)

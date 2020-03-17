@@ -69,14 +69,14 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   private def checkSorakuvaus(valintaperuste: Valintaperuste): Unit =
     valintaperuste.sorakuvausId.foreach { sorakuvausId =>
       val sorakuvaus = SorakuvausDAO.get(sorakuvausId).map(_._1)
-        .getOrElse(singleError("sorakuvausId", Validations.nonExistent("Sorakuvausta", sorakuvausId)))
+        .getOrElse(singleValidationError("sorakuvausId", Validations.nonExistent("Sorakuvausta", sorakuvausId)))
 
       if (sorakuvaus.tila != Julkaistu && valintaperuste.tila == Julkaistu) {
-        singleError("tila", Validations.notYetJulkaistu("Sorakuvausta", sorakuvausId))
+        singleValidationError("tila", Validations.notYetJulkaistu("Sorakuvausta", sorakuvausId))
       }
 
       if (valintaperuste.koulutustyyppi != sorakuvaus.koulutustyyppi) {
-        singleError("koulutustyyppi", Validations.tyyppiMismatch("sorakuvauksen", sorakuvausId))
+        singleValidationError("koulutustyyppi", Validations.tyyppiMismatch("sorakuvauksen", sorakuvausId))
       }
     }
 

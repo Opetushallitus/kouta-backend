@@ -18,7 +18,7 @@ trait ValidatingService[E <: Validatable] {
     }
   }
 
-  def singleError(path: String, msg: String) = throw KoutaValidationException(Seq(ValidationError(path, msg)))
+  def singleValidationError(path: String, msg: String) = throw KoutaValidationException(Seq(ValidationError(path, msg)))
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException

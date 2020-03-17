@@ -58,36 +58,36 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     }
 
   private def checkToteutus(hakukohde: Hakukohde): Toteutus = {
-    val toteutus = ToteutusDAO.get(hakukohde.toteutusOid).map(_._1).getOrElse(singleError("toteutusOid", Validations.nonExistent("Toteutusta", hakukohde.toteutusOid)))
+    val toteutus = ToteutusDAO.get(hakukohde.toteutusOid).map(_._1).getOrElse(singleValidationError("toteutusOid", Validations.nonExistent("Toteutusta", hakukohde.toteutusOid)))
     if (toteutus.tila != Julkaistu && hakukohde.tila == Julkaistu) {
-      singleError("tila", Validations.notYetJulkaistu("Toteutusta", hakukohde.toteutusOid))
+      singleValidationError("tila", Validations.notYetJulkaistu("Toteutusta", hakukohde.toteutusOid))
     }
     toteutus
   }
 
   private def checkHaku(hakukohde: Hakukohde): Unit = {
     val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1).getOrElse(
-      singleError("hakuOid", Validations.nonExistent("Hakua", hakukohde.hakuOid))
+      singleValidationError("hakuOid", Validations.nonExistent("Hakua", hakukohde.hakuOid))
     )
 
     if (haku.tila != Julkaistu && hakukohde.tila == Julkaistu) {
-      singleError("tila", Validations.notYetJulkaistu("Hakua", hakukohde.hakuOid))
+      singleValidationError("tila", Validations.notYetJulkaistu("Hakua", hakukohde.hakuOid))
     }
   }
 
   private def checkValintaperuste(hakukohde: Hakukohde, toteutus: Toteutus): Unit = {
     hakukohde.valintaperusteId foreach { valintaperusteId =>
       val valintaperuste = ValintaperusteDAO.get(valintaperusteId).map(_._1).getOrElse(
-        singleError("valintaperusteId", Validations.nonExistent("Valintaperustetta", valintaperusteId))
+        singleValidationError("valintaperusteId", Validations.nonExistent("Valintaperustetta", valintaperusteId))
       )
 
       if (valintaperuste.tila != Julkaistu && hakukohde.tila == Julkaistu) {
-        singleError("tila", Validations.notYetJulkaistu("Valintaperustetta", valintaperusteId))
+        singleValidationError("tila", Validations.notYetJulkaistu("Valintaperustetta", valintaperusteId))
       }
 
       toteutus.metadata.map(_.tyyppi) collect {
         case tyyppi if tyyppi != valintaperuste.koulutustyyppi =>
-          singleError("valintaperusteId", Validations.tyyppiMismatch("Toteutuksen", toteutus.oid.get, "valintaperusteen", valintaperusteId))
+          singleValidationError("valintaperusteId", Validations.tyyppiMismatch("Toteutuksen", toteutus.oid.get, "valintaperusteen", valintaperusteId))
       }
     }
   }
