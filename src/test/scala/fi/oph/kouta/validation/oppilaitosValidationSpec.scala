@@ -29,6 +29,10 @@ class OppilaitosValidationSpec extends BaseValidationSpec[Oppilaitos] {
   it should "fail if teemakuva is not a proper url" in {
     failsValidation(min.copy(teemakuva = Some("url")), "teemakuva", invalidUrl("url"))
   }
+
+  it should "fail if logo is not a proper url" in {
+    failsValidation(min.copy(logo = Some("ftp://url.fi/ftp-logo")), "logo", invalidUrl("ftp://url.fi/ftp-logo"))
+  }
 }
 
 class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[OppilaitosMetadata] {

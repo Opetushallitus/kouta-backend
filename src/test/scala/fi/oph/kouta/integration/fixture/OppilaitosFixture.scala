@@ -7,7 +7,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.{MockAuditLogger, MockS3Service}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.service.OppilaitosService
 import fi.oph.kouta.servlet.OppilaitosServlet
@@ -21,7 +21,7 @@ trait OppilaitosFixture { this: KoutaIntegrationSpec =>
   val OppilaitosPath = "/oppilaitos"
 
   protected lazy val oppilaitosService: OppilaitosService =
-    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3Service, new AuditLog(MockAuditLogger))
+    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger))
 
   addServlet(new OppilaitosServlet(oppilaitosService), OppilaitosPath)
 

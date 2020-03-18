@@ -5,8 +5,9 @@ import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
+import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
-import fi.oph.kouta.indexing.{S3Service, SqsInTransactionService}
 import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -14,14 +15,15 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Service, AuditLog)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog)
 
-class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
-  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with TeemakuvaService[OrganisaatioOid, Oppilaitos] {
+class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
+  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
 
   val teemakuvaPrefix = "oppilaitos-teemakuva"
+  val logoPrefix = "oppilaitos-logo"
 
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] =
     authorizeGet(OppilaitosDAO.get(oid))
@@ -52,14 +54,17 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitos)
+        (logo, o)  <- checkAndMaybeClearLogo(o)
         o          <- OppilaitosDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
-        o          <- teema.map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
+        o          <- maybeCopyLogo(logo, o)
+        o          <- teema.orElse(logo).map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
-      } yield (teema, o)
-    }.map { case (teema, o) =>
+      } yield (teema, logo, o)
+    }.map { case (teema, logo, o) =>
       maybeDeleteTempImage(teema)
+      maybeDeleteTempImage(logo)
       o
     }.get
 
@@ -68,12 +73,14 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
       for {
         _          <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
+        (logo, o)  <- checkAndMaybeCopyLogo(o)
         o          <- OppilaitosDAO.getUpdateActions(o)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
-      } yield (teema, o)
-    }.map { case (teema, o) =>
+      } yield (teema, logo, o)
+    }.map { case (teema, logo, o) =>
       maybeDeleteTempImage(teema)
+      maybeDeleteTempImage(logo)
       o
     }.get
 
@@ -81,9 +88,9 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
 }
 
-object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3Service, AuditLog)
+object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog)
 
-class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3Service: S3Service, auditLog: AuditLog)
+class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
   extends ValidatingService[OppilaitoksenOsa]
     with RoleEntityAuthorizationService
     with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa] {
@@ -120,7 +127,6 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
       maybeDeleteTempImage(teema)
       o
     }.get
-
 
   private def doUpdate(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant, before: OppilaitoksenOsa)(implicit authenticated: Authenticated): Option[OppilaitoksenOsa] =
     KoutaDatabase.runBlockingTransactionally {

@@ -3,11 +3,11 @@ package fi.oph.kouta.integration.fixture
 import java.nio.file.{Files, Paths}
 
 import com.amazonaws.services.s3.model.ObjectMetadata
-import fi.oph.kouta.indexing.S3Service
+import fi.oph.kouta.images.{ImageServlet, S3ImageService}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.integration.fixture.MockS3Client.Content
-import fi.oph.kouta.mocks.MockS3Service
-import fi.oph.kouta.servlet.UploadServlet
+import fi.oph.kouta.mocks.MockS3ImageService
+import fi.oph.kouta.servlet.{ImageSizeSpecs, UploadServlet}
 import org.scalatest.BeforeAndAfterEach
 
 trait UploadFixture extends BeforeAndAfterEach {
@@ -18,24 +18,30 @@ trait UploadFixture extends BeforeAndAfterEach {
     MockS3Client.reset()
   }
 
-  val UploadPath = "/upload"
+  val UploadPath          = "/upload"
   val TeemakuvaUploadPath = s"$UploadPath/teemakuva"
+  val LogoUploadPath      = s"$UploadPath/logo"
 
-  val ImageBucket = MockS3Service.config.imageBucket
-  val PublicImageServer = MockS3Service.config.imageBucketPublicUrl
+  val ImageBucket       = MockS3ImageService.config.imageBucket
+  val PublicImageServer = MockS3ImageService.config.imageBucketPublicUrl
 
-  protected lazy val s3Service: S3Service = MockS3Service
+  protected lazy val s3ImageService: S3ImageService = MockS3ImageService
 
   val MaxSizeInTest = 20000
 
-  addServlet(new UploadServlet(s3Service, MaxSizeInTest), UploadPath)
+  addServlet(TestUploadServlet, UploadPath)
 
-  def getResourceImage(filename: String) = Files.readAllBytes(Paths.get(getClass.getClassLoader.getResource(s"files/$filename").toURI))
+  def getResourceImage(filename: String): Array[Byte] =
+    Files.readAllBytes(Paths.get(getClass.getClassLoader.getResource(s"files/$filename").toURI))
 
-  lazy val correctTeemakuva: Array[Byte] = getResourceImage("correct-header.png")
+  lazy val correctTeemakuva: Array[Byte]    = getResourceImage("correct-header.png")
+  lazy val correctLogo: Array[Byte]         = getResourceImage("correct-logo.png")
   lazy val correctJpgTeemakuva: Array[Byte] = getResourceImage("correct-header.jpg")
-  lazy val tooLargeTeemakuva: Array[Byte] = getResourceImage("too-large-header.png")
-  lazy val tooSmallHeader: Array[Byte] = getResourceImage("too-small-header.png")
+  lazy val tooLargeTeemakuva: Array[Byte]   = getResourceImage("too-large-header.png")
+  lazy val tooSmallHeader: Array[Byte]      = getResourceImage("too-small-header.png")
+  lazy val tooSmallLogo: Array[Byte]        = getResourceImage("too-small-logo.png")
+  lazy val correctSvgLogo: Array[Byte]      = getResourceImage("correct-logo.svg")
+  lazy val randomXml: Array[Byte]           = getResourceImage("random-xml.svg")
 
   def saveLocalPng(key: String): Unit = {
     val metadata = new ObjectMetadata()
@@ -53,4 +59,8 @@ trait UploadFixture extends BeforeAndAfterEach {
     returnedMeta.getContentType should equal("image/png")
   }
 
+  object TestUploadServlet extends UploadServlet(s3ImageService) {
+    override val teemakuvaSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = MaxSizeInTest, minWidth = 1260, minHeight = 400)
+    override val logoSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = MaxSizeInTest, minWidth = 100, minHeight = 100)
+  }
 }

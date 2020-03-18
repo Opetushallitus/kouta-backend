@@ -162,6 +162,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val SorakuvausIdKey = "sorakuvaus"
   val OppilaitosOidKey = "oppilaitosOid"
   val TeemakuvaKey = "teemakuva"
+  val LogoKey = "logo"
 
   def formatModified(date: LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
 
@@ -324,6 +325,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/oppilaitos-teemakuva/oid/kuva.jpg",
+    LogoKey -> "https://testi.fi/oppilaitos-logo/oid/logo.png",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.JulkaistuOppilaitos.metadata.get)
   )
@@ -514,6 +516,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
       params.get(TeemakuvaKey),
+      params.get(LogoKey),
       Some(parseModified(params(ModifiedKey)))
     ))
   }
