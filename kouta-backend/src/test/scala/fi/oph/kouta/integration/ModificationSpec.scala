@@ -21,8 +21,6 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     updateTestData()
   }
 
-  def nTimes[T](f: () => T, n: Int = 15) = (0 to n).map(i => f()).toList
-
   def iHakukohde(i: Int) = hakukohde(hakukohdeOids(i), toteutusOids(i), hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)
 
   var koulutusOids: List[String] = List()
@@ -30,21 +28,20 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   var hakuOids: List[String] = List()
   var valintaperusteIds: List[UUID] = List()
   var hakukohdeOids: List[String] = List()
+  var sorakuvausIds: List[UUID] = List()
 
   var timestampBeforeAllModifications = ""
   var timestampAfterInserts = ""
   var timestampAfterAllModifications = ""
 
-  var sorakuvausId: UUID = _
-
   def createTestData(n: Int = 10) = {
     timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
-    koulutusOids = nTimes(() => put(koulutus.copy(tila = Tallennettu)), n)
+    koulutusOids = List.fill(n)(put(koulutus.copy(tila = Tallennettu)))
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid).copy(tila = Tallennettu)))
-    hakuOids = nTimes(() => put(haku), n)
-    sorakuvausId = put(sorakuvaus)
-    valintaperusteIds = nTimes(() => put(valintaperuste(sorakuvausId)), n)
+    hakuOids = List.fill(n)(put(haku))
+    sorakuvausIds = List.fill(n)(put(sorakuvaus))
+    valintaperusteIds = sorakuvausIds.map(id => put(valintaperuste(id)))
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) =>
       put(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu))
     }
@@ -66,6 +63,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     updateInHakukohteenLiitteetTable(10)
     updateInHakukohteenValintakokeetTable(11)
     updateInValintaperusteetTable(12)
+    updateInSorakuvauksetTable(13)
     Thread.sleep(1000)
     timestampAfterAllModifications = renderHttpDate(now())
   }
@@ -82,7 +80,8 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def updateInHakukohteenHakuajatTable(i: Int) = update(iHakukohde(i).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(5000))))), timestampAfterInserts)
   def updateInHakukohteenLiitteetTable(i: Int) = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"liitetyypitamm_$i#1")))), timestampAfterInserts)
   def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"valintakokeentyyppi_$i#1")))), timestampAfterInserts)
-  def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), sorakuvausId, Arkistoitu), timestampAfterInserts)
+  def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), sorakuvausIds(i), Arkistoitu), timestampAfterInserts)
+  def updateInSorakuvauksetTable(i: Int) = update(sorakuvaus(sorakuvausIds(i), Tallennettu), timestampAfterInserts)
 
   "Modified since" should "return 401 without a valid session" in {
 
@@ -123,6 +122,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
       result.haut should contain theSameElementsAs List(hakuOids(6), hakuOids(7)).map(HakuOid)
       result.hakukohteet should contain theSameElementsAs List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)).map(HakukohdeOid)
       result.valintaperusteet should contain theSameElementsAs List(valintaperusteIds(12))
+      result.sorakuvaukset should contain theSameElementsAs List(sorakuvausIds(13))
     }
   }
 
@@ -138,6 +138,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
       result.haut should contain theSameElementsAs hakuOids.map(HakuOid)
       result.hakukohteet should contain theSameElementsAs hakukohdeOids.map(HakukohdeOid)
       result.valintaperusteet should contain theSameElementsAs valintaperusteIds
+      result.sorakuvaukset should contain theSameElementsAs sorakuvausIds
     }
   }
 
@@ -153,6 +154,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
       result.haut should be(empty)
       result.hakukohteet should be(empty)
       result.valintaperusteet should be(empty)
+      result.sorakuvaukset should be(empty)
     }
   }
 }

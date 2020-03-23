@@ -316,6 +316,20 @@ package object domain {
       |            example:
       |              - ea596a9c-5940-497e-b5b7-aded3a2352a7
       |              - ea596a9c-5940-497e-b5b7-aded3a2352a8
+      |        oppilaitokset:
+      |          type: array
+      |          items:
+      |            type: string
+      |            example:
+      |              - 1.2.246.562.10.00000000000000000009
+      |              - 1.2.246.562.10.00000000000000000008
+      |        sorakuvaukset:
+      |          type: array
+      |          items:
+      |            type: string
+      |            example:
+      |              - 09a23d0c-3a6e-403b-b3d6-cd659ec763f8
+      |              - d9afdef2-ae7a-4e78-8366-ab8f97b1fd25
       |""".stripMargin
 
 
@@ -451,7 +465,8 @@ package object domain {
                             haut: Seq[HakuOid] = Seq(),
                             hakukohteet: Seq[HakukohdeOid] = Seq(),
                             valintaperusteet: Seq[UUID] = Seq(),
-                            oppilaitokset: Seq[OrganisaatioOid] = Seq())
+                            oppilaitokset: Seq[OrganisaatioOid] = Seq(),
+                            sorakuvaukset: Seq[UUID] = Seq())
 
   trait HasTeemakuva[T] {
     val teemakuva: Option[String]
