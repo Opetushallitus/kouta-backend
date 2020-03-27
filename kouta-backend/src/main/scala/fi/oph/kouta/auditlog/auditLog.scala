@@ -91,8 +91,8 @@ class AuditLog(val logger: Logger) extends GsonSupport {
   def getUser(sessionId: UUID, session: Session)(implicit request: HttpServletRequest): User =
     getUser(Authenticated(sessionId, session))
 
-  def getUser(sessionId: UUID, session: Session, userAgent: String, ip: InetAddress): User =
-    new User(new Oid(session.personOid), ip, sessionId.toString, userAgent)
+  def getUser(sessionId: String, session: Session, userAgent: String, ip: InetAddress): User =
+    new User(new Oid(session.personOid), ip, sessionId, userAgent)
 
   private def getTarget[ID](resource: AuditResource, targetId: Option[ID]): Target.Builder =
     new Target.Builder()

@@ -1,11 +1,12 @@
 package fi.oph.kouta.util
 
+import java.net.InetAddress
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.JString
 import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
@@ -37,6 +38,7 @@ trait GenericKoutaFormats {
       stringSerializer(OrganisaatioOid),
       stringSerializer(UserOid),
       stringSerializer(GenericOid),
+      stringSerializer(InetAddress.getByName, (ip: InetAddress) => ip.getHostAddress),
     )
 
   private def localDateTimeSerializer = new CustomSerializer[LocalDateTime](_ => ( {
@@ -51,9 +53,13 @@ trait GenericKoutaFormats {
     case k: Kieli => k.toString
   }))
 
-  private def stringSerializer[A: Manifest](construct: String => A) = new CustomSerializer[A](_ => ( {
-    case JString(s) => construct(s)
-  }, {
-    case a: A => JString(a.toString)
-  }))
+  private def stringSerializer[A: Manifest](construct: String => A): CustomSerializer[A] =
+    stringSerializer(construct, (a: A) => a.toString)
+
+  private def stringSerializer[A: Manifest](construct: String => A, deconstruct: A => String) =
+    new CustomSerializer[A](_ => ( {
+      case JString(s) => construct(s)
+    }, {
+      case a: A => JString(deconstruct(a))
+    }))
 }

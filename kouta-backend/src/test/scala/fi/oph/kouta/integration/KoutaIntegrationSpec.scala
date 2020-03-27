@@ -117,7 +117,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
 
   def addTestSessions(): Unit = {
     Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid, YoOid, AmmOid).foreach { org =>
-      crudSessions.update(org, addTestSession(roleEntities.map(re => re.Crud.asInstanceOf[Role]), org))
+      crudSessions.update(org, addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), org))
     }
 
     Seq(ChildOid, YoOid, AmmOid).foreach { org =>
