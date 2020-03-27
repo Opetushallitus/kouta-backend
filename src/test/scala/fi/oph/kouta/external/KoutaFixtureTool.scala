@@ -119,6 +119,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val TarjoajatKey = "tarjoajat"
   val NimiKey = "nimi"
   val JulkinenKey = "julkinen"
+  val EsikatseluKey = "esikatselu"
   val MuokkaajaKey = "muokkaaja"
   val OrganisaatioKey = "organisaatio"
   val KielivalintaKey = "kielivalinta"
@@ -363,6 +364,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[KoulutusMetadata]),
       params(JulkinenKey).toBoolean,
+      params(EsikatseluKey).toBoolean,
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
