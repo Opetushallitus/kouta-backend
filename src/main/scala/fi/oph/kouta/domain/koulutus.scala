@@ -165,7 +165,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
                     modified: Option[LocalDateTime])
-  extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen {
+  extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen with Esikatselu {
 
   override def validate(): IsValid = {
     and(super.validate(),

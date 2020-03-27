@@ -479,6 +479,10 @@ package object domain {
     def withTeemakuva(teemakuva: Option[String]): T
   }
 
+  trait Esikatselu {
+    val esikatselu: Boolean = true
+  }
+
   trait HasPrimaryId[ID, T] {
     def primaryId: Option[ID]
 
