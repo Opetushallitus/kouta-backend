@@ -364,7 +364,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[KoulutusMetadata]),
       params(JulkinenKey).toBoolean,
-      params(EsikatseluKey).toBoolean,
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
