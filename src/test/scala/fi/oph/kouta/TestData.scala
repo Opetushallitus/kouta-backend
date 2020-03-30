@@ -169,8 +169,6 @@ object TestData {
     minAloituspaikat = Some(1),
     maxAloituspaikat = Some(3),
     ensikertalaisenAloituspaikat = Some(1),
-    minEnsikertalaisenAloituspaikat = Some(1),
-    maxEnsikertalaisenAloituspaikat = Some(2),
     pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_pk#1", "pohjakoulutusvaatimustoinenaste_yo#1"),
     pohjakoulutusvaatimusTarkenne = kieliMap("Pohjakoulutusvaatimuksen tarkenne"),
     muuPohjakoulutusvaatimus = Map(),

@@ -92,14 +92,6 @@ package object hakukohde {
       |          type: integer
       |          description: Hakukohteen ensikertalaisen aloituspaikkojen lukumäärä
       |          example: 50
-      |        minEnsikertalaisenAloituspaikat:
-      |          type: integer
-      |          description: Hakukohteen ensikertalaisen aloituspaikkojen minimimäärä
-      |          example: 45
-      |        maxEnsikertalaisenAloituspaikat:
-      |          type: integer
-      |          description: Hakukohteen ensikertalaisen aloituspaikkojen maksimimäärä
-      |          example: 60
       |        pohjakoulutusvaatimusKoodiUrit:
       |          type: array
       |          description: Lista toisen asteen hakukohteen pohjakoulutusvaatimuksista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/pohjakoulutusvaatimustoinenaste/1)
@@ -311,8 +303,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      minAloituspaikat: Option[Int] = None,
                      maxAloituspaikat: Option[Int] = None,
                      ensikertalaisenAloituspaikat: Option[Int] = None,
-                     minEnsikertalaisenAloituspaikat: Option[Int] = None,
-                     maxEnsikertalaisenAloituspaikat: Option[Int] = None,
                      pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
                      pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
                      muuPohjakoulutusvaatimus: Kielistetty = Map(),
@@ -344,9 +334,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     validateIfDefined[Int](maxAloituspaikat, assertNotNegative(_, "maxAloituspaikat")),
     validateMinMax(minAloituspaikat, maxAloituspaikat, "minAloituspaikat"),
     validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
-    validateIfDefined[Int](minEnsikertalaisenAloituspaikat, assertNotNegative(_, "minEnsikertalaisenAloituspaikat")),
-    validateIfDefined[Int](maxEnsikertalaisenAloituspaikat, assertNotNegative(_, "maxEnsikertalaisenAloituspaikat")),
-    validateMinMax(minEnsikertalaisenAloituspaikat, maxEnsikertalaisenAloituspaikat, "minEnsikertalaisenAloituspaikat"),
     validateIfDefined[LiitteenToimitusosoite](liitteidenToimitusosoite, _.validate(tila, kielivalinta, "liitteidenToimitusosoite")),
     validateIfNonEmpty[Liite](liitteet, "liitteet", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),

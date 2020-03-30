@@ -142,8 +142,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val MinAloituspaikatKey = "minAloituspaikat"
   val MaxAloituspaikatKey = "maxAloituspaikat"
   val EnsikertalaisenAloituspaikatKey = "ensikertalaisenAloituspaikat"
-  val MinEnsikertalaisenAloituspaikatKey = "minEnsikertalaisenAloituspaikat"
-  val MaxEnsikertalaisenAloituspaikatKey = "maxEnsikertalaisenAloituspaikat"
   val PohjakoulutusvaatimusKoodiUritKey = "pohjakoulutusvaatimusKoodiUrit"
   val PohjakoulutusvaatimusTarkenneKey = "pohjakoulutusvaatimusTarkenne"
   val ToinenAsteOnkoKaksoistutkintoKey = "toinenAsteOnkoKaksoistutkinto"
@@ -259,8 +257,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     MinAloituspaikatKey -> "99",
     MaxAloituspaikatKey -> "101",
     EnsikertalaisenAloituspaikatKey -> "0",
-    MinEnsikertalaisenAloituspaikatKey -> "0",
-    MaxEnsikertalaisenAloituspaikatKey -> "0",
     PohjakoulutusvaatimusKoodiUritKey -> "pohjakoulutusvaatimustoinenaste_01#2, pohjakoulutusvaatimustoinenaste_02#2",
     PohjakoulutusvaatimusTarkenneKey -> "Pohjakoulutusvaatimuksen tarkenne",
     ToinenAsteOnkoKaksoistutkintoKey -> "false",
@@ -445,8 +441,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(MinAloituspaikatKey).toInt),
       Some(params(MaxAloituspaikatKey).toInt),
       Some(params(EnsikertalaisenAloituspaikatKey).toInt),
-      Some(params(MinEnsikertalaisenAloituspaikatKey).toInt),
-      Some(params(MaxEnsikertalaisenAloituspaikatKey).toInt),
       params(PohjakoulutusvaatimusKoodiUritKey).split(",").map(_.trim).toSeq,
       toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),
       params.get(MuuPohjakoulutusvaatimusKey).map(toKielistetty(kielivalinta, _)).getOrElse(Map()),
@@ -798,8 +792,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(MinAloituspaikatKey).toInt),
       Some(params(MaxAloituspaikatKey).toInt),
       Some(params(EnsikertalaisenAloituspaikatKey).toInt),
-      Some(params(MinEnsikertalaisenAloituspaikatKey).toInt),
-      Some(params(MaxEnsikertalaisenAloituspaikatKey).toInt),
       Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
       UserOid(params(MuokkaajaKey)),

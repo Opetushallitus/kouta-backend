@@ -540,8 +540,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             minAloituspaikat = TestData.JulkaistuHakukohde.minAloituspaikat,
             maxAloituspaikat = TestData.JulkaistuHakukohde.maxAloituspaikat,
             ensikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.ensikertalaisenAloituspaikat,
-            minEnsikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.minEnsikertalaisenAloituspaikat,
-            maxEnsikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.maxEnsikertalaisenAloituspaikat,
             kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
             hakuajat = TestData.JulkaistuHakukohde.hakuajat,
             muokkaaja = hk1.muokkaaja,

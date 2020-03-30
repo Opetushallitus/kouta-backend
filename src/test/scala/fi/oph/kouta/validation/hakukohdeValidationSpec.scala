@@ -47,9 +47,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     failsValidation(min.copy(maxAloituspaikat = Some(-1)), "maxAloituspaikat", notNegativeMsg)
     failsValidation(min.copy(minAloituspaikat = Some(90), maxAloituspaikat = Some(1)), "minAloituspaikat", minmaxMsg(90, 1))
     failsValidation(min.copy(ensikertalaisenAloituspaikat = Some(-1)), "ensikertalaisenAloituspaikat", notNegativeMsg)
-    failsValidation(min.copy(minEnsikertalaisenAloituspaikat = Some(-1)), "minEnsikertalaisenAloituspaikat", notNegativeMsg)
-    failsValidation(min.copy(maxEnsikertalaisenAloituspaikat = Some(-1)), "maxEnsikertalaisenAloituspaikat", notNegativeMsg)
-    failsValidation(min.copy(minEnsikertalaisenAloituspaikat = Some(90), maxEnsikertalaisenAloituspaikat = Some(1)), "minEnsikertalaisenAloituspaikat", minmaxMsg(90, 1))
   }
 
   it should "fail if julkaistu hakukohde is invalid" in {
