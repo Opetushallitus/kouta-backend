@@ -139,8 +139,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val HakuaikaAlkaaKey = "hakuaikaAlkaa"
   val HakuaikaPaattyyKey = "hakuaikaPaattyy"
   val AloituspaikatKey = "aloituspaikat"
-  val MinAloituspaikatKey = "minAloituspaikat"
-  val MaxAloituspaikatKey = "maxAloituspaikat"
   val EnsikertalaisenAloituspaikatKey = "ensikertalaisenAloituspaikat"
   val PohjakoulutusvaatimusKoodiUritKey = "pohjakoulutusvaatimusKoodiUrit"
   val PohjakoulutusvaatimusTarkenneKey = "pohjakoulutusvaatimusTarkenne"
@@ -254,8 +252,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
     AloituspaikatKey -> "100",
-    MinAloituspaikatKey -> "99",
-    MaxAloituspaikatKey -> "101",
     EnsikertalaisenAloituspaikatKey -> "0",
     PohjakoulutusvaatimusKoodiUritKey -> "pohjakoulutusvaatimustoinenaste_01#2, pohjakoulutusvaatimustoinenaste_02#2",
     PohjakoulutusvaatimusTarkenneKey -> "Pohjakoulutusvaatimuksen tarkenne",
@@ -438,8 +434,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
       Some(params(KaytetaanHaunHakulomakettaKey).toBoolean),
       Some(params(AloituspaikatKey).toInt),
-      Some(params(MinAloituspaikatKey).toInt),
-      Some(params(MaxAloituspaikatKey).toInt),
       Some(params(EnsikertalaisenAloituspaikatKey).toInt),
       params(PohjakoulutusvaatimusKoodiUritKey).split(",").map(_.trim).toSeq,
       toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),

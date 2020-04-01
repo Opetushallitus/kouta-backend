@@ -43,9 +43,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
       ("pohjakoulutusvaatimusKoodiUrit[0]", validationMsg("tintti")), ("pohjakoulutusvaatimusKoodiUrit[1]", validationMsg("huuhkaja")))
 
     failsValidation(min.copy(aloituspaikat = Some(-1)), "aloituspaikat", notNegativeMsg)
-    failsValidation(min.copy(minAloituspaikat = Some(-1)), "minAloituspaikat", notNegativeMsg)
-    failsValidation(min.copy(maxAloituspaikat = Some(-1)), "maxAloituspaikat", notNegativeMsg)
-    failsValidation(min.copy(minAloituspaikat = Some(90), maxAloituspaikat = Some(1)), "minAloituspaikat", minmaxMsg(90, 1))
     failsValidation(min.copy(ensikertalaisenAloituspaikat = Some(-1)), "ensikertalaisenAloituspaikat", notNegativeMsg)
   }
 

@@ -211,8 +211,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
             ${hakukohde.kaytetaanHaunHakulomaketta},
             ${hakukohde.aloituspaikat},
-            ${hakukohde.minAloituspaikat},
-            ${hakukohde.maxAloituspaikat},
             ${hakukohde.ensikertalaisenAloituspaikat},
             ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
             ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
@@ -246,8 +244,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               hakulomake_linkki = ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
               kaytetaan_haun_hakulomaketta = ${hakukohde.kaytetaanHaunHakulomaketta},
               aloituspaikat = ${hakukohde.aloituspaikat},
-              min_aloituspaikat = ${hakukohde.minAloituspaikat},
-              max_aloituspaikat = ${hakukohde.maxAloituspaikat},
               ensikertalaisen_aloituspaikat = ${hakukohde.ensikertalaisenAloituspaikat},
               pohjakoulutusvaatimus_koodi_urit = ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
               pohjakoulutusvaatimus_tarkenne = ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
@@ -277,8 +273,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or hakulomake_linkki is distinct from ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb
             or kaytetaan_haun_hakulomaketta is distinct from ${hakukohde.kaytetaanHaunHakulomaketta}
             or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
-            or min_aloituspaikat is distinct from ${hakukohde.minAloituspaikat}
-            or max_aloituspaikat is distinct from ${hakukohde.maxAloituspaikat}
             or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
             or pohjakoulutusvaatimus_koodi_urit is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUrit}
             or pohjakoulutusvaatimus_tarkenne is distinct from ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb

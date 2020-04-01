@@ -166,8 +166,6 @@ object TestData {
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/kohteen-hakemusinfo-fi", Sv -> "https://koulu.test/kohteen-hakemusinfo-sv"),
     kaytetaanHaunHakulomaketta = Some(false),
     aloituspaikat = Some(2),
-    minAloituspaikat = Some(1),
-    maxAloituspaikat = Some(3),
     ensikertalaisenAloituspaikat = Some(1),
     pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_pk#1", "pohjakoulutusvaatimustoinenaste_yo#1"),
     pohjakoulutusvaatimusTarkenne = kieliMap("Pohjakoulutusvaatimuksen tarkenne"),

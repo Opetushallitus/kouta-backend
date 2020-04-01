@@ -80,14 +80,6 @@ package object hakukohde {
       |          type: integer
       |          description: Hakukohteen aloituspaikkojen lukumäärä
       |          example: 100
-      |        minAloituspaikat:
-      |          type: integer
-      |          description: Hakukohteen aloituspaikkojen minimimäärä
-      |          example: 75
-      |        maxAloituspaikat:
-      |          type: integer
-      |          description: Hakukohteen aloituspaikkojen maksimimäärä
-      |          example: 110
       |        ensikertalaisenAloituspaikat:
       |          type: integer
       |          description: Hakukohteen ensikertalaisen aloituspaikkojen lukumäärä
@@ -300,8 +292,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      hakulomakeLinkki: Kielistetty = Map(),
                      kaytetaanHaunHakulomaketta: Option[Boolean] = None,
                      aloituspaikat: Option[Int] = None,
-                     minAloituspaikat: Option[Int] = None,
-                     maxAloituspaikat: Option[Int] = None,
                      ensikertalaisenAloituspaikat: Option[Int] = None,
                      pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
                      pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
@@ -330,9 +320,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit", assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)),
     validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
-    validateIfDefined[Int](minAloituspaikat, assertNotNegative(_, "minAloituspaikat")),
-    validateIfDefined[Int](maxAloituspaikat, assertNotNegative(_, "maxAloituspaikat")),
-    validateMinMax(minAloituspaikat, maxAloituspaikat, "minAloituspaikat"),
     validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
     validateIfDefined[LiitteenToimitusosoite](liitteidenToimitusosoite, _.validate(tila, kielivalinta, "liitteidenToimitusosoite")),
     validateIfNonEmpty[Liite](liitteet, "liitteet", _.validate(tila, kielivalinta, _)),
