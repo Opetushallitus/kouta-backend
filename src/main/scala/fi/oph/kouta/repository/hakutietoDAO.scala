@@ -83,7 +83,7 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
   def selectHakukohteidenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakuOid, HakutietoHakukohde)]] = {
     sql"""select t.oid, h.oid, k.oid, k.nimi, k.alkamiskausi_koodi_uri, k.alkamisvuosi, k.kaytetaan_haun_alkamiskautta,
                  k.hakulomaketyyppi, k.hakulomake_ataru_id, k.hakulomake_kuvaus, k.hakulomake_linkki, k.kaytetaan_haun_hakulomaketta,
-                 k.aloituspaikat, k.min_aloituspaikat, k.max_aloituspaikat, k.ensikertalaisen_aloituspaikat,
+                 k.aloituspaikat, k.ensikertalaisen_aloituspaikat,
                  k.kaytetaan_haun_aikataulua, k.organisaatio_oid, k.muokkaaja, lower(k.system_time)
           from hakukohteet k
           inner join haut h on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
