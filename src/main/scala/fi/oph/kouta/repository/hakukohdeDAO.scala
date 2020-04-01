@@ -180,11 +180,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             hakulomake_linkki,
             kaytetaan_haun_hakulomaketta,
             aloituspaikat,
-            min_aloituspaikat,
-            max_aloituspaikat,
             ensikertalaisen_aloituspaikat,
-            min_ensikertalaisen_aloituspaikat,
-            max_ensikertalaisen_aloituspaikat,
             pohjakoulutusvaatimus_koodi_urit,
             pohjakoulutusvaatimus_tarkenne,
             muu_pohjakoulutusvaatimus_kuvaus,
@@ -213,11 +209,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
             ${hakukohde.kaytetaanHaunHakulomaketta},
             ${hakukohde.aloituspaikat},
-            ${hakukohde.minAloituspaikat},
-            ${hakukohde.maxAloituspaikat},
             ${hakukohde.ensikertalaisenAloituspaikat},
-            ${hakukohde.minEnsikertalaisenAloituspaikat},
-            ${hakukohde.maxEnsikertalaisenAloituspaikat},
             ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
             ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
             ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
@@ -250,11 +242,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               hakulomake_linkki = ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
               kaytetaan_haun_hakulomaketta = ${hakukohde.kaytetaanHaunHakulomaketta},
               aloituspaikat = ${hakukohde.aloituspaikat},
-              min_aloituspaikat = ${hakukohde.minAloituspaikat},
-              max_aloituspaikat = ${hakukohde.maxAloituspaikat},
               ensikertalaisen_aloituspaikat = ${hakukohde.ensikertalaisenAloituspaikat},
-              min_ensikertalaisen_aloituspaikat = ${hakukohde.minEnsikertalaisenAloituspaikat},
-              max_ensikertalaisen_aloituspaikat = ${hakukohde.maxEnsikertalaisenAloituspaikat},
               pohjakoulutusvaatimus_koodi_urit = ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
               pohjakoulutusvaatimus_tarkenne = ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
               muu_pohjakoulutusvaatimus_kuvaus = ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
@@ -283,11 +271,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or hakulomake_linkki is distinct from ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb
             or kaytetaan_haun_hakulomaketta is distinct from ${hakukohde.kaytetaanHaunHakulomaketta}
             or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
-            or min_aloituspaikat is distinct from ${hakukohde.minAloituspaikat}
-            or max_aloituspaikat is distinct from ${hakukohde.maxAloituspaikat}
             or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
-            or min_ensikertalaisen_aloituspaikat is distinct from ${hakukohde.minEnsikertalaisenAloituspaikat}
-            or max_ensikertalaisen_aloituspaikat is distinct from ${hakukohde.maxEnsikertalaisenAloituspaikat}
             or pohjakoulutusvaatimus_koodi_urit is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUrit}
             or pohjakoulutusvaatimus_tarkenne is distinct from ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb
             or muu_pohjakoulutusvaatimus_kuvaus is distinct from ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
@@ -318,11 +302,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              hakulomake_linkki,
              kaytetaan_haun_hakulomaketta,
              aloituspaikat,
-             min_aloituspaikat,
-             max_aloituspaikat,
              ensikertalaisen_aloituspaikat,
-             min_ensikertalaisen_aloituspaikat,
-             max_ensikertalaisen_aloituspaikat,
              pohjakoulutusvaatimus_koodi_urit,
              pohjakoulutusvaatimus_tarkenne,
              muu_pohjakoulutusvaatimus_kuvaus,

@@ -152,14 +152,6 @@ package object hakutieto {
       |                      type: integer
       |                      description: Hakukohteen ensikertalaisen aloituspaikkojen lukumäärä
       |                      example: 50
-      |                    minEnsikertalaisenAloituspaikat:
-      |                      type: integer
-      |                      description: Hakukohteen ensikertalaisen aloituspaikkojen minimimäärä
-      |                      example: 45
-      |                    maxEnsikertalaisenAloituspaikat:
-      |                      type: integer
-      |                      description: Hakukohteen ensikertalaisen aloituspaikkojen maksimimäärä
-      |                      example: 60
       |                    kaytetaanHaunAikataulua:
       |                      type: boolean
       |                      description: Käytetäänkö haun hakuaikoja vai onko hakukohteelle määritelty omat hakuajat?
@@ -215,11 +207,7 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               hakulomakeLinkki: Kielistetty = Map(),
                               kaytetaanHaunHakulomaketta: Option[Boolean] = None,
                               aloituspaikat: Option[Int] = None,
-                              minAloituspaikat: Option[Int] = None,
-                              maxAloituspaikat: Option[Int] = None,
                               ensikertalaisenAloituspaikat: Option[Int] = None,
-                              minEnsikertalaisenAloituspaikat: Option[Int] = None,
-                              maxEnsikertalaisenAloituspaikat: Option[Int] = None,
                               kaytetaanHaunAikataulua: Option[Boolean] = None,
                               hakuajat: Seq[Ajanjakso] = Seq(),
                               muokkaaja: UserOid,
