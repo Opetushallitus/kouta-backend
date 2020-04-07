@@ -78,7 +78,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   "Search koulutukset" should "search allowed koulutukset and allowed toteutus counts 1" in {
-    addMock(mockKoulutusResponse(write(List(koid1, koid2, koid4, koid5, koid6)), params, List(koid1, koid2, koid4, koid5, koid6)))
+    addMock(mockKoulutusResponse(List(koid1, koid2, koid4, koid5, koid6), params, List(koid1, koid2, koid4, koid5, koid6)))
 
     get(s"$SearchPath/koulutukset", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -90,7 +90,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "search allowed koulutukset and allowed toteutus counts 2" in {
-    addMock(mockKoulutusResponse(write(List(koid3, koid4, koid5, koid6)), params, List(koid3, koid4, koid5, koid6)))
+    addMock(mockKoulutusResponse(List(koid3, koid4, koid5, koid6), params, List(koid3, koid4, koid5, koid6)))
 
     get(s"$SearchPath/koulutukset", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (200)
@@ -102,7 +102,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "search oph koulutukset and total toteutus counts for oph organisaatio" in {
-    addMock(mockKoulutusResponse(write(List(koid4, koid5, koid6)), params, List(koid4, koid5, koid6)))
+    addMock(mockKoulutusResponse(List(koid4, koid5, koid6), params, List(koid4, koid5, koid6)))
 
     get(s"$SearchPath/koulutukset", barams(OphOid), Seq(sessionHeader(ophSession))) {
       status should equal (200)
@@ -114,7 +114,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return empty result if there are allowed koulutukset but nothing match kouta index search" in {
-    addMock(mockKoulutusResponse(write(List(koid1, koid2, koid4, koid5, koid6)), params, List()))
+    addMock(mockKoulutusResponse(List(koid1, koid2, koid4, koid5, koid6), params, List()))
 
     get(s"$SearchPath/koulutukset", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -137,7 +137,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return 500 if kouta index returns 500" in {
-    addMock(mockKoulutusResponse(write(List(koid3, koid4, koid5, koid6)), params, List(), 500))
+    addMock(mockKoulutusResponse(List(koid3, koid4, koid5, koid6), params, List(), 500))
 
     get(s"$SearchPath/koulutukset", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (500)
@@ -145,7 +145,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   "Search toteutukset" should "search allowed toteutukset and allowed hakukohde counts 1" in {
-    addMock(mockToteutusResponse(write(List(toid1, toid2, toid5)), params, List(toid1, toid2, toid5)))
+    addMock(mockToteutusResponse(List(toid1, toid2, toid5), params, List(toid1, toid2, toid5)))
 
     get(s"$SearchPath/toteutukset", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -157,7 +157,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "search allowed toteutukset and allowed toteutus counts 2" in {
-    addMock(mockToteutusResponse(write(List(toid3, toid4, toid6)), params, List(toid3, toid4, toid6)))
+    addMock(mockToteutusResponse(List(toid3, toid4, toid6), params, List(toid3, toid4, toid6)))
 
     get(s"$SearchPath/toteutukset", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (200)
@@ -169,7 +169,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return empty result if there are allowed toteutukset but nothing match kouta index search" in {
-    addMock(mockToteutusResponse(write(List(toid1, toid2, toid5)), params, List()))
+    addMock(mockToteutusResponse(List(toid1, toid2, toid5), params, List()))
 
     get(s"$SearchPath/toteutukset", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -192,7 +192,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return 500 if kouta index returns 500" in {
-    addMock(mockToteutusResponse(write(List(toid1, toid5)), params, List(), 500))
+    addMock(mockToteutusResponse(List(toid1, toid5), params, List(), 500))
 
     get(s"$SearchPath/toteutukset", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (500)
@@ -200,7 +200,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   "Search haut" should "search allowed haut and allowed hakukohde counts 1" in {
-    addMock(mockHakuResponse(write(List(hoid1, hoid3)), params, List(hoid1, hoid3)))
+    addMock(mockHakuResponse(List(hoid1, hoid3), params, List(hoid1, hoid3)))
 
     get(s"$SearchPath/haut", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -212,7 +212,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "search allowed haut and allowed hakukohde counts 2" in {
-    addMock(mockHakuResponse(write(List(hoid2, hoid3)), params, List(hoid2, hoid3)))
+    addMock(mockHakuResponse(List(hoid2, hoid3), params, List(hoid2, hoid3)))
 
     get(s"$SearchPath/haut", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (200)
@@ -224,7 +224,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return empty result if there are allowed haut but nothing match kouta index search" in {
-    addMock(mockHakuResponse(write(List(hoid1, hoid3)), params, List()))
+    addMock(mockHakuResponse(List(hoid1, hoid3), params, List()))
 
     get(s"$SearchPath/haut", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -247,7 +247,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return 500 if kouta index returns 500" in {
-    addMock(mockHakuResponse(write(List(hoid1, hoid3)), params, List(), 500))
+    addMock(mockHakuResponse(List(hoid1, hoid3), params, List(), 500))
 
     get(s"$SearchPath/haut", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (500)
@@ -255,7 +255,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   "Search hakukohteet" should "search allowed hakukohteet 1" in {
-    addMock(mockHakukohdeResponse(write(List(hkoid1, hkoid5)), params, List(hkoid1, hkoid5)))
+    addMock(mockHakukohdeResponse(List(hkoid1, hkoid5), params, List(hkoid1, hkoid5)))
 
     get(s"$SearchPath/hakukohteet", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -266,7 +266,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "search allowed hakukohteet 2" in {
-    addMock(mockHakukohdeResponse(write(List(hkoid3, hkoid4)), params, List(hkoid3, hkoid4)))
+    addMock(mockHakukohdeResponse(List(hkoid3, hkoid4), params, List(hkoid3, hkoid4)))
 
     get(s"$SearchPath/hakukohteet", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (200)
@@ -277,7 +277,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return empty result if there are allowed hakukohteet but nothing match kouta index search" in {
-    addMock(mockHakukohdeResponse(write(List(hkoid1, hkoid5)), params, List()))
+    addMock(mockHakukohdeResponse(List(hkoid1, hkoid5), params, List()))
 
     get(s"$SearchPath/hakukohteet", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -300,7 +300,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return 500 if kouta index returns 500" in {
-    addMock(mockHakukohdeResponse(write(List(hkoid1, hkoid5)), params, List(), 500))
+    addMock(mockHakukohdeResponse(List(hkoid1, hkoid5), params, List(), 500))
 
     get(s"$SearchPath/hakukohteet", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (500)
@@ -308,7 +308,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   "Search valintaperusteet" should "search allowed valintaperusteet 1" in {
-    addMock(mockValintaperusteResponse(write(List(vpid1, vpid2, vpid3, vpid5)), params, List(vpid1, vpid2, vpid3, vpid5)))
+    addMock(mockValintaperusteResponse(List(vpid1, vpid2, vpid3, vpid5), params, List(vpid1, vpid2, vpid3, vpid5)))
 
     get(s"$SearchPath/valintaperusteet", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -319,7 +319,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "search allowed valintaperusteet 2" in {
-    addMock(mockValintaperusteResponse(write(List(vpid3, vpid4, vpid5)), params, List(vpid3, vpid4, vpid5)))
+    addMock(mockValintaperusteResponse(List(vpid3, vpid4, vpid5), params, List(vpid3, vpid4, vpid5)))
 
     get(s"$SearchPath/valintaperusteet", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (200)
@@ -330,7 +330,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return empty result if there are allowed valintaperusteet but nothing match kouta index search" in {
-    addMock(mockValintaperusteResponse(write(List(vpid1, vpid2, vpid3, vpid5)), params, List()))
+    addMock(mockValintaperusteResponse(List(vpid1, vpid2, vpid3, vpid5), params, List()))
 
     get(s"$SearchPath/valintaperusteet", barams(ChildOid), Seq(sessionHeader(readSessions(ChildOid)))) {
       status should equal (200)
@@ -353,7 +353,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "return 500 if kouta index returns 500" in {
-    addMock(mockValintaperusteResponse(write(List(vpid3, vpid4, vpid5)), params, List(), 500))
+    addMock(mockValintaperusteResponse(List(vpid3, vpid4, vpid5), params, List(), 500))
 
     get(s"$SearchPath/valintaperusteet", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (500)

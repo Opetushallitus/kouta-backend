@@ -8,7 +8,6 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
-import org.json4s.jackson.Serialization.write
 
 import scala.reflect.Manifest
 
@@ -35,7 +34,7 @@ trait KoutaIndexClient extends HttpClient with Logging with KoutaJsonFormats {
 
   private def search[T](urlKey: String, keys: Seq[String], params: Map[String, String])(implicit mf: Manifest[T]): T = {
     val url = urlProperties.url(urlKey, toQueryParams(params.toSeq:_*))
-    post(url, write(keys),followRedirects = true) { response =>
+    post(url, keys.sorted, followRedirects = true) { response =>
       parse(response).extract[T]
     }
   }
