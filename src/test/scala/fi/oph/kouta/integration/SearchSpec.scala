@@ -15,7 +15,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   override val DebugJson = false
 
   var koid1, koid2, koid3, koid4, koid5, koid6: String = _
-  var toid1, toid2, toid3, toid4, toid5: String = _
+  var toid1, toid2, toid3, toid4, toid5, toid6: String = _
   var hoid1, hoid2, hoid3: String = _
   var hkoid1, hkoid2, hkoid3, hkoid4, hkoid5: String = _
   var vpid1, vpid2, vpid3, vpid4, vpid5: String = _
@@ -48,13 +48,14 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
     koid3 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
     koid4 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid), julkinen = true))
     koid5 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid, ChildOid), julkinen = true))
-    koid6 = put(koulutus.copy(organisaatioOid = OphOid))
+    koid6 = put(koulutus.copy(organisaatioOid = OphOid, tarjoajat = List(LonelyOid), julkinen = true))
 
     toid1 = put(toteutus.copy(koulutusOid = KoulutusOid(koid1), organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid)))
     toid2 = put(toteutus.copy(koulutusOid = KoulutusOid(koid2), organisaatioOid = ParentOid, tarjoajat = List(ParentOid)))
     toid3 = put(toteutus.copy(koulutusOid = KoulutusOid(koid3), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
     toid4 = put(toteutus.copy(koulutusOid = KoulutusOid(koid4), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
     toid5 = put(toteutus.copy(koulutusOid = KoulutusOid(koid5), organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid)))
+    toid6 = put(toteutus.copy(koulutusOid = KoulutusOid(koid6), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
 
     hoid1 = put(haku.copy(organisaatioOid = ParentOid))
     hoid2 = put(haku.copy(organisaatioOid = LonelyOid))
@@ -95,7 +96,19 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
       debugJson[KoulutusSearchResult](body)
       val r = read[KoulutusSearchResult](body).result
       r.map(_.oid.s) should be (List(koid6, koid5, koid4, koid3))
-      r.map(_.toteutukset) should be (List(0, 0, 1, 1))
+      r.map(_.toteutukset) should be (List(1, 0, 1, 1))
+    }
+  }
+
+  it should "search oph koulutukset and total toteutus counts for oph organisaatio" in {
+    addMock(mockKoulutusResponse(mockParams(List(koid4, koid5, koid6)), List(koid4, koid5, koid6)))
+
+    get(s"$SearchPath/koulutukset", barams(OphOid), Seq(sessionHeader(ophSession))) {
+      status should equal (200)
+      debugJson[KoulutusSearchResult](body)
+      val r = read[KoulutusSearchResult](body).result
+      r.map(_.oid.s) should be (List(koid6, koid5, koid4))
+      r.map(_.toteutukset) should be (List(1, 1, 1))
     }
   }
 
@@ -143,14 +156,14 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   it should "search allowed toteutukset and allowed toteutus counts 2" in {
-    addMock(mockToteutusResponse(mockParams(List(toid3, toid4)), List(toid3, toid4)))
+    addMock(mockToteutusResponse(mockParams(List(toid3, toid4, toid6)), List(toid3, toid4, toid6)))
 
     get(s"$SearchPath/toteutukset", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (200)
       debugJson[ToteutusSearchResult](body)
       val r = read[ToteutusSearchResult](body).result
-      r.map(_.oid.s) should be (List(toid4, toid3))
-      r.map(_.hakukohteet) should be (List(0, 2))
+      r.map(_.oid.s) should be (List(toid6, toid4, toid3))
+      r.map(_.hakukohteet) should be (List(0, 0, 2))
     }
   }
 
