@@ -18,7 +18,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog)
 
-class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService {
+class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog)
+  extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -27,16 +28,15 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
-    authorizePut(valintaperuste) {
-      withValidation(valintaperuste, None, doPut)
+    authorizePut(valintaperuste) { v =>
+      withValidation(v, None, doPut)
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
-            (implicit authenticated: Authenticated): Boolean = {
-    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {  oldValintaperuste =>
-      withValidation(valintaperuste, Some(oldValintaperuste), doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
+            (implicit authenticated: Authenticated): Boolean =
+    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get), valintaperuste) { (oldValintaperuste, v) =>
+      withValidation(v, Some(oldValintaperuste), doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
     }
-  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
@@ -62,8 +62,7 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        v <- setMuokkaajaFromSession(valintaperuste)
-        v <- ValintaperusteDAO.getPutActions(v)
+        v <- ValintaperusteDAO.getPutActions(valintaperuste)
         _ <- index(Some(v))
         _ <- auditLog.logCreate(v)
       } yield v
@@ -73,8 +72,7 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)
-        v <- setMuokkaajaFromSession(valintaperuste)
-        v <- ValintaperusteDAO.getUpdateActions(v)
+        v <- ValintaperusteDAO.getUpdateActions(valintaperuste)
         _ <- index(v)
         _ <- auditLog.logUpdate(before, v)
       } yield v

@@ -124,7 +124,7 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableMaybeJulkinen {
+                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableMaybeJulkinen[Sorakuvaus] {
   override def validate(): IsValid = and(
     super.validate(),
     validateIfDefined[SorakuvausMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),

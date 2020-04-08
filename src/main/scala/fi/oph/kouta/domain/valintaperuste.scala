@@ -197,7 +197,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           muokkaaja: UserOid,
                           kielivalinta: Seq[Kieli] = Seq(),
                           modified: Option[LocalDateTime])
-  extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen {
+  extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen[Valintaperuste] {
 
   override def validate(): IsValid = and(
     super.validate(),

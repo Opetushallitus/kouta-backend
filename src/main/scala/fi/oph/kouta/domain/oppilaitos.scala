@@ -3,9 +3,9 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.security.Authorizable
+import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidatableSubEntity}
+import fi.oph.kouta.validation.{IsValid, Validatable, ValidatableSubEntity}
 
 package object oppilaitos {
 
@@ -258,7 +258,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       logo: Option[String] = None,
                       modified: Option[LocalDateTime] = None)
   extends Validatable
-    with Authorizable
+    with AuthorizableEntity[Oppilaitos]
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
     with HasModified[Oppilaitos]
     with HasMuokkaaja[Oppilaitos]
@@ -294,7 +294,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             teemakuva: Option[String] = None,
                             modified: Option[LocalDateTime] = None)
   extends Validatable
-    with Authorizable
+    with AuthorizableEntity[OppilaitoksenOsa]
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
     with HasModified[OppilaitoksenOsa]
     with HasMuokkaaja[OppilaitoksenOsa]

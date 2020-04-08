@@ -5,19 +5,16 @@ import java.time.Instant
 import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.Julkaistu
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{HasMuokkaaja, Julkaistu}
-import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
-import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role, RoleEntity}
+import fi.oph.kouta.security.{Authorizable, AuthorizableEntity, AuthorizableMaybeJulkinen, Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
-import slick.dbio.DBIO
 
 import scala.collection.IterableView
-import scala.util.Try
 
-trait ValidatingService[E <: Validatable with HasMuokkaaja[E]] {
+trait ValidatingService[E <: Validatable] {
 
   def withValidation[R](e: E, oldE: Option[E], f: E => R): R = {
     val errors = if (!oldE.contains(Julkaistu) && e.tila == Julkaistu) {
@@ -31,21 +28,16 @@ trait ValidatingService[E <: Validatable with HasMuokkaaja[E]] {
       case errors => throw KoutaValidationException(errors)
     }
   }
-
-  def setMuokkaajaFromSession(t: E)(implicit authenticated: Authenticated): DBIO[E] =
-    Try {
-      t.withMuokkaaja(UserOid(authenticated.session.personOid))
-    }.toDBIO
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException
 
-trait RoleEntityAuthorizationService extends AuthorizationService {
+trait RoleEntityAuthorizationService[E <: AuthorizableEntity[E]] extends AuthorizationService {
   protected val roleEntity: RoleEntity
 
   lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
-  private def authorizeJulkinen(entity: AuthorizableMaybeJulkinen, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
+  private def authorizeJulkinen(entity: AuthorizableMaybeJulkinen[E], organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
 
     def isCorrectKoulutustyyppi(): Boolean = oidsAndOppilaitostyypit._2.contains(entity.koulutustyyppi)
 
@@ -57,48 +49,54 @@ trait RoleEntityAuthorizationService extends AuthorizationService {
   }
 
   val AuthorizationRuleForJulkinen: AuthorizationRule = (entity: Authorizable, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat) => entity match {
-    case e:AuthorizableMaybeJulkinen => authorizeJulkinen(e, organisaatioOids, oidsAndOppilaitostyypit)
+    case e: AuthorizableMaybeJulkinen[E] => authorizeJulkinen(e, organisaatioOids, oidsAndOppilaitostyypit)
     case _ => false
   }
 
-  def authorizeGet[E <: Authorizable](entityWithTime: Option[(E, Instant)],
-                                      authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles))
-                                     (implicit authenticated: Authenticated): Option[(E, Instant)] =
+  def authorizeGet(entityWithTime: Option[(E, Instant)],
+                   authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles))
+                  (implicit authenticated: Authenticated): Option[(E, Instant)] =
     entityWithTime.map {
       case (e, t) => ifAuthorized(e, authorizationRules) {
         (e, t)
       }
     }
 
-  def authorizePut[E <: Authorizable, I](entity: E,
-                                         authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.createRoles))
-                                        (f: => I)(implicit authenticated: Authenticated): I =
+  private def withUpdatedMuokkaaja(entity: E)(implicit authenticated: Authenticated) =
+    entity.withMuokkaaja(UserOid(authenticated.session.personOid))
+
+  def authorizePut[I](entity: E,
+                      authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.createRoles))
+                     (f: E => I)(implicit authenticated: Authenticated): I =
     ifAuthorized(entity, authorizationRules) {
-      f
+      f(withUpdatedMuokkaaja(entity))
     }
 
-  def authorizeUpdate[E <: Authorizable, I](entityForUpdate: => Option[(E, Instant)],
-                                            authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.updateRoles))
-                                           (f: E => I)(implicit authenticated: Authenticated): I =
-    entityForUpdate match {
-      case None         => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+  def authorizeUpdate[I](oldEntity: => Option[(E, Instant)],
+                         updatedEntity: E,
+                         authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.updateRoles))
+                        (f: (E, E) => I)(implicit authenticated: Authenticated): I =
+    oldEntity match {
+      case None => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
       case Some((e, _)) => ifAuthorized(e, authorizationRules) {
-        f(e)
+        f(e, withUpdatedMuokkaaja(updatedEntity))
       }
     }
 
-  def authorizeUpdate[E <: Authorizable, I](entityForUpdate: => Option[(E, Instant)],
-                                            authorizationRules: List[AuthorizationRules])
-                                           (f: E => I)(implicit authenticated: Authenticated): I = {
-    def checkRules(rule: AuthorizationRules,rules: List[AuthorizationRules], e: E): I = {
-      if(rules.isEmpty) {
-        ifAuthorized(e, rule)(f(e))
+  def authorizeUpdate[I](oldEntity: => Option[(E, Instant)],
+                         updatedEntity: E,
+                         authorizationRules: List[AuthorizationRules])
+                        (f: (E, E) => I)(implicit authenticated: Authenticated): I = {
+    def checkRules(rule: AuthorizationRules, rules: List[AuthorizationRules], e: E): I = {
+      if (rules.isEmpty) {
+        ifAuthorized(e, rule)(f(e, withUpdatedMuokkaaja(updatedEntity)))
       } else {
-        ifAuthorized(e, rule)(checkRules(rules.head,rules.tail,e))
+        ifAuthorized(e, rule)(checkRules(rules.head, rules.tail, withUpdatedMuokkaaja(e)))
       }
     }
-    entityForUpdate match {
-      case None         => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+
+    oldEntity match {
+      case None => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
       case Some((e, _)) =>
         authorizationRules match {
           case Nil => throw EntityNotFoundException(s"Ei päivitettävää")
