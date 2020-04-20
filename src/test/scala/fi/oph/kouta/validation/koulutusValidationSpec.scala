@@ -47,6 +47,12 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(metadata = Some(metadata.copy(tyyppi = Muu))), "metadata.tyyppi", InvalidMetadataTyyppi)
   }
 
+  it should "fail if ePeruste ID is negative or missing for a ammatillinen koulutus" in {
+    failsValidation(amm.copy(ePerusteId = Some(-3)), "ePerusteId", notNegativeMsg)
+    passesValidation(yo.copy(ePerusteId = None))
+    failsValidation(amm.copy(ePerusteId = None), "ePerusteId", missingMsg)
+  }
+
   it should "fail if korkeakoulutus metadata is invalid" in {
     val metadata = yo.metadata.get.asInstanceOf[YliopistoKoulutusMetadata]
     failsValidation(yo.copy(metadata = Some(metadata.copy(kuvauksenNimi = Map(Fi -> "lisatieto")))), "metadata.kuvauksenNimi", invalidKielistetty(Seq(Sv)))
