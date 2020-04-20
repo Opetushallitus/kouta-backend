@@ -96,10 +96,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
-      _ match {
-        case Seq(OrganisaatioClient.OphOid) => ToteutusDAO.listByKoulutusOid(oid)
-        case x =>  ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
-      }
+      case Seq(OrganisaatioClient.OphOid) => ToteutusDAO.listByKoulutusOid(oid)
+      case x => ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
     }
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): KoulutusSearchResult = {
