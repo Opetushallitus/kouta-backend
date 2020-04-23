@@ -90,6 +90,8 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/ammkuva"),
+    ePerusteId = Some(11L),
     modified = None)
 
   val YoKoulutus = Koulutus(
@@ -111,6 +113,8 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/yokuva"),
+    ePerusteId = Some(12L),
     modified = None)
 
   val MinKoulutus = Koulutus(

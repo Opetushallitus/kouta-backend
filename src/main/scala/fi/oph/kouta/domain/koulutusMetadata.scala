@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.validation.IsValid
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
 
 package object koulutusMetadata {
@@ -103,14 +103,13 @@ package object koulutusMetadata {
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, YliopistoKoulutusMetadataModel)
 }
 
-sealed trait KoulutusMetadata {
+sealed trait KoulutusMetadata extends ValidatableSubEntity {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val lisatiedot: Seq[Lisatieto]
   val koulutusalaKoodiUrit: Seq[String]
 
-  def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    assertTrue(tyyppi == koulutustyyppi, s"$path.tyyppi", InvalidMetadataTyyppi),
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
     validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _))
@@ -122,8 +121,8 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
   val tutkintonimikeKoodiUrit: Seq[String]
   val opintojenLaajuusKoodiUri: Option[String]
 
-  override def validate(koulutustyyppi: Koulutustyyppi, tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    super.validate(koulutustyyppi, tila, kielivalinta, path),
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi")),
     validateIfNonEmpty[String](tutkintonimikeKoodiUrit, s"$path.tutkintonimikeKoodiUrit", assertMatch(_, TutkintonimikeKoodiPattern, _)),
     validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri"))
