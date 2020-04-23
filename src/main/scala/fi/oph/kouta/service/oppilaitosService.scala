@@ -18,7 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog)
 
 class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
-  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService with LogoService {
+  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService[Oppilaitos] with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
 
@@ -29,14 +29,14 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     authorizeGet(OppilaitosDAO.get(oid))
 
   def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid = {
-    authorizePut(oppilaitos) {
-      withValidation(oppilaitos, None, doPut)
+    authorizePut(oppilaitos) { o =>
+      withValidation(o, None, doPut)
     }.oid
   }
 
   def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid)) { oldOppilaitos =>
-      withValidation(oppilaitos, Some(oldOppilaitos), doUpdate(_, notModifiedSince, oldOppilaitos))
+    authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid), oppilaitos) { (oldOppilaitos, o) =>
+      withValidation(o, Some(oldOppilaitos), doUpdate(_, notModifiedSince, oldOppilaitos))
     }.nonEmpty
 
   def getOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
@@ -54,7 +54,7 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitos)
-        (logo, o)  <- checkAndMaybeClearLogo(o)
+        (logo, o) <- checkAndMaybeClearLogo(o)
         o          <- OppilaitosDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- maybeCopyLogo(logo, o)
@@ -71,9 +71,9 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
   private def doUpdate(oppilaitos: Oppilaitos, notModifiedSince: Instant, before: Oppilaitos)(implicit authenticated: Authenticated): Option[Oppilaitos] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _          <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
+        _ <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
-        (logo, o)  <- checkAndMaybeCopyLogo(o)
+        (logo, o) <- checkAndMaybeCopyLogo(o)
         o          <- OppilaitosDAO.getUpdateActions(o)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
@@ -92,7 +92,7 @@ object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionS
 
 class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
   extends ValidatingService[OppilaitoksenOsa]
-    with RoleEntityAuthorizationService
+    with RoleEntityAuthorizationService[OppilaitoksenOsa]
     with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa] {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
@@ -103,21 +103,21 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
     authorizeGet(OppilaitoksenOsaDAO.get(oid))
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid =
-    authorizePut(oppilaitoksenOsa) {
-      withValidation(oppilaitoksenOsa, None, doPut).oid
+    authorizePut(oppilaitoksenOsa) { o =>
+      withValidation(o, None, doPut).oid
     }
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid)) { oldOsa =>
-      withValidation(oppilaitoksenOsa, Some(oldOsa), doUpdate(_, notModifiedSince, oldOsa))
+    authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), oppilaitoksenOsa) { (oldOsa, o) =>
+      withValidation(o, Some(oldOsa), doUpdate(_, notModifiedSince, oldOsa))
     }.nonEmpty
 
   private def doPut(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OppilaitoksenOsa =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _          <- OppilaitoksenOsaDAO.oppilaitosExists(oppilaitoksenOsa)
+        _ <- OppilaitoksenOsaDAO.oppilaitosExists(oppilaitoksenOsa)
         (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitoksenOsa)
-        o          <- OppilaitoksenOsaDAO.getPutActions(o)
+        o <- OppilaitoksenOsaDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
         _          <- index(Some(o))
@@ -131,9 +131,9 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
   private def doUpdate(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant, before: OppilaitoksenOsa)(implicit authenticated: Authenticated): Option[OppilaitoksenOsa] =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _          <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
+        _ <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
-        o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
+        o <- OppilaitoksenOsaDAO.getUpdateActions(o)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, o)

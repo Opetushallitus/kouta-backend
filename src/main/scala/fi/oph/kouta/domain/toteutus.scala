@@ -236,6 +236,8 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
   override def withTeemakuva(teemakuva: Option[String]): Toteutus = this.copy(teemakuva = teemakuva)
 
   override def withModified(modified: LocalDateTime): Toteutus = copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = oid)
 }
 
 case class ToteutusListItem(oid: ToteutusOid,

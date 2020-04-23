@@ -20,10 +20,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog)
 
 class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
-  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService with TeemakuvaService[KoulutusOid, Koulutus] with Logging {
+  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService[Koulutus] with TeemakuvaService[KoulutusOid, Koulutus] with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
-  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
@@ -33,8 +33,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   }
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
-    authorizePut(koulutus) {
-      withValidation(koulutus, None, doPut)
+    authorizePut(koulutus) { k =>
+      withValidation(k, None, doPut)
     }.oid.get
 
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
@@ -60,8 +60,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
         val rules: List[AuthorizationRules] =
           (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
 
-        rules.nonEmpty && authorizeUpdate(koulutusWithInstant, rules) { _ =>
-          withValidation(koulutus, Some(oldKoulutus), doUpdate(_, notModifiedSince, oldKoulutus)).nonEmpty
+        rules.nonEmpty && authorizeUpdate(koulutusWithInstant, koulutus, rules) { (_, k) =>
+          withValidation(k, Some(oldKoulutus), doUpdate(_, notModifiedSince, oldKoulutus)).nonEmpty
         }
       case _ => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
     }

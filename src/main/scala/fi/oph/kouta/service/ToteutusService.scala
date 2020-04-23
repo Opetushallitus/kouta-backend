@@ -20,7 +20,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService)
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, keywordService: KeywordService)
-  extends ValidatingService[Toteutus] with RoleEntityAuthorizationService with TeemakuvaService[ToteutusOid, Toteutus] {
+  extends ValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
@@ -32,15 +32,15 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   }
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
-    authorizePut(toteutus) {
-      withValidation(toteutus, None, doPut)
+    authorizePut(toteutus) { t =>
+      withValidation(t, None, doPut)
     }.oid.get
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
-    authorizeUpdate(toteutusWithTime, rules) { oldToteutus =>
-      withValidation(toteutus, Some(oldToteutus), doUpdate(_, notModifiedSince, oldToteutus)).nonEmpty
+    authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
+      withValidation(t, Some(oldToteutus), doUpdate(_, notModifiedSince, oldToteutus)).nonEmpty
     }
   }
 

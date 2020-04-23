@@ -90,6 +90,12 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(uusiHakukohde)
     get(oid, tallennettuHakukohde(oid))
   }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(uusiHakukohde.copy(muokkaaja = UserOid("random")))
+    get(oid, tallennettuHakukohde(oid).copy(muokkaaja = testUser.oid))
+  }
+
   it should "write create hakukohde to audit log" in {
     MockAuditLogger.clean()
     val oid = put(uusiHakukohde.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
@@ -158,6 +164,15 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu)
     update(updatedHakukohde, lastModified)
     get(oid, updatedHakukohde)
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(uusiHakukohde, crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(oid, tallennettuHakukohde(oid).copy(muokkaaja = userOid))
+    val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu, muokkaaja = userOid)
+    update(updatedHakukohde, lastModified)
+    get(oid, updatedHakukohde.copy(muokkaaja = testUser.oid))
   }
 
   it should "write hakukohde update to audit log" in {

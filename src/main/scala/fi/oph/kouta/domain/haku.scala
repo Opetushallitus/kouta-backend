@@ -232,6 +232,8 @@ case class Haku(oid: Option[HakuOid] = None,
   def withOid(oid: HakuOid): Haku = copy(oid = Some(oid))
 
   override def withModified(modified: LocalDateTime): Haku = copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): Haku = this.copy(muokkaaja = oid)
 }
 
 case class HakuListItem(oid: HakuOid,

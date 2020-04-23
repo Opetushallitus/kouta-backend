@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object HakukohdeService extends HakukohdeService(SqsInTransactionService, AuditLog)
 
-class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Hakukohde] with RoleEntityAuthorizationService {
+class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Hakukohde] with RoleEntityAuthorizationService[Hakukohde] {
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
 
@@ -25,14 +25,14 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     authorizeGet(HakukohdeDAO.get(oid), AuthorizationRules(roleEntity.readRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(oid)))
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
-    authorizePut(hakukohde) {
-      withValidation(hakukohde, None, doPut)
+    authorizePut(hakukohde) { h =>
+      withValidation(h, None, doPut)
     }.oid.get
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), rules) { oldHakuKohde =>
-      withValidation(hakukohde, Some(oldHakuKohde), doUpdate(_, notModifiedSince, oldHakuKohde))
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakuKohde, h) =>
+      withValidation(h, Some(oldHakuKohde), doUpdate(_, notModifiedSince, oldHakuKohde))
     }.nonEmpty
   }
 

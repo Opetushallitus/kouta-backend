@@ -17,22 +17,22 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog)
 
-class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService {
+class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService[Sorakuvaus] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
-  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
     authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
-    authorizePut(sorakuvaus) {
-      withValidation(sorakuvaus, None, doPut)
+    authorizePut(sorakuvaus) { s =>
+      withValidation(s, None, doPut)
     }.id.get
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get)) { oldSorakuvaus =>
-      withValidation(sorakuvaus, Some(oldSorakuvaus), doUpdate(_, notModifiedSince, oldSorakuvaus))
+    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get), sorakuvaus) { (oldSorakuvaus, s) =>
+      withValidation(s, Some(oldSorakuvaus), doUpdate(_, notModifiedSince, oldSorakuvaus))
     }.nonEmpty
 
   def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =

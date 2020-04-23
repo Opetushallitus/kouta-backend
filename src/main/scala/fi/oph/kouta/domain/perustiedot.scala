@@ -4,11 +4,11 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.security.Authorizable
+import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPrimaryId[ID, T] with HasModified[T] {
+sealed trait Perustiedot[ID, T] extends Validatable with AuthorizableEntity[T] with HasPrimaryId[ID, T] with HasModified[T] with HasMuokkaaja[T] {
   val tila: Julkaisutila
   val nimi: Kielistetty
   val muokkaaja: UserOid
@@ -17,7 +17,6 @@ sealed trait Perustiedot[ID, T] extends Validatable with Authorizable with HasPr
   val modified: Option[LocalDateTime]
 
   def validate(): IsValid = and(
-    assertValid(muokkaaja, "muokkaaja"),
     assertValid(organisaatioOid, "organisaatioOid"),
     validateKielistetty(kielivalinta, nimi, "nimi"),
     assertNotEmpty(kielivalinta, "kielivalinta")

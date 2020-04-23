@@ -22,22 +22,22 @@ object HakuService extends HakuService(SqsInTransactionService, AuditLog, Ohjaus
 class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
                   ohjausparametritClient: OhjausparametritClient)
-  extends ValidatingService[Haku] with RoleEntityAuthorizationService {
+  extends ValidatingService[Haku] with RoleEntityAuthorizationService[Haku] {
 
   override val roleEntity: RoleEntity = Role.Haku
-  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   def get(oid: HakuOid)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
     authorizeGet(HakuDAO.get(oid), readRules)
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid =
-    authorizePut(haku) {
-      withValidation(haku, None, doPut)
+    authorizePut(haku) { h =>
+      withValidation(h, None, doPut)
     }.oid.get
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(HakuDAO.get(haku.oid.get)) { oldHaku =>
-      withValidation(haku, Some(oldHaku), doUpdate(_, notModifiedSince, oldHaku))
+    authorizeUpdate(HakuDAO.get(haku.oid.get), haku) { (oldHaku, h) =>
+      withValidation(h, Some(oldHaku), doUpdate(_, notModifiedSince, oldHaku))
     }.nonEmpty
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =

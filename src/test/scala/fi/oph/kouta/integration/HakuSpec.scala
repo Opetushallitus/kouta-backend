@@ -78,6 +78,11 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     get(oid, haku(oid))
   }
 
+  it should "read muokkaaja from the session" in {
+    val oid = put(haku.copy(muokkaaja = UserOid("random")))
+    get(oid, haku(oid).copy(muokkaaja = testUser.oid))
+  }
+
   it should "write create haku to audit log" in {
     MockAuditLogger.clean()
     val oid = put(haku.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
@@ -154,6 +159,14 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val lastModified = get(oid, thisHaku)
     update(thisHaku.copy(tila = Arkistoitu), lastModified)
     get(oid, thisHaku.copy(tila = Arkistoitu))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(haku, crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(oid, haku(oid).copy(muokkaaja = userOid))
+    update(haku(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    get(oid, haku(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write haku update to audit log" in {

@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.Arkistoitu
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -62,6 +62,11 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   "Create oppilaitos" should "store oppilaitos" in {
     val oid = put(oppilaitos)
     get(oid, oppilaitos(oid))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(oppilaitos.copy(muokkaaja = UserOid("random")))
+    get(oid, oppilaitos(oid).copy(muokkaaja = testUser.oid))
   }
 
   it should "write create oppilaitos to audit log" in {
@@ -149,6 +154,14 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     val lastModified = get(oid, oppilaitos(oid))
     update(oppilaitos(oid, Arkistoitu), lastModified)
     get(oid, oppilaitos(oid, Arkistoitu))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(oppilaitos, crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(oid, oppilaitos(oid).copy(muokkaaja = userOid))
+    update(oppilaitos(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    get(oid, oppilaitos(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write oppilaitos update to audit log" in {

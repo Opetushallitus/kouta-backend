@@ -197,7 +197,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           muokkaaja: UserOid,
                           kielivalinta: Seq[Kieli] = Seq(),
                           modified: Option[LocalDateTime])
-  extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen {
+  extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen[Valintaperuste] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -220,6 +220,8 @@ case class Valintaperuste(id: Option[UUID] = None,
   override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
 
   override def withModified(modified: LocalDateTime): Valintaperuste = copy(modified = Some(modified))
+
+  def withMuokkaaja(oid: UserOid): Valintaperuste = this.copy(muokkaaja = oid)
 }
 
 case class ValintaperusteListItem(id: UUID,

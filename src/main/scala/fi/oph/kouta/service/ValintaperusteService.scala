@@ -18,7 +18,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog)
 
-class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService {
+class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog)
+  extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
@@ -27,16 +28,15 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
-    authorizePut(valintaperuste) {
-      withValidation(valintaperuste, None, doPut)
+    authorizePut(valintaperuste) { v =>
+      withValidation(v, None, doPut)
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
-            (implicit authenticated: Authenticated): Boolean = {
-    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get)) {  oldValintaperuste =>
-      withValidation(valintaperuste, Some(oldValintaperuste), doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
+            (implicit authenticated: Authenticated): Boolean =
+    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get), valintaperuste) { (oldValintaperuste, v) =>
+      withValidation(v, Some(oldValintaperuste), doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
     }
-  }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>

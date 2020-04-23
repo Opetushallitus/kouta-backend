@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.Arkistoitu
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.SorakuvausFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -71,6 +71,11 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     get(id, TestData.YoSorakuvaus.copy(id = Some(id)))
   }
 
+  it should "read muokkaaja from the session" in {
+    val oid = put(sorakuvaus.copy(muokkaaja = UserOid("random")))
+    get(oid, sorakuvaus(oid).copy(muokkaaja = testUser.oid))
+  }
+
   it should "write create haku to audit log" in {
     MockAuditLogger.clean()
     val id = put(sorakuvaus.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
@@ -122,6 +127,14 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val lastModified = get(id, sorakuvaus(id))
     update(sorakuvaus(id, Arkistoitu), lastModified)
     get(id, sorakuvaus(id, Arkistoitu))
+  }
+
+  it should "read muokkaaja from the session" in {
+    val oid = put(sorakuvaus, crudSessions(ChildOid))
+    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val lastModified = get(oid, sorakuvaus(oid).copy(muokkaaja = userOid))
+    update(sorakuvaus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    get(oid, sorakuvaus(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write sorakuvaus update to audit log" in {
