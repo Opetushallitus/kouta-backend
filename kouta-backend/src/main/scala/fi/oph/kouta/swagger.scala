@@ -1,5 +1,6 @@
 package fi.oph.kouta
 
+import fi.oph.kouta.servlet.KoutaServlet
 import org.scalatra.ScalatraServlet
 
 object SwaggerPaths {
@@ -51,10 +52,19 @@ class SwaggerServlet extends ScalatraServlet {
       }
     }
     yaml +=
-      """
-        |components:
-        |  schemas:
-        |""".stripMargin +
+      s"""
+         |components:
+         |  parameters:
+         |    xIfUnmodifiedSince:
+         |      in: header
+         |      name: ${KoutaServlet.IfUnmodifiedSinceHeader}
+         |      schema:
+         |        type: string
+         |        default: ${KoutaServlet.SampleHttpDate}
+         |      required: true
+         |      description: Vastaavan GETin ${KoutaServlet.LastModifiedHeader}
+         |  schemas:
+         |""".stripMargin +
       fi.oph.kouta.domain.models.mkString +
       fi.oph.kouta.domain.keyword.models.mkString +
       fi.oph.kouta.domain.koulutus.models.mkString +

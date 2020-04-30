@@ -32,13 +32,11 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     renderHttpDate(instant.truncatedTo(java.time.temporal.ChronoUnit.SECONDS).plusSeconds(1))
   }
 
-  val SampleHttpDate = renderHttpDate(Instant.EPOCH)
-
   protected def parseIfUnmodifiedSince: Option[Instant] = request.headers.get(KoutaServlet.IfUnmodifiedSinceHeader) match {
     case Some(s) =>
       Try(parseHttpDate(s)) match {
         case x if x.isSuccess => Some(x.get)
-        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta ${KoutaServlet.IfUnmodifiedSinceHeader} muodossa $SampleHttpDate.", e)
+        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta ${KoutaServlet.IfUnmodifiedSinceHeader} muodossa ${KoutaServlet.SampleHttpDate}.", e)
       }
     case None => None
   }
@@ -101,8 +99,9 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
 }
 
 object KoutaServlet {
-  val IfUnmodifiedSinceHeader = "x-If-Unmodified-Since"
-  val LastModifiedHeader = "x-Last-Modified"
+  val IfUnmodifiedSinceHeader: String = "x-If-Unmodified-Since"
+  val LastModifiedHeader: String = "x-Last-Modified"
+  val SampleHttpDate: String = renderHttpDate(Instant.EPOCH)
 }
 
 class HealthcheckServlet extends KoutaServlet {

@@ -14,7 +14,7 @@ import scala.concurrent.duration.Duration
 trait SessionDAO {
   def delete(ticket: ServiceTicket): Boolean
   def delete(id: UUID): Boolean
-  def store(session: Session): UUID
+  def store(session: CasSession): UUID
   def store(session: CasSession, id: UUID): UUID
   def get(id: UUID): Option[Session]
 }
@@ -23,11 +23,11 @@ object SessionDAO extends SessionDAO with SessionSQL {
 
   import KoutaDatabase.{runBlocking, runBlockingTransactionally}
 
-  override def store(session: Session): UUID = session match {
-    case CasSession(ServiceTicket(ticket), personOid, authorities) =>
-      val id = UUID.randomUUID()
-      runBlockingTransactionally(storeCasSession(id, ticket, personOid, authorities), timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted)
-        .map(_ => id).get
+  override def store(session: CasSession): UUID = {
+    val CasSession(ServiceTicket(ticket), personOid, authorities) = session
+    val id = UUID.randomUUID()
+    runBlockingTransactionally(storeCasSession(id, ticket, personOid, authorities), timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted)
+      .map(_ => id).get
   }
 
   override def store(session: CasSession, id: UUID): UUID =

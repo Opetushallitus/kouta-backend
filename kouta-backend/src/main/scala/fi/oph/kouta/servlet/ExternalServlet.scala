@@ -65,6 +65,52 @@ class ExternalServlet(hakuService: HakuService) extends KoutaServlet {
     }
   }
 
+  registerPath(
+    "/external/haku",
+    """    post:
+      |      summary: Muokkaa olemassa olevaa hakua
+      |      operationId: Muokkaa hakua
+      |      description: Muokkaa olemassa olevaa hakua. Rajapinnalle annetaan haun kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - External
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
+      |      requestBody:
+      |        description: Muokattavan haun kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                haku:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Haku'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden haun yksilöivä oid
+      |                    example: 1.2.246.562.29.00000000000000000009
+      |""".stripMargin)
+  post("/haku") {
+    val hr = parsedBody.extract[ExternalHakuRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(hr)
+
+    val updated = hakuService.update(hr.haku, getIfUnmodifiedSince)
+    Ok("updated" -> updated)
+  }
+
   private def authenticateExternal[R <: ExternalRequest](request: R): Authenticated = {
     val session = authenticate.session
 

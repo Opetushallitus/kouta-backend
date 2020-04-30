@@ -21,6 +21,12 @@ trait ExternalFixture extends KoutaIntegrationSpec with HakuFixture {
   def put(request: ExternalHakuRequest): String = put(ExternalHakuPath, request, oid)
   def put(request: ExternalHakuRequest, sessionId: UUID): String = put(ExternalHakuPath, request, sessionId, oid)
 
+  def update(request: ExternalHakuRequest, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit =
+    update(ExternalHakuPath, request, lastModified, expectUpdate)
+
+  def update(request: ExternalHakuRequest, lastModified: String, sessionId: UUID): Unit =
+    update(ExternalHakuPath, request, lastModified, expectUpdate = true, sessionId)
+
   def authenticated(id: String = UUID.randomUUID().toString,
                     personOid: UserOid = TestUserOid,
                     authorities: Set[Authority] = defaultAuthorities,
