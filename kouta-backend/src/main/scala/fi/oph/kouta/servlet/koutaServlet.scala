@@ -74,7 +74,12 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     case e: OrganizationAuthorizationFailedException =>
       logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
       Forbidden("error" -> s"Forbidden ${e.getMessage}")
-    case e: KoutaValidationException => BadRequest(e.errorMessages)
+    case e: KoutaValidationException =>
+      logger.warn(
+        s"""${errorMsgFromRequest()}
+           |  ${e.getClass.getCanonicalName}: ${e.getMessage}
+           |""".stripMargin)
+      BadRequest(e.errorMessages)
     case e: IllegalStateException => badRequest(e)
     case e: IllegalArgumentException => badRequest(e)
     case e: MappingException => badRequest(e)

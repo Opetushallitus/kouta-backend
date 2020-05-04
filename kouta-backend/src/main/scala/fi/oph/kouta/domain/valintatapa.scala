@@ -118,7 +118,7 @@ case class Valintatapa(nimi: Kielistetty = Map(),
                        enimmaispisteet: Option[Double] = None,
                        vahimmaispisteet: Option[Double] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateKielistetty(kielivalinta, nimi, "nimi"),
+    validateKielistetty(kielivalinta, nimi, s"$path.nimi"),
     validateIfDefined[String](valintatapaKoodiUri, assertMatch(_, ValintatapajonoKoodiPattern, s"$path.valintatapaKoodiUri")),
     validateIfNonEmpty[ValintatapaSisalto](sisalto, s"$path.sisalto", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Double](enimmaispisteet, assertNotNegative(_, s"$path.enimmaispisteet")),
