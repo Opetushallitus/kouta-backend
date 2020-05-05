@@ -370,7 +370,7 @@ object TestData {
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     yhteyshenkilot = Seq(Yhteystieto1))
 
-  val YoToteutuksenMetaTieto = YliopistoToteutusMetadata(
+  val YoToteutuksenMetatieto = YliopistoToteutusMetadata(
     kuvaus = Map(),
     alemmanKorkeakoulututkinnonOsaamisalat = Seq(KorkeakouluOsaamisala(
       linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
@@ -399,7 +399,7 @@ object TestData {
     kielivalinta = Seq(Fi, Sv),
     modified = None)
 
-  val JulkaistuYoToteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetaTieto))
+  val JulkaistuYoToteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto))
 
   val MinToteutus = Toteutus(
     muokkaaja = TestUserOid,
