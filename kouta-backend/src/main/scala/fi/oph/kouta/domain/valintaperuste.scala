@@ -1,6 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
@@ -196,7 +195,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
                           kielivalinta: Seq[Kieli] = Seq(),
-                          modified: Option[LocalDateTime])
+                          modified: Option[Modified])
   extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen[Valintaperuste] {
 
   override def validate(): IsValid = and(
@@ -218,7 +217,7 @@ case class Valintaperuste(id: Option[UUID] = None,
 
   override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
 
-  override def withModified(modified: LocalDateTime): Valintaperuste = copy(modified = Some(modified))
+  override def withModified(modified: Modified): Valintaperuste = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Valintaperuste = this.copy(muokkaaja = oid)
 }
@@ -228,4 +227,4 @@ case class ValintaperusteListItem(id: UUID,
                                   tila: Julkaisutila,
                                   organisaatioOid: OrganisaatioOid,
                                   muokkaaja: UserOid,
-                                  modified: LocalDateTime) extends IdListItem
+                                  modified: Modified) extends IdListItem

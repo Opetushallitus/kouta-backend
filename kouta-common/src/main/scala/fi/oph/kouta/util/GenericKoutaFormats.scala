@@ -19,12 +19,14 @@ trait GenericKoutaJsonFormats extends GenericKoutaFormats {
 
 trait GenericKoutaFormats {
 
-  val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+  val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+  val ISO_MODIFIED_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
   def genericKoutaFormats: Formats = DefaultFormats.strict
     .addKeySerializers(Seq(kieliKeySerializer)) ++
     Seq(
       localDateTimeSerializer,
+      modifiedSerializer,
       stringSerializer(Julkaisutila.withName),
       stringSerializer(Koulutustyyppi.withName),
       stringSerializer(Hakulomaketyyppi.withName),
@@ -45,6 +47,12 @@ trait GenericKoutaFormats {
     case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
   }, {
     case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
+  }))
+
+  private def modifiedSerializer = new CustomSerializer[Modified](_ => ({
+    case JString(i) => Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
+  }, {
+    case i: Modified => JString(ISO_MODIFIED_FORMATTER.format(i.value))
   }))
 
   private def kieliKeySerializer = new CustomKeySerializer[Kieli](_ => ( {

@@ -1,6 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
@@ -266,7 +265,7 @@ case class KoulutusSearchItem(oid: KoulutusOid,
                               nimi: Kielistetty,
                               organisaatio: Organisaatio,
                               muokkaaja: Muokkaaja,
-                              modified: LocalDateTime,
+                              modified: Modified,
                               tila: Julkaisutila,
                               toteutukset: Int = 0)
 
@@ -277,7 +276,7 @@ case class ToteutusSearchItem(oid: ToteutusOid,
                               nimi: Kielistetty,
                               organisaatio: Organisaatio,
                               muokkaaja: Muokkaaja,
-                              modified: LocalDateTime,
+                              modified: Modified,
                               tila: Julkaisutila,
                               hakukohteet: Int = 0)
 
@@ -288,7 +287,7 @@ case class HakuSearchItem(oid: HakuOid,
                           nimi: Kielistetty,
                           organisaatio: Organisaatio,
                           muokkaaja: Muokkaaja,
-                          modified: LocalDateTime,
+                          modified: Modified,
                           tila: Julkaisutila,
                           hakukohteet: Int = 0)
 
@@ -299,7 +298,7 @@ case class HakukohdeSearchItem(oid: HakukohdeOid,
                                nimi: Kielistetty,
                                organisaatio: Organisaatio,
                                muokkaaja: Muokkaaja,
-                               modified: LocalDateTime,
+                               modified: Modified,
                                tila: Julkaisutila)
 
 case class ValintaperusteSearchResult(totalCount: Int = 0,
@@ -309,7 +308,7 @@ case class ValintaperusteSearchItem(id: UUID,
                                     nimi: Kielistetty,
                                     organisaatio: Organisaatio,
                                     muokkaaja: Muokkaaja,
-                                    modified: LocalDateTime,
+                                    modified: Modified,
                                     tila: Julkaisutila)
 
 case class Organisaatio(oid: OrganisaatioOid,

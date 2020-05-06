@@ -5,7 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
+import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -39,7 +39,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       } yield (k, t, l)
     ).get match {
       case (Some(k), t, Some(l)) =>
-        Some((k.copy(modified = Some(instantToLocalDateTime(l)), tarjoajat = t.map(_.tarjoajaOid).toList), l))
+        Some((k.copy(modified = Some(instantToModified(l)), tarjoajat = t.map(_.tarjoajaOid).toList), l))
       case _ => None
     }
   }

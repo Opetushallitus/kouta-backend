@@ -1,7 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
-
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
@@ -170,7 +168,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
                     ePerusteId: Option[Long] = None,
-                    modified: Option[LocalDateTime])
+                    modified: Option[Modified])
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
   override def validate(): IsValid = {
@@ -196,7 +194,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
 
   override def withTeemakuva(teemakuva: Option[String]): Koulutus = this.copy(teemakuva = teemakuva)
 
-  override def withModified(modified: LocalDateTime): Koulutus = this.copy(modified = Some(modified))
+  override def withModified(modified: Modified): Koulutus = this.copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Koulutus = this.copy(muokkaaja = oid)
 }
@@ -207,4 +205,4 @@ case class KoulutusListItem(oid: KoulutusOid,
                             tarjoajat: List[OrganisaatioOid],
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
-                            modified: LocalDateTime) extends OidListItem
+                            modified: Modified) extends OidListItem

@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
+import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -48,7 +48,7 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
         l <- selectLastModified(id)
       } yield (v, k, l)
     ).map {
-      case (Some(v), k, Some(l)) => Some((v.copy(modified = Some(instantToLocalDateTime(l)), valintakokeet = k.toList), l))
+      case (Some(v), k, Some(l)) => Some((v.copy(modified = Some(instantToModified(l)), valintakokeet = k.toList), l))
       case _ => None
     }.get
   }

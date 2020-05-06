@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {
@@ -463,7 +464,7 @@ package object domain {
     val tila: Julkaisutila
     val organisaatioOid: OrganisaatioOid
     val muokkaaja: UserOid
-    val modified: LocalDateTime
+    val modified: Modified
   }
 
   abstract class IdListItem {
@@ -472,7 +473,7 @@ package object domain {
     val tila: Julkaisutila
     val organisaatioOid: OrganisaatioOid
     val muokkaaja: UserOid
-    val modified: LocalDateTime
+    val modified: Modified
   }
 
   case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) extends ValidatableSubEntity {
@@ -519,8 +520,9 @@ package object domain {
   }
 
   trait HasModified[T] {
-    def modified: Option[LocalDateTime]
-    def withModified(modified: LocalDateTime): T
-    def withModified(modified: Instant): T = withModified(TimeUtils.instantToLocalDateTime(modified))
+    def modified: Option[Modified]
+    def withModified(modified: Modified): T
+    def withModified(modified: Instant): T = withModified(TimeUtils.instantToModified(modified))
+    def withModified(modified: LocalDateTime): T = withModified(Modified(modified))
   }
 }

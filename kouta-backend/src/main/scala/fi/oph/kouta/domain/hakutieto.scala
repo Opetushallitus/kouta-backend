@@ -1,6 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
@@ -193,7 +192,7 @@ case class HakutietoHaku(hakuOid: HakuOid,
                          organisaatioOid: OrganisaatioOid,
                          hakuajat: Seq[Ajanjakso] = Seq(),
                          muokkaaja: UserOid,
-                         modified: Option[LocalDateTime],
+                         modified: Option[Modified],
                          hakukohteet: Seq[HakutietoHakukohde])
 
 case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
@@ -215,4 +214,4 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
                               muokkaaja: UserOid,
                               organisaatioOid: OrganisaatioOid,
-                              modified: Option[LocalDateTime])
+                              modified: Option[Modified])

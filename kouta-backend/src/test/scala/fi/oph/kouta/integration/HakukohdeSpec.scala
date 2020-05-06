@@ -10,7 +10,6 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{ValidationError, Validations}
 import fi.oph.kouta.{TestData, TestOids}
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
@@ -278,7 +277,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   it should "write hakukohde update to audit log" in {
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
-    val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu, modified = Some(LocalDateTime.parse("1000-01-01T12:00:00")))
+    val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00"))
     MockAuditLogger.clean()
     update(updatedHakukohde, lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "hakukohde_update") shouldBe defined

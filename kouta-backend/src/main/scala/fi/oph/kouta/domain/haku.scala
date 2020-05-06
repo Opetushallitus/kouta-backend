@@ -4,8 +4,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 package object haku {
 
@@ -199,7 +199,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakuajat: List[Ajanjakso] = List(),
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
-                modified: Option[LocalDateTime])
+                modified: Option[Modified])
   extends PerustiedotWithOid[HakuOid, Haku] {
 
   override def validate(): IsValid = and(
@@ -236,7 +236,7 @@ case class Haku(oid: Option[HakuOid] = None,
 
   def withOid(oid: HakuOid): Haku = copy(oid = Some(oid))
 
-  override def withModified(modified: LocalDateTime): Haku = copy(modified = Some(modified))
+  override def withModified(modified: Modified): Haku = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Haku = this.copy(muokkaaja = oid)
 
@@ -247,7 +247,7 @@ case class HakuListItem(oid: HakuOid,
                         tila: Julkaisutila,
                         organisaatioOid: OrganisaatioOid,
                         muokkaaja: UserOid,
-                        modified: LocalDateTime) extends OidListItem
+                        modified: Modified) extends OidListItem
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends ValidatableSubEntity {

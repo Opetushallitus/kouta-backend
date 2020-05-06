@@ -1,7 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
-
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
@@ -216,7 +214,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
-                    modified: Option[LocalDateTime])
+                    modified: Option[Modified])
   extends PerustiedotWithOid[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
 
   override def validate(): IsValid = and(
@@ -235,7 +233,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   override def withTeemakuva(teemakuva: Option[String]): Toteutus = this.copy(teemakuva = teemakuva)
 
-  override def withModified(modified: LocalDateTime): Toteutus = copy(modified = Some(modified))
+  override def withModified(modified: Modified): Toteutus = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = oid)
 }
@@ -247,4 +245,4 @@ case class ToteutusListItem(oid: ToteutusOid,
                             tarjoajat: List[OrganisaatioOid],
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
-                            modified: LocalDateTime) extends OidListItem
+                            modified: Modified) extends OidListItem

@@ -235,7 +235,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     MockAuditLogger.clean()
-    update(toteutus(oid, koulutusOid, Arkistoitu).copy(modified = Some(LocalDateTime.parse("1000-01-01T12:00:00"))), lastModified)
+    update(toteutus(oid, koulutusOid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "toteutus_update") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }

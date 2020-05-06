@@ -1,11 +1,10 @@
 package fi.oph.kouta.integration.fixture
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
+import fi.oph.kouta.domain.{Julkaisutila, Modified, Oppilaitos}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.OppilaitosDAO
@@ -13,8 +12,6 @@ import fi.oph.kouta.service.{OppilaitosService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.OppilaitosServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
-
-import scala.util.Random
 
 trait OppilaitosFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
@@ -49,7 +46,7 @@ trait OppilaitosFixture extends KoutaIntegrationSpec with AccessControlSpec {
   def update(oppilaitos: Oppilaitos, lastModified: String, expectUpdate: Boolean): Unit = update(OppilaitosPath, oppilaitos, lastModified, expectUpdate)
   def update(oppilaitos: Oppilaitos, lastModified: String): Unit = update(oppilaitos, lastModified, true)
 
-  def readOppilaitosModified(oid: String): LocalDateTime = readOppilaitosModified(OrganisaatioOid(oid))
-  def readOppilaitosModified(oid: OrganisaatioOid): LocalDateTime =
+  def readOppilaitosModified(oid: String): Modified = readOppilaitosModified(OrganisaatioOid(oid))
+  def readOppilaitosModified(oid: OrganisaatioOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(OppilaitosDAO.selectLastModified(oid)).get)
 }

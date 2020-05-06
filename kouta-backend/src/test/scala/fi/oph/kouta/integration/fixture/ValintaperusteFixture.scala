@@ -1,6 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
@@ -83,7 +82,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
       valintaperuste.organisaatioOid, valintaperuste.muokkaaja, modified)
   }
 
-  def readValintaperusteModified(id: String): LocalDateTime = readValintaperusteModified(UUID.fromString(id))
-  def readValintaperusteModified(id: UUID): LocalDateTime =
+  def readValintaperusteModified(id: String): Modified = readValintaperusteModified(UUID.fromString(id))
+  def readValintaperusteModified(id: UUID): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(ValintaperusteDAO.selectLastModified(id)).get)
 }
