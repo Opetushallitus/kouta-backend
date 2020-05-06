@@ -19,7 +19,7 @@ trait GenericKoutaJsonFormats extends GenericKoutaFormats {
 
 trait GenericKoutaFormats {
 
-  val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+  val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
   def genericKoutaFormats: Formats = DefaultFormats.strict
     .addKeySerializers(Seq(kieliKeySerializer)) ++

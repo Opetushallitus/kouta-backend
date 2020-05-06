@@ -11,7 +11,7 @@ object TimeUtils {
 
   def timeStampToLocalDateTime(timestamp: Timestamp): LocalDateTime = instantToLocalDateTime(timestamp.toInstant)
 
-  def instantToModifiedAt(instant: Instant): LocalDateTime = instantToLocalDateTime(instant).withSecond(0).withNano(0)
+  def instantToModifiedAt(instant: Instant): LocalDateTime = instantToLocalDateTime(instant).withNano(0)
 
   def renderHttpDate(instant: Instant): String = {
     DateTimeFormatter.RFC_1123_DATE_TIME.format(ZonedDateTime.ofInstant(instant, ZoneId.of("GMT")))

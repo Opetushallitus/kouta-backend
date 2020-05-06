@@ -33,7 +33,7 @@ trait KoutaIndexMock extends ServiceMocks with KoutaJsonFormats {
      "nimi": "Keijo Antero Kana",
      "oid": "1.2.246.562.24.62301161440"
     },
-    "modified": "2019-02-08T09:57",
+    "modified": "2019-02-08T09:57:23",
     "$idField": "$id",
     "tila": "julkaistu"}"""
 

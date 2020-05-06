@@ -477,7 +477,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     "sv",
     "en"
     ],
-    "modified": "2019-10-29T15:21"
+    "modified": "2019-10-29T15:21:23"
   }"""
 
   val incorrectJson: String = """{
