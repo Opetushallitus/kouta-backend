@@ -37,7 +37,8 @@ object HakuDAO extends HakuDAO with HakuSQL {
       l <- selectLastModified(oid)
     } yield (h, a, l) ).map {
       case (Some(h), a, Some(l)) => Some((
-        h.copy(modified = Some(instantToLocalDateTime(l)), hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList),
+        h.copy(modified = Some(instantToLocalDateTime(l)),
+          hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, Option(x.paattyy))).toList),
         l))
       case _ => None
     }.get
@@ -136,7 +137,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
               values (
                 ${haku.oid},
                 tsrange(${formatTimestampParam(Some(t.alkaa))}::timestamp,
-                        ${formatTimestampParam(Some(t.paattyy))}::timestamp, '[)'),
+                        ${formatTimestampParam(t.paattyy)}::timestamp, '[)'),
                 ${haku.muokkaaja})"""))
   }
 
@@ -194,7 +195,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   def insertHakuaika(oid: Option[HakuOid], hakuaika: Ajanjakso, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""insert into hakujen_hakuajat (haku_oid, hakuaika, muokkaaja)
                values ($oid, tsrange(${formatTimestampParam(Some(hakuaika.alkaa))}::timestamp,
-                                     ${formatTimestampParam(Some(hakuaika.paattyy))}::timestamp, '[)'), $muokkaaja)
+                                     ${formatTimestampParam(hakuaika.paattyy)}::timestamp, '[)'), $muokkaaja)
                on conflict on constraint hakujen_hakuajat_pkey do nothing"""
   }
 

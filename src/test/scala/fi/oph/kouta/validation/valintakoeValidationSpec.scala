@@ -27,11 +27,11 @@ class ValintakoeValidationSpec extends SubEntityValidationSpec[Valintakoe] {
   }
 
   it should "validate tilaisuudet" in {
-    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = inPast(2000))
+    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = Some(inPast(2000)))
     val tilaisuus = Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val koe = Valintakoe1.copy(tilaisuudet = List(tilaisuus))
     passesValidation(Julkaistu, koe)
-    failsOnJulkaisuValidation(koe, "tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy))
+    failsOnJulkaisuValidation(koe, "tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy.get))
   }
 }
 
@@ -52,7 +52,7 @@ class ValintakoetilaisuusValidationSpec extends SubEntityValidationSpec[Valintak
   }
 
   it should "validate ajanjakso" in {
-    val ajanjakso = Ajanjakso(alkaa = inFuture(2000), paattyy = inFuture(100))
+    val ajanjakso = Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(100)))
     failsValidation(Tallennettu, Valintakoetilaisuus1.copy(aika = Some(ajanjakso)), "aika", invalidAjanjaksoMsg(ajanjakso))
   }
 
@@ -76,9 +76,9 @@ class ValintakoetilaisuusValidationSpec extends SubEntityValidationSpec[Valintak
   }
 
   it should "fail if aika ends in the past" in {
-    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = inPast(2000))
+    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = Some(inPast(2000)))
     passesValidation(Julkaistu, Valintakoetilaisuus1.copy(aika = Some(ajanjakso)))
-    failsOnJulkaisuValidation(Valintakoetilaisuus1.copy(aika = Some(ajanjakso)), "aika.paattyy", pastDateMsg(ajanjakso.paattyy))
+    failsOnJulkaisuValidation(Valintakoetilaisuus1.copy(aika = Some(ajanjakso)), "aika.paattyy", pastDateMsg(ajanjakso.paattyy.get))
   }
 }
 

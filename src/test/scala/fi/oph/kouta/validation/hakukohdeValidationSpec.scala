@@ -129,9 +129,9 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
   }
 
   it should "fail if hakuajat are in the past" in {
-    val pastHakuaika = Ajanjakso(inPast(2000), inPast(1000))
+    val pastHakuaika = Ajanjakso(inPast(2000), Some(inPast(1000)))
     passesValidation(max.copy(tila = Julkaistu, hakuajat = List(pastHakuaika)))
-    failsOnJulkaisuValidation(max.copy(hakuajat = List(pastHakuaika)), "hakuajat[0].paattyy", pastDateMsg(pastHakuaika.paattyy))
+    failsOnJulkaisuValidation(max.copy(hakuajat = List(pastHakuaika)), "hakuajat[0].paattyy", pastDateMsg(pastHakuaika.paattyy.get))
   }
 
   it should "validate liitteet" in {
@@ -140,11 +140,11 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
   }
 
   it should "validate valintakokeet" in {
-    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = inPast(2000))
+    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = Some(inPast(2000)))
     val tilaisuus = Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val hakukohde = max.copy(valintakokeet = List(Valintakoe1.copy(tilaisuudet = List(tilaisuus))))
     passesValidation(hakukohde)
-    failsOnJulkaisuValidation(hakukohde, "valintakokeet[0].tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy))
+    failsOnJulkaisuValidation(hakukohde, "valintakokeet[0].tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy.get))
   }
 }
 

@@ -5,7 +5,7 @@ import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
+import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
@@ -394,11 +394,21 @@ package object domain {
     }
   }
 
-  case class Ajanjakso(alkaa: LocalDateTime, paattyy: LocalDateTime) extends ValidatableSubEntity {
+  case class Ajanjakso(alkaa: LocalDateTime, paattyy: Option[LocalDateTime]) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
-      assertTrue(alkaa.isBefore(paattyy), path, invalidAjanjaksoMsg(this))
+      assertTrue(paattyy.forall(_.isAfter(alkaa)), path, invalidAjanjaksoMsg(this))
 
-    override def validateOnJulkaisu(path: String): IsValid = assertInFuture(paattyy, s"$path.paattyy")
+    override def validateOnJulkaisu(path: String): IsValid =
+      paattyy match {
+        case Some(p) => assertInFuture(p, s"$path.paattyy")
+        case _ => error(path, s"$path.paattyy")
+      }
+
+    def validateOnJulkaisuForJatkuvaHaku(path: String): IsValid =
+      paattyy match {
+        case Some(p) => assertInFuture(p, s"$path.paattyy")
+        case _ => NoErrors
+      }
   }
 
   case class Valintakoe(id: Option[UUID] = None,

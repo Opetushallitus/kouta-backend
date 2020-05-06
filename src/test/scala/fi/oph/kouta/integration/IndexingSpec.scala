@@ -98,7 +98,7 @@ class IndexingSpec extends KoutaIntegrationSpec
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake"),
-      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = TestData.inFuture(12000))))
+      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))))
     update(muokattuHakukohde, lastModified, true)
 
     eventuallyIndexingMessages {
