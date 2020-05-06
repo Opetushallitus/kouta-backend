@@ -40,7 +40,7 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   }
 
   def toTsrangeString(a: Ajanjakso) =
-    s"'[${toIso(Some(a.alkaa))}, ${toIso(a.paattyy)})'"
+    s"'[${toIso(Some(a.alkaa))},${toIso(a.paattyy)})'"
 
   implicit object SetInstant extends SetParameter[Instant] {
     def apply(v: Instant, pp: PositionedParameters): Unit = {
