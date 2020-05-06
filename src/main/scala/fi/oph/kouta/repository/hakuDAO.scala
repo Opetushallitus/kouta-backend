@@ -38,7 +38,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
     } yield (h, a, l) ).map {
       case (Some(h), a, Some(l)) => Some((
         h.copy(modified = Some(instantToLocalDateTime(l)),
-          hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, Option(x.paattyy))).toList),
+          hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList),
         l))
       case _ => None
     }.get

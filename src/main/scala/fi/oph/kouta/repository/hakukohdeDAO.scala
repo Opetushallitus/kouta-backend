@@ -56,7 +56,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     } yield (h, a, k, i, l) ).get match {
       case (Some(h), a, k, i, Some(l)) => Some((h.copy(
         modified = Some(instantToLocalDateTime(l)),
-        hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, Option(x.paattyy))).toList,
+        hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
         valintakokeet = k.toList,
         liitteet = i.toList), l))
       case _ => None

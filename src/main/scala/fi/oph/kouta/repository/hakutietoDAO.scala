@@ -31,7 +31,7 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
 
     def mapHakuajat[A <: Oid](hakuajat: Seq[Hakuaika], f: GenericOid => A): Map[A, Seq[Ajanjakso]] =
       hakuajat.groupBy(h => f(h.oid))
-        .mapValues(_.map(a => Ajanjakso(a.alkaa, Option(a.paattyy))))
+        .mapValues(_.map(a => Ajanjakso(a.alkaa, a.paattyy)))
 
     val hakujenHakuajatMap = mapHakuajat[HakuOid](hakujenHakuajat, (oid: GenericOid) => HakuOid(oid.toString))
     val hakukohteidenHakuajatMap = mapHakuajat[HakukohdeOid](hakukohteidenHakuajat, (oid: GenericOid) => HakukohdeOid(oid.toString))
