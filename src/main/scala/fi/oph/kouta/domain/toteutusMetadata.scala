@@ -286,8 +286,7 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat",_.validate(tila, kielivalinta, _)),
-    validateIfJulkaistu(tila, assertNotEmpty(osaamisalat, s"$path.osaamisalat"))
+    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat",_.validate(tila, kielivalinta, _))
   )
 }
 

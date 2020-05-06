@@ -11,7 +11,7 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val amm = JulkaistuAmmToteutus
   val ammMetadata = AmmToteutuksenMetatieto
   val yo = JulkaistuYoToteutus
-  val yoMetadata = YoToteutuksenMetaTieto
+  val yoMetadata = YoToteutuksenMetatieto
   val min = MinToteutus
 
   it should "fail if perustiedot is invalid" in {
@@ -40,7 +40,6 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   it should "fail if toteutus metadata is invalid" in {
     failsValidation(amm.copy(metadata = Some(AmmToteutuksenMetatieto.copy(kuvaus = Map(Fi -> "kuvaus")))), "metadata.kuvaus", invalidKielistetty(Seq(Sv)))
     failsValidation(amm.copy(metadata = Some(AmmToteutuksenMetatieto.copy(opetus = None))), "metadata.opetus", missingMsg)
-    failsValidation(amm.copy(metadata = Some(AmmToteutuksenMetatieto.copy(osaamisalat = Nil))), "metadata.osaamisalat", missingMsg)
   }
 
   it should "fail if ammatillinen osaamisala is invalid" in {
@@ -60,16 +59,16 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   }
 
   it should "fail if korkeakoulutus osaamisala is invalid" in {
-    val osaamisala = YoToteutuksenMetaTieto.alemmanKorkeakoulututkinnonOsaamisalat.head
+    val osaamisala = YoToteutuksenMetatieto.alemmanKorkeakoulututkinnonOsaamisalat.head
 
     val missingName = osaamisala.copy(nimi = Map(), kuvaus = Map())
-    failsValidation(yo.copy(metadata = Some(YoToteutuksenMetaTieto.copy(alemmanKorkeakoulututkinnonOsaamisalat = Seq(missingName)))), "metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].nimi", invalidKielistetty(Seq(Fi, Sv)))
+    failsValidation(yo.copy(metadata = Some(YoToteutuksenMetatieto.copy(alemmanKorkeakoulututkinnonOsaamisalat = Seq(missingName)))), "metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].nimi", invalidKielistetty(Seq(Fi, Sv)))
 
     val missingFinnishNimi = osaamisala.copy(nimi = Map(Sv -> "nimi"))
-    failsValidation(yo.copy(metadata = Some(YoToteutuksenMetaTieto.copy(alemmanKorkeakoulututkinnonOsaamisalat = Seq(missingFinnishNimi)))), "metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].nimi", invalidKielistetty(Seq(Fi)))
+    failsValidation(yo.copy(metadata = Some(YoToteutuksenMetatieto.copy(alemmanKorkeakoulututkinnonOsaamisalat = Seq(missingFinnishNimi)))), "metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].nimi", invalidKielistetty(Seq(Fi)))
 
     val missingSwedishKuvaus = osaamisala.copy(kuvaus = Map(Fi -> "kuvaus"))
-    failsValidation(yo.copy(metadata = Some(YoToteutuksenMetaTieto.copy(alemmanKorkeakoulututkinnonOsaamisalat = Seq(missingSwedishKuvaus)))), "metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].kuvaus", invalidKielistetty(Seq(Sv)))
+    failsValidation(yo.copy(metadata = Some(YoToteutuksenMetatieto.copy(alemmanKorkeakoulututkinnonOsaamisalat = Seq(missingSwedishKuvaus)))), "metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].kuvaus", invalidKielistetty(Seq(Sv)))
   }
 
   it should "fail if yhteyshenkilot has other info, but no name" in {
