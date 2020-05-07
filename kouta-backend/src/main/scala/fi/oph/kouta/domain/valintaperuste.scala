@@ -139,7 +139,7 @@ package object valintaperuste {
       |           type: string
       |           format: date-time
       |           description: Valintaperustekuvauksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val ValintaperusteListItemModel =
@@ -175,7 +175,7 @@ package object valintaperuste {
       |           type: string
       |           format: date-time
       |           description: Valintaperustekuvauksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   def models = List(ValintaperusteModel, ValintaperusteListItemModel)

@@ -54,7 +54,7 @@ package object oppilaitos {
       |           type: string
       |           format: date-time
       |           description: Oppilaitoksen kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val OppilaitosMetadataModel =
@@ -151,7 +151,7 @@ package object oppilaitos {
       |           type: string
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val OppilaitoksenOsaMetadataModel =
@@ -214,7 +214,7 @@ package object oppilaitos {
       |           type: string
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val YhteystietoModel =

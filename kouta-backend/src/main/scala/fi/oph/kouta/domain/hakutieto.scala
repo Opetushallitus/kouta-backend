@@ -81,7 +81,7 @@ package object hakutieto {
       |                type: string
       |                format: date-time
       |                description: Haun viimeisin muokkausaika. Järjestelmän generoima
-      |                example: 2019-08-23T09:55
+      |                example: 2019-08-23T09:55:17
       |              hakukohteet:
       |                type: array
       |                description: Hakuun liittyvien hakukohteiden hakutiedot
@@ -171,7 +171,7 @@ package object hakutieto {
       |                       type: string
       |                       format: date-time
       |                       description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
-      |                       example: 2019-08-23T09:55
+      |                       example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val models = List(HakutietoModel)

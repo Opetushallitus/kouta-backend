@@ -89,7 +89,7 @@ package object searchResults {
       |          type: string
       |          format: date-time
       |          description: Viimeisin muokkausaika
-      |          example: 2019-08-23T09:55
+      |          example: 2019-08-23T09:55:17
       |        tila:
       |          type: string
       |          example: "julkaistu"

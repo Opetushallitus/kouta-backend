@@ -170,7 +170,7 @@ package object hakukohde {
       |           type: string
       |           format: date-time
       |           description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val HakukohdeListItemModel =
@@ -225,7 +225,7 @@ package object hakukohde {
       |           type: string
       |           format: date-time
       |           description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val HakukohdeMetadataModel =

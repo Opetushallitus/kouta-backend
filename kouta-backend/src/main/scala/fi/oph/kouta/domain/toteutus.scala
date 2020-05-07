@@ -150,7 +150,7 @@ package object toteutus {
       |           type: string
       |           format: date-time
       |           description: Toteutuksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val ToteutusListItemModel =
@@ -198,7 +198,7 @@ package object toteutus {
       |           type: string
       |           format: date-time
       |           description: Toteutuksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   def models = List(ToteutusModel, ToteutusListItemModel)

@@ -72,7 +72,7 @@ package object sorakuvaus {
       |           type: string
       |           format: date-time
       |           description: SORA-kuvauksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val SorakuvausListItemModel =
@@ -108,7 +108,7 @@ package object sorakuvaus {
       |           type: string
       |           format: date-time
       |           description: SORA-kuvauksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   def models = List(SorakuvausModel, SorakuvausListItemModel)

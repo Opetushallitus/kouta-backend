@@ -103,7 +103,7 @@ package object koulutus {
       |           type: string
       |           format: date-time
       |           description: Koulutuksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val KoulutusListItemModel =
@@ -147,7 +147,7 @@ package object koulutus {
       |           type: string
       |           format: date-time
       |           description: Koulutuksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   def models = List(KoulutusModel, KoulutusListItemModel)

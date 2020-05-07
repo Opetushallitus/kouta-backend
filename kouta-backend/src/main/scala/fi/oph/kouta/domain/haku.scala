@@ -121,7 +121,7 @@ package object haku {
       |           type: string
       |           format: date-time
       |           description: Haun viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val HakuMetadataModel =
@@ -173,7 +173,7 @@ package object haku {
       |           type: string
       |           format: date-time
       |           description: Haun viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   def models = List(HakuModel, HakuMetadataModel, HakuListItemModel)
