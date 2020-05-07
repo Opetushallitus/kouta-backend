@@ -35,7 +35,7 @@ object TestData {
 
   def kieliMap(text: String): Kielistetty = Map(Fi -> s"$text fi", Sv -> s"$text sv")
 
-  def getInvalidHakuajat = List(Ajanjakso(TestData.inFuture(9000), TestData.inFuture(3000)))
+  def getInvalidHakuajat = List(Ajanjakso(TestData.inFuture(9000), Some(TestData.inFuture(3000))))
 
   val Osoite1 = Osoite(
     osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"),
@@ -71,7 +71,7 @@ object TestData {
     tyyppiKoodiUri = Some("valintakokeentyyppi_1#1"),
     tilaisuudet = List(Valintakoetilaisuus(
       osoite = Some(Osoite1),
-      aika = Some(Ajanjakso(alkaa = now(), paattyy = inFuture())),
+      aika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
       lisatietoja = Map(Fi -> "lisätietieto fi", Sv -> "lisätieto sv"))))
 
   val AmmKoulutus = Koulutus(
@@ -141,8 +141,8 @@ object TestData {
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/hakemusinfo-fi", Sv -> "https://koulu.test/hakemusinfo-sv"),
-    metadata = Some(HakuMetadata(Seq(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = inFuture())))),
-    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
+    metadata = Some(HakuMetadata(Seq(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))))),
+    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     kielivalinta = Seq(Fi, Sv),
@@ -184,7 +184,7 @@ object TestData {
     liitteidenToimitusosoite = None,
     liitteet = List(Liite1, Liite2),
     valintakokeet = List(Valintakoe1),
-    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = inFuture())),
+    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),

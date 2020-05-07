@@ -13,7 +13,7 @@ import slick.jdbc._
 
 trait ExtractorBase extends KoutaJsonFormats {
   case class Tarjoaja(oid: GenericOid, tarjoajaOid: OrganisaatioOid)
-  case class Hakuaika(oid: GenericOid, alkaa: LocalDateTime, paattyy: LocalDateTime)
+  case class Hakuaika(oid: GenericOid, alkaa: LocalDateTime, paattyy: Option[LocalDateTime])
 
   implicit val getKoulutusOidResult: GetResult[KoulutusOid] = GetResult(r => KoulutusOid(r.nextString()))
   implicit val getToteutusOidResult: GetResult[ToteutusOid] = GetResult(r => ToteutusOid(r.nextString()))
@@ -27,7 +27,7 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => new Tarjoaja(GenericOid(r.nextString()), OrganisaatioOid(r.nextString())))
 
   implicit val getHakuaikaResult: GetResult[Hakuaika] = GetResult(r => {
-    new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestamp().toLocalDateTime)
+    new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestampOption().map(_.toLocalDateTime))
   })
 
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(

@@ -34,7 +34,13 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]): String = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
 
-  def toTsrangeString(a: Ajanjakso) = s"'[${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.alkaa)}, ${ISO_LOCAL_DATE_TIME_FORMATTER.format(a.paattyy)})'"
+  private def toIso(l: Option[LocalDateTime]): String = l match {
+    case Some(a) => ISO_LOCAL_DATE_TIME_FORMATTER.format(a)
+    case None => ""
+  }
+
+  def toTsrangeString(a: Ajanjakso) =
+    s"'[${toIso(Some(a.alkaa))},${toIso(a.paattyy)})'"
 
   implicit object SetInstant extends SetParameter[Instant] {
     def apply(v: Instant, pp: PositionedParameters): Unit = {

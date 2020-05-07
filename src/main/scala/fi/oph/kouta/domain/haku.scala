@@ -225,7 +225,12 @@ case class Haku(oid: Option[HakuOid] = None,
 
   override def validateOnJulkaisu(): IsValid = and(
     validateIfDefined[String](alkamisvuosi, assertAlkamisvuosiInFuture(_, "alkamisvuosi")),
-    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
+    validateIfTrue(!hakutapaKoodiUri.contains("hakutapa_03#1"), and( // Not Jatkuva haku
+      validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_))
+    )),
+    validateIfTrue(hakutapaKoodiUri.contains("hakutapa_03#1"), and( // Jatkuva haku
+      validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaHaku(_))
+    )),
     validateIfDefined[HakuMetadata](metadata, _.validateOnJulkaisu("metadata"))
   )
 
@@ -234,6 +239,7 @@ case class Haku(oid: Option[HakuOid] = None,
   override def withModified(modified: LocalDateTime): Haku = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Haku = this.copy(muokkaaja = oid)
+
 }
 
 case class HakuListItem(oid: HakuOid,

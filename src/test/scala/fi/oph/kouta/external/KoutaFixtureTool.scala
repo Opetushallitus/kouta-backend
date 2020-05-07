@@ -231,7 +231,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
-      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = startTime1, paattyy = endTime1))
+      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = startTime1, paattyy = Some(endTime1)))
     )),
   )
 
@@ -271,7 +271,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       TestData.Liite2.copy(id = Some(UUID.fromString("59b5a1c9-316b-4007-a14e-cc2b617bab46"))))),
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
-      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, endTime1))))
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, Some(endTime1)))))
     )))
   )
 
@@ -293,7 +293,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     SorakuvausIdKey -> UUID.randomUUID().toString,
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
-      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, endTime1))))
+      tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, Some(endTime1)))))
     )))
   )
 
@@ -418,7 +418,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
       params.get(MetadataKey).map(read[HakuMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
-      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
       UserOid(params(MuokkaajaKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       Some(parseModified(params(ModifiedKey)))))
@@ -456,7 +456,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(LiitteidenToimitusosoiteKey).map(read[LiitteenToimitusosoite]),
       params.get(LiitteetKey).map(read[List[Liite]]).getOrElse(List()),
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
-      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
@@ -769,7 +769,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
       toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
-      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
       UserOid(params(MuokkaajaKey)),
       Some(parseModified(params(ModifiedKey))),
       List()
@@ -793,7 +793,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(AloituspaikatKey).toInt),
       Some(params(EnsikertalaisenAloituspaikatKey).toInt),
       Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
-      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), parseModified(params(HakuaikaPaattyyKey)))),
+      List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       Some(parseModified(params(ModifiedKey)))

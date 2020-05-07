@@ -151,7 +151,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "validate dates only when adding a new julkaistu valintaperuste" in {
-    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = TestData.inPast(2000))
+    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
     val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
     val thisValintaperuste = valintaperuste(sorakuvausId).copy(valintakokeet = List(koe))
@@ -162,7 +162,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
+      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy.get), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
     }
   }
 
@@ -301,7 +301,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "validate dates only when moving from other states to julkaistu" in {
-    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = TestData.inPast(2000))
+    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
     val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
     val thisValintaperuste = valintaperuste(sorakuvausId).copy(valintakokeet = List(koe), tila = Tallennettu)
@@ -314,7 +314,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
+      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy.get), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
     }
 
     update(thisValintaperusteWithOid.copy(tila = Arkistoitu), lastModified)
