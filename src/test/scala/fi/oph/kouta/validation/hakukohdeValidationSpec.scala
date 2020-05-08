@@ -55,7 +55,8 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
 
     passesValidation(max.copy(tila = Julkaistu, liitteetOnkoSamaToimitusosoite = Some(false), liitteidenToimitusosoite = None))
     passesValidation(max.copy(tila = Tallennettu, liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitusosoite = None))
-    failsValidation(max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitusosoite = None), "liitteidenToimitusosoite", missingMsg)
+    failsValidation(max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitustapa = None), "liitteidenToimitustapa", missingMsg)
+    failsValidation(max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitustapa = Some(MuuOsoite), liitteidenToimitusosoite = None), "liitteidenToimitusosoite", missingMsg)
 
     passesValidation(max.copy(tila = Tallennettu, pohjakoulutusvaatimusKoodiUrit = Seq()))
     failsValidation(max.copy(pohjakoulutusvaatimusKoodiUrit = Seq()), "pohjakoulutusvaatimusKoodiUrit", missingMsg)
