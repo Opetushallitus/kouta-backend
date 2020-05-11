@@ -37,8 +37,8 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     if(new java.io.File(s"$home/.kouta_localstack").exists()) {
       logger.warn(s"Localstack is already running. Skipping ./tools/start_localstack....")
     } else {
-      logger.info(s"Running ./tools/start_localstack....")
-      CommandLine.runBlocking(s"./tools/start_localstack")
+      logger.info(s"Running ../tools/start_localstack....")
+      CommandLine.runBlocking(s"../tools/start_localstack")
       Runtime.getRuntime.addShutdownHook(new Thread(() => CommandLine.runBlocking(s"./tools/stop_localstack")))
     }
     logSqsQueues()
