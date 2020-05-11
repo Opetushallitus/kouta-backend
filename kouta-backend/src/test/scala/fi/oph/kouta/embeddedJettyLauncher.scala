@@ -39,7 +39,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     } else {
       logger.info(s"Running ../tools/start_localstack....")
       CommandLine.runBlocking(s"../tools/start_localstack")
-      Runtime.getRuntime.addShutdownHook(new Thread(() => CommandLine.runBlocking(s"./tools/stop_localstack")))
+      Runtime.getRuntime.addShutdownHook(new Thread(() => CommandLine.runBlocking(s"../tools/stop_localstack")))
     }
     logSqsQueues()
   }

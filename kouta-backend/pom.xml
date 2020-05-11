@@ -28,6 +28,12 @@
             <artifactId>scala-library</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>fi.oph.kouta</groupId>
+            <artifactId>kouta-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- Utility dependencies -->
         <dependency>
             <groupId>fi.vm.sade</groupId>
@@ -375,7 +381,6 @@
         <dependency>
             <groupId>org.scalacheck</groupId>
             <artifactId>scalacheck_2.12</artifactId>
-            <version>1.14.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>

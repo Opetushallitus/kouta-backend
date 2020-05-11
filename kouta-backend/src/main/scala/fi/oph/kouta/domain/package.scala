@@ -285,18 +285,6 @@ package object domain {
 
   type Kielistetty = Map[Kieli,String]
 
-  trait EnumType {
-    def name:String
-    override def toString = name
-  }
-
-  trait Enum[T <: EnumType] {
-    def name:String
-    def values():List[T]
-    def withName(n:String):T = values().find(_.name.equals(n))
-      .getOrElse(throw new IllegalArgumentException(s"Unknown ${name} '${n}'"))
-  }
-
   sealed trait Julkaisutila extends EnumType
 
   object Julkaisutila extends Enum[Julkaisutila] {
@@ -316,18 +304,6 @@ package object domain {
   case object Fi extends Kieli { val name = "fi" }
   case object Sv extends Kieli { val name = "sv" }
   case object En extends Kieli { val name = "en" }
-
-  sealed trait Koulutustyyppi extends EnumType
-
-  object Koulutustyyppi extends Enum[Koulutustyyppi] {
-    override def name: String = "koulutustyyppi"
-    def values() = List(Amm, Lk, Muu, Yo, Amk)
-  }
-  case object Amm extends Koulutustyyppi { val name = "amm" }
-  case object Lk extends Koulutustyyppi { val name = "lk" }
-  case object Muu extends Koulutustyyppi { val name = "muu" }
-  case object Yo extends Koulutustyyppi { val name = "yo" }
-  case object Amk extends Koulutustyyppi { val name = "amk" }
 
   val oppilaitostyyppi2koulutustyyppi: Map[String, Koulutustyyppi] = Map(
     "oppilaitostyyppi_01#1" -> Muu, //Taiteen perusopetuksen oppilaitokset (ei musiikki)
@@ -499,10 +475,5 @@ package object domain {
     def modified: Option[LocalDateTime]
     def withModified(modified: LocalDateTime): T
     def withModified(modified: Instant): T = withModified(TimeUtils.instantToLocalDateTime(modified))
-  }
-
-  trait HasMuokkaaja[T] {
-    def muokkaaja: UserOid
-    def withMuokkaaja(muokkaaja: UserOid): T
   }
 }

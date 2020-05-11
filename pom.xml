@@ -10,6 +10,7 @@
     <name>kouta-backend-parent</name>
 
     <modules>
+        <module>kouta-common</module>
         <module>kouta-backend</module>
     </modules>
 
@@ -120,6 +121,12 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.30</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scalacheck</groupId>
+                <artifactId>scalacheck_2.12</artifactId>
+                <version>1.14.0</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

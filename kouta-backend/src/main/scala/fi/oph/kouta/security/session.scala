@@ -1,20 +1,8 @@
 package fi.oph.kouta.security
 
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{HasMuokkaaja, Koulutustyyppi}
 
 import scala.util.matching.Regex
-
-trait Authorizable {
-  val organisaatioOid: OrganisaatioOid
-}
-
-trait AuthorizableEntity[T] extends Authorizable with HasMuokkaaja[T]
-
-trait AuthorizableMaybeJulkinen[T] extends AuthorizableEntity[T] {
-  val koulutustyyppi: Koulutustyyppi
-  val julkinen: Boolean
-}
 
 sealed abstract class Role(val name: String) extends Product with Serializable {
   override def toString: String = name
