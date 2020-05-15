@@ -12,7 +12,7 @@
     <!-- TODO: dependencyManagement käyttöön? -->
 
     <properties>
-        <scala.version>2.12.10</scala.version>
+        <scala.version>2.13.1</scala.version>
 
         <!-- Korjaa käännösvirheen:
              [ERROR] Source option 5 is no longer supported. Use 6 or later.
