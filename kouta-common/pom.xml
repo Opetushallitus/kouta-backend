@@ -133,25 +133,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${plugin.maven-jar-plugin.version}</version>
-                <!--Huom! Includen lisääminen muuttaa jostain syystä fat jarin sisältöä.-->
-                <!--configuration>
-                    <includes>
-                        <include>**/external/*</include>
-                    </includes>
-                </configuration-->
-                <executions>
-                    <execution>
-                        <id>test-jar</id>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
             <!-- disable surefire -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
