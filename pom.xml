@@ -36,7 +36,7 @@
         <!-- Database related properties -->
         <flyway.version>5.1.4</flyway.version>
         <slick.version>3.2.3</slick.version>
-        <jdbc.version>42.2.5</jdbc.version>
+        <jdbc.version>42.2.12.jre7</jdbc.version>
 
         <!-- Test properties -->
         <scala-test.version>3.2.0-SNAP10</scala-test.version>
