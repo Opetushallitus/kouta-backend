@@ -1,70 +1,22 @@
 package fi.oph.kouta.util
 
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.UUID
-
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{HakukohdeOid, _}
 import org.json4s.JsonAST.{JObject, JString}
-import org.json4s.jackson.Serialization.write
-import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Extraction, Formats}
+import org.json4s.{CustomSerializer, Extraction, Formats}
 
 import scala.util.Try
 
-trait KoutaJsonFormats extends DefaultKoutaJsonFormats {
-
-  implicit def jsonFormats: Formats = koutaJsonFormats
-
-  def toJson(data: AnyRef): String = write(data)
+trait KoutaJsonFormats extends GenericKoutaJsonFormats with DefaultKoutaJsonFormats {
+  override implicit def jsonFormats: Formats = koutaJsonFormats
 }
 
-sealed trait DefaultKoutaJsonFormats {
-
-  val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
+sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
 
   def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
     koulutusMetadataSerializer,
     toteutusMetadataSerializer,
     valintatapaSisaltoSerializer,
     valintaperusteMetadataSerializer)
-
-  private def genericKoutaFormats: Formats = DefaultFormats.strict
-    .addKeySerializers(Seq(kieliKeySerializer)) ++
-    Seq(
-      localDateTimeSerializer,
-      stringSerializer(Julkaisutila.withName),
-      stringSerializer(Koulutustyyppi.withName),
-      stringSerializer(Hakulomaketyyppi.withName),
-      stringSerializer(Kieli.withName),
-      stringSerializer(UUID.fromString),
-      stringSerializer(LiitteenToimitustapa.withName),
-      stringSerializer(HakuOid),
-      stringSerializer(HakukohdeOid),
-      stringSerializer(KoulutusOid),
-      stringSerializer(ToteutusOid),
-      stringSerializer(OrganisaatioOid),
-      stringSerializer(UserOid),
-      stringSerializer(GenericOid),
-    )
-
-  private def kieliKeySerializer = new CustomKeySerializer[Kieli](_ => ( {
-    case s: String => Kieli.withName(s)
-  }, {
-    case k: Kieli => k.toString
-  }))
-
-  private def localDateTimeSerializer = new CustomSerializer[LocalDateTime](_ => ({
-    case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
-  }, {
-    case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
-  }))
-
-  private def stringSerializer[A: Manifest](construct: String => A) = new CustomSerializer[A](_ => ({
-    case JString(s) => construct(s)
-  }, {
-    case a: A => JString(a.toString)
-  }))
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ => ({
     case s: JObject =>

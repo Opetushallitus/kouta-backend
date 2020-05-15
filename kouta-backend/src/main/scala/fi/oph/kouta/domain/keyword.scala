@@ -39,7 +39,7 @@ package object keyword {
   sealed trait KeywordType extends EnumType
   object KeywordType extends Enum[KeywordType] {
     override def name: String = "Asiasanan tyyppi"
-    override def values(): List[KeywordType] = List(Asiasana, Ammattinimike)
+    override val values: List[KeywordType] = List(Asiasana, Ammattinimike)
   }
 
   case object Asiasana extends KeywordType { val name = "asiasana" }

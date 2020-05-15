@@ -9,8 +9,8 @@ trait EnumType {
 trait Enum[T <: EnumType] {
   def name: String
 
-  def values(): List[T]
+  def values: List[T]
 
-  def withName(n: String): T = values().find(_.name.equals(n))
+  def withName(n: String): T = values.find(_.name.equals(n))
     .getOrElse(throw new IllegalArgumentException(s"Unknown ${name} '${n}'"))
 }

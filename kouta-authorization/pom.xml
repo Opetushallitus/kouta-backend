@@ -10,19 +10,40 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>kouta-common</artifactId>
+    <artifactId>kouta-authorization</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <name>kouta-common</name>
+    <name>kouta-authorization</name>
 
     <dependencies>
+        <dependency>
+            <groupId>fi.oph.kouta</groupId>
+            <artifactId>kouta-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
         </dependency>
 
-
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet-api.version}</version>
+        </dependency>
 
         <!-- Utility dependencies -->
+        <dependency>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-http</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-utils_2.12</artifactId>
+            <version>${scala-utils.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-logging_2.12</artifactId>
@@ -38,6 +59,10 @@
             <artifactId>json4s-jackson_2.12</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -46,9 +71,17 @@
             <version>${scala-test.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.scalacheck</groupId>
             <artifactId>scalacheck_2.12</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-netty</artifactId>
+            <version>5.5.1</version>
             <scope>test</scope>
         </dependency>
 
@@ -137,12 +170,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>${plugin.maven-jar-plugin.version}</version>
-                <!--Huom! Includen lisääminen muuttaa jostain syystä fat jarin sisältöä.-->
-                <!--configuration>
-                    <includes>
-                        <include>**/external/*</include>
-                    </includes>
-                </configuration-->
                 <executions>
                     <execution>
                         <id>test-jar</id>

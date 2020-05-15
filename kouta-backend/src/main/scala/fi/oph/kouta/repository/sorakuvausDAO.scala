@@ -3,8 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.UUID
 
-import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
@@ -75,8 +74,6 @@ sealed trait SorakuvausModificationSQL extends SQLHelpers {
 
 sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificationSQL with SQLHelpers {
 
-  lazy val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
-
   def insertSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Int] = {
     sqlu"""insert into sorakuvaukset (
                      id,
@@ -127,13 +124,13 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${ophOid})""".as[SorakuvausListItem]
+          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})""".as[SorakuvausListItem]
   }
 
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${ophOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${RootOrganisaatioOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           or (julkinen  = ${true} and koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))""".as[SorakuvausListItem]
   }
 }

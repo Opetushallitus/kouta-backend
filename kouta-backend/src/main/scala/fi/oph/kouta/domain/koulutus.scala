@@ -2,7 +2,7 @@ package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
@@ -186,7 +186,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
         validateIfTrue(koulutustyyppi == Amm, assertNotOptional(ePerusteId, "ePerusteId")),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-        validateIfTrue(!OrganisaatioOid("1.2.246.562.10.00000000001").equals(organisaatioOid), //TODO: !KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio.equals(organisaatioOid), (rikkoo mm. indeksoijan testit)
+        validateIfTrue(!RootOrganisaatioOid.equals(organisaatioOid),
           assertNotEmpty(tarjoajat, "tarjoajat"))
       ))
     )

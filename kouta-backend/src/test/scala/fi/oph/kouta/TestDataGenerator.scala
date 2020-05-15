@@ -106,7 +106,7 @@ object TestDataGenerator extends KoutaJsonFormats {
   def koulutus(i: Int) = i % 2 match {
     case 0 => AmmKoulutus.copy(
       nimi = koulutusNimi(i),
-      tila = shuffle(Julkaisutila.values()).head,
+      tila = shuffle(Julkaisutila.values).head,
       julkinen = (i % 4 == 0),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = List(organisaatioOid(i)),
@@ -114,7 +114,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     )
     case _ => YoKoulutus.copy(
       nimi = koulutusNimi(i),
-      tila = shuffle(Julkaisutila.values()).head,
+      tila = shuffle(Julkaisutila.values).head,
       julkinen = (i % 4 == 0),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = List(organisaatioOid(i)),
@@ -132,7 +132,7 @@ object TestDataGenerator extends KoutaJsonFormats {
   def toteutus(koulutusOid: String, i: Int, j: Int) = i % 2 match {
     case 0 => JulkaistuAmmToteutus.copy(
       nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
-      tila = shuffle(Julkaisutila.values()).head,
+      tila = shuffle(Julkaisutila.values).head,
       koulutusOid = KoulutusOid(koulutusOid),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = getTarjoajat(i),
@@ -140,7 +140,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       metadata = Some(updateAsiasanat(JulkaistuAmmToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata])))
     case 1 => JulkaistuYoToteutus.copy(
       nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
-      tila = shuffle(Julkaisutila.values()).head,
+      tila = shuffle(Julkaisutila.values).head,
       koulutusOid = KoulutusOid(koulutusOid),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = getTarjoajat(i),
@@ -149,14 +149,14 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   def haku(i: Int) = JulkaistuHaku.copy(
     nimi = Map(Fi -> s"Haku $i", Sv -> s"Haku $i sv"),
-    tila = shuffle(Julkaisutila.values()).head,
+    tila = shuffle(Julkaisutila.values).head,
     hakuajat = List(Ajanjakso(alkaa = inPast(), paattyy = Some(inFuture()))),
     organisaatioOid = organisaatioOid(i)
   )
 
   def hakukohde(i: Int, j: Int, k: Int, toteutusOid: String, hakuOid: String, valintaperusteId: String) = JulkaistuHakukohde.copy(
     nimi = Map(Fi -> s"Koulutuksen $i toteutuksen $j hakukohde $k", Sv -> s"Koulutuksen $i toteutuksen $j hakukohde $k sv"),
-    tila = shuffle(Julkaisutila.values()).head,
+    tila = shuffle(Julkaisutila.values).head,
     toteutusOid = ToteutusOid(toteutusOid),
     hakuOid = HakuOid(hakuOid),
     valintaperusteId = Some(UUID.fromString(valintaperusteId)),
@@ -167,19 +167,19 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   def sorakuvaus(i: Int) = AmmSorakuvaus.copy(
     nimi = Map(Fi -> s"Sorakuvaus $i", Sv -> s"Sorakuvaus $i sv"),
-    tila = shuffle(Julkaisutila.values()).head,
+    tila = shuffle(Julkaisutila.values).head,
     organisaatioOid = organisaatioOid(i)
   )
 
   def valintaperuste(i: Int, sorakuvausId: String) = i % 2 match {
     case 0 => AmmValintaperuste.copy(
       nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
-      tila = shuffle(Julkaisutila.values()).head,
+      tila = shuffle(Julkaisutila.values).head,
       sorakuvausId = Some(UUID.fromString(sorakuvausId)),
       organisaatioOid = organisaatioOid(i))
     case 1 => YoValintaperuste.copy(
       nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
-      tila = shuffle(Julkaisutila.values()).head,
+      tila = shuffle(Julkaisutila.values).head,
       sorakuvausId = Some(UUID.fromString(sorakuvausId)),
       organisaatioOid = organisaatioOid(i))
   }

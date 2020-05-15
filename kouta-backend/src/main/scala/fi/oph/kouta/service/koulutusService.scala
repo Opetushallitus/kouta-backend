@@ -5,7 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
@@ -96,7 +96,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
-      case Seq(OrganisaatioClient.OphOid) => ToteutusDAO.listByKoulutusOid(oid)
+      case Seq(RootOrganisaatioOid) => ToteutusDAO.listByKoulutusOid(oid)
       case x => ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
     }
 

@@ -121,5 +121,3 @@ class HealthcheckServlet extends KoutaServlet {
 case class PayloadTooLargeException(message: String) extends RuntimeException(message)
 
 case class MediaNotSupportedException(message: String) extends RuntimeException(message)
-
-case class EntityNotFoundException(message: String) extends RuntimeException(message)

@@ -2,7 +2,6 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 
-import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
@@ -132,8 +131,6 @@ sealed trait KoulutusModificationSQL extends SQLHelpers {
 }
 
 sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL with SQLHelpers {
-
-  val ophOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
 
   def insertKoulutus(koulutus: Koulutus): DBIO[KoulutusOid] = {
     sql"""insert into koulutukset (
@@ -265,13 +262,13 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""#$selectKoulutusListSql
-          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${ophOid})
+          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})
       """.as[KoulutusListItem]
   }
 
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]) = {
     sql"""#$selectKoulutusListSql
-          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${ophOid} or tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${RootOrganisaatioOid} or tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
       """.as[KoulutusListItem]
   }

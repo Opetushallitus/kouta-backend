@@ -1,36 +1,30 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Koulutustyyppi, oppilaitostyyppi2koulutustyyppi}
-import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.config.KoutaAuthorizationConfigFactory
+import fi.oph.kouta.domain.Koulutustyyppi
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.util.GenericKoutaJsonFormats
 import fi.vm.sade.properties.OphProperties
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import scala.annotation.tailrec
 
-trait OrganisaatioClient {
-  type OrganisaatioOidsAndOppilaitostyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
-}
-
-object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJsonFormats {
-  val urlProperties: OphProperties = KoutaConfigurationFactory.configuration.urlProperties
-
-  val OphOid: OrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+object OrganisaatioClient extends HttpClient with GenericKoutaJsonFormats {
+  val urlProperties: OphProperties = KoutaAuthorizationConfigFactory.urlProperties
 
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
-    case OphOid => Seq(OphOid)
+    case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
     case _ => getHierarkia(oid, orgs => children(oid, orgs), lakkautetut)
   }
 
   def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
-    case OphOid => (Seq(OphOid), Koulutustyyppi.values)
+    case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
     case _ => getHierarkia(oid, orgs => (children(oid, orgs), oppilaitostyypit(oid, orgs)))
   }
 
   def getAllChildAndParentOidsWithOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
-    case OphOid => (Seq(OphOid), Koulutustyyppi.values)
+    case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
     case _ => getHierarkia(oid, orgs => (parentsAndChildren(oid, orgs), oppilaitostyypit(oid, orgs)))
   }
 
@@ -60,7 +54,7 @@ object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJ
   private def oppilaitostyypit(oid: OrganisaatioOid, organisaatiot: Seq[OidAndChildren]): Seq[Koulutustyyppi] =
     find(oid, organisaatiot).map{
       x => parentOppilaitostyypitFlat(x, organisaatiot) ++ Seq(x.oppilaitostyyppi) ++ childOppilaitostyypitFlat(x)
-    }.getOrElse(Seq()).filter(_.isDefined).map(_.get).distinct.map(oppilaitostyyppi2koulutustyyppi)
+    }.getOrElse(Seq()).filter(_.isDefined).map(_.get).distinct.map(Koulutustyyppi.fromOppilaitostyyppi)
 
   @tailrec
   private def find(oid: OrganisaatioOid, level: Seq[OidAndChildren]): Option[OidAndChildren] =
