@@ -12,12 +12,10 @@ import scala.annotation.tailrec
 
 trait OrganisaatioClient {
   type OrganisaatioOidsAndOppilaitostyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
-}
-
-object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJsonFormats {
-  val urlProperties: OphProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   val OphOid: OrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+
+  protected def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R, lakkautetut: Boolean = false): R
 
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
     case OphOid => Seq(OphOid)
@@ -33,23 +31,6 @@ object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJ
     case OphOid => (Seq(OphOid), Koulutustyyppi.values)
     case _ => getHierarkia(oid, orgs => (parentsAndChildren(oid, orgs), oppilaitostyypit(oid, orgs)))
   }
-
-  case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
-  case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String, oppilaitostyyppi: Option[String])
-
-  private def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R, lakkautetut: Boolean = false) = {
-    val url = urlProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid.toString, lakkautetut))
-    get(url, followRedirects = true) { response =>
-      result(parse(response).extract[OrganisaatioResponse].organisaatiot)
-    }
-  }
-
-  private def queryParams(oid: String, lakkautetut: Boolean = false) =
-    toQueryParams(
-      "oid" -> oid,
-      "aktiiviset" -> "true",
-      "suunnitellut" -> "true",
-      "lakkautetut" -> Option(lakkautetut).map(_.toString).getOrElse("false"))
 
   private def children(oid: OrganisaatioOid, organisaatiot: List[OidAndChildren]): Seq[OrganisaatioOid] =
     find(oid, organisaatiot).map(x => x.oid +: childOidsFlat(x)).getOrElse(Seq()).distinct
@@ -84,4 +65,85 @@ object OrganisaatioClient extends OrganisaatioClient with HttpClient with KoutaJ
       case None => None
       case Some(org) => org.oppilaitostyyppi
     }}
+}
+
+object CachedOrganisaatioHierarkiaClient extends HttpClient with KoutaJsonFormats {
+
+  import scala.concurrent.duration._
+  import scalacache.modes.sync._
+  import scalacache.caffeine._
+  import scalacache.memoization.memoizeSync
+
+  val urlProperties: OphProperties = KoutaConfigurationFactory.configuration.urlProperties
+
+  val OphOid: OrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
+
+  implicit val WholeHierarkiaCache = CaffeineCache[OrganisaatioResponse]
+
+  def getWholeOrganisaatioHierarkiaCached(): OrganisaatioResponse = memoizeSync[OrganisaatioResponse](Some(45.minutes)) {
+    val url = urlProperties.url("organisaatio-service.organisaatio.oid.jalkelaiset", OphOid.s)
+    get(url, followRedirects = true) { response =>
+      parse(response).extract[OrganisaatioResponse]
+    }
+  }
+}
+
+object OrganisaatioClient extends OrganisaatioClient {
+
+  import scalacache._
+  import scala.concurrent.duration._
+  import scalacache.modes.sync._
+  import scalacache.caffeine._
+
+  //TODO: @tailrec
+  private def pickChildrenRecursively(current: OidAndChildren, oid: OrganisaatioOid): Option[OidAndChildren] = {
+    if(current.oid.equals(oid)) {
+      Some(current)
+    } else {
+      val children = current.children.map(pickChildrenRecursively(_, oid)).flatten
+      if(children.isEmpty) {
+        None
+      } else {
+        Some(current.copy(children = children))
+      }
+    }
+  }
+
+  private def findHierarkia(oid: OrganisaatioOid): List[OidAndChildren] =
+    CachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached()
+      .organisaatiot.map(pickChildrenRecursively(_, oid)).flatten
+
+  implicit val HierarkiaCache = CaffeineCache[List[OidAndChildren]]
+
+  private def cacheHierarkia(oid: OrganisaatioOid): Any =
+    sync.put(oid)(findHierarkia(oid), Some(45.minutes))
+
+  private def getCachedHierarkia(oid: OrganisaatioOid): Option[List[OidAndChildren]] =
+    sync.get(oid)
+
+  //TODO: @tailrec
+  private def removeLakkautetutRecursively(current: OidAndChildren): Option[OidAndChildren] = {
+    if(current.isPassiivinen) {
+      None
+    } else {
+      Some(current.copy(children = current.children.map(removeLakkautetutRecursively(_)).flatten))
+    }
+  }
+
+  protected def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R, lakkautetut: Boolean = false) = {
+    val hierarkia: List[OidAndChildren] = getCachedHierarkia(oid).orElse {
+      cacheHierarkia(oid)
+      getCachedHierarkia(oid)
+    }.getOrElse(List.empty[OidAndChildren])
+
+    result {
+      if(lakkautetut) { hierarkia } else { hierarkia.map(removeLakkautetutRecursively).flatten }
+    }
+  }
+}
+
+case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
+
+case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String, oppilaitostyyppi: Option[String], status: String) {
+  def isPassiivinen = status.equalsIgnoreCase("PASSIIVINEN")
 }

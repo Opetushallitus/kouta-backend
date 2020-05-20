@@ -3,7 +3,6 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.client.OrganisaatioClient
-import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.Julkaistu
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
@@ -13,6 +12,7 @@ import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
 
 import scala.collection.IterableView
+import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
 
 trait ValidatingService[E <: Validatable] {
 

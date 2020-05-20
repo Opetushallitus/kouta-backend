@@ -72,10 +72,12 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     startServiceMocking()
     addTestSessions()
 
-    mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
+    mockOrganisaatioResponse()
+
+    /*mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
     mockSingleOrganisaatioResponses(LonelyOid)
     mockOrganisaatioResponse(YoOid, responseFromResource("mpkk"))
-    mockOrganisaatioResponse(AmmOid, singleOidOrganisaatioResponse(AmmOid.s))
+    mockOrganisaatioResponse(AmmOid, singleOidOrganisaatioResponse(AmmOid.s))*/
   }
 
   override def afterAll(): Unit = {

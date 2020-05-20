@@ -1,6 +1,7 @@
 package fi.oph.kouta.mocks
 
 import fi.oph.kouta.TestOids.OphOid
+import fi.oph.kouta.client.CachedOrganisaatioHierarkiaClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -41,22 +42,22 @@ sealed trait ServiceMocks extends Logging with KoutaJsonFormats {
 
   def clearMock(request:model.HttpRequest) = mockServer.foreach(_.clear(request))
 
-  protected def getMockPath(key:String) = urlProperties.map(p => new java.net.URL(p.url(key)).getPath).getOrElse("/")
+  protected def getMockPath(key: String, param: Option[String] = None): String = urlProperties match {
+    case None => "/"
+    case Some(up) => new java.net.URL(param match {
+      case None => up.url(key)
+      case Some(p) => up.url(key, p)
+    }).getPath
+  }
 
   protected def responseFromResource(filename:String) = Source.fromInputStream(
     getClass().getClassLoader().getResourceAsStream(s"data/$filename.json")).mkString
 
-  protected def organisaationServiceParams(oid: OrganisaatioOid, lakkautetut: Boolean = false) = Map(
-    "oid" -> oid.s,
-    "aktiiviset" -> "true",
-    "suunnitellut" -> "true",
-    "lakkautetut" -> lakkautetut.toString)
-
-  protected def mockGet(key:String, params:Map[String,String], responseString:String, statusCode:Int = 200): model.HttpRequest = {
+  protected def mockGet(path:String, params:Map[String,String], responseString:String, statusCode:Int = 200): model.HttpRequest = {
     val req: model.HttpRequest = request()
       .withMethod("GET")
       //.withSecure(true) TODO: https toimimaan
-      .withPath(getMockPath(key))
+      .withPath(path)
       .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
     mockServer.foreach(_.when(
       req
@@ -66,10 +67,10 @@ sealed trait ServiceMocks extends Logging with KoutaJsonFormats {
     req
   }
 
-  protected def mockPost[B <: AnyRef](key: String, body: B, params: Map[String, String], responseString: String, statusCode: Int = 200): model.HttpRequest = {
+  protected def mockPost[B <: AnyRef](path: String, body: B, params: Map[String, String], responseString: String, statusCode: Int = 200): model.HttpRequest = {
     val req: model.HttpRequest = request()
       .withMethod("POST")
-      .withPath(getMockPath(key))
+      .withPath(path)
       .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
       .withBody(JsonBody.json(write[B](body), MatchType.STRICT).asInstanceOf[Body[_]])
     mockServer.foreach(_.when(
@@ -86,19 +87,9 @@ trait OrganisaatioServiceMock extends ServiceMocks {
   val NotFoundOrganisaatioResponse = s"""{ "numHits": 0, "organisaatiot": []}"""
   lazy val DefaultResponse = responseFromResource("organisaatio")
 
-  def singleOidOrganisaatioResponse(oid:String) = s"""{ "numHits": 1, "organisaatiot": [{"oid": "$oid", "parentOidPath": "$oid/$OphOid", "oppilaitostyyppi": "oppilaitostyyppi_21#1", "children" : []}]}"""
+  def mockOrganisaatioResponse(response: String = DefaultResponse): Unit =
+    mockGet(getMockPath("organisaatio-service.organisaatio.oid.jalkelaiset", Some(OphOid.s)), Map.empty, response)
 
-  def mockOrganisaatioResponse(oid: OrganisaatioOid, response: String = DefaultResponse, lakkautetut: Boolean = false): Unit =
-    mockGet("organisaatio-service.organisaatio.hierarkia", organisaationServiceParams(oid, lakkautetut), response)
-
-  def mockOrganisaatioResponses(oids: OrganisaatioOid*): Unit = oids.foreach(mockOrganisaatioResponse(_))
-
-  def mockSingleOrganisaatioResponses(organisaatioOids: OrganisaatioOid*): Unit = organisaatioOids.foreach { oid =>
-    mockOrganisaatioResponse(oid, singleOidOrganisaatioResponse(oid.s))
-  }
-
-  def mockSingleOrganisaatioResponses(first: String, organisaatioOids: String*): Unit =
-    mockSingleOrganisaatioResponses((organisaatioOids :+ first).map(OrganisaatioOid):_*)
 }
 
 object OrganisaatioServiceMock extends OrganisaatioServiceMock
@@ -137,8 +128,8 @@ trait KoutaIndexMock extends ServiceMocks {
   }
 
   private def mock(key: String, body: List[String], params: Map[String, String], response: String, statusCode: Int = 200): model.HttpRequest = statusCode match {
-    case 200 => mockPost(key, body.sorted, params, response)
-    case _   => mockPost(key, body.sorted, params, s"Error $statusCode", statusCode)
+    case 200 => mockPost(getMockPath(key), body.sorted, params, response)
+    case _   => mockPost(getMockPath(key), body.sorted, params, s"Error $statusCode", statusCode)
   }
 
   def mockKoulutusResponse(body: List[String], params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest =

@@ -26,7 +26,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    mockOrganisaatioResponse(UnknownOid, NotFoundOrganisaatioResponse)
+    mockOrganisaatioResponse()
+    //mockOrganisaatioResponse(UnknownOid, NotFoundOrganisaatioResponse)
 
     createTestData()
   }
