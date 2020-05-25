@@ -430,8 +430,8 @@ object TestData {
         puhelinnumero = Map(Fi -> "123", Sv -> "123"),
         sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
       tietoaOpiskelusta = Seq(
-        Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
-          teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))),
+        TietoaOpiskelusta(otsikkoKoodiUri = "organisaationkuvaustiedot_03#1",
+          teksti = Map(Fi -> "Tietoa opiskelusta ", Sv -> "Tietoa opiskelusta sv"))),
       esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),
       opiskelijoita = Some(100),
       korkeakouluja = Some(1),
