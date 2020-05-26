@@ -417,7 +417,7 @@ package object domain {
                         nimi: Kielistetty = Map(),
                         tietoja: Kielistetty = Map(),
                         liittyyEnnakkovalmistautumista: Option[Boolean] = None,
-                        ohjeetEennakkovalmistautumiseen: Kielistetty = Map(),
+                        ohjeetEnnakkovalmistautumiseen: Kielistetty = Map(),
                         erityisjarjestelytMahdollisia: Option[Boolean] = None,
                         ohjeetErityisjarjestelyihin: Kielistetty = Map(),
                         tilaisuudet: List[Valintakoetilaisuus] = List()) extends ValidatableSubEntity {
@@ -427,7 +427,7 @@ package object domain {
       validateIfJulkaistu(tila, and(
         validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi"),
         validateOptionalKielistetty(kielivalinta, tietoja, s"$path.tietoja"),
-        validateIfTrue(liittyyEnnakkovalmistautumista.contains(true), validateKielistetty(kielivalinta, ohjeetEennakkovalmistautumiseen, s"$path.ohjeetEennakkovalmistautumiseen")),
+        validateIfTrue(liittyyEnnakkovalmistautumista.contains(true), validateKielistetty(kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")),
         validateIfTrue(erityisjarjestelytMahdollisia.contains(true), validateKielistetty(kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin"))
       ))
     )
