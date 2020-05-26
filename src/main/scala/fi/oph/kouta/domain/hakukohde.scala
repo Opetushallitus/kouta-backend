@@ -305,6 +305,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      liitteidenToimitustapa: Option[LiitteenToimitustapa] = None,
                      liitteidenToimitusosoite: Option[LiitteenToimitusosoite] = None,
                      liitteet: List[Liite] = List(),
+                     valintakokeidenYleiskuvaus: Kielistetty = Map(),
                      valintakokeet: List[Valintakoe] = List(),
                      hakuajat: List[Ajanjakso] = List(),
                      muokkaaja: UserOid,
@@ -342,6 +343,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
         assertNotOptional(alkamisvuosi, "alkamisvuosi"),
         assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri")
       )),
+      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, "valintakokeidenYleiskuvaus")
     ))
   )
 
