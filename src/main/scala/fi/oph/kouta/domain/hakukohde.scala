@@ -305,9 +305,9 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      liitteidenToimitustapa: Option[LiitteenToimitustapa] = None,
                      liitteidenToimitusosoite: Option[LiitteenToimitusosoite] = None,
                      liitteet: List[Liite] = List(),
-                     valintakokeidenYleiskuvaus: Kielistetty = Map(),
                      valintakokeet: List[Valintakoe] = List(),
                      hakuajat: List[Ajanjakso] = List(),
+                     metadata: Option[HakukohdeMetadata] = None, //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
@@ -325,6 +325,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     validateIfDefined[LiitteenToimitusosoite](liitteidenToimitusosoite, _.validate(tila, kielivalinta, "liitteidenToimitusosoite")),
     validateIfNonEmpty[Liite](liitteet, "liitteet", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[HakukohdeMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
       validateIfDefined[String](alkamisvuosi, assertMatch(_, VuosiPattern,"alkamisvuosi")),
       validateIfTrue(liitteetOnkoSamaToimitusaika.contains(true), assertNotOptional(liitteidenToimitusaika, "liitteidenToimitusaika")),
@@ -342,8 +343,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
       validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), and(
         assertNotOptional(alkamisvuosi, "alkamisvuosi"),
         assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri")
-      )),
-      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, "valintakokeidenYleiskuvaus")
+      ))
     ))
   )
 
@@ -360,6 +360,14 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   override def withModified(modified: LocalDateTime): Hakukohde = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
+}
+
+case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, "valintakokeidenYleiskuvaus")
+    ))
+  )
 }
 
 case class Liite(id: Option[UUID] = None,

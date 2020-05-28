@@ -191,7 +191,6 @@ case class Valintaperuste(id: Option[UUID] = None,
                           nimi: Kielistetty = Map(),
                           julkinen: Boolean = false,
                           sorakuvausId: Option[UUID] = None,
-                          valintakokeidenYleiskuvaus: Kielistetty = Map(),
                           valintakokeet: List[Valintakoe] = List(),
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,
@@ -211,8 +210,7 @@ case class Valintaperuste(id: Option[UUID] = None,
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-      assertNotOptional(sorakuvausId, "sorakuvausId"),
-      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, "valintakokeidenYleiskuvaus")
+      assertNotOptional(sorakuvausId, "sorakuvausId")
     ))
   )
 

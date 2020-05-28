@@ -415,25 +415,33 @@ package object domain {
   case class Valintakoe(id: Option[UUID] = None,
                         tyyppiKoodiUri: Option[String] = None,
                         nimi: Kielistetty = Map(),
-                        tietoja: Kielistetty = Map(),
-                        liittyyEnnakkovalmistautumista: Option[Boolean] = None,
-                        ohjeetEnnakkovalmistautumiseen: Kielistetty = Map(),
-                        erityisjarjestelytMahdollisia: Option[Boolean] = None,
-                        ohjeetErityisjarjestelyihin: Kielistetty = Map(),
+                        metadata: Option[ValintakoeMetadata] = None,
                         tilaisuudet: List[Valintakoetilaisuus] = List()) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, ValintakokeenTyyppiKoodiPattern, s"$path.tyyppiKoodiUri")),
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _)),
+      validateIfDefined[ValintakoeMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfJulkaistu(tila, and(
         validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi"),
-        validateOptionalKielistetty(kielivalinta, tietoja, s"$path.tietoja"),
-        validateIfTrue(liittyyEnnakkovalmistautumista.contains(true), validateKielistetty(kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")),
-        validateIfTrue(erityisjarjestelytMahdollisia.contains(true), validateKielistetty(kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin"))
       ))
     )
 
     override def validateOnJulkaisu(path: String): IsValid =
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validateOnJulkaisu(_))
+  }
+
+  case class ValintakoeMetadata(tietoja: Kielistetty = Map(),
+                                liittyyEnnakkovalmistautumista: Option[Boolean] = None,
+                                ohjeetEnnakkovalmistautumiseen: Kielistetty = Map(),
+                                erityisjarjestelytMahdollisia: Option[Boolean] = None,
+                                ohjeetErityisjarjestelyihin: Kielistetty = Map()) extends ValidatableSubEntity {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+      validateIfJulkaistu(tila, and(
+        validateOptionalKielistetty(kielivalinta, tietoja, s"$path.tietoja"),
+        validateIfTrue(liittyyEnnakkovalmistautumista.contains(true), validateKielistetty(kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")),
+        validateIfTrue(erityisjarjestelytMahdollisia.contains(true), validateKielistetty(kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin"))
+      ))
+    )
   }
 
   case class Valintakoetilaisuus(osoite: Option[Osoite],

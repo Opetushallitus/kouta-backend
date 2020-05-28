@@ -161,7 +161,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val TeemakuvaKey = "teemakuva"
   val LogoKey = "logo"
   val EPerusteIdKey = "ePerusteId"
-  val ValintakokeidenYleiskuvausKey = "valintakokeidenYleiskuvaus"
 
   def formatModified(date: LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
 
@@ -456,9 +455,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(LiitteidenToimitustapaKey).map(LiitteenToimitustapa.withName),
       params.get(LiitteidenToimitusosoiteKey).map(read[LiitteenToimitusosoite]),
       params.get(LiitteetKey).map(read[List[Liite]]).getOrElse(List()),
-      params.get(ValintakokeidenYleiskuvausKey).map(toKielistetty(kielivalinta, _)).getOrElse(Map()),
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
+      params.get(MetadataKey).map(read[HakukohdeMetadata]),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
@@ -478,7 +477,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(NimiKey)),
       params(JulkinenKey).toBoolean,
       Some(UUID.fromString(params(SorakuvausIdKey))),
-      params.get(ValintakokeidenYleiskuvausKey).map(toKielistetty(kielivalinta, _)).getOrElse(Map()),
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       params.get(MetadataKey).map(read[ValintaperusteMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
