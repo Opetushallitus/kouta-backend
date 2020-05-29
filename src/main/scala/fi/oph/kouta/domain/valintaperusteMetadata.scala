@@ -19,6 +19,11 @@ package object valintaperusteMetadata {
       |          description: Lista valintaperustekuvauksen valintatavoista
       |          items:
       |            $ref: '#/components/schemas/Valintatapa'
+      |        valintakokeidenYleiskuvaus:
+      |          type: object
+      |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty valintaperustekuvauksen kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
   val AmmatillinenValintaperusteMetadataModel =
@@ -38,6 +43,8 @@ package object valintaperusteMetadata {
   val KorkeakoulutusValintaperusteMetadataModel =
     """    KorkeakoulutusValintaperusteMetadata:
       |      type: object
+      |      allOf:
+      |        - $ref: '#/components/schemas/ValintaperusteMetadata'
       |      properties:
       |        osaamistaustaKoodiUrit:
       |          type: array
@@ -50,7 +57,7 @@ package object valintaperusteMetadata {
       |            - osaamistausta_002#1
       |        kuvaus:
       |          type: object
-      |          description: Valintaperustekuvauksen kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          description: Valintaperustekuvauksen kuvausteksti eri kielillä. Kielet on määritetty valintaperustekuvauksen kielivalinnassa.
       |          allOf:
       |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin

@@ -209,11 +209,46 @@ package object domain {
       |          type: string
       |          description: Valintakokeen tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1)
       |          example: valintakokeentyyppi_1#1
+      |        nimi:
+      |          type: object
+      |          description: Valintakokeen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Nimi'
+      |        metadata:
+      |          type: object
+      |          $ref: '#/components/schemas/ValintakoeMetadata'
       |        tilaisuudet:
       |          type: array
       |          description: Valintakokeen järjestämistilaisuudet
       |          items:
       |            $ref: '#/components/schemas/Valintakoetilaisuus'
+      |""".stripMargin
+
+  val ValintakoeMetadataModel =
+    """    ValintakoeMetadata:
+      |      type: object
+      |      properties:
+      |        tietoja:
+      |          type: object
+      |          description: Tietoa valintakokeesta
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |        liittyyEnnakkovalmistautumista:
+      |          type: boolean
+      |          description: Liittyykö valintakokeeseen ennakkovalmistautumista
+      |        ohjeetEnnakkovalmistautumiseen:
+      |          type: object
+      |          description: Ohjeet valintakokeen ennakkojärjestelyihin
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |        erityisjarjestelytMahdollisia:
+      |          type: boolean
+      |          description: Ovatko erityisjärjestelyt mahdollisia valintakokeessa
+      |        ohjeetErityisjarjestelyihin:
+      |          type: object
+      |          description: Ohjeet valintakokeen erityisjärjestelyihin
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val ValintakoetilaisuusModel =
@@ -230,6 +265,11 @@ package object domain {
       |          description: Valintakokeen järjestämisaika
       |          items:
       |            $ref: '#/components/schemas/Ajanjakso'
+      |        jarjestamispaikka:
+      |          type: object
+      |          description: Valintakokeen järjestämispaikka eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
       |        lisatietoja:
       |          type: object
       |          description: Lisätietoja valintakokeesta eri kielillä. Kielet on määritetty kielivalinnassa.
@@ -281,7 +321,7 @@ package object domain {
 
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel,
     LisatietoModel, YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel,
-    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel)
+    ValintakoeMetadataModel, ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel)
 
   type Kielistetty = Map[Kieli,String]
 

@@ -202,6 +202,9 @@ package object hakukohde {
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          allOf:
       |            - $ref: '#/components/schemas/Nimi'
+      |        metadata:
+      |          type: object
+      |          $ref: '#/components/schemas/HakukohdeMetadata'
       |        muokkaaja:
       |          type: string
       |          description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
@@ -215,6 +218,17 @@ package object hakukohde {
       |           format: date-time
       |           description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55
+      |""".stripMargin
+
+  val HakukohdeMetadataModel =
+    """    HakukohdeMetadata:
+      |      type: object
+      |      properties:
+      |        valintakokeidenYleiskuvaus:
+      |          type: object
+      |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
   val LiitteenToimitusosoiteModel =
@@ -275,7 +289,7 @@ package object hakukohde {
       |            - $ref: '#/components/schemas/LiitteenToimitusosoite'
       |""".stripMargin
 
-  def models = List(HakukohdeListItemModel, HakukohdeModel, LiiteModel, LiitteenToimitusosoiteModel)
+  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel)
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,
