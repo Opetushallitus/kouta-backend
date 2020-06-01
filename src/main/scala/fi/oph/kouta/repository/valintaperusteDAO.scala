@@ -214,7 +214,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL :+ deleteSQL)
   }
 
-  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]): DBIO[Int] = {
+  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: Seq[UUID]): DBIO[Int] = {
     sqlu"""delete from valintaperusteiden_valintakokeet
            where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id not in (#${createUUIDInParams(exclude)})"""
   }

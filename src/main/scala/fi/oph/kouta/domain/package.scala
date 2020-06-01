@@ -456,7 +456,7 @@ package object domain {
                         tyyppiKoodiUri: Option[String] = None,
                         nimi: Kielistetty = Map(),
                         metadata: Option[ValintakoeMetadata] = None,
-                        tilaisuudet: List[Valintakoetilaisuus] = List()) extends ValidatableSubEntity {
+                        tilaisuudet: Seq[Valintakoetilaisuus] = Seq()) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, ValintakokeenTyyppiKoodiPattern, s"$path.tyyppiKoodiUri")),
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _)),
