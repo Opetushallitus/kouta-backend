@@ -169,7 +169,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   "Update valintaperuste" should "update valintaperuste" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(valintaperuste(id, sorakuvausId, Arkistoitu), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
   }
 
@@ -177,7 +177,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId), crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
     val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = userOid))
-    update(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
@@ -185,7 +185,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     MockAuditLogger.clean()
-    update(valintaperuste(id, sorakuvausId, Arkistoitu), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "valintaperuste_update")
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
   }
@@ -255,7 +255,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     Thread.sleep(1500)
-    update(valintaperuste(id, sorakuvausId, Arkistoitu), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
     post(ValintaperustePath, bytes(valintaperuste(id, sorakuvausId)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
@@ -275,7 +275,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     Thread.sleep(1500)
-    val uusiValintaperuste = valintaperuste(id, sorakuvausId).copy(valintakokeet = List())
+    val uusiValintaperuste = getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = List()))
     update(uusiValintaperuste, lastModified, expectUpdate = true)
     get(id, uusiValintaperuste) should not equal (lastModified)
   }
@@ -317,7 +317,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy.get), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
     }
 
-    update(thisValintaperusteWithOid.copy(tila = Arkistoitu), lastModified)
+    update(getIds(thisValintaperusteWithOid.copy(tila = Arkistoitu)), lastModified)
   }
 
 }
