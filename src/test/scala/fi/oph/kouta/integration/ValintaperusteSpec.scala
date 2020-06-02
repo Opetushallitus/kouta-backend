@@ -271,6 +271,18 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, uusiValintaperuste)
   }
 
+  it should "put, update and delete valintakokeet correctly" in {
+    val valintaperusteWithValintakokeet = valintaperuste(sorakuvausId).copy(
+      valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
+    )
+    val id = put(valintaperusteWithValintakokeet)
+    val lastModified = get(id, getIds(valintaperusteWithValintakokeet.copy(id = Some(id))))
+    val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
+    val updateValintakoe = (getIds(valintaperuste(id, sorakuvausId))).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    update(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
+    get(id, getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
+  }
+
   it should "delete all valintakokeet and read last modified from history" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))

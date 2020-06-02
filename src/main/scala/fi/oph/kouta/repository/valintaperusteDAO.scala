@@ -211,7 +211,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
 
-    DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL :+ deleteSQL)
+    deleteSQL.zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL))(_ + _)
   }
 
   def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: Seq[UUID]): DBIO[Int] = {
