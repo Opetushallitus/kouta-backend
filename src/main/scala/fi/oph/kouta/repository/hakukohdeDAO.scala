@@ -81,7 +81,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(v => insertValintakoe(oid, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(oid, v, muokkaaja))
 
-    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
+    deleteSQL.zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL))(_ + _)
   }
 
   private def updateLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
@@ -92,7 +92,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(l => insertLiite(oid, l.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateLiite(oid, v, muokkaaja))
 
-    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
+    deleteSQL.zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL))(_ + _)
   }
 
   override def listByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] = organisaatioOids match {
@@ -401,7 +401,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               on conflict on constraint hakukohteiden_hakuajat_pkey do nothing"""
   }
 
-  def deleteHakuajat(oid: Option[HakukohdeOid], exclude: List[Ajanjakso]): DBIO[Int] = {
+  def deleteHakuajat(oid: Option[HakukohdeOid], exclude: Seq[Ajanjakso]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_hakuajat
            where hakukohde_oid = $oid
            and hakuaika not in (#${createRangeInParams(exclude)})"""
@@ -411,7 +411,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid"""
   }
 
-  def deleteValintakokeet(oid: Option[HakukohdeOid], exclude: List[UUID]): DBIO[Int] = {
+  def deleteValintakokeet(oid: Option[HakukohdeOid], exclude: Seq[UUID]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_valintakokeet
            where hakukohde_oid = $oid
            and id not in (#${createUUIDInParams(exclude)})"""
@@ -439,7 +439,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid"""
   }
 
-  def deleteLiitteet(oid: Option[HakukohdeOid], exclude: List[UUID]): DBIO[Int] = {
+  def deleteLiitteet(oid: Option[HakukohdeOid], exclude: Seq[UUID]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${createUUIDInParams(exclude)})"""
   }
 

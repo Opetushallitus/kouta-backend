@@ -346,6 +346,18 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     get(oid, getIds(muokattuHakukohde))
   }
 
+  it should "put, update and delete valintakokeet correctly" in {
+    val hakukohdeWithValintakokeet = uusiHakukohde.copy(
+      valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
+    )
+    val oid = put(hakukohdeWithValintakokeet)
+    val lastModified = get(oid, getIds(hakukohdeWithValintakokeet.copy(oid = Some((HakukohdeOid(oid))))))
+    val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
+    val updateValintakoe = (getIds(tallennettuHakukohde(oid))).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    update(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
+    get(oid, getIds(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
+  }
+
   it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {
     val oid = put(uusiHakukohde)
     val tallennettu = tallennettuHakukohde(oid)
