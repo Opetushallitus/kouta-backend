@@ -311,11 +311,12 @@ package object domain {
 
   object Kieli extends Enum[Kieli] {
     override def name: String = "kieli"
-    def values = List(Fi, Sv, En)
+    def values = List(Fi, Sv, En, MuuKieli)
   }
   case object Fi extends Kieli { val name = "fi" }
   case object Sv extends Kieli { val name = "sv" }
   case object En extends Kieli { val name = "en" }
+  case object MuuKieli extends Kieli { val name = "muu" }
 
   sealed trait Koulutustyyppi extends EnumType
 
