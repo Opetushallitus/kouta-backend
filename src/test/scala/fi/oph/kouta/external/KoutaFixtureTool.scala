@@ -436,6 +436,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(AlkamiskausiKoodiUriKey)),
       Some(params(AlkamisvuosiKey)),
       Some(params(KaytetaanHaunAlkamiskauttaKey).toBoolean),
+      None,
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
