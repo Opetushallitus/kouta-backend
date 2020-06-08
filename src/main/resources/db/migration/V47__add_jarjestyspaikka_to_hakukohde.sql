@@ -5,6 +5,8 @@ alter table hakukohteet
 alter table hakukohteet_history
   add column jarjestyspaikka varchar;
 
+comment on column hakukohteet.jarjestyspaikka is 'Hakukohteen jarjestajan organisaatio';
+
 create or replace function update_hakukohteet_history() returns trigger as
 $$
 begin
