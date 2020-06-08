@@ -50,6 +50,10 @@ package object hakukohde {
       |        kaytetaanHaunAlkamiskautta:
       |          type: boolean
       |          description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
+      |        jarjestyspaikka:
+      |          type: string
+      |          description: Hakukohteen järjestyspaikan organisaatio
+      |          example: 1.2.246.562.10.00101010101
       |        hakulomaketyyppi:
       |          type: string
       |          description: Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta
