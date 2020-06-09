@@ -135,6 +135,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val HakulomakeKuvausKey = "hakulomakeKuvaus"
   val HakulomakeLinkkiKey = "hakulomakeLinkki"
   val KaytetaanHaunHakulomakettaKey = "kaytetaanHaunHakulomaketta"
+  val JarjestyspaikkaOidKey = "jarjestyspaikkaOid"
   val HakukohteenLiittamisenTakarajaKey = "hakukohteenLiittamisenTakaraja"
   val HakukohteenMuokkaamisenTakarajaKey = "hakukohteenMuokkaamisenTakaraja"
   val HakuaikaAlkaaKey = "hakuaikaAlkaa"
@@ -252,6 +253,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
     KaytetaanHaunHakulomakettaKey -> "false",
+    JarjestyspaikkaOidKey -> OtherOid.s,
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
     AloituspaikatKey -> "100",
@@ -436,7 +438,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(AlkamiskausiKoodiUriKey)),
       Some(params(AlkamisvuosiKey)),
       Some(params(KaytetaanHaunAlkamiskauttaKey).toBoolean),
-      None,
+      Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
