@@ -460,7 +460,7 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, ValintakokeenTyyppiKoodiPattern, s"$path.tyyppiKoodiUri")),
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _)),
-      validateIfDefined[ValintakoeMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
+      validateIfDefined[ValintakoeMetadata](metadata, _.validate(tila, kielivalinta, s"$path.metadata")),
       validateIfJulkaistu(tila, and(
         validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi"),
       ))

@@ -159,7 +159,7 @@ sealed trait ValintaperusteMetadata extends ValidatableSubEntity {
     validateIfNonEmpty[ValintaperusteKielitaitovaatimus](kielitaitovaatimukset, s"$path.kielitaitovaatimukset", _.validate(tila, kielivalinta, _)),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
-      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, "valintakokeidenYleiskuvaus")
+      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus")
     ))
   )
 }
