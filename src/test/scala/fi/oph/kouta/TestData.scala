@@ -69,7 +69,15 @@ object TestData {
   val Valintakoe1 = Valintakoe(
     id = None,
     tyyppiKoodiUri = Some("valintakokeentyyppi_1#1"),
+    nimi = Map(Fi -> "valintakokeen nimi fi", Sv -> "valintakokeen nimi sv"),
+    metadata = Some(ValintakoeMetadata(
+      tietoja = Map(Fi -> "tietoa valintakokeesta fi", Sv -> "tietoa valintakokeesta sv"),
+      liittyyEnnakkovalmistautumista = Some(true),
+      ohjeetEnnakkovalmistautumiseen = Map(Fi -> "Ennakko-ohjeet fi", Sv -> "Ennakko-ohjeet sv"),
+      erityisjarjestelytMahdollisia = Some(true),
+      ohjeetErityisjarjestelyihin = Map(Fi -> "Erityisvalmistelut fi", Sv -> "Erityisvalmistelut sv"))),
     tilaisuudet = List(Valintakoetilaisuus(
+      jarjestamispaikka = Map(Fi -> "Järjestämispaikka fi", Sv -> "Järjestämispaikka sv"),
       osoite = Some(Osoite1),
       aika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
       lisatietoja = Map(Fi -> "lisätietieto fi", Sv -> "lisätieto sv"))))
@@ -183,6 +191,7 @@ object TestData {
     liitteidenToimitustapa = None,
     liitteidenToimitusosoite = None,
     liitteet = List(Liite1, Liite2),
+    metadata = Some(HakukohdeMetadata(valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"))),
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     muokkaaja = TestUserOid,
@@ -267,11 +276,13 @@ object TestData {
     valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     osaamistaustaKoodiUrit = Seq("osaamistausta_001#1"),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
     kuvaus = kieliMap("kuvaus"))
 
   val AmmValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))
 
   val AmmValintaperuste = Valintaperuste(

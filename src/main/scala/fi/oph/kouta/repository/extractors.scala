@@ -33,6 +33,8 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
     id = r.nextStringOption().map(UUID.fromString),
     tyyppiKoodiUri = r.nextStringOption(),
+    nimi = extractKielistetty(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[ValintakoeMetadata]),
     tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List())
   ))
 
@@ -222,6 +224,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     liitteidenToimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
     liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
+    metadata = r.nextStringOption().map(read[HakukohdeMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),

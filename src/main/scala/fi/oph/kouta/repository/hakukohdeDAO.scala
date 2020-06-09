@@ -81,7 +81,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(v => insertValintakoe(oid, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(oid, v, muokkaaja))
 
-    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
+    deleteSQL.zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL))(_ + _)
   }
 
   private def updateLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
@@ -92,7 +92,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val insertSQL = insert.map(l => insertLiite(oid, l.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateLiite(oid, v, muokkaaja))
 
-    DBIOHelpers.sumIntDBIOs(deleteSQL :: insertSQL ++ updateSQL)
+    deleteSQL.zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL))(_ + _)
   }
 
   override def listByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] = organisaatioOids match {
@@ -192,6 +192,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             liitteiden_toimitusaika,
             liitteiden_toimitustapa,
             liitteiden_toimitusosoite,
+            metadata,
             muokkaaja,
             organisaatio_oid,
             kielivalinta
@@ -221,6 +222,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
             ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
             ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
+            ${toJsonParam(hakukohde.metadata)}::jsonb,
             ${hakukohde.muokkaaja},
             ${hakukohde.organisaatioOid},
             ${toJsonParam(hakukohde.kielivalinta)}::jsonb
@@ -254,6 +256,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               liitteiden_toimitusaika = ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
               liitteiden_toimitustapa = ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
               liitteiden_toimitusosoite = ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
+              metadata = ${toJsonParam(hakukohde.metadata)}::jsonb,
               muokkaaja = ${hakukohde.muokkaaja},
               organisaatio_oid = ${hakukohde.organisaatioOid},
               kielivalinta = ${toJsonParam(hakukohde.kielivalinta)}::jsonb
@@ -283,6 +286,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or liitteiden_toimitusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp
             or liitteiden_toimitustapa is distinct from ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa
             or liitteiden_toimitusosoite is distinct from ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb
+            or metadata is distinct from ${toJsonParam(hakukohde.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb
             or organisaatio_oid is distinct from ${hakukohde.organisaatioOid})"""
   }
@@ -314,6 +318,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              liitteiden_toimitusaika,
              liitteiden_toimitustapa,
              liitteiden_toimitusosoite,
+             metadata,
              muokkaaja,
              organisaatio_oid,
              kielivalinta,
@@ -335,8 +340,16 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def insertValintakoe(oid: Option[HakukohdeOid], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] = {
-    sqlu"""insert into hakukohteiden_valintakokeet (id, hakukohde_oid, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
-               values (${valintakoe.id.map(_.toString)}::uuid, $oid, ${valintakoe.tyyppiKoodiUri}, ${toJsonParam(valintakoe.tilaisuudet)}::jsonb, $muokkaaja)"""
+    sqlu"""insert into hakukohteiden_valintakokeet (
+             id, hakukohde_oid, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja)
+           values (
+             ${valintakoe.id.map(_.toString)}::uuid,
+             $oid,
+             ${valintakoe.tyyppiKoodiUri},
+             ${toJsonParam(valintakoe.nimi)}::jsonb,
+             ${toJsonParam(valintakoe.metadata)}::jsonb,
+             ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
+             $muokkaaja)"""
   }
 
   def insertLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
@@ -372,7 +385,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectValintakokeet(oid: HakukohdeOid): DBIO[Vector[Valintakoe]] = {
-    sql"""select id, tyyppi_koodi_uri, tilaisuudet from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
+    sql"""select id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
+          from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
   }
 
   def selectLiitteet(oid: HakukohdeOid): DBIO[Vector[Liite]] = {
@@ -387,7 +401,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               on conflict on constraint hakukohteiden_hakuajat_pkey do nothing"""
   }
 
-  def deleteHakuajat(oid: Option[HakukohdeOid], exclude: List[Ajanjakso]): DBIO[Int] = {
+  def deleteHakuajat(oid: Option[HakukohdeOid], exclude: Seq[Ajanjakso]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_hakuajat
            where hakukohde_oid = $oid
            and hakuaika not in (#${createRangeInParams(exclude)})"""
@@ -397,7 +411,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     sqlu"""delete from hakukohteiden_hakuajat where hakukohde_oid = $oid"""
   }
 
-  def deleteValintakokeet(oid: Option[HakukohdeOid], exclude: List[UUID]): DBIO[Int] = {
+  def deleteValintakokeet(oid: Option[HakukohdeOid], exclude: Seq[UUID]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_valintakokeet
            where hakukohde_oid = $oid
            and id not in (#${createUUIDInParams(exclude)})"""
@@ -406,9 +420,13 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   def updateValintakoe(oid: Option[HakukohdeOid], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""update hakukohteiden_valintakokeet set
               tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
+              nimi = ${toJsonParam(valintakoe.nimi)}::jsonb,
+              metadata = ${toJsonParam(valintakoe.metadata)}::jsonb,
               tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
               muokkaaja = $muokkaaja
            where hakukohde_oid = $oid and id = ${valintakoe.id.map(_.toString)}::uuid and (
+              nimi is distinct from ${toJsonParam(valintakoe.nimi)}::jsonb or
+              metadata is distinct from ${toJsonParam(valintakoe.metadata)}::jsonb or
               tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
               tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri})"""
   }
@@ -421,7 +439,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid"""
   }
 
-  def deleteLiitteet(oid: Option[HakukohdeOid], exclude: List[UUID]): DBIO[Int] = {
+  def deleteLiitteet(oid: Option[HakukohdeOid], exclude: Seq[UUID]): DBIO[Int] = {
     sqlu"""delete from hakukohteiden_liitteet where hakukohde_oid = $oid and id not in (#${createUUIDInParams(exclude)})"""
   }
 

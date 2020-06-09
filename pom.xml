@@ -6,7 +6,7 @@
 
     <groupId>fi.oph.kouta</groupId>
     <artifactId>kouta-backend</artifactId>
-    <version>0.24-SNAPSHOT</version>
+    <version>0.26-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <!-- TODO: dependencyManagement käyttöön? -->
@@ -30,7 +30,7 @@
         <scala-cas.version>1.4.0-SNAPSHOT</scala-cas.version>
 
         <!-- Http related properties -->
-        <scalatra.version>2.7.0-RC1</scalatra.version>
+        <scalatra.version>2.7.0</scalatra.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
 
         <!-- Database related properties -->
@@ -39,8 +39,8 @@
         <jdbc.version>42.2.5</jdbc.version>
 
         <!-- Test properties -->
-        <scala-test.version>3.2.0-SNAP10</scala-test.version>
-        <scalatra-scalatest.version>2.7.0-RC1</scalatra-scalatest.version>
+        <scala-test.version>3.2.0-M4</scala-test.version>
+        <scalatra-scalatest.version>2.7.0</scalatra-scalatest.version>
         <jetty.version>9.4.17.v20190418</jetty.version>
 
         <commons.io.version>2.6</commons.io.version>
@@ -409,6 +409,10 @@
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
                     <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

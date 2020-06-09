@@ -209,11 +209,46 @@ package object domain {
       |          type: string
       |          description: Valintakokeen tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/valintakokeentyyppi/1)
       |          example: valintakokeentyyppi_1#1
+      |        nimi:
+      |          type: object
+      |          description: Valintakokeen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Nimi'
+      |        metadata:
+      |          type: object
+      |          $ref: '#/components/schemas/ValintakoeMetadata'
       |        tilaisuudet:
       |          type: array
       |          description: Valintakokeen järjestämistilaisuudet
       |          items:
       |            $ref: '#/components/schemas/Valintakoetilaisuus'
+      |""".stripMargin
+
+  val ValintakoeMetadataModel =
+    """    ValintakoeMetadata:
+      |      type: object
+      |      properties:
+      |        tietoja:
+      |          type: object
+      |          description: Tietoa valintakokeesta
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |        liittyyEnnakkovalmistautumista:
+      |          type: boolean
+      |          description: Liittyykö valintakokeeseen ennakkovalmistautumista
+      |        ohjeetEnnakkovalmistautumiseen:
+      |          type: object
+      |          description: Ohjeet valintakokeen ennakkojärjestelyihin
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |        erityisjarjestelytMahdollisia:
+      |          type: boolean
+      |          description: Ovatko erityisjärjestelyt mahdollisia valintakokeessa
+      |        ohjeetErityisjarjestelyihin:
+      |          type: object
+      |          description: Ohjeet valintakokeen erityisjärjestelyihin
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val ValintakoetilaisuusModel =
@@ -230,6 +265,11 @@ package object domain {
       |          description: Valintakokeen järjestämisaika
       |          items:
       |            $ref: '#/components/schemas/Ajanjakso'
+      |        jarjestamispaikka:
+      |          type: object
+      |          description: Valintakokeen järjestämispaikka eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
       |        lisatietoja:
       |          type: object
       |          description: Lisätietoja valintakokeesta eri kielillä. Kielet on määritetty kielivalinnassa.
@@ -281,7 +321,7 @@ package object domain {
 
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel,
     LisatietoModel, YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel,
-    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel)
+    ValintakoeMetadataModel, ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel)
 
   type Kielistetty = Map[Kieli,String]
 
@@ -414,18 +454,39 @@ package object domain {
 
   case class Valintakoe(id: Option[UUID] = None,
                         tyyppiKoodiUri: Option[String] = None,
-                        tilaisuudet: List[Valintakoetilaisuus] = List()) extends ValidatableSubEntity {
+                        nimi: Kielistetty = Map(),
+                        metadata: Option[ValintakoeMetadata] = None,
+                        tilaisuudet: Seq[Valintakoetilaisuus] = Seq()) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, ValintakokeenTyyppiKoodiPattern, s"$path.tyyppiKoodiUri")),
-      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _))
+      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _)),
+      validateIfDefined[ValintakoeMetadata](metadata, _.validate(tila, kielivalinta, s"$path.metadata")),
+      validateIfJulkaistu(tila, and(
+        validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi"),
+      ))
     )
 
     override def validateOnJulkaisu(path: String): IsValid =
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validateOnJulkaisu(_))
   }
 
+  case class ValintakoeMetadata(tietoja: Kielistetty = Map(),
+                                liittyyEnnakkovalmistautumista: Option[Boolean] = None,
+                                ohjeetEnnakkovalmistautumiseen: Kielistetty = Map(),
+                                erityisjarjestelytMahdollisia: Option[Boolean] = None,
+                                ohjeetErityisjarjestelyihin: Kielistetty = Map()) extends ValidatableSubEntity {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+      validateIfJulkaistu(tila, and(
+        validateOptionalKielistetty(kielivalinta, tietoja, s"$path.tietoja"),
+        validateIfTrue(liittyyEnnakkovalmistautumista.contains(true), validateKielistetty(kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")),
+        validateIfTrue(erityisjarjestelytMahdollisia.contains(true), validateKielistetty(kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin"))
+      ))
+    )
+  }
+
   case class Valintakoetilaisuus(osoite: Option[Osoite],
                                  aika: Option[Ajanjakso] = None,
+                                 jarjestamispaikka: Kielistetty = Map(),
                                  lisatietoja: Kielistetty = Map()) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta, s"$path.osoite")),
@@ -433,6 +494,7 @@ package object domain {
       validateIfJulkaistu(tila, and(
         assertNotOptional(osoite, s"$path.osoite"),
         assertNotOptional(aika, s"$path.aika"),
+        validateOptionalKielistetty(kielivalinta, jarjestamispaikka, s"$path.jarjestamispaikka"),
         validateOptionalKielistetty(kielivalinta, lisatietoja, s"$path.lisatietoja")
       ))
     )
