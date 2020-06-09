@@ -1,11 +1,11 @@
 
 alter table hakukohteet
-  add column jarjestyspaikka varchar;
+  add column jarjestyspaikka_oid varchar;
 
 alter table hakukohteet_history
-  add column jarjestyspaikka varchar;
+  add column jarjestyspaikka_oid varchar;
 
-comment on column hakukohteet.jarjestyspaikka is 'Hakukohteen jarjestajan organisaatio';
+comment on column hakukohteet.jarjestyspaikka_oid is 'Hakukohteen jarjestajan organisaatio';
 
 create or replace function update_hakukohteet_history() returns trigger as
 $$
@@ -24,7 +24,7 @@ begin
         hakulomake_kuvaus,
         hakulomake_linkki,
         kaytetaan_haun_hakulomaketta,
-        jarjestyspaikka,
+        jarjestyspaikka_oid,
         aloituspaikat,
         ensikertalaisen_aloituspaikat,
         pohjakoulutusvaatimus_koodi_urit,
@@ -57,7 +57,7 @@ begin
         old.hakulomake_kuvaus,
         old.hakulomake_linkki,
         old.kaytetaan_haun_hakulomaketta,
-        old.jarjestyspaikka,
+        old.jarjestyspaikka_oid,
         old.aloituspaikat,
         old.ensikertalaisen_aloituspaikat,
         old.pohjakoulutusvaatimus_koodi_urit,

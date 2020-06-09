@@ -50,7 +50,7 @@ package object hakukohde {
       |        kaytetaanHaunAlkamiskautta:
       |          type: boolean
       |          description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
-      |        jarjestyspaikka:
+      |        jarjestyspaikkaOid:
       |          type: string
       |          description: Hakukohteen järjestyspaikan organisaatio
       |          example: 1.2.246.562.10.00101010101
@@ -304,7 +304,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      alkamiskausiKoodiUri: Option[String] = None,
                      alkamisvuosi: Option[String] = None,
                      kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
-                     jarjestyspaikka: Option[OrganisaatioOid] = None,
+                     jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                      hakulomakeAtaruId: Option[UUID] = None,
                      hakulomakeKuvaus: Kielistetty = Map(),
