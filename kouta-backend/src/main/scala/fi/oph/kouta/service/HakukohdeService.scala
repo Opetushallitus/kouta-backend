@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient, OrganisaatioClientImpl}
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -15,9 +15,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object HakukohdeService extends HakukohdeService(SqsInTransactionService, AuditLog)
+object HakukohdeService extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioClientImpl)
 
-class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Hakukohde] with RoleEntityAuthorizationService[Hakukohde] {
+class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog, val organisaatioClient: OrganisaatioClient) extends ValidatingService[Hakukohde] with RoleEntityAuthorizationService[Hakukohde] {
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
 
@@ -31,8 +31,8 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakuKohde, h) =>
-      withValidation(h, Some(oldHakuKohde), doUpdate(_, notModifiedSince, oldHakuKohde))
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
+      withValidation(h, Some(oldHakukohde), doUpdate(_, notModifiedSince, oldHakukohde))
     }.nonEmpty
   }
 

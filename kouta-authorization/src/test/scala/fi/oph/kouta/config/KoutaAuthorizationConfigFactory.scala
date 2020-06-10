@@ -1,7 +1,5 @@
 package fi.oph.kouta.config
 
-import java.io.File
-
 import com.typesafe.config.{Config => TypesafeConfig}
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsParser, ConfigTemplateProcessor}
@@ -22,32 +20,11 @@ object KoutaAuthorizationConfigFactory extends Logging {
   val profile: String = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
   logger.info(s"Using profile '${profile}'")
 
-  val urlProperties: OphProperties = profile match {
-    case CONFIG_PROFILE_DEFAULT  => loadOphConfiguration()
-    case CONFIG_PROFILE_TEMPLATE => loadTemplatedConfiguration()
-    case _ =>
-      throw new IllegalArgumentException(
-        s"Unknown profile '${profile}'! Cannot load oph-properties! Use either " +
-          s"'${CONFIG_PROFILE_DEFAULT}' or '${CONFIG_PROFILE_TEMPLATE}' profiles."
-      )
-  }
-
-  private def loadOphConfiguration(): OphProperties = {
-    val configFilePath = System.getProperty("user.home") + "/oph-configuration/kouta-backend.properties"
-    logger.info(s"Reading properties from '$configFilePath'")
-    new OphProperties(configFilePath)
-  }
-
   private case class KoutaAuthorizationConfiguration(config: TypesafeConfig, urlProperties: OphProperties)
       extends ApplicationSettings(config)
 
-  private def loadTemplatedConfiguration(): OphProperties = {
-    val templateFilePath = Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE)).getOrElse(
-      throw new IllegalArgumentException(
-        s"Using 'template' profile but '${SYSTEM_PROPERTY_NAME_TEMPLATE}' " +
-          "system property is missing. Cannot create oph-properties!"
-      )
-    )
+  def loadTemplatedConfiguration(): OphProperties = {
+    val templateFilePath = "src/test/resources/dev-vars.yml"
 
     implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaAuthorizationConfiguration] {
       override def parse(c: TypesafeConfig): KoutaAuthorizationConfiguration =

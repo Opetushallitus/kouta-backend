@@ -6,23 +6,29 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHakukohde
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.{HakukohdeDAO, SQLHelpers}
 import fi.oph.kouta.service.HakukohdeService
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 
-trait HakukohdeFixture extends SQLHelpers { this: KoutaIntegrationSpec =>
+trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessControlSpec {
 
   val HakukohdePath = "/hakukohde"
 
-  protected lazy val hakukohdeService: HakukohdeService = new HakukohdeService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger))
+  def hakukohdeService: HakukohdeService = {
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    new HakukohdeService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioClient)
+  }
 
-  addServlet(new HakukohdeServlet(hakukohdeService), HakukohdePath)
-
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    addServlet(new HakukohdeServlet(hakukohdeService), HakukohdePath)
+  }
   val hakukohde = JulkaistuHakukohde
 
   def getIds(hakukohde:Hakukohde): Hakukohde = {

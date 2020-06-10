@@ -15,6 +15,8 @@ object KoutaIndexClient extends KoutaIndexClient
 
 trait KoutaIndexClient extends HttpClient with Logging with KoutaJsonFormats {
 
+  val callerId = "kouta-backend"
+
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: Map[String, String]): KoulutusSearchResult =

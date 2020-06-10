@@ -1,6 +1,5 @@
 package fi.oph.kouta.mocks
 
-import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.Formats
@@ -8,11 +7,11 @@ import org.json4s.jackson.Serialization.write
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.matchers.MatchType
-import org.mockserver.model
+import org.mockserver.model.Header.header
 import org.mockserver.model.HttpRequest.request
 import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.Parameter.param
-import org.mockserver.model.{Body, JsonBody}
+import org.mockserver.model.{Body, HttpRequest, JsonBody}
 
 import scala.collection.JavaConverters._
 import scala.io.Source
@@ -37,7 +36,7 @@ trait ServiceMocks extends Logging {
 
   def clearServiceMocks(): Unit = mockServer.foreach(_.reset())
 
-  def clearMock(request: model.HttpRequest): Unit = mockServer.foreach(_.clear(request))
+  def clearMock(request: HttpRequest): Unit = mockServer.foreach(_.clear(request))
 
   protected def getMockPath(key: String): String =
     urlProperties match {
@@ -50,37 +49,54 @@ trait ServiceMocks extends Logging {
       getClass.getClassLoader.getResourceAsStream(s"data/$filename.json")
     ).mkString
 
-  protected def organisaationServiceParams(oid: OrganisaatioOid, lakkautetut: Boolean = false) = Map(
-    "oid" -> oid.s,
-    "aktiiviset" -> "true",
-    "suunnitellut" -> "true",
-    "lakkautetut" -> lakkautetut.toString)
+  private def mockRequest(request: HttpRequest, responseString: String, statusCode: Int) = {
+    mockServer.foreach(_.when(
+      request
+    ).respond(
+      response(responseString).withStatusCode(statusCode)
+    ))
+    request
+  }
 
-  protected def mockGet(key: String, params: Map[String, String], responseString: String, statusCode: Int = 200): model.HttpRequest = {
-    val req: model.HttpRequest = request()
+  protected def mockGet(key: String, params: Map[String, String], responseString: String, statusCode: Int = 200): HttpRequest = {
+    val req: HttpRequest = request()
       .withMethod("GET")
       //.withSecure(true) TODO: https toimimaan
       .withPath(getMockPath(key))
       .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
-    mockServer.foreach(_.when(
-      req
-    ).respond(
-      response(responseString).withStatusCode(statusCode)
-    ))
-    req
+    mockRequest(req, responseString, statusCode)
   }
 
-  protected def mockPost[B <: AnyRef](key: String, body: B, params: Map[String, String], responseString: String, statusCode: Int = 200)(implicit jsonFormats: Formats): model.HttpRequest = {
-    val req: model.HttpRequest = request()
+  private def postRequest[B <: AnyRef](key: String, body: B, params: Map[String, String], headers: Map[String, String], matchType: MatchType)(implicit jsonFormats: Formats): HttpRequest =
+    request()
       .withMethod("POST")
       .withPath(getMockPath(key))
       .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
-      .withBody(JsonBody.json(write[B](body), MatchType.STRICT).asInstanceOf[Body[_]])
-    mockServer.foreach(_.when(
-      req
-    ).respond(
-      response(responseString).withStatusCode(statusCode)
-    ))
-    req
+      .withHeaders(headers.map(x => header(x._1, x._2)).toList.asJava)
+      .withBody(JsonBody.json(write[B](body), matchType).asInstanceOf[Body[_]])
+
+  protected def mockPost[B <: AnyRef](key: String,
+                                      body: B,
+                                      params: Map[String, String] = Map.empty,
+                                      responseString: String,
+                                      statusCode: Int = 200,
+                                      headers: Map[String, String] = Map.empty,
+                                      matchType: MatchType = MatchType.STRICT
+                                     )(implicit jsonFormats: Formats): HttpRequest = {
+    val req: HttpRequest = postRequest(key, body, params, headers, matchType)
+    mockRequest(req, responseString, statusCode)
   }
+
+  protected def mockPut[B <: AnyRef](key: String,
+                                     body: B,
+                                     params: Map[String, String] = Map.empty,
+                                     responseString: String,
+                                     statusCode: Int = 200,
+                                     headers: Map[String, String] = Map.empty,
+                                     matchType: MatchType = MatchType.STRICT
+                                    )(implicit jsonFormats: Formats): HttpRequest = {
+    val req: HttpRequest = postRequest(key, body, params, headers, matchType).withMethod("PUT")
+    mockRequest(req, responseString, statusCode)
+  }
+
 }

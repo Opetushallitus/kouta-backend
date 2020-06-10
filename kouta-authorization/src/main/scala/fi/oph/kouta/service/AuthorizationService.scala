@@ -11,6 +11,8 @@ import scala.collection.IterableView
 
 trait AuthorizationService extends Logging {
 
+  def organisaatioClient: OrganisaatioClient
+
   protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
 
   type OrganisaatioOidsAndOppilaitostyypitFlatView = IterableView[OrganisaatioOidsAndOppilaitostyypitFlat, Iterable[_]]
@@ -68,9 +70,9 @@ trait AuthorizationService extends Logging {
 
       val requestedOrganizations =
         if( authorizationRules.allowAccessToParentOrganizations ) {
-          OrganisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
+          organisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
         } else {
-          OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid)
+          organisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid)
         }
 
       requestedOrganizations match {
@@ -85,10 +87,10 @@ trait AuthorizationService extends Logging {
     }
 
   protected def lazyFlatChildrenAndParents(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => OrganisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => organisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid))
 
   protected def lazyFlatChildren(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => organisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid))
 
   def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
     roles.exists(role => authenticated.session.roleMap.get(role).exists(_.contains(RootOrganisaatioOid)))

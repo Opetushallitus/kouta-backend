@@ -4,9 +4,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.ValintaperusteDAO
 import fi.oph.kouta.service.ValintaperusteService
@@ -16,13 +17,19 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 import slick.jdbc.GetResult
 
-trait ValintaperusteFixture { this: KoutaIntegrationSpec =>
+trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec  {
 
   val ValintaperustePath = "/valintaperuste"
 
-  protected lazy val valintaperusteService: ValintaperusteService = new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger))
+  def valintaperusteService: ValintaperusteService = {
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioClient)
+  }
 
-  addServlet(new ValintaperusteServlet(valintaperusteService), ValintaperustePath)
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    addServlet(new ValintaperusteServlet(valintaperusteService), ValintaperustePath)
+  }
 
   private val valintaperuste = TestData.AmmValintaperuste
   val valintaperuste2 = TestData.AmmValintaperuste

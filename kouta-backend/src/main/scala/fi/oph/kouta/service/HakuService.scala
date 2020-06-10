@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{HaunOhjausparametrit, KoutaIndexClient, OhjausparametritClient}
+import fi.oph.kouta.client.{HaunOhjausparametrit, KoutaIndexClient, OhjausparametritClient, OrganisaatioClient, OrganisaatioClientImpl}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -17,11 +17,12 @@ import slick.dbio.DBIO
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient)
+object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioClientImpl)
 
 class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
-                  ohjausparametritClient: OhjausparametritClient)
+                  ohjausparametritClient: OhjausparametritClient,
+                  val organisaatioClient: OrganisaatioClient)
   extends ValidatingService[Haku] with RoleEntityAuthorizationService[Haku] {
 
   override val roleEntity: RoleEntity = Role.Haku

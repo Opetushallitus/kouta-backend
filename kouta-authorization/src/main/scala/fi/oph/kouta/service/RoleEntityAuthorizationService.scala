@@ -24,17 +24,25 @@ trait RoleEntityAuthorizationService[E <: AuthorizableEntity[E]] extends Authori
   val AuthorizationRuleForJulkinen: AuthorizationRule =
     (entity: Authorizable, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat) => entity match {
       case e: AuthorizableMaybeJulkinen[E] => authorizeJulkinen(e, organisaatioOids, oidsAndOppilaitostyypit)
-      case _ => false
+      case _ => throw new RuntimeException("AuthorizationRuleForJulkinen kutsuttu entitylla, joka ei ole AuthorizableMaybeJulkinen")
     }
 
-  def authorizeGet(entityWithTime: Option[(E, Instant)],
-                   authorizationRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles))
+  def authorizeGet(entityWithTime: Option[(E, Instant)])
+                  (implicit authenticated: Authenticated): Option[(E, Instant)] =
+    authorizeGet(entityWithTime, AuthorizationRules(roleEntity.readRoles))
+
+  def authorizeGet(entityWithTime: Option[(E, Instant)], authorizationRules: AuthorizationRules)
                   (implicit authenticated: Authenticated): Option[(E, Instant)] =
     entityWithTime.map {
-      case (e, t) => ifAuthorized(e, authorizationRules) {
-        (e, t)
-      }
+      case (e, t) => (authorizeGet(e, authorizationRules), t)
     }
+
+  def authorizeGet(entity: E)(implicit authenticated: Authenticated): E =
+    authorizeGet(entity, AuthorizationRules(roleEntity.readRoles))
+
+  def authorizeGet(entity: E, authorizationRules: AuthorizationRules)
+                  (implicit authenticated: Authenticated): E =
+    ifAuthorized(entity, authorizationRules)(entity)
 
   private def withUpdatedMuokkaaja(entity: E)(implicit authenticated: Authenticated) =
     entity.withMuokkaaja(UserOid(authenticated.session.personOid))

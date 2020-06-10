@@ -6,7 +6,7 @@ import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 trait ValidatingService[E <: Validatable] {
 
   def withValidation[R](e: E, oldE: Option[E], f: E => R): R = {
-    val errors = if (!oldE.contains(Julkaistu) && e.tila == Julkaistu) {
+    val errors = if (!oldE.exists(_.tila == Julkaistu) && e.tila == Julkaistu) {
       e.validate() ++ e.validateOnJulkaisu()
     } else {
       e.validate()

@@ -4,9 +4,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Sorakuvaus, SorakuvausListItem}
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.service.SorakuvausService
@@ -14,14 +15,19 @@ import fi.oph.kouta.servlet.SorakuvausServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
-trait SorakuvausFixture { this: KoutaIntegrationSpec =>
+trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   val SorakuvausPath = "/sorakuvaus"
 
-  protected lazy val sorakuvausService: SorakuvausService =
-    new SorakuvausService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger))
+  def sorakuvausService: SorakuvausService = {
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    new SorakuvausService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioClient)
+  }
 
-  addServlet(new SorakuvausServlet(sorakuvausService), SorakuvausPath)
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    addServlet(new SorakuvausServlet(sorakuvausService), SorakuvausPath)
+  }
 
   val sorakuvaus = TestData.AmmSorakuvaus
 

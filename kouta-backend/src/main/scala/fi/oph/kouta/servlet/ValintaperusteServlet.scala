@@ -21,7 +21,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |        - Valintaperuste
       |      parameters:
       |        - in: path
-      |          name: oid
+      |          name: id
       |          schema:
       |            type: string
       |          required: true
@@ -68,7 +68,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |              schema:
       |                type: object
       |                properties:
-      |                  oid:
+      |                  id:
       |                    type: string
       |                    description: Uuden valintaperustekuvauksen yksilöivä id
       |                    example: ea596a9c-5940-497e-b5b7-aded3a2352a7

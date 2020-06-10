@@ -4,9 +4,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.KoulutusService
@@ -17,14 +18,19 @@ import org.scalactic.Equality
 
 import scala.util.Try
 
-trait KoulutusFixture extends KoulutusDbFixture {
-  this: KoutaIntegrationSpec =>
+trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with AccessControlSpec {
 
   val KoulutusPath = "/koulutus"
 
-  protected lazy val koulutusService: KoulutusService = new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger))
+  def koulutusService: KoulutusService = {
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioClient)
+  }
 
-  addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
+  }
 
   val koulutus = TestData.AmmKoulutus
   val yoKoulutus = TestData.YoKoulutus

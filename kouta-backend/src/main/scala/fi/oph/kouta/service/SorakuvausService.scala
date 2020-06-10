@@ -4,6 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.{OrganisaatioClient, OrganisaatioClientImpl}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem, ValintaperusteListItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -15,9 +16,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog)
+object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioClientImpl)
 
-class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService[Sorakuvaus] {
+class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog, val organisaatioClient: OrganisaatioClient) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService[Sorakuvaus] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)

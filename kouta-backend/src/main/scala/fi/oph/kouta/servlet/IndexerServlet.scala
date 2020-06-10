@@ -19,7 +19,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   def this() = this(KoulutusService, ToteutusService, HakuService, ValintaperusteService, SorakuvausService, OppilaitosService)
 
   registerPath("/indexer/modifiedSince/{since}",
-    """    get:
+    s"""    get:
       |      summary: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
       |      operationId: Hae lista muuttuneista
       |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen. Tämä rajapinta on indeksointia varten
@@ -39,7 +39,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          content:
       |            application/json:
       |              schema:
-      |                $ref: '#/components/schemas/ListEverything'
+      |                $$ref: '#/components/schemas/ListEverything'
       |""".stripMargin)
   get("/modifiedSince/:since") {
 

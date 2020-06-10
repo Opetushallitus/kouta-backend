@@ -4,9 +4,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.service.OppilaitosService
@@ -16,14 +17,19 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Random
 
-trait OppilaitosFixture { this: KoutaIntegrationSpec =>
+trait OppilaitosFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   val OppilaitosPath = "/oppilaitos"
 
-  protected lazy val oppilaitosService: OppilaitosService =
-    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger))
+  def oppilaitosService: OppilaitosService = {
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioClient)
+  }
 
-  addServlet(new OppilaitosServlet(oppilaitosService), OppilaitosPath)
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    addServlet(new OppilaitosServlet(oppilaitosService), OppilaitosPath)
+  }
 
   private lazy val random = new Random()
 

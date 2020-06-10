@@ -8,6 +8,8 @@ import org.json4s.Formats
 import scalaj.http.HttpOptions._
 
 trait HttpClient {
+  def callerId: String
+
   private val DefaultConnTimeout = 30000
   private val DefaultReadTimeout = 120000
 
@@ -17,8 +19,9 @@ trait HttpClient {
     followRedirects(doFollowRedirects)
   )
 
-  private val HeaderCallerId = ("Caller-id", "kouta-backend")
-  private val HeaderClientSubSystemCode = ("clientSubSystemCode", "kouta-backend")
+  //TODO: Caller-Id konfiguraatiosta, että tämän luokan perijä voi käyttää omaa tunnustaan
+  private val HeaderCallerId = ("Caller-id", callerId)
+  private val HeaderClientSubSystemCode = ("clientSubSystemCode", callerId)
   private val HeaderContentTypeJson = ("Content-Type", "application/json; charset=utf-8")
   private val HeaderAcceptJson = ("Accept", "application/json")
 

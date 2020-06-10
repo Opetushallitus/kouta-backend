@@ -4,9 +4,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, OppilaitoksenOsa, OppilaitoksenOsaListItem}
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.OppilaitoksenOsaDAO
 import fi.oph.kouta.service.OppilaitoksenOsaService
@@ -16,14 +17,16 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
 import scala.util.Random
 
-trait OppilaitoksenOsaFixture { this: KoutaIntegrationSpec =>
+trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec  with AccessControlSpec {
 
   val OppilaitoksenOsaPath = "/oppilaitoksen-osa"
 
-  protected lazy val oppilaitoksenOsaService: OppilaitoksenOsaService =
-    new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger))
-
-  addServlet(new OppilaitoksenOsaServlet(oppilaitoksenOsaService), OppilaitoksenOsaPath)
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    val oppilaitoksenOsaService = new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioClient)
+    addServlet(new OppilaitoksenOsaServlet(oppilaitoksenOsaService), OppilaitoksenOsaPath)
+  }
 
   private lazy val random = new Random()
 

@@ -3,10 +3,10 @@ package fi.oph.kouta.external
 import java.util.UUID
 
 import fi.oph.kouta.external.{KoutaFixtureTool => KFT}
-import fi.oph.kouta.integration.{EverythingFixture, KoutaIntegrationSpec}
+import fi.oph.kouta.integration.{AccessControlSpec, EverythingFixture, KoutaIntegrationSpec}
 import org.scalatest.BeforeAndAfterEach
 
-class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture with BeforeAndAfterEach {
+class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture with BeforeAndAfterEach with AccessControlSpec {
 
   def put(path: String, entityJson: String): String =
     put(path, entityJson, defaultHeaders) {

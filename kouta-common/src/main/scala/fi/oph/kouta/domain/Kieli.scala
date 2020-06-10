@@ -1,5 +1,15 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.swagger.SwaggerModel
+
+@SwaggerModel(
+  """    Kieli:
+    |      type: string
+    |      enum:
+    |        - fi
+    |        - sv
+    |        - en
+    |""")
 sealed trait Kieli extends EnumType
 
 object Kieli extends Enum[Kieli] {

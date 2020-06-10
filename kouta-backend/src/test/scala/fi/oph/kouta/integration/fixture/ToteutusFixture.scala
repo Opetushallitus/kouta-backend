@@ -6,9 +6,10 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OrganisaatioClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.ToteutusDAO
 import fi.oph.kouta.service.{KeywordService, ToteutusService}
@@ -16,15 +17,21 @@ import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
 
-trait ToteutusFixture { this: KoutaIntegrationSpec =>
+trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   val ToteutusPath = "/toteutus"
 
-  private lazy val auditLog = new AuditLog(MockAuditLogger)
-  protected lazy val toteutusService: ToteutusService =
-    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog, new KeywordService(auditLog))
+  protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
-  addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
+  def toteutusService: ToteutusService = {
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog, new KeywordService(auditLog, organisaatioClient), organisaatioClient)
+  }
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
+  }
 
   val opetus = ToteutuksenOpetus
   val ammMetatieto = AmmToteutuksenMetatieto

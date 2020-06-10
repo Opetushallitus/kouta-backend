@@ -3,18 +3,24 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.service.KeywordService
 import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet}
 import org.json4s.jackson.Serialization.read
 
-trait KeywordFixture { this:KoutaIntegrationSpec =>
+trait KeywordFixture extends KoutaIntegrationSpec with AccessControlSpec {
   val AsiasanaPath = "/asiasana"
   val AmmattinimikePath = "/ammattinimike"
 
-  addServlet(new AsiasanaServlet(new KeywordService(new AuditLog(MockAuditLogger))), AsiasanaPath)
-  addServlet(new AmmattinimikeServlet(new KeywordService(new AuditLog(MockAuditLogger))), AmmattinimikePath)
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
+    val keywordService = new KeywordService(new AuditLog(MockAuditLogger), organisaatioClient)
+    addServlet(new AsiasanaServlet(keywordService), AsiasanaPath)
+    addServlet(new AmmattinimikeServlet(keywordService), AmmattinimikePath)
+  }
 
   val asiasanat = List(
     "aaMu",

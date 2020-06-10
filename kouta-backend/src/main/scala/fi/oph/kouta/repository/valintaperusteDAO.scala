@@ -3,7 +3,6 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import java.util.UUID
 
-import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen

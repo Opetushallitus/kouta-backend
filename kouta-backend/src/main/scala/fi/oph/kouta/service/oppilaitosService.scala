@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.{OrganisaatioClient, OrganisaatioClientImpl}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -15,9 +16,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioClientImpl)
 
-class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
+class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, val organisaatioClient: OrganisaatioClient)
   extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService[Oppilaitos] with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
@@ -88,9 +89,9 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
 }
 
-object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog)
+object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioClientImpl)
 
-class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog)
+class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, val organisaatioClient: OrganisaatioClient)
   extends ValidatingService[OppilaitoksenOsa]
     with RoleEntityAuthorizationService[OppilaitoksenOsa]
     with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa] {

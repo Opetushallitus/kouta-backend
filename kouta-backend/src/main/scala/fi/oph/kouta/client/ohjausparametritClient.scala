@@ -32,7 +32,7 @@ trait OhjausparametritClient {
   def postHaunOhjausparametrit(haunOhjausparametrit: HaunOhjausparametrit): Unit
 }
 
-object OhjausparametritClient extends OhjausparametritClient with HttpClient with KoutaJsonFormats {
+object OhjausparametritClient extends OhjausparametritClient with KoutaJsonFormats {
   private val config = KoutaConfigurationFactory.configuration.ohjausparametritClientConfiguration
   private val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
   private val params = CasParams(

@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient, OrganisaatioClientImpl}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -16,9 +16,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog)
+object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog, OrganisaatioClientImpl)
 
-class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog)
+class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog, val organisaatioClient: OrganisaatioClient)
   extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste

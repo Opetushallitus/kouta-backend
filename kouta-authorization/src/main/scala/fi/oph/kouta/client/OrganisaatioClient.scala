@@ -1,6 +1,5 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.config.KoutaAuthorizationConfigFactory
 import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.util.GenericKoutaJsonFormats
@@ -10,8 +9,7 @@ import org.json4s.jackson.JsonMethods._
 
 import scala.annotation.tailrec
 
-object OrganisaatioClient extends HttpClient with GenericKoutaJsonFormats {
-  val urlProperties: OphProperties = KoutaAuthorizationConfigFactory.urlProperties
+class OrganisaatioClient(ophProperties: OphProperties, val callerId: String) extends HttpClient with GenericKoutaJsonFormats {
 
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
     case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
@@ -28,11 +26,8 @@ object OrganisaatioClient extends HttpClient with GenericKoutaJsonFormats {
     case _ => getHierarkia(oid, orgs => (parentsAndChildren(oid, orgs), oppilaitostyypit(oid, orgs)))
   }
 
-  case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
-  case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String, oppilaitostyyppi: Option[String])
-
   private def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R, lakkautetut: Boolean = false) = {
-    val url = urlProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid.toString, lakkautetut))
+    val url = ophProperties.url("organisaatio-service.organisaatio.hierarkia", queryParams(oid.toString, lakkautetut))
     get(url, followRedirects = true) { response =>
       result(parse(response).extract[OrganisaatioResponse].organisaatiot)
     }
@@ -79,3 +74,7 @@ object OrganisaatioClient extends HttpClient with GenericKoutaJsonFormats {
       case Some(org) => org.oppilaitostyyppi
     }}
 }
+
+// Siirretty päätasolle, koska muuten serialisoidaan piilotettu kenttä $outer, joka viittaisi OrganisaatioClient:iin
+case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
+case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String, oppilaitostyyppi: Option[String])

@@ -5,15 +5,20 @@ import java.net.InetAddress
 import java.util.UUID
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.KoutaClientSpec
+import fi.oph.kouta.client.OrganisaatioClientFixture
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.mocks.OrganisaatioServiceMock
 import fi.oph.kouta.service.{AuthorizationService, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.servlet.Authenticated
 
-class AuthorizationServiceSpec extends KoutaClientSpec with OrganisaatioServiceMock {
+class AuthorizationServiceSpec extends OrganisaatioClientFixture with OrganisaatioServiceMock {
 
-  val TestService = new AuthorizationService {}
+  lazy val oc = organisaatioClient
+
+  // object, joka initialisoidaan laiskasti?
+  lazy val TestService: AuthorizationService = new AuthorizationService {
+    override val organisaatioClient = oc
+  }
 
   val paakayttajaSession = CasSession(ServiceTicket("ST-123"), "1.2.3.1234",
     Set("APP_KOUTA", "APP_KOUTA_OPHPAAKAYTTAJA", s"APP_KOUTA_OPHPAAKAYTTAJA_${OphOid}").map(Authority(_)))

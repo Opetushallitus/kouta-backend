@@ -9,11 +9,12 @@ import org.apache.commons.lang3.builder.ToStringBuilder
 import org.flywaydb.core.Flyway
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation
 import slick.jdbc.TransactionIsolation.Serializable
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object KoutaDatabase extends Logging {
 
@@ -34,8 +35,8 @@ object KoutaDatabase extends Logging {
     )
   }
 
-  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS)): Try[R] = {
-    Try(runBlocking(operations.transactionally.withTransactionIsolation(Serializable), timeout))
+  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS), isolation: TransactionIsolation = Serializable): Try[R] = {
+    Try(runBlocking(operations.transactionally.withTransactionIsolation(isolation), timeout))
   }
 
   def destroy() = {

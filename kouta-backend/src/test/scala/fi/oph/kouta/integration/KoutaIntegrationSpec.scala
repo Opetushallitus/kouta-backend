@@ -4,6 +4,7 @@ import java.util.UUID
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
 import fi.oph.kouta.mocks.{MockSecurityContext, OrganisaatioServiceMock}
@@ -66,6 +67,11 @@ object KoutaIntegrationSpec {
 trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { this: HttpSpec =>
 
   protected val roleEntities: Seq[RoleEntity] = Seq.empty
+
+  override def startServiceMocking(): Unit = {
+    super.startServiceMocking()
+    urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort"))
+  }
 
   override def beforeAll(): Unit = {
     super.beforeAll()
