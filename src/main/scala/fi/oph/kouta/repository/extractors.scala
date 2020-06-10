@@ -314,6 +314,7 @@ trait HakutietoExtractors extends ExtractorBase {
     ( ToteutusOid(r.nextString()), HakuOid(r.nextString()), HakutietoHakukohde(
       hakukohdeOid = HakukohdeOid(r.nextString()),
       nimi = extractKielistetty(r.nextStringOption()),
+      valintaperusteId = r.nextStringOption().map(UUID.fromString),
       alkamiskausiKoodiUri = r.nextStringOption(),
       alkamisvuosi = r.nextStringOption(),
       kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
@@ -325,6 +326,8 @@ trait HakutietoExtractors extends ExtractorBase {
       aloituspaikat = r.nextIntOption(),
       ensikertalaisenAloituspaikat = r.nextIntOption(),
       kaytetaanHaunAikataulua = r.nextBooleanOption(),
+      pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
+      pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
       organisaatioOid = OrganisaatioOid(r.nextString()),
       hakuajat = List(),
       muokkaaja = UserOid(r.nextString()),
