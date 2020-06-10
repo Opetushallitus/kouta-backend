@@ -339,4 +339,21 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-logo/$oid/logo.png"))
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/teemakuva.png"))
   }
+
+  it should "not change other oppilaitos while updating teemakuva and logo" in {
+    val oid1 = put(oppilaitos)
+    val lastModified1 = get(oid1, oppilaitos(oid1))
+    val oid2 = put(oppilaitos)
+
+    saveLocalPng("temp/teemakuva.png")
+    saveLocalPng("temp/logo.png")
+    val oppilaitosWithImages = oppilaitos(oid1).copy(
+      teemakuva = Some(s"$PublicImageServer/temp/teemakuva.png"),
+      logo = Some(s"$PublicImageServer/temp/logo.png")
+    )
+
+    update(oppilaitosWithImages, lastModified1)
+
+    get(oid2, oppilaitos(oid2))
+  }
 }
