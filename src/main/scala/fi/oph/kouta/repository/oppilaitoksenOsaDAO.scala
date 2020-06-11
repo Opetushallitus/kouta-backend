@@ -133,11 +133,13 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
               organisaatio_oid = ${oppilaitoksenOsa.organisaatioOid},
               teemakuva = ${oppilaitoksenOsa.teemakuva}
             where oid = ${oppilaitoksenOsa.oid}
-            and (tila is distinct from ${oppilaitoksenOsa.tila.toString}::julkaisutila
-            or metadata is distinct from ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid})
-            or teemakuva is distinct from ${oppilaitoksenOsa.teemakuva}"""
+            and (
+              tila is distinct from ${oppilaitoksenOsa.tila.toString}::julkaisutila
+              or metadata is distinct from ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb
+              or kielivalinta is distinct from ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb
+              or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid}
+              or teemakuva is distinct from ${oppilaitoksenOsa.teemakuva}
+            )"""
   }
 
   def selectListByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsaListItem]] = {

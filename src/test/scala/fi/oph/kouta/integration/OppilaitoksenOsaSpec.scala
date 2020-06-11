@@ -296,4 +296,15 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     MockS3Client.storage shouldBe empty
     get(oid, oppilaitoksenOsaWithImage)
   }
+
+  it should "not change other oppilaitoksen osa while updating teemakuva" in {
+    val oid1 = put(oppilaitoksenOsa(oppilaitosOid))
+    val oid2 = put(oppilaitoksenOsa(oppilaitosOid))
+    val lastModified = get(oid1, oppilaitoksenOsa(oid1, oppilaitosOid))
+    val oppilaitoksenOsaWithImage = oppilaitoksenOsa(oid1, oppilaitosOid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
+
+    update(oppilaitoksenOsaWithImage, lastModified)
+
+    get(oid2, oppilaitoksenOsa(oid2, oppilaitosOid))
+  }
 }
