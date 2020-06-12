@@ -211,6 +211,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
     hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
     kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
+    jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid(_)),
     aloituspaikat = r.nextIntOption(),
     ensikertalaisenAloituspaikat = r.nextIntOption(),
     pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
