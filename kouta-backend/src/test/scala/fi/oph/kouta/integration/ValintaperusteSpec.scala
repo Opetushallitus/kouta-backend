@@ -204,13 +204,17 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "fail to update julkaistu valintaperuste if sorakuvaus is not yet julkaistu" in {
-    val sorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "tila", notYetJulkaistu("Sorakuvausta", sorakuvausId))
+    val id = put(valintaperuste(sorakuvausId))
+    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val tallennettuSorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
+    update(ValintaperustePath, valintaperuste(id, tallennettuSorakuvausId), lastModified, 400, "tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId))
   }
 
   it should "fail to update valintaperuste if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val sorakuvausId = put(TestData.YoSorakuvaus)
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
+    val id = put(valintaperuste(sorakuvausId))
+    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val yoSorakuvausId = put(TestData.YoSorakuvaus)
+    update(ValintaperustePath, valintaperuste(id, yoSorakuvausId), lastModified, 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", yoSorakuvausId))
   }
 
   it should "write valintaperuste update to audit log" in {
