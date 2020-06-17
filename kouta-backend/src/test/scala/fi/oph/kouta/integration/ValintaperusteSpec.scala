@@ -344,7 +344,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     }
   }
 
-  it should "validate dates only when moving from other states to julkaistu" in {
+  it should "validate dates when moving from other states to julkaistu" in {
     val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
     val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
@@ -362,5 +362,17 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     }
 
     update(getIds(thisValintaperusteWithOid.copy(tila = Arkistoitu)), lastModified)
+  }
+
+  it should "not validate dates when update a julkaistu valintaperuste" in {
+    val id = put(valintaperuste(sorakuvausId))
+    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+
+    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
+    val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
+    val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
+    val thisValintaperuste = valintaperuste(id, sorakuvausId).copy(valintakokeet = List(koe), tila = Julkaistu)
+
+    update(thisValintaperuste, lastModified)
   }
 }

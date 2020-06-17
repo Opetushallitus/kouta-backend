@@ -361,7 +361,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  it should "validate dates only when moving from other states to julkaistu" in {
+  it should "validate dates when moving from other states to julkaistu" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
     val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
     val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
@@ -382,6 +382,19 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
 
     update(thisToteutusWithOid.copy(tila = Arkistoitu), lastModified)
+  }
+
+  it should "not validate dates when updating a julkaistu toteutus" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
+    val inPastMetadata = ammMetatieto.copy(opetus = Some(inPastOpetus))
+
+    val oid = put(toteutus(koulutusOid).copy(tila = Julkaistu))
+    val thisToteutus = toteutus(oid, koulutusOid)
+
+    val lastModified = get(oid, thisToteutus)
+
+    update(thisToteutus.copy(metadata = Some(inPastMetadata)), lastModified)
   }
 
   it should "copy a temporary image to a permanent location while updating the toteutus" in {
