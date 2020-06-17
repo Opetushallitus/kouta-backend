@@ -10,7 +10,7 @@ import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO, KoulutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validations
@@ -34,8 +34,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) { t =>
-      withValidation(t, None) {
-        checkKoulutus(t)
+      withValidation(t, None) { t =>
+        validateKoulutusIntegrity(t)
         doPut(t)
       }
     }.oid.get
@@ -44,8 +44,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
-      withValidation(t, Some(oldToteutus)) {
-        checkKoulutus(t)
+      withValidation(t, Some(oldToteutus)) { t =>
+        validateKoulutusIntegrity(t)
         doUpdate(t, notModifiedSince, oldToteutus)
       }
     }
@@ -82,18 +82,17 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def checkKoulutus(toteutus: Toteutus): Unit = {
-    val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map(_._1)
-      .getOrElse(singleValidationError("koulutusOid", Validations.nonExistent("Koulutusta", toteutus.koulutusOid)))
+  private def validateKoulutusIntegrity(toteutus: Toteutus): Unit = {
+    import Validations._
+    val (koulutusTila, koulutusTyyppi) = KoulutusDAO.getTilaAndTyyppi(toteutus.koulutusOid)
 
-    if (koulutus.tila != Julkaistu && toteutus.tila == Julkaistu) {
-      singleValidationError("tila", Validations.notYetJulkaistu("Koulutusta", toteutus.koulutusOid))
-    }
-
-    toteutus.metadata.map(_.tyyppi) collect {
-      case tyyppi if tyyppi != koulutus.koulutustyyppi =>
-        singleValidationError("metadata.tyyppi", Validations.tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
-    }
+    throwValidationErrors(and(
+      validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
+      validateIfDefined[Koulutustyyppi](koulutusTyyppi, koulutusTyyppi =>
+        validateIfDefined[ToteutusMetadata](toteutus.metadata, toteutusMetadata =>
+          assertTrue(koulutusTyyppi == toteutusMetadata.tyyppi, "metadata.tyyppi", tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
+        ))
+    ))
   }
 
   private def doPut(toteutus: Toteutus)(implicit authenticated: Authenticated): Toteutus =

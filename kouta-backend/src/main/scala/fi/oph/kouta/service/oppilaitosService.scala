@@ -31,14 +31,14 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
 
   def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid = {
     authorizePut(oppilaitos) { o =>
-      withValidation(o, None)(doPut(o))
+      withValidation(o, None)(doPut)
     }.oid
   }
 
   def update(oppilaitos: Oppilaitos, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid), oppilaitos) { (oldOppilaitos, o) =>
       withValidation(o, Some(oldOppilaitos)) {
-        doUpdate(o, notModifiedSince, oldOppilaitos)
+        doUpdate(_, notModifiedSince, oldOppilaitos)
       }
     }.nonEmpty
 
@@ -107,27 +107,26 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid =
     authorizePut(oppilaitoksenOsa) { o =>
-      withValidation(oppilaitoksenOsa, None) {
-        checkOppilaitos(o)
+      withValidation(o, None) { o =>
+        validateOppilaitosIntegrity(o)
         doPut(o)
       }
     }.oid
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), oppilaitoksenOsa) { (oldOsa, o) =>
-      withValidation(o, Some(oldOsa)) {
-        checkOppilaitos(o)
+      withValidation(o, Some(oldOsa)) { o =>
+        validateOppilaitosIntegrity(o)
         doUpdate(o, notModifiedSince, oldOsa)
       }
     }.nonEmpty
 
-  private def checkOppilaitos(oppilaitoksenOsa: OppilaitoksenOsa): Unit = {
-    val oppilaitos = OppilaitosDAO.get(oppilaitoksenOsa.oppilaitosOid).map(_._1)
-      .getOrElse(singleValidationError("oppilaitosOid", Validations.nonExistent("Oppilaitosta", oppilaitoksenOsa.oppilaitosOid)))
+  private def validateOppilaitosIntegrity(oppilaitoksenOsa: OppilaitoksenOsa): Unit = {
+    val oppilaitosTila = OppilaitosDAO.getTila(oppilaitoksenOsa.oppilaitosOid)
 
-    if (oppilaitos.tila != Julkaistu && oppilaitoksenOsa.tila == Julkaistu) {
-      singleValidationError("oppilaitosOid", Validations.notYetJulkaistu("Oppilaitosta", oppilaitoksenOsa.oppilaitosOid))
-    }
+    throwValidationErrors(
+      Validations.validateDependency(oppilaitoksenOsa.tila, oppilaitosTila, oppilaitoksenOsa.oppilaitosOid, "Oppilaitosta", "oppilaitosOid")
+    )
   }
 
   private def doPut(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OppilaitoksenOsa =

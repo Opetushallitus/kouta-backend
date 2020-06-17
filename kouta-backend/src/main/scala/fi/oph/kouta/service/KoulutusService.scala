@@ -34,7 +34,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
     authorizePut(koulutus) { k =>
-      withValidation(k, None)(doPut(k))
+      withValidation(k, None)(doPut)
     }.oid.get
 
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
@@ -62,7 +62,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
         rules.nonEmpty && authorizeUpdate(koulutusWithInstant, koulutus, rules) { (_, k) =>
           withValidation(k, Some(oldKoulutus)) {
-            doUpdate(k, notModifiedSince, oldKoulutus)
+            doUpdate(_, notModifiedSince, oldKoulutus)
           }
         }.nonEmpty
       case _ => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")

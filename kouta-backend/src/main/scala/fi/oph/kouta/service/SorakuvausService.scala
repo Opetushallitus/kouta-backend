@@ -27,13 +27,13 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus) { s =>
-      withValidation(s, None)(doPut(s))
+      withValidation(s, None)(doPut)
     }.id.get
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get), sorakuvaus) { (oldSorakuvaus, s) =>
       withValidation(s, Some(oldSorakuvaus)) {
-        doUpdate(s, notModifiedSince, oldSorakuvaus)
+        doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
     }.nonEmpty
 

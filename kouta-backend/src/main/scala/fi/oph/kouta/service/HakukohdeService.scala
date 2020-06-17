@@ -1,6 +1,7 @@
 package fi.oph.kouta.service
 
 import java.time.Instant
+import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
@@ -28,10 +29,8 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) { h =>
-      withValidation(hakukohde, None) {
-        checkHaku(h)
-        val toteutus = checkToteutus(h)
-        checkValintaperuste(h, toteutus)
+      withValidation(h, None) { h =>
+        validateDependenciesIntegrity(h)
         doPut(h)
       }
     }.oid.get
@@ -39,10 +38,8 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
-      withValidation(h, Some(oldHakukohde)) {
-        checkHaku(h)
-        val toteutus = checkToteutus(h)
-        checkValintaperuste(h, toteutus)
+      withValidation(h, Some(oldHakukohde)) { h =>
+        validateDependenciesIntegrity(h)
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
@@ -57,39 +54,22 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  private def checkToteutus(hakukohde: Hakukohde): Toteutus = {
-    val toteutus = ToteutusDAO.get(hakukohde.toteutusOid).map(_._1).getOrElse(singleValidationError("toteutusOid", Validations.nonExistent("Toteutusta", hakukohde.toteutusOid)))
-    if (toteutus.tila != Julkaistu && hakukohde.tila == Julkaistu) {
-      singleValidationError("tila", Validations.notYetJulkaistu("Toteutusta", hakukohde.toteutusOid))
-    }
-    toteutus
-  }
+  private def validateDependenciesIntegrity(hakukohde: Hakukohde): Unit = {
+    import Validations._
+    val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
 
-  private def checkHaku(hakukohde: Hakukohde): Unit = {
-    val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1).getOrElse(
-      singleValidationError("hakuOid", Validations.nonExistent("Hakua", hakukohde.hakuOid))
-    )
-
-    if (haku.tila != Julkaistu && hakukohde.tila == Julkaistu) {
-      singleValidationError("tila", Validations.notYetJulkaistu("Hakua", hakukohde.hakuOid))
-    }
-  }
-
-  private def checkValintaperuste(hakukohde: Hakukohde, toteutus: Toteutus): Unit = {
-    hakukohde.valintaperusteId foreach { valintaperusteId =>
-      val valintaperuste = ValintaperusteDAO.get(valintaperusteId).map(_._1).getOrElse(
-        singleValidationError("valintaperusteId", Validations.nonExistent("Valintaperustetta", valintaperusteId))
-      )
-
-      if (valintaperuste.tila != Julkaistu && hakukohde.tila == Julkaistu) {
-        singleValidationError("tila", Validations.notYetJulkaistu("Valintaperustetta", valintaperusteId))
-      }
-
-      toteutus.metadata.map(_.tyyppi) collect {
-        case tyyppi if tyyppi != valintaperuste.koulutustyyppi =>
-          singleValidationError("valintaperusteId", Validations.tyyppiMismatch("Toteutuksen", toteutus.oid.get, "valintaperusteen", valintaperusteId))
-      }
-    }
+    throwValidationErrors(and(
+      validateDependency(hakukohde.tila, deps.get("toteutus").map(_.tila), hakukohde.toteutusOid, "Toteutusta", "toteutusOid"),
+      validateDependency(hakukohde.tila, deps.get("haku").map(_.tila), hakukohde.hakuOid, "Hakua", "hakuOid"),
+      validateIfDefined[UUID](hakukohde.valintaperusteId, valintaperusteId => and(
+        validateDependency(hakukohde.tila, deps.get("valintaperuste").map(_.tila), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
+        validateIfDefined[Koulutustyyppi](deps.get("valintaperuste").flatMap(_.tyyppi), valintaperusteTyyppi =>
+          validateIfDefined[Koulutustyyppi](deps.get("toteutus").flatMap(_.tyyppi), toteutusTyyppi =>
+            assertTrue(toteutusTyyppi == valintaperusteTyyppi, "valintaperusteId", tyyppiMismatch("Toteutuksen", hakukohde.toteutusOid, "valintaperusteen", valintaperusteId))
+          )
+        )
+      ))
+    ))
   }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =

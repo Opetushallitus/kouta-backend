@@ -15,6 +15,7 @@ object Validations {
   def error(path: String, msg: String): IsValid = List(ValidationError(path, msg))
 
   def and(validations: IsValid*): IsValid = validations.flatten.distinct
+  def or(first: IsValid, second: IsValid): IsValid = if (first.isEmpty) second else first
 
   def validationMsg(value: String) = s"'${value}' ei ole validi"
   val missingMsg = s"Pakollinen tieto puuttuu"
@@ -136,4 +137,14 @@ object Validations {
 
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
+
+  def validateDependency(validatableTila: Julkaisutila,
+                         dependencyTila: Option[Julkaisutila],
+                         dependencyId: Any,
+                         dependencyName: String,
+                         dependencyIdPath: String): IsValid = {
+    dependencyTila.map { tila =>
+      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId))),
+    }.getOrElse(error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId)))
+  }
 }

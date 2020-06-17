@@ -85,7 +85,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
   it should "fail to store oppilaitoksen osa if oppilaitos is not yet julkaistu" in {
     val oppilaitosOid = put(oppilaitos.copy(tila = Tallennettu))
-    put(OppilaitoksenOsaPath, oppilaitoksenOsa(oppilaitosOid), 400, "oppilaitosOid", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
+    put(OppilaitoksenOsaPath, oppilaitoksenOsa(oppilaitosOid), 400, "tila", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
   }
 
   it should "return 401 if no session is found" in {
@@ -181,7 +181,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     val oppilaitosOid = put(oppilaitos.copy(tila = Tallennettu))
     val oid = put(oppilaitoksenOsa(oppilaitosOid).copy(tila = Tallennettu))
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Tallennettu))
-    update(OppilaitoksenOsaPath, oppilaitoksenOsa(oid, oppilaitosOid, Julkaistu), lastModified, 400, "oppilaitosOid", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
+    update(OppilaitoksenOsaPath, oppilaitoksenOsa(oid, oppilaitosOid, Julkaistu), lastModified, 400, "tila", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
   }
 
   it should "write oppilaitoksen osa update to audit log" in {

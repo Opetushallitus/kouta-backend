@@ -40,6 +40,12 @@ trait ExtractorBase extends KoutaJsonFormats {
 
   implicit val getKeywordResult: GetResult[Keyword] = GetResult(r => Keyword(Kieli.withName(r.nextString()), r.nextString()))
 
+  implicit val getJulkaisutilaResult: GetResult[Julkaisutila] = GetResult(r => Julkaisutila.withName(r.nextString()))
+  implicit val getJulkaisutilaOptionResult: GetResult[Option[Julkaisutila]] = GetResult(r => r.nextStringOption().map(Julkaisutila.withName))
+
+  implicit val getKoulutustyyppiResult: GetResult[Koulutustyyppi] = GetResult(r => Koulutustyyppi.withName(r.nextString()))
+  implicit val getKoulutustyyppiOptionResult: GetResult[Option[Koulutustyyppi]] = GetResult(r => r.nextStringOption().map(Koulutustyyppi.withName))
+
   def extractArray[U](o: Option[Object]): Seq[U] = o
     .map(_.asInstanceOf[org.postgresql.jdbc.PgArray])
     .map(_.getArray.asInstanceOf[Array[U]].toSeq)

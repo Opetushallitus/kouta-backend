@@ -452,6 +452,15 @@ package object domain {
                             valintaperusteet: Seq[UUID] = Seq(),
                             oppilaitokset: Seq[OrganisaatioOid] = Seq())
 
+  case class DependencyInformation(tila: Julkaisutila, tyyppi: Option[Koulutustyyppi])
+
+  object DependencyInformation {
+    def toMap(seq: Seq[(String, Julkaisutila, Option[Koulutustyyppi])]): Map[String, DependencyInformation] =
+      seq.map { case (name, tila, tyyppi) =>
+        name -> DependencyInformation(tila, tyyppi)
+      }.toMap
+  }
+
   trait HasTeemakuva[T] {
     val teemakuva: Option[String]
 
