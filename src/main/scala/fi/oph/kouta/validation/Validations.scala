@@ -36,6 +36,7 @@ object Validations {
   val PohjakoulutusvaatimusKoodiPattern: Pattern = Pattern.compile("""pohjakoulutusvaatimustoinenaste_\w+#\d{1,2}""")
   val ValintatapajonoKoodiPattern: Pattern = Pattern.compile("""valintatapajono_\w{2}#\d{1,2}""")
   val KoulutuksenLisatiedotOtsikkoKoodiPattern: Pattern = Pattern.compile("""koulutuksenlisatiedot_\d+#\d{1,2}""")
+  val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
   val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso[12]_\d+#\d{1,2}""")
   val TutkintonimikeKoodiPattern: Pattern = Pattern.compile("""tutkintonimikekk_\d+#\d{1,2}""")
   val OpintojenLaajuusKoodiPattern: Pattern = Pattern.compile("""opintojenlaajuus_\d+#\d{1,2}""")

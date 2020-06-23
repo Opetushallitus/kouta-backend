@@ -73,7 +73,7 @@ package object oppilaitos {
       |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
       |          items:
       |            type: object
-      |            $ref: '#/components/schemas/Lisatieto'
+      |            $ref: '#/components/schemas/TietoaOpiskelusta'
       |        esittely:
       |          type: object
       |          description: Oppilaitoksen Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -245,7 +245,24 @@ package object oppilaitos {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel, OppilaitoksenOsaListItemModel, YhteystietoModel)
+  val TietoaOpiskelustaModel =
+    """    TietoaOpiskelusta:
+      |      type: object
+      |      properties:
+      |        otsikkoKoodiUri:
+      |          type: string
+      |          description: Lisätiedon otsikon koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/organisaationkuvaustiedot/1)
+      |          example: organisaationkuvaustiedot_03#1
+      |        teksti:
+      |          type: object
+      |          description: Lisätiedon teksti eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |""".stripMargin
+
+
+  def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel,
+    OppilaitoksenOsaListItemModel, YhteystietoModel, TietoaOpiskelustaModel)
 }
 
 case class Oppilaitos(oid: OrganisaatioOid,
@@ -320,7 +337,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
   def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = oid)
 }
 
-case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
+case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
                               yhteystiedot: Option[Yhteystieto] = None,
                               esittely: Kielistetty = Map(),
                               opiskelijoita: Option[Integer] = None,
@@ -331,7 +348,7 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
                               toimipisteita: Option[Integer] = None,
                               akatemioita: Option[Integer] = None) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfNonEmpty[Lisatieto](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[TietoaOpiskelusta](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Yhteystieto](yhteystiedot, _.validate(tila, kielivalinta, s"$path.yhteystiedot")),
     validateIfDefined[Integer](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
     validateIfDefined[Integer](korkeakouluja, assertNotNegative(_, s"$path.korkeakouluja")),
@@ -341,6 +358,13 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[Lisatieto] = Seq(),
     validateIfDefined[Integer](toimipisteita, assertNotNegative(_, s"$path.toimipisteita")),
     validateIfDefined[Integer](akatemioita,   assertNotNegative(_, s"$path.akatemioita")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"))
+  )
+}
+
+case class TietoaOpiskelusta(otsikkoKoodiUri: String, teksti: Kielistetty) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    assertMatch(otsikkoKoodiUri, TietoaOpiskelustaOtsikkoKoodiPattern, s"$path.otsikkoKoodiUri"),
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, teksti, s"$path.teksti"))
   )
 }
 

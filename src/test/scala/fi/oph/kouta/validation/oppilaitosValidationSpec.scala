@@ -1,8 +1,8 @@
 package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Fi, Julkaistu, Lisatieto, Oppilaitos, OppilaitosMetadata, Osoite, Sv, Tallennettu, Yhteystieto}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{Fi, Julkaistu, Oppilaitos, OppilaitosMetadata, Osoite, Sv, Tallennettu, TietoaOpiskelusta, Yhteystieto}
 import fi.oph.kouta.validation.Validations._
 
 class OppilaitosValidationSpec extends BaseValidationSpec[Oppilaitos] {
@@ -44,7 +44,7 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
   }
 
   it should "validate tietoaOpiskelusta" in {
-    val metadata = min.copy(tietoaOpiskelusta = Seq(Lisatieto(otsikkoKoodiUri = "virhe", teksti = Map())))
+    val metadata = min.copy(tietoaOpiskelusta = Seq(TietoaOpiskelusta(otsikkoKoodiUri = "virhe", teksti = Map())))
     failsValidation(Tallennettu, metadata, "tietoaOpiskelusta[0].otsikkoKoodiUri", validationMsg("virhe"))
   }
 
