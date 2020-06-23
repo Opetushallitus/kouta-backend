@@ -14,6 +14,7 @@ import fi.oph.kouta.repository.{HakukohdeDAO, SQLHelpers}
 import fi.oph.kouta.service.{HakukohdeService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
+import org.scalactic.Equality
 
 trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessControlSpec {
 
@@ -38,6 +39,14 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       valintakokeet = hakukohde.valintakokeet.map(vk => vk.copy(id = db.runBlocking(
         sql"""select id from hakukohteiden_valintakokeet where hakukohde_oid = ${hakukohde.oid} and tyyppi_koodi_uri = ${vk.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString)))
     )}
+
+  implicit val hakukohdeEquality: Equality[Hakukohde] = (a: Hakukohde, b: Any) => b match {
+    case v: Hakukohde =>
+      val that = a.copy(valintakokeet = a.valintakokeet.sortBy(_.nimi(Fi)))
+      val other = v.copy(valintakokeet = v.valintakokeet.sortBy(_.nimi(Fi)))
+      Equality.default[Hakukohde].areEqual(that, other)
+    case _ => false
+  }
 
   def hakukohde(toteutusOid: String, hakuOid: String): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = None, tila = Tallennettu)

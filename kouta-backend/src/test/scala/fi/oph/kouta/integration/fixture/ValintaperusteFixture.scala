@@ -59,8 +59,8 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
 
   implicit val valintaperusteEquality: Equality[Valintaperuste] = (a: Valintaperuste, b: Any) => b match {
     case v: Valintaperuste =>
-      val that = a.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)))
-      val other = v.copy(valintakokeet = v.valintakokeet.map(_.copy(id = None)))
+      val that = a.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)).sortBy(_.nimi(Fi)))
+      val other = v.copy(valintakokeet = v.valintakokeet.map(_.copy(id = None)).sortBy(_.nimi(Fi)))
       Equality.default[Valintaperuste].areEqual(that, other)
     case _ => false
   }
