@@ -101,6 +101,19 @@ package object toteutusMetadata {
       |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          allOf:
       |            - $ref: '#/components/schemas/Kuvaus'
+      |        suunniteltuKestoVuodet:
+      |          type: integer
+      |          description: "Koulutuksen suunniteltu kesto vuosina"
+      |          example: 2
+      |        suunniteltuKestoKuukaudet:
+      |          type: integer
+      |          description: "Koulutuksen suunniteltu kesto kuukausina"
+      |          example: 2
+      |        suunniteltuKestoKuvaus:
+      |          type: object
+      |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
   val ToteutusMetadata =
