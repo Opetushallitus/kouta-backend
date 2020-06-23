@@ -73,7 +73,7 @@ package object oppilaitos {
       |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
       |          items:
       |            type: object
-      |            $ref: '#/components/schemas/Lisatieto'
+      |            $ref: '#/components/schemas/TietoaOpiskelusta'
       |        esittely:
       |          type: object
       |          description: Oppilaitoksen Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -245,7 +245,24 @@ package object oppilaitos {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel, OppilaitoksenOsaListItemModel, YhteystietoModel)
+  val TietoaOpiskelustaModel =
+    """    TietoaOpiskelusta:
+      |      type: object
+      |      properties:
+      |        otsikkoKoodiUri:
+      |          type: string
+      |          description: Lisätiedon otsikon koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/organisaationkuvaustiedot/1)
+      |          example: organisaationkuvaustiedot_03#1
+      |        teksti:
+      |          type: object
+      |          description: Lisätiedon teksti eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
+      |""".stripMargin
+
+
+  def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel,
+    OppilaitoksenOsaListItemModel, YhteystietoModel, TietoaOpiskelustaModel)
 }
 
 case class Oppilaitos(oid: OrganisaatioOid,
