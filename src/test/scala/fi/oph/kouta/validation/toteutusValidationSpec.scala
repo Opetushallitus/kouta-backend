@@ -191,4 +191,10 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsOnJulkaisuValidation(opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast), koulutuksenPaattymispaivamaara = Some(past)),
       ("koulutuksenAlkamispaivamaara", pastDateMsg(moreInPast)), ("koulutuksenPaattymispaivamaara", pastDateMsg(past)))
   }
+
+  it should "fail if suunniteltu kesto is not valid" in {
+    failsValidation(Tallennettu, opetus.copy(suunniteltuKestoVuodet = Some(-1)), "suunniteltuKestoVuodet", notNegativeMsg)
+    failsValidation(Tallennettu, opetus.copy(suunniteltuKestoKuukaudet = Some(-1)), "suunniteltuKestoKuukaudet", notNegativeMsg)
+    failsValidation(Julkaistu, opetus.copy(suunniteltuKestoKuvaus = Map(Sv -> "moi")), "suunniteltuKestoKuvaus", invalidKielistetty(Seq(Fi)))
+  }
 }

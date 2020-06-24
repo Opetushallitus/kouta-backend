@@ -101,6 +101,19 @@ package object toteutusMetadata {
       |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          allOf:
       |            - $ref: '#/components/schemas/Kuvaus'
+      |        suunniteltuKestoVuodet:
+      |          type: integer
+      |          description: "Koulutuksen suunniteltu kesto vuosina"
+      |          example: 2
+      |        suunniteltuKestoKuukaudet:
+      |          type: integer
+      |          description: "Koulutuksen suunniteltu kesto kuukausina"
+      |          example: 2
+      |        suunniteltuKestoKuvaus:
+      |          type: object
+      |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
   val ToteutusMetadata =
@@ -360,7 +373,10 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
-                  stipendinKuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+                  stipendinKuvaus: Kielistetty = Map(),
+                  suunniteltuKestoVuodet: Option[Int] = None,
+                  suunniteltuKestoKuukaudet: Option [Int] = None,
+                  suunniteltuKestoKuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
@@ -371,6 +387,8 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
     validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Double](stipendinMaara, assertNotNegative(_, s"$path.stipendinMaara")),
     validateIfDefined[Double](maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
+    validateIfDefined[Int](suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),
+    validateIfDefined[Int](suunniteltuKestoKuukaudet, assertNotNegative(_, s"$path.suunniteltuKestoKuukaudet")),
     validateIfJulkaistu(tila, and(
       assertNotEmpty(opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit"),
       assertNotEmpty(opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit"),
@@ -384,6 +402,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       assertNotOptional(onkoStipendia, s"$path.onkoStipendia"),
       validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
       validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
+      validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus"),
       if (koulutuksenTarkkaAlkamisaika) {
         assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")
       } else and(

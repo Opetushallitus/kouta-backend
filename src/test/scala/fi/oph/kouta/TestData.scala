@@ -369,6 +369,10 @@ object TestData {
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
     onkoStipendia = Some(false),
     stipendinMaara = Some(100.0),
+    stipendinKuvaus = Map(Fi -> "Stipendin kuvaus fi", Sv -> "Stipendin kuvaus sv"),
+    suunniteltuKestoVuodet = Some(3),
+    suunniteltuKestoKuukaudet = Some(10),
+    suunniteltuKestoKuvaus = Map(Fi -> "Keston kuvaus fi", Sv -> "Keston kuvaus sv")
   )
 
   val AmmToteutuksenMetatieto = AmmatillinenToteutusMetadata(
