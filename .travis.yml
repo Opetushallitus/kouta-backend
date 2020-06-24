@@ -2,7 +2,7 @@ sudo: required
 dist: xenial
 language: scala
 scala:
-  - 2.12.2
+  - 2.12.10
 jdk:
   - openjdk8
 services:
@@ -50,7 +50,7 @@ before_script:
   - docker pull localstack/localstack:0.10.2
 
 script:
-  - mvn install --batch-mode -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
+  - mvn clean package --batch-mode -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
 
   - mv kouta-backend/target/kouta-backend-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
   - cp -vr kouta-backend/src/main/resources/* $DOCKER_BUILD_DIR/config/
