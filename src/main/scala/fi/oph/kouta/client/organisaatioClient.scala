@@ -10,7 +10,7 @@ import org.json4s.jackson.JsonMethods._
 
 import scala.annotation.tailrec
 
-trait OrganisaatioClient {
+trait OrganisaatioService {
   type OrganisaatioOidsAndOppilaitostyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
 
   val OphOid: OrganisaatioOid = KoutaConfigurationFactory.configuration.securityConfiguration.rootOrganisaatio
@@ -88,56 +88,46 @@ object CachedOrganisaatioHierarkiaClient extends HttpClient with KoutaJsonFormat
   }
 }
 
-object OrganisaatioClient extends OrganisaatioClient {
+object OrganisaatioService extends OrganisaatioService {
 
   import scalacache._
   import scala.concurrent.duration._
   import scalacache.modes.sync._
   import scalacache.caffeine._
 
-  //TODO: @tailrec
   private def pickChildrenRecursively(current: OidAndChildren, oid: OrganisaatioOid): Option[OidAndChildren] = {
     if(current.oid.equals(oid)) {
       Some(current)
     } else {
-      val children = current.children.map(pickChildrenRecursively(_, oid)).flatten
-      if(children.isEmpty) {
-        None
-      } else {
-        Some(current.copy(children = children))
-      }
+      current.children.view
+        .map(pickChildrenRecursively(_, oid))
+        .collectFirst { case Some(child) => current.copy(children = List(child)) }
     }
   }
 
   private def findHierarkia(oid: OrganisaatioOid): List[OidAndChildren] =
     CachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached()
-      .organisaatiot.map(pickChildrenRecursively(_, oid)).flatten
+      .organisaatiot.view
+      .map(pickChildrenRecursively(_, oid))
+      .collectFirst { case Some(child) => List(child) }
+      .getOrElse(List())
 
   implicit val HierarkiaCache = CaffeineCache[List[OidAndChildren]]
 
-  private def cacheHierarkia(oid: OrganisaatioOid): Any =
-    sync.put(oid)(findHierarkia(oid), Some(45.minutes))
-
-  private def getCachedHierarkia(oid: OrganisaatioOid): Option[List[OidAndChildren]] =
-    sync.get(oid)
-
-  //TODO: @tailrec
   private def removeLakkautetutRecursively(current: OidAndChildren): Option[OidAndChildren] = {
     if(current.isPassiivinen) {
       None
     } else {
-      Some(current.copy(children = current.children.map(removeLakkautetutRecursively(_)).flatten))
+      Some(current.copy(children = current.children.flatMap(removeLakkautetutRecursively(_))))
     }
   }
 
   protected def getHierarkia[R](oid: OrganisaatioOid, result: List[OidAndChildren] => R, lakkautetut: Boolean = false) = {
-    val hierarkia: List[OidAndChildren] = getCachedHierarkia(oid).orElse {
-      cacheHierarkia(oid)
-      getCachedHierarkia(oid)
-    }.getOrElse(List.empty[OidAndChildren])
-
+    val hierarkia: List[OidAndChildren] = sync.caching(oid)(Some(45.minutes)) {
+      findHierarkia(oid)
+    }
     result {
-      if(lakkautetut) { hierarkia } else { hierarkia.map(removeLakkautetutRecursively).flatten }
+      if(lakkautetut) { hierarkia } else { hierarkia.flatMap(removeLakkautetutRecursively) }
     }
   }
 }

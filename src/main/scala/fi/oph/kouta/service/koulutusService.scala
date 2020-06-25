@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient}
+import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioService}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
@@ -74,7 +74,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] =
     withRootAccess(indexerRoles) {
-      KoulutusDAO.getJulkaistutByTarjoajaOids(OrganisaatioClient.getAllChildOidsFlat(organisaatioOid, lakkautetut = true))
+      KoulutusDAO.getJulkaistutByTarjoajaOids(OrganisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true))
     }
 
   def toteutukset(oid: KoulutusOid, vainJulkaistut: Boolean)(implicit authenticated: Authenticated): Seq[Toteutus] =
@@ -96,7 +96,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
-      case Seq(OrganisaatioClient.OphOid) => ToteutusDAO.listByKoulutusOid(oid)
+      case Seq(OrganisaatioService.OphOid) => ToteutusDAO.listByKoulutusOid(oid)
       case x => ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
     }
 
