@@ -58,14 +58,17 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     import Validations._
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
 
+    val hakuOid = hakukohde.hakuOid.s
+    val toteutusOid = hakukohde.toteutusOid.s
+
     throwValidationErrors(and(
-      validateDependency(hakukohde.tila, deps.get("toteutus").map(_.tila), hakukohde.toteutusOid, "Toteutusta", "toteutusOid"),
-      validateDependency(hakukohde.tila, deps.get("haku").map(_.tila), hakukohde.hakuOid, "Hakua", "hakuOid"),
+      validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
+      validateDependency(hakukohde.tila, deps.get(hakuOid).map(_._1), hakuOid, "Hakua", "hakuOid"),
       validateIfDefined[UUID](hakukohde.valintaperusteId, valintaperusteId => and(
-        validateDependency(hakukohde.tila, deps.get("valintaperuste").map(_.tila), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
-        validateIfDefined[Koulutustyyppi](deps.get("valintaperuste").flatMap(_.tyyppi), valintaperusteTyyppi =>
-          validateIfDefined[Koulutustyyppi](deps.get("toteutus").flatMap(_.tyyppi), toteutusTyyppi =>
-            assertTrue(toteutusTyyppi == valintaperusteTyyppi, "valintaperusteId", tyyppiMismatch("Toteutuksen", hakukohde.toteutusOid, "valintaperusteen", valintaperusteId))
+        validateDependency(hakukohde.tila, deps.get(valintaperusteId.toString).map(_._1), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
+        validateIfDefined[Koulutustyyppi](deps.get(valintaperusteId.toString).flatMap(_._2), valintaperusteTyyppi =>
+          validateIfDefined[Koulutustyyppi](deps.get(toteutusOid).flatMap(_._2), toteutusTyyppi =>
+            assertTrue(toteutusTyyppi == valintaperusteTyyppi, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
           )
         )
       ))
