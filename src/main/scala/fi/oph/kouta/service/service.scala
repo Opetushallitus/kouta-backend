@@ -2,8 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 
-import fi.oph.kouta.client.OrganisaatioClient
-import fi.oph.kouta.client.OrganisaatioClient.OrganisaatioOidsAndOppilaitostyypitFlat
+import fi.oph.kouta.client.OrganisaatioService
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.Julkaistu
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
@@ -13,6 +12,7 @@ import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 import fi.vm.sade.utils.slf4j.Logging
 
 import scala.collection.IterableView
+import fi.oph.kouta.client.OrganisaatioService.OrganisaatioOidsAndOppilaitostyypitFlat
 
 trait ValidatingService[E <: Validatable] {
 
@@ -168,9 +168,9 @@ trait AuthorizationService extends Logging {
 
       val requestedOrganizations =
         if( authorizationRules.allowAccessToParentOrganizations ) {
-          OrganisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
+          OrganisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
         } else {
-          OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid)
+          OrganisaatioService.getAllChildOidsAndOppilaitostyypitFlat(oid)
         }
 
       requestedOrganizations match {
@@ -185,10 +185,10 @@ trait AuthorizationService extends Logging {
     }
 
   protected def lazyFlatChildrenAndParents(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => OrganisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => OrganisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid))
 
   protected def lazyFlatChildren(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => OrganisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => OrganisaatioService.getAllChildOidsAndOppilaitostyypitFlat(oid))
 
   def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
     roles.exists(role => authenticated.session.roleMap.get(role).exists(_.contains(rootOrganisaatioOid)))

@@ -14,6 +14,11 @@ class AuthorizationServiceSpec extends KoutaClientSpec with OrganisaatioServiceM
 
   val TestService = new AuthorizationService {}
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    mockOrganisaatioResponse()
+  }
+
   val paakayttajaSession = CasSession(ServiceTicket("ST-123"), "1.2.3.1234",
     Set("APP_KOUTA", "APP_KOUTA_OPHPAAKAYTTAJA", s"APP_KOUTA_OPHPAAKAYTTAJA_${OphOid}").map(Authority(_)))
 
@@ -30,7 +35,6 @@ class AuthorizationServiceSpec extends KoutaClientSpec with OrganisaatioServiceM
     run should be (true)
   }
   it should "have permission to execute with authorized child oids" in {
-    mockOrganisaatioResponse(ChildOid)
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), paakayttajaSession)
     var orgs: Seq[OrganisaatioOid] = Seq()
     TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.readRoles) { o => orgs = o }
@@ -54,32 +58,21 @@ class AuthorizationServiceSpec extends KoutaClientSpec with OrganisaatioServiceM
     }
   }
   it should "have permission to execute with authorized child oids" in {
-    mockOrganisaatioResponse(ChildOid)
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), readChildOidSession)
     var orgs: Seq[OrganisaatioOid] = Seq()
     TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.readRoles) { o => orgs = o }
     orgs should contain theSameElementsAs(Seq(ChildOid, GrandChildOid, EvilGrandChildOid))
   }
   it should "not have permission to execute write operations" in {
-    mockOrganisaatioResponse(ChildOid)
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), readChildOidSession)
     assertThrows[RoleAuthorizationFailedException] {
       TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.updateRoles) {o => o}
     }
   }
   it should "not have permission to execute with parent oids" in {
-    mockOrganisaatioResponse(ChildOid)
-    mockOrganisaatioResponse(GrandChildOid, singleOidOrganisaatioResponse(GrandChildOid.s))
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), readGrandChildOidSession)
     assertThrows[OrganizationAuthorizationFailedException] {
       TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.readRoles) { o => o }
-    }
-  }
-  it should "not have permission to execute if organization oid is uknown" in {
-    mockOrganisaatioResponse(ChildOid, NotFoundOrganisaatioResponse)
-    implicit val authenticated = testAuthenticated(UUID.randomUUID(), readChildOidSession)
-    assertThrows[RoleAuthorizationFailedException] {
-      TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.updateRoles) {o => o}
     }
   }
 }
