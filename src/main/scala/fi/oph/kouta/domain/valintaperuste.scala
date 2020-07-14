@@ -209,8 +209,7 @@ case class Valintaperuste(id: Option[UUID] = None,
     validateIfDefined[ValintaperusteMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)),
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-      assertNotOptional(sorakuvausId, "sorakuvausId")
+      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
     ))
   )
 
