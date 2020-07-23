@@ -113,6 +113,11 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
     failsValidation(Tallennettu, yo.copy(tutkintonimikeKoodiUrit = Seq("mummo")), "tutkintonimikeKoodiUrit[0]", validationMsg("mummo"))
   }
 
+  it should "succeed with any valid tutkintonimikeKoodiUri" in {
+    passesValidation(Tallennettu, yo.copy(tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_y19#2")))
+    passesValidation(Tallennettu, yo.copy(tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_19#2")))
+  }
+
   it should "fail if any opintojenLaajuusKoodiUri is invalid" in {
     failsValidation(Tallennettu, yo.copy(opintojenLaajuusKoodiUri = Some("mummo")), "opintojenLaajuusKoodiUri", validationMsg("mummo"))
   }
