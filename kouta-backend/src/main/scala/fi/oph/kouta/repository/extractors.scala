@@ -33,6 +33,8 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
     id = r.nextStringOption().map(UUID.fromString),
     tyyppiKoodiUri = r.nextStringOption(),
+    nimi = extractKielistetty(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[ValintakoeMetadata]),
     tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List())
   ))
 
@@ -209,6 +211,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
     hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
     kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
+    jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid(_)),
     aloituspaikat = r.nextIntOption(),
     ensikertalaisenAloituspaikat = r.nextIntOption(),
     pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
@@ -222,6 +225,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     liitteidenToimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
     liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
+    metadata = r.nextStringOption().map(read[HakukohdeMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
@@ -311,6 +315,7 @@ trait HakutietoExtractors extends ExtractorBase {
     ( ToteutusOid(r.nextString()), HakuOid(r.nextString()), HakutietoHakukohde(
       hakukohdeOid = HakukohdeOid(r.nextString()),
       nimi = extractKielistetty(r.nextStringOption()),
+      valintaperusteId = r.nextStringOption().map(UUID.fromString),
       alkamiskausiKoodiUri = r.nextStringOption(),
       alkamisvuosi = r.nextStringOption(),
       kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
@@ -322,6 +327,8 @@ trait HakutietoExtractors extends ExtractorBase {
       aloituspaikat = r.nextIntOption(),
       ensikertalaisenAloituspaikat = r.nextIntOption(),
       kaytetaanHaunAikataulua = r.nextBooleanOption(),
+      pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
+      pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
       organisaatioOid = OrganisaatioOid(r.nextString()),
       hakuajat = List(),
       muokkaaja = UserOid(r.nextString()),

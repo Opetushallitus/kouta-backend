@@ -133,10 +133,12 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
 
   def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] =
-    sqlu"""insert into valintaperusteiden_valintakokeet (id, valintaperuste_id, tyyppi_koodi_uri, tilaisuudet, muokkaaja)
+    sqlu"""insert into valintaperusteiden_valintakokeet (id, valintaperuste_id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja)
            values (${valintakoe.id.map(_.toString)}::uuid,
                    ${valintaperusteId.map(_.toString)}::uuid,
                    ${valintakoe.tyyppiKoodiUri},
+                   ${toJsonParam(valintakoe.nimi)}::jsonb,
+                   ${toJsonParam(valintakoe.metadata)}::jsonb,
                    ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
                    $muokkaaja)"""
 
@@ -146,7 +148,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
           from valintaperusteet where id = ${id.toString}::uuid"""
 
   def selectValintakokeet(id: UUID): DBIO[Vector[Valintakoe]] = {
-    sql"""select id, tyyppi_koodi_uri, tilaisuudet
+    sql"""select id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
           from valintaperusteiden_valintakokeet
           where valintaperuste_id = ${id.toString}::uuid""".as[Valintakoe]
   }
@@ -181,12 +183,17 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def updateValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""update valintaperusteiden_valintakokeet set
-            tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
-            tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
-            muokkaaja = $muokkaaja
-          where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id = ${valintakoe.id.map(_.toString)}::uuid and (
-            tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb or
-            tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri})"""
+             tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri},
+             nimi = ${toJsonParam(valintakoe.nimi)}::jsonb,
+             metadata = ${toJsonParam(valintakoe.metadata)}::jsonb,
+             tilaisuudet = ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
+             muokkaaja = $muokkaaja
+          where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid
+            and id = ${valintakoe.id.map(_.toString)}::uuid
+            and ( tilaisuudet is distinct from ${toJsonParam(valintakoe.tilaisuudet)}::jsonb
+              or tyyppi_koodi_uri is distinct from ${valintakoe.tyyppiKoodiUri}
+              or nimi is distinct from ${toJsonParam(valintakoe.nimi)}::jsonb
+              or metadata is distinct from ${toJsonParam(valintakoe.metadata)}::jsonb)"""
   }
 
   def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
@@ -201,10 +208,10 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
 
-    DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL :+ deleteSQL)
+    deleteSQL.zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL))(_ + _)
   }
 
-  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: List[UUID]): DBIO[Int] = {
+  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: Seq[UUID]): DBIO[Int] = {
     sqlu"""delete from valintaperusteiden_valintakokeet
            where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id not in (#${createUUIDInParams(exclude)})"""
   }

@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
@@ -16,8 +16,8 @@ trait HakuFixtureWithIndexing extends HakuFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
   override def hakuService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService)
   }
 }
 
@@ -25,8 +25,8 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
   override def koulutusService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService)
   }
 }
 
@@ -34,8 +34,8 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
   override def toteutusService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog, new KeywordService(auditLog, organisaatioClient), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog, new KeywordService(auditLog, organisaatioService), organisaatioService)
   }
 }
 
@@ -43,8 +43,8 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
   override def valintaperusteService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService)
   }
 }
 
@@ -52,7 +52,7 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
   override def hakukohdeService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService)
   }
 }

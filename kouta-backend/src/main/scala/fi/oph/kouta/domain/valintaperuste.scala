@@ -191,7 +191,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           nimi: Kielistetty = Map(),
                           julkinen: Boolean = false,
                           sorakuvausId: Option[UUID] = None,
-                          valintakokeet: List[Valintakoe] = List(),
+                          valintakokeet: Seq[Valintakoe] = Seq(),
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
@@ -209,8 +209,7 @@ case class Valintaperuste(id: Option[UUID] = None,
     validateIfDefined[ValintaperusteMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)),
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-      assertNotOptional(sorakuvausId, "sorakuvausId")
+      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
     ))
   )
 

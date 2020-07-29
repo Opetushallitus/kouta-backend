@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHakukohde
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -21,8 +21,8 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
   val HakukohdePath = "/hakukohde"
 
   def hakukohdeService: HakukohdeService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new HakukohdeService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new HakukohdeService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService)
   }
 
   override def beforeAll(): Unit = {

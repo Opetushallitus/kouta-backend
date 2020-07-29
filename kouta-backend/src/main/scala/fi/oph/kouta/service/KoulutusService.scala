@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient, OrganisaatioClientImpl}
+import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioServiceImpl, OrganisaatioService}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
@@ -17,9 +17,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object KoulutusService extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioClientImpl)
+object KoulutusService extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl)
 
-class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, val organisaatioClient: OrganisaatioClient)
+class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, val organisaatioService: OrganisaatioService)
   extends ValidatingService[Koulutus] with RoleEntityAuthorizationService[Koulutus] with TeemakuvaService[KoulutusOid, Koulutus] with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
@@ -74,7 +74,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] =
     withRootAccess(indexerRoles) {
-      KoulutusDAO.getJulkaistutByTarjoajaOids(organisaatioClient.getAllChildOidsFlat(organisaatioOid, lakkautetut = true))
+      KoulutusDAO.getJulkaistutByTarjoajaOids(organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true))
     }
 
   def toteutukset(oid: KoulutusOid, vainJulkaistut: Boolean)(implicit authenticated: Authenticated): Seq[Toteutus] =

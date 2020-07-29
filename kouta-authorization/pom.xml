@@ -47,7 +47,6 @@
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-logging_2.12</artifactId>
-            <version>${scala-utils.version}</version>
         </dependency>
 
         <dependency>
@@ -62,6 +61,12 @@
         <dependency>
             <groupId>com.typesafe</groupId>
             <artifactId>config</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.cb372</groupId>
+            <artifactId>scalacache-caffeine_2.12</artifactId>
+            <version>0.28.0</version>
         </dependency>
 
         <!-- Test dependencies -->

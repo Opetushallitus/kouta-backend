@@ -3,7 +3,7 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.service.KeywordService
@@ -16,8 +16,8 @@ trait KeywordFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    val keywordService = new KeywordService(new AuditLog(MockAuditLogger), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    val keywordService = new KeywordService(new AuditLog(MockAuditLogger), organisaatioService)
     addServlet(new AsiasanaServlet(keywordService), AsiasanaPath)
     addServlet(new AmmattinimikeServlet(keywordService), AmmattinimikePath)
   }

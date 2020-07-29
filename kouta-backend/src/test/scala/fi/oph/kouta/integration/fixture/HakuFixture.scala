@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -23,8 +23,8 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
   val ohjausparametritClient: MockOhjausparametritClient.type = MockOhjausparametritClient
 
   def hakuService: HakuService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService)
   }
 
   override def beforeAll(): Unit = {

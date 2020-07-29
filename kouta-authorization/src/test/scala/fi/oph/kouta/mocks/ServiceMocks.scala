@@ -38,11 +38,13 @@ trait ServiceMocks extends Logging {
 
   def clearMock(request: HttpRequest): Unit = mockServer.foreach(_.clear(request))
 
-  protected def getMockPath(key: String): String =
-    urlProperties match {
-      case Some(p) => new java.net.URL(p.url(key)).getPath
-      case None => throw new RuntimeException("urlProperties not set")
-    }
+  protected def getMockPath(key: String, param: Option[String] = None): String = urlProperties match {
+    case None => "/"
+    case Some(up) => new java.net.URL(param match {
+      case None => up.url(key)
+      case Some(p) => up.url(key, p)
+    }).getPath
+  }
 
   protected def responseFromResource(filename: String): String =
     Source.fromInputStream(
@@ -58,24 +60,24 @@ trait ServiceMocks extends Logging {
     request
   }
 
-  protected def mockGet(key: String, params: Map[String, String], responseString: String, statusCode: Int = 200): HttpRequest = {
+  protected def mockGet(path:String, params:Map[String,String], responseString:String, statusCode:Int = 200): HttpRequest = {
     val req: HttpRequest = request()
       .withMethod("GET")
       //.withSecure(true) TODO: https toimimaan
-      .withPath(getMockPath(key))
+      .withPath(path)
       .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
     mockRequest(req, responseString, statusCode)
   }
 
-  private def postRequest[B <: AnyRef](key: String, body: B, params: Map[String, String], headers: Map[String, String], matchType: MatchType)(implicit jsonFormats: Formats): HttpRequest =
+  private def postRequest[B <: AnyRef](path: String, body: B, params: Map[String, String], headers: Map[String, String], matchType: MatchType)(implicit jsonFormats: Formats): HttpRequest =
     request()
       .withMethod("POST")
-      .withPath(getMockPath(key))
+      .withPath(path)
       .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
       .withHeaders(headers.map(x => header(x._1, x._2)).toList.asJava)
       .withBody(JsonBody.json(write[B](body), matchType).asInstanceOf[Body[_]])
 
-  protected def mockPost[B <: AnyRef](key: String,
+  protected def mockPost[B <: AnyRef](path: String,
                                       body: B,
                                       params: Map[String, String] = Map.empty,
                                       responseString: String,
@@ -83,11 +85,11 @@ trait ServiceMocks extends Logging {
                                       headers: Map[String, String] = Map.empty,
                                       matchType: MatchType = MatchType.STRICT
                                      )(implicit jsonFormats: Formats): HttpRequest = {
-    val req: HttpRequest = postRequest(key, body, params, headers, matchType)
+    val req: HttpRequest = postRequest(path, body, params, headers, matchType)
     mockRequest(req, responseString, statusCode)
   }
 
-  protected def mockPut[B <: AnyRef](key: String,
+  protected def mockPut[B <: AnyRef](path: String,
                                      body: B,
                                      params: Map[String, String] = Map.empty,
                                      responseString: String,
@@ -95,7 +97,7 @@ trait ServiceMocks extends Logging {
                                      headers: Map[String, String] = Map.empty,
                                      matchType: MatchType = MatchType.STRICT
                                     )(implicit jsonFormats: Formats): HttpRequest = {
-    val req: HttpRequest = postRequest(key, body, params, headers, matchType).withMethod("PUT")
+    val req: HttpRequest = postRequest(path, body, params, headers, matchType).withMethod("PUT")
     mockRequest(req, responseString, statusCode)
   }
 

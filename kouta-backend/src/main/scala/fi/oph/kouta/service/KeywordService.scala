@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.{AuditLog, AuditResource}
-import fi.oph.kouta.client.{OrganisaatioClient, OrganisaatioClientImpl}
+import fi.oph.kouta.client.{OrganisaatioServiceImpl, OrganisaatioService}
 import fi.oph.kouta.domain.keyword.{Keyword, KeywordSearch, KeywordType}
 import fi.oph.kouta.repository.{KeywordDAO, KoutaDatabase}
 import fi.oph.kouta.security.RoleEntity
@@ -10,9 +10,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object KeywordService extends KeywordService(AuditLog, OrganisaatioClientImpl)
+object KeywordService extends KeywordService(AuditLog, OrganisaatioServiceImpl)
 
-class KeywordService(auditLog: AuditLog, val organisaatioClient: OrganisaatioClient) extends AuthorizationService {
+class KeywordService(auditLog: AuditLog, val organisaatioService: OrganisaatioService) extends AuthorizationService {
 
   def search(search: KeywordSearch): List[String] = KeywordDAO.search(search)
 

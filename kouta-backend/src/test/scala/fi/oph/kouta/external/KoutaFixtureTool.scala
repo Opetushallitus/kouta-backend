@@ -135,6 +135,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val HakulomakeKuvausKey = "hakulomakeKuvaus"
   val HakulomakeLinkkiKey = "hakulomakeLinkki"
   val KaytetaanHaunHakulomakettaKey = "kaytetaanHaunHakulomaketta"
+  val JarjestyspaikkaOidKey = "jarjestyspaikkaOid"
   val HakukohteenLiittamisenTakarajaKey = "hakukohteenLiittamisenTakaraja"
   val HakukohteenMuokkaamisenTakarajaKey = "hakukohteenMuokkaamisenTakaraja"
   val HakuaikaAlkaaKey = "hakuaikaAlkaa"
@@ -252,6 +253,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
     KaytetaanHaunHakulomakettaKey -> "false",
+    JarjestyspaikkaOidKey -> OtherOid.s,
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
     AloituspaikatKey -> "100",
@@ -436,6 +438,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(AlkamiskausiKoodiUriKey)),
       Some(params(AlkamisvuosiKey)),
       Some(params(KaytetaanHaunAlkamiskauttaKey).toBoolean),
+      Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
@@ -457,6 +460,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(LiitteetKey).map(read[List[Liite]]).getOrElse(List()),
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
+      params.get(MetadataKey).map(read[HakukohdeMetadata]),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
@@ -782,6 +786,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakutietoHakukohde(
       HakukohdeOid(oid),
       toKielistetty(kielivalinta, params(NimiKey)),
+      params.get(ValintaperusteIdKey).map(UUID.fromString),
       Some(params(AlkamiskausiKoodiUriKey)),
       Some(params(AlkamisvuosiKey)),
       params.get(KaytetaanHaunAlkamiskauttaKey).map(_.toBoolean),
@@ -794,6 +799,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(EnsikertalaisenAloituspaikatKey).toInt),
       Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
+      params.get(PohjakoulutusvaatimusKoodiUritKey) match {
+        case None => List[String]()
+        case Some(x) if x.trim == "" => List[String]()
+        case Some(x)  => x.split(",").map(_.trim).toList
+      },
+      toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       Some(parseModified(params(ModifiedKey)))

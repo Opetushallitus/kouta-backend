@@ -5,19 +5,24 @@ import java.net.InetAddress
 import java.util.UUID
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.OrganisaatioClientFixture
+import fi.oph.kouta.client.OrganisaatioFixture
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.mocks.OrganisaatioServiceMock
 import fi.oph.kouta.service.{AuthorizationService, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.servlet.Authenticated
 
-class AuthorizationServiceSpec extends OrganisaatioClientFixture with OrganisaatioServiceMock {
+class AuthorizationServiceSpec extends OrganisaatioFixture with OrganisaatioServiceMock {
 
-  lazy val oc = organisaatioClient
+  lazy val oc = organisaatioService
 
   // object, joka initialisoidaan laiskasti?
   lazy val TestService: AuthorizationService = new AuthorizationService {
-    override val organisaatioClient = oc
+    override val organisaatioService = oc
+  }
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    mockOrganisaatioResponse()
   }
 
   val paakayttajaSession = CasSession(ServiceTicket("ST-123"), "1.2.3.1234",
@@ -36,7 +41,6 @@ class AuthorizationServiceSpec extends OrganisaatioClientFixture with Organisaat
     run should be (true)
   }
   it should "have permission to execute with authorized child oids" in {
-    mockOrganisaatioResponse(ChildOid)
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), paakayttajaSession)
     var orgs: Seq[OrganisaatioOid] = Seq()
     TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.readRoles) { o => orgs = o }
@@ -60,32 +64,21 @@ class AuthorizationServiceSpec extends OrganisaatioClientFixture with Organisaat
     }
   }
   it should "have permission to execute with authorized child oids" in {
-    mockOrganisaatioResponse(ChildOid)
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), readChildOidSession)
     var orgs: Seq[OrganisaatioOid] = Seq()
     TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.readRoles) { o => orgs = o }
     orgs should contain theSameElementsAs(Seq(ChildOid, GrandChildOid, EvilGrandChildOid))
   }
   it should "not have permission to execute write operations" in {
-    mockOrganisaatioResponse(ChildOid)
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), readChildOidSession)
     assertThrows[RoleAuthorizationFailedException] {
       TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.updateRoles) {o => o}
     }
   }
   it should "not have permission to execute with parent oids" in {
-    mockOrganisaatioResponse(ChildOid)
-    mockOrganisaatioResponse(GrandChildOid, singleOidOrganisaatioResponse(GrandChildOid.s))
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), readGrandChildOidSession)
     assertThrows[OrganizationAuthorizationFailedException] {
       TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.readRoles) { o => o }
-    }
-  }
-  it should "not have permission to execute if organization oid is uknown" in {
-    mockOrganisaatioResponse(ChildOid, NotFoundOrganisaatioResponse)
-    implicit val authenticated = testAuthenticated(UUID.randomUUID(), readChildOidSession)
-    assertThrows[RoleAuthorizationFailedException] {
-      TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.updateRoles) {o => o}
     }
   }
 }

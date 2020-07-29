@@ -38,7 +38,6 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
   it should "fail if julkaistu valintaperuste is invalid" in {
     failsValidation(max.copy(hakutapaKoodiUri = None), "hakutapaKoodiUri", missingMsg)
     failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
-    failsValidation(max.copy(sorakuvausId = None), "sorakuvausId", missingMsg)
   }
 
   it should "pass valid julkaistu valintaperuste" in {

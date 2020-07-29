@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{OrganisaatioClient, OrganisaatioOidsAndOppilaitostyypitFlat}
+import fi.oph.kouta.client.{OrganisaatioOidsAndOppilaitostyypitFlat, OrganisaatioService}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.security.{Authorizable, Role}
 import fi.oph.kouta.servlet.Authenticated
@@ -11,7 +11,7 @@ import scala.collection.IterableView
 
 trait AuthorizationService extends Logging {
 
-  def organisaatioClient: OrganisaatioClient
+  def organisaatioService: OrganisaatioService
 
   protected lazy val indexerRoles: Seq[Role] = Seq(Role.Indexer)
 
@@ -70,9 +70,9 @@ trait AuthorizationService extends Logging {
 
       val requestedOrganizations =
         if( authorizationRules.allowAccessToParentOrganizations ) {
-          organisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
+          organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
         } else {
-          organisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid)
+          organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(oid)
         }
 
       requestedOrganizations match {
@@ -87,10 +87,10 @@ trait AuthorizationService extends Logging {
     }
 
   protected def lazyFlatChildrenAndParents(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => organisaatioClient.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid))
 
   protected def lazyFlatChildren(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => organisaatioClient.getAllChildOidsAndOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(oid))
 
   def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
     roles.exists(role => authenticated.session.roleMap.get(role).exists(_.contains(RootOrganisaatioOid)))

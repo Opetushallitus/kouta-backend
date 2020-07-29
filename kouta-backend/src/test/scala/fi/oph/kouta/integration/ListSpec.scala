@@ -25,9 +25,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-
-    mockOrganisaatioResponse(UnknownOid, NotFoundOrganisaatioResponse)
-
+    mockOrganisaatioResponse()
     createTestData()
   }
 
@@ -544,6 +542,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
           hakukohteet = Seq(HakutietoHakukohde(
             hakukohdeOid = hk1.oid,
             nimi = hk1.nimi,
+            valintaperusteId = hk1.valintaperusteId,
             alkamiskausiKoodiUri = TestData.JulkaistuHakukohde.alkamiskausiKoodiUri,
             alkamisvuosi = TestData.JulkaistuHakukohde.alkamisvuosi,
             kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.kaytetaanHaunAlkamiskautta,
@@ -556,6 +555,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             ensikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.ensikertalaisenAloituspaikat,
             kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
             hakuajat = TestData.JulkaistuHakukohde.hakuajat,
+            pohjakoulutusvaatimusKoodiUrit = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusKoodiUrit,
+            pohjakoulutusvaatimusTarkenne = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusTarkenne,
             muokkaaja = hk1.muokkaaja,
             organisaatioOid = hk1.organisaatioOid,
             modified = Some(hk1.modified)))))))

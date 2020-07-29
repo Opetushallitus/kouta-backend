@@ -19,6 +19,11 @@ package object valintaperusteMetadata {
       |          description: Lista valintaperustekuvauksen valintatavoista
       |          items:
       |            $ref: '#/components/schemas/Valintatapa'
+      |        valintakokeidenYleiskuvaus:
+      |          type: object
+      |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty valintaperustekuvauksen kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
   val AmmatillinenValintaperusteMetadataModel =
@@ -38,6 +43,8 @@ package object valintaperusteMetadata {
   val KorkeakoulutusValintaperusteMetadataModel =
     """    KorkeakoulutusValintaperusteMetadata:
       |      type: object
+      |      allOf:
+      |        - $ref: '#/components/schemas/ValintaperusteMetadata'
       |      properties:
       |        osaamistaustaKoodiUrit:
       |          type: array
@@ -50,7 +57,7 @@ package object valintaperusteMetadata {
       |            - osaamistausta_002#1
       |        kuvaus:
       |          type: object
-      |          description: Valintaperustekuvauksen kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          description: Valintaperustekuvauksen kuvausteksti eri kielillä. Kielet on määritetty valintaperustekuvauksen kielivalinnassa.
       |          allOf:
       |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
@@ -145,11 +152,15 @@ sealed trait ValintaperusteMetadata extends ValidatableSubEntity {
   def valintatavat: Seq[Valintatapa]
   def kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus]
   def kuvaus: Kielistetty
+  def valintakokeidenYleiskuvaus: Kielistetty
 
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Valintatapa](valintatavat, s"$path.valintatavat", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[ValintaperusteKielitaitovaatimus](kielitaitovaatimukset, s"$path.kielitaitovaatimukset", _.validate(tila, kielivalinta, _)),
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus")
+    ))
   )
 }
 
@@ -165,21 +176,24 @@ sealed trait KorkeakoulutusValintaperusteMetadata extends ValintaperusteMetadata
 case class AmmatillinenValintaperusteMetadata(tyyppi: Koulutustyyppi = Amm,
                                               valintatavat: Seq[Valintatapa],
                                               kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
-                                              kuvaus: Kielistetty = Map())
+                                              kuvaus: Kielistetty = Map(),
+                                              valintakokeidenYleiskuvaus: Kielistetty = Map())
     extends ValintaperusteMetadata
 
 case class YliopistoValintaperusteMetadata(tyyppi: Koulutustyyppi = Yo,
                                            valintatavat: Seq[Valintatapa],
                                            kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                            osaamistaustaKoodiUrit: Seq[String] = Seq(),
-                                           kuvaus: Kielistetty = Map())
+                                           kuvaus: Kielistetty = Map(),
+                                           valintakokeidenYleiskuvaus: Kielistetty = Map())
     extends KorkeakoulutusValintaperusteMetadata
 
 case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk,
                                                     valintatavat: Seq[Valintatapa],
                                                     kielitaitovaatimukset: Seq[ValintaperusteKielitaitovaatimus],
                                                     osaamistaustaKoodiUrit: Seq[String] = Seq(),
-                                                    kuvaus: Kielistetty = Map())
+                                                    kuvaus: Kielistetty = Map(),
+                                                    valintakokeidenYleiskuvaus: Kielistetty = Map())
     extends KorkeakoulutusValintaperusteMetadata
 
 case class ValintaperusteKielitaitovaatimus(kieliKoodiUri: Option[String] = None,

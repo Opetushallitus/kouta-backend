@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -24,8 +24,8 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
   def toteutusService: ToteutusService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog, new KeywordService(auditLog, organisaatioClient), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog, new KeywordService(auditLog, organisaatioService), organisaatioService)
   }
 
   override def beforeAll(): Unit = {

@@ -43,8 +43,8 @@ trait KoutaIndexMock extends ServiceMocks with KoutaJsonFormats {
   }
 
   private def mock(key: String, body: List[String], params: Map[String, String], response: String, statusCode: Int = 200): model.HttpRequest = statusCode match {
-    case 200 => mockPost(key, body.sorted, params, response)
-    case _   => mockPost(key, body.sorted, params, s"Error $statusCode", statusCode)
+    case 200 => mockPost(getMockPath(key), body.sorted, params, response)
+    case _   => mockPost(getMockPath(key), body.sorted, params, s"Error $statusCode", statusCode)
   }
 
   def mockKoulutusResponse(body: List[String], params: Map[String, String], responseOids: Seq[String] = Seq(), statusCode: Int = 200): model.HttpRequest =

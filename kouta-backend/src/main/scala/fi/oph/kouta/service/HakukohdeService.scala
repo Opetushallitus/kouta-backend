@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioClient, OrganisaatioClientImpl}
+import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioServiceImpl, OrganisaatioService}
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -15,9 +15,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object HakukohdeService extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioClientImpl)
+object HakukohdeService extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl)
 
-class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog, val organisaatioClient: OrganisaatioClient) extends ValidatingService[Hakukohde] with RoleEntityAuthorizationService[Hakukohde] {
+class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog, val organisaatioService: OrganisaatioService) extends ValidatingService[Hakukohde] with RoleEntityAuthorizationService[Hakukohde] {
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
 

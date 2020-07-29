@@ -107,11 +107,13 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
               teemakuva = ${oppilaitos.teemakuva},
               logo = ${oppilaitos.logo}
             where oid = ${oppilaitos.oid}
-            and ( tila is distinct from ${oppilaitos.tila.toString}::julkaisutila
-            or metadata is distinct from ${toJsonParam(oppilaitos.metadata)}::jsonb
-            or kielivalinta is distinct from ${toJsonParam(oppilaitos.kielivalinta)}::jsonb
-            or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid})
-            or teemakuva is distinct from ${oppilaitos.teemakuva}
-            or logo is distinct from ${oppilaitos.logo}"""
+            and (
+              tila is distinct from ${oppilaitos.tila.toString}::julkaisutila
+              or metadata is distinct from ${toJsonParam(oppilaitos.metadata)}::jsonb
+              or kielivalinta is distinct from ${toJsonParam(oppilaitos.kielivalinta)}::jsonb
+              or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid}
+              or teemakuva is distinct from ${oppilaitos.teemakuva}
+              or logo is distinct from ${oppilaitos.logo}
+            )"""
   }
 }

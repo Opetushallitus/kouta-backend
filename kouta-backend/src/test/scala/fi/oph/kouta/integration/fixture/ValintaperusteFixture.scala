@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioClient
+import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -22,8 +22,8 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   val ValintaperustePath = "/valintaperuste"
 
   def valintaperusteService: ValintaperusteService = {
-    val organisaatioClient = new OrganisaatioClient(urlProperties.get, "kouta-backend")
-    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioClient)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService)
   }
 
   override def beforeAll(): Unit = {
@@ -62,7 +62,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   implicit val valintaperusteEquality: Equality[Valintaperuste] = (a: Valintaperuste, b: Any) => b match {
     case v: Valintaperuste =>
       val that = a.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)))
-      val other = v.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)))
+      val other = v.copy(valintakokeet = v.valintakokeet.map(_.copy(id = None)))
       Equality.default[Valintaperuste].areEqual(that, other)
     case _ => false
   }

@@ -18,6 +18,10 @@ Emebedded Postgres-kannan käyttäminen vaatii, että postgresql on asennettu ko
 
 EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
 
+Jos Docker ei ole ajossa EmbeddedJettyLauncher:n käynnistyksessä, niin saatat päätyä virheilmoitukseen
+```com.amazonaws.SdkClientException: Unable to execute HTTP request: Read timed out```. 
+Tästä voi toipua ajamalla `tools/stop_localstack`, joka poistaa "haamutiedoston".
+
 ## Indeksoinnin SQS-jonot
 
 Indeksoinnin jonot saa manuaalisesti lokaalisti käyttöön porttiin `localhost:4576` käynnistämällä
@@ -64,3 +68,5 @@ Lokaaliin kouta-backendiin saa generoitua testidataa ajamalla ```TestDataGenerat
 ### Riippuvuuksien tarkistaminen
 
 ```mvn enforcer:enforce```
+
+

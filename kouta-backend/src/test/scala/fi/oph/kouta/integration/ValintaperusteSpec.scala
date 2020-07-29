@@ -169,7 +169,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   "Update valintaperuste" should "update valintaperuste" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(valintaperuste(id, sorakuvausId, Arkistoitu), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
   }
 
@@ -177,7 +177,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId), crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
     val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = userOid))
-    update(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
@@ -185,7 +185,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     MockAuditLogger.clean()
-    update(valintaperuste(id, sorakuvausId, Arkistoitu), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "valintaperuste_update")
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
   }
@@ -255,7 +255,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     Thread.sleep(1500)
-    update(valintaperuste(id, sorakuvausId, Arkistoitu), lastModified)
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
     post(ValintaperustePath, bytes(valintaperuste(id, sorakuvausId)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
@@ -271,11 +271,23 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, uusiValintaperuste)
   }
 
+  it should "put, update and delete valintakokeet correctly" in {
+    val valintaperusteWithValintakokeet = valintaperuste(sorakuvausId).copy(
+      valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
+    )
+    val id = put(valintaperusteWithValintakokeet)
+    val lastModified = get(id, getIds(valintaperusteWithValintakokeet.copy(id = Some(id))))
+    val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
+    val updateValintakoe = (getIds(valintaperuste(id, sorakuvausId))).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    update(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
+    get(id, getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
+  }
+
   it should "delete all valintakokeet and read last modified from history" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     Thread.sleep(1500)
-    val uusiValintaperuste = valintaperuste(id, sorakuvausId).copy(valintakokeet = List())
+    val uusiValintaperuste = getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = List()))
     update(uusiValintaperuste, lastModified, expectUpdate = true)
     get(id, uusiValintaperuste) should not equal (lastModified)
   }
@@ -317,7 +329,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
       body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy.get), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
     }
 
-    update(thisValintaperusteWithOid.copy(tila = Arkistoitu), lastModified)
+    update(getIds(thisValintaperusteWithOid.copy(tila = Arkistoitu)), lastModified)
   }
 
 }

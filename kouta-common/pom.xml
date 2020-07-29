@@ -26,7 +26,6 @@
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-logging_2.12</artifactId>
-            <version>${scala-utils.version}</version>
         </dependency>
 
         <dependency>

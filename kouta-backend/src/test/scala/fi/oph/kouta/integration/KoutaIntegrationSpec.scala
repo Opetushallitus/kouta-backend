@@ -78,10 +78,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     startServiceMocking()
     addTestSessions()
 
-    mockOrganisaatioResponses(EvilChildOid, ChildOid, ParentOid, GrandChildOid)
-    mockSingleOrganisaatioResponses(LonelyOid)
-    mockOrganisaatioResponse(YoOid, responseFromResource("mpkk"))
-    mockOrganisaatioResponse(AmmOid, singleOidOrganisaatioResponse(AmmOid.s))
+    mockOrganisaatioResponse()
   }
 
   override def afterAll(): Unit = {
@@ -89,7 +86,6 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     stopServiceMocking()
   }
 
-  //val testSessions: mutable.Map[Symbol, (String, String)] = mutable.Map.empty
   val crudSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
   val readSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
 
