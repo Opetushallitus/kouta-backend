@@ -5,7 +5,7 @@ import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.vm.sade.utils.slf4j.Logging
 
-object KoutaAuthorizationConfigFactory extends Logging {
+object KoutaCommonConfigFactory extends Logging {
 
   object Constants {
     val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "kouta-backend.config-profile"

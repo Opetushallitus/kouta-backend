@@ -15,7 +15,6 @@ class AuthorizationServiceSpec extends OrganisaatioFixture with OrganisaatioServ
 
   lazy val oc = organisaatioService
 
-  // object, joka initialisoidaan laiskasti?
   lazy val TestService: AuthorizationService = new AuthorizationService {
     override val organisaatioService = oc
   }

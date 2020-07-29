@@ -12,7 +12,6 @@
 
     <modules>
         <module>kouta-common</module>
-        <module>kouta-authorization</module>
         <module>kouta-backend</module>
     </modules>
 
@@ -125,6 +124,11 @@
                 <groupId>fi.vm.sade</groupId>
                 <artifactId>scala-properties_2.12</artifactId>
                 <version>${scala-logging.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fi.vm.sade</groupId>
+                <artifactId>scala-utils_2.12</artifactId>
+                <version>${scala-utils.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.servlet</groupId>

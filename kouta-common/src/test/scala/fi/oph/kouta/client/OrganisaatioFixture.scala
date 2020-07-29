@@ -1,6 +1,6 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.config.KoutaAuthorizationConfigFactory
+import fi.oph.kouta.config.KoutaCommonConfigFactory
 import fi.oph.kouta.domain.oid.RootOrganisaatioOid
 import fi.oph.kouta.mocks.{OrganisaatioServiceMock, ServiceMocks}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -14,14 +14,14 @@ trait OrganisaatioFixture extends AnyFlatSpec with BeforeAndAfterAll with Before
 
   case class OrganisaatioServiceImpl(organisaatioUrl: String) extends  OrganisaatioService {
     case class CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl: String) extends CachedOrganisaatioHierarkiaClient {
-      val callerId = "kouta-authorization"
+      val callerId = "kouta-common"
     }
     val cachedOrganisaatioHierarkiaClient = new CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl)
   }
 
   override def startServiceMocking(): Unit = {
     super.startServiceMocking()
-    urlProperties = Some(KoutaAuthorizationConfigFactory.loadTemplatedConfiguration().addOverride("host.virkailija", s"localhost:$mockPort"))
+    urlProperties = Some(KoutaCommonConfigFactory.loadTemplatedConfiguration().addOverride("host.virkailija", s"localhost:$mockPort"))
     organisaatioService = OrganisaatioServiceImpl(s"http://localhost:$mockPort/organisaatio-service/rest/organisaatio/v4/$RootOrganisaatioOid/jalkelaiset")
   }
 

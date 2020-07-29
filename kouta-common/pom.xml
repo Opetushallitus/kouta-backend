@@ -20,9 +20,23 @@
             <artifactId>scala-library</artifactId>
         </dependency>
 
-
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet-api.version}</version>
+        </dependency>
 
         <!-- Utility dependencies -->
+        <dependency>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-http</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>fi.vm.sade</groupId>
+            <artifactId>scala-utils_2.12</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-logging_2.12</artifactId>
@@ -37,6 +51,16 @@
             <artifactId>json4s-jackson_2.12</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.cb372</groupId>
+            <artifactId>scalacache-caffeine_2.12</artifactId>
+            <version>0.28.0</version>
+        </dependency>
 
         <!-- Test dependencies -->
         <dependency>
@@ -45,12 +69,19 @@
             <version>${scala-test.version}</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.scalacheck</groupId>
             <artifactId>scalacheck_2.12</artifactId>
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.mock-server</groupId>
+            <artifactId>mockserver-netty</artifactId>
+            <version>5.5.1</version>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 
@@ -105,6 +136,19 @@
                             <goal>enforce</goal>
                         </goals>
                         <phase>validate</phase>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>${plugin.maven-jar-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>test-jar</id>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
