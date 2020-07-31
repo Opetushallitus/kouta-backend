@@ -4,13 +4,12 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers}
-import fi.oph.kouta.service.KoulutusService
+import fi.oph.kouta.service.{KoulutusService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.KoulutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}

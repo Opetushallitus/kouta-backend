@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{OrganisaatioOidsAndOppilaitostyypitFlat, OrganisaatioService}
+import fi.oph.kouta.client.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.security.{Authorizable, Role}
 import fi.oph.kouta.servlet.Authenticated

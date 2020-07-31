@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioService, OrganisaatioServiceImpl}
+import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}

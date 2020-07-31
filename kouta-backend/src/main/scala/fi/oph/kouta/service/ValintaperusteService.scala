@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, OrganisaatioService, OrganisaatioServiceImpl}
+import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService

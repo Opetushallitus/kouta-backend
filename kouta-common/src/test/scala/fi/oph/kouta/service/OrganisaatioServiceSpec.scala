@@ -1,4 +1,4 @@
-package fi.oph.kouta.client
+package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
@@ -6,7 +6,7 @@ import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Lk, Yo}
 
 class OrganisaatioServiceSpec extends OrganisaatioFixture {
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     mockOrganisaatioResponse()
   }

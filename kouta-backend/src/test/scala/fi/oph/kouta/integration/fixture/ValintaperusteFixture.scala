@@ -4,13 +4,12 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.ValintaperusteDAO
-import fi.oph.kouta.service.ValintaperusteService
+import fi.oph.kouta.service.{OrganisaatioServiceImpl, ValintaperusteService}
 import fi.oph.kouta.servlet.ValintaperusteServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}

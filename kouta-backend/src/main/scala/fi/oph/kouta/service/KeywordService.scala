@@ -1,7 +1,6 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.{AuditLog, AuditResource}
-import fi.oph.kouta.client.{OrganisaatioServiceImpl, OrganisaatioService}
 import fi.oph.kouta.domain.keyword.{Keyword, KeywordSearch, KeywordType}
 import fi.oph.kouta.repository.{KeywordDAO, KoutaDatabase}
 import fi.oph.kouta.security.RoleEntity

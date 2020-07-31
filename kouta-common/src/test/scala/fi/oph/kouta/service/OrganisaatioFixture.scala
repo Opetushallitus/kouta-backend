@@ -1,5 +1,6 @@
-package fi.oph.kouta.client
+package fi.oph.kouta.service
 
+import fi.oph.kouta.client.CachedOrganisaatioHierarkiaClient
 import fi.oph.kouta.config.KoutaCommonConfigFactory
 import fi.oph.kouta.domain.oid.RootOrganisaatioOid
 import fi.oph.kouta.mocks.{OrganisaatioServiceMock, ServiceMocks}

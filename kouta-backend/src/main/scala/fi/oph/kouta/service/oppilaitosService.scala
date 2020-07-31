@@ -3,7 +3,6 @@ package fi.oph.kouta.service
 import java.time.Instant
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{OrganisaatioService, OrganisaatioServiceImpl}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}

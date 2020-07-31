@@ -3,10 +3,9 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.OrganisaatioServiceImpl
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
-import fi.oph.kouta.service.KeywordService
+import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet}
 import org.json4s.jackson.Serialization.read
 

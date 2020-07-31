@@ -5,10 +5,9 @@ import java.net.InetAddress
 import java.util.UUID
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.OrganisaatioFixture
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.mocks.OrganisaatioServiceMock
-import fi.oph.kouta.service.{AuthorizationService, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
+import fi.oph.kouta.service.{AuthorizationService, OrganisaatioFixture, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.servlet.Authenticated
 
 class AuthorizationServiceSpec extends OrganisaatioFixture with OrganisaatioServiceMock {
