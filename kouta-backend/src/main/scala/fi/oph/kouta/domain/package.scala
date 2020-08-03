@@ -336,7 +336,8 @@ package object domain {
         validateOptionalKielistetty(kielivalinta, titteli, s"$path.titteli"),
         validateOptionalKielistetty(kielivalinta, sahkoposti, s"$path.sahkoposti"),
         validateOptionalKielistetty(kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
-        validateOptionalKielistetty(kielivalinta, wwwSivu, s"$path.wwwSivu")
+        validateOptionalKielistetty(kielivalinta, wwwSivu, s"$path.wwwSivu"),
+        validateIfNonEmpty(wwwSivu, s"$path/wwwSivu", assertValidUrl _)
       ))
     }
   }
