@@ -1,20 +1,18 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails, Role, RoleEntity}
+import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 
 object KayttooikeusClient extends KayttooikeusClient
 
-trait KayttooikeusClient extends HttpClient with Logging {
+trait KayttooikeusClient extends HttpClient with CallerId with Logging {
 
   import org.json4s._
 
   private implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
-
-  override def callerId: String = "kouta-backend"
 
   def getUserByUsername(username: String): KayttooikeusUserDetails = {
     val url = urlProperties.url(s"kayttooikeus-service.userDetails.byUsername", username)

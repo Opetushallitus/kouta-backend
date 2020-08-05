@@ -11,10 +11,11 @@ Testit vaativat että Docker on asennettuna ja Docker daemon on käynnissä.
 
 ## Ajaminen lokaalisti
 
-Käynnistä Ideassa ```EmbeddedJettyLauncher```. Sovellus käynnistyy porttiin **8099** ja se käyttää embedded Postgres-kantaa.
-Asetuksia voi muuttaa muokkaamalla ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
+Käynnistä Ideassa ```EmbeddedJettyLauncher```. Aseta Working directoryksi `$MODULE_DIR$`. Sovellus
+käynnistyy porttiin **8099** ja se käyttää embedded Postgres-kantaa. Asetuksia voi muuttaa muokkaamalla
+```'/src/test/resources/dev-vars.yml'```-tiedostoa.
 
-Emebedded Postgres-kannan käyttäminen vaatii, että postgresql on asennettu koneelle.
+Embedded Postgres-kannan käyttäminen vaatii, että postgresql on asennettu koneelle.
 
 EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
 
@@ -37,7 +38,7 @@ jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/s
 
 EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
  
-| System property |   |
+| System property                     |                                                    |
 | ----------------------------------- |:--------------------------------------------------:| 
 | ```-Dkouta-backend.port=xxxx```     | Määrittää Jettyn portin (default 8099)             | 
 | ```-Dkouta-backend.embedded=xxxx``` | Käynnistetäänkö embedded PostgreSQL (default true) |
@@ -68,5 +69,3 @@ Lokaaliin kouta-backendiin saa generoitua testidataa ajamalla ```TestDataGenerat
 ### Riippuvuuksien tarkistaminen
 
 ```mvn enforcer:enforce```
-
-

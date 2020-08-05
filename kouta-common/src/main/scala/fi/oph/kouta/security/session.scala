@@ -1,6 +1,6 @@
 package fi.oph.kouta.security
 
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 
 import scala.util.matching.Regex
 
@@ -54,7 +54,7 @@ case class Authority(authority: String) {
 }
 
 object Authority {
-  val OrganisaatioRegex: Regex = """_1\.2\.246\.562\.10.[\d]+$""".r
+  val OrganisaatioRegex: Regex = RootOrganisaatioOid.OidPattern.pattern().replace("^", "_").r
 
   def apply(role: Role, organisaatioOid: OrganisaatioOid): Authority = this(s"${role.name}_$organisaatioOid")
 }

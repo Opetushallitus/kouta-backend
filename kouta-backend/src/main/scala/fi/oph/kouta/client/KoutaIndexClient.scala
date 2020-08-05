@@ -13,9 +13,7 @@ import scala.reflect.Manifest
 
 object KoutaIndexClient extends KoutaIndexClient
 
-trait KoutaIndexClient extends HttpClient with Logging with KoutaJsonFormats {
-
-  val callerId = "kouta-backend"
+trait KoutaIndexClient extends HttpClient with CallerId with Logging with KoutaJsonFormats {
 
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 

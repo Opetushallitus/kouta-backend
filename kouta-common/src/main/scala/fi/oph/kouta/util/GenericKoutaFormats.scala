@@ -51,12 +51,9 @@ trait GenericKoutaFormats {
     case k: Kieli => k.toString
   }))
 
-
   private def stringSerializer[A: Manifest](construct: String => A) = new CustomSerializer[A](_ => ( {
     case JString(s) => construct(s)
   }, {
     case a: A => JString(a.toString)
   }))
-
-
 }

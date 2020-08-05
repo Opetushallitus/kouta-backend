@@ -8,7 +8,6 @@ import fi.vm.sade.utils.slf4j.Logging
 
 import scala.collection.IterableView
 
-
 trait AuthorizationService extends Logging {
 
   def organisaatioService: OrganisaatioService

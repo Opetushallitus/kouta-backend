@@ -8,8 +8,8 @@ import fi.vm.sade.utils.slf4j.Logging
 object KoutaCommonConfigFactory extends Logging {
 
   object Constants {
-    val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "kouta-backend.config-profile"
-    val SYSTEM_PROPERTY_NAME_TEMPLATE       = "kouta-backend.template-file"
+    val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "kouta-common.config-profile"
+    val SYSTEM_PROPERTY_NAME_TEMPLATE       = "kouta-common.template-file"
 
     val CONFIG_PROFILE_DEFAULT  = "default"
     val CONFIG_PROFILE_TEMPLATE = "template"
@@ -28,13 +28,13 @@ object KoutaCommonConfigFactory extends Logging {
 
     implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaAuthorizationConfiguration] {
       override def parse(c: TypesafeConfig): KoutaAuthorizationConfiguration =
-        KoutaAuthorizationConfiguration(c, new OphProperties("src/test/resources/kouta-backend.properties") {
+        KoutaAuthorizationConfiguration(c, new OphProperties("src/test/resources/kouta-common.properties") {
           addDefault("host.virkailija", c.getString("host.virkailija"))
         })
     }
 
     logger.info(s"Reading template variables from '${templateFilePath}'")
-    ConfigTemplateProcessor.createSettings("kouta-backend", templateFilePath).urlProperties
+    ConfigTemplateProcessor.createSettings("kouta-common", templateFilePath).urlProperties
   }
 
 }
