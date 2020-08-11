@@ -2,7 +2,7 @@ sudo: required
 dist: xenial
 language: scala
 scala:
-  - 2.12.2
+  - 2.12.10
 jdk:
   - openjdk8
 services:
@@ -46,14 +46,14 @@ install:
 before_script:
   - DB_NAME=kouta
   - psql -c "create database $DB_NAME WITH ENCODING 'UTF8' LC_COLLATE='C' LC_CTYPE='C' TEMPLATE template0;" -U postgres
-  - psql -d $DB_NAME -f postgresql/init_it_postgresql.sql
+  - psql -d $DB_NAME -f kouta-backend/postgresql/init_it_postgresql.sql
   - docker pull localstack/localstack:0.10.2
 
 script:
-  - mvn install --batch-mode -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
+  - mvn clean package --batch-mode -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
 
-  - mv target/kouta-backend-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
-  - cp -vr src/main/resources/* $DOCKER_BUILD_DIR/config/
+  - mv kouta-backend/target/kouta-backend-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
+  - cp -vr kouta-backend/src/main/resources/* $DOCKER_BUILD_DIR/config/
 
   - export BASE_IMAGE="baseimage-fatjar-openjdk8:master"
   - ./ci-tools/common/pull-image.sh
@@ -66,6 +66,12 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
+  - provider: script
+    script:
+      mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
+    skip_cleanup: true
+    on:
+      branch: KTO-720-jakaminen-moduuleihin
   - provider: script
     script:
       ./ci-tools/build/upload-image.sh $ARTIFACT_NAME
