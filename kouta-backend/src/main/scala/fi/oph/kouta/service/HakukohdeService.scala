@@ -1,16 +1,19 @@
 package fi.oph.kouta.service
 
 import java.time.Instant
+import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -26,13 +29,19 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) { h =>
-      withValidation(h, None, doPut)
+      withValidation(h, None) { h =>
+        validateDependenciesIntegrity(h)
+        doPut(h)
+      }
     }.oid.get
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
-      withValidation(h, Some(oldHakukohde), doUpdate(_, notModifiedSince, oldHakukohde))
+      withValidation(h, Some(oldHakukohde)) { h =>
+        validateDependenciesIntegrity(h)
+        doUpdate(h, notModifiedSince, oldHakukohde)
+      }
     }.nonEmpty
   }
 
@@ -44,6 +53,27 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
       case Nil           => HakukohdeSearchResult()
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
+
+  private def validateDependenciesIntegrity(hakukohde: Hakukohde): Unit = {
+    import Validations._
+    val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
+
+    val hakuOid = hakukohde.hakuOid.s
+    val toteutusOid = hakukohde.toteutusOid.s
+
+    throwValidationErrors(and(
+      validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
+      validateDependency(hakukohde.tila, deps.get(hakuOid).map(_._1), hakuOid, "Hakua", "hakuOid"),
+      validateIfDefined[UUID](hakukohde.valintaperusteId, valintaperusteId => and(
+        validateDependency(hakukohde.tila, deps.get(valintaperusteId.toString).map(_._1), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
+        validateIfDefined[Koulutustyyppi](deps.get(valintaperusteId.toString).flatMap(_._2), valintaperusteTyyppi =>
+          validateIfDefined[Koulutustyyppi](deps.get(toteutusOid).flatMap(_._2), toteutusTyyppi =>
+            assertTrue(toteutusTyyppi == valintaperusteTyyppi, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
+          )
+        )
+      ))
+    ))
+  }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
     KoutaDatabase.runBlockingTransactionally {

@@ -2,8 +2,8 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 
-import fi.oph.kouta.domain.Oppilaitos
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -48,6 +48,9 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
       _ <- updateOppilaitos(oppilaitos)
       m <- selectLastModified(oppilaitos.oid)
     } yield oppilaitos.withModified(m.get)
+
+  def getTila(oppilaitosOid: OrganisaatioOid): Option[Julkaisutila] =
+    KoutaDatabase.runBlocking(selectTila(oppilaitosOid))
 }
 
 sealed trait OppilaitosModificationSQL extends SQLHelpers {
@@ -116,4 +119,9 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
               or logo is distinct from ${oppilaitos.logo}
             )"""
   }
+
+  def selectTila(oppilaitosOid: OrganisaatioOid): DBIO[Option[Julkaisutila]] =
+    sql"""select tila from oppilaitokset
+            where oid = $oppilaitosOid
+    """.as[Julkaisutila].headOption
 }

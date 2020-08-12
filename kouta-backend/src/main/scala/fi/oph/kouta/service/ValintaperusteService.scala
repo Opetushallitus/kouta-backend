@@ -6,12 +6,13 @@ import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
+import fi.oph.kouta.domain.{HakukohdeListItem, Koulutustyyppi, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, SorakuvausDAO, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,14 +30,20 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) { v =>
-      withValidation(v, None, doPut)
+      withValidation(v, None) { v =>
+        validateSorakuvausIntegrity(v)
+        doPut(v)
+      }
     }.id.get
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get), valintaperuste) { (oldValintaperuste, v) =>
-      withValidation(v, Some(oldValintaperuste), doUpdate(_, notModifiedSince, oldValintaperuste)).nonEmpty
-    }
+      withValidation(v, Some(oldValintaperuste)) { v =>
+        validateSorakuvausIntegrity(v)
+        doUpdate(v, notModifiedSince, oldValintaperuste)
+      }
+    }.nonEmpty
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
@@ -58,6 +65,22 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       case Nil               => ValintaperusteSearchResult()
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }
+
+  private def validateSorakuvausIntegrity(valintaperuste: Valintaperuste): Unit = {
+    import Validations._
+
+    throwValidationErrors(
+      validateIfDefined[UUID](valintaperuste.sorakuvausId, sorakuvausId => {
+        val (sorakuvausTila, sorakuvausTyyppi) = SorakuvausDAO.getTilaAndTyyppi(sorakuvausId)
+        and(
+          validateDependency(valintaperuste.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
+          validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
+            assertTrue(sorakuvausTyyppi == valintaperuste.koulutustyyppi, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
+          )
+        )
+      })
+    )
+  }
 
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally {

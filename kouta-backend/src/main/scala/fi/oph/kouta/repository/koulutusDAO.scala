@@ -101,6 +101,12 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       }
     }.get
   }
+
+  def getTilaAndTyyppi(koulutusOid: KoulutusOid): (Option[Julkaisutila], Option[Koulutustyyppi]) =
+    KoutaDatabase.runBlocking(selectTilaAndTyyppi(koulutusOid)) match {
+      case None => (None, None)
+      case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
+    }
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -279,4 +285,9 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           inner join hakukohteet h on t.oid = h.toteutus_oid
           where h.haku_oid = ${hakuOid.toString}""".as[KoulutusListItem]
   }
+
+  def selectTilaAndTyyppi(koulutusOid: KoulutusOid): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =
+    sql"""select tila, tyyppi from koulutukset
+            where oid = $koulutusOid
+    """.as[(Julkaisutila, Koulutustyyppi)].headOption
 }

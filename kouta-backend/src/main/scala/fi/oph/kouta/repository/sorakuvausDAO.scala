@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
-import fi.oph.kouta.domain.{Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
+import fi.oph.kouta.domain.{Julkaisutila, Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -50,6 +50,12 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
       case (Nil, _) => Seq()
       case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids))
       case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit))
+    }
+
+  def getTilaAndTyyppi(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi]) =
+    KoutaDatabase.runBlocking(selectTilaAndTyyppi(sorakuvausId)) match {
+      case None => (None, None)
+      case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
     }
 }
 
@@ -133,4 +139,9 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
           where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${RootOrganisaatioOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           or (julkinen  = ${true} and koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))""".as[SorakuvausListItem]
   }
+
+  def selectTilaAndTyyppi(sorakuvausId: UUID): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =
+    sql"""select tila, koulutustyyppi from sorakuvaukset
+            where id = ${sorakuvausId.toString}::uuid
+    """.as[(Julkaisutila, Koulutustyyppi)].headOption
 }

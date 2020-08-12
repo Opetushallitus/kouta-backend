@@ -10,9 +10,10 @@ import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,16 +34,22 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
     authorizePut(toteutus) { t =>
-      withValidation(t, None, doPut)
+      withValidation(t, None) { t =>
+        validateKoulutusIntegrity(t)
+        doPut(t)
+      }
     }.oid.get
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
-      withValidation(t, Some(oldToteutus), doUpdate(_, notModifiedSince, oldToteutus)).nonEmpty
+      withValidation(t, Some(oldToteutus)) { t =>
+        validateKoulutusIntegrity(t)
+        doUpdate(t, notModifiedSince, oldToteutus)
+      }
     }
-  }
+  }.nonEmpty
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(ToteutusDAO.listByAllowedOrganisaatiot)
@@ -74,6 +81,19 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
+
+  private def validateKoulutusIntegrity(toteutus: Toteutus): Unit = {
+    import Validations._
+    val (koulutusTila, koulutusTyyppi) = KoulutusDAO.getTilaAndTyyppi(toteutus.koulutusOid)
+
+    throwValidationErrors(and(
+      validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
+      validateIfDefined[Koulutustyyppi](koulutusTyyppi, koulutusTyyppi =>
+        validateIfDefined[ToteutusMetadata](toteutus.metadata, toteutusMetadata =>
+          assertTrue(koulutusTyyppi == toteutusMetadata.tyyppi, "metadata.tyyppi", tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
+        ))
+    ))
+  }
 
   private def doPut(toteutus: Toteutus)(implicit authenticated: Authenticated): Toteutus =
     KoutaDatabase.runBlockingTransactionally {

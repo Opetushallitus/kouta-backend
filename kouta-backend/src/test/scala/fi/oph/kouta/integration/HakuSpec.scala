@@ -294,7 +294,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     }
   }
 
-  it should "validate dates only when moving from other states to julkaistu" in {
+  it should "validate dates when moving from other states to julkaistu" in {
     val thisHaku = haku.copy(alkamisvuosi = Some("2017"), tila = Tallennettu)
 
     val oid = put(thisHaku)
@@ -309,6 +309,13 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     }
 
     update(thisHakuWithOid.copy(tila = Arkistoitu), lastModified)
+  }
+
+  it should "not validate dates when updating a julkaistu haku" in {
+    val oid = put(haku)
+    val lastModified = get(oid, haku(oid))
+
+    update(haku(oid).copy(alkamisvuosi = Some("2017")), lastModified)
   }
 
 

@@ -118,6 +118,11 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     case Nil => Seq()
     case _   =>  KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids))
   }
+
+  def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi])] =
+    KoutaDatabase.runBlocking(selectDependencyInformation(hakukohde)).map { case (name, tila, tyyppi) =>
+      name -> (tila, tyyppi)
+    }.toMap
 }
 
 sealed trait HakukohdeModificationSQL extends SQLHelpers {
@@ -524,4 +529,19 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))""".as[HakukohdeListItem]
   }
+
+  def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi])]] =
+    sql"""select t.oid, t.tila, k.tyyppi
+          from toteutukset t
+              inner join koulutukset k on t.koulutus_oid = k.oid
+          where t.oid = ${hakukohde.toteutusOid}
+          union all
+          select oid, tila, null
+          from haut
+          where oid = ${hakukohde.hakuOid}
+          union all
+          select id::text, tila, koulutustyyppi
+          from valintaperusteet
+          where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid
+    """.as[(String, Julkaisutila, Option[Koulutustyyppi])]
 }

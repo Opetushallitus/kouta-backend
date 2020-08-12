@@ -5,7 +5,7 @@ import java.util.UUID
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.Arkistoitu
+import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, Tallennettu}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -78,6 +78,16 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = testUser.oid))
   }
 
+  it should "fail to store oppilaitoksen osa if oppilaitos doesn't exist" in {
+    val oppilaitosOid = randomOrganisaatioOid.s
+    put(OppilaitoksenOsaPath, oppilaitoksenOsa(oppilaitosOid), 400, "oppilaitosOid", nonExistent("Oppilaitosta", oppilaitosOid))
+  }
+
+  it should "fail to store oppilaitoksen osa if oppilaitos is not yet julkaistu" in {
+    val oppilaitosOid = put(oppilaitos.copy(tila = Tallennettu))
+    put(OppilaitoksenOsaPath, oppilaitoksenOsa(oppilaitosOid), 400, "tila", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
+  }
+
   it should "return 401 if no session is found" in {
     put(s"$OppilaitoksenOsaPath", bytes(oppilaitoksenOsa(oppilaitosOid))) {
       status should equal (401)
@@ -91,8 +101,8 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
-  it should "return 404 if oppilaitos not found" in {
-    put(OppilaitoksenOsaPath, oppilaitoksenOsa, crudSessions(ParentOid), 404)
+  it should "fail to store oppilaitoksen osa if oppilaitos does not exist" in {
+    put(OppilaitoksenOsaPath, oppilaitoksenOsa, 400, "oppilaitosOid", nonExistent("Oppilaitosta", oppilaitoksenOsa.oppilaitosOid))
   }
 
   it should "allow a user of the oppilaitoksen osa organization to create the oppilaitoksen osa" in {
@@ -160,6 +170,20 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
+  it should "fail to update oppilaitoksen osa if oppilaitos doesn't exist" in {
+    val oid = put(oppilaitoksenOsa(oppilaitosOid))
+    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
+    val nonExistentOppilaitosOid = randomOrganisaatioOid.s
+    update(OppilaitoksenOsaPath, oppilaitoksenOsa(oid, nonExistentOppilaitosOid), lastModified, 400, "oppilaitosOid", nonExistent("Oppilaitosta", nonExistentOppilaitosOid))
+  }
+
+  it should "fail to update oppilaitoksen osa if oppilaitos is not yet julkaistu" in {
+    val oppilaitosOid = put(oppilaitos.copy(tila = Tallennettu))
+    val oid = put(oppilaitoksenOsa(oppilaitosOid).copy(tila = Tallennettu))
+    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Tallennettu))
+    update(OppilaitoksenOsaPath, oppilaitoksenOsa(oid, oppilaitosOid, Julkaistu), lastModified, 400, "tila", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
+  }
+
   it should "write oppilaitoksen osa update to audit log" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
@@ -189,7 +213,8 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "not update oppilaitos oid" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
-    update(oppilaitoksenOsa(oid, ChildOid.s), lastModified, 200, crudSessions(ParentOid))
+    val newOppilaitosOid = put(oppilaitos(randomOrganisaatioOid.s))
+    update(oppilaitoksenOsa(oid, newOppilaitosOid), lastModified, 200, crudSessions(ParentOid))
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
   }
 

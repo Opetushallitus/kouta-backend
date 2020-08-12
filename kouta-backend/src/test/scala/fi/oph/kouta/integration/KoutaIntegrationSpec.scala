@@ -194,6 +194,17 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
+  def put[E <: AnyRef](path: String, entity: E, expectedStatus: Int, errorPath: String, errorMsg: String): Unit =
+    put(path, entity, expectedStatus, Seq(ValidationError(errorPath, errorMsg)))
+
+  def put[E <: AnyRef, M <: AnyRef](path: String, entity: E, expectedStatus: Int, errorMessage: M)(implicit equality: Equality[M], mf: Manifest[M]): Unit =
+    put(path, bytes(entity), defaultHeaders) {
+      withClue(body) {
+        status should equal(expectedStatus)
+        read[M](body) shouldEqual errorMessage
+      }
+    }
+
   def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
     get(path, id, defaultSessionId, expected)
 
@@ -238,6 +249,17 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
       }
     }
   }
+
+  def update[E <: AnyRef](path: String, entity: E, lastModified: String, expectedStatus: Int, errorPath: String, errorMsg: String): Unit =
+    update(path, entity, lastModified, expectedStatus, Seq(ValidationError(errorPath, errorMsg)))
+
+  def update[E <: AnyRef, M <: AnyRef](path: String, entity: E, lastModified: String, expectedStatus: Int, errorMessage: M)(implicit equality: Equality[M], mf: Manifest[M]): Unit =
+    post(path, bytes(entity), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, defaultSessionHeader)) {
+      withClue(body) {
+        status should equal(expectedStatus)
+        read[M](body) shouldEqual errorMessage
+      }
+    }
 
   def list[R](path: String, params: Map[String, String], expected: List[R])(implicit mf: Manifest[R]): Seq[R] =
     list(path, params, expected, defaultSessionId)

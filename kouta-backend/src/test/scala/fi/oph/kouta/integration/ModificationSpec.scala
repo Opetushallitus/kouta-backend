@@ -23,7 +23,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
 
   def nTimes[T](f: () => T, n: Int = 15) = (0 to n).map(i => f()).toList
 
-  def iHakukohde(i: Int) = hakukohde(hakukohdeOids(i), toteutusOids(i), hakuOids(i), valintaperusteIds(i))
+  def iHakukohde(i: Int) = hakukohde(hakukohdeOids(i), toteutusOids(i), hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)
 
   var koulutusOids: List[String] = List()
   var toteutusOids: List[String] = List()
@@ -41,11 +41,13 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
     koulutusOids = nTimes(() => put(koulutus.copy(tila = Tallennettu)), n)
-    toteutusOids = koulutusOids.map(oid => put(toteutus(oid)))
+    toteutusOids = koulutusOids.map(oid => put(toteutus(oid).copy(tila = Tallennettu)))
     hakuOids = nTimes(() => put(haku), n)
     sorakuvausId = put(sorakuvaus)
     valintaperusteIds = nTimes(() => put(valintaperuste(sorakuvausId)), n)
-    hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) => put(hakukohde(oid, hakuOids(i), valintaperusteIds(i))) }
+    hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) =>
+      put(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu))
+    }
     Thread.sleep(1000)
     timestampAfterInserts = renderHttpDate(now())
   }
@@ -72,8 +74,8 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
   def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInToteutusTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
-  def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i)).copy(tarjoajat = List()), timestampAfterInserts)
+  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
+  def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
   def updateInHakuTable(i: Int) = update(haku(hakuOids(i), Arkistoitu), timestampAfterInserts)
   def updateInHakuHakuajatTable(i: Int) = update(haku(hakuOids(i)).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(5000))))), timestampAfterInserts)
   def updateInHakukohdeTable(i: Int) = update(iHakukohde(i).copy(tila = Arkistoitu), timestampAfterInserts)

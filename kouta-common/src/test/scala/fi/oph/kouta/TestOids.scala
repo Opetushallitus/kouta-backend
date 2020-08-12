@@ -1,6 +1,6 @@
 package fi.oph.kouta
 
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid._
 
 import scala.util.Random
 
@@ -28,4 +28,8 @@ object TestOids {
 
   def randomUserOid: UserOid = UserOid(randomOid("24"))
   def randomOrganisaatioOid: OrganisaatioOid = OrganisaatioOid(randomOid("10"))
+  def randomKoulutusOid: KoulutusOid = KoulutusOid(randomOid("13"))
+  def randomToteutusOid: ToteutusOid = ToteutusOid(randomOid("17"))
+  def randomHakukohdeOid: HakukohdeOid = HakukohdeOid(randomOid("20"))
+  def randomHakuOid: HakuOid = HakuOid(randomOid("29"))
 }

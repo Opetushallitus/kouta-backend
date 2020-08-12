@@ -3,7 +3,6 @@ package fi.oph.kouta.integration
 import java.time.LocalDateTime
 import java.util.UUID
 
-import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -11,6 +10,8 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{ValidationError, Validations}
+import fi.oph.kouta.{TestData, TestOids}
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
@@ -18,13 +19,14 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId: UUID = _
+  var sorakuvausId: UUID = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus)
     toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid)))
     hakuOid = put(haku)
-    val sorakuvausId = put(sorakuvaus)
+    sorakuvausId = put(sorakuvaus)
     valintaperusteId = put(valintaperuste(sorakuvausId))
   }
 
@@ -94,6 +96,42 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   it should "read muokkaaja from the session" in {
     val oid = put(uusiHakukohde.copy(muokkaaja = UserOid("random")))
     get(oid, tallennettuHakukohde(oid).copy(muokkaaja = testUser.oid))
+  }
+
+  it should "fail to store hakukohde if the toteutus does not exist" in {
+    val toteutusOid = TestOids.randomToteutusOid.s
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
+  }
+
+  it should "fail to store hakukohde if the haku does not exist" in {
+    val hakuOid = TestOids.randomHakuOid.s
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "hakuOid", nonExistent("Hakua", hakuOid))
+  }
+
+  it should "fail to store hakukohde if the valintaperuste does not exist" in {
+    val valintaperusteId = UUID.randomUUID()
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId))
+  }
+
+  it should "fail to store julkaistu hakukohde if the toteutus is not yet julkaistu" in {
+    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
+  }
+
+  it should "fail to store julkaistu hakukohde if the haku is not yet julkaistu" in {
+    val hakuOid = put(haku.copy(tila = Tallennettu))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Hakua", hakuOid))
+  }
+
+  it should "fail to store julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
+    val valintaperusteId = put(valintaperuste(sorakuvausId).copy(tila = Tallennettu, metadata = None))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Valintaperustetta", valintaperusteId))
+  }
+
+  it should "fail to store hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
+    val sorakuvausId = put(TestData.YoSorakuvaus)
+    val valintaperusteId = put(valintaperuste(sorakuvausId).copy(koulutustyyppi = Yo, metadata = Some(TestData.YoValintaperusteMetadata)))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", s"Toteutuksen ($toteutusOid) tyyppi ei vastaa valintaperusteen ($valintaperusteId) tyyppiä")
   }
 
   it should "write create hakukohde to audit log" in {
@@ -173,6 +211,68 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu, muokkaaja = userOid)
     update(updatedHakukohde, lastModified)
     get(oid, updatedHakukohde.copy(muokkaaja = testUser.oid))
+  }
+
+  it should "fail to update hakukohde if the toteutus does not exist" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    val toteutusOid = TestOids.randomToteutusOid
+    val updatedHakukohde = tallennettuHakukohde(oid).copy(toteutusOid = toteutusOid)
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
+  }
+
+  it should "fail to update hakukohde if the haku does not exist" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    val hakuOid = TestOids.randomHakuOid
+    val updatedHakukohde = tallennettuHakukohde(oid).copy(hakuOid = hakuOid)
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "hakuOid", nonExistent("Hakua", hakuOid))
+  }
+
+  it should "fail to update hakukohde if the valintaperuste does not exist" in {
+    val oid = put(hakukohde(toteutusOid, hakuOid))
+    val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
+    val lastModified = get(oid, savedHakukohde)
+    val valintaperusteId = UUID.randomUUID()
+    val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId))
+  }
+
+  it should "fail to update julkaistu hakukohde if the toteutus is not yet julkaistu" in {
+    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
+    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
+    val savedHakukohde = tallennettuHakukohde(oid).copy(toteutusOid = ToteutusOid(toteutusOid), tila = Tallennettu)
+    val lastModified = get(oid, savedHakukohde)
+    val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
+  }
+
+  it should "fail to update julkaistu hakukohde if the haku is not yet julkaistu" in {
+    val hakuOid = put(haku.copy(tila = Tallennettu))
+    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
+    val savedHakukohde = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), tila = Tallennettu)
+    val lastModified = get(oid, savedHakukohde)
+    val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Hakua", hakuOid))
+  }
+
+  it should "fail to update julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
+    val valintaperusteId = put(valintaperuste(sorakuvausId).copy(tila = Tallennettu))
+    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
+    val savedHakukohde = tallennettuHakukohde(oid).copy(valintaperusteId = Some(valintaperusteId), tila = Tallennettu)
+    val lastModified = get(oid, savedHakukohde)
+    val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Valintaperustetta", valintaperusteId))
+  }
+
+  it should "fail to update hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
+    val oid = put(hakukohde(toteutusOid, hakuOid))
+    val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
+    val lastModified = get(oid, savedHakukohde)
+    val sorakuvausId = put(TestData.YoSorakuvaus)
+    val valintaperusteId = put(TestData.YoValintaperuste.copy(sorakuvausId = Some(sorakuvausId)))
+    val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
+    update(HakukohdePath, updatedHakukohde, lastModified, 400, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
   }
 
   it should "write hakukohde update to audit log" in {
@@ -318,7 +418,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     }
   }
 
-  it should "validate dates only when moving from other states to julkaistu" in {
+  it should "validate dates when moving from other states to julkaistu" in {
     val thisHakukohde = uusiHakukohde.copy(alkamisvuosi = Some("2017"), tila = Tallennettu, liitteet = List(), valintakokeet = List())
 
     val oid = put(thisHakukohde)
@@ -333,6 +433,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     }
 
     update(thisHakukohdeWithOid.copy(tila = Arkistoitu), lastModified)
+  }
+
+  it should "not validate dates when updating a julkaistu hakukohde" in {
+    val thisHakukohde = uusiHakukohde.copy(tila = Julkaistu, liitteet = List(), valintakokeet = List())
+
+    val oid = put(thisHakukohde)
+    val thisHakukohdeWithOid = thisHakukohde.copy(oid = Some(HakukohdeOid(oid)))
+    val lastModified = get(oid, thisHakukohdeWithOid)
+
+    update(thisHakukohdeWithOid.copy(alkamisvuosi = Some("2017")), lastModified)
   }
 
   it should "update hakukohteen liitteet ja valintakokeet" in {
