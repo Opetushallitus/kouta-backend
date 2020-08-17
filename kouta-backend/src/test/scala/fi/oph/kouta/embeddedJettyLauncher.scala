@@ -19,6 +19,7 @@ object EmbeddedJettyLauncher extends Logging {
   val TestDataGeneratorSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
 
   def main(args: Array[String]) {
+    System.setProperty("kouta-backend.useSecureCookies", "false")
     System.getProperty("kouta-backend.embedded", "true") match {
       case x if "false".equalsIgnoreCase(x) => TestSetups.setupWithoutEmbeddedPostgres()
       case _ => TestSetups.setupWithEmbeddedPostgres()
