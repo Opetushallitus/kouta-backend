@@ -106,6 +106,7 @@ package object koulutusMetadata {
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
+  val tutkinnonOsat: Seq[TutkinnonOsat]
   val lisatiedot: Seq[Lisatieto]
   val koulutusalaKoodiUrit: Seq[String]
 
