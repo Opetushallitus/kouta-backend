@@ -26,7 +26,9 @@ case class SecurityConfiguration(
   useSecureCookies: Boolean
 ) {
   def sessionCookieName: String = if (useSecureCookies) {
-    "__Secure-session"
+    //TODO: Kouta-indeksoija ja muut olettaa, että session nimi on session
+    //"__Secure-session"
+    "session"
   } else {
     "session"
   }
