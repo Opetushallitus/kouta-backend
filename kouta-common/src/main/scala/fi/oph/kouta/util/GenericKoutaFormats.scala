@@ -26,7 +26,6 @@ trait GenericKoutaFormats {
       localDateTimeSerializer,
       stringSerializer(Julkaisutila.withName),
       stringSerializer(Koulutustyyppi.withName),
-      stringSerializer(KoulutustyypinTarkenne.withName),
       stringSerializer(Hakulomaketyyppi.withName),
       stringSerializer(Kieli.withName),
       stringSerializer(UUID.fromString),
