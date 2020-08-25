@@ -41,7 +41,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
 }
 
 case object Amm extends Koulutustyyppi { val name = "amm" }
-case object AmmTutkinnonOsa extends Koulutustyyppi { val name = "tutkinnon_osa" }
+case object AmmTutkinnonOsa extends Koulutustyyppi { val name = "tutkinnon-osa" }
 case object Lk extends Koulutustyyppi { val name = "lk" }
 case object Muu extends Koulutustyyppi { val name = "muu" }
 case object Yo extends Koulutustyyppi { val name = "yo" }
