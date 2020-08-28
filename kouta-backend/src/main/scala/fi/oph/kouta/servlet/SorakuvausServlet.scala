@@ -21,7 +21,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |        - Sorakuvaus
       |      parameters:
       |        - in: path
-      |          name: oid
+      |          name: id
       |          schema:
       |            type: string
       |          required: true

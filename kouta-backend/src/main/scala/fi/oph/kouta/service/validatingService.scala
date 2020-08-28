@@ -22,4 +22,6 @@ trait ValidatingService[E <: Validatable] {
     if(errors.nonEmpty) throw KoutaValidationException(errors)
 }
 
-case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException
+case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException {
+  override def getMessage: String = "[" + errorMessages.mkString(",") + "]"
+}

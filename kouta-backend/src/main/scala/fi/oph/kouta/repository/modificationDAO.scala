@@ -23,7 +23,8 @@ object ModificationDAO extends ModificationDAO {
     p <- ValintaperusteDAO.selectModifiedSince(modifiedSince)
     l <- OppilaitosDAO.selectModifiedSince(modifiedSince)
     o <- OppilaitoksenOsaDAO.selectModifiedSince(modifiedSince)
-  } yield ListEverything(k, t, h, a, p, o.union(l))).get
+    s <- SorakuvausDAO.selectModifiedSince(modifiedSince)
+  } yield ListEverything(k, t, h, a, p, o.union(l), s)).get
 }
 
 trait EntityModificationDAO[T] {
