@@ -1,1 +1,1 @@
-alter type koulutustyyppi add value 'tutkinnon_osa';
+alter type koulutustyyppi add value 'tutkinnon-osa';
