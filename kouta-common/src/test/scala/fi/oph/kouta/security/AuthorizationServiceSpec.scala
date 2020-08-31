@@ -26,7 +26,7 @@ class AuthorizationServiceSpec extends OrganisaatioFixture with OrganisaatioServ
   val paakayttajaSession = CasSession(ServiceTicket("ST-123"), "1.2.3.1234",
     Set("APP_KOUTA", "APP_KOUTA_OPHPAAKAYTTAJA", s"APP_KOUTA_OPHPAAKAYTTAJA_${OphOid}").map(Authority(_)))
 
-  def testAuthenticated(id: UUID, session: Session) = Authenticated(id, session, "testAgent", InetAddress.getByName("127.0.0.1"))
+  def testAuthenticated(id: UUID, session: Session) = Authenticated(id.toString, session, "testAgent", InetAddress.getByName("127.0.0.1"))
 
   "Pääkäyttäjä" should "have root access" in {
     implicit val authenticated = testAuthenticated(UUID.randomUUID(), paakayttajaSession)

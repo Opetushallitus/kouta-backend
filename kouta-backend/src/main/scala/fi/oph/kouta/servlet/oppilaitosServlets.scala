@@ -35,7 +35,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |""".stripMargin)
   get("/:oid") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     oppilaitosService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
@@ -73,7 +73,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     oppilaitosService.put(parsedBody.extract[Oppilaitos]) match {
       case oid => Ok("oid" -> oid)
@@ -102,7 +102,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     oppilaitosService.update(parsedBody.extract[Oppilaitos], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -143,7 +143,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |""".stripMargin)
   get("/:oid/osat/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -181,7 +181,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
       |""".stripMargin)
   get("/:oid") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     oppilaitoksenOsaService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
@@ -219,7 +219,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     oppilaitoksenOsaService.put(parsedBody.extract[OppilaitoksenOsa]) match {
       case oid => Ok("oid" -> oid)
@@ -248,7 +248,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     oppilaitoksenOsaService.update(parsedBody.extract[OppilaitoksenOsa], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)

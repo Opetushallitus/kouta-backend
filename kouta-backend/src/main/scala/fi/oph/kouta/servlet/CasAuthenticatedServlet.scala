@@ -1,14 +1,11 @@
 package fi.oph.kouta.servlet
 
-import java.net.InetAddress
 import java.util.UUID
 
 import fi.oph.kouta.config.{KoutaConfigurationFactory, SecurityConfiguration}
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{AuthenticationFailedException, Session}
-import fi.vm.sade.javautils.http.HttpServletRequestUtils
+import fi.oph.kouta.security.AuthenticationFailedException
 import fi.vm.sade.utils.slf4j.Logging
-import javax.servlet.http.HttpServletRequest
 import org.scalatra._
 
 trait CasAuthenticatedServlet {
@@ -17,7 +14,7 @@ trait CasAuthenticatedServlet {
   lazy val securityConfiguration: SecurityConfiguration = KoutaConfigurationFactory.configuration.securityConfiguration
   lazy val sessionCookieName: String = securityConfiguration.sessionCookieName
 
-  protected def authenticate: Authenticated = {
+  protected def authenticate(): Authenticated = {
     val sessionCookie = cookies.get(sessionCookieName)
 
     logger.debug("Session cookie {}", sessionCookie)

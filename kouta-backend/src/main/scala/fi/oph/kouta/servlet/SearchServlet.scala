@@ -109,7 +109,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |""".stripMargin)
   get("/koulutukset") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -137,7 +137,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |""".stripMargin)
   get("/toteutukset") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -165,7 +165,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |""".stripMargin)
   get("/haut") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -193,7 +193,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |""".stripMargin)
   get("/hakukohteet") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -221,7 +221,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |""".stripMargin)
   get("/valintaperusteet") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()

@@ -37,7 +37,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |""".stripMargin)
   get("/:id") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     valintaperusteService.get(UUID.fromString(params("id"))) match {
       case None => NotFound("error" -> "Unknown valintaperuste id")
@@ -75,7 +75,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     valintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
       case id => Ok("id" -> id)
@@ -103,7 +103,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     valintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -145,7 +145,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |""".stripMargin)
   get("/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
       case (None, _) => NotFound()

@@ -58,7 +58,7 @@ class AsiasanaServlet(keywordService: KeywordService) extends KeywordServlet {
       |""".stripMargin)
   get("/search/:term") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(keywordService.search(parseAsiasanaSearch()))
   }
@@ -98,7 +98,7 @@ class AsiasanaServlet(keywordService: KeywordService) extends KeywordServlet {
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     val kieli = parseKieliParam("kieli", Fi)
     Ok(keywordService.store(Asiasana, bodyToKeywords(kieli)))
@@ -161,7 +161,7 @@ class AmmattinimikeServlet(keywordService: KeywordService) extends KeywordServle
       |""".stripMargin)
   get("/search/:term") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(keywordService.search(parseAmmattinimikeSearch()))
   }
@@ -201,7 +201,7 @@ class AmmattinimikeServlet(keywordService: KeywordService) extends KeywordServle
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     val kieli = parseKieliParam("kieli", Fi)
     Ok(keywordService.store(Ammattinimike, bodyToKeywords(kieli)))

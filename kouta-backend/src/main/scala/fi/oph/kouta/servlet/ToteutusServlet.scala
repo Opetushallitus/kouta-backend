@@ -35,7 +35,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |""".stripMargin)
   get("/:oid") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     toteutusService.get(ToteutusOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown toteutus oid")
@@ -73,7 +73,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     toteutusService.put(parsedBody.extract[Toteutus]) match {
       case oid => Ok("oid" -> oid)
@@ -101,7 +101,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     toteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -135,7 +135,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |""".stripMargin)
   get("/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -176,7 +176,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |                  $ref: '#/components/schemas/HakukohdeListItem'
       |""".stripMargin)
   get("/:oid/hakukohteet/list") {
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     val toteutusOid = ToteutusOid(params("oid"))
 

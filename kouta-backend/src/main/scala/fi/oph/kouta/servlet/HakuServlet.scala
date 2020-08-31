@@ -35,7 +35,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |""".stripMargin)
   get("/:oid") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     hakuService.get(HakuOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown haku oid")
@@ -73,7 +73,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     hakuService.put(parsedBody.extract[Haku]) match {
       case oid => Ok("oid" -> oid)
@@ -101,7 +101,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     hakuService.update(parsedBody.extract[Haku], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -135,7 +135,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |""".stripMargin)
   get("/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -179,7 +179,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |""".stripMargin)
   get("/:oid/hakukohteet/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()

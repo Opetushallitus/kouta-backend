@@ -12,7 +12,7 @@ import fi.oph.kouta.repository.OppilaitoksenOsaDAO
 import fi.oph.kouta.service.{OppilaitoksenOsaService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
 
 import scala.util.Random
 
@@ -27,9 +27,7 @@ trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec  with AccessControlSp
     addServlet(new OppilaitoksenOsaServlet(oppilaitoksenOsaService), OppilaitoksenOsaPath)
   }
 
-  private lazy val random = new Random()
-
-  def oppilaitoksenOsa = TestData.JulkaistuOppilaitoksenOsa.copy(oid = OrganisaatioOid(s"1.2.246.562.10.000${random.nextInt().abs}"))
+  def oppilaitoksenOsa = TestData.JulkaistuOppilaitoksenOsa.copy(oid = TestOids.randomOrganisaatioOid)
 
   def oppilaitoksenOsa(oppilaitosOid: String): OppilaitoksenOsa = oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid))
   def oppilaitoksenOsa(oid: String, oppilaitosOid: String): OppilaitoksenOsa = oppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), oppilaitosOid = OrganisaatioOid(oppilaitosOid))

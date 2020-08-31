@@ -60,8 +60,6 @@ object Authority {
 }
 
 sealed trait Session {
-  def hasAnyRole(roles: Set[Role]): Boolean
-  def hasEveryRole(roles: Set[Role]): Boolean
   def personOid: String
   def authorities: Set[Authority]
 
@@ -73,7 +71,5 @@ sealed trait Session {
 }
 
 case class ServiceTicket(s: String)
-case class CasSession(casTicket: ServiceTicket, personOid: String, authorities: Set[Authority]) extends Session {
-  override def hasAnyRole(roles: Set[Role]): Boolean = this.roles.intersect(roles).nonEmpty
-  override def hasEveryRole(roles: Set[Role]): Boolean = roles.subsetOf(this.roles)
-}
+case class CasSession(casTicket: ServiceTicket, personOid: String, authorities: Set[Authority]) extends Session
+case class ExternalSession(personOid: String, authorities: Set[Authority]) extends Session

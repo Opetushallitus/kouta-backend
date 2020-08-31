@@ -35,7 +35,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |""".stripMargin)
   get("/:oid") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     koulutusService.get(KoulutusOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown koulutus oid")
@@ -73,7 +73,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     koulutusService.put(parsedBody.extract[Koulutus]) match {
       case oid => Ok("oid" -> oid)
@@ -101,7 +101,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     koulutusService.update(parsedBody.extract[Koulutus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -136,7 +136,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |""".stripMargin)
   get("/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
@@ -178,7 +178,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |""".stripMargin)
   get("/:oid/toteutukset/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()

@@ -1,6 +1,7 @@
 package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.security.{ExternalSession, Session}
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 
@@ -16,14 +17,15 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     koulutusMetadataSerializer,
     toteutusMetadataSerializer,
     valintatapaSisaltoSerializer,
-    valintaperusteMetadataSerializer)
+    valintaperusteMetadataSerializer,
+    sessionSerializer)
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ => ({
     case s: JObject =>
       implicit def formats: Formats = genericKoutaFormats
 
       Try(s \ "tyyppi").toOption.collect {
-          case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
+        case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
       }.getOrElse(Amm) match {
         case Yo => s.extract[YliopistoKoulutusMetadata]
         case Amm => s.extract[AmmatillinenKoulutusMetadata]
@@ -97,5 +99,17 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
       implicit def formats: Formats = genericKoutaFormats
 
       JObject(List("tyyppi" -> JString("taulukko"), "data" -> Extraction.decompose(j)))
+  }))
+
+  private def sessionSerializer = new CustomSerializer[Session](_ => ( {
+    case s: JObject =>
+      implicit def formats: Formats = genericKoutaFormats
+
+      s.extract[ExternalSession]
+  }, {
+    case j: ExternalSession =>
+      implicit def formats: Formats = genericKoutaFormats
+
+      Extraction.decompose(j)
   }))
 }
