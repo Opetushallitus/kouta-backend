@@ -106,7 +106,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
 
       s.extract[ExternalSession]
   }, {
-    case j: ToteutusMetadata =>
+    case j: ExternalSession =>
       implicit def formats: Formats = genericKoutaFormats
 
       Extraction.decompose(j)

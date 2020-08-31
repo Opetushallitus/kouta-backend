@@ -37,7 +37,7 @@ class UploadServlet(val s3ImageService: S3ImageService) extends KoutaServlet wit
       |""".stripMargin
   )
   post("/teemakuva") {
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
     Ok("url" -> storeTempImage(teemakuvaSizes))
   }
 
@@ -69,7 +69,7 @@ class UploadServlet(val s3ImageService: S3ImageService) extends KoutaServlet wit
        |""".stripMargin
   )
   post("/logo") {
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
     Ok("url" -> storeTempImage(logoSizes))
   }
 }

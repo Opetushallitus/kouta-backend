@@ -14,7 +14,7 @@ trait CasAuthenticatedServlet {
   lazy val securityConfiguration: SecurityConfiguration = KoutaConfigurationFactory.configuration.securityConfiguration
   lazy val sessionCookieName: String = securityConfiguration.sessionCookieName
 
-  protected def authenticate: Authenticated = {
+  protected def authenticate(): Authenticated = {
     val sessionCookie = cookies.get(sessionCookieName)
 
     logger.debug("Session cookie {}", sessionCookie)

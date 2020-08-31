@@ -35,7 +35,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |""".stripMargin)
   get("/:oid") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     hakukohdeService.get(HakukohdeOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown hakukohde oid")
@@ -73,7 +73,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     hakukohdeService.put(parsedBody.extract[Hakukohde]) match {
       case oid => Ok("oid" -> oid)
@@ -101,7 +101,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     hakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)

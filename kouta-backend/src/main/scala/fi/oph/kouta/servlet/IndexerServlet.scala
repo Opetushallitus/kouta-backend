@@ -44,7 +44,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/modifiedSince/:since") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(ModificationService.getModifiedSince(parseHttpDate(URLDecoder.decode(params("since"), "UTF-8"))))
   }
@@ -77,7 +77,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/tarjoaja/:organisaatioOid/koulutukset") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(koulutusService.getTarjoajanJulkaistutKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
   }
@@ -116,7 +116,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/koulutus/:oid/toteutukset") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
   }
@@ -148,7 +148,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/koulutus/:oid/toteutukset/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(koulutusService.listToteutukset(KoulutusOid(params("oid"))))
   }
@@ -180,7 +180,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/koulutus/:oid/hakutiedot") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
@@ -212,7 +212,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/toteutus/:oid/haut/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(toteutusService.listHaut(ToteutusOid(params("oid"))))
   }
@@ -243,7 +243,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                  $ref: '#/components/schemas/HakukohdeListItem'
       |""".stripMargin)
   get("/toteutus/:oid/hakukohteet/list") {
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid"))))
   }
@@ -275,7 +275,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/haku/:oid/hakukohteet/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
     Ok(hakuService.listHakukohteet(HakuOid(params("oid"))))
   }
 
@@ -306,7 +306,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/haku/:oid/koulutukset/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
   }
@@ -338,7 +338,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/haku/:oid/toteutukset/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
   }
@@ -370,7 +370,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/valintaperuste/:id/hakukohteet/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id"))))
   }
@@ -402,7 +402,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/sorakuvaus/:id/valintaperusteet/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(sorakuvausService.listValintaperusteet(UUID.fromString(params("id"))))
   }
@@ -434,7 +434,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/oppilaitos/:oid/osat/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(oppilaitosService.listOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
@@ -466,7 +466,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |""".stripMargin)
   get("/oppilaitos/:oid/osat") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }

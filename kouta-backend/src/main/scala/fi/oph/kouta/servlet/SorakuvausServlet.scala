@@ -37,7 +37,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |""".stripMargin)
   get("/:id") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     sorakuvausService.get(UUID.fromString(params("id"))) match {
       case None => NotFound("error" -> "Unknown SORA-kuvaus id")
@@ -75,7 +75,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |""".stripMargin)
   put("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     sorakuvausService.put(parsedBody.extract[Sorakuvaus]) match {
       case id => Ok("id" -> id)
@@ -103,7 +103,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |""".stripMargin)
   post("/") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     sorakuvausService.update(parsedBody.extract[Sorakuvaus], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
@@ -137,7 +137,7 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |""".stripMargin)
   get("/list") {
 
-    implicit val authenticated: Authenticated = authenticate
+    implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid") match {
       case None => NotFound()

@@ -332,10 +332,43 @@ package object domain {
       |              - d9afdef2-ae7a-4e78-8366-ab8f97b1fd25
       |""".stripMargin
 
+  val AuthenticatedModel =
+    """    Authenticated:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: string
+      |          description: Session id (UUID)
+      |          example: b0c9ccd3-9f56-4d20-8df4-21a1239fcf89
+      |        ip:
+      |          type: string
+      |          description: Kutsujan IP
+      |          example: 127.0.0.1
+      |        userAgent:
+      |          type: string
+      |          description: Kutsujan user-agent
+      |          example: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36"
+      |        session:
+      |          type: object
+      |          properties:
+      |            personOid:
+      |              type: string
+      |              description: Henkilön oid
+      |              example: 1.2.246.562.10.00101010101
+      |            authorities:
+      |              type: array
+      |              items:
+      |                type: object
+      |                properties:
+      |                  authority:
+      |                    type: string
+      |                    description: Yksittäinen käyttöoikeus
+      |                    example: APP_KOUTA_OPHPAAKAYTTAJA_1.2.246.562.10.00000000001
+      |""".stripMargin
 
-  val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel,
-    LisatietoModel, YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel,
-    ValintakoeMetadataModel, ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel)
+  val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
+    YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
+    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel)
 
   type Kielistetty = Map[Kieli,String]
 

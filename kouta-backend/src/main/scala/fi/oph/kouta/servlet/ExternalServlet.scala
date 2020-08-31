@@ -57,10 +57,10 @@ class ExternalServlet(hakuService: HakuService) extends KoutaServlet {
       |""".stripMargin
   )
   put("/haku") {
-    val hr = parsedBody.extract[ExternalHakuRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(hr)
+    val hakuRequest = parsedBody.extract[ExternalHakuRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
 
-    hakuService.put(hr.haku) match {
+    hakuService.put(hakuRequest.haku) match {
       case oid => Ok("oid" -> oid)
     }
   }
@@ -104,15 +104,15 @@ class ExternalServlet(hakuService: HakuService) extends KoutaServlet {
       |                    example: 1.2.246.562.29.00000000000000000009
       |""".stripMargin)
   post("/haku") {
-    val hr = parsedBody.extract[ExternalHakuRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(hr)
+    val hakuRequest = parsedBody.extract[ExternalHakuRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
 
-    val updated = hakuService.update(hr.haku, getIfUnmodifiedSince)
+    val updated = hakuService.update(hakuRequest.haku, getIfUnmodifiedSince)
     Ok("updated" -> updated)
   }
 
   private def authenticateExternal[R <: ExternalRequest](request: R): Authenticated = {
-    val session = authenticate.session
+    val session = authenticate().session
 
     session.roleMap.get(externalRole) match {
       case None =>
@@ -124,5 +124,4 @@ class ExternalServlet(hakuService: HakuService) extends KoutaServlet {
         request.authenticated.copy(id = s"kouta-external-${request.authenticated.id}")
     }
   }
-
 }
