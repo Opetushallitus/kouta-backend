@@ -449,6 +449,11 @@ package object domain {
     )
   }
 
+  case class TutkinnonOsat(eperusteId: String, koulutusId: String, tutkinnonosatId: String) extends ValidatableSubEntity {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    )
+  }
+
   case class Osoite(osoite: Kielistetty = Map(),
                     postinumeroKoodiUri: Option[String]) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
