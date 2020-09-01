@@ -145,6 +145,18 @@ case class TutkinnonOsaMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
   )
 }
 
+case class OsaamisalaMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
+                              kuvaus: Kielistetty = Map(),
+                              lisatiedot: Seq[Lisatieto] = Seq(),
+                              koulutusalaKoodiUrit: Seq[String] = Seq(),
+                              osaamisalaKoodiUri: Option[String]) extends KoulutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfDefined[String](osaamisalaKoodiUri, assertMatch(_, OsaamisalaKoodiPattern, s"$path/osaamisalaKoodiUri")),
+    validateIfJulkaistu(tila, assertNotOptional(osaamisalaKoodiUri, s"$path/osaamisalaKoodiUri"))
+  )
+}
+
 case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
                                      lisatiedot: Seq[Lisatieto] = Seq(),

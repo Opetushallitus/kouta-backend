@@ -61,11 +61,12 @@ object Validations {
   val KielitaitovaatimusKoodiPattern: Pattern = Pattern.compile("""kielitaitovaatimustyypit_\d+(#\d{1,2})?""")
   val KielitaitovaatimusKuvausKoodiPattern: Pattern = Pattern.compile("""kielitaitovaatimustyypitkuvaus_\d+(#\d{1,2})?""")
   val OsaamistaustaKoodiPattern: Pattern = Pattern.compile("""osaamistausta_\d+(#\d{1,2})?""")
+  val EPerusteIdPattern: Pattern = Pattern.compile("""[1-9]\d*""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
   def assertTrue(b: Boolean, path: String, msg: String): IsValid = if (b) NoErrors else error(path, msg)
-  def assertNotNegative(i: Int, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
+  def assertNotNegative(i: Long, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertNotNegative(i: Double, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertMatch(value: String, pattern: Pattern, path: String): IsValid = assertTrue(pattern.matcher(value).matches(), path, validationMsg(value))
   def assertValid(oid: Oid, path: String): IsValid = assertTrue(oid.isValid, path, validationMsg(oid.toString))

@@ -299,9 +299,62 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat",_.validate(tila, kielivalinta, _))
+    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat", _.validate(tila, kielivalinta, _))
   )
 }
+
+trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
+  def osaamisalat: List[AmmatillinenOsaamisala]
+  def hakutermi: Hakutermi
+  def hakulomaketyyppi: Hakulomaketyyppi
+  def hakulomakeLinkki: Kielistetty
+  def lisatietoaHakeutumisesta: Kielistetty
+  def lisatietoaValintaperusteista: Kielistetty
+  def hakuaika: Option[Ajanjakso]
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfNonEmpty(hakulomakeLinkki, s"$path/hakulomakeLinkki", assertValidUrl _),
+    validateIfDefined[Ajanjakso](hakuaika, _.validate(tila, kielivalinta, path)),
+    validateIfJulkaistu(tila, and(
+      validateIfTrue(hakulomaketyyppi == MuuHakulomake, and(
+        validateKielistetty(kielivalinta, hakulomakeLinkki, "$path/hakulomakeLinkki"),
+        assertNotOptional(hakuaika, s"$path/hakuaika"),
+        validateOptionalKielistetty(kielivalinta, lisatietoaHakeutumisesta, "$path/lisatietoaHakeutumisesta")
+      )),
+      validateIfTrue(hakulomaketyyppi == EiSähköistä, validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, "$path/lisatietoaHakeutumisesta")),
+      validateOptionalKielistetty(kielivalinta, lisatietoaValintaperusteista, s"$path/lisatietoaValintaperusteista"),
+    ))
+  )
+}
+
+case class TutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+                                        kuvaus: Kielistetty = Map(),
+                                        osaamisalat: List[AmmatillinenOsaamisala] = List(),
+                                        opetus: Option[Opetus] = None,
+                                        asiasanat: List[Keyword] = List(),
+                                        ammattinimikkeet: List[Keyword] = List(),
+                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                        hakutermi: Hakutermi,
+                                        hakulomaketyyppi: Hakulomaketyyppi,
+                                        hakulomakeLinkki: Kielistetty = Map(),
+                                        lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                        lisatietoaValintaperusteista: Kielistetty = Map(),
+                                        hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
+
+case class OsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+                                      kuvaus: Kielistetty = Map(),
+                                      osaamisalat: List[AmmatillinenOsaamisala] = List(),
+                                      opetus: Option[Opetus] = None,
+                                      asiasanat: List[Keyword] = List(),
+                                      ammattinimikkeet: List[Keyword] = List(),
+                                      yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                      hakutermi: Hakutermi,
+                                      hakulomaketyyppi: Hakulomaketyyppi,
+                                      hakulomakeLinkki: Kielistetty = Map(),
+                                      lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                      lisatietoaValintaperusteista: Kielistetty = Map(),
+                                      hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
