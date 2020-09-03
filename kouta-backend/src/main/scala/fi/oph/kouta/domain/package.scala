@@ -486,7 +486,7 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       assertMatch(eperusteId, EPerusteIdPattern, s"$path/eperusteId"),
       assertMatch(koulutusId, KoulutusKoodiPattern, s"$path/koulutusId"),
-      assertMatch(tutkinnonosatId, EPerusteIdPattern, s"$path/tutkinnonosatId")
+      assertMatch(tutkinnonosaId, EPerusteIdPattern, s"$path/tutkinnonosaId")
     )
   }
 
