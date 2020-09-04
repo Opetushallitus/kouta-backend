@@ -138,10 +138,12 @@ case class TutkinnonOsaMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
                                 kuvaus: Kielistetty = Map(),
                                 lisatiedot: Seq[Lisatieto] = Seq(),
                                 koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                tutkinnonOsat: Seq[TutkinnonOsat] = Seq()) extends KoulutusMetadata {
+                                tutkinnonOsat: Seq[TutkinnonOsa] = Seq()) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfNonEmpty[TutkinnonOsat](tutkinnonOsat, s"$path/tutkinnonOsat", _.validate(tila, kielivalinta, _))
+    validateIfNonEmpty[TutkinnonOsa](tutkinnonOsat, s"$path/tutkinnonOsat", _.validate(tila, kielivalinta, _)),
+    validateIfJulkaistu(tila,
+      assertNotEmpty(tutkinnonOsat, s"$path/tutkinnonOsat"))
   )
 }
 

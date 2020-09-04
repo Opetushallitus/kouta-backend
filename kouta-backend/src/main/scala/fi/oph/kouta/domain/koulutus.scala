@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
-import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.Validations.{validateIfTrue, _}
 
 package object koulutus {
 
@@ -183,8 +183,9 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
       validateIfJulkaistu(tila, and(
         assertTrue(!Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
-        validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
-        validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")),
+        validateIfTrue(koulutustyyppi != AmmTutkinnonOsa, and(
+          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
+          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
         validateIfTrue(!RootOrganisaatioOid.equals(organisaatioOid),

@@ -482,10 +482,10 @@ package object domain {
     )
   }
 
-  case class TutkinnonOsat(eperusteId: String, koulutusId: String, tutkinnonosaId: String, tutkinnonosaViite: String) extends ValidatableSubEntity {
+  case class TutkinnonOsa(ePerusteId: String, koulutusKoodiUri: String, tutkinnonosaId: String, tutkinnonosaViite: String) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      assertMatch(eperusteId, EPerusteIdPattern, s"$path/eperusteId"),
-      assertMatch(koulutusId, KoulutusKoodiPattern, s"$path/koulutusId"),
+      assertMatch(ePerusteId, EPerusteIdPattern, s"$path/ePerusteId"),
+      assertMatch(koulutusKoodiUri, KoulutusKoodiPattern, s"$path/koulutusKoodiUri"),
       assertMatch(tutkinnonosaId, EPerusteIdPattern, s"$path/tutkinnonosaId")
     )
   }
