@@ -22,13 +22,14 @@ package object koulutus {
       |          description: Onko koulutus tutkintoon johtavaa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'muu' (muu koulutus)"
+      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala'"
       |          enum:
       |            - amm
       |            - yo
       |            - amk
       |            - lk
-      |            - muu
+      |            - amm-tutkinnon-osa
+      |            - amm-osaamisala
       |          example: amm
       |        koulutusKoodiUri:
       |          type: string
@@ -181,9 +182,9 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
       validateIfJulkaistu(tila, and(
-        assertTrue(!koulutustyyppi.johtaaAinaTutkintoon | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
-        validateIfTrue(koulutustyyppi.baseType == Amm, assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
-        validateIfTrue(koulutustyyppi.baseType == Amm, assertNotOptional(ePerusteId, "ePerusteId")),
+        assertTrue(!Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
+        validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
+        validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
         validateIfTrue(!RootOrganisaatioOid.equals(organisaatioOid),

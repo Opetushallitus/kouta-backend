@@ -1,17 +1,27 @@
 package fi.oph.kouta.domain
 
-sealed trait Koulutustyyppi extends EnumType {
-  def baseType: Koulutustyyppi = this
-  def johtaaAinaTutkintoon: Boolean = true
-}
+sealed trait Koulutustyyppi extends EnumType
 
 object Koulutustyyppi extends Enum[Koulutustyyppi] {
   override def name: String = "koulutustyyppi"
 
   def values = List(Amm, Lk, Muu, Yo, Amk, AmmTutkinnonOsa, AmmOsaamisala)
 
+  def ammatilliset = List(Amm, AmmTutkinnonOsa, AmmOsaamisala)
+  def korkeakoulu = List(Amk, Yo)
+  def tutkintoonJohtavat = List(Amm, Lk, Yo, Amk)
+
   def fromOppilaitostyyppi(oppilaitostyyppi: String): Koulutustyyppi =
     oppilaitostyyppi2koulutustyyppi(oppilaitostyyppi)
+
+  def isAmmatillinen(koulutustyyppi: Koulutustyyppi): Boolean =
+    ammatilliset.contains(koulutustyyppi)
+
+  def isKorkeakoulu(koulutustyyppi: Koulutustyyppi) : Boolean =
+    korkeakoulu.contains(koulutustyyppi)
+
+  def isTutkintoonJohtava(koulutustyyppi: Koulutustyyppi): Boolean =
+    tutkintoonJohtavat.contains(koulutustyyppi)
 
   val oppilaitostyyppi2koulutustyyppi: Map[String, Koulutustyyppi] = Map(
     "oppilaitostyyppi_01#1" -> Muu, //Taiteen perusopetuksen oppilaitokset (ei musiikki)
@@ -48,20 +58,6 @@ case object Amm extends Koulutustyyppi { val name = "amm" }
 case object Lk extends Koulutustyyppi { val name = "lk" }
 case object Yo extends Koulutustyyppi { val name = "yo" }
 case object Amk extends Koulutustyyppi { val name = "amk" }
-
-case object Muu extends Koulutustyyppi {
-  val name = "muu"
-  override val johtaaAinaTutkintoon = false
-}
-
-case object AmmTutkinnonOsa extends Koulutustyyppi {
-  val name = "tutkinnon-osa"
-  override val baseType: Koulutustyyppi = Amm
-  override val johtaaAinaTutkintoon = false
-}
-
-case object AmmOsaamisala extends Koulutustyyppi {
-  val name = "osaamisala"
-  override val baseType: Koulutustyyppi = Amm
-  override val johtaaAinaTutkintoon = false
-}
+case object Muu extends Koulutustyyppi {val name = "muu"}
+case object AmmTutkinnonOsa extends Koulutustyyppi {val name = "amm-tutkinnon-osa"}
+case object AmmOsaamisala extends Koulutustyyppi {val name = "amm-osaamisala"}
