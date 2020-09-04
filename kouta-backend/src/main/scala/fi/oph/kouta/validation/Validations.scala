@@ -61,7 +61,6 @@ object Validations {
   val KielitaitovaatimusKoodiPattern: Pattern = Pattern.compile("""kielitaitovaatimustyypit_\d+(#\d{1,2})?""")
   val KielitaitovaatimusKuvausKoodiPattern: Pattern = Pattern.compile("""kielitaitovaatimustyypitkuvaus_\d+(#\d{1,2})?""")
   val OsaamistaustaKoodiPattern: Pattern = Pattern.compile("""osaamistausta_\d+(#\d{1,2})?""")
-  val EPerusteIdPattern: Pattern = Pattern.compile("""[1-9]\d*""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 

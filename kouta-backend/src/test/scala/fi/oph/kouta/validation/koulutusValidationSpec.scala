@@ -92,7 +92,7 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
   }
 
   it should "fail if any koulutusalaKoodiUrit are invalid" in {
-    failsValidation(Tallennettu, min.copy(koulutusalaKoodiUrit = Seq("mummo")), "koulutusalaKoodiUrit[0]", validationMsg("mummo"))
+    failsValidation(Tallennettu, yo.copy(koulutusalaKoodiUrit = Seq("mummo")), "koulutusalaKoodiUrit[0]", validationMsg("mummo"))
   }
 
   it should "validate lisatiedot" in {

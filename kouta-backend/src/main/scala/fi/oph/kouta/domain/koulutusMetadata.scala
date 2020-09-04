@@ -9,14 +9,6 @@ package object koulutusMetadata {
     """    KoulutusMetadata:
       |      type: object
       |      properties:
-      |        koulutusalaKoodiUrit:
-      |          type: array
-      |          description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso2/1)
-      |          items:
-      |            type: string
-      |            example:
-      |              - kansallinenkoulutusluokitus2016koulutusalataso2_054#1
-      |              - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
       |        kuvaus:
       |          type: object
       |          description: Koulutuksen kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -39,6 +31,14 @@ package object koulutusMetadata {
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |      properties:
+      |        koulutusalaKoodiUrit:
+      |          type: array
+      |          description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso2/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kansallinenkoulutusluokitus2016koulutusalataso2_054#1
+      |              - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
       |        kuvauksenNimi:
       |          type: object
       |          description: Koulutuksen kuvaukseni nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -100,19 +100,56 @@ package object koulutusMetadata {
       |                - amm
       |""".stripMargin
 
-  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, YliopistoKoulutusMetadataModel)
+  val AmmatillinenTutkinnonOsaMetadataModel =
+    """    AmmatillinenKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm-tutkinnon-osa
+      |              enum:
+      |                - amm-tutkinnon-osa
+      |            tutkinnonOsat:
+      |              type: array
+      |              description: Tutkinnon osat
+      |              items:
+      |                type: object
+      |                $ref: '#/components/schemas/TutkinnonOsa'
+      |""".stripMargin
+
+  val AmmatillinenOsaamisalaMetadataModel =
+    """    AmmatillinenKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm
+      |              enum:
+      |                - amm
+      |            osaamisalaKoodiUri:
+      |              type: string
+      |              description: Osaamisala. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/osaamisala/1)
+      |              example: osaamisala_10#1
+      |""".stripMargin
+
+  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
+    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaMetadataModel, AmmatillinenOsaamisalaMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val lisatiedot: Seq[Lisatieto]
-  val koulutusalaKoodiUrit: Seq[String]
 
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
-    validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
-    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _))
+    validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _))
   )
 }
 
@@ -120,25 +157,25 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
   val kuvauksenNimi: Kielistetty
   val tutkintonimikeKoodiUrit: Seq[String]
   val opintojenLaajuusKoodiUri: Option[String]
+  val koulutusalaKoodiUrit: Seq[String]
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi")),
     validateIfNonEmpty[String](tutkintonimikeKoodiUrit, s"$path.tutkintonimikeKoodiUrit", assertMatch(_, TutkintonimikeKoodiPattern, _)),
-    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri"))
+    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
+    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _))
   )
 }
 
 case class AmmatillinenKoulutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         kuvaus: Kielistetty = Map(),
-                                        lisatiedot: Seq[Lisatieto] = Seq(),
-                                        koulutusalaKoodiUrit: Seq[String] = Seq()) extends KoulutusMetadata
+                                        lisatiedot: Seq[Lisatieto] = Seq()) extends KoulutusMetadata
 
-case class TutkinnonOsaMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
-                                kuvaus: Kielistetty = Map(),
-                                lisatiedot: Seq[Lisatieto] = Seq(),
-                                koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                tutkinnonOsat: Seq[TutkinnonOsa] = Seq()) extends KoulutusMetadata {
+case class AmmatillinenTutkinnonOsaMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+                                            kuvaus: Kielistetty = Map(),
+                                            lisatiedot: Seq[Lisatieto] = Seq(),
+                                            tutkinnonOsat: Seq[TutkinnonOsa] = Seq()) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfNonEmpty[TutkinnonOsa](tutkinnonOsat, s"$path/tutkinnonOsat", _.validate(tila, kielivalinta, _)),
@@ -147,11 +184,10 @@ case class TutkinnonOsaMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
   )
 }
 
-case class OsaamisalaMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
-                              kuvaus: Kielistetty = Map(),
-                              lisatiedot: Seq[Lisatieto] = Seq(),
-                              koulutusalaKoodiUrit: Seq[String] = Seq(),
-                              osaamisalaKoodiUri: Option[String]) extends KoulutusMetadata {
+case class AmmatillinenOsaamisalaMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
+                                          kuvaus: Kielistetty = Map(),
+                                          lisatiedot: Seq[Lisatieto] = Seq(),
+                                          osaamisalaKoodiUri: Option[String]) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](osaamisalaKoodiUri, assertMatch(_, OsaamisalaKoodiPattern, s"$path/osaamisalaKoodiUri")),

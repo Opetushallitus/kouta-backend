@@ -366,9 +366,31 @@ package object domain {
       |                    example: APP_KOUTA_OPHPAAKAYTTAJA_1.2.246.562.10.00000000001
       |""".stripMargin
 
+  val TutkinnonOsaModel =
+    """    TutkinnonOsa:
+      |      type: object
+      |      properties:
+      |        ePerusteId:
+      |          type: number
+      |          description: Tutkinnon osan käyttämän ePerusteen id.
+      |          example: 4804100
+      |        koulutusKoodiUri:
+      |          type: string
+      |          description: Koulutuksen koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
+      |          example: koulutus_371101#1
+      |        tutkinnonosaId:
+      |          type: number
+      |          description: Tutkinnon osan id ePerusteissa
+      |          example: 12345
+      |        tutkinnonosaViite:
+      |          type: number
+      |          description: Tutkinnon osan viite
+      |          example: 2449201
+      |""".stripMargin
+
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
-    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel)
+    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel)
 
   type Kielistetty = Map[Kieli,String]
 
@@ -482,11 +504,9 @@ package object domain {
     )
   }
 
-  case class TutkinnonOsa(ePerusteId: String, koulutusKoodiUri: String, tutkinnonosaId: String, tutkinnonosaViite: String) extends ValidatableSubEntity {
+  case class TutkinnonOsa(ePerusteId: Long, koulutusKoodiUri: String, tutkinnonosaId: Long, tutkinnonosaViite: Long) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      assertMatch(ePerusteId, EPerusteIdPattern, s"$path/ePerusteId"),
-      assertMatch(koulutusKoodiUri, KoulutusKoodiPattern, s"$path/koulutusKoodiUri"),
-      assertMatch(tutkinnonosaId, EPerusteIdPattern, s"$path/tutkinnonosaId")
+      assertMatch(koulutusKoodiUri, KoulutusKoodiPattern, s"$path/koulutusKoodiUri")
     )
   }
 
