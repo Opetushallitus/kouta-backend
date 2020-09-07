@@ -30,6 +30,7 @@ object Validations {
   def minmaxMsg(minValue: Any, maxValue: Any) = s"$minValue on suurempi kuin $maxValue"
   def notYetJulkaistu(field: String, id: Any) = s"$field ($id) ei ole vielä julkaistu"
   def nonExistent(field: String, id: Any) = s"$field ($id) ei ole olemassa"
+  def notMissingMsg(value: Any) = s"Arvo $value ei saisi olla määritelty"
   def tyyppiMismatch(field: String, id: Any) = s"Tyyppi ei vastaa $field ($id) tyyppiä"
   def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any) =
     s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä"
@@ -71,6 +72,7 @@ object Validations {
   def assertValid(oid: Oid, path: String): IsValid = assertTrue(oid.isValid, path, validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
+  def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
 
   def validateIfDefined[T](value: Option[T], f: (T) => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 

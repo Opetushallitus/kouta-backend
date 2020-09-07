@@ -178,9 +178,9 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadata(tyyppi: Koulutustyyppi = Amm
                                                     tutkinnonOsat: Seq[TutkinnonOsa] = Seq()) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfNonEmpty[TutkinnonOsa](tutkinnonOsat, s"$path/tutkinnonOsat", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[TutkinnonOsa](tutkinnonOsat, s"$path.tutkinnonOsat", _.validate(tila, kielivalinta, _)),
     validateIfJulkaistu(tila,
-      assertNotEmpty(tutkinnonOsat, s"$path/tutkinnonOsat"))
+      assertNotEmpty(tutkinnonOsat, s"$path.tutkinnonOsat"))
   )
 }
 
@@ -190,8 +190,8 @@ case class AmmatillinenOsaamisalaKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOs
                                                   osaamisalaKoodiUri: Option[String]) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfDefined[String](osaamisalaKoodiUri, assertMatch(_, OsaamisalaKoodiPattern, s"$path/osaamisalaKoodiUri")),
-    validateIfJulkaistu(tila, assertNotOptional(osaamisalaKoodiUri, s"$path/osaamisalaKoodiUri"))
+    validateIfDefined[String](osaamisalaKoodiUri, assertMatch(_, OsaamisalaKoodiPattern, s"$path.osaamisalaKoodiUri")),
+    validateIfJulkaistu(tila, assertNotOptional(osaamisalaKoodiUri, s"$path.osaamisalaKoodiUri"))
   )
 }
 

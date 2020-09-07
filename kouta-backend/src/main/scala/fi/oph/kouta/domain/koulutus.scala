@@ -184,10 +184,14 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
       validateIfJulkaistu(tila, and(
-        assertTrue(!Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
+        assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         validateIfTrue(koulutustyyppi != AmmTutkinnonOsa, and(
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
+        validateIfTrue(koulutustyyppi == AmmTutkinnonOsa, and(
+          assertNotDefined(ePerusteId, "ePerusteId"),
+          assertNotDefined(koulutusKoodiUri, "koulutusKoodiUri")
+        )),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
         validateIfTrue(!RootOrganisaatioOid.equals(organisaatioOid),

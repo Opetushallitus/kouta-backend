@@ -84,6 +84,9 @@ object TestData {
     ePerusteId = Some(11L),
     modified = None)
 
+  val Lisatieto1 = Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
+    teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))
+
   val YoKoulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
@@ -96,9 +99,7 @@ object TestData {
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
       kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      lisatiedot = Seq(
-        Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
-          teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
+      lisatiedot = Seq(Lisatieto1))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
@@ -106,6 +107,36 @@ object TestData {
     teemakuva = Some("http://kuva.fi/yokuva"),
     ePerusteId = Some(12L),
     modified = None)
+
+  val AmmTutkinnonOsaKoulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = AmmTutkinnonOsa,
+    koulutusKoodiUri = None,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata(
+      tyyppi = AmmTutkinnonOsa,
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      lisatiedot = Seq(Lisatieto1),
+      tutkinnonOsat = Seq(TutkinnonOsa(123L, "koulutus_371101#1", 1234L, 122L)))),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    ePerusteId = None,
+    modified = None)
+
+  val AmmOsaamisalaKoulutus = AmmTutkinnonOsaKoulutus.copy(
+    koulutustyyppi = AmmOsaamisala,
+    koulutusKoodiUri = Some("koulutus_371101#1"),
+    ePerusteId = Some(11L),
+    metadata = Some(AmmatillinenOsaamisalaKoulutusMetadata(
+      tyyppi = AmmOsaamisala,
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      lisatiedot = Seq(Lisatieto1),
+      osaamisalaKoodiUri = Some("osaamisala_01"))))
 
   val MinKoulutus = Koulutus(
     koulutustyyppi = Amm,
