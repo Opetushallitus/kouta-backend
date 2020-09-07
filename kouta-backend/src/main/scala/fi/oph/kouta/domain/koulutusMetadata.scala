@@ -100,8 +100,8 @@ package object koulutusMetadata {
       |                - amm
       |""".stripMargin
 
-  val AmmatillinenTutkinnonOsaMetadataModel =
-    """    AmmatillinenKoulutusMetadata:
+  val AmmatillinenTutkinnonOsaKoulutusMetadataModel =
+    """    AmmatillinenTutkinnonOsaKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
@@ -120,8 +120,8 @@ package object koulutusMetadata {
       |                $ref: '#/components/schemas/TutkinnonOsa'
       |""".stripMargin
 
-  val AmmatillinenOsaamisalaMetadataModel =
-    """    AmmatillinenKoulutusMetadata:
+  val AmmatillinenOsaamisalaKoulutusMetadataModel =
+    """    AmmatillinenOsaamisalaKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
@@ -139,7 +139,7 @@ package object koulutusMetadata {
       |""".stripMargin
 
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaMetadataModel, AmmatillinenOsaamisalaMetadataModel)
+    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
@@ -172,10 +172,10 @@ case class AmmatillinenKoulutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         kuvaus: Kielistetty = Map(),
                                         lisatiedot: Seq[Lisatieto] = Seq()) extends KoulutusMetadata
 
-case class AmmatillinenTutkinnonOsaMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
-                                            kuvaus: Kielistetty = Map(),
-                                            lisatiedot: Seq[Lisatieto] = Seq(),
-                                            tutkinnonOsat: Seq[TutkinnonOsa] = Seq()) extends KoulutusMetadata {
+case class AmmatillinenTutkinnonOsaKoulutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+                                                    kuvaus: Kielistetty = Map(),
+                                                    lisatiedot: Seq[Lisatieto] = Seq(),
+                                                    tutkinnonOsat: Seq[TutkinnonOsa] = Seq()) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfNonEmpty[TutkinnonOsa](tutkinnonOsat, s"$path/tutkinnonOsat", _.validate(tila, kielivalinta, _)),
@@ -184,10 +184,10 @@ case class AmmatillinenTutkinnonOsaMetadata(tyyppi: Koulutustyyppi = AmmTutkinno
   )
 }
 
-case class AmmatillinenOsaamisalaMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
-                                          kuvaus: Kielistetty = Map(),
-                                          lisatiedot: Seq[Lisatieto] = Seq(),
-                                          osaamisalaKoodiUri: Option[String]) extends KoulutusMetadata {
+case class AmmatillinenOsaamisalaKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
+                                                  kuvaus: Kielistetty = Map(),
+                                                  lisatiedot: Seq[Lisatieto] = Seq(),
+                                                  osaamisalaKoodiUri: Option[String]) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](osaamisalaKoodiUri, assertMatch(_, OsaamisalaKoodiPattern, s"$path/osaamisalaKoodiUri")),

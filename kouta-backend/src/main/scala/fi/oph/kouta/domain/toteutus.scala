@@ -51,6 +51,8 @@ package object toteutus {
       |            - $ref: '#/components/schemas/YliopistoToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeaToteutusMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaToteutusMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaToteutusMetadata'
       |          example:
       |            tyyppi: amm
       |            kuvaus:

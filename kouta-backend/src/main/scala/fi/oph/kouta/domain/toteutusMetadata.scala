@@ -214,7 +214,7 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: yo
@@ -228,7 +228,7 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amk
@@ -239,7 +239,7 @@ package object toteutusMetadata {
   val AmmatillinenToteutusMetadata =
     """    AmmatillinenToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            osaamisalat:
@@ -247,7 +247,7 @@ package object toteutusMetadata {
       |              items:
       |                $ref: '#/components/schemas/Osaamisala'
       |              description: Lista ammatillisen koulutuksen osaamisalojen kuvauksia
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm
@@ -255,7 +255,92 @@ package object toteutusMetadata {
       |                - amm
       |""".stripMargin
 
-  val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
+  val TutkintoonJohtamatonToteutusMetadata =
+    """    TutkintoonJohtamatonToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            osaamisalat:
+      |              type: array
+      |              items:
+      |                $ref: '#/components/schemas/Osaamisala'
+      |              description: Lista tutkintoon johtamattoman koulutuksen osaamisalojen kuvauksia
+      |            hakutermi:
+      |              type: object
+      |              $ref: '#/components/schemas/Hakutermi'
+      |            hakulomaketyyppi:
+      |              type: string
+      |              description: Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta
+      |                (jolloin voidaan lisätä hakulomakkeeseen linkki) tai onko niin, ettei sähkököistä hakulomaketta ole lainkaan, jolloin sille olisi hyvä lisätä kuvaus.
+      |              example: "ataru"
+      |              enum:
+      |                - ataru
+      |                - haku-app
+      |                - ei sähköistä
+      |                - muu
+      |            hakulomakeLinkki:
+      |              type: object
+      |              description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
+      |              allOf:
+      |                - $ref: '#/components/schemas/Linkki'
+      |            lisatietoaHakeutumisesta:
+      |              type: object
+      |              description: Lisätietoa hakeutumisesta eri kielillä. Kielet on määritetty haun kielivalinnassa.
+      |              allOf:
+      |                - $ref: '#/components/schemas/Teksti'
+      |            lisatietoaValintaperusteista:
+      |              type: object
+      |              description: Lisätietoa valintaperusteista eri kielillä. Kielet on määritetty haun kielivalinnassa.
+      |              allOf:
+      |                - $ref: '#/components/schemas/Teksti'
+      |            hakuaika:
+      |              type: array
+      |              description: Toteutuksen hakuaika
+      |              $ref: '#/components/schemas/Ajanjakso'
+      |""".stripMargin
+
+  val AmmatillinenTutkinnonOsaToteutusMetadata =
+    """    AmmatillinenTutkinnonOsaToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            osaamisalat:
+      |              type: array
+      |              items:
+      |                $ref: '#/components/schemas/Osaamisala'
+      |              description: Lista ammatillisen koulutuksen osaamisalojen kuvauksia
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm-tutkinnon-osa
+      |              enum:
+      |                - amm-tutkinnon-osa
+      |""".stripMargin
+
+  val AmmatillinenOsaamisalaToteutusMetadata =
+    """    AmmatillinenOsaamisalaToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            osaamisalat:
+      |              type: array
+      |              items:
+      |                $ref: '#/components/schemas/Osaamisala'
+      |              description: Lista ammatillisen koulutuksen osaamisalojen kuvauksia
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm-osaamisala
+      |              enum:
+      |                - amm-osaamisala
+      |""".stripMargin
+
+  val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
+    AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
+    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
@@ -328,33 +413,33 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
   )
 }
 
-case class TutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
-                                        kuvaus: Kielistetty = Map(),
-                                        osaamisalat: List[AmmatillinenOsaamisala] = List(),
-                                        opetus: Option[Opetus] = None,
-                                        asiasanat: List[Keyword] = List(),
-                                        ammattinimikkeet: List[Keyword] = List(),
-                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                        hakutermi: Hakutermi,
-                                        hakulomaketyyppi: Hakulomaketyyppi,
-                                        hakulomakeLinkki: Kielistetty = Map(),
-                                        lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                        lisatietoaValintaperusteista: Kielistetty = Map(),
-                                        hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
+case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+                                                    kuvaus: Kielistetty = Map(),
+                                                    osaamisalat: List[AmmatillinenOsaamisala] = List(),
+                                                    opetus: Option[Opetus] = None,
+                                                    asiasanat: List[Keyword] = List(),
+                                                    ammattinimikkeet: List[Keyword] = List(),
+                                                    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                    hakutermi: Hakutermi,
+                                                    hakulomaketyyppi: Hakulomaketyyppi,
+                                                    hakulomakeLinkki: Kielistetty = Map(),
+                                                    lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                                    lisatietoaValintaperusteista: Kielistetty = Map(),
+                                                    hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
 
-case class OsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
-                                      kuvaus: Kielistetty = Map(),
-                                      osaamisalat: List[AmmatillinenOsaamisala] = List(),
-                                      opetus: Option[Opetus] = None,
-                                      asiasanat: List[Keyword] = List(),
-                                      ammattinimikkeet: List[Keyword] = List(),
-                                      yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                      hakutermi: Hakutermi,
-                                      hakulomaketyyppi: Hakulomaketyyppi,
-                                      hakulomakeLinkki: Kielistetty = Map(),
-                                      lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                      lisatietoaValintaperusteista: Kielistetty = Map(),
-                                      hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
+case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
+                                                  kuvaus: Kielistetty = Map(),
+                                                  osaamisalat: List[AmmatillinenOsaamisala] = List(),
+                                                  opetus: Option[Opetus] = None,
+                                                  asiasanat: List[Keyword] = List(),
+                                                  ammattinimikkeet: List[Keyword] = List(),
+                                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                  hakutermi: Hakutermi,
+                                                  hakulomaketyyppi: Hakulomaketyyppi,
+                                                  hakulomakeLinkki: Kielistetty = Map(),
+                                                  lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                                  lisatietoaValintaperusteista: Kielistetty = Map(),
+                                                  hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
