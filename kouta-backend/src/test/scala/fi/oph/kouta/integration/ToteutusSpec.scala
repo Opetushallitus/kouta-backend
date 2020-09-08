@@ -421,6 +421,24 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
   }
 
+  it should "create, get and update ammatillinen osaamisala toteutus" in {
+    val ammOaKoulutusOid = put(TestData.AmmOsaamisalaKoulutus.copy(tila = Julkaistu))
+    val ammOaToteutus = TestData.AmmOsaamisalaToteutus.copy(koulutusOid = KoulutusOid(ammOaKoulutusOid), tila = Tallennettu)
+    val oid = put(ammOaToteutus)
+    val lastModified = get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "create, get and update ammatillinen tutkinnon osa toteutus" in {
+    val ammToKoulutusOid = put(TestData.AmmTutkinnonOsaKoulutus.copy(tila = Julkaistu))
+    val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid(ammToKoulutusOid), tila = Tallennettu)
+    val oid = put(ammToToteutus)
+    val lastModified = get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
   object ToteutusJsonMethods extends JsonMethods {
     def extractJsonString(s: String): Toteutus = {
       parse(s).extract[Toteutus]

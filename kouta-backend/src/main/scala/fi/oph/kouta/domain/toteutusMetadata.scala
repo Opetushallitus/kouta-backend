@@ -390,8 +390,8 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
 
 trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
   def osaamisalat: List[AmmatillinenOsaamisala]
-  def hakutermi: Hakutermi
-  def hakulomaketyyppi: Hakulomaketyyppi
+  def hakutermi: Option[Hakutermi]
+  def hakulomaketyyppi: Option[Hakulomaketyyppi]
   def hakulomakeLinkki: Kielistetty
   def lisatietoaHakeutumisesta: Kielistetty
   def lisatietoaValintaperusteista: Kielistetty
@@ -399,18 +399,20 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfNonEmpty(hakulomakeLinkki, s"$path/hakulomakeLinkki", assertValidUrl _),
-    validateIfDefined[Ajanjakso](hakuaika, _.validate(tila, kielivalinta, path)),
+    validateIfNonEmpty(hakulomakeLinkki, s"$path.hakulomakeLinkki", assertValidUrl _),
+    validateIfDefined[Ajanjakso](hakuaika, _.validate(tila, kielivalinta, s"$path.hakuaika")),
     validateIfJulkaistu(tila, and(
-      validateIfTrue(hakulomaketyyppi == MuuHakulomake, and(
-        validateKielistetty(kielivalinta, hakulomakeLinkki, "$path/hakulomakeLinkki"),
-        assertNotOptional(hakuaika, s"$path/hakuaika"),
-        validateOptionalKielistetty(kielivalinta, lisatietoaHakeutumisesta, "$path/lisatietoaHakeutumisesta")
+      assertNotOptional(hakutermi, s"$path.hakutermi"),
+      assertNotOptional(hakulomaketyyppi, s"$path.hakulomaketyyppi"),
+      validateIfTrue(hakulomaketyyppi.exists(_ == MuuHakulomake), and(
+        validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"),
+        validateKielistetty(kielivalinta, hakulomakeLinkki, s"$path.hakulomakeLinkki"),
+        validateOptionalKielistetty(kielivalinta, lisatietoaValintaperusteista, s"$path.lisatietoaValintaperusteista"),
+        assertNotOptional(hakuaika, s"$path.hakuaika")
       )),
-      validateIfTrue(hakulomaketyyppi == EiSähköistä, validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, "$path/lisatietoaHakeutumisesta")),
-      validateOptionalKielistetty(kielivalinta, lisatietoaValintaperusteista, s"$path/lisatietoaValintaperusteista"),
-    ))
-  )
+      validateIfTrue(hakulomaketyyppi.exists(_ == EiSähköistä),
+        validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"))
+    )))
 }
 
 case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
@@ -420,8 +422,8 @@ case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = Amm
                                                     asiasanat: List[Keyword] = List(),
                                                     ammattinimikkeet: List[Keyword] = List(),
                                                     yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                    hakutermi: Hakutermi,
-                                                    hakulomaketyyppi: Hakulomaketyyppi,
+                                                    hakutermi: Option[Hakutermi],
+                                                    hakulomaketyyppi: Option[Hakulomaketyyppi],
                                                     hakulomakeLinkki: Kielistetty = Map(),
                                                     lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                     lisatietoaValintaperusteista: Kielistetty = Map(),
@@ -434,8 +436,8 @@ case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOs
                                                   asiasanat: List[Keyword] = List(),
                                                   ammattinimikkeet: List[Keyword] = List(),
                                                   yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                  hakutermi: Hakutermi,
-                                                  hakulomaketyyppi: Hakulomaketyyppi,
+                                                  hakutermi: Option[Hakutermi],
+                                                  hakulomaketyyppi: Option[Hakulomaketyyppi],
                                                   hakulomakeLinkki: Kielistetty = Map(),
                                                   lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                   lisatietoaValintaperusteista: Kielistetty = Map(),
