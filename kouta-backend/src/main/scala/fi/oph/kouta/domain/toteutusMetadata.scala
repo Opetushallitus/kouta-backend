@@ -360,6 +360,8 @@ sealed trait ToteutusMetadata extends ValidatableSubEntity {
     ))
   )
 
+  def allowSorakuvaus: Boolean = false
+
   override def validateOnJulkaisu(path: String): IsValid =
     validateIfDefined[Opetus](opetus, _.validateOnJulkaisu(s"$path.opetus"))
 }
@@ -413,6 +415,9 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
       validateIfTrue(hakulomaketyyppi.exists(_ == EiSähköistä),
         validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"))
     )))
+
+  override def allowSorakuvaus: Boolean =
+    hakulomaketyyppi.exists(_ == MuuHakulomake)
 }
 
 case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,

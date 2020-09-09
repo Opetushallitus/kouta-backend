@@ -161,7 +161,7 @@ trait ToteutusModificationSQL extends SQLHelpers {
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   val selectToteutusSql =
-    """select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, t.teemakuva, m.modified
+    """select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, t.teemakuva, t.sorakuvaus_id, m.modified
          from toteutukset t
          inner join (
            select t.oid oid, greatest(
@@ -204,7 +204,8 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             muokkaaja,
             organisaatio_oid,
             kielivalinta,
-            teemakuva
+            teemakuva,
+            sorakuvaus_id
           ) values (
             ${toteutus.koulutusOid},
             ${toteutus.tila.toString}::julkaisutila,
@@ -213,7 +214,8 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             ${toteutus.muokkaaja},
             ${toteutus.organisaatioOid},
             ${toJsonParam(toteutus.kielivalinta)}::jsonb,
-            ${toteutus.teemakuva}
+            ${toteutus.teemakuva},
+            ${toteutus.sorakuvausId.map(_.toString)}::uuid
           ) returning oid""".as[ToteutusOid].head
   }
 
@@ -233,7 +235,8 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               muokkaaja = ${toteutus.muokkaaja},
               organisaatio_oid = ${toteutus.organisaatioOid},
               kielivalinta = ${toJsonParam(toteutus.kielivalinta)}::jsonb,
-              teemakuva = ${toteutus.teemakuva}
+              teemakuva = ${toteutus.teemakuva},
+              sorakuvaus_id = ${toteutus.sorakuvausId.map(_.toString)}::uuid
             where oid = ${toteutus.oid}
             and ( koulutus_oid is distinct from ${toteutus.koulutusOid}
             or tila is distinct from ${toteutus.tila.toString}::julkaisutila
@@ -241,7 +244,8 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             or metadata is distinct from ${toJsonParam(toteutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(toteutus.kielivalinta)}::jsonb
             or organisaatio_oid is distinct from ${toteutus.organisaatioOid}
-            or teemakuva is distinct from ${toteutus.teemakuva} )"""
+            or teemakuva is distinct from ${toteutus.teemakuva}
+            or sorakuvaus_id is distinct from ${toteutus.sorakuvausId.map(_.toString)}::uuid)"""
   }
 
   def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {
