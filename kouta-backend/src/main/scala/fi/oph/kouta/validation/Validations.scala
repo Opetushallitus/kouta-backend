@@ -34,6 +34,7 @@ object Validations {
   def tyyppiMismatch(field: String, id: Any) = s"Tyyppi ei vastaa $field ($id) tyyppiä"
   def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any) =
     s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä"
+  def cannotLinkToHakukohde(oid: String) = s"Toteutusta ($oid) ei voi liittää hakukohteeseen"
 
   val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
   val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"

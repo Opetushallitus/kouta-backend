@@ -24,6 +24,8 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
   def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
+
+  def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -119,9 +121,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     case _   =>  KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids))
   }
 
-  def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi])] =
-    KoutaDatabase.runBlocking(selectDependencyInformation(hakukohde)).map { case (name, tila, tyyppi) =>
-      name -> (tila, tyyppi)
+  override def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])] =
+    KoutaDatabase.runBlocking(selectDependencyInformation(hakukohde)).map { case (name, tila, tyyppi, toteutusMetadata) =>
+      name -> (tila, tyyppi, toteutusMetadata)
     }.toMap
 }
 
@@ -530,18 +532,18 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))""".as[HakukohdeListItem]
   }
 
-  def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi])]] =
-    sql"""select t.oid, t.tila, k.tyyppi
+  def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]] =
+    sql"""select t.oid, t.tila, k.tyyppi, t.metadata
           from toteutukset t
-              inner join koulutukset k on t.koulutus_oid = k.oid
+          inner join koulutukset k on t.koulutus_oid = k.oid
           where t.oid = ${hakukohde.toteutusOid}
           union all
-          select oid, tila, null
+          select oid, tila, null, null
           from haut
           where oid = ${hakukohde.hakuOid}
           union all
-          select id::text, tila, koulutustyyppi
+          select id::text, tila, koulutustyyppi, null
           from valintaperusteet
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid
-    """.as[(String, Julkaisutila, Option[Koulutustyyppi])]
+    """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]
 }

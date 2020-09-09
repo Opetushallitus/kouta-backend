@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
@@ -14,6 +14,7 @@ import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDA
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validations
+import org.checkerframework.checker.units.qual.m
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -71,7 +72,12 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
             assertTrue(toteutusTyyppi == valintaperusteTyyppi, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
           )
         )
-      ))
+      )),
+      validateIfDefined[ToteutusMetadata](deps.get(toteutusOid).flatMap(_._3), metadata => and(
+        validateIfTrue(metadata.tyyppi == AmmTutkinnonOsa,
+          assertTrue(metadata.asInstanceOf[AmmatillinenTutkinnonOsaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
+        validateIfTrue(metadata.tyyppi == AmmOsaamisala,
+          assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid)))))
     ))
   }
 
