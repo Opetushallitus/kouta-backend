@@ -161,7 +161,8 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
 
   it should "fail if no tutkinnon osat defined or tutkinnon osa is invalid" in {
     failsValidation(Julkaistu, ammTo.copy(tutkinnonOsat = Seq()), "tutkinnonOsat", missingMsg)
-    failsValidation(Julkaistu, ammTo.copy(tutkinnonOsat = Seq(TutkinnonOsa(123L, "mummo", 123L, 123L))), "tutkinnonOsat[0].koulutusKoodiUri", validationMsg("mummo"))
+    failsValidation(Julkaistu, ammTo.copy(tutkinnonOsat = Seq(TutkinnonOsa(Some(123L), Some("mummo"), Some(123L), Some(123L)))), "tutkinnonOsat[0].koulutusKoodiUri", validationMsg("mummo"))
+    failsValidation(Julkaistu, ammTo.copy(tutkinnonOsat = Seq(TutkinnonOsa(None, Some("koulutus_371101#1"), Some(123L), Some(123L)))), "tutkinnonOsat[0].ePerusteId", missingMsg)
   }
 
 }

@@ -187,7 +187,7 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadata(tyyppi: Koulutustyyppi = Amm
 case class AmmatillinenOsaamisalaKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
                                                   kuvaus: Kielistetty = Map(),
                                                   lisatiedot: Seq[Lisatieto] = Seq(),
-                                                  osaamisalaKoodiUri: Option[String]) extends KoulutusMetadata {
+                                                  osaamisalaKoodiUri: Option[String] = None) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](osaamisalaKoodiUri, assertMatch(_, OsaamisalaKoodiPattern, s"$path.osaamisalaKoodiUri")),

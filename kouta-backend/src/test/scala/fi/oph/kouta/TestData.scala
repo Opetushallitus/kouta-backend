@@ -119,7 +119,7 @@ object TestData {
       tyyppi = AmmTutkinnonOsa,
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(Lisatieto1),
-      tutkinnonOsat = Seq(TutkinnonOsa(123L, "koulutus_371101#1", 1234L, 122L)))),
+      tutkinnonOsat = Seq(TutkinnonOsa(Some(123L), Some("koulutus_371101#1"), Some(1234L), Some(122L))))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,

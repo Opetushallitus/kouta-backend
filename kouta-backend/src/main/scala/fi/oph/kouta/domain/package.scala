@@ -504,11 +504,18 @@ package object domain {
     )
   }
 
-  case class TutkinnonOsa(ePerusteId: Long, koulutusKoodiUri: String, tutkinnonosaId: Long, tutkinnonosaViite: Long) extends ValidatableSubEntity {
+  case class TutkinnonOsa(ePerusteId: Option[Long] = None,
+                          koulutusKoodiUri: Option[String] = None,
+                          tutkinnonosaId: Option[Long] = None,
+                          tutkinnonosaViite: Option[Long] = None) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      assertMatch(koulutusKoodiUri, KoulutusKoodiPattern, s"$path.koulutusKoodiUri")
-    )
-  }
+      validateIfDefined(koulutusKoodiUri,
+        assertMatch(_, KoulutusKoodiPattern, s"$path.koulutusKoodiUri")),
+      validateIfJulkaistu(tila, and(
+        assertNotOptional(ePerusteId, s"$path.ePerusteId"),
+        assertNotOptional(koulutusKoodiUri, s"$path.koulutusKoodiUri"),
+        assertNotOptional(tutkinnonosaId, s"$path.tutkinnonosaId"),
+        assertNotOptional(tutkinnonosaViite, s"$path.tutkinnonosaViite"))))}
 
   case class Osoite(osoite: Kielistetty = Map(),
                     postinumeroKoodiUri: Option[String]) extends ValidatableSubEntity {
