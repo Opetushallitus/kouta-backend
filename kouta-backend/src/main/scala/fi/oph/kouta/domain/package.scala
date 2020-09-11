@@ -411,7 +411,8 @@ package object domain {
     }
   }
 
-  case class Ajanjakso(alkaa: LocalDateTime, paattyy: Option[LocalDateTime]) extends ValidatableSubEntity {
+  case class Ajanjakso(alkaa: LocalDateTime,
+                       paattyy: Option[LocalDateTime] = None) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
       assertTrue(paattyy.forall(_.isAfter(alkaa)), path, invalidAjanjaksoMsg(this))
 
