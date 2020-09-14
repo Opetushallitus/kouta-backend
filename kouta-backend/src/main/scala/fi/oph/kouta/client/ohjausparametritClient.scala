@@ -42,7 +42,7 @@ object OhjausparametritClient extends OhjausparametritClient with CallerId with 
     config.password
   )
   private val client = CasAuthenticatingClient(
-    casClient = new CasClient(KoutaConfigurationFactory.configuration.securityConfiguration.casUrl, defaultClient),
+    casClient = new CasClient(KoutaConfigurationFactory.configuration.securityConfiguration.casUrl, defaultClient, callerId),
     casParams = params,
     serviceClient = defaultClient,
     clientCallerId = callerId,

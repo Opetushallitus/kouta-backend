@@ -1,13 +1,14 @@
 package fi.oph.kouta.mocks
 
+import fi.oph.kouta.client.CallerId
 import fi.oph.kouta.security.{Authority, KayttooikeusUserDetails, SecurityContext}
 import fi.vm.sade.utils.cas.CasClient.{SessionCookie, Username}
 import fi.vm.sade.utils.cas.{CasClient, CasParams}
 import scalaz.concurrent.Task
 
-class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, users: Map[String, KayttooikeusUserDetails]) extends SecurityContext {
+class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, users: Map[String, KayttooikeusUserDetails]) extends SecurityContext with CallerId {
 
-  val casClient: CasClient = new CasClient("", null) {
+  val casClient: CasClient = new CasClient("", null, callerId) {
     override def validateServiceTicket(service: String)(ticket: String): Task[Username] =
       if (ticket.startsWith(MockSecurityContext.ticketPrefix(service))) {
         val username = ticket.stripPrefix(MockSecurityContext.ticketPrefix(service))
