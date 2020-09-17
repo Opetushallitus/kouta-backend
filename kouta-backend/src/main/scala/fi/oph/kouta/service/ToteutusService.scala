@@ -51,8 +51,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
   }.nonEmpty
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(ToteutusDAO.listByAllowedOrganisaatiot)
+  def list(organisaatioOid: OrganisaatioOid, vainHakukohteeseenLiitettavat: Boolean = false)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(ToteutusDAO.listByAllowedOrganisaatiot(_, vainHakukohteeseenLiitettavat))
 
   def listHaut(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid))

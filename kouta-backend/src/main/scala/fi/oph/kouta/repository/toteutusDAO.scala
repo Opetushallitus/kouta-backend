@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Toteutus, ToteutusListItem}
+import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Hakulomaketyyppi, Toteutus, ToteutusListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
@@ -20,7 +20,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
   def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
-  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
+  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false): Seq[ToteutusListItem]
   def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
   def listByKoulutusOidAndAllowedOrganisaatiot(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem]
@@ -113,9 +113,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
           t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
     }.get
 
-  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] = organisaatioOids match {
-    case Nil => Seq()
-    case _   => listWithTarjoajat(() => selectByCreatorOrTarjoaja(organisaatioOids))
+  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false): Seq[ToteutusListItem] = (organisaatioOids, vainHakukohteeseenLiitettavat) match {
+    case (Nil, _)   => Seq()
+    case (_, false) => listWithTarjoajat(() => selectByCreatorOrTarjoaja(organisaatioOids))
+    case (_, true)  => listWithTarjoajat(() => selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids))
   }
 
   override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem] =
@@ -283,6 +284,16 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           inner join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
              or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})""".as[ToteutusListItem]
+  }
+
+  def selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ToteutusListItem]] = {
+    sql"""#$selectToteutusListSql
+          inner join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
+          where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+                 or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
+                and (((t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmTutkinnonOsa.toString}::koulutustyyppi
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi )
+                     or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOid(koulutusOid: KoulutusOid): DBIO[Vector[ToteutusListItem]] = {
