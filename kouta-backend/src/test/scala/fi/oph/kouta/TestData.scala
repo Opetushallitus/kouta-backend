@@ -441,9 +441,6 @@ object TestData {
     metadata = Some(AmmatillinenOsaamisalaToteutusMetadata(
       tyyppi = AmmOsaamisala,
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-      osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
-        linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
-        otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
@@ -458,9 +455,6 @@ object TestData {
   val AmmOsaamisalaToteutusMetadataHakemuspalvelu = AmmatillinenOsaamisalaToteutusMetadata(
     tyyppi = AmmOsaamisala,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-    osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
-      linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
-      otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
@@ -475,9 +469,6 @@ object TestData {
   val AmmOsaamisalaToteutusMetadataEiSahkoista = AmmatillinenOsaamisalaToteutusMetadata(
     tyyppi = AmmOsaamisala,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-    osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
-      linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
-      otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
@@ -493,9 +484,6 @@ object TestData {
     metadata = Some(AmmatillinenTutkinnonOsaToteutusMetadata(
       tyyppi = AmmTutkinnonOsa,
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-      osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
-        linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
-        otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
@@ -510,9 +498,6 @@ object TestData {
   val AmmTutkinnonOsaToteutusMetadataHakemuspalvelu = AmmatillinenTutkinnonOsaToteutusMetadata(
     tyyppi = AmmTutkinnonOsa,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-    osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
-      linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
-      otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
@@ -527,9 +512,6 @@ object TestData {
   val AmmTutkinnonOsaToteutusMetadataEiSahkoista = AmmatillinenTutkinnonOsaToteutusMetadata(
     tyyppi = AmmTutkinnonOsa,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-    osaamisalat = List(AmmatillinenOsaamisala("osaamisala_0001#1",
-      linkki = Map(Fi -> "http://osaamisala.fi/linkki/fi", Sv -> "http://osaamisala.fi/linkki/sv"),
-      otsikko = Map(Fi -> "Katso osaamisalan tarkempi kuvaus tästä", Sv -> "Katso osaamisalan tarkempi kuvaus tästä sv"))),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),

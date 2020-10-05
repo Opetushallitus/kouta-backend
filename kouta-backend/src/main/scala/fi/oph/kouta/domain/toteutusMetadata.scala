@@ -306,11 +306,6 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
       |        - type: object
       |          properties:
-      |            osaamisalat:
-      |              type: array
-      |              items:
-      |                $ref: '#/components/schemas/Osaamisala'
-      |              description: Lista ammatillisen koulutuksen osaamisalojen kuvauksia
       |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
@@ -325,11 +320,6 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
       |        - type: object
       |          properties:
-      |            osaamisalat:
-      |              type: array
-      |              items:
-      |                $ref: '#/components/schemas/Osaamisala'
-      |              description: Lista ammatillisen koulutuksen osaamisalojen kuvauksia
       |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
@@ -391,7 +381,6 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
 }
 
 trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
-  def osaamisalat: List[AmmatillinenOsaamisala]
   def hakutermi: Option[Hakutermi]
   def hakulomaketyyppi: Option[Hakulomaketyyppi]
   def hakulomakeLinkki: Kielistetty
@@ -422,7 +411,6 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
 
 case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
                                                     kuvaus: Kielistetty = Map(),
-                                                    osaamisalat: List[AmmatillinenOsaamisala] = List(),
                                                     opetus: Option[Opetus] = None,
                                                     asiasanat: List[Keyword] = List(),
                                                     ammattinimikkeet: List[Keyword] = List(),
@@ -436,7 +424,6 @@ case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = Amm
 
 case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
                                                   kuvaus: Kielistetty = Map(),
-                                                  osaamisalat: List[AmmatillinenOsaamisala] = List(),
                                                   opetus: Option[Opetus] = None,
                                                   asiasanat: List[Keyword] = List(),
                                                   ammattinimikkeet: List[Keyword] = List(),
