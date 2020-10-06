@@ -316,7 +316,10 @@ object TestData {
     koulutustyyppi = Yo,
     julkinen = false,
     kielivalinta = List(Fi, Sv),
-    metadata = Some(SorakuvausMetadata(kuvaus = kieliMap("kuvaus"))),
+    metadata = Some(SorakuvausMetadata(
+      kuvaus = kieliMap("kuvaus"),
+      koulutusKoodiUri = Some("koulutus_371101#1"),
+      koulutusalaKoodiUri = Some("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))),
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     modified = None)

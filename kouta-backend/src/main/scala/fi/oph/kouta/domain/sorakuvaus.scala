@@ -61,6 +61,14 @@ package object sorakuvaus {
       |              description: SORA-kuvauksen kuvausteksti eri kielillä. Kielet on määritetty kuvauksen kielivalinnassa.
       |              allOf:
       |                - $ref: '#/components/schemas/Kuvaus'
+      |            koulutusKoodiUri:
+      |              type: string
+      |              description: Koulutuksen koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
+      |              example: koulutus_371101#1
+      |            koulutusalaKoodiUrit:
+      |              type: string
+      |              description: Koulutusala. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso2/1)
+      |              example: kansallinenkoulutusluokitus2016koulutusalataso2_054#1
       |        muokkaaja:
       |          type: string
       |          description: SORA-kuvausta viimeksi muokanneen virkailijan henkilö-oid
@@ -138,9 +146,16 @@ case class Sorakuvaus(id: Option[UUID] = None,
   def withMuokkaaja(oid: UserOid): Sorakuvaus = this.copy(muokkaaja = oid)
 }
 
-case class SorakuvausMetadata(kuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
-    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
+case class SorakuvausMetadata(kuvaus: Kielistetty = Map(),
+                              koulutusalaKoodiUri: Option[String],
+                              koulutusKoodiUri: Option[String]) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+      assertNotOptional(koulutusalaKoodiUri, s"$path.koulutusalaKoodiUri")
+    )),
+    validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern, s"$path.koulutusKoodiUri")),
+    validateIfDefined[String](koulutusalaKoodiUri, assertMatch(_, KoulutusalaKoodiPattern, s"$path.koulutusalaKoodiUri")))
 }
 
 case class SorakuvausListItem(id: UUID,
