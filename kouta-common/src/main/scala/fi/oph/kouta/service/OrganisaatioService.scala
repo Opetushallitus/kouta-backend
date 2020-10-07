@@ -17,17 +17,17 @@ trait OrganisaatioService {
 
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
     case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
-    case _ => getPartialHierarkia(oid, hierarkia => children(hierarkia), lakkautetut)
+    case _ => children(getPartialHierarkia(oid, lakkautetut))
   }
 
   def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => getPartialHierarkia(oid, hierarkia => (children(hierarkia), oppilaitostyypit(hierarkia)))
+    case _ => (children(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkia(oid)))
   }
 
   def getAllChildAndParentOidsWithOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => getPartialHierarkia(oid, hierarkia => (parentsAndChildren(hierarkia), oppilaitostyypit(hierarkia)))
+    case _ => (parentsAndChildren(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkia(oid)))
   }
 
   private def children(hierarkia: Option[OidAndChildren]): Seq[OrganisaatioOid] =
@@ -94,8 +94,8 @@ trait OrganisaatioService {
     }
   }
 
-  private def getPartialHierarkia[R](oid: OrganisaatioOid, result: Option[OidAndChildren] => R, lakkautetut: Boolean = false): R =
-    result(find(oid, getHierarkia(oid, lakkautetut).toSet))
+  private def getPartialHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] =
+    find(oid, getHierarkia(oid, lakkautetut).toSet)
 
   private def getHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] = {
     val hierarkia: Option[OidAndChildren] = sync.caching(oid)(Some(45.minutes)) {
