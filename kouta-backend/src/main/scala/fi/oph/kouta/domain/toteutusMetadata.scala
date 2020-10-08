@@ -298,6 +298,10 @@ package object toteutusMetadata {
       |              type: array
       |              description: Toteutuksen hakuaika
       |              $ref: '#/components/schemas/Ajanjakso'
+      |            aloituspaikat:
+      |              type: integer
+      |              description: Toteutuksen aloituspaikkojen lukumäärä
+      |              example: 100
       |""".stripMargin
 
   val AmmatillinenTutkinnonOsaToteutusMetadata =
@@ -387,11 +391,13 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
   def lisatietoaHakeutumisesta: Kielistetty
   def lisatietoaValintaperusteista: Kielistetty
   def hakuaika: Option[Ajanjakso]
+  def aloituspaikat: Option[Int]
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfNonEmpty(hakulomakeLinkki, s"$path.hakulomakeLinkki", assertValidUrl _),
     validateIfDefined[Ajanjakso](hakuaika, _.validate(tila, kielivalinta, s"$path.hakuaika")),
+    validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutermi, s"$path.hakutermi"),
       assertNotOptional(hakulomaketyyppi, s"$path.hakulomaketyyppi"),
@@ -420,7 +426,8 @@ case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = Amm
                                                     hakulomakeLinkki: Kielistetty = Map(),
                                                     lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                     lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                    hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                                    hakuaika: Option[Ajanjakso] = None,
+                                                    aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
                                                   kuvaus: Kielistetty = Map(),
@@ -433,7 +440,8 @@ case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOs
                                                   hakulomakeLinkki: Kielistetty = Map(),
                                                   lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                   lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                  hakuaika: Option[Ajanjakso] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                                  hakuaika: Option[Ajanjakso] = None,
+                                                  aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),

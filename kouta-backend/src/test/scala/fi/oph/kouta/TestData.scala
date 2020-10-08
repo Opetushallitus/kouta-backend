@@ -450,7 +450,8 @@ object TestData {
       hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
       lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))))))
+      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+      aloituspaikat = Some(23))))
 
   val AmmOsaamisalaToteutusMetadataHakemuspalvelu = AmmatillinenOsaamisalaToteutusMetadata(
     tyyppi = AmmOsaamisala,
@@ -464,7 +465,8 @@ object TestData {
     hakulomakeLinkki = Map(),
     lisatietoaHakeutumisesta = Map(),
     lisatietoaValintaperusteista = Map(),
-    hakuaika = None)
+    hakuaika = None,
+    aloituspaikat = Some(23))
 
   val AmmOsaamisalaToteutusMetadataEiSahkoista = AmmatillinenOsaamisalaToteutusMetadata(
     tyyppi = AmmOsaamisala,
@@ -478,7 +480,8 @@ object TestData {
     hakulomakeLinkki = Map(),
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     lisatietoaValintaperusteista = Map(),
-    hakuaika = None)
+    hakuaika = None,
+    aloituspaikat = Some(23))
 
   val AmmTutkinnonOsaToteutus = JulkaistuAmmToteutus.copy(
     metadata = Some(AmmatillinenTutkinnonOsaToteutusMetadata(
@@ -493,7 +496,8 @@ object TestData {
       hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
       lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))))))
+      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+      aloituspaikat = Some(22))))
 
   val AmmTutkinnonOsaToteutusMetadataHakemuspalvelu = AmmatillinenTutkinnonOsaToteutusMetadata(
     tyyppi = AmmTutkinnonOsa,
@@ -507,7 +511,8 @@ object TestData {
     hakulomakeLinkki = Map(),
     lisatietoaHakeutumisesta = Map(),
     lisatietoaValintaperusteista = Map(),
-    hakuaika = None)
+    hakuaika = None,
+    aloituspaikat = Some(23))
 
   val AmmTutkinnonOsaToteutusMetadataEiSahkoista = AmmatillinenTutkinnonOsaToteutusMetadata(
     tyyppi = AmmTutkinnonOsa,
@@ -521,7 +526,8 @@ object TestData {
     hakulomakeLinkki = Map(),
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     lisatietoaValintaperusteista = Map(),
-    hakuaika = None)
+    hakuaika = None,
+    aloituspaikat = Some(23))
 
   val JulkaistuOppilaitos = Oppilaitos(
     oid = ChildOid,
