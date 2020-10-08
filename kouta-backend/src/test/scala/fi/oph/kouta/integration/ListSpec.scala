@@ -15,7 +15,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   var t1, t2, t3, t4         :ToteutusListItem = null
   var h1, h2, h3, h4         :HakuListItem = null
   var v1, v2, v3, v4         :ValintaperusteListItem = null
-  var s1, s2, s3             :SorakuvausListItem = null
+  var s1, s2, s3, s4         :SorakuvausListItem = null
   var hk1, hk2, hk3, hk4     :HakukohdeListItem = null
   var o1, o2                 :OrganisaatioOid = null
   var oo1, oo2, oo3          :OppilaitoksenOsaListItem = null
@@ -44,9 +44,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
-    s1 = addToList(sorakuvaus(Julkaistu, ParentOid))
-    s2 = addToList(sorakuvaus(Arkistoitu, ChildOid).copy(julkinen = true))
-    s3 = addToList(sorakuvaus(Julkaistu, LonelyOid))
+    s1 = addToList(sorakuvaus(Julkaistu, OphOid))
+    s2 = addToList(sorakuvaus(Arkistoitu, OphOid).copy(julkinen = true))
+    s3 = addToList(sorakuvaus(Julkaistu, OphOid))
+    s4 = addToList(yoSorakuvaus.copy(tila = Julkaistu, organisaatioOid = OphOid))
     v1 = addToList(valintaperuste(Some(s1.id), Julkaistu, ParentOid).copy(julkinen = false))
     v2 = addToList(valintaperuste(Some(s1.id), Arkistoitu, ChildOid).copy(julkinen = true))
     v3 = addToList(valintaperuste(None, Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None, julkinen = false))
@@ -225,11 +226,11 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(ValintaperustePath, Map("organisaatioOid" -> YoOid.s), List(), readSessions(YoOid))
   }
 
-  "Sorakuvaus list" should "list all sorakuvaukset for authorized organisations" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2))
+  "Sorakuvaus list" should "list all sorakuvaukset for non oph organisation 1" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2, s3))
   }
-  it should "list all sorakuvaukset for authorized organizations 2" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> LonelyOid.s), List(s2, s3))
+  it should "list all sorakuvaukset non oph organisation 2" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> LonelyOid.s), List(s1, s2, s3))
   }
   it should "return forbidden if oid is unknown" in {
     list(SorakuvausPath, Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -241,28 +242,28 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(SorakuvausPath, Map[String,String](), 401, Map.empty)
   }
   it should "allow access to user of the selected organization" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), crudSessions(ChildOid))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2, s3), crudSessions(ChildOid))
   }
   it should "deny access without access to the given organization" in {
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access for a user of an ancestor organization" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), crudSessions(ParentOid))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2, s3), crudSessions(ParentOid))
   }
   it should "allow access for a user of a descendant organization" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), crudSessions(GrandChildOid))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2, s3), crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
   it should "allow access to any sorakuvaus with the indexer role" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2), indexerSession)
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2, s3), indexerSession)
   }
-  it should "list public sorakuvaus with the same koulutustyyppi" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> AmmOid.s), List(s2), readSessions(AmmOid))
+  it should "list all sorakuvaukset with the same koulutustyyppi (amm)" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> AmmOid.s), List(s1, s2, s3), readSessions(AmmOid))
   }
-  it should "not list public sorakuvaus with different koulutustyyppi" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> YoOid.s), List(), readSessions(YoOid))
+  it should "list all sorakuvaukset with different koulutustyyppi (yo)" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> YoOid.s), List(s4), readSessions(YoOid))
   }
 
   "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {

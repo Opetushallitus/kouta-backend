@@ -320,8 +320,8 @@ object TestData {
       kuvaus = kieliMap("kuvaus"),
       koulutusKoodiUri = Some("koulutus_371101#1"),
       koulutusalaKoodiUri = Some("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))),
-    organisaatioOid = ChildOid,
-    muokkaaja = TestUserOid,
+    organisaatioOid = OphOid,
+    muokkaaja = OphUserOid,
     modified = None)
 
   val AmmSorakuvaus = YoSorakuvaus.copy(koulutustyyppi = Amm)
@@ -330,8 +330,8 @@ object TestData {
     koulutustyyppi = Yo,
     kielivalinta = Seq(Fi, Sv),
     nimi = kieliMap("Minimi sorakuvaus"),
-    muokkaaja = TestUserOid,
-    organisaatioOid = ChildOid,
+    muokkaaja = OphUserOid,
+    organisaatioOid = OphOid,
     modified = None)
 
   val ToteutuksenOpetus = Opetus(

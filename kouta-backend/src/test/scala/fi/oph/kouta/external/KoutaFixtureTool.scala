@@ -306,7 +306,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     NimiKey -> "nimi",
     KoulutustyyppiKey -> Amm.name,
     MuokkaajaKey -> TestUserOid.s,
-    OrganisaatioKey -> OtherOid.s,
+    OrganisaatioKey -> OphOid.s,
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     JulkinenKey -> "false",

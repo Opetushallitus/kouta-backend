@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.{Julkaisutila, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -12,7 +12,7 @@ import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.service.{OrganisaatioServiceImpl, SorakuvausService}
 import fi.oph.kouta.servlet.SorakuvausServlet
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
 
 trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
@@ -29,6 +29,7 @@ trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
   }
 
   val sorakuvaus = TestData.AmmSorakuvaus
+  val yoSorakuvaus = TestData.YoSorakuvaus
 
   def sorakuvaus(id:UUID): Sorakuvaus = sorakuvaus.copy(id = Some(id))
   def sorakuvaus(id:UUID, tila:Julkaisutila): Sorakuvaus = sorakuvaus.copy(id = Some(id), tila = tila)
@@ -36,7 +37,7 @@ trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
   def sorakuvaus(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Sorakuvaus =
     sorakuvaus.copy(organisaatioOid = organisaatioOid, tila = tila)
 
-  def put(sorakuvaus: Sorakuvaus): UUID = put(SorakuvausPath, sorakuvaus, id(_))
+  def put(sorakuvaus: Sorakuvaus): UUID = put(SorakuvausPath, sorakuvaus, ophSession, id(_))
   def put(sorakuvaus: Sorakuvaus, sessionId: UUID): UUID = put(SorakuvausPath, sorakuvaus, sessionId, id(_))
 
   def get(id: UUID, expected: Sorakuvaus): String = get(SorakuvausPath, id, expected.copy(modified = Some(readSorakuvausModified(id))))
@@ -44,11 +45,12 @@ trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   def update(sorakuvaus: Sorakuvaus, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(SorakuvausPath, sorakuvaus, lastModified, sessionId, expectedStatus)
   def update(sorakuvaus: Sorakuvaus, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(SorakuvausPath, sorakuvaus, lastModified, expectUpdate, sessionId)
-  def update(sorakuvaus: Sorakuvaus, lastModified: String, expectUpdate: Boolean): Unit = update(SorakuvausPath, sorakuvaus, lastModified, expectUpdate)
-  def update(sorakuvaus: Sorakuvaus, lastModified: String): Unit = update(sorakuvaus, lastModified, true)
+  def update(sorakuvaus: Sorakuvaus, lastModified: String, expectUpdate: Boolean): Unit = update(SorakuvausPath, sorakuvaus, lastModified, expectUpdate, ophSession)
+  def update(sorakuvaus: Sorakuvaus, lastModified: String): Unit = update(sorakuvaus, lastModified, true, ophSession)
+  def update(sorakuvaus: Sorakuvaus, lastModified: String, sessionId: UUID): Unit = update(SorakuvausPath, sorakuvaus, lastModified, true, sessionId)
 
   def addToList(sorakuvaus: Sorakuvaus) = {
-    val id = put(sorakuvaus)
+    val id = put(sorakuvaus, ophSession)
     val modified = readSorakuvausModified(id)
     SorakuvausListItem(id, sorakuvaus.nimi, sorakuvaus.tila,
       sorakuvaus.organisaatioOid, sorakuvaus.muokkaaja, modified)

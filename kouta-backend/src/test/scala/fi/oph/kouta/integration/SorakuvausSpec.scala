@@ -17,6 +17,8 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
+  def OphHeaders: Seq[(String, String)] = Seq(sessionHeader(ophSession), jsonHeader)
+
   "Get sorakuvaus by id" should "return 404 if sorakuvaus not found" in {
     get(s"/sorakuvaus/${UUID.randomUUID()}", headers = defaultHeaders) {
       status should equal (404)
@@ -30,24 +32,31 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     }
   }
 
-  it should "allow a user of the sorakuvaus organization to read the sorakuvaus" in {
+  it should "allow a user of the non oph organization to read the sorakuvaus 1" in {
     val id = put(sorakuvaus)
-    get(id, crudSessions(sorakuvaus.organisaatioOid), sorakuvaus(id))
+    get(id, crudSessions(ChildOid), sorakuvaus(id))
   }
 
-  it should "deny a user without access to the sorakuvaus organization" in {
+  it should "allow a user of the non oph organization to read the sorakuvaus 2" in {
     val id = put(sorakuvaus)
-    get(s"$SorakuvausPath/$id", crudSessions(LonelyOid), 403)
+    get(id, crudSessions(LonelyOid), sorakuvaus(id))
   }
 
-  it should "allow a user of an ancestor organization to read the sorakuvaus" in {
+  it should "allow a user of the non oph organization to read the sorakuvaus 3" in {
     val id = put(sorakuvaus)
     get(id, crudSessions(ParentOid), sorakuvaus(id))
   }
 
-  it should "allow a user with only access to a descendant organization" in {
+  it should "allow a user of the non oph organization to read the sorakuvaus 4" in {
     val id = put(sorakuvaus)
     get(id, crudSessions(GrandChildOid), sorakuvaus(id))
+  }
+
+  it should "allow a user to read only sorakuvaus with correct koulutustyyppi" in {
+    val ammId = put(sorakuvaus)
+    val yoId = put(yoSorakuvaus, ophSession)
+    get(s"$SorakuvausPath/$ammId", crudSessions(YoOid), 403)
+    get(yoId, crudSessions(YoOid), yoSorakuvaus.copy(id = Some(yoId)))
   }
 
   it should "deny a user with the wrong role" in {
@@ -61,19 +70,19 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   }
 
 
-  "Create sorakuvaus" should "store sorakuvaus" in {
+  "Create sorakuvaus" should "allow oph user to store sorakuvaus" in {
     val id = put(sorakuvaus)
-    get(id, sorakuvaus(id))
+    get(id, sorakuvaus(id).copy(muokkaaja = OphUserOid))
   }
 
-  it should "store korkeakoulutus sorakuvaus" in {
+  it should "allow oph user to store korkeakoulutus sorakuvaus" in {
     val id = put(TestData.YoSorakuvaus)
-    get(id, TestData.YoSorakuvaus.copy(id = Some(id)))
+    get(id, TestData.YoSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid))
   }
 
   it should "read muokkaaja from the session" in {
     val oid = put(sorakuvaus.copy(muokkaaja = UserOid("random")))
-    get(oid, sorakuvaus(oid).copy(muokkaaja = testUser.oid))
+    get(oid, sorakuvaus(oid).copy(muokkaaja = OphUserOid))
   }
 
   it should "write create haku to audit log" in {
@@ -89,19 +98,23 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     }
   }
 
-  it should "allow a user of the sorakuvaus organization to create the sorakuvaus" in {
-    put(sorakuvaus, crudSessions(sorakuvaus.organisaatioOid))
+  it should "deny non oph user to create sorakuvaus 1" in {
+    put(SorakuvausPath, sorakuvaus, defaultSessionId, 403)
   }
 
-  it should "deny a user without access to the sorakuvaus organization" in {
+  it should "deny non oph user to create the sorakuvaus 2" in {
+    put(SorakuvausPath, sorakuvaus, crudSessions(ChildOid), 403)
+  }
+
+  it should "deny non oph user to create the sorakuvaus 3" in {
     put(SorakuvausPath, sorakuvaus, crudSessions(LonelyOid), 403)
   }
 
-  it should "allow a user of an ancestor organization to create the sorakuvaus" in {
-    put(sorakuvaus, crudSessions(ParentOid))
+  it should "deny non oph user to create the sorakuvaus 4" in {
+    put(SorakuvausPath, sorakuvaus, crudSessions(ParentOid), 403)
   }
 
-  it should "deny a user with only access to a descendant organization" in {
+  it should "deny non oph user to create the sorakuvaus 5" in {
     put(SorakuvausPath, sorakuvaus, crudSessions(GrandChildOid), 403)
   }
 
@@ -114,7 +127,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   }
 
   it should "validate new sorakuvaus" in {
-    put(SorakuvausPath, bytes(sorakuvaus.copy(organisaatioOid = OrganisaatioOid("saippua"))), defaultHeaders) {
+    put(SorakuvausPath, bytes(sorakuvaus.copy(organisaatioOid = OrganisaatioOid("saippua"))), OphHeaders) {
       withClue(body) {
         status should equal(400)
       }
@@ -122,7 +135,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     }
   }
 
-  "Update sorakuvaus" should "update sorakuvaus" in {
+  "Update sorakuvaus" should "allow oph user to update sorakuvaus" in {
     val id = put(sorakuvaus)
     val lastModified = get(id, sorakuvaus(id))
     update(sorakuvaus(id, Arkistoitu), lastModified)
@@ -130,11 +143,11 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(sorakuvaus, crudSessions(ChildOid))
+    val oid = put(sorakuvaus)
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(oid, sorakuvaus(oid).copy(muokkaaja = userOid))
+    val lastModified = get(oid, sorakuvaus(oid))
     update(sorakuvaus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, sorakuvaus(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
+    get(oid, sorakuvaus(oid, Arkistoitu))
   }
 
   it should "write sorakuvaus update to audit log" in {
@@ -163,28 +176,35 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     }
   }
 
-  it should "allow a user of the sorakuvaus organization to update the sorakuvaus" in {
+  it should "deny non oph user to update sorakuvaus 1" in {
     val id = put(sorakuvaus)
     val thisSorakuvaus = sorakuvaus(id)
     val lastModified = get(id, thisSorakuvaus)
-    update(thisSorakuvaus, lastModified, false, crudSessions(sorakuvaus.organisaatioOid))
+    update(thisSorakuvaus, lastModified, 403, defaultSessionId)
   }
 
-  it should "deny a user without access to the sorakuvaus organization" in {
+  it should "deny non oph user to update sorakuvaus 2" in {
+    val id = put(sorakuvaus)
+    val thisSorakuvaus = sorakuvaus(id)
+    val lastModified = get(id, thisSorakuvaus)
+    update(thisSorakuvaus, lastModified, 403, crudSessions(ChildOid))
+  }
+
+  it should "deny non oph user to update sorakuvaus 3" in {
     val id = put(sorakuvaus)
     val thisSorakuvaus = sorakuvaus(id)
     val lastModified = get(id, thisSorakuvaus)
     update(thisSorakuvaus, lastModified, 403, crudSessions(LonelyOid))
   }
 
-  it should "allow a user of an ancestor organization to create the sorakuvaus" in {
+  it should "deny non oph user to update sorakuvaus 4" in {
     val id = put(sorakuvaus)
     val thisSorakuvaus = sorakuvaus(id)
     val lastModified = get(id, thisSorakuvaus)
-    update(thisSorakuvaus, lastModified, false, crudSessions(ParentOid))
+    update(thisSorakuvaus, lastModified, 403, crudSessions(ParentOid))
   }
 
-  it should "deny a user with only access to a descendant organization" in {
+  it should "deny non oph user to update sorakuvaus 5" in {
     val id = put(sorakuvaus)
     val thisSorakuvaus = sorakuvaus(id)
     val lastModified = get(id, thisSorakuvaus)
@@ -195,7 +215,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val id = put(sorakuvaus)
     val thisSorakuvaus = sorakuvaus(id)
     val lastModified = get(id, thisSorakuvaus)
-    update(thisSorakuvaus, lastModified, 403, readSessions(sorakuvaus.organisaatioOid))
+    update(thisSorakuvaus, lastModified, 403, readSessions(ChildOid))
   }
 
   it should "deny indexer access" in {
@@ -207,7 +227,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val id = put(sorakuvaus)
-    post(SorakuvausPath, bytes(sorakuvaus(id)), defaultHeaders) {
+    post(SorakuvausPath, bytes(sorakuvaus(id)), OphHeaders) {
       status should equal (400)
       body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
@@ -217,25 +237,25 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val id = put(sorakuvaus)
     val lastModified = get(id, sorakuvaus(id))
     Thread.sleep(1500)
-    update(sorakuvaus(id, Arkistoitu), lastModified)
-    post(SorakuvausPath, bytes(sorakuvaus(id)), headersIfUnmodifiedSince(lastModified)) {
+    update(sorakuvaus(id, Arkistoitu), lastModified, ophSession)
+    post(SorakuvausPath, bytes(sorakuvaus(id)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       status should equal (409)
     }
   }
 
   it should "store and update unfinished sorakuvaus" in {
     val unfinishedSorakuvaus = TestData.MinSorakuvaus
-    val id = put(unfinishedSorakuvaus)
-    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id)))
-    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid)
-    update(newUnfinishedSorakuvaus, lastModified)
+    val id = put(unfinishedSorakuvaus, ophSession)
+    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid))
+    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid, muokkaaja = OphUserOid)
+    update(newUnfinishedSorakuvaus, lastModified, ophSession)
     get(id, newUnfinishedSorakuvaus)
   }
 
   it should "validate updated sorakuvaus" in {
     val id = put(sorakuvaus)
     val lastModified = get(id, sorakuvaus(id))
-    post(SorakuvausPath, bytes(sorakuvaus(id).copy(organisaatioOid = OrganisaatioOid("saippua"))), headersIfUnmodifiedSince(lastModified)) {
+    post(SorakuvausPath, bytes(sorakuvaus(id).copy(organisaatioOid = OrganisaatioOid("saippua"))), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       withClue(body) {
         status should equal(400)
       }
