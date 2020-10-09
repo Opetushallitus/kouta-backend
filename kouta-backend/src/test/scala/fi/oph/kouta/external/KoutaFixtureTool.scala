@@ -699,6 +699,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(UUID.fromString(params(ValintaperusteIdKey))),
       toKielistetty(kielivalinta, params(NimiKey)),
       Julkaisutila.withName(params(TilaKey)),
+      Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
       parseModified(params(ModifiedKey))

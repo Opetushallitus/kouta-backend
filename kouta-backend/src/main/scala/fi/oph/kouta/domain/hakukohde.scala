@@ -213,6 +213,10 @@ package object hakukohde {
       |          type: string
       |          description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
       |          example: 1.2.246.562.10.00101010101
+      |        jarjestyspaikkaOid:
+      |          type: string
+      |          description: Hakukohteen järjestyspaikan organisaatio
+      |          example: 1.2.246.562.10.00101010101
       |        organisaatioOid:
       |           type: string
       |           description: Hakukohteen luoneen organisaation oid
@@ -426,6 +430,7 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              valintaperusteId: Option[UUID],
                              nimi: Kielistetty,
                              tila: Julkaisutila,
+                             jarjestyspaikkaOid: Option[OrganisaatioOid],
                              organisaatioOid: OrganisaatioOid,
                              muokkaaja: UserOid,
                              modified: LocalDateTime) extends OidListItem
