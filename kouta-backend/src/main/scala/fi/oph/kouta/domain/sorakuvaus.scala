@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.security.AuthorizableMaybeJulkinen
+import fi.oph.kouta.security.AuthorizableByKoulutustyyppi
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
 
@@ -36,9 +36,6 @@ package object sorakuvaus {
       |            - arkistoitu
       |            - tallennettu
       |          description: SORA-kuvauksen julkaisutila. Jos SORA-kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
-      |        julkinen:
-      |          type: boolean
-      |          description: Voivatko muut oppilaitokset käyttää SORA-kuvausta
       |        kielivalinta:
       |          type: array
       |          description: Kielet, joille SORA-kuvauksen nimi, kuvailutiedot ja muut tekstit on käännetty
@@ -127,12 +124,11 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       tila: Julkaisutila = Tallennettu,
                       nimi: Kielistetty = Map(),
                       koulutustyyppi: Koulutustyyppi,
-                      julkinen: Boolean = false,
                       kielivalinta: Seq[Kieli] = Seq(),
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableMaybeJulkinen[Sorakuvaus] {
+                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableByKoulutustyyppi[Sorakuvaus] {
   override def validate(): IsValid = and(
     super.validate(),
     validateIfDefined[SorakuvausMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),

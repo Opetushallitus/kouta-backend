@@ -497,7 +497,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Julkaisutila.withName(params(TilaKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
-      params(JulkinenKey).toBoolean,
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       params.get(MetadataKey).map(read[SorakuvausMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),

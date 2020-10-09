@@ -314,7 +314,6 @@ object TestData {
     tila = Julkaistu,
     nimi = kieliMap("nimi"),
     koulutustyyppi = Yo,
-    julkinen = false,
     kielivalinta = List(Fi, Sv),
     metadata = Some(SorakuvausMetadata(
       kuvaus = kieliMap("kuvaus"),

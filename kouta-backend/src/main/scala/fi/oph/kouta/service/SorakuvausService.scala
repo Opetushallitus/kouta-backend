@@ -25,7 +25,7 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
   protected val updateRules: AuthorizationRules = AuthorizationRules(Seq(Role.Paakayttaja))
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
-    authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
+    authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(authorizationRuleByKoulutustyyppi)))
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus, createRules) { s =>
@@ -45,8 +45,8 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
     }
 
   def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
-    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (_, koulutustyypit) =>
+      SorakuvausDAO.listByKoulutustyypit(koulutustyypit)
     }
 
   private def doPut(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): Sorakuvaus =
