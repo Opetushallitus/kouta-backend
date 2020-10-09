@@ -317,7 +317,7 @@ object TestData {
     kielivalinta = List(Fi, Sv),
     metadata = Some(SorakuvausMetadata(
       kuvaus = kieliMap("kuvaus"),
-      koulutusKoodiUri = Some("koulutus_371101#1"),
+      koulutusKoodiUrit = Seq("koulutus_371101#1"),
       koulutusalaKoodiUri = Some("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))),
     organisaatioOid = OphOid,
     muokkaaja = OphUserOid,
