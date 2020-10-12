@@ -211,6 +211,7 @@ case class Haku(oid: Option[HakuOid] = None,
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
+      assertNotOptional(metadata, "metadata"),
       validateIfDefined[String](alkamisvuosi, assertMatch(_, VuosiPattern,"alkamisvuosi")),
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
@@ -249,12 +250,31 @@ case class HakuListItem(oid: HakuOid,
                         muokkaaja: UserOid,
                         modified: LocalDateTime) extends OidListItem
 
+case class KoulutuksenAlkamiskausi(alkamiskausityyppi: Option[Alkamiskausityyppi] = None,
+                                   koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
+                                   koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
+                                   koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
+                                   koulutuksenAlkamisvuosi: Option[Int] = None) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
+    validateIfDefined[String](koulutuksenAlkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausiKoodiUri")),
+    validateIfDefined[Int](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(alkamiskausityyppi, s"$path.alkamiskausityyppi"),
+      validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.get, assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
+      validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.get, and(
+        assertNotOptional(koulutuksenAlkamiskausiKoodiUri, s"$path.koulutuksenAlkamiskausiKoodiUri"),
+        assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi"))))))
+}
+
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends ValidatableSubEntity {
+                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
+                        koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
-  )
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    validateIfJulkaistu(tila, and(assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"))))
 
   override def validateOnJulkaisu(path: String): IsValid =
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_))

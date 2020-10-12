@@ -162,7 +162,15 @@ object TestData {
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
     hakulomakeLinkki = Map( Fi -> "https://koulu.test/hakemusinfo-fi", Sv -> "https://koulu.test/hakemusinfo-sv"),
-    metadata = Some(HakuMetadata(Seq(Yhteystieto1), Seq(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))))),
+    metadata = Some(HakuMetadata(
+      yhteyshenkilot = Seq(Yhteystieto1),
+      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+      koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
+        alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+        koulutuksenAlkamispaivamaara = None,
+        koulutuksenPaattymispaivamaara = None,
+        koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
+        koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear))))),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
