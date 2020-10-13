@@ -52,15 +52,6 @@ package object haku {
       |          description: Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet ja koulutukset julkaistaan
       |            automaattisesti Opintopolussa, jos ne eivät vielä ole julkisia
       |          example: 2019-08-23T09:55
-      |        alkamiskausiKoodiUri:
-      |          type: string
-      |          description: Haun koulutusten alkamiskausi. Hakukohteella voi olla eri alkamiskausi kuin haulla.
-      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |          example: kausi_k#1
-      |        alkamisvuosi:
-      |          type: string
-      |          description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
-      |          example: 2020
       |        kohdejoukkoKoodiUri:
       |          type: string
       |          description: Haun kohdejoukko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukko/1)
@@ -138,6 +129,41 @@ package object haku {
       |          description: Oppijalle Opintopolussa näytettävät haun mahdolliset tulevat hakuajat
       |          items:
       |            $ref: '#/components/schemas/Ajanjakso'
+      |        koulutuksenAlkamiskausi:
+      |          type: object
+      |          description: Koulutuksen alkamiskausi
+      |          allOf:
+      |            - $ref: '#/components/schemas/KoulutuksenAlkamiskausiHaulla'
+      |""".stripMargin
+
+  val HakuKoulutuksenAlkamiskausiModel =
+    """    KoulutuksenAlkamiskausiHaulla:
+      |      type: object
+      |      properties:
+      |        alkamiskausityyppi:
+      |          type: string
+      |          description: Alkamiskauden tyyppi
+      |          enum:
+      |            - 'henkilokohtainen suunnitelma'
+      |            - 'tarkka alkamisajankohta'
+      |            - 'alkamiskausi ja -vuosi'
+      |        koulutuksenAlkamispaivamaara:
+      |          type: string
+      |          description: Koulutuksen tarkka alkamisen päivämäärä
+      |          example: 2019-11-20T12:00
+      |        koulutuksenPaattymispaivamaara:
+      |          type: string
+      |          description: Koulutuksen päättymisen päivämäärä
+      |          example: 2019-11-20T12:00
+      |        koulutuksenAlkamiskausiKoodiUri:
+      |          type: string
+      |          description: Haun koulutusten alkamiskausi. Hakukohteella voi olla eri alkamiskausi kuin haulla.
+      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
+      |          example: kausi_k#1
+      |        koulutuksenAlkamisvuosi:
+      |          type: string
+      |          description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
+      |          example: 2020
       |""".stripMargin
 
   val HakuListItemModel =
@@ -176,7 +202,7 @@ package object haku {
       |           example: 2019-08-23T09:55
       |""".stripMargin
 
-  def models = List(HakuModel, HakuMetadataModel, HakuListItemModel)
+  def models = List(HakuModel, HakuMetadataModel, HakuListItemModel, HakuKoulutuksenAlkamiskausiModel)
 }
 
 case class Haku(oid: Option[HakuOid] = None,
