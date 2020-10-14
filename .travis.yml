@@ -68,12 +68,6 @@ deploy:
       branch: master
   - provider: script
     script:
-      mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
-    skip_cleanup: true
-    on:
-      branch: KTO-189-osaamisalat
-  - provider: script
-    script:
       ./ci-tools/build/upload-image.sh $ARTIFACT_NAME
     on:
       all_branches: true
