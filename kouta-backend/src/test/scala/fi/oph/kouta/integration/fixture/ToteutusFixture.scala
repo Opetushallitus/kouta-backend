@@ -3,7 +3,7 @@ package fi.oph.kouta.integration.fixture
 import java.time.LocalDateTime
 import java.util.UUID
 
-import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
@@ -35,6 +35,10 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   val opetus = ToteutuksenOpetus
   val ammMetatieto = AmmToteutuksenMetatieto
   val toteutus = JulkaistuAmmToteutus
+  val ammTutkinnonOsaToteutus = TestData.AmmTutkinnonOsaToteutus
+  val ammOsaamisalaToteutus = TestData.AmmOsaamisalaToteutus
+  val ammTutkinnonOsaToteutusAtaru = TestData.AmmTutkinnonOsaToteutus.copy(metadata = Some(TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu))
+  val ammOsaamisalaToteutusAtaru = TestData.AmmOsaamisalaToteutus.copy(metadata = Some(TestData.AmmOsaamisalaToteutusMetadataHakemuspalvelu))
 
   def toteutus(koulutusOid:String): Toteutus = toteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
   def toteutus(oid:String, koulutusOid:String): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid))

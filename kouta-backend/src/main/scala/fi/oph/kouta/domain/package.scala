@@ -366,9 +366,31 @@ package object domain {
       |                    example: APP_KOUTA_OPHPAAKAYTTAJA_1.2.246.562.10.00000000001
       |""".stripMargin
 
+  val TutkinnonOsaModel =
+    """    TutkinnonOsa:
+      |      type: object
+      |      properties:
+      |        ePerusteId:
+      |          type: number
+      |          description: Tutkinnon osan käyttämän ePerusteen id.
+      |          example: 4804100
+      |        koulutusKoodiUri:
+      |          type: string
+      |          description: Koulutuksen koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
+      |          example: koulutus_371101#1
+      |        tutkinnonosaId:
+      |          type: number
+      |          description: Tutkinnon osan id ePerusteissa
+      |          example: 12345
+      |        tutkinnonosaViite:
+      |          type: number
+      |          description: Tutkinnon osan viite
+      |          example: 2449201
+      |""".stripMargin
+
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
-    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel)
+    ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel)
 
   type Kielistetty = Map[Kieli,String]
 
@@ -389,7 +411,8 @@ package object domain {
     }
   }
 
-  case class Ajanjakso(alkaa: LocalDateTime, paattyy: Option[LocalDateTime]) extends ValidatableSubEntity {
+  case class Ajanjakso(alkaa: LocalDateTime,
+                       paattyy: Option[LocalDateTime] = None) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
       assertTrue(paattyy.forall(_.isAfter(alkaa)), path, invalidAjanjaksoMsg(this))
 
@@ -482,10 +505,18 @@ package object domain {
     )
   }
 
-  case class TutkinnonOsat(eperusteId: String, koulutusId: String, tutkinnonosaId: String, tutkinnonosaViite: String) extends ValidatableSubEntity {
+  case class TutkinnonOsa(ePerusteId: Option[Long] = None,
+                          koulutusKoodiUri: Option[String] = None,
+                          tutkinnonosaId: Option[Long] = None,
+                          tutkinnonosaViite: Option[Long] = None) extends ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    )
-  }
+      validateIfDefined(koulutusKoodiUri,
+        assertMatch(_, KoulutusKoodiPattern, s"$path.koulutusKoodiUri")),
+      validateIfJulkaistu(tila, and(
+        assertNotOptional(ePerusteId, s"$path.ePerusteId"),
+        assertNotOptional(koulutusKoodiUri, s"$path.koulutusKoodiUri"),
+        assertNotOptional(tutkinnonosaId, s"$path.tutkinnonosaId"),
+        assertNotOptional(tutkinnonosaViite, s"$path.tutkinnonosaViite"))))}
 
   case class Osoite(osoite: Kielistetty = Map(),
                     postinumeroKoodiUri: Option[String]) extends ValidatableSubEntity {

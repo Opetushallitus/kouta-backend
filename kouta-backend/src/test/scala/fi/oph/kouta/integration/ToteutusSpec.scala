@@ -15,7 +15,8 @@ import fi.oph.kouta.{TestData, TestOids}
 import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
-  with AccessControlSpec with KoulutusFixture with ToteutusFixture with KeywordFixture with UploadFixture {
+  with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
+  with KeywordFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Toteutus)
 
@@ -524,4 +525,35 @@ class ToteutusSpec extends KoutaIntegrationSpec
     ],
     "modified": "2019-10-29T15:21"
   }"""
+
+  "When tutkintoon johtamaton, toteutus servlet" should "create, get and update ammatillinen osaamisala toteutus" in {
+    val sorakuvausId = put(sorakuvaus)
+    val ammOaKoulutusOid = put(TestData.AmmOsaamisalaKoulutus.copy(tila = Julkaistu))
+    val ammOaToteutus = TestData.AmmOsaamisalaToteutus.copy(koulutusOid = KoulutusOid(ammOaKoulutusOid), sorakuvausId = Some(sorakuvausId), tila = Tallennettu)
+    val oid = put(ammOaToteutus)
+    val lastModified = get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "create, get and update ammatillinen tutkinnon osa toteutus" in {
+    val sorakuvausId = put(sorakuvaus)
+    val ammToKoulutusOid = put(TestData.AmmTutkinnonOsaKoulutus.copy(tila = Julkaistu))
+    val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid(ammToKoulutusOid), sorakuvausId = Some(sorakuvausId), tila = Tallennettu)
+    val oid = put(ammToToteutus)
+    val lastModified = get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "deny sorakuvaus id when not allowed" in {
+    val sorakuvausId = put(sorakuvaus)
+    val thisToteutus = toteutus(koulutusOid).copy(sorakuvausId = Some(sorakuvausId))
+    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validationErrorBody(notMissingMsg(Some(sorakuvausId)), "sorakuvausId"))
+    }
+  }
 }
