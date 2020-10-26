@@ -214,7 +214,7 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: yo
@@ -228,7 +228,7 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amk
@@ -239,7 +239,7 @@ package object toteutusMetadata {
   val AmmatillinenToteutusMetadata =
     """    AmmatillinenToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            osaamisalat:
@@ -247,7 +247,7 @@ package object toteutusMetadata {
       |              items:
       |                $ref: '#/components/schemas/Osaamisala'
       |              description: Lista ammatillisen koulutuksen osaamisalojen kuvauksia
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm
@@ -255,7 +255,86 @@ package object toteutusMetadata {
       |                - amm
       |""".stripMargin
 
-  val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata, AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata)
+  val TutkintoonJohtamatonToteutusMetadata =
+    """    TutkintoonJohtamatonToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            osaamisalat:
+      |              type: array
+      |              items:
+      |                $ref: '#/components/schemas/Osaamisala'
+      |              description: Lista tutkintoon johtamattoman koulutuksen osaamisalojen kuvauksia
+      |            hakutermi:
+      |              type: object
+      |              $ref: '#/components/schemas/Hakutermi'
+      |            hakulomaketyyppi:
+      |              type: string
+      |              description: Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta
+      |                (jolloin voidaan lisätä hakulomakkeeseen linkki) tai onko niin, ettei sähkököistä hakulomaketta ole lainkaan, jolloin sille olisi hyvä lisätä kuvaus.
+      |              example: "ataru"
+      |              enum:
+      |                - ataru
+      |                - haku-app
+      |                - ei sähköistä
+      |                - muu
+      |            hakulomakeLinkki:
+      |              type: object
+      |              description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
+      |              allOf:
+      |                - $ref: '#/components/schemas/Linkki'
+      |            lisatietoaHakeutumisesta:
+      |              type: object
+      |              description: Lisätietoa hakeutumisesta eri kielillä. Kielet on määritetty haun kielivalinnassa.
+      |              allOf:
+      |                - $ref: '#/components/schemas/Teksti'
+      |            lisatietoaValintaperusteista:
+      |              type: object
+      |              description: Lisätietoa valintaperusteista eri kielillä. Kielet on määritetty haun kielivalinnassa.
+      |              allOf:
+      |                - $ref: '#/components/schemas/Teksti'
+      |            hakuaika:
+      |              type: array
+      |              description: Toteutuksen hakuaika
+      |              $ref: '#/components/schemas/Ajanjakso'
+      |            aloituspaikat:
+      |              type: integer
+      |              description: Toteutuksen aloituspaikkojen lukumäärä
+      |              example: 100
+      |""".stripMargin
+
+  val AmmatillinenTutkinnonOsaToteutusMetadata =
+    """    AmmatillinenTutkinnonOsaToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm-tutkinnon-osa
+      |              enum:
+      |                - amm-tutkinnon-osa
+      |""".stripMargin
+
+  val AmmatillinenOsaamisalaToteutusMetadata =
+    """    AmmatillinenOsaamisalaToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm-osaamisala
+      |              enum:
+      |                - amm-osaamisala
+      |""".stripMargin
+
+  val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
+    AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
+    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
@@ -274,6 +353,8 @@ sealed trait ToteutusMetadata extends ValidatableSubEntity {
       assertNotOptional(opetus, s"$path.opetus"),
     ))
   )
+
+  def allowSorakuvaus: Boolean = false
 
   override def validateOnJulkaisu(path: String): IsValid =
     validateIfDefined[Opetus](opetus, _.validateOnJulkaisu(s"$path.opetus"))
@@ -299,9 +380,68 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat",_.validate(tila, kielivalinta, _))
+    validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat", _.validate(tila, kielivalinta, _))
   )
 }
+
+trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
+  def hakutermi: Option[Hakutermi]
+  def hakulomaketyyppi: Option[Hakulomaketyyppi]
+  def hakulomakeLinkki: Kielistetty
+  def lisatietoaHakeutumisesta: Kielistetty
+  def lisatietoaValintaperusteista: Kielistetty
+  def hakuaika: Option[Ajanjakso]
+  def aloituspaikat: Option[Int]
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfNonEmpty(hakulomakeLinkki, s"$path.hakulomakeLinkki", assertValidUrl _),
+    validateIfDefined[Ajanjakso](hakuaika, _.validate(tila, kielivalinta, s"$path.hakuaika")),
+    validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(hakutermi, s"$path.hakutermi"),
+      assertNotOptional(hakulomaketyyppi, s"$path.hakulomaketyyppi"),
+      validateIfTrue(hakulomaketyyppi.exists(_ == MuuHakulomake), and(
+        validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"),
+        validateKielistetty(kielivalinta, hakulomakeLinkki, s"$path.hakulomakeLinkki"),
+        validateOptionalKielistetty(kielivalinta, lisatietoaValintaperusteista, s"$path.lisatietoaValintaperusteista"),
+        assertNotOptional(hakuaika, s"$path.hakuaika")
+      )),
+      validateIfTrue(hakulomaketyyppi.exists(_ == EiSähköistä),
+        validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"))
+    )))
+
+  override def allowSorakuvaus: Boolean =
+    hakulomaketyyppi.exists(_ == MuuHakulomake)
+}
+
+case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+                                                    kuvaus: Kielistetty = Map(),
+                                                    opetus: Option[Opetus] = None,
+                                                    asiasanat: List[Keyword] = List(),
+                                                    ammattinimikkeet: List[Keyword] = List(),
+                                                    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                    hakutermi: Option[Hakutermi] = None,
+                                                    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                                    hakulomakeLinkki: Kielistetty = Map(),
+                                                    lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                                    lisatietoaValintaperusteista: Kielistetty = Map(),
+                                                    hakuaika: Option[Ajanjakso] = None,
+                                                    aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata
+
+case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
+                                                  kuvaus: Kielistetty = Map(),
+                                                  opetus: Option[Opetus] = None,
+                                                  asiasanat: List[Keyword] = List(),
+                                                  ammattinimikkeet: List[Keyword] = List(),
+                                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                  hakutermi: Option[Hakutermi] = None,
+                                                  hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                                  hakulomakeLinkki: Kielistetty = Map(),
+                                                  lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                                  lisatietoaValintaperusteista: Kielistetty = Map(),
+                                                  hakuaika: Option[Ajanjakso] = None,
+                                                  aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),

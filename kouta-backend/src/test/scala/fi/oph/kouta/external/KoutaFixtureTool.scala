@@ -178,6 +178,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val time3 = testDate("09:58", 3)
   val thisYear = LocalDate.now().getYear.toString
 
+  val ammTutkinnonOsaKoulutusMetadata = write(TestData.AmmTutkinnonOsaKoulutus.metadata)
+  val ammOsaamisalaKoulutusMetadata = write(TestData.AmmOsaamisalaKoulutus.metadata)
+  val ammTutkinnonOsaToteutusMetadata = write(TestData.AmmTutkinnonOsaToteutus.metadata)
+  val ammOsaamisalaToteutusMetadata = write(TestData.AmmOsaamisalaToteutus.metadata)
+
   val DefaultKoulutusScala = Map[String, String](
     JohtaaTutkintoonKey -> "true",
     KoulutustyyppiKey -> Amm.name,
@@ -358,7 +363,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(KoulutusOid(oid)),
       params(JohtaaTutkintoonKey).toBoolean,
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
-      Some(params(KoulutusKoodiUriKey)),
+      params.get(KoulutusKoodiUriKey) match {
+        case None | Some(null) => None
+        case Some(x) => Some(x)
+      },
       Julkaisutila.withName(params(TilaKey)),
       params.get(TarjoajatKey) match {
         case None => List[OrganisaatioOid]()
@@ -376,7 +384,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
       params.get(TeemakuvaKey),
-      params.get(EPerusteIdKey).map(_.toLong),
+      params.get(EPerusteIdKey) match {
+        case None | Some(null) => None
+        case Some(x) => Some(x.toLong)
+      },
       Some(parseModified(params(ModifiedKey))))
   }
 
@@ -392,6 +403,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid(_)).toList,
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[ToteutusMetadata]),
+      None,
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,

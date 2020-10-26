@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
-import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.Validations.{validateIfTrue, _}
 
 package object koulutus {
 
@@ -22,13 +22,14 @@ package object koulutus {
       |          description: Onko koulutus tutkintoon johtavaa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'muu' (muu koulutus)"
+      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala'"
       |          enum:
       |            - amm
       |            - yo
       |            - amk
       |            - lk
-      |            - muu
+      |            - amm-tutkinnon-osa
+      |            - amm-osaamisala
       |          example: amm
       |        koulutusKoodiUri:
       |          type: string
@@ -72,6 +73,8 @@ package object koulutus {
       |            - $ref: '#/components/schemas/YliopistoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
       |          example:
       |            koulutustyyppi: amm
       |            koulutusalaKoodiUrit:
@@ -181,9 +184,14 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
       validateIfJulkaistu(tila, and(
-        assertTrue(koulutustyyppi == Muu | johtaaTutkintoon, "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
-        validateIfTrue(koulutustyyppi == Amm, assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
-        validateIfTrue(koulutustyyppi == Amm, assertNotOptional(ePerusteId, "ePerusteId")),
+        assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
+        validateIfTrue(koulutustyyppi != AmmTutkinnonOsa, and(
+          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
+          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
+        validateIfTrue(koulutustyyppi == AmmTutkinnonOsa, and(
+          assertNotDefined(ePerusteId, "ePerusteId"),
+          assertNotDefined(koulutusKoodiUri, "koulutusKoodiUri")
+        )),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
         validateIfTrue(!RootOrganisaatioOid.equals(organisaatioOid),
