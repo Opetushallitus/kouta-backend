@@ -2,20 +2,60 @@
 
 Uuden tarjonnan backend.
 
+## Kehitysympäristön pystytys
+
+Asenna haluamallasi tavalla koneellesi 
+1. [IntelliJ IDEA](https://www.jetbrains.com/idea/) + [scala plugin](https://plugins.jetbrains.com/plugin/1347-scala)
+2. [AWS cli](https://aws.amazon.com/cli/) (SQS-jonoja varten)
+3. [Docker](https://www.docker.com/get-started) (localstackia ja postgresia varten)
+4. [Maven](https://maven.apache.org/) Jos haluat ajaa komentoriviltä Mavenia, 
+mutta idean Mavenilla pärjää kyllä hyvin, joten tämä ei ole pakollinen
+
+Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Katso [.travis.yml](.travis.yml) mitä versioita sovellus käyttää. 
+Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10. 
+
+### Postgresin ajaminen
+
+Kontin luonti
+
+``` shell
+cd kouta-backend/postgresql/docker
+docker build --tag kouta-postgres .
+```
+
+Kontin ajaminen
+
+Tähän on kaksi vaihtoehtoa. Jos ei haittaa että kontin sammuttamisen jälkeen 
+tietokantaan tallennetut tiedot häviävät, aja:
+
+``` shell
+docker run --rm --name kouta-database -p 5432:5432 kouta-postgres
+```
+
+Jos haluat että tiedot säilyvät vaikka kontti sammutetaan, aja:
+
+``` shell
+docker volume create kouta-data # Tämä tarvitsee ajaa vain ensimmäisellä kerralla, myöhemmillä kerroilla riittää alle oleva komento
+docker run --rm --name kouta-database -p 5432:5432 --volume kouta-data:/var/lib/postgresql/data kouta-postgres
+```
+
 ## Testit
 
-Testit voi ajaa `mvn test` komennolla tai rajaamalla ajettavien testejä
-`mvn test -Dsuites="<testiluokan nimet pilkulla erotettuna>"`
+Testit käyttävät localstackia ja postgresia joten Docker täytyy olla asennettuna 
+ja kouta-postgres kontti käynnissä.
 
-Testit vaativat että Docker on asennettuna ja Docker daemon on käynnissä.
+Testit voi ajaa ideassa ottamalla right-click kansion /kouta-backend/src/test/scala päällä -> Run 'ScalaTests in 'scala...'. 
+Yksittäisen testisuiten tai testin voi ajaa ottamalla right-click halutun testiclassin tai funktion päältä. 
+
+Jos Maven on asennettuna voi myös testit ajaa myös komentoriviltä `mvn test` komennolla tai rajaamalla ajettavien testejä
+`mvn test -Dsuites="<testiluokan nimet pilkulla erotettuna>"`
 
 ## Ajaminen lokaalisti
 
-Käynnistä Ideassa ```EmbeddedJettyLauncher```. Aseta Working directoryksi `$MODULE_DIR$`. Sovellus
-käynnistyy porttiin **8099** ja se käyttää embedded Postgres-kantaa. Asetuksia voi muuttaa muokkaamalla
+Käynnistä kouta-postgres kontti ja Ideassa [EmbeddedJettyLauncher](embeddedJettyLauncher.scala) (right-click -> Run). 
+Avaa Ideassa ylhäältä Run Configurations valikko ja aseta EmbeddedJettyLauncherin Working directoryksi `$MODULE_DIR$`. Sovellus
+käynnistyy porttiin **8099** ja se käyttää postgres kontin kantaa. Asetuksia voi muuttaa muokkaamalla
 ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
-
-Embedded Postgres-kannan käyttäminen vaatii, että postgresql on asennettu koneelle.
 
 EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
 
