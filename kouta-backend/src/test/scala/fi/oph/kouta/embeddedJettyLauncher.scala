@@ -118,7 +118,7 @@ object Templates {
         .map(l => l match {
           case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: ${port}"
           case x if x.contains("postgres_app_user") => "postgres_app_user: oph"
-          case x if x.contains("host_postgresql_kouta_app_password") => "host_postgresql_kouta_app_password:"
+          case x if x.contains("host_postgresql_kouta_app_password") => "host_postgresql_kouta_app_password: oph"
           case x if x.contains("host_postgresql_kouta") => "host_postgresql_kouta: localhost"
           case x => x
         })
