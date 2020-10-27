@@ -49,7 +49,7 @@ laitetaan working directoryksi `/projektinJuuri/kouta-backend` ja Command line k
 
 Yksittäisen testisuiten tai testin voi ajaa ottamalla right-click halutun testiclassin tai funktion päältä. 
 
-Jos Maven on asennettuna voi myös testit ajaa myös komentoriviltä `mvn test` komennolla tai rajaamalla ajettavien testejä
+Jos Maven on asennettuna voi testit ajaa myös komentoriviltä `mvn test` komennolla tai rajaamalla ajettavien testejä
 `mvn test -Dsuites="<testiluokan nimet pilkulla erotettuna>"`
 
 ## Ajaminen lokaalisti
