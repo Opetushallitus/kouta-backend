@@ -44,7 +44,9 @@ docker run --rm --name kouta-database --env POSTGRES_PASSWORD=postgres -p 5432:5
 Testit käyttävät localstackia ja postgresia joten Docker täytyy olla asennettuna 
 ja kouta-postgres kontti käynnissä.
 
-Testit voi ajaa ideassa ottamalla right-click kansion /kouta-backend/src/test/scala päällä -> Run 'ScalaTests in 'scala...'. 
+Testit voi ajaa ideassa avaamalla Edit Configurations valikon ja luomalla uuden Maven run configurationin jolle 
+laitetaan working directoryksi `/projektinJuuri/kouta-backend` ja Command line komennoksi `test`. Tämän jälkeen konfiguraatio ajoon.
+
 Yksittäisen testisuiten tai testin voi ajaa ottamalla right-click halutun testiclassin tai funktion päältä. 
 
 Jos Maven on asennettuna voi myös testit ajaa myös komentoriviltä `mvn test` komennolla tai rajaamalla ajettavien testejä
