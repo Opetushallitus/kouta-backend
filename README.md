@@ -29,14 +29,14 @@ Tähän on kaksi vaihtoehtoa. Jos ei haittaa että kontin sammuttamisen jälkeen
 tietokantaan tallennetut tiedot häviävät, aja:
 
 ``` shell
-docker run --rm --name kouta-database -p 5432:5432 kouta-postgres
+docker run --rm --name kouta-database --env POSTGRES_PASSWORD=postgres -p 5432:5432 kouta-postgres
 ```
 
 Jos haluat että tiedot säilyvät vaikka kontti sammutetaan, aja:
 
 ``` shell
 docker volume create kouta-data # Tämä tarvitsee ajaa vain ensimmäisellä kerralla, myöhemmillä kerroilla riittää alle oleva komento
-docker run --rm --name kouta-database -p 5432:5432 --volume kouta-data:/var/lib/postgresql/data kouta-postgres
+docker run --rm --name kouta-database --env POSTGRES_PASSWORD=postgres -p 5432:5432 --volume kouta-data:/var/lib/postgresql/data kouta-postgres
 ```
 
 ## Testit
