@@ -35,7 +35,7 @@ docker run --rm --name kouta-database --env POSTGRES_PASSWORD=postgres -p 5432:5
 Jos haluat että tiedot säilyvät vaikka kontti sammutetaan, aja:
 
 ``` shell
-docker volume create kouta-data # Tämä tarvitsee ajaa vain ensimmäisellä kerralla, myöhemmillä kerroilla riittää alle oleva komento
+docker volume create kouta-data # Tämä tarvitsee ajaa vain ensimmäisellä kerralla, myöhemmillä kerroilla riittää alla oleva komento
 docker run --rm --name kouta-database --env POSTGRES_PASSWORD=postgres -p 5432:5432 --volume kouta-data:/var/lib/postgresql/data kouta-postgres
 ```
 
@@ -51,6 +51,14 @@ Yksittäisen testisuiten tai testin voi ajaa ottamalla right-click halutun testi
 
 Jos Maven on asennettuna voi testit ajaa myös komentoriviltä `mvn test` komennolla tai rajaamalla ajettavien testejä
 `mvn test -Dsuites="<testiluokan nimet pilkulla erotettuna>"`
+
+### Testit ja Windows + docker
+
+Jotkin testit (IndexerSpec) voivat epäonnistua windowsilla, koska getDockerExeLocation olettaa `docker.exe` löytyvän kovakoodatusti tietystä polusta:
+
+- `C:/program files/docker/docker/resources/bin/docker.exe`
+
+Tähän voi tehdä korjauksen ainakin seuraavalla tavalla: lisää ko. polkuun symbolinen linkki viittaamaan oikeaan polkuun, mistä docker.exe löytyy. Tämän saa helpoiten tehtyä windowsissa pikakuvakkeella.
 
 ## Ajaminen lokaalisti
 
