@@ -15,6 +15,7 @@ import scala.util.Try
 object EmbeddedJettyLauncher extends Logging {
 
   val DefaultPort = "8099"
+  private val koutaDbPort = 5432
 
   val TestDataGeneratorSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
 
@@ -22,7 +23,7 @@ object EmbeddedJettyLauncher extends Logging {
     System.setProperty("kouta-backend.useSecureCookies", "false")
     System.getProperty("kouta-backend.embedded", "true") match {
       case x if "false".equalsIgnoreCase(x) => TestSetups.setupWithoutEmbeddedPostgres()
-      case _ => TestSetups.setupWithEmbeddedPostgres()
+      case _ => TestSetups.setupWithEmbeddedPostgres(koutaDbPort)
     }
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
@@ -70,10 +71,9 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
   }
 
-  def setupWithEmbeddedPostgres() = {
+  def setupWithEmbeddedPostgres(port:Int) = {
     logger.info("Starting embedded PostgreSQL!")
-    TempDb.start()
-    setupWithTemplate(TempDb.port)
+    setupWithTemplate(port)
   }
 
   def setupWithoutEmbeddedPostgres()=
