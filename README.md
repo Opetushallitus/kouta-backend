@@ -16,7 +16,7 @@ Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10.
 
 ### Postgresin ajaminen
 
-Kontin luonti
+Kontti-imagen luonti (tarvitsee tehdä vain kerran)
 
 ``` shell
 cd kouta-backend/postgresql/docker
@@ -52,7 +52,7 @@ Jos Maven on asennettuna voi myös testit ajaa myös komentoriviltä `mvn test` 
 
 ## Ajaminen lokaalisti
 
-Käynnistä kouta-postgres kontti ja Ideassa [EmbeddedJettyLauncher](embeddedJettyLauncher.scala) (right-click -> Run). 
+Käynnistä kouta-postgres kontti ja Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run). 
 Avaa Ideassa ylhäältä Run Configurations valikko ja aseta EmbeddedJettyLauncherin Working directoryksi `$MODULE_DIR$`. Sovellus
 käynnistyy porttiin **8099** ja se käyttää postgres kontin kantaa. Asetuksia voi muuttaa muokkaamalla
 ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
