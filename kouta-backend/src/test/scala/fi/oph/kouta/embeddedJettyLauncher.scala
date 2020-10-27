@@ -134,3 +134,16 @@ object Templates {
     Files.deleteIfExists(new File(TEST_TEMPLATE_FILE_PATH).toPath)
   }
 }
+
+object CommandLine {
+
+  import scala.sys.process.stringToProcess
+
+  def runBlocking(command: String, failOnError: Boolean = true): Int = {
+    val returnValue = command.!
+    if (failOnError && returnValue != 0) {
+      throw new RuntimeException(s"Command '$command' exited with $returnValue")
+    }
+    returnValue
+  }
+}
