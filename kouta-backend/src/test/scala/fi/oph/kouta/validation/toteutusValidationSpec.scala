@@ -226,4 +226,11 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Tallennettu, opetus.copy(suunniteltuKestoKuukaudet = Some(-1)), "suunniteltuKestoKuukaudet", notNegativeMsg)
     failsValidation(Julkaistu, opetus.copy(suunniteltuKestoKuvaus = Map(Sv -> "moi")), "suunniteltuKestoKuvaus", invalidKielistetty(Seq(Fi)))
   }
+
+  it should "not treat alkamiskausi as mandatory" in {
+    val opetusWithoutAlkamisajankohta = opetus.copy(koulutuksenTarkkaAlkamisaika = None, koulutuksenAlkamispaivamaara = None, koulutuksenPaattymispaivamaara = None, koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None)
+    passesValidation(Julkaistu, opetusWithoutAlkamisajankohta)
+    failsValidation(Julkaistu, opetusWithoutAlkamisajankohta.copy(koulutuksenTarkkaAlkamisaika = Some(true)), "koulutuksenAlkamispaivamaara", missingMsg)
+    failsValidation(Julkaistu, opetusWithoutAlkamisajankohta.copy(koulutuksenTarkkaAlkamisaika = Some(false)), ("koulutuksenAlkamisvuosi", missingMsg), ("koulutuksenAlkamiskausi", missingMsg))
+  }
 }
