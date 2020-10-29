@@ -27,10 +27,10 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
-  private def authorizedForTarjoajaOids(oids: Set[OrganisaatioOid]): Option[AuthorizationRules] =
+  private def authorizedForTarjoajaOids(oids: Set[OrganisaatioOid], roles: Seq[Role] = roleEntity.updateRoles): Option[AuthorizationRules] =
     if (oids.nonEmpty) {
       Some( AuthorizationRules(
-        requiredRoles = roleEntity.updateRoles,
+        requiredRoles = roles,
         allowAccessToParentOrganizations = true,
         overridingAuthorizationRules = Seq(AuthorizationRuleForJulkinen),
         additionalAuthorizedOrganisaatioOids = oids.toSeq))
@@ -133,7 +133,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
       DBIO.successful(None)
     } else {
       val newKoulutus: Koulutus = koulutus.copy(tarjoajat = koulutus.tarjoajat ++ newTarjoajat)
-      authorizeUpdate(koulutusWithLastModified, newKoulutus, List(authorizedForTarjoajaOids(tarjoajaOids).get)) { (_, k) =>
+      authorizeUpdate(koulutusWithLastModified, newKoulutus, List(authorizedForTarjoajaOids(tarjoajaOids, roleEntity.readRoles).get)) { (_, k) =>
         withValidation(newKoulutus, Some(k)) {
           getUpdateTarjoajatActions(_, lastModified)
         }

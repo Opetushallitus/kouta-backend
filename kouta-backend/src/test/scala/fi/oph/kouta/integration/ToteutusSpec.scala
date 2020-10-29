@@ -95,7 +95,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List())
     val koulutusOid = put(ophKoulutus)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
-    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Crud.asInstanceOf[Role]), GrandChildOid)
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     val oid = put(newToteutus, session)
     get(oid, newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session)))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid)))
@@ -105,7 +105,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val newKoulutus = koulutus.copy(organisaatioOid = LonelyOid, julkinen = false, tarjoajat = List(LonelyOid))
     val koulutusOid = put(newKoulutus)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
-    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Crud.asInstanceOf[Role]), GrandChildOid)
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     put(ToteutusPath, newToteutus, session, 403)
     get(koulutusOid, newKoulutus.copy(oid = Some(KoulutusOid(koulutusOid))))
   }
