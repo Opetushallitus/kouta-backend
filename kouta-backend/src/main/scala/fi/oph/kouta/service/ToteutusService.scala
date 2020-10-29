@@ -104,10 +104,10 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     ))
   }
 
-  private def doPut(toteutus: Toteutus, koulutusAddTarjoajaActions: DBIO[Option[Koulutus]])(implicit authenticated: Authenticated): Toteutus =
+  private def doPut(toteutus: Toteutus, koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])])(implicit authenticated: Authenticated): Toteutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        k          <- koulutusAddTarjoajaActions
+        (oldK, k)  <- koulutusAddTarjoajaActions
         (teema, t) <- checkAndMaybeClearTeemakuva(toteutus)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
@@ -116,8 +116,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         t          <- teema.map(_ => ToteutusDAO.updateJustToteutus(t)).getOrElse(DBIO.successful(t))
         _          <- koulutusService.index(k)
         _          <- index(Some(t))
+        _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logCreate(t)
-        _          <- k.map(auditLog.logCreate(_)).getOrElse(DBIO.successful(t))
       } yield (teema, t)
     }.map { case (teema, t) =>
       maybeDeleteTempImage(teema)

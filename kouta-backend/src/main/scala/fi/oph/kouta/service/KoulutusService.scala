@@ -118,7 +118,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
   }
 
-  def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit authenticated: Authenticated): DBIO[Option[Koulutus]] = {
+  def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
     val koulutusWithLastModified = get(koulutusOid)
 
     if(koulutusWithLastModified.isEmpty) {
@@ -130,12 +130,12 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     val newTarjoajat = tarjoajaOids diff koulutus.tarjoajat.toSet
 
     if(newTarjoajat.isEmpty) {
-      DBIO.successful(None)
+      DBIO.successful((koulutus, None))
     } else {
       val newKoulutus: Koulutus = koulutus.copy(tarjoajat = koulutus.tarjoajat ++ newTarjoajat)
       authorizeUpdate(koulutusWithLastModified, newKoulutus, List(authorizedForTarjoajaOids(tarjoajaOids, roleEntity.readRoles).get)) { (_, k) =>
         withValidation(newKoulutus, Some(k)) {
-          getUpdateTarjoajatActions(_, lastModified)
+          DBIO.successful(koulutus) zip getUpdateTarjoajatActions(_, lastModified)
         }
       }
     }
