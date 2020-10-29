@@ -30,6 +30,9 @@ trait OrganisaatioService {
     case _ => (parentsAndChildren(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkia(oid)))
   }
 
+  def findOppilaitosOidFromOrganisaationHierarkia(oid: OrganisaatioOid): Option[OrganisaatioOid] =
+    find(_.isOppilaitos, getHierarkia(oid).toSet).map(_.oid)
+
   private def children(hierarkia: Option[OidAndChildren]): Seq[OrganisaatioOid] =
     hierarkia.map(x => x.oid +: childOidsFlat(x)).getOrElse(Seq()).distinct
 
@@ -45,11 +48,11 @@ trait OrganisaatioService {
       .map(Koulutustyyppi.fromOppilaitostyyppi)
 
   @tailrec
-  private def find(oid: OrganisaatioOid, level: Set[OidAndChildren]): Option[OidAndChildren] =
-    level.find(_.oid == oid) match {
+  private def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
+    level.find(pred) match {
       case None if level.isEmpty => None
       case Some(c) => Some(c)
-      case None => find(oid, level.flatMap(_.children))
+      case None => find(pred, level.flatMap(_.children))
     }
 
   private def childOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
@@ -62,7 +65,9 @@ trait OrganisaatioService {
     item.children.flatMap(c => c.oppilaitostyyppi +: childOppilaitostyypitFlat(c))
 
   private def parentOppilaitostyypitFlat(item: OidAndChildren, hierarkia: Option[OidAndChildren]): Seq[Option[String]] =
-    parentOidsFlat(item).map(find(_, hierarkia.toSet)).collect {
+    parentOidsFlat(item).map { case oid =>
+      find(_.oid == oid, hierarkia.toSet)
+    }.collect {
       case Some(org) => org.oppilaitostyyppi
     }
 
@@ -95,7 +100,7 @@ trait OrganisaatioService {
   }
 
   private def getPartialHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] =
-    find(oid, getHierarkia(oid, lakkautetut).toSet)
+    find(_.oid == oid, getHierarkia(oid, lakkautetut).toSet)
 
   private def getHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] = {
     val hierarkia: Option[OidAndChildren] = sync.caching(oid)(Some(45.minutes)) {
