@@ -52,7 +52,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       withValidation(t, Some(oldToteutus)) { t =>
         validateKoulutusIntegrity(t)
-        doUpdate(t, notModifiedSince, oldToteutus)
+        doUpdate(t, notModifiedSince, oldToteutus, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
       }
     }
   }.nonEmpty
@@ -124,15 +124,18 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
       t
     }.get
 
-  private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated): Option[Toteutus] =
+  private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus, koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])])(implicit authenticated: Authenticated): Option[Toteutus] =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
+        (oldK, k)  <- koulutusAddTarjoajaActions
         (teema, t) <- checkAndMaybeCopyTeemakuva(toteutus)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getUpdateActions(t)
+        _          <- koulutusService.index(k)
         _          <- index(t)
+        _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logUpdate(before, t)
       } yield (teema, t)
     }.map { case (teema, t) =>
