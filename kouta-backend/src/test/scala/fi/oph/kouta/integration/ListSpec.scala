@@ -9,19 +9,19 @@ import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
-  override val roleEntities = RoleEntity.all
+  override val roleEntities: List[RoleEntity] = RoleEntity.all
 
-  var k1, k2, k3, k4, k5, k6, k7, k8 :KoulutusListItem = null
-  var t1, t2, t3, t4, t5, t6, t7, t8 :ToteutusListItem = null
-  var h1, h2, h3, h4                 :HakuListItem = null
-  var v1, v2, v3, v4                 :ValintaperusteListItem = null
-  var s1, s2, s3                     :SorakuvausListItem = null
-  var hk1, hk2, hk3, hk4             :HakukohdeListItem = null
-  var o1, o2                         :OrganisaatioOid = null
-  var oo1, oo2, oo3                  :OppilaitoksenOsaListItem = null
+  var k1, k2, k3, k4, k5, k6, k7, k8 :KoulutusListItem = _
+  var t1, t2, t3, t4, t5, t6, t7, t8 :ToteutusListItem = _
+  var h1, h2, h3, h4                 :HakuListItem = _
+  var v1, v2, v3, v4                 :ValintaperusteListItem = _
+  var s1, s2, s3                     :SorakuvausListItem = _
+  var hk1, hk2, hk3, hk4             :HakukohdeListItem = _
+  var o1, o2                         :OrganisaatioOid = _
+  var oo1, oo2, oo3                  :OppilaitoksenOsaListItem = _
 
-  var ophKoulutus:  KoulutusListItem = null
-  var ophT1, ophT2: ToteutusListItem = null
+  var ophKoulutus:  KoulutusListItem = _
+  var ophT1, ophT2: ToteutusListItem = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -30,11 +30,11 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   def createTestData(): Unit = {
-    k1 = addToList(koulutus(false, ParentOid, Julkaistu))
-    k2 = addToList(koulutus(false, ChildOid, Arkistoitu))
-    k3 = addToList(koulutus(false, GrandChildOid, Tallennettu))
-    k4 = addToList(koulutus(false, LonelyOid, Julkaistu))
-    k5 = addToList(koulutus(true, LonelyOid, Julkaistu))
+    k1 = addToList(koulutus(julkinen = false, ParentOid, Julkaistu))
+    k2 = addToList(koulutus(julkinen = false, ChildOid, Arkistoitu))
+    k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
+    k4 = addToList(koulutus(julkinen = false, LonelyOid, Julkaistu))
+    k5 = addToList(koulutus(julkinen = true, LonelyOid, Julkaistu))
     k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu))
     k7 = addToList(ammTutkinnonOsaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
     k8 = addToList(ammOsaamisalaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
@@ -69,7 +69,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     oo2 = addToList(oppilaitoksenOsa(o1, Julkaistu, GrandChildOid))
     oo3 = addToList(oppilaitoksenOsa(o2, Julkaistu, EvilGrandChildOid))
 
-    ophKoulutus = addToList(koulutus(true, OphOid, Julkaistu))
+    ophKoulutus = addToList(koulutus(julkinen = true, OphOid, Julkaistu))
     ophT1 = addToList(toteutus(ophKoulutus.oid.toString, Julkaistu, LonelyOid))
     ophT2 = addToList(toteutus(ophKoulutus.oid.toString, Julkaistu, GrandChildOid))
   }
