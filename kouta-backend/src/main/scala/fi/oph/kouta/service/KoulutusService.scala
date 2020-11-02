@@ -69,9 +69,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
   }
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
   def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] =
@@ -109,7 +109,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
           k => k.copy(toteutukset = listToteutukset(k.oid, organisaatioOid).size)
       })
 
-    list(organisaatioOid).map(_.oid) match {
+    list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil          => KoulutusSearchResult()
       case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
     }
