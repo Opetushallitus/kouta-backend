@@ -193,6 +193,12 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "allow access to any haku with the indexer role" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3), indexerSession)
   }
+  it should "by default list arkistoidut also" in {
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3))
+  }
+  it should "filter out arkistoidut if instructed" in {
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h3))
+  }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3))
