@@ -268,22 +268,14 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean) = {
     sql"""#$selectKoulutusListSql
-          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})  #${arkistoidutFilter(myosArkistoidut)}
+          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})  #${createArkistoidutFilter(myosArkistoidut)}
       """.as[KoulutusListItem]
-  }
-
-  private def arkistoidutFilter(myosArkistoidut: Boolean) = {
-    if (myosArkistoidut) {
-      ""
-    } else {
-      s"and tila <> '${Arkistoitu}'"
-    }
   }
 
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean) = {
     sql"""#$selectKoulutusListSql
           where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${RootOrganisaatioOid} or tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))) #${arkistoidutFilter(myosArkistoidut)}
+          or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))) #${createArkistoidutFilter(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
 

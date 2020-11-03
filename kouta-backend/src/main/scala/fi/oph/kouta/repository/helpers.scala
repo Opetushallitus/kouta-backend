@@ -5,7 +5,7 @@ import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi}
+import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Koulutustyyppi}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
@@ -33,6 +33,14 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   }
 
   def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]): String = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
+
+  def createArkistoidutFilter(myosArkistoidut: Boolean): String = {
+    if (myosArkistoidut) {
+      ""
+    } else {
+      s"and tila <> '$Arkistoitu'"
+    }
+  }
 
   private def toIso(l: Option[LocalDateTime]): String = l match {
     case Some(a) => ISO_LOCAL_DATE_TIME_FORMATTER.format(a)
