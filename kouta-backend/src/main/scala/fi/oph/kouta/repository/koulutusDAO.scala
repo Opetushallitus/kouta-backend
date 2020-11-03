@@ -82,7 +82,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) => listWithTarjoajat { selectByCreatorAndNotOph(organisaatioOids) } //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case (_, Nil) => listWithTarjoajat { selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut) } //OPH:lla pitäisi olla aina kaikki koulutustyypit
       case _        => listWithTarjoajat { selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut) }
     }
 
@@ -266,9 +266,9 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
            group by k.oid) m on k.oid = m.oid"""
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]) = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean) = {
     sql"""#$selectKoulutusListSql
-          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})
+          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})  #${arkistoidutFilter(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
 
