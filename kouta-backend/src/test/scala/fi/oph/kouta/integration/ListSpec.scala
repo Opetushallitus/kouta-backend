@@ -197,7 +197,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3))
   }
   it should "filter out arkistoidut if instructed" in {
-    list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h3))
+    list(HakuPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(h1, h3))
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {

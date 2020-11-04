@@ -144,9 +144,10 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
-      case Some(oid) => Ok(hakuService.list(oid, myosArkistoidut = true))
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("myosArkistoidut")) match {
+      case (None, _) => NotFound()
+      case (Some(oid), None) => Ok(hakuService.list(oid, myosArkistoidut = true))
+      case (Some(oid), Some(myosArkistoidut)) => Ok(hakuService.list(oid, myosArkistoidut.toBoolean))
     }
   }
 
