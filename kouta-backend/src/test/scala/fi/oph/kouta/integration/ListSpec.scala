@@ -45,7 +45,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     t5 = addToList(ammTutkinnonOsaToteutus.copy(koulutusOid = k7.oid, organisaatioOid = LonelyOid, tila = Julkaistu))
     t6 = addToList(ammOsaamisalaToteutus.copy(koulutusOid = k8.oid, organisaatioOid = LonelyOid, tila = Julkaistu))
     t7 = addToList(ammTutkinnonOsaToteutusAtaru.copy(koulutusOid = k7.oid, organisaatioOid = LonelyOid, tila = Julkaistu))
-    t8 = addToList(ammOsaamisalaToteutusAtaru.copy(koulutusOid = k8.oid, organisaatioOid = LonelyOid, tila = Julkaistu))
+    t8 = addToList(ammOsaamisalaToteutusAtaru.copy(koulutusOid = k8.oid, organisaatioOid = LonelyOid, tila = Arkistoitu))
     h1 = addToList(haku(Julkaistu, ParentOid))
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
@@ -164,6 +164,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
   it should "filter out arkistoidut if instructed" in {
     list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(t1, t3, ophT2))
+  }
+  it should "filter arkistoidut and hakukohteeseen liitettävät if instructed" in {
+    list(ToteutusPath, Map("organisaatioOid" -> LonelyOid.s, "vainHakukohteeseenLiitettavat" -> "true", "myosArkistoidut" -> "false"), List(t4, t7, ophT1))
   }
 
   "Haku list" should "list all haut for authorized organizations" in {
