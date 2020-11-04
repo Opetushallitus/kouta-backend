@@ -159,6 +159,12 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "list all toteutukset linked to oph koulutus for oph organization" in {
     list(ToteutusPath, Map("organisaatioOid" -> OphOid.s), List(), ophSession)
   }
+  it should "by default list arkistoidut also" in {
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s), List(t1, t2, t3, ophT2))
+  }
+  it should "filter out arkistoidut if instructed" in {
+    list(ToteutusPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(t1, t3, ophT2))
+  }
 
   "Haku list" should "list all haut for authorized organizations" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3))
