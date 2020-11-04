@@ -130,6 +130,13 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |          required: false
       |          description: Listataanko vain ne toteutukset, jotka voi liittää hakukohteeseen
       |          default: false
+      |        - in: query
+      |          name: myosArkistoidut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Listataanko myös arkistoidut haut
+      |          default: true
       |      responses:
       |        '200':
       |          description: Ok
@@ -144,9 +151,12 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
-      case Some(oid) => Ok(toteutusService.list(oid, params.get("vainHakukohteeseenLiitettavat").exists(_.toBoolean)))
+    val vainHakukohteeseenLiitettavat = params.get("vainHakukohteeseenLiitettavat").exists(_.toBoolean)
+
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("myosArkistoidut")) match {
+      case (None, _) => NotFound()
+      case (Some(oid), None) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut = true))
+      case (Some(oid), Some(myosArkistoidut)) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut.toBoolean))
     }
   }
 

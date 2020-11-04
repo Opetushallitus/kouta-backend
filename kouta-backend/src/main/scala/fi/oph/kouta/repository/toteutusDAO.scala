@@ -20,7 +20,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
   def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
-  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false): Seq[ToteutusListItem]
+  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false, myosArkistoidut: Boolean): Seq[ToteutusListItem]
   def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
   def listByKoulutusOidAndAllowedOrganisaatiot(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem]
@@ -113,10 +113,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
           t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
     }.get
 
-  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false): Seq[ToteutusListItem] = (organisaatioOids, vainHakukohteeseenLiitettavat) match {
+  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false, myosArkistoidut: Boolean): Seq[ToteutusListItem] = (organisaatioOids, vainHakukohteeseenLiitettavat) match {
     case (Nil, _)   => Seq()
-    case (_, false) => listWithTarjoajat(() => selectByCreatorOrTarjoaja(organisaatioOids))
-    case (_, true)  => listWithTarjoajat(() => selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids))
+    case (_, false) => listWithTarjoajat(() => selectByCreatorOrTarjoaja(organisaatioOids, myosArkistoidut))
+    case (_, true)  => listWithTarjoajat(() => selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids, myosArkistoidut))
   }
 
   override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem] =
@@ -279,21 +279,23 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
            group by t.oid) m on t.oid = m.oid"""
 
-  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ToteutusListItem]] = {
+  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           inner join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
-          where t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-             or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})""".as[ToteutusListItem]
+          where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+             or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
+              #${createArkistoidutFilter(myosArkistoidut)}""".as[ToteutusListItem]
   }
 
-  def selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ToteutusListItem]] = {
+  def selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           inner join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
                  or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
                 and (((t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmTutkinnonOsa.toString}::koulutustyyppi
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi )
-                     or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )""".as[ToteutusListItem]
+                     or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )
+                    #${createArkistoidutFilter(myosArkistoidut)}""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOid(koulutusOid: KoulutusOid): DBIO[Vector[ToteutusListItem]] = {
