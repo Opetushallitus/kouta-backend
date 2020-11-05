@@ -125,6 +125,13 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |          required: true
       |          description: Organisaatio-oid
       |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: myosArkistoidut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Listataanko myös arkistoidut sorakuvaukset
       |      responses:
       |        '200':
       |          description: Ok
@@ -139,9 +146,10 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
 
     implicit val authenticated: Authenticated = authenticate()
 
-    params.get("organisaatioOid") match {
-      case None => NotFound()
-      case Some(oid) => Ok(sorakuvausService.list(OrganisaatioOid(oid)))
+    (params.get("organisaatioOid"), params.get("myosArkistoidut")) match {
+      case (None, _) => NotFound()
+      case (Some(oid), None) => Ok(sorakuvausService.list(OrganisaatioOid(oid), myosArkistoidut = true))
+      case (Some(oid), Some(myosArkistoidut)) => Ok(sorakuvausService.list(OrganisaatioOid(oid), myosArkistoidut.toBoolean))
     }
   }
 }
