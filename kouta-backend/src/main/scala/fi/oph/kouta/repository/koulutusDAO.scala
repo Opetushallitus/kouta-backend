@@ -14,6 +14,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getPutActions(koulutus: Koulutus): DBIO[Koulutus]
   def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]]
+  def getUpdateTarjoajatActions(koulutus: Koulutus): DBIO[Koulutus]
 
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem]
@@ -54,6 +55,12 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   def updateJustKoulutus(koulutus: Koulutus): DBIO[Koulutus] =
     for {
       _ <- updateKoulutus(koulutus)
+      m <- selectLastModified(koulutus.oid.get)
+    } yield koulutus.withModified(m.get)
+
+  override def getUpdateTarjoajatActions(koulutus: Koulutus): DBIO[Koulutus] =
+    for {
+      _ <- updateKoulutuksenTarjoajat(koulutus)
       m <- selectLastModified(koulutus.oid.get)
     } yield koulutus.withModified(m.get)
 

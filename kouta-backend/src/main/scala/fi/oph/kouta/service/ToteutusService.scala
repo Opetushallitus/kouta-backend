@@ -12,15 +12,20 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService)
 
-class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, keywordService: KeywordService, val organisaatioService: OrganisaatioService)
+class ToteutusService(sqsInTransactionService: SqsInTransactionService,
+                      val s3ImageService: S3ImageService,
+                      auditLog: AuditLog,
+                      keywordService: KeywordService,
+                      val organisaatioService: OrganisaatioService,
+                      koulutusService: KoulutusService)
   extends ValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
@@ -32,13 +37,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     authorizeGet(toteutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
   }
 
-  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid =
+  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
     authorizePut(toteutus) { t =>
       withValidation(t, None) { t =>
         validateKoulutusIntegrity(t)
-        doPut(t)
+        doPut(t, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
       }
     }.oid.get
+  }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
@@ -46,7 +52,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       withValidation(t, Some(oldToteutus)) { t =>
         validateKoulutusIntegrity(t)
-        doUpdate(t, notModifiedSince, oldToteutus)
+        doUpdate(t, notModifiedSince, oldToteutus, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
       }
     }
   }.nonEmpty
@@ -79,6 +85,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
   }
 
+  private def getTarjoajienOppilaitokset(toteutus:Toteutus): Set[OrganisaatioOid] =
+    toteutus.tarjoajat.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten.toSet
+
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
@@ -95,16 +104,19 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     ))
   }
 
-  private def doPut(toteutus: Toteutus)(implicit authenticated: Authenticated): Toteutus =
+  private def doPut(toteutus: Toteutus, koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])])(implicit authenticated: Authenticated): Toteutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
+        (oldK, k)  <- koulutusAddTarjoajaActions
         (teema, t) <- checkAndMaybeClearTeemakuva(toteutus)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getPutActions(t)
         t          <- maybeCopyTeemakuva(teema, t)
         t          <- teema.map(_ => ToteutusDAO.updateJustToteutus(t)).getOrElse(DBIO.successful(t))
+        _          <- koulutusService.index(k)
         _          <- index(Some(t))
+        _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logCreate(t)
       } yield (teema, t)
     }.map { case (teema, t) =>
@@ -112,15 +124,18 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
       t
     }.get
 
-  private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus)(implicit authenticated: Authenticated): Option[Toteutus] =
+  private def doUpdate(toteutus: Toteutus, notModifiedSince: Instant, before: Toteutus, koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])])(implicit authenticated: Authenticated): Option[Toteutus] =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
+        (oldK, k)  <- koulutusAddTarjoajaActions
         (teema, t) <- checkAndMaybeCopyTeemakuva(toteutus)
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getUpdateActions(t)
+        _          <- koulutusService.index(k)
         _          <- index(t)
+        _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logUpdate(before, t)
       } yield (teema, t)
     }.map { case (teema, t) =>

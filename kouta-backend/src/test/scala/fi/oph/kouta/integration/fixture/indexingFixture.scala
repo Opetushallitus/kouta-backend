@@ -30,11 +30,12 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
 }
 
 trait ToteutusFixtureWithIndexing extends ToteutusFixture {
-  this: KoutaIntegrationSpec with AccessControlSpec =>
+  this: KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture =>
 
   override def toteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog, new KeywordService(auditLog, organisaatioService), organisaatioService)
+    new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
+      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService)
   }
 }
 
