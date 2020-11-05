@@ -303,6 +303,12 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "not list public sorakuvaus with different koulutustyyppi" in {
     list(SorakuvausPath, Map("organisaatioOid" -> YoOid.s), List(), readSessions(YoOid))
   }
+  it should "by default list arkistoidut also" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2))
+  }
+  it should "filter out arkistoidut if instructed" in {
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(s1))
+  }
 
   "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
