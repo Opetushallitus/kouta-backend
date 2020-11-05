@@ -161,8 +161,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
       case (None, _) => NotFound()
-      case (Some(oid), None) => Ok(valintaperusteService.list(OrganisaatioOid(oid)))
-      case (Some(oid), Some(hakuOid)) => Ok(valintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid)))
+      case (Some(oid), None) => Ok(valintaperusteService.list(OrganisaatioOid(oid), myosArkistoidut))
+      case (Some(oid), Some(hakuOid)) => Ok(valintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid), myosArkistoidut))
     }
   }
 }
