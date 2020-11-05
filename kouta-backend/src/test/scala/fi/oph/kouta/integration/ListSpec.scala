@@ -254,6 +254,12 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "not list public valintaperuste with different koulutustyyppi" in {
     list(ValintaperustePath, Map("organisaatioOid" -> YoOid.s), List(), readSessions(YoOid))
   }
+  it should "by default list arkistoidut also" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3))
+  }
+  it should "filter out arkistoidut if instructed" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(v1, v3))
+  }
 
   "Sorakuvaus list" should "list all sorakuvaukset for authorized organisations" in {
     list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2))
