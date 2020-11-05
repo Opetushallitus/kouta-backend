@@ -372,7 +372,7 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Some(200.5),
-    koulutuksenTarkkaAlkamisaika = true,
+    koulutuksenTarkkaAlkamisaika = Some(true),
     koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
     koulutuksenPaattymispaivamaara = Some(inFuture(30000)),
     lisatiedot = Seq(
