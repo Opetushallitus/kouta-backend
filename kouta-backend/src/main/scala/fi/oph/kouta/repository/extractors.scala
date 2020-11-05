@@ -329,6 +329,7 @@ trait HakutietoExtractors extends ExtractorBase {
       alkamiskausiKoodiUri = r.nextStringOption(),
       alkamisvuosi = r.nextStringOption(),
       kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
+      jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid(_)),
       hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
       hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
       hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
