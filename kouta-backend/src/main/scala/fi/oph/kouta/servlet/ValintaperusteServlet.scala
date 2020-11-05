@@ -139,7 +139,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |            type: boolean
       |          required: false
       |          default: true
-      |          description: Listataanko myös arkistoidut koulutukset
+      |          description: Listataanko myös arkistoidut valintaperusteet
       |      responses:
       |        '200':
       |          description: Ok

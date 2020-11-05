@@ -135,7 +135,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |          schema:
       |            type: boolean
       |          required: false
-      |          description: Listataanko myös arkistoidut haut
+      |          description: Listataanko myös arkistoidut toteutukset
       |          default: true
       |      responses:
       |        '200':
