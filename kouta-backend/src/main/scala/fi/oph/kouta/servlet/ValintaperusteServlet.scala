@@ -133,6 +133,13 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |          required: true
       |          description: Haku-oid
       |          example: 1.2.246.562.29.00000000000000000009
+      |        - in: query
+      |          name: myosArkistoidut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Listataanko myös arkistoidut koulutukset
       |      responses:
       |        '200':
       |          description: Ok
@@ -146,6 +153,11 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
   get("/list") {
 
     implicit val authenticated: Authenticated = authenticate()
+
+    val myosArkistoidut = params.get("myosArkistoidut") match {
+      case None => true
+      case Some(value) => value.toBoolean
+    }
 
     ( params.get("organisaatioOid"), params.get("hakuOid") ) match {
       case (None, _) => NotFound()
