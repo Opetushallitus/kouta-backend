@@ -505,7 +505,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
-                  koulutuksenTarkkaAlkamisaika: Boolean = false,
+                  koulutuksenTarkkaAlkamisaika: Option[Boolean] = None,
                   koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
                   koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
                   koulutuksenAlkamiskausi: Option[String] = None,
@@ -543,12 +543,13 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
       validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
       validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus"),
-      if (koulutuksenTarkkaAlkamisaika) {
-        assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")
-      } else and(
-        assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"),
-        assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi")
-      )
+      validateIfDefined[Boolean](koulutuksenTarkkaAlkamisaika, _ match {
+        case true  => assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")
+        case false => and(
+          assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"),
+          assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi")
+        )
+      })
     ))
   )
 

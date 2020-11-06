@@ -17,6 +17,7 @@ import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
 
 trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
+  this: KoulutusFixture =>
 
   val ToteutusPath = "/toteutus"
 
@@ -24,7 +25,8 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   def toteutusService: ToteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog, new KeywordService(auditLog, organisaatioService), organisaatioService)
+    new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
+      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService)
   }
 
   override def beforeAll(): Unit = {
