@@ -250,11 +250,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   def createArkistoidutFilterForValintaperuste(myosArkistoidut: Boolean): String = {
-    if (myosArkistoidut) {
-      ""
-    } else {
-      s"and v.tila <> '$Arkistoitu'"
-    }
+    if (myosArkistoidut) "" else s"and v.tila <> '$Arkistoitu'"
   }
 
   def selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {

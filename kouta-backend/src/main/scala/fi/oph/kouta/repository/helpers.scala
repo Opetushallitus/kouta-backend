@@ -35,11 +35,7 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]): String = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
 
   def createArkistoidutFilter(myosArkistoidut: Boolean): String = {
-    if (myosArkistoidut) {
-      ""
-    } else {
-      s"and tila <> '$Arkistoitu'"
-    }
+    if (myosArkistoidut) "" else s"and tila <> '$Arkistoitu'"
   }
 
   private def toIso(l: Option[LocalDateTime]): String = l match {
