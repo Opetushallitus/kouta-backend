@@ -275,14 +275,18 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean) = {
     sql"""#$selectKoulutusListSql
-          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})  #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
+          where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
 
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean) = {
     sql"""#$selectKoulutusListSql
-          where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${RootOrganisaatioOid} or tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
+          where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                  (organisaatio_oid <> ${RootOrganisaatioOid} or
+                   tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
 

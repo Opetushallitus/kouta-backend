@@ -244,8 +244,12 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
-          where (( v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${RootOrganisaatioOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
+          where ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                  (v.organisaatio_oid <> ${RootOrganisaatioOid} or
+                   v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              or (v.julkinen  = ${true} and
+                  v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 
@@ -257,7 +261,9 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${RootOrganisaatioOid})  #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
+          and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+               v.organisaatio_oid <> ${RootOrganisaatioOid})
+          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 
@@ -265,8 +271,12 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${RootOrganisaatioOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))) #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
+          and ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                (v.organisaatio_oid <> ${RootOrganisaatioOid} or
+                 v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          or (v.julkinen  = ${true} and
+              v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 

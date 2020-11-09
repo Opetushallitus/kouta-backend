@@ -130,14 +130,20 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid}) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
+          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                  organisaatio_oid <> ${RootOrganisaatioOid})
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
   }
 
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where (( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${RootOrganisaatioOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (julkinen  = ${true} and koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
+          where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                  (organisaatio_oid <> ${RootOrganisaatioOid} or
+                   koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          or (julkinen  = ${true} and
+              koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
   }
 
   def selectTilaAndTyyppi(sorakuvausId: UUID): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =
