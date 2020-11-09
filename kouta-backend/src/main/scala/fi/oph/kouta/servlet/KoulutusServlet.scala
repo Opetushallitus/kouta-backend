@@ -145,10 +145,9 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("myosArkistoidut")) match {
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
       case (None, _) => NotFound()
-      case (Some(oid), None) => Ok(koulutusService.list(oid, myosArkistoidut = true))
-      case (Some(oid), Some(myosArkistoidut)) => Ok(koulutusService.list(oid, myosArkistoidut.toBoolean))
+      case (Some(oid), myosArkistoidut) => Ok(koulutusService.list(oid, myosArkistoidut))
     }
   }
 

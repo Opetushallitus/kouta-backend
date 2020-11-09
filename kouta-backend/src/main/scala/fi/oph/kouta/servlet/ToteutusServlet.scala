@@ -151,12 +151,12 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val vainHakukohteeseenLiitettavat = params.get("vainHakukohteeseenLiitettavat").exists(_.toBoolean)
-
-    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("myosArkistoidut")) match {
-      case (None, _) => NotFound()
-      case (Some(oid), None) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut = true))
-      case (Some(oid), Some(myosArkistoidut)) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut.toBoolean))
+    (params.get("organisaatioOid").map(OrganisaatioOid),
+     params.get("vainHakukohteeseenLiitettavat").exists(_.toBoolean),
+     params.getOrElse("myosArkistoidut", "true").toBoolean)
+    match {
+      case (None, _, _) => NotFound()
+      case (Some(oid), vainHakukohteeseenLiitettavat, myosArkistoidut) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut))
     }
   }
 

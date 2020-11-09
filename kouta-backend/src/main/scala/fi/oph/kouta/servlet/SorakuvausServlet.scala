@@ -146,10 +146,9 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
 
     implicit val authenticated: Authenticated = authenticate()
 
-    (params.get("organisaatioOid"), params.get("myosArkistoidut")) match {
+    (params.get("organisaatioOid"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
       case (None, _) => NotFound()
-      case (Some(oid), None) => Ok(sorakuvausService.list(OrganisaatioOid(oid), myosArkistoidut = true))
-      case (Some(oid), Some(myosArkistoidut)) => Ok(sorakuvausService.list(OrganisaatioOid(oid), myosArkistoidut.toBoolean))
+      case (Some(oid), myosArkistoidut) => Ok(sorakuvausService.list(OrganisaatioOid(oid), myosArkistoidut))
     }
   }
 }
