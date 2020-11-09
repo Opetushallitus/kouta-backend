@@ -25,6 +25,16 @@ trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJson
 
 case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
 
-case class OidAndChildren(oid: OrganisaatioOid, children: List[OidAndChildren], parentOidPath: String, oppilaitostyyppi: Option[String], status: String) {
+case class OidAndChildren(oid: OrganisaatioOid,
+                          children: List[OidAndChildren],
+                          parentOidPath: String,
+                          oppilaitostyyppi: Option[String],
+                          status: String,
+                          organisaatiotyypit: List[String] = List()) {
+
   def isPassiivinen: Boolean = status.equalsIgnoreCase("PASSIIVINEN")
+
+  def isOppilaitos: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_02")
+
+  def isKoulutustoimija: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_01")
 }

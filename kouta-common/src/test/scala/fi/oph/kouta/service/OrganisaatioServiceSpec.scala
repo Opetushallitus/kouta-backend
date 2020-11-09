@@ -29,6 +29,9 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
   it should "return a flat list of oppilaitostyyppi present in parents and children 2" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo)
   }
+  it should "return a flat list of oppilaitostyyppi present in parents and children 3" in {
+    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(GrandChildOid)._2 should contain theSameElementsAs List(Amm)
+  }
   it should "return correct oppilaitostyypit for koulutustoimija when requesting only children" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk)
   }
