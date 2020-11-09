@@ -232,7 +232,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[HakuListItem]] = {
     sql"""#$selectHakuListSql
-          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) #${createArkistoidutFilter(myosArkistoidut)}""".as[HakuListItem]
+          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[HakuListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid): DBIO[Vector[HakuListItem]] = {

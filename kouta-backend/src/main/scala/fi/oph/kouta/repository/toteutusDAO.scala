@@ -284,7 +284,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           inner join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
              or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-              #${createArkistoidutFilter(myosArkistoidut)}""".as[ToteutusListItem]
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[ToteutusListItem]
   }
 
   def selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[ToteutusListItem]] = {
@@ -295,7 +295,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
                 and (((t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmTutkinnonOsa.toString}::koulutustyyppi
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi )
                      or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )
-                    #${createArkistoidutFilter(myosArkistoidut)}""".as[ToteutusListItem]
+                    #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOid(koulutusOid: KoulutusOid): DBIO[Vector[ToteutusListItem]] = {
