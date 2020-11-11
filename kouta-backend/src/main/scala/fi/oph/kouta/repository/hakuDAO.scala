@@ -17,7 +17,7 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def getUpdateActions(haku: Haku): DBIO[Option[Haku]]
 
   def get(oid: HakuOid): Option[(Haku, Instant)]
-  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem]
+  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
 }
 
@@ -51,9 +51,9 @@ object HakuDAO extends HakuDAO with HakuSQL {
       m <- selectLastModified(haku.oid.get)
     } yield optionWhen(x + y > 0)(haku.withModified(m.get))
 
-  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakuListItem] = organisaatioOids match {
+  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): Seq[HakuListItem] = organisaatioOids match {
     case Nil => Seq()
-    case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids))
+    case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids, myosArkistoidut))
   }
 
 
@@ -230,9 +230,9 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
            group by ha.oid
          ) m on m.oid = ha.oid"""
 
-  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakuListItem]] = {
+  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[HakuListItem]] = {
     sql"""#$selectHakuListSql
-          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})""".as[HakuListItem]
+          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[HakuListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid): DBIO[Vector[HakuListItem]] = {
