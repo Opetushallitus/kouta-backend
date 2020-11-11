@@ -42,9 +42,9 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
       ValintaperusteDAO.listBySorakuvausId(sorakuvausId)
     }
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+      SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
   private def doPut(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): Sorakuvaus =

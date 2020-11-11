@@ -57,8 +57,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }.nonEmpty
 
-  def list(organisaatioOid: OrganisaatioOid, vainHakukohteeseenLiitettavat: Boolean = false)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(ToteutusDAO.listByAllowedOrganisaatiot(_, vainHakukohteeseenLiitettavat))
+  def list(organisaatioOid: OrganisaatioOid, vainHakukohteeseenLiitettavat: Boolean = false, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(ToteutusDAO.listByAllowedOrganisaatiot(_, vainHakukohteeseenLiitettavat, myosArkistoidut))
 
   def listHaut(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid))
@@ -79,7 +79,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         t => t.copy(hakukohteet = listHakukohteet(t.oid, organisaatioOid).size)
       })
 
-    list(organisaatioOid).map(_.oid) match {
+    list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil          => ToteutusSearchResult()
       case toteutusOids => assocHakukohdeCounts(KoutaIndexClient.searchToteutukset(toteutusOids, params))
     }

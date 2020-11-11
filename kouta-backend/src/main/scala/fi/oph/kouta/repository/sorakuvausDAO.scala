@@ -16,7 +16,7 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getUpdateActions(sorakuvaus: Sorakuvaus): DBIO[Option[Sorakuvaus]]
 
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
-  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem]
 }
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
@@ -45,11 +45,11 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     }).get
   }
 
-  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem] =
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids))
-      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit))
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut))
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut))
     }
 
   def getTilaAndTyyppi(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi]) =
@@ -127,17 +127,23 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
              or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb)"""
   }
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[SorakuvausListItem]] = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})""".as[SorakuvausListItem]
+          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                  organisaatio_oid <> ${RootOrganisaatioOid})
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): DBIO[Vector[SorakuvausListItem]] = {
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (organisaatio_oid <> ${RootOrganisaatioOid} or koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (julkinen  = ${true} and koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))""".as[SorakuvausListItem]
+          where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                  (organisaatio_oid <> ${RootOrganisaatioOid} or
+                   koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          or (julkinen  = ${true} and
+              koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
   }
 
   def selectTilaAndTyyppi(sorakuvausId: UUID): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =

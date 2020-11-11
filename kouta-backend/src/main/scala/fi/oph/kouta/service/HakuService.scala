@@ -43,8 +43,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       }
     }.nonEmpty
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, readRules)(HakuDAO.listByAllowedOrganisaatiot)
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid, readRules)(oids => HakuDAO.listByAllowedOrganisaatiot(oids, myosArkistoidut))
 
   def listHakukohteet(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid))
@@ -67,7 +67,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         h => h.copy(hakukohteet = listHakukohteet(h.oid, organisaatioOid).size)
       })
 
-    list(organisaatioOid).map(_.oid) match {
+    list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil      => HakuSearchResult()
       case hakuOids => assocHakukohdeCounts(KoutaIndexClient.searchHaut(hakuOids, params))
     }
