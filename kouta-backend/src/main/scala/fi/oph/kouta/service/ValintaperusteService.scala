@@ -45,14 +45,14 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       }
     }.nonEmpty
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+      ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
-  def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+  def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      ValintaperusteDAO.listAllowedByOrganisaatiotAndHaunKohdejoukko(oids, koulutustyypit, hakuOid)
+      ValintaperusteDAO.listAllowedByOrganisaatiotAndHaunKohdejoukko(oids, koulutustyypit, hakuOid, myosArkistoidut)
     }
 
   def listHakukohteet(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
@@ -61,7 +61,7 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
     }
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ValintaperusteSearchResult =
-    list(organisaatioOid).map(_.id) match {
+    list(organisaatioOid, myosArkistoidut = true).map(_.id) match {
       case Nil               => ValintaperusteSearchResult()
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }
