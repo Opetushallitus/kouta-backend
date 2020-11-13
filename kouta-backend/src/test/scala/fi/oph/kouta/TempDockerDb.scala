@@ -4,9 +4,8 @@ import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
 
 import scala.annotation.tailrec
-import scala.sys.process
 
-object TempDb extends Logging {
+object TempDockerDb extends Logging {
 
   val port: Int = new PortFromSystemPropertyOrFindFree("kouta-backend.db.port").chosenPort
   val dbName = "kouta"
@@ -59,20 +58,5 @@ object TempDb extends Logging {
     case n if n < 1 => false
     case 1 => thunk()
     case n => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
-  }
-}
-
-object CommandLine {
-
-  import scala.sys.process.stringToProcess
-
-  def run(command: String): process.Process = command.run()
-
-  def runBlocking(command: String, failOnError: Boolean = true): Int = {
-    val returnValue = command.!
-    if (failOnError && returnValue != 0) {
-      throw new RuntimeException(s"Command '$command' exited with $returnValue")
-    }
-    returnValue
   }
 }
