@@ -8,13 +8,19 @@ Asenna haluamallasi tavalla koneellesi
 1. [IntelliJ IDEA](https://www.jetbrains.com/idea/) + [scala plugin](https://plugins.jetbrains.com/plugin/1347-scala)
 2. [AWS cli](https://aws.amazon.com/cli/) (SQS-jonoja varten)
 3. [Docker](https://www.docker.com/get-started) (localstackia ja postgresia varten)
-4. [Maven](https://maven.apache.org/) Jos haluat ajaa komentoriviltä Mavenia, 
+4. [Maven](https://maven.apache.org/) Jos haluat ajaa komentoriviltä Mavenia,
 mutta idean Mavenilla pärjää kyllä hyvin, joten tämä ei ole pakollinen
+5. PostgreSQL Jos haluat ajaa postgresia host-koneella
 
 Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Katso [.travis.yml](.travis.yml) mitä versioita sovellus käyttää. 
 Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10. 
 
 ### Postgresin ajaminen
+
+Tähän on kaksi vaihtoehtoa, postgresin asentaminen omalle koneelle tai kontissa ajaminen.
+Näitä vaihtoehtoja voi hallita VM-parametreilla (katso ohjeet alempaa). 
+Oletuksena postgresia ajetaan host-koneella. Postgresin asennuksen tai kontti imagen buildin 
+jälkeen ei kannasta tarvitse huolehtia sillä sovellus ja testit huoletivat kannan käynnistämisestä 
 
 Kontti-imagen luonti (tarvitsee tehdä vain kerran)
 
@@ -23,29 +29,15 @@ cd kouta-backend/postgresql/docker
 docker build --tag kouta-postgres .
 ```
 
-Kontin ajaminen
-
-Tähän on kaksi vaihtoehtoa. Jos ei haittaa että kontin sammuttamisen jälkeen 
-tietokantaan tallennetut tiedot häviävät, aja:
-
-``` shell
-docker run --rm --name kouta-database --env POSTGRES_PASSWORD=postgres -p 5432:5432 kouta-postgres
-```
-
-Jos haluat että tiedot säilyvät vaikka kontti sammutetaan, aja:
-
-``` shell
-docker volume create kouta-data # Tämä tarvitsee ajaa vain ensimmäisellä kerralla, myöhemmillä kerroilla riittää alla oleva komento
-docker run --rm --name kouta-database --env POSTGRES_PASSWORD=postgres -p 5432:5432 --volume kouta-data:/var/lib/postgresql/data kouta-postgres
-```
-
 ## Testit
 
 Testit käyttävät localstackia ja postgresia joten Docker täytyy olla asennettuna 
-ja kouta-postgres kontti käynnissä.
+ja jos haluat ajaa postgresia host-koneella, täytyy postgres olla asennettuna. 
+Kontista ajoon riittää että Docker daemon käynnissä.
 
-Testit voi ajaa ideassa avaamalla Edit Configurations valikon ja luomalla uuden Maven run configurationin jolle 
-laitetaan working directoryksi `/projektinJuuri/kouta-backend` ja Command line komennoksi `test`. Tämän jälkeen konfiguraatio ajoon.
+Testit voi ajaa ideassa Maven ikkunasta valitsemalla test kouta-backend-parentin kohdalta tai
+avaamalla Edit Configurations valikon ja luomalla uuden Maven run configurationin jolle 
+laitetaan working directoryksi projektin juurikansio ja Command line komennoksi `test`. Tämän jälkeen konfiguraatio ajoon.
 
 Yksittäisen testisuiten tai testin voi ajaa ottamalla right-click halutun testiclassin tai funktion päältä. 
 
@@ -62,9 +54,10 @@ Tähän voi tehdä korjauksen ainakin seuraavalla tavalla: lisää ko. polkuun s
 
 ## Ajaminen lokaalisti
 
-Käynnistä kouta-postgres kontti ja Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run). 
+Käynnistä Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run). 
 Avaa Ideassa ylhäältä Run Configurations valikko ja aseta EmbeddedJettyLauncherin Working directoryksi `$MODULE_DIR$`. Sovellus
-käynnistyy porttiin **8099** ja se käyttää postgres kontin kantaa. Asetuksia voi muuttaa muokkaamalla
+käynnistyy porttiin **8099** ja se käyttää valittua postgres kantaa (host tai kontti).
+Asetuksia voi muuttaa muokkaamalla
 ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
 
 EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
