@@ -32,20 +32,9 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     failsValidation(min.copy(oid = Some(HakuOid("1.2.3"))), "oid", validationMsg("1.2.3"))
   }
 
-  /*it should "pass non-julkaistu haku even if alkamisvuosi is invalid" in {
-    passesValidation(min.copy(alkamisvuosi = Some("2017")))
-    passesValidation(min.copy(alkamisvuosi = Some("20180")))
-  }*/
-
   it should "fail if julkaistu haku is invalid" in {
     failsValidation(max.copy(hakutapaKoodiUri = None), "hakutapaKoodiUri", missingMsg)
     failsValidation(max.copy(hakutapaKoodiUri = Some("korppi")), "hakutapaKoodiUri", validationMsg("korppi"))
-
-    /*failsValidation(max.copy(alkamiskausiKoodiUri = Some("tintti")), "alkamiskausiKoodiUri", validationMsg("tintti"))
-    failsValidation(max.copy(alkamiskausiKoodiUri = None, hakutapaKoodiUri = Some("hakutapa_01#1")), "alkamiskausiKoodiUri", missingMsg)
-
-    failsValidation(max.copy(alkamisvuosi = None, hakutapaKoodiUri = Some("hakutapa_01#1")), "alkamisvuosi", missingMsg)
-    failsValidation(max.copy(alkamisvuosi = Some("20180")), "alkamisvuosi", validationMsg("20180"))*/
 
     failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
     failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
@@ -85,19 +74,9 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     passesValidation(max)
   }
 
-  /*it should "return multiple error messages" in {
-    failsValidation(max.copy(hakutapaKoodiUri = Some("korppi"), alkamisvuosi = Some("02017")),
-      ("hakutapaKoodiUri", validationMsg("korppi")), ("alkamisvuosi", validationMsg("02017")))
-  }*/
-
   "Haku on julkaisu validation" should "pass a valid haku" in {
     passesOnJulkaisuValidation(max)
   }
-
-  /*it should "fail if alkamisvuosi is in the past" in {
-    passesValidation(max.copy(tila = Julkaistu, alkamisvuosi = Some("2017")))
-    failsOnJulkaisuValidation(max.copy(alkamisvuosi = Some("2017")), "alkamisvuosi", pastDateMsg("2017"))
-  }*/
 
   it should "fail if hakuajat are in the past unless jatkuva haku" in {
     passesValidation(max.copy(tila = Julkaistu, hakuajat = List(pastAjanjakso)))
@@ -135,35 +114,67 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = None), "koulutuksenAlkamiskausi", missingMsg)
   }
 
-  it should "validate koulutuksen alkamiskausi" in {
-    val alkamiskausi = KoulutuksenAlkamiskausi(
-      alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
-      koulutuksenAlkamispaivamaara = None,
-      koulutuksenPaattymispaivamaara = None,
-      koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
-      koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear.toString))
+  val alkamiskausiJaVuosi = KoulutuksenAlkamiskausi(
+    alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+    koulutuksenAlkamispaivamaara = None,
+    koulutuksenPaattymispaivamaara = None,
+    koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
+    koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear.toString))
 
-    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi)))
-    passesValidation(Tallennettu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamiskausiKoodiUri = None, koulutuksenAlkamisvuosi = None))))
-    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamiskausiKoodiUri = None))), "koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri", missingMsg)
-    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamisvuosi = None))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", missingMsg)
-    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamiskausiKoodiUri = Some("mummo")))), "koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri", validationMsg("mummo"))
-    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamisvuosi = Some("100")))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("100"))
+  it should "validate koulutuksen alkamiskausi" in {
+    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi)))
+    passesValidation(Tallennettu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamiskausiKoodiUri = None, koulutuksenAlkamisvuosi = None))))
+    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamiskausiKoodiUri = None))), "koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri", missingMsg)
+    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = None))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", missingMsg)
+    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamiskausiKoodiUri = Some("mummo")))), "koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri", validationMsg("mummo"))
+    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("100")))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("100"))
   }
 
-  it should "validate koulutuksen tarkka alkamisaika" in {
-    val alkamiskausi = KoulutuksenAlkamiskausi(
-      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
-      koulutuksenAlkamispaivamaara = Some(TestData.now()),
-      koulutuksenPaattymispaivamaara = Some(TestData.inFuture(300)),
-      koulutuksenAlkamiskausiKoodiUri = None,
-      koulutuksenAlkamisvuosi = None)
+  it should "fail if alkamisvuosi or alkamiskausi is invalid even when haku is not julkaistu" in {
+    failsValidation(Tallennettu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("20180")))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("20180"))
+    failsValidation(Tallennettu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamiskausiKoodiUri = Some("tintti_123")))), "koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri", validationMsg("tintti_123"))
+  }
 
-    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi)))
-    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenPaattymispaivamaara = None))))
-    passesValidation(Tallennettu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamispaivamaara = None, koulutuksenPaattymispaivamaara = None))))
-    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamispaivamaara = None))), "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", missingMsg)
-    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi.copy(koulutuksenAlkamispaivamaara = Some(TestData.inFuture(5000))))), "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", InvalidKoulutuspaivamaarat)
+  it should "return multiple error messages" in {
+    failsValidation(
+      Tallennettu,
+      metadata.copy( koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("20180"), koulutuksenAlkamiskausiKoodiUri = Some("tintti_123")))),
+      ("koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("20180")),
+      ("koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri", validationMsg("tintti_123")))
+  }
+
+  it should "fail if alkamisvuosi is in the past on julkaisu" in {
+    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("2017")))))
+    failsOnJulkaisuValidation(metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("2017")))), "koulutuksenAlkamiskausi.alkamisvuosi", pastDateMsg("2017"))
+  }
+
+  val alkamiskausiTarkka = KoulutuksenAlkamiskausi(
+    alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+    koulutuksenAlkamispaivamaara = Some(TestData.now()),
+    koulutuksenPaattymispaivamaara = Some(TestData.inFuture(300)),
+    koulutuksenAlkamiskausiKoodiUri = None,
+    koulutuksenAlkamisvuosi = None)
+
+  it should "validate koulutuksen tarkka alkamisaika" in {
+    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka)))
+    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenPaattymispaivamaara = None))))
+    passesValidation(Tallennettu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = None, koulutuksenPaattymispaivamaara = None))))
+    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = None))), "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", missingMsg)
+    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = Some(TestData.inFuture(5000))))), "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", InvalidKoulutuspaivamaarat)
+  }
+
+  it should "fail if tarkka alkamisaika is invalid even when haku is not julkaistu" in {
+    failsValidation(
+      Tallennettu,
+      metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = Some(TestData.inFuture(5000)), koulutuksenPaattymispaivamaara = Some( TestData.inPast(300))))),
+      "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara",
+      InvalidKoulutuspaivamaarat)
+  }
+
+  it should "fail if alkamisaika is in the past on julkaisu" in {
+    val pastDate = TestData.inPast(300)
+    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = Some(pastDate)))))
+    failsOnJulkaisuValidation(metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = Some(pastDate)))), "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(pastDate))
   }
 
   it should "validate henkilökohtainen suunnitelma" in {
