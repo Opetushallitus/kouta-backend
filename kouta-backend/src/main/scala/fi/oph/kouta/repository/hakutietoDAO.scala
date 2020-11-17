@@ -63,7 +63,9 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
 sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
 
   def selectHakujenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakutietoHaku)]] = {
-    sql"""select t.oid, h.oid, h.nimi, h.hakutapa_koodi_uri, h.alkamiskausi_koodi_uri, h.alkamisvuosi,
+    sql"""select t.oid, h.oid, h.nimi, h.hakutapa_koodi_uri,
+                 h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamiskausiKoodiUri' as alkamiskausi_koodi_uri,
+                 h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamisvuosi' as alkamisvuosi,
                  h.hakulomaketyyppi, h.hakulomake_ataru_id, h.hakulomake_kuvaus, h.hakulomake_linkki,
                  h.organisaatio_oid, h.muokkaaja, lower(h.system_time)
           from haut h

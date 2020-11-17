@@ -224,8 +224,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     HakutapaKoodiUriKey -> "hakutapa_03#1",
-    AlkamiskausiKoodiUriKey -> "kausi_k#1",
-    AlkamisvuosiKey -> thisYear,
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_02#2",
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#11",
     HakulomaketyyppiKey -> EiSähköistä.toString,
@@ -237,8 +235,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
-      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = startTime1, paattyy = Some(endTime1)))
-    )),
+      tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = startTime1, paattyy = Some(endTime1))),
+      koulutuksenAlkamiskausi = Some(
+        KoulutuksenAlkamiskausi(
+          alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+          koulutuksenAlkamiskausiKoodiUri = Some( "kausi_k#1"),
+          koulutuksenAlkamisvuosi = Some(thisYear)))))
   )
 
   val DefaultHaku: java.util.Map[String, String] = mapAsJavaMap(DefaultHakuScala)
@@ -422,8 +424,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(parseModified(params(HakukohteenLiittamisenTakarajaKey))),
       Some(parseModified(params(HakukohteenMuokkaamisenTakarajaKey))),
       params.get(AjastettuJulkaisuKey).map(parseModified),
-      Some(params(AlkamiskausiKoodiUriKey)),
-      Some(params(AlkamisvuosiKey)),
       Some(params(KohdejoukkoKoodiUriKey)),
       params.get(KohdejoukonTarkenneKoodiUriKey).flatMap(Option(_)),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
