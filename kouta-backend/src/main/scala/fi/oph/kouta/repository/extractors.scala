@@ -127,8 +127,6 @@ trait HakuExtractors extends ExtractorBase {
     hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     ajastettuJulkaisu = r.nextTimestampOption().map(_.toLocalDateTime),
-    alkamiskausiKoodiUri = r.nextStringOption(),
-    alkamisvuosi = r.nextStringOption(),
     kohdejoukkoKoodiUri = r.nextStringOption(),
     kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
