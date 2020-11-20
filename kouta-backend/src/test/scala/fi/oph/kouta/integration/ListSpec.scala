@@ -15,7 +15,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   var t1, t2, t3, t4, t5, t6, t7, t8 :ToteutusListItem = _
   var h1, h2, h3, h4                 :HakuListItem = _
   var v1, v2, v3, v4                 :ValintaperusteListItem = _
-  var s1, s2, s3, s4                     :SorakuvausListItem = _
+  var s1, s2, s3, s4                 :SorakuvausListItem = _
   var hk1, hk2, hk3, hk4             :HakukohdeListItem = _
   var o1, o2                         :OrganisaatioOid = _
   var oo1, oo2, oo3                  :OppilaitoksenOsaListItem = _
@@ -305,10 +305,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(SorakuvausPath, Map("organisaatioOid" -> YoOid.s), List(s4), readSessions(YoOid))
   }
   it should "by default list arkistoidut also" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s), List(s1, s2, s3))
   }
   it should "filter out arkistoidut if instructed" in {
-    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(s1))
+    list(SorakuvausPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(s1, s3))
   }
 
   "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {
