@@ -796,18 +796,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   }
 
   private def getAlkamiskausiInfoFromHakuMetadata(params: Map[String, String]) = {
-    params.get(MetadataKey) match {
-      case None => (None, None)
-      case Some(metadata) => {
-        Some(metadata).map(read[HakuMetadata]) match {
-          case None => (None, None)
-          case Some(hakuMetadata) => hakuMetadata.koulutuksenAlkamiskausi match {
-            case None => (None, None)
-            case Some(alkamiskausi) => (alkamiskausi.koulutuksenAlkamiskausiKoodiUri, alkamiskausi.koulutuksenAlkamisvuosi)
-          }
-        }
-      }
-    }
+    params
+      .get(MetadataKey)
+      .map(read[HakuMetadata])
+      .flatMap(_.koulutuksenAlkamiskausi)
+      .map(alkamiskausi => (alkamiskausi.koulutuksenAlkamiskausiKoodiUri, alkamiskausi.koulutuksenAlkamisvuosi))
+      .getOrElse((None, None))
   }
 
   private def hakutietoHakukohde(oid:String) = {
