@@ -13,6 +13,8 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val yo = JulkaistuYoToteutus
   val yoMetadata = YoToteutuksenMetatieto
   val min = MinToteutus
+  val ammOa = AmmOsaamisalaToteutus
+  val ammTo = AmmTutkinnonOsaToteutus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -83,6 +85,33 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   it should "return multiple error messages" in {
     failsValidation(min.copy(oid = Some(ToteutusOid("kurppa")), koulutusOid = KoulutusOid("Hannu Hanhi")),
       ("oid", validationMsg("kurppa")), ("koulutusOid", validationMsg("Hannu Hanhi")))
+  }
+
+  "Ammatillinen osaamisala toteutus validation" should "pass valid toteutus" in {
+    passesValidation(ammOa)
+    passesValidation(ammOa.copy(metadata = Some(AmmOsaamisalaToteutusMetadataHakemuspalvelu)))
+    passesValidation(ammOa.copy(metadata = Some(AmmOsaamisalaToteutusMetadataEiSahkoista)))
+  }
+
+  it should "fail if metadata is invalid with muu hakulomake" in {
+    val ammOaMetadata = ammOa.metadata.get.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata]
+
+    failsValidation(ammOa.copy(metadata = Some(ammOaMetadata.copy(hakulomakeLinkki = Map(Fi -> "url", Sv -> "http://osaaminen.fi/")))), "metadata.hakulomakeLinkki.fi", invalidUrl("url"))
+    failsValidation(ammOa.copy(metadata = Some(ammOaMetadata.copy(hakulomakeLinkki =  Map(Fi -> "http://osaaminen.fi/")))), "metadata.hakulomakeLinkki", invalidKielistetty(Seq(Sv)))
+    failsValidation(ammOa.copy(metadata = Some(ammOaMetadata.copy(lisatietoaHakeutumisesta =  Map(Fi -> "Lisätieto")))), "metadata.lisatietoaHakeutumisesta", invalidKielistetty(Seq(Sv)))
+    failsValidation(ammOa.copy(metadata = Some(ammOaMetadata.copy(lisatietoaValintaperusteista =  Map(Fi -> "Lisätieto")))), "metadata.lisatietoaValintaperusteista", invalidKielistetty(Seq(Sv)))
+
+    val invalidAjanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = Some(TestData.inFuture(9000)))
+    failsValidation(ammOa.copy(metadata = Some(ammOaMetadata.copy(hakuaika = Some(invalidAjanjakso)))), "metadata.hakuaika", invalidAjanjaksoMsg(invalidAjanjakso))
+    failsValidation(ammOa.copy(metadata = Some(ammOaMetadata.copy(hakuaika = None))), "metadata.hakuaika", missingMsg)
+
+    failsValidation(ammOa.copy(metadata = Some(ammOaMetadata.copy(hakulomaketyyppi = None))), "metadata.hakulomaketyyppi", missingMsg)
+  }
+
+  "Ammatillinen tutkinnon osa toteutus validation" should "pass valid toteutus" in {
+    passesValidation(ammTo)
+    passesValidation(ammTo.copy(metadata = Some(AmmTutkinnonOsaToteutusMetadataHakemuspalvelu)))
+    passesValidation(ammTo.copy(metadata = Some(AmmTutkinnonOsaToteutusMetadataEiSahkoista)))
   }
 }
 
@@ -196,5 +225,12 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Tallennettu, opetus.copy(suunniteltuKestoVuodet = Some(-1)), "suunniteltuKestoVuodet", notNegativeMsg)
     failsValidation(Tallennettu, opetus.copy(suunniteltuKestoKuukaudet = Some(-1)), "suunniteltuKestoKuukaudet", notNegativeMsg)
     failsValidation(Julkaistu, opetus.copy(suunniteltuKestoKuvaus = Map(Sv -> "moi")), "suunniteltuKestoKuvaus", invalidKielistetty(Seq(Fi)))
+  }
+
+  it should "not treat alkamiskausi as mandatory" in {
+    val opetusWithoutAlkamisajankohta = opetus.copy(koulutuksenTarkkaAlkamisaika = None, koulutuksenAlkamispaivamaara = None, koulutuksenPaattymispaivamaara = None, koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None)
+    passesValidation(Julkaistu, opetusWithoutAlkamisajankohta)
+    failsValidation(Julkaistu, opetusWithoutAlkamisajankohta.copy(koulutuksenTarkkaAlkamisaika = Some(true)), "koulutuksenAlkamispaivamaara", missingMsg)
+    failsValidation(Julkaistu, opetusWithoutAlkamisajankohta.copy(koulutuksenTarkkaAlkamisaika = Some(false)), ("koulutuksenAlkamisvuosi", missingMsg), ("koulutuksenAlkamiskausi", missingMsg))
   }
 }

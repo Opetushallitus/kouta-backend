@@ -401,4 +401,20 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
   }
+
+  it should "create, get and update ammatillinen osaamisala koulutus" in {
+    val ammOaKoulutus = TestData.AmmOsaamisalaKoulutus.copy(tila = Tallennettu)
+    val oid = put(ammOaKoulutus)
+    val lastModified = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    update(ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "create, get and update ammatillinen tutkinnon osa koulutus" in {
+    val ammOaKoulutus = TestData.AmmTutkinnonOsaKoulutus.copy(tila = Tallennettu)
+    val oid = put(ammOaKoulutus)
+    val lastModified = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    update(ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
 }

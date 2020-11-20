@@ -123,6 +123,13 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |          required: true
       |          description: Organisaatio-oid
       |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: myosArkistoidut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Listataanko myös arkistoidut haut
       |      responses:
       |        '200':
       |          description: Ok
@@ -137,9 +144,9 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
-      case Some(oid) => Ok(hakuService.list(oid))
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
+      case (None, _) => NotFound()
+      case (Some(oid), myosArkistoidut) => Ok(hakuService.list(oid, myosArkistoidut))
     }
   }
 

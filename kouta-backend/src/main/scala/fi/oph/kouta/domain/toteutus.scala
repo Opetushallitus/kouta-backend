@@ -1,6 +1,7 @@
 package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
+import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.validation.IsValid
@@ -51,6 +52,8 @@ package object toteutus {
       |            - $ref: '#/components/schemas/YliopistoToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeaToteutusMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaToteutusMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaToteutusMetadata'
       |          example:
       |            tyyppi: amm
       |            kuvaus:
@@ -212,6 +215,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     tarjoajat: List[OrganisaatioOid] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,
+                    sorakuvausId: Option[UUID] = None,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
@@ -225,7 +229,8 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
     validateOidList(tarjoajat, "tarjoajat"),
     validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-    validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
+    validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata")),
+    validateIfTrue(!metadata.exists(_.allowSorakuvaus), assertNotDefined(sorakuvausId, "sorakuvausId"))
   )
 
   override def validateOnJulkaisu(): IsValid =

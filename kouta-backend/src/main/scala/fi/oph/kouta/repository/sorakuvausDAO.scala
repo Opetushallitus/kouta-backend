@@ -16,7 +16,7 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getUpdateActions(sorakuvaus: Sorakuvaus): DBIO[Option[Sorakuvaus]]
 
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
-  def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem]
+  def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem]
 }
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
@@ -45,7 +45,7 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     }).get
   }
 
-  override def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi]): Seq[SorakuvausListItem] =
+  override def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem] =
     koulutustyypit match {
       case Nil => Seq()
       case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit))

@@ -1,0 +1,1 @@
+alter type koulutustyyppi add value 'amm-osaamisala';

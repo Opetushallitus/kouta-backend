@@ -123,6 +123,20 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |          required: true
       |          description: Organisaatio-oid
       |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: vainHakukohteeseenLiitettavat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Listataanko vain ne toteutukset, jotka voi liittää hakukohteeseen
+      |          default: false
+      |        - in: query
+      |          name: myosArkistoidut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Listataanko myös arkistoidut toteutukset
+      |          default: true
       |      responses:
       |        '200':
       |          description: Ok
@@ -137,9 +151,12 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
-      case Some(oid) => Ok(toteutusService.list(oid))
+    (params.get("organisaatioOid").map(OrganisaatioOid),
+     params.get("vainHakukohteeseenLiitettavat").exists(_.toBoolean),
+     params.getOrElse("myosArkistoidut", "true").toBoolean)
+    match {
+      case (None, _, _) => NotFound()
+      case (Some(oid), vainHakukohteeseenLiitettavat, myosArkistoidut) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut))
     }
   }
 

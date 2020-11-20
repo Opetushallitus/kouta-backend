@@ -52,15 +52,6 @@ package object haku {
       |          description: Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet ja koulutukset julkaistaan
       |            automaattisesti Opintopolussa, jos ne eivät vielä ole julkisia
       |          example: 2019-08-23T09:55
-      |        alkamiskausiKoodiUri:
-      |          type: string
-      |          description: Haun koulutusten alkamiskausi. Hakukohteella voi olla eri alkamiskausi kuin haulla.
-      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |          example: kausi_k#1
-      |        alkamisvuosi:
-      |          type: string
-      |          description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
-      |          example: 2020
       |        kohdejoukkoKoodiUri:
       |          type: string
       |          description: Haun kohdejoukko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukko/1)
@@ -138,6 +129,41 @@ package object haku {
       |          description: Oppijalle Opintopolussa näytettävät haun mahdolliset tulevat hakuajat
       |          items:
       |            $ref: '#/components/schemas/Ajanjakso'
+      |        koulutuksenAlkamiskausi:
+      |          type: object
+      |          description: Koulutuksen alkamiskausi
+      |          allOf:
+      |            - $ref: '#/components/schemas/KoulutuksenAlkamiskausiHaulla'
+      |""".stripMargin
+
+  val HakuKoulutuksenAlkamiskausiModel =
+    """    KoulutuksenAlkamiskausiHaulla:
+      |      type: object
+      |      properties:
+      |        alkamiskausityyppi:
+      |          type: string
+      |          description: Alkamiskauden tyyppi
+      |          enum:
+      |            - 'henkilokohtainen suunnitelma'
+      |            - 'tarkka alkamisajankohta'
+      |            - 'alkamiskausi ja -vuosi'
+      |        koulutuksenAlkamispaivamaara:
+      |          type: string
+      |          description: Koulutuksen tarkka alkamisen päivämäärä
+      |          example: 2019-11-20T12:00
+      |        koulutuksenPaattymispaivamaara:
+      |          type: string
+      |          description: Koulutuksen päättymisen päivämäärä
+      |          example: 2019-11-20T12:00
+      |        koulutuksenAlkamiskausiKoodiUri:
+      |          type: string
+      |          description: Haun koulutusten alkamiskausi. Hakukohteella voi olla eri alkamiskausi kuin haulla.
+      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
+      |          example: kausi_k#1
+      |        koulutuksenAlkamisvuosi:
+      |          type: string
+      |          description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
+      |          example: 2020
       |""".stripMargin
 
   val HakuListItemModel =
@@ -176,7 +202,7 @@ package object haku {
       |           example: 2019-08-23T09:55
       |""".stripMargin
 
-  def models = List(HakuModel, HakuMetadataModel, HakuListItemModel)
+  def models = List(HakuModel, HakuMetadataModel, HakuListItemModel, HakuKoulutuksenAlkamiskausiModel)
 }
 
 case class Haku(oid: Option[HakuOid] = None,
@@ -186,8 +212,6 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
                 hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
                 ajastettuJulkaisu: Option[LocalDateTime] = None,
-                alkamiskausiKoodiUri: Option[String] = None,
-                alkamisvuosi: Option[String] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,
                 kohdejoukonTarkenneKoodiUri: Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
@@ -207,24 +231,22 @@ case class Haku(oid: Option[HakuOid] = None,
     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
-    validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, "alkamiskausiKoodiUri")),
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
-      validateIfDefined[String](alkamisvuosi, assertMatch(_, VuosiPattern,"alkamisvuosi")),
+      assertNotOptional(metadata, "metadata"),
       assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
-      validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), and( // Yhteishaku
+      /*validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), and( // Yhteishaku
         assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri"),
         assertNotOptional(alkamisvuosi, "alkamisvuosi")
-      ))
+      ))*/
     ))
   )
 
   override def validateOnJulkaisu(): IsValid = and(
-    validateIfDefined[String](alkamisvuosi, assertAlkamisvuosiInFuture(_, "alkamisvuosi")),
     validateIfTrue(!hakutapaKoodiUri.contains("hakutapa_03#1"), and( // Not Jatkuva haku
       validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_))
     )),
@@ -249,13 +271,37 @@ case class HakuListItem(oid: HakuOid,
                         muokkaaja: UserOid,
                         modified: LocalDateTime) extends OidListItem
 
+case class KoulutuksenAlkamiskausi(alkamiskausityyppi: Option[Alkamiskausityyppi] = None,
+                                   koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
+                                   koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
+                                   koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
+                                   koulutuksenAlkamisvuosi: Option[String] = None) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
+    validateIfDefined[String](koulutuksenAlkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausiKoodiUri")),
+    validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(alkamiskausityyppi, s"$path.alkamiskausityyppi"),
+      validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.get, assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
+      validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.get, and(
+        assertNotOptional(koulutuksenAlkamiskausiKoodiUri, s"$path.koulutuksenAlkamiskausiKoodiUri"),
+        assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi"))))))
+
+  override def validateOnJulkaisu(path: String): IsValid = and(
+    validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.alkamisvuosi")),
+    validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")))
+}
+
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq()) extends ValidatableSubEntity {
+                        tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
+                        koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
-  )
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    validateIfJulkaistu(tila, and(assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"))))
 
-  override def validateOnJulkaisu(path: String): IsValid =
-    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_))
+  override def validateOnJulkaisu(path: String): IsValid = and(
+    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_)),
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")))
 }

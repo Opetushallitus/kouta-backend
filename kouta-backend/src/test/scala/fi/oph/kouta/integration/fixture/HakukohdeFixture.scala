@@ -78,7 +78,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
     val oid = put(hakukohde)
     val modified = readHakukohdeModified(oid)
     HakukohdeListItem(HakukohdeOid(oid), hakukohde.toteutusOid, hakukohde.hakuOid, hakukohde.valintaperusteId,
-      hakukohde.nimi, hakukohde.tila, hakukohde.organisaatioOid, hakukohde.muokkaaja, modified)
+      hakukohde.nimi, hakukohde.tila, hakukohde.jarjestyspaikkaOid, hakukohde.organisaatioOid, hakukohde.muokkaaja, modified)
   }
 
   def readHakukohdeModified(oid: String): LocalDateTime = readHakukohdeModified(HakukohdeOid(oid))
