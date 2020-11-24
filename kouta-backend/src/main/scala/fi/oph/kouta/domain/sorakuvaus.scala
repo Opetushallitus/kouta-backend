@@ -65,7 +65,7 @@ package object sorakuvaus {
       |                type: string
       |                example:
       |                  - koulutus_371101#1
-      |            koulutusalaKoodiUrit:
+      |            koulutusalaKoodiUri:
       |              type: string
       |              description: Koulutusala. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso2/1)
       |              example: kansallinenkoulutusluokitus2016koulutusalataso2_054#1
@@ -147,7 +147,7 @@ case class Sorakuvaus(id: Option[UUID] = None,
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map(),
                               koulutusalaKoodiUri: Option[String],
-                              koulutusKoodiUrit: Seq[String]) extends ValidatableSubEntity {
+                              koulutusKoodiUrit: Seq[String] = Seq()) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, and(
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
