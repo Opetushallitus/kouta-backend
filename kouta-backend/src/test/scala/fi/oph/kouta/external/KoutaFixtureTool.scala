@@ -176,7 +176,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val startTime1 = testDate("09:49", 1)
   val endTime1 = testDate("09:58", 1)
   val time3 = testDate("09:58", 3)
-  val thisYear = LocalDate.now().getYear.toString
+  val thisYear = "2020"
 
   val ammTutkinnonOsaKoulutusMetadata = write(TestData.AmmTutkinnonOsaKoulutus.metadata)
   val ammOsaamisalaKoulutusMetadata = write(TestData.AmmOsaamisalaKoulutus.metadata)
@@ -795,18 +795,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   }
 
   private def getAlkamiskausiInfoFromHakuMetadata(params: Map[String, String]) = {
-    params.get(MetadataKey) match {
-      case None => (None, None)
-      case Some(metadata) => {
-        Some(metadata).map(read[HakuMetadata]) match {
-          case None => (None, None)
-          case Some(hakuMetadata) => hakuMetadata.koulutuksenAlkamiskausi match {
-            case None => (None, None)
-            case Some(alkamiskausi) => (alkamiskausi.koulutuksenAlkamiskausiKoodiUri, alkamiskausi.koulutuksenAlkamisvuosi)
-          }
-        }
-      }
-    }
+    params
+      .get(MetadataKey)
+      .map(read[HakuMetadata])
+      .flatMap(_.koulutuksenAlkamiskausi)
+      .map(alkamiskausi => (alkamiskausi.koulutuksenAlkamiskausiKoodiUri, alkamiskausi.koulutuksenAlkamisvuosi))
+      .getOrElse((None, None))
   }
 
   private def hakutietoHakukohde(oid:String) = {
