@@ -57,23 +57,30 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
         hakuMap.getOrElse(toteutusOid, Seq()))
     }}
   }
-
 }
 
 sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
 
   def selectHakujenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakutietoHaku)]] = {
-    sql"""select t.oid, h.oid, h.nimi, h.hakutapa_koodi_uri,
+    sql"""select t.oid,
+                 h.oid,
+                 h.nimi,
+                 h.hakutapa_koodi_uri,
                  h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamiskausiKoodiUri' as alkamiskausi_koodi_uri,
-                 h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamisvuosi' as alkamisvuosi,
-                 h.hakulomaketyyppi, h.hakulomake_ataru_id, h.hakulomake_kuvaus, h.hakulomake_linkki,
-                 h.organisaatio_oid, h.muokkaaja, lower(h.system_time)
+                 h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamisvuosi'         as alkamisvuosi,
+                 h.hakulomaketyyppi,
+                 h.hakulomake_ataru_id,
+                 h.hakulomake_kuvaus,
+                 h.hakulomake_linkki,
+                 h.organisaatio_oid,
+                 h.muokkaaja,
+                 lower(h.system_time)
           from haut h
-          inner join hakukohteet k on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
-          inner join toteutukset t on t.oid = k.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
-          inner join koulutukset o on o.oid = t.koulutus_oid and o.tila = 'julkaistu'::julkaisutila
+                   inner join hakukohteet k on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
+                   inner join toteutukset t on t.oid = k.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
+                   inner join koulutukset o on o.oid = t.koulutus_oid and o.tila = 'julkaistu'::julkaisutila
           where o.oid = ${koulutusOid.toString}
-          and h.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakutietoHaku)]
+            and h.tila = 'julkaistu'::julkaisutila;""".as[(ToteutusOid, HakutietoHaku)]
   }
 
   def selectHakujenHakuajat(hakutiedot: Seq[(ToteutusOid, HakutietoHaku)]): DBIO[Vector[Hakuaika]] = {
