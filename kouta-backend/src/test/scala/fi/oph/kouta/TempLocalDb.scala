@@ -10,9 +10,10 @@ object TempLocalDb extends Logging {
 
   import java.io.File
   import java.nio.file.Files
+  import org.apache.commons.io.FileUtils
 
   import CommandLine._
-  import org.apache.commons.io.FileUtils
+  import TempDbUtils.tryTimes
 
   val dataDirectoryName = s"kouta-temp-db/$port"
   val dataDirectoryFile = new File(dataDirectoryName)
@@ -79,14 +80,20 @@ object TempLocalDb extends Logging {
     if(pidFile.canRead) Some(FileUtils.readFileToString(pidFile, "UTF-8").split("\n")(0).toInt) else None
   }
 
-  private def tryTimes(times: Int, sleep: Int)(thunk: () => Boolean): Boolean = times match {
+  private val isAcceptingConnections: () => Boolean = () => {
+    runBlocking(s"pg_isready -q -t 1 -h localhost -p $port -d $dbName", failOnError = false) == 0
+  }
+}
+
+object TempDbUtils {
+
+  import scala.annotation.tailrec
+
+  @tailrec
+  def tryTimes(times: Int, sleep: Int)(thunk: () => Boolean): Boolean = times match {
     case n if n < 1 => false
     case 1 => thunk()
     case n => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
-  }
-
-  private val isAcceptingConnections: () => Boolean = () => {
-    runBlocking(s"pg_isready -q -t 1 -h localhost -p $port -d $dbName", failOnError = false) == 0
   }
 }
 

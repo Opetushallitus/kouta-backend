@@ -3,8 +3,6 @@ package fi.oph.kouta
 import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
 
-import scala.annotation.tailrec
-
 object TempDockerDb extends Logging {
 
   val port: Int = new PortFromSystemPropertyOrFindFree("kouta-backend.db.port").chosenPort
@@ -13,6 +11,7 @@ object TempDockerDb extends Logging {
 
   import java.io.File
 
+  import TempDbUtils.tryTimes
   import CommandLine._
 
   val dataDirectoryName = s"kouta-temp-db/$port"
@@ -51,12 +50,5 @@ object TempDockerDb extends Logging {
     if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(databaseIsRunning)) {
       throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
     }
-  }
-
-  @tailrec
-  private def tryTimes(times: Int, sleep: Int)(thunk: () => Boolean): Boolean = times match {
-    case n if n < 1 => false
-    case 1 => thunk()
-    case n => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
   }
 }
