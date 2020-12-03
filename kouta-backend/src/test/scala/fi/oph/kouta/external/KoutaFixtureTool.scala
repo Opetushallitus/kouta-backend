@@ -176,7 +176,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val startTime1 = testDate("09:49", 1)
   val endTime1 = testDate("09:58", 1)
   val time3 = testDate("09:58", 3)
-  val thisYear = LocalDate.now().getYear.toString
+  val thisYear = "2020"
 
   val ammTutkinnonOsaKoulutusMetadata = write(TestData.AmmTutkinnonOsaKoulutus.metadata)
   val ammOsaamisalaKoulutusMetadata = write(TestData.AmmOsaamisalaKoulutus.metadata)
@@ -775,12 +775,14 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   private def hakutietoHaku(oid:String) = {
     val params = haut(oid)
     val kielivalinta = toKielivalinta(params)
+    val (alkamiskausiKoodiUri, alkamisvuosi) = getAlkamiskausiInfoFromHakuMetadata(params)
+
     HakutietoHaku(
       HakuOid(oid),
       toKielistetty(kielivalinta, params(NimiKey)),
       Some(params(HakutapaKoodiUriKey)),
-      Some(params(AlkamiskausiKoodiUriKey)),
-      Some(params(AlkamisvuosiKey)),
+      alkamiskausiKoodiUri,
+      alkamisvuosi,
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
@@ -793,6 +795,15 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  private def getAlkamiskausiInfoFromHakuMetadata(params: Map[String, String]) = {
+    params
+      .get(MetadataKey)
+      .map(read[HakuMetadata])
+      .flatMap(_.koulutuksenAlkamiskausi)
+      .map(alkamiskausi => (alkamiskausi.koulutuksenAlkamiskausiKoodiUri, alkamiskausi.koulutuksenAlkamisvuosi))
+      .getOrElse((None, None))
+  }
+
   private def hakutietoHakukohde(oid:String) = {
     val params = hakukohteet(oid)
     val kielivalinta = toKielivalinta(params)
@@ -803,6 +814,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(AlkamiskausiKoodiUriKey)),
       Some(params(AlkamisvuosiKey)),
       params.get(KaytetaanHaunAlkamiskauttaKey).map(_.toBoolean),
+      Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
