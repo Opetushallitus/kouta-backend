@@ -165,6 +165,7 @@ object TestData {
       tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
       koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
         alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+        henkilokohtaisenSuunnitelmanLisatiedot = Map(Fi -> "Jotakin lisätietoa", Sv -> "Jotakin lisätietoa sv"),
         koulutuksenAlkamispaivamaara = None,
         koulutuksenPaattymispaivamaara = None,
         koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),

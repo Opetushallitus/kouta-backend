@@ -272,6 +272,7 @@ case class HakuListItem(oid: HakuOid,
                         modified: LocalDateTime) extends OidListItem
 
 case class KoulutuksenAlkamiskausi(alkamiskausityyppi: Option[Alkamiskausityyppi] = None,
+                                   henkilokohtaisenSuunnitelmanLisatiedot: Kielistetty = Map(),
                                    koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
                                    koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
                                    koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
