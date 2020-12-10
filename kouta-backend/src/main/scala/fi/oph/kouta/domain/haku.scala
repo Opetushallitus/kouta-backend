@@ -291,7 +291,9 @@ case class KoulutuksenAlkamiskausi(alkamiskausityyppi: Option[Alkamiskausityyppi
       validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.get, assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
       validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.get, and(
         assertNotOptional(koulutuksenAlkamiskausiKoodiUri, s"$path.koulutuksenAlkamiskausiKoodiUri"),
-        assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi"))))))
+        assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi"))),
+      validateOptionalKielistetty(kielivalinta, henkilokohtaisenSuunnitelmanLisatiedot, s"$path.henkilokohtaisenSuunnitelmanLisatiedot")
+    )))
 
   override def validateOnJulkaisu(path: String): IsValid = and(
     validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.alkamisvuosi")),
