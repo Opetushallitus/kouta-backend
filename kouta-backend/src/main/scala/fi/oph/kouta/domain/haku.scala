@@ -164,6 +164,11 @@ package object haku {
       |          type: string
       |          description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
       |          example: 2020
+      |        henkilokohtaisenSuunnitelmanLisatiedot:
+      |          type: object
+      |          description: Lisätietoa koulutuksen alkamisesta henkilökohtaisen suunnitelman mukaan eri kielillä. Kielet on määritetty haun kielivalinnassa.
+      |          allOf:
+      |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val HakuListItemModel =
