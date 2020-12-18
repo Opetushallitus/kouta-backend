@@ -221,7 +221,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 metadata: Option[HakuMetadata] = None,
                 organisaatioOid: OrganisaatioOid,
                 hakuajat: List[Ajanjakso] = List(),
-                muokkaaja: UserOid,
+                muokkaaja: Option[UserOid],
                 kielivalinta: Seq[Kieli] = Seq(),
                 modified: Option[LocalDateTime])
   extends PerustiedotWithOid[HakuOid, Haku] {
@@ -260,7 +260,7 @@ case class Haku(oid: Option[HakuOid] = None,
 
   override def withModified(modified: LocalDateTime): Haku = copy(modified = Some(modified))
 
-  def withMuokkaaja(oid: UserOid): Haku = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): Haku = this.copy(muokkaaja = Some(oid))
 
 }
 

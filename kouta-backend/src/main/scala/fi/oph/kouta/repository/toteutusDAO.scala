@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Hakulomaketyyppi, Toteutus, ToteutusListItem}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
 import slick.dbio.DBIO
@@ -60,7 +60,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
-    val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
+    val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja.get)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
       DBIOHelpers.sumIntDBIOs(actions)

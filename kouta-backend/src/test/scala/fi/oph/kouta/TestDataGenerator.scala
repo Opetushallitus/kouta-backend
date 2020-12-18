@@ -110,7 +110,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       julkinen = (i % 4 == 0),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = List(organisaatioOid(i)),
-      muokkaaja = userOid
+      muokkaaja = Some(userOid)
     )
     case _ => YoKoulutus.copy(
       nimi = koulutusNimi(i),
@@ -118,7 +118,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       julkinen = (i % 4 == 0),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = List(organisaatioOid(i)),
-      muokkaaja = userOid
+      muokkaaja = Some(userOid)
     )
   }
 
@@ -136,7 +136,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       koulutusOid = KoulutusOid(koulutusOid),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = getTarjoajat(i),
-      muokkaaja = userOid,
+      muokkaaja = Some(userOid),
       metadata = Some(updateAsiasanat(JulkaistuAmmToteutus.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata])))
     case 1 => JulkaistuYoToteutus.copy(
       nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
@@ -144,7 +144,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       koulutusOid = KoulutusOid(koulutusOid),
       organisaatioOid = organisaatioOid(i),
       tarjoajat = getTarjoajat(i),
-      muokkaaja = userOid)
+      muokkaaja = Some(userOid))
   }
 
   def haku(i: Int) = JulkaistuHaku.copy(

@@ -72,7 +72,7 @@ trait KoulutusExtractors extends ExtractorBase {
     nimi = extractKielistetty(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[KoulutusMetadata]),
     julkinen = r.nextBoolean(),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
@@ -98,7 +98,7 @@ trait ToteutusExtractors extends ExtractorBase {
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[ToteutusMetadata]),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
@@ -136,7 +136,7 @@ trait HakuExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[HakuMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     hakuajat = List(),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
@@ -164,7 +164,7 @@ trait ValintaperusteExtractors extends ExtractorBase {
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
     sorakuvausId = r.nextStringOption().map(UUID.fromString),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
@@ -189,7 +189,7 @@ trait SorakuvausExtractors extends ExtractorBase {
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[SorakuvausMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
   ))
 
@@ -233,7 +233,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
     metadata = r.nextStringOption().map(read[HakukohdeMetadata]),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
@@ -269,7 +269,7 @@ trait OppilaitosExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     teemakuva = r.nextStringOption(),
     logo = r.nextStringOption(),
@@ -284,7 +284,7 @@ trait OppilaitoksenOsaExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
-    muokkaaja = UserOid(r.nextString()),
+    muokkaaja = Some(UserOid(r.nextString())),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     teemakuva = r.nextStringOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))

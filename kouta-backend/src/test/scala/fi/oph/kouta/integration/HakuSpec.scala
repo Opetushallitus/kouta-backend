@@ -79,8 +79,8 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(haku.copy(muokkaaja = UserOid("random")))
-    get(oid, haku(oid).copy(muokkaaja = testUser.oid))
+    val oid = put(haku.copy(muokkaaja = Some(UserOid("random"))))
+    get(oid, haku(oid).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "write create haku to audit log" in {
@@ -164,9 +164,9 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   it should "read muokkaaja from the session" in {
     val oid = put(haku, crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(oid, haku(oid).copy(muokkaaja = userOid))
-    update(haku(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, haku(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
+    val lastModified = get(oid, haku(oid).copy(muokkaaja = Some(userOid)))
+    update(haku(oid, Arkistoitu).copy(muokkaaja = Some(userOid)), lastModified)
+    get(oid, haku(oid, Arkistoitu).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "write haku update to audit log" in {
@@ -273,7 +273,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "haku"))
+    val unfinishedHaku = Haku(muokkaaja = Some(TestUserOid), organisaatioOid = LonelyOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "haku"))
     val oid = put(unfinishedHaku)
     val lastModified = get(oid, unfinishedHaku.copy(oid = Some(HakuOid(oid))))
     val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = AmmOid)

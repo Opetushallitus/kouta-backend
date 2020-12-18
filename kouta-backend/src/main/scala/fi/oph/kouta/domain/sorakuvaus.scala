@@ -123,7 +123,7 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       kielivalinta: Seq[Kieli] = Seq(),
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
-                      muokkaaja: UserOid,
+                      muokkaaja: Option[UserOid],
                       modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableMaybeJulkinen[Sorakuvaus] {
   override def validate(): IsValid = and(
     super.validate(),
@@ -135,7 +135,7 @@ case class Sorakuvaus(id: Option[UUID] = None,
 
   override def withId(id: UUID): Sorakuvaus = copy(id = Some(id))
 
-  def withMuokkaaja(oid: UserOid): Sorakuvaus = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): Sorakuvaus = this.copy(muokkaaja = Some(oid))
 }
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map()) extends ValidatableSubEntity {

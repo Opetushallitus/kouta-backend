@@ -331,7 +331,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      valintakokeet: Seq[Valintakoe] = Seq(),
                      hakuajat: Seq[Ajanjakso] = Seq(),
                      metadata: Option[HakukohdeMetadata] = None, //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
-                     muokkaaja: UserOid,
+                     muokkaaja: Option[UserOid],
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
                      modified: Option[LocalDateTime]) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
@@ -382,7 +382,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 
   override def withModified(modified: LocalDateTime): Hakukohde = copy(modified = Some(modified))
 
-  def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = Some(oid))
 }
 
 case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map()) extends ValidatableSubEntity {

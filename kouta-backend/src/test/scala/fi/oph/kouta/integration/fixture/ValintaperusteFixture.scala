@@ -80,7 +80,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
     val id = put(valintaperuste)
     val modified = readValintaperusteModified(id)
     ValintaperusteListItem(id, valintaperuste.nimi, valintaperuste.tila,
-      valintaperuste.organisaatioOid, valintaperuste.muokkaaja, modified)
+      valintaperuste.organisaatioOid, valintaperuste.muokkaaja.get, modified)
   }
 
   def readValintaperusteModified(id: String): LocalDateTime = readValintaperusteModified(UUID.fromString(id))

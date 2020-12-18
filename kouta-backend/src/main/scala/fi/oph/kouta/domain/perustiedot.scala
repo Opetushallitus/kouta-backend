@@ -11,7 +11,7 @@ import fi.oph.kouta.validation.{IsValid, Validatable}
 sealed trait Perustiedot[ID, T] extends Validatable with AuthorizableEntity[T] with HasPrimaryId[ID, T] with HasModified[T] with HasMuokkaaja[T] {
   val tila: Julkaisutila
   val nimi: Kielistetty
-  val muokkaaja: UserOid
+  val muokkaaja: Option[UserOid]
   val kielivalinta: Seq[Kieli]
   val organisaatioOid: OrganisaatioOid
   val modified: Option[LocalDateTime]

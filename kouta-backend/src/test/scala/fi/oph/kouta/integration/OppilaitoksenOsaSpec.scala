@@ -74,8 +74,8 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(oppilaitoksenOsa(oppilaitosOid).copy(muokkaaja = UserOid("random")))
-    get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = testUser.oid))
+    val oid = put(oppilaitoksenOsa(oppilaitosOid).copy(muokkaaja = Some(UserOid("random"))))
+    get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "fail to store oppilaitoksen osa if oppilaitos doesn't exist" in {
@@ -165,9 +165,9 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "read muokkaaja from the session" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid), crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = userOid))
-    update(oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = testUser.oid))
+    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = Some(userOid)))
+    update(oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = Some(userOid)), lastModified)
+    get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "fail to update oppilaitoksen osa if oppilaitos doesn't exist" in {

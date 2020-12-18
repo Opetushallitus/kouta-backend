@@ -270,7 +270,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       metadata: Option[OppilaitosMetadata] = None,
                       kielivalinta: Seq[Kieli] = Seq(),
                       organisaatioOid: OrganisaatioOid,
-                      muokkaaja: UserOid,
+                      muokkaaja: Option[UserOid],
                       teemakuva: Option[String] = None,
                       logo: Option[String] = None,
                       modified: Option[LocalDateTime] = None)
@@ -298,7 +298,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
 
   override def withModified(modified: LocalDateTime): Oppilaitos = copy(modified = Some(modified))
 
-  def withMuokkaaja(oid: UserOid): Oppilaitos = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): Oppilaitos = this.copy(muokkaaja = Some(oid))
 }
 
 case class OppilaitoksenOsa(oid: OrganisaatioOid,
@@ -307,7 +307,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             metadata: Option[OppilaitoksenOsaMetadata] = None,
                             kielivalinta: Seq[Kieli] = Seq(),
                             organisaatioOid: OrganisaatioOid,
-                            muokkaaja: UserOid,
+                            muokkaaja: Option[UserOid],
                             teemakuva: Option[String] = None,
                             modified: Option[LocalDateTime] = None)
   extends Validatable
@@ -334,7 +334,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
 
   override def withModified(modified: LocalDateTime): OppilaitoksenOsa = copy(modified = Some(modified))
 
-  def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = Some(oid))
 }
 
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),

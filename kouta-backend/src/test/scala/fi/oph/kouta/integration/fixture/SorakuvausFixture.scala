@@ -51,7 +51,7 @@ trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val id = put(sorakuvaus)
     val modified = readSorakuvausModified(id)
     SorakuvausListItem(id, sorakuvaus.nimi, sorakuvaus.tila,
-      sorakuvaus.organisaatioOid, sorakuvaus.muokkaaja, modified)
+      sorakuvaus.organisaatioOid, sorakuvaus.muokkaaja.get, modified)
   }
 
   def readSorakuvausModified(id: String): LocalDateTime = readSorakuvausModified(UUID.fromString(id))

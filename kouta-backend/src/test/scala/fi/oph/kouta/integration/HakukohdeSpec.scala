@@ -10,7 +10,6 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{ValidationError, Validations}
 import fi.oph.kouta.{TestData, TestOids}
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
@@ -94,8 +93,8 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(uusiHakukohde.copy(muokkaaja = UserOid("random")))
-    get(oid, tallennettuHakukohde(oid).copy(muokkaaja = testUser.oid))
+    val oid = put(uusiHakukohde.copy(muokkaaja = Some(UserOid("random"))))
+    get(oid, tallennettuHakukohde(oid).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "fail to store hakukohde if the toteutus does not exist" in {
@@ -223,10 +222,10 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   it should "read muokkaaja from the session" in {
     val oid = put(uusiHakukohde, crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(oid, tallennettuHakukohde(oid).copy(muokkaaja = userOid))
-    val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu, muokkaaja = userOid)
+    val lastModified = get(oid, tallennettuHakukohde(oid).copy(muokkaaja = Some(userOid)))
+    val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu, muokkaaja = Some(userOid))
     update(updatedHakukohde, lastModified)
-    get(oid, updatedHakukohde.copy(muokkaaja = testUser.oid))
+    get(oid, updatedHakukohde.copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "fail to update hakukohde if the toteutus does not exist" in {
@@ -412,7 +411,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "store and update unfinished hakukohde" in {
-    val unfinishedHakukohde = Hakukohde(muokkaaja = TestUserOid, toteutusOid = ToteutusOid(toteutusOid),
+    val unfinishedHakukohde = Hakukohde(muokkaaja = Some(TestUserOid), toteutusOid = ToteutusOid(toteutusOid),
       hakuOid = HakuOid(hakuOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "hakukohde"))
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid))))

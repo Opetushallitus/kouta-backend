@@ -65,8 +65,8 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(oppilaitos.copy(muokkaaja = UserOid("random")))
-    get(oid, oppilaitos(oid).copy(muokkaaja = testUser.oid))
+    val oid = put(oppilaitos.copy(muokkaaja = Some(UserOid("random"))))
+    get(oid, oppilaitos(oid).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "write create oppilaitos to audit log" in {
@@ -159,9 +159,9 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   it should "read muokkaaja from the session" in {
     val oid = put(oppilaitos, crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(oid, oppilaitos(oid).copy(muokkaaja = userOid))
-    update(oppilaitos(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, oppilaitos(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
+    val lastModified = get(oid, oppilaitos(oid).copy(muokkaaja = Some(userOid)))
+    update(oppilaitos(oid, Arkistoitu).copy(muokkaaja = Some(userOid)), lastModified)
+    get(oid, oppilaitos(oid, Arkistoitu).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "write oppilaitos update to audit log" in {

@@ -74,7 +74,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val oid = put(toteutus)
     val modified = readToteutusModified(oid)
     new ToteutusListItem(ToteutusOid(oid), toteutus.koulutusOid, toteutus.nimi, toteutus.tila,
-      toteutus.tarjoajat, toteutus.organisaatioOid, toteutus.muokkaaja, modified)
+      toteutus.tarjoajat, toteutus.organisaatioOid, toteutus.muokkaaja.get, modified)
   }
 
   def readToteutusModified(oid: String): LocalDateTime = readToteutusModified(ToteutusOid(oid))

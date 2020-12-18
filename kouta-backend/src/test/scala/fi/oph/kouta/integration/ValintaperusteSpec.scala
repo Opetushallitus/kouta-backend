@@ -90,8 +90,8 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   it should "read muokkaaja from the session" in {
     val sorakuvausId = put(sorakuvaus)
-    val id = put(valintaperuste(sorakuvausId).copy(muokkaaja = UserOid("random")))
-    get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = testUser.oid))
+    val id = put(valintaperuste(sorakuvausId).copy(muokkaaja = Some(UserOid("random"))))
+    get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "fail to store valintaperuste if sorakuvaus doesn't exist" in {
@@ -191,9 +191,9 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "read muokkaaja from the session" in {
     val id = put(valintaperuste(sorakuvausId), crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = userOid))
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
-    get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
+    val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = Some(userOid)))
+    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = Some(userOid))), lastModified)
+    get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "fail to update valintaperuste if sorakuvaus doesn't exist" in {

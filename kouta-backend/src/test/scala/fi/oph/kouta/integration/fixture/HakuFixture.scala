@@ -55,7 +55,7 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
   def addToList(haku: Haku) = {
     val oid = put(haku)
     val modified = readHakuModified(oid)
-    HakuListItem(HakuOid(oid), haku.nimi, haku.tila, haku.organisaatioOid, haku.muokkaaja, modified)
+    HakuListItem(HakuOid(oid), haku.nimi, haku.tila, haku.organisaatioOid, haku.muokkaaja.get, modified)
   }
 
   def readHakuModified(oid: String): LocalDateTime = readHakuModified(HakuOid(oid))

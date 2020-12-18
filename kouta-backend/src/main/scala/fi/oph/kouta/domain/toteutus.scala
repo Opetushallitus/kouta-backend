@@ -216,7 +216,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,
                     sorakuvausId: Option[UUID] = None,
-                    muokkaaja: UserOid,
+                    muokkaaja: Option[UserOid],
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
@@ -242,7 +242,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   override def withModified(modified: LocalDateTime): Toteutus = copy(modified = Some(modified))
 
-  def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = Some(oid))
 }
 
 case class ToteutusListItem(oid: ToteutusOid,

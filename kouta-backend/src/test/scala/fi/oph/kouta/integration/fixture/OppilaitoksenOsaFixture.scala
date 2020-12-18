@@ -14,8 +14,6 @@ import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
 
-import scala.util.Random
-
 trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec  with AccessControlSpec {
 
   val OppilaitoksenOsaPath = "/oppilaitoksen-osa"
@@ -51,7 +49,7 @@ trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec  with AccessControlSp
     val oid = put(oppilaitoksenOsa)
     val modified = readOppilaitoksenOsaModified(oid)
     OppilaitoksenOsaListItem(OrganisaatioOid(oid), oppilaitoksenOsa.oppilaitosOid, oppilaitoksenOsa.tila,
-      oppilaitoksenOsa.organisaatioOid, oppilaitoksenOsa.muokkaaja, modified)
+      oppilaitoksenOsa.organisaatioOid, oppilaitoksenOsa.muokkaaja.get, modified)
   }
 
   def readOppilaitoksenOsaModified(oid: String): LocalDateTime = readOppilaitoksenOsaModified(OrganisaatioOid(oid))

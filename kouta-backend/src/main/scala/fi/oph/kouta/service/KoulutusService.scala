@@ -51,18 +51,21 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
     koulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
-        val newTarjoajat = koulutus.tarjoajat.toSet
-        val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+        val rules = oldKoulutus.koulutustyyppi match {
+          case Amm => List(AuthorizationRules(roleEntity.updateRoles))
+          case Lk  => List(AuthorizationRules(roleEntity.updateRoles))
+          case _ => {
+            val newTarjoajat = koulutus.tarjoajat.toSet
+            val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+            val updatesOnKoulutus = oldKoulutus.copy(modified=None, tarjoajat = List()) != koulutus.copy(tarjoajat = List())
+            val rulesForUpdatingKoulutus = if(updatesOnKoulutus) Some(AuthorizationRules(roleEntity.updateRoles)) else None
 
-        val updatesOnKoulutus = oldKoulutus.copy(modified=None, tarjoajat = List()) != koulutus.copy(tarjoajat = List())
-        val rulesForUpdatingKoulutus = if(updatesOnKoulutus) Some(AuthorizationRules(roleEntity.updateRoles)) else None
+            val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+            val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
 
-        val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-        val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
-
-        val rules: List[AuthorizationRules] =
-          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
-
+            (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+          }
+        }
         rules.nonEmpty && authorizeUpdate(koulutusWithInstant, koulutus, rules) { (_, k) =>
           withValidation(k, Some(oldKoulutus)) {
             doUpdate(_, notModifiedSince, oldKoulutus)

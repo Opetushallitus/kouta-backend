@@ -75,7 +75,7 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
   def addToList(koulutus:Koulutus) = {
     val oid = put(koulutus)
     val modified = readKoulutusModified(oid)
-    new KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
+    new KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja.get, modified)
   }
 
   def readKoulutusModified(oid: String): LocalDateTime = readKoulutusModified(KoulutusOid(oid))

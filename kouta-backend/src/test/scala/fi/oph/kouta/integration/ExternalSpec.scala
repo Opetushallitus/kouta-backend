@@ -42,7 +42,7 @@ class ExternalSpec extends KoutaIntegrationSpec with AccessControlSpec with Haku
     val authentication = authenticated(personOid = userOid)
     val request = ExternalHakuRequest(authentication, haku)
     val oid = put(request, externalSession)
-    get(oid, haku(oid).copy(muokkaaja = userOid))
+    get(oid, haku(oid).copy(muokkaaja = Some(userOid)))
   }
 
   it should "deny a user with the wrong role" in {
@@ -96,7 +96,7 @@ class ExternalSpec extends KoutaIntegrationSpec with AccessControlSpec with Haku
 
     val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
     update(request, lastModified, externalSession)
-    get(oid, haku(oid, Tallennettu).copy(muokkaaja = userOid))
+    get(oid, haku(oid, Tallennettu).copy(muokkaaja = Some(userOid)))
   }
 
   it should "deny a user with the wrong role" in {

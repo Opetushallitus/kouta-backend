@@ -81,8 +81,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(toteutus(koulutusOid).copy(muokkaaja = UserOid("random")))
-    get(oid, toteutus(oid, koulutusOid).copy(muokkaaja = testUser.oid))
+    val oid = put(toteutus(koulutusOid).copy(muokkaaja = Some(UserOid("random"))))
+    get(oid, toteutus(oid, koulutusOid).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "store korkeakoulutus toteutus" in {
@@ -97,7 +97,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
     val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     val oid = put(newToteutus, session)
-    get(oid, newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session)))
+    get(oid, newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = Some(userOidForTestSessionId(session))))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid)))
   }
 
@@ -224,9 +224,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "read muokkaaja from the session" in {
     val oid = put(toteutus(koulutusOid), crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(oid, toteutus(oid, koulutusOid).copy(muokkaaja = userOid))
-    update(toteutus(oid, koulutusOid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, toteutus(oid, koulutusOid, Arkistoitu).copy(muokkaaja = testUser.oid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid).copy(muokkaaja = Some(userOid)))
+    update(toteutus(oid, koulutusOid, Arkistoitu).copy(muokkaaja = Some(userOid)), lastModified)
+    get(oid, toteutus(oid, koulutusOid, Arkistoitu).copy(muokkaaja = Some(testUser.oid)))
   }
 
   it should "not update toteutus" in {
@@ -245,7 +245,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List())
     val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     val oid = put(newToteutus, session)
-    val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session))
+    val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = Some(userOidForTestSessionId(session)))
     val lastModified = get(oid, createdToteutus)
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List()))
     update(createdToteutus.copy(tarjoajat = List(GrandChildOid)), lastModified)
@@ -385,7 +385,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
+    val unfinishedToteutus = new Toteutus(muokkaaja = Some(TestUserOid), koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
     val newKoulutusOid = put(koulutus)

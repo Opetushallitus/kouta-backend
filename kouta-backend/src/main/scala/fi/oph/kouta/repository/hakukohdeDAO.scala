@@ -68,7 +68,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   private def updateHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
     if (hakuajat.nonEmpty) {
-      val actions = hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat)
+      val actions = hakuajat.map(t => insertHakuaika(oid, t, muokkaaja.get)) :+ deleteHakuajat(oid, hakuajat)
       DBIOHelpers.sumIntDBIOs(actions)
     } else {
       deleteHakuajat(oid)
@@ -76,7 +76,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   }
 
   private def updateValintakokeet(hakukohde: Hakukohde): DBIO[Int] = {
-    val (oid, valintakokeet, muokkaaja) = (hakukohde.oid, hakukohde.valintakokeet, hakukohde.muokkaaja)
+    val (oid, valintakokeet, muokkaaja) = (hakukohde.oid, hakukohde.valintakokeet, hakukohde.muokkaaja.get)
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
 
     val deleteSQL = if (update.nonEmpty) { deleteValintakokeet(oid, update.map(_.id.get)) } else { deleteValintakokeet(oid) }
@@ -87,7 +87,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   }
 
   private def updateLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
-    val (oid, liitteet, muokkaaja) = (hakukohde.oid, hakukohde.liitteet, hakukohde.muokkaaja)
+    val (oid, liitteet, muokkaaja) = (hakukohde.oid, hakukohde.liitteet, hakukohde.muokkaaja.get)
     val (insert, update) = liitteet.partition(_.id.isEmpty)
 
     val deleteSQL = if (update.nonEmpty) { deleteLiitteet(oid, update.map(_.id.get)) } else { deleteLiitteet(oid) }
@@ -347,7 +347,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def insertValintakokeet(hakukohde: Hakukohde): DBIO[Int] = {
-    val inserts = hakukohde.valintakokeet.map(k => insertValintakoe(hakukohde.oid, k.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja))
+    val inserts = hakukohde.valintakokeet.map(k => insertValintakoe(hakukohde.oid, k.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja.get))
     DBIO.sequence(inserts).map(_.sum)
   }
 
@@ -365,7 +365,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def insertLiitteet(hakukohde: Hakukohde): DBIO[Int] = {
-    val inserts = hakukohde.liitteet.map(l => insertLiite(hakukohde.oid, l.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja))
+    val inserts = hakukohde.liitteet.map(l => insertLiite(hakukohde.oid, l.copy(id = Some(UUID.randomUUID())), hakukohde.muokkaaja.get))
     DBIOHelpers.sumIntDBIOs(inserts)
   }
 

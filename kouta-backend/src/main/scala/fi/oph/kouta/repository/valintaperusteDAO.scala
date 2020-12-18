@@ -127,7 +127,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def insertValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
     val inserts = valintaperuste.valintakokeet.map(k =>
-      insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja))
+      insertValintakoe(valintaperuste.id, k.copy(id = Some(UUID.randomUUID())), valintaperuste.muokkaaja.get))
     DBIOHelpers.sumIntDBIOs(inserts)
   }
 
@@ -197,7 +197,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
-    val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
+    val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja.get)
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
 
     val deleteSQL = if (update.nonEmpty) {

@@ -168,7 +168,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     metadata: Option[KoulutusMetadata] = None,
                     julkinen: Boolean = false,
                     esikatselu: Boolean = true,
-                    muokkaaja: UserOid,
+                    muokkaaja: Option[UserOid],
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
@@ -206,7 +206,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
 
   override def withModified(modified: LocalDateTime): Koulutus = this.copy(modified = Some(modified))
 
-  def withMuokkaaja(oid: UserOid): Koulutus = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): Koulutus = this.copy(muokkaaja = Some(oid))
 }
 
 case class KoulutusListItem(oid: KoulutusOid,

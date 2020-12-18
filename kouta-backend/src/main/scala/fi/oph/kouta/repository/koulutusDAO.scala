@@ -65,7 +65,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     } yield koulutus.withModified(m.get)
 
   private def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
-    val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
+    val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja.get)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
       DBIOHelpers.sumIntDBIOs(actions)

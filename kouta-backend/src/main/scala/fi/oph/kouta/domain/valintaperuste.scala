@@ -194,7 +194,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           valintakokeet: Seq[Valintakoe] = Seq(),
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,
-                          muokkaaja: UserOid,
+                          muokkaaja: Option[UserOid],
                           kielivalinta: Seq[Kieli] = Seq(),
                           modified: Option[LocalDateTime])
   extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen[Valintaperuste] {
@@ -220,7 +220,7 @@ case class Valintaperuste(id: Option[UUID] = None,
 
   override def withModified(modified: LocalDateTime): Valintaperuste = copy(modified = Some(modified))
 
-  def withMuokkaaja(oid: UserOid): Valintaperuste = this.copy(muokkaaja = oid)
+  def withMuokkaaja(oid: UserOid): Valintaperuste = this.copy(muokkaaja = Some(oid))
 }
 
 case class ValintaperusteListItem(id: UUID,

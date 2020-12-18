@@ -382,7 +382,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case None => false
         case Some(x) => x.toBoolean
       },
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
       params.get(TeemakuvaKey),
@@ -406,7 +406,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[ToteutusMetadata]),
       None,
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
       params.get(TeemakuvaKey),
@@ -433,7 +433,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(MetadataKey).map(read[HakuMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       Some(parseModified(params(ModifiedKey)))))
   }
@@ -473,7 +473,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       List(Ajanjakso(parseModified(params(HakuaikaAlkaaKey)), Some(parseModified(params(HakuaikaPaattyyKey))))),
       params.get(MetadataKey).map(read[HakukohdeMetadata]),
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       OrganisaatioOid(params(OrganisaatioKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       Some(parseModified(params(ModifiedKey)))))
@@ -495,7 +495,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       params.get(MetadataKey).map(read[ValintaperusteMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       Some(parseModified(params(ModifiedKey)))
     ))
@@ -513,7 +513,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       params.get(MetadataKey).map(read[SorakuvausMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       Some(parseModified(params(ModifiedKey)))
     ))
   }
@@ -526,7 +526,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(MetadataKey).map(read[OppilaitosMetadata]),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       OrganisaatioOid(params(OrganisaatioKey)),
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       params.get(TeemakuvaKey),
       params.get(LogoKey),
       Some(parseModified(params(ModifiedKey)))
@@ -544,7 +544,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(MetadataKey).map(read[OppilaitoksenOsaMetadata]),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       OrganisaatioOid(params(OrganisaatioKey)),
-      UserOid(params(MuokkaajaKey)),
+      Some(UserOid(params(MuokkaajaKey))),
       params.get(TeemakuvaKey),
       Some(parseModified(params(ModifiedKey)))
     )
