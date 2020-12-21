@@ -505,7 +505,11 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
-                  koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
+                  koulutuksenTarkkaAlkamisaika: Option[Boolean] = None,
+                  koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
+                  koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
+                  koulutuksenAlkamiskausi: Option[String] = None,
+                  koulutuksenAlkamisvuosi: Option[Int] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
@@ -517,7 +521,9 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
     validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
     validateIfNonEmpty[String](opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit", assertMatch(_, OpetustapaKoodiPattern, _)),
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    validateIfDefined[String](koulutuksenAlkamiskausi, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausi")),
+    validateIfDefined[Int](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
+    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
     validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Double](stipendinMaara, assertNotNegative(_, s"$path.stipendinMaara")),
     validateIfDefined[Double](maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
@@ -536,7 +542,19 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       assertNotOptional(onkoStipendia, s"$path.onkoStipendia"),
       validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
       validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
-      validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
+      validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus"),
+      validateIfDefined[Boolean](koulutuksenTarkkaAlkamisaika, _ match {
+        case true  => assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")
+        case false => and(
+          assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"),
+          assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi")
+        )
+      })
     ))
+  )
+
+  override def validateOnJulkaisu(path: String): IsValid = and(
+    validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
+    validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")),
   )
 }
