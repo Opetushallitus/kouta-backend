@@ -420,8 +420,7 @@ package object domain {
       |        henkilokohtaisenSuunnitelmanLisatiedot:
       |          type: object
       |          description: Lisätietoa koulutuksen alkamisesta henkilökohtaisen suunnitelman mukaan eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
