@@ -185,7 +185,6 @@ trait SorakuvausExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
-    julkinen = r.nextBoolean(),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[SorakuvausMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
