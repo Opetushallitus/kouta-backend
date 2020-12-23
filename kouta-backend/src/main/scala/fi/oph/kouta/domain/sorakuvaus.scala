@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.security.AuthorizableMaybeJulkinen
+import fi.oph.kouta.security.AuthorizableByKoulutustyyppi
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
 
@@ -36,9 +36,6 @@ package object sorakuvaus {
       |            - arkistoitu
       |            - tallennettu
       |          description: SORA-kuvauksen julkaisutila. Jos SORA-kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
-      |        julkinen:
-      |          type: boolean
-      |          description: Voivatko muut oppilaitokset käyttää SORA-kuvausta
       |        kielivalinta:
       |          type: array
       |          description: Kielet, joille SORA-kuvauksen nimi, kuvailutiedot ja muut tekstit on käännetty
@@ -61,6 +58,17 @@ package object sorakuvaus {
       |              description: SORA-kuvauksen kuvausteksti eri kielillä. Kielet on määritetty kuvauksen kielivalinnassa.
       |              allOf:
       |                - $ref: '#/components/schemas/Kuvaus'
+      |            koulutusKoodiUrit:
+      |              type: array
+      |              description: Koulutuksen koodi URIt. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - koulutus_371101#1
+      |            koulutusalaKoodiUri:
+      |              type: string
+      |              description: Koulutusala. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso2/1)
+      |              example: kansallinenkoulutusluokitus2016koulutusalataso2_054#1
       |        muokkaaja:
       |          type: string
       |          description: SORA-kuvausta viimeksi muokanneen virkailijan henkilö-oid
@@ -119,12 +127,11 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       tila: Julkaisutila = Tallennettu,
                       nimi: Kielistetty = Map(),
                       koulutustyyppi: Koulutustyyppi,
-                      julkinen: Boolean = false,
                       kielivalinta: Seq[Kieli] = Seq(),
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableMaybeJulkinen[Sorakuvaus] {
+                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableByKoulutustyyppi[Sorakuvaus] {
   override def validate(): IsValid = and(
     super.validate(),
     validateIfDefined[SorakuvausMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
@@ -138,9 +145,16 @@ case class Sorakuvaus(id: Option[UUID] = None,
   def withMuokkaaja(oid: UserOid): Sorakuvaus = this.copy(muokkaaja = oid)
 }
 
-case class SorakuvausMetadata(kuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
-    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
+case class SorakuvausMetadata(kuvaus: Kielistetty = Map(),
+                              koulutusalaKoodiUri: Option[String],
+                              koulutusKoodiUrit: Seq[String] = Seq()) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+      assertNotOptional(koulutusalaKoodiUri, s"$path.koulutusalaKoodiUri")
+    )),
+    validateIfNonEmpty[String](koulutusKoodiUrit, s"$path.koulutusKoodiUrit", assertMatch(_, KoulutusKoodiPattern, _)),
+    validateIfDefined[String](koulutusalaKoodiUri, assertMatch(_, KoulutusalaKoodiPattern, s"$path.koulutusalaKoodiUri")))
 }
 
 case class SorakuvausListItem(id: UUID,
