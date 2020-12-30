@@ -46,24 +46,28 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
       withValidation(k, None)(doPut)
     }.oid.get
 
-  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val koulutusWithInstant = KoulutusDAO.get(koulutus.oid.get)
+  def update(newKoulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val oldKoulutusWithInstant = KoulutusDAO.get(newKoulutus.oid.get)
 
-    koulutusWithInstant match {
+    oldKoulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
-        val newTarjoajat = koulutus.tarjoajat.toSet
-        val oldTarjoajat = oldKoulutus.tarjoajat.toSet
-
-        val updatesOnKoulutus = oldKoulutus.copy(modified=None, tarjoajat = List()) != koulutus.copy(tarjoajat = List())
+        val updatesOnKoulutus = oldKoulutus.copy(modified=None, tarjoajat = List()) != newKoulutus.copy(tarjoajat = List())
         val rulesForUpdatingKoulutus = if(updatesOnKoulutus) Some(AuthorizationRules(roleEntity.updateRoles)) else None
+        val rules: List[AuthorizationRules] = newKoulutus.koulutustyyppi match {
+          case k: Koulutustyyppi if Koulutustyyppi.isTutkintoonJohtava(k) =>
+            rulesForUpdatingKoulutus match {
+              case Some(r) => List(r)
+              case None => List.empty
+            }
+          case _ =>
+            val newTarjoajat = newKoulutus.tarjoajat.toSet
+            val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+            val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+            val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
+            (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+        }
 
-        val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-        val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
-
-        val rules: List[AuthorizationRules] =
-          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
-
-        rules.nonEmpty && authorizeUpdate(koulutusWithInstant, koulutus, rules) { (_, k) =>
+        rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           withValidation(k, Some(oldKoulutus)) {
             doUpdate(_, notModifiedSince, oldKoulutus)
           }
