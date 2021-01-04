@@ -32,6 +32,8 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
 
   val koulutus = TestData.AmmKoulutus
   val yoKoulutus = TestData.YoKoulutus
+  val ammOsaamisalaKoulutus = TestData.AmmOsaamisalaKoulutus
+  val ammTutkinnonOsaKoulutus = TestData.AmmTutkinnonOsaKoulutus
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
   def muokkaus(k: Koulutus): Koulutus = k.copy(nimi = k.nimi.map{case (k, v) => k -> (v + v) })

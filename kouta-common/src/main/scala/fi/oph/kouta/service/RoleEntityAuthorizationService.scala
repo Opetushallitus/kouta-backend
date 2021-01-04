@@ -4,13 +4,15 @@ import java.time.Instant
 
 import fi.oph.kouta.client.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, UserOid}
-import fi.oph.kouta.security.{Authorizable, AuthorizableEntity, AuthorizableMaybeJulkinen, RoleEntity}
+import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 
 trait RoleEntityAuthorizationService[E <: AuthorizableEntity[E]] extends AuthorizationService {
   protected val roleEntity: RoleEntity
 
-  private def authorizeJulkinen(entity: AuthorizableMaybeJulkinen[E], organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
+  private def authorizeJulkinen(entity: AuthorizableMaybeJulkinen[E],
+                                organisaatioOids: Seq[OrganisaatioOid],
+                                oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
 
     def isCorrectKoulutustyyppi(): Boolean = oidsAndOppilaitostyypit._2.contains(entity.koulutustyyppi)
 
@@ -21,11 +23,29 @@ trait RoleEntityAuthorizationService[E <: AuthorizableEntity[E]] extends Authori
     }
   }
 
+  private def authorizeKoulutustyyppi(entity: AuthorizableByKoulutustyyppi[E],
+                                      organisaatioOids: Seq[OrganisaatioOid],
+                                      oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat): Boolean = {
+
+    def isCorrectKoulutustyyppi(): Boolean = oidsAndOppilaitostyypit._2.contains(entity.koulutustyyppi)
+
+    DefaultAuthorizationRule(entity, organisaatioOids, oidsAndOppilaitostyypit) match {
+      case _ => isCorrectKoulutustyyppi()
+    }
+  }
+
   val AuthorizationRuleForJulkinen: AuthorizationRule =
     (entity: Authorizable, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat) => entity match {
       case e: AuthorizableMaybeJulkinen[E] => authorizeJulkinen(e, organisaatioOids, oidsAndOppilaitostyypit)
       case _ => throw new RuntimeException("AuthorizationRuleForJulkinen kutsuttu entitylla, joka ei ole AuthorizableMaybeJulkinen")
     }
+
+  val authorizationRuleByKoulutustyyppi: AuthorizationRule =
+    (entity: Authorizable, organisaatioOids: Seq[OrganisaatioOid], oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlat) => entity match {
+      case e: AuthorizableByKoulutustyyppi[E] => authorizeKoulutustyyppi(e, organisaatioOids, oidsAndOppilaitostyypit)
+      case _ => throw new RuntimeException("authorizationRuleByKoulutustyyppi kutsuttu entitylla, joka ei ole AuthorizableByKoulutustyyppi")
+    }
+
 
   def authorizeGet(entityWithTime: Option[(E, Instant)])
                   (implicit authenticated: Authenticated): Option[(E, Instant)] =

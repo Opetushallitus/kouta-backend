@@ -109,6 +109,10 @@ package object hakutieto {
       |                    kaytetaanHaunAlkamiskautta:
       |                      type: boolean
       |                      description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
+      |                    jarjestyspaikkaOid:
+      |                      type: string
+      |                      description: Hakukohteen järjestyspaikan organisaatio
+      |                      example: 1.2.246.562.10.00101010101
       |                    hakulomaketyyppi:
       |                      type: string
       |                      description: Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta
@@ -201,6 +205,7 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               alkamiskausiKoodiUri: Option[String] = None,
                               alkamisvuosi: Option[String] = None,
                               kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
+                              jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                               hakulomakeAtaruId: Option[UUID] = None,
                               hakulomakeKuvaus: Kielistetty = Map(),

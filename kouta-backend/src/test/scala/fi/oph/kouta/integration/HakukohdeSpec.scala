@@ -133,6 +133,22 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", s"Toteutuksen ($toteutusOid) tyyppi ei vastaa valintaperusteen ($valintaperusteId) tyyppiä")
   }
 
+  it should "store tutkintoon johtamaton hakukohde if toteutus uses hakemuspalvelu" in {
+    val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
+    val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(
+      koulutusOid = KoulutusOid(koulutusOid),
+      metadata = Some(TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu))
+    val toteutusOid = put(ammToToteutus)
+    put(hakukohde(toteutusOid, hakuOid))
+  }
+
+  it should "fail to store tutkintoon johtamaton hakukohde if toteutus does not use hakemuspalvelu" in {
+    val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
+    val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
+    val toteutusOid = put(ammToToteutus)
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid), 400, "toteutusOid", s"Toteutusta ($toteutusOid) ei voi liittää hakukohteeseen")
+  }
+
   it should "write create hakukohde to audit log" in {
     MockAuditLogger.clean()
     val oid = put(uusiHakukohde.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))

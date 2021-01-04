@@ -141,7 +141,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "validate dates only when adding a new julkaistu haku" in {
-    val thisHaku = haku.copy(alkamisvuosi = Some("2017"))
+    val thisHaku = hakuWithAlkamisvuosi(haku, "2007")
 
     put(thisHaku.copy(tila = Tallennettu))
 
@@ -149,7 +149,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
+      body should equal(validationErrorBody(pastDateMsg("2007"), "metadata.koulutuksenAlkamiskausi.alkamisvuosi"))
     }
   }
 
@@ -295,7 +295,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "validate dates when moving from other states to julkaistu" in {
-    val thisHaku = haku.copy(alkamisvuosi = Some("2017"), tila = Tallennettu)
+    val thisHaku = hakuWithAlkamisvuosi(haku, "2017").copy(tila = Tallennettu)
 
     val oid = put(thisHaku)
     val thisHakuWithOid = thisHaku.copy(oid = Some(HakuOid(oid)))
@@ -305,7 +305,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
+      body should equal(validationErrorBody(pastDateMsg("2017"), "metadata.koulutuksenAlkamiskausi.alkamisvuosi"))
     }
 
     update(thisHakuWithOid.copy(tila = Arkistoitu), lastModified)
@@ -315,7 +315,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val oid = put(haku)
     val lastModified = get(oid, haku(oid))
 
-    update(haku(oid).copy(alkamisvuosi = Some("2017")), lastModified)
+    update(hakuWithAlkamisvuosi(haku(oid), "2017"), lastModified)
   }
 
 

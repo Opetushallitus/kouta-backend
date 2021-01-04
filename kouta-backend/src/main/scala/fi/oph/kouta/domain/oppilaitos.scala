@@ -338,23 +338,23 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
                               yhteystiedot: Option[Yhteystieto] = None,
                               esittely: Kielistetty = Map(),
-                              opiskelijoita: Option[Integer] = None,
-                              korkeakouluja: Option[Integer] = None,
-                              tiedekuntia: Option[Integer] = None,
-                              kampuksia: Option[Integer] = None,
-                              yksikoita: Option[Integer] = None,
-                              toimipisteita: Option[Integer] = None,
-                              akatemioita: Option[Integer] = None) extends ValidatableSubEntity {
+                              opiskelijoita: Option[Int] = None,
+                              korkeakouluja: Option[Int] = None,
+                              tiedekuntia: Option[Int] = None,
+                              kampuksia: Option[Int] = None,
+                              yksikoita: Option[Int] = None,
+                              toimipisteita: Option[Int] = None,
+                              akatemioita: Option[Int] = None) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[TietoaOpiskelusta](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Yhteystieto](yhteystiedot, _.validate(tila, kielivalinta, s"$path.yhteystiedot")),
-    validateIfDefined[Integer](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
-    validateIfDefined[Integer](korkeakouluja, assertNotNegative(_, s"$path.korkeakouluja")),
-    validateIfDefined[Integer](tiedekuntia,   assertNotNegative(_, s"$path.tiedekuntia")),
-    validateIfDefined[Integer](kampuksia,     assertNotNegative(_, s"$path.kampuksia")),
-    validateIfDefined[Integer](yksikoita,     assertNotNegative(_, s"$path.yksikoita")),
-    validateIfDefined[Integer](toimipisteita, assertNotNegative(_, s"$path.toimipisteita")),
-    validateIfDefined[Integer](akatemioita,   assertNotNegative(_, s"$path.akatemioita")),
+    validateIfDefined[Int](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
+    validateIfDefined[Int](korkeakouluja, assertNotNegative(_, s"$path.korkeakouluja")),
+    validateIfDefined[Int](tiedekuntia,   assertNotNegative(_, s"$path.tiedekuntia")),
+    validateIfDefined[Int](kampuksia,     assertNotNegative(_, s"$path.kampuksia")),
+    validateIfDefined[Int](yksikoita,     assertNotNegative(_, s"$path.yksikoita")),
+    validateIfDefined[Int](toimipisteita, assertNotNegative(_, s"$path.toimipisteita")),
+    validateIfDefined[Int](akatemioita,   assertNotNegative(_, s"$path.akatemioita")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"))
   )
 }
@@ -367,12 +367,12 @@ case class TietoaOpiskelusta(otsikkoKoodiUri: String, teksti: Kielistetty) exten
 }
 
 case class OppilaitoksenOsaMetadata(yhteystiedot: Option[Yhteystieto] = None,
-                                    opiskelijoita: Option[Integer] = None,
+                                    opiskelijoita: Option[Int] = None,
                                     kampus: Kielistetty = Map(),
                                     esittely: Kielistetty = Map()) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[Yhteystieto](yhteystiedot, _.validate(tila, kielivalinta, s"$path.yhteystiedot")),
-    validateIfDefined[Integer](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
+    validateIfDefined[Int](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kampus, s"$path.kampus"),
       validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely")

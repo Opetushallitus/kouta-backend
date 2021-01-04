@@ -46,6 +46,8 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getKoulutustyyppiResult: GetResult[Koulutustyyppi] = GetResult(r => Koulutustyyppi.withName(r.nextString()))
   implicit val getKoulutustyyppiOptionResult: GetResult[Option[Koulutustyyppi]] = GetResult(r => r.nextStringOption().map(Koulutustyyppi.withName))
 
+  implicit val getToteutusMetadataOptionResult: GetResult[Option[ToteutusMetadata]] = GetResult(r => r.nextStringOption().map(read[ToteutusMetadata]))
+
   def extractArray[U](o: Option[Object]): Seq[U] = o
     .map(_.asInstanceOf[org.postgresql.jdbc.PgArray])
     .map(_.getArray.asInstanceOf[Array[U]].toSeq)
@@ -100,6 +102,7 @@ trait ToteutusExtractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
+    sorakuvausId = r.nextStringOption().map(UUID.fromString),
     modified = Some(timeStampToModified(r.nextTimestamp()))
   ))
 
@@ -124,8 +127,6 @@ trait HakuExtractors extends ExtractorBase {
     hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     ajastettuJulkaisu = r.nextTimestampOption().map(_.toLocalDateTime),
-    alkamiskausiKoodiUri = r.nextStringOption(),
-    alkamisvuosi = r.nextStringOption(),
     kohdejoukkoKoodiUri = r.nextStringOption(),
     kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
@@ -184,7 +185,6 @@ trait SorakuvausExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
-    julkinen = r.nextBoolean(),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[SorakuvausMetadata]),
     organisaatioOid = OrganisaatioOid(r.nextString()),
@@ -326,6 +326,7 @@ trait HakutietoExtractors extends ExtractorBase {
       alkamiskausiKoodiUri = r.nextStringOption(),
       alkamisvuosi = r.nextStringOption(),
       kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
+      jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid(_)),
       hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
       hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
       hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),

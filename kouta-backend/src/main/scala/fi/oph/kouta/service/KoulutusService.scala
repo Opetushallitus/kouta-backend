@@ -27,6 +27,15 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
+  private def authorizedForTarjoajaOids(oids: Set[OrganisaatioOid], roles: Seq[Role] = roleEntity.updateRoles): Option[AuthorizationRules] =
+    if (oids.nonEmpty) {
+      Some( AuthorizationRules(
+        requiredRoles = roles,
+        allowAccessToParentOrganizations = true,
+        overridingAuthorizationRules = Seq(AuthorizationRuleForJulkinen),
+        additionalAuthorizedOrganisaatioOids = oids.toSeq))
+    } else { None }
+
   def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
     authorizeGet(koulutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime)))
@@ -40,12 +49,6 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val koulutusWithInstant = KoulutusDAO.get(koulutus.oid.get)
 
-    def authorizedForOids(oids: Set[OrganisaatioOid]) = if(oids.nonEmpty) Some(AuthorizationRules(
-      roleEntity.updateRoles,
-      allowAccessToParentOrganizations = true,
-      Seq(AuthorizationRuleForJulkinen),
-      oids.toSeq)) else None
-
     koulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
         val newTarjoajat = koulutus.tarjoajat.toSet
@@ -54,8 +57,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
         val updatesOnKoulutus = oldKoulutus.copy(modified=None, tarjoajat = List()) != koulutus.copy(tarjoajat = List())
         val rulesForUpdatingKoulutus = if(updatesOnKoulutus) Some(AuthorizationRules(roleEntity.updateRoles)) else None
 
-        val rulesForAddedTarjoajat = authorizedForOids(newTarjoajat diff oldTarjoajat)
-        val rulesForRemovedTarjoajat = authorizedForOids(oldTarjoajat diff newTarjoajat)
+        val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+        val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
 
         val rules: List[AuthorizationRules] =
           (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
@@ -69,9 +72,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
   }
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
   def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] =
@@ -109,14 +112,44 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
           k => k.copy(toteutukset = listToteutukset(k.oid, organisaatioOid).size)
       })
 
-    list(organisaatioOid).map(_.oid) match {
+    list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil          => KoulutusSearchResult()
       case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
     }
   }
 
+  def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
+    val koulutusWithLastModified = get(koulutusOid)
+
+    if(koulutusWithLastModified.isEmpty) {
+      throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+    }
+
+    val Some((koulutus, lastModified)) = koulutusWithLastModified
+
+    val newTarjoajat = tarjoajaOids diff koulutus.tarjoajat.toSet
+
+    if(newTarjoajat.isEmpty) {
+      DBIO.successful((koulutus, None))
+    } else {
+      val newKoulutus: Koulutus = koulutus.copy(tarjoajat = koulutus.tarjoajat ++ newTarjoajat)
+      authorizeUpdate(koulutusWithLastModified, newKoulutus, List(authorizedForTarjoajaOids(tarjoajaOids, roleEntity.readRoles).get)) { (_, k) =>
+        withValidation(newKoulutus, Some(k)) {
+          DBIO.successful(koulutus) zip getUpdateTarjoajatActions(_, lastModified)
+        }
+      }
+    }
+  }
+
   private def getTarjoajat(maybeKoulutusWithTime: Option[(Koulutus, Instant)]): Seq[OrganisaatioOid] =
     maybeKoulutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
+
+  private def getUpdateTarjoajatActions(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): DBIO[Option[Koulutus]] = {
+    for {
+      _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+      k          <- KoulutusDAO.getUpdateTarjoajatActions(koulutus)
+    } yield Some(k)
+  }
 
   private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
     KoutaDatabase.runBlockingTransactionally {
@@ -147,6 +180,6 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
       k
     }.get
 
-  private def index(koulutus: Option[Koulutus]): DBIO[_] =
+  def index(koulutus: Option[Koulutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
 }

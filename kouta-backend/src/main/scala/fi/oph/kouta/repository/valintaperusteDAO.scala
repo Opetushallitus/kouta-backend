@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain.{Arkistoitu, Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
@@ -17,8 +17,8 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def getUpdateActions(valintaperuste: Valintaperuste): DBIO[Option[Valintaperuste]]
 
   def get(id: UUID): Option[(Valintaperuste, Instant)]
-  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem]
-  def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): Seq[ValintaperusteListItem]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
+  def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
   def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem]
 }
 
@@ -53,18 +53,18 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }.get
   }
 
-  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): Seq[ValintaperusteListItem] =
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[ValintaperusteListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
-      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit))
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut))
     }
 
-  override def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): Seq[ValintaperusteListItem] =
+  override def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids, hakuOid)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
-      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids, koulutustyypit, hakuOid))
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids, hakuOid, myosArkistoidut)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids, koulutustyypit, hakuOid, myosArkistoidut))
     }
 
   override def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem] =
@@ -237,33 +237,47 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
            group by vp.id) m on v.id = m.id"""
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
-          where (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${RootOrganisaatioOid})
+          where (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${RootOrganisaatioOid}) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi]): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
-          where ( v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${RootOrganisaatioOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
+          where ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                  (v.organisaatio_oid <> ${RootOrganisaatioOid} or
+                   v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              or (v.julkinen  = ${true} and
+                  v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid): DBIO[Vector[ValintaperusteListItem]] = {
+  def andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut: Boolean): String = {
+    if (myosArkistoidut) "" else s"and v.tila <> '$Arkistoitu'"
+  }
+
+  def selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${RootOrganisaatioOid})
+          and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+               v.organisaatio_oid <> ${RootOrganisaatioOid})
+          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
           where h.oid = $hakuOid
-          and ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and (v.organisaatio_oid <> ${RootOrganisaatioOid} or v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (v.julkinen  = ${true} and v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          and ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
+                (v.organisaatio_oid <> ${RootOrganisaatioOid} or
+                 v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          or (v.julkinen  = ${true} and
+              v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 

@@ -103,7 +103,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow oph to create julkaistu koulutus without tarjoajat" in {
     val oid = put(ophKoulutus, ophSession)
-    get(oid, ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = userOidForTestSessionId(ophSession)))
+    get(oid, ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid))
   }
 
   it should "deny other users to create julkaistu koulutus without tarjoajat" in {
@@ -251,7 +251,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "allow the user of proper koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
     val oid = put(ophKoulutus, ophSession)
-    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = userOidForTestSessionId(ophSession))
+    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid)
     val lastModified = get(oid, koulutusWithOid)
     val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(AmmOid))
     update(koulutusWithNewTarjoaja, lastModified, expectUpdate = true, crudSessions(AmmOid))
@@ -259,7 +259,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "deny the user of wrong koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
     val oid = put(ophKoulutus, ophSession)
-    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = userOidForTestSessionId(ophSession))
+    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid)
     val lastModified = get(oid, koulutusWithOid)
     val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(YoOid))
     update(koulutusWithNewTarjoaja, lastModified, crudSessions(YoOid), 403)
@@ -400,5 +400,21 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
+  }
+
+  it should "create, get and update ammatillinen osaamisala koulutus" in {
+    val ammOaKoulutus = TestData.AmmOsaamisalaKoulutus.copy(tila = Tallennettu)
+    val oid = put(ammOaKoulutus)
+    val lastModified = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    update(ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "create, get and update ammatillinen tutkinnon osa koulutus" in {
+    val ammOaKoulutus = TestData.AmmTutkinnonOsaKoulutus.copy(tila = Tallennettu)
+    val oid = put(ammOaKoulutus)
+    val lastModified = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    update(ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 }

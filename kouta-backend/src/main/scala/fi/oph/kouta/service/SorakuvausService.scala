@@ -21,17 +21,19 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
+  protected val createRules: AuthorizationRules = AuthorizationRules(Seq(Role.Paakayttaja))
+  protected val updateRules: AuthorizationRules = AuthorizationRules(Seq(Role.Paakayttaja))
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
-    authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
+    authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(authorizationRuleByKoulutustyyppi)))
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
-    authorizePut(sorakuvaus) { s =>
+    authorizePut(sorakuvaus, createRules) { s =>
       withValidation(s, None)(doPut)
     }.id.get
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get), sorakuvaus) { (oldSorakuvaus, s) =>
+    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get), sorakuvaus, updateRules) { (oldSorakuvaus, s) =>
       withValidation(s, Some(oldSorakuvaus)) {
         doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
@@ -42,9 +44,9 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
       ValintaperusteDAO.listBySorakuvausId(sorakuvausId)
     }
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
-    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      SorakuvausDAO.listAllowedByOrganisaatiot(oids, koulutustyypit)
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (_, koulutustyypit) =>
+      SorakuvausDAO.listByKoulutustyypit(koulutustyypit, myosArkistoidut)
     }
 
   private def doPut(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): Sorakuvaus =
