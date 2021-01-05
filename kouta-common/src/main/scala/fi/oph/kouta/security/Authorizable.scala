@@ -13,3 +13,7 @@ trait AuthorizableMaybeJulkinen[T] extends AuthorizableEntity[T] {
   val koulutustyyppi: Koulutustyyppi
   val julkinen: Boolean
 }
+
+trait AuthorizableByKoulutustyyppi[T] extends AuthorizableEntity[T] {
+  val koulutustyyppi: Koulutustyyppi
+}

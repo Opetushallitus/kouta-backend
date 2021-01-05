@@ -20,6 +20,7 @@ object TestOids {
   val OtherOid = OrganisaatioOid("1.2.246.562.10.67476956288")
 
   val TestUserOid = UserOid("1.2.246.562.24.10000000000")
+  val OphUserOid = UserOid("1.2.246.562.24.10000000099")
 
   val random = new Random()
 

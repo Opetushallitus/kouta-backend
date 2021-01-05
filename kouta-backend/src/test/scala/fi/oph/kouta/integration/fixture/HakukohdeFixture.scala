@@ -51,6 +51,9 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
   def hakukohde(toteutusOid: String, hakuOid: String): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = None, tila = Tallennettu)
 
+  def julkaistuHakukohde(toteutusOid: String, hakuOid: String): Hakukohde = hakukohde.copy(
+    toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = None, tila = Julkaistu)
+
   def hakukohde(toteutusOid: String, hakuOid: String, valintaperusteId: UUID): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId))
 

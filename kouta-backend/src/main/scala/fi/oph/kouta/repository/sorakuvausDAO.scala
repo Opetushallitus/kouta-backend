@@ -16,7 +16,7 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getUpdateActions(sorakuvaus: Sorakuvaus): DBIO[Option[Sorakuvaus]]
 
   def get(id: UUID): Option[(Sorakuvaus, Instant)]
-  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem]
+  def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem]
 }
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
@@ -45,11 +45,10 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     }).get
   }
 
-  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem] =
-    (organisaatioOids, koulutustyypit) match {
-      case (Nil, _) => Seq()
-      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut))
-      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut))
+  override def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem] =
+    koulutustyypit match {
+      case Nil => Seq()
+      case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit, myosArkistoidut))
     }
 
   def getTilaAndTyyppi(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi]) =
@@ -86,7 +85,6 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      tila,
                      nimi,
                      koulutustyyppi,
-                     julkinen,
                      kielivalinta,
                      metadata,
                      organisaatio_oid,
@@ -95,7 +93,6 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      ${sorakuvaus.tila.toString}::julkaisutila,
                      ${toJsonParam(sorakuvaus.nimi)}::jsonb,
                      ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi,
-                     ${sorakuvaus.julkinen},
                      ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb,
                      ${toJsonParam(sorakuvaus.metadata)}::jsonb,
                      ${sorakuvaus.organisaatioOid},
@@ -103,7 +100,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
   }
 
   def selectSorakuvaus(id: UUID): DBIO[Option[Sorakuvaus]] =
-    sql"""select id, tila, nimi, koulutustyyppi, julkinen, kielivalinta,
+    sql"""select id, tila, nimi, koulutustyyppi, kielivalinta,
                  metadata, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset where id = ${id.toString}::uuid""".as[Sorakuvaus].headOption
 
@@ -112,7 +109,6 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      tila = ${sorakuvaus.tila.toString}::julkaisutila,
                      nimi = ${toJsonParam(sorakuvaus.nimi)}::jsonb,
                      koulutustyyppi = ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi,
-                     julkinen = ${sorakuvaus.julkinen},
                      kielivalinta = ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb,
                      metadata = ${toJsonParam(sorakuvaus.metadata)}::jsonb,
                      organisaatio_oid = ${sorakuvaus.organisaatioOid},
@@ -121,28 +117,15 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
            and (koulutustyyppi is distinct from ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi
              or tila is distinct from ${sorakuvaus.tila.toString}::julkaisutila
              or nimi is distinct from ${toJsonParam(sorakuvaus.nimi)}::jsonb
-             or julkinen is distinct from ${sorakuvaus.julkinen}
              or metadata is distinct from ${toJsonParam(sorakuvaus.metadata)}::jsonb
              or organisaatio_oid is distinct from ${sorakuvaus.organisaatioOid}
              or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb)"""
   }
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
+  def selectByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
-          where ( organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
-                  organisaatio_oid <> ${RootOrganisaatioOid})
-              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
-  }
-
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
-    sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
-          from sorakuvaukset
-          where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
-                  (organisaatio_oid <> ${RootOrganisaatioOid} or
-                   koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (julkinen  = ${true} and
-              koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          where koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})
           #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
   }
 

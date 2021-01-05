@@ -3,7 +3,7 @@ package fi.oph.kouta
 import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
 
-object TempDb extends Logging {
+object TempLocalDb extends Logging {
 
   val port = new PortFromSystemPropertyOrFindFree("kouta-backend.db.port").chosenPort
   val dbName = "kouta"
@@ -13,6 +13,7 @@ object TempDb extends Logging {
   import org.apache.commons.io.FileUtils
 
   import CommandLine._
+  import TempDbUtils.tryTimes
 
   val dataDirectoryName = s"kouta-temp-db/$port"
   val dataDirectoryFile = new File(dataDirectoryName)
@@ -79,14 +80,20 @@ object TempDb extends Logging {
     if(pidFile.canRead) Some(FileUtils.readFileToString(pidFile, "UTF-8").split("\n")(0).toInt) else None
   }
 
-  private def tryTimes(times: Int, sleep: Int)(thunk: () => Boolean): Boolean = times match {
+  private val isAcceptingConnections: () => Boolean = () => {
+    runBlocking(s"pg_isready -q -t 1 -h localhost -p $port -d $dbName", failOnError = false) == 0
+  }
+}
+
+object TempDbUtils {
+
+  import scala.annotation.tailrec
+
+  @tailrec
+  def tryTimes(times: Int, sleep: Int)(thunk: () => Boolean): Boolean = times match {
     case n if n < 1 => false
     case 1 => thunk()
     case n => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
-  }
-
-  private val isAcceptingConnections: () => Boolean = () => {
-    runBlocking(s"pg_isready -q -t 1 -h localhost -p $port -d $dbName", failOnError = false) == 0
   }
 }
 
@@ -95,7 +102,6 @@ object CommandLine {
   import scala.sys.process.stringToProcess
 
   def run(command: String) = command.run()
-
 
   def runBlocking(command: String, failOnError: Boolean = true): Int = {
     val returnValue = command.!
