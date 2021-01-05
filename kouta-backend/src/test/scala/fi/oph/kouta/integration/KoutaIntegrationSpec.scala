@@ -95,11 +95,11 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
   var fakeIndexerSession: UUID = _
   var otherRoleSession: UUID = _
 
-  def addTestSession(authorities: Authority*): UUID = {
+  private def storeTestSession(authorities: Set[Authority] = Set(), userOid: Option[UserOid] = None): UUID = {
     val sessionId = UUID.randomUUID()
-    val oid = userOidForTestSessionId(sessionId)
+    val oid = userOid.getOrElse(userOidForTestSessionId(sessionId))
     val user = TestUser(oid, s"user-$oid", sessionId)
-    SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid.s, authorities.toSet), user.sessionId)
+    SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid.s, authorities), user.sessionId)
     sessionId
   }
 
@@ -107,12 +107,17 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
   def userOidForTestSessionId(sessionId: UUID): UserOid =
     UserOid(f"1.2.246.562.24.${math.abs(sessionId.getLeastSignificantBits)}%011d".substring(0, userOidLength))
 
+  def addTestSession(): UUID = storeTestSession()
+
   def addTestSession(role: Role, organisaatioOid: OrganisaatioOid): UUID =
     addTestSession(Seq(role), organisaatioOid)
 
-  def addTestSession(roles: Seq[Role], organisaatioOid: OrganisaatioOid): UUID = {
-    val authorities = roles.map(Authority(_, organisaatioOid))
-    addTestSession(authorities: _*)
+  def addTestSession(role: Role, organisaatioOid: OrganisaatioOid, userOid: UserOid): UUID =
+    addTestSession(Seq(role), organisaatioOid, Some(userOid))
+
+  def addTestSession(roles: Seq[Role], organisaatioOid: OrganisaatioOid, userOid: Option[UserOid] = None): UUID = {
+    val authorities: Seq[Authority] = roles.map(Authority(_, organisaatioOid))
+    storeTestSession(authorities.toSet, userOid)
   }
 
   def addTestSessions(): Unit = {
@@ -124,7 +129,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
       readSessions.update(org, addTestSession(roleEntities.map(_.Read.asInstanceOf[Role]), org))
     }
 
-    ophSession = addTestSession(Role.Paakayttaja, OphOid)
+    ophSession = addTestSession(Role.Paakayttaja, OphOid, OphUserOid)
     indexerSession = addTestSession(Role.Indexer, OphOid)
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
     otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)
@@ -158,7 +163,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 
-  def headersIfUnmodifiedSince(lastModified: String) = List(jsonHeader, defaultSessionHeader, KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)
+  def headersIfUnmodifiedSince(lastModified: String, sessionHeader: (String, String) = defaultSessionHeader) = List(jsonHeader, sessionHeader, KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
   def sessionHeader(sessionId: UUID): (String, String) = sessionHeader(sessionId.toString)
