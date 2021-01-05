@@ -132,8 +132,7 @@ package object haku {
       |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
-      |          allOf:
-      |            - $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
+      |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |""".stripMargin
 
   val HakuListItemModel =
