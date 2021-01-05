@@ -176,7 +176,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val startTime1 = testDate("09:49", 1)
   val endTime1 = testDate("09:58", 1)
   val time3 = testDate("09:58", 3)
-  val thisYear = "2020"
+  val thisYear = "2021"
 
   val ammTutkinnonOsaKoulutusMetadata = write(TestData.AmmTutkinnonOsaKoulutus.metadata)
   val ammOsaamisalaKoulutusMetadata = write(TestData.AmmOsaamisalaKoulutus.metadata)
