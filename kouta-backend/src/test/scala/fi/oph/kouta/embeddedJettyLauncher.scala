@@ -56,7 +56,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
 
   def setupAwsKeysForSqs(): Any = {
     if(System.getProperty("kouta-backend.awsKeys", "false") == "false") {
-      if (!Option(System.getProperty("aws.accessKeyId", null)).isDefined) {
+      if (Option(System.getProperty("aws.accessKeyId", null)).isEmpty) {
         System.setProperty("aws.accessKeyId", "randomKeyIdForLocalstack")
         System.setProperty("aws.secretKey", "randomKeyForLocalstack")
       }
@@ -78,7 +78,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     }
   }
 
-  private def startHostPostgres() = {
+  private def startHostPostgres(): String = {
     TempLocalDb.start()
     setupWithTemplate(TempLocalDb.port)
   }
@@ -128,7 +128,7 @@ object Templates {
       Source.fromFile(DEFAULT_TEMPLATE_FILE_PATH)
         .getLines
         .map(l => l match {
-          case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: ${port}"
+          case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: $port"
           case x if x.contains("postgres_app_user") => "postgres_app_user: oph"
           case x if x.contains("host_postgresql_kouta_app_password") => "host_postgresql_kouta_app_password: oph"
           case x if x.contains("host_postgresql_kouta") => "host_postgresql_kouta: localhost"
