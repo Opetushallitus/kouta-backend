@@ -132,38 +132,7 @@ package object haku {
       |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
-      |          allOf:
-      |            - $ref: '#/components/schemas/KoulutuksenAlkamiskausiHaulla'
-      |""".stripMargin
-
-  val HakuKoulutuksenAlkamiskausiModel =
-    """    KoulutuksenAlkamiskausiHaulla:
-      |      type: object
-      |      properties:
-      |        alkamiskausityyppi:
-      |          type: string
-      |          description: Alkamiskauden tyyppi
-      |          enum:
-      |            - 'henkilokohtainen suunnitelma'
-      |            - 'tarkka alkamisajankohta'
-      |            - 'alkamiskausi ja -vuosi'
-      |        koulutuksenAlkamispaivamaara:
-      |          type: string
-      |          description: Koulutuksen tarkka alkamisen päivämäärä
-      |          example: 2019-11-20T12:00
-      |        koulutuksenPaattymispaivamaara:
-      |          type: string
-      |          description: Koulutuksen päättymisen päivämäärä
-      |          example: 2019-11-20T12:00
-      |        koulutuksenAlkamiskausiKoodiUri:
-      |          type: string
-      |          description: Haun koulutusten alkamiskausi. Hakukohteella voi olla eri alkamiskausi kuin haulla.
-      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |          example: kausi_k#1
-      |        koulutuksenAlkamisvuosi:
-      |          type: string
-      |          description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
-      |          example: 2020
+      |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |""".stripMargin
 
   val HakuListItemModel =
@@ -202,7 +171,7 @@ package object haku {
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
-  def models = List(HakuModel, HakuMetadataModel, HakuListItemModel, HakuKoulutuksenAlkamiskausiModel)
+  def models = List(HakuModel, HakuMetadataModel, HakuListItemModel)
 }
 
 case class Haku(oid: Option[HakuOid] = None,
@@ -270,27 +239,6 @@ case class HakuListItem(oid: HakuOid,
                         organisaatioOid: OrganisaatioOid,
                         muokkaaja: UserOid,
                         modified: Modified) extends OidListItem
-
-case class KoulutuksenAlkamiskausi(alkamiskausityyppi: Option[Alkamiskausityyppi] = None,
-                                   koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
-                                   koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
-                                   koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
-                                   koulutuksenAlkamisvuosi: Option[String] = None) extends ValidatableSubEntity {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
-    validateIfDefined[String](koulutuksenAlkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausiKoodiUri")),
-    validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
-    validateIfJulkaistu(tila, and(
-      assertNotOptional(alkamiskausityyppi, s"$path.alkamiskausityyppi"),
-      validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.get, assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
-      validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.get, and(
-        assertNotOptional(koulutuksenAlkamiskausiKoodiUri, s"$path.koulutuksenAlkamiskausiKoodiUri"),
-        assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi"))))))
-
-  override def validateOnJulkaisu(path: String): IsValid = and(
-    validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.alkamisvuosi")),
-    validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")))
-}
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
