@@ -1,8 +1,8 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{Koulutus, OppilaitoksenOsa, Toteutus}
+import fi.oph.kouta.domain.oid.KoulutusOid
+import fi.oph.kouta.domain.{Hakutieto, Koulutus, OppilaitoksenOsa, Toteutus}
 import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
 
@@ -58,6 +58,23 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/tarjoaja/$ChildOid/koulutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Koulutus]](body).filter(_.oid.get.s == oid).size should equal (1)
+    }
+  }
+
+  "List hakutiedot by koulutus" should "list all hakutiedot distinct" in {
+    val koulutusOid = put(koulutus)
+    val totetusOid = put(toteutus(koulutusOid))
+    val hakuOid = put(haku)
+    val hkOid1 = put(julkaistuHakukohde(totetusOid, hakuOid))
+    val hkOid2 = put(julkaistuHakukohde(totetusOid, hakuOid))
+    val hkOid3 = put(julkaistuHakukohde(totetusOid, hakuOid))
+
+    get(s"$IndexerPath/koulutus/$koulutusOid/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      val result = read[List[Hakutieto]](body)
+      result.size should equal (1)
+      result.head.haut.size should equal (1)
+      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3)
     }
   }
 
