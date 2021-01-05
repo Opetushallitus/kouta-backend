@@ -27,13 +27,13 @@ object EmbeddedJettyLauncher extends Logging {
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
     TestSetups.setupCasSessionIdForTestDataGenerator()
-    new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt).start.join
+    new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt).start.join()
   }
 }
 
 object TestSetups extends Logging with KoutaConfigurationConstants {
 
-  def setupSqsQueues() = {
+  def setupSqsQueues(): Unit = {
     val home = System.getProperty("user.home")
     if(new java.io.File(s"$home/.kouta_localstack").exists()) {
       logger.warn(s"Localstack is already running. Skipping ./tools/start_localstack....")
@@ -45,7 +45,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     logSqsQueues()
   }
 
-  def logSqsQueues() = {
+  def logSqsQueues(): Unit = {
     val config = KoutaConfigurationFactory.configuration.indexingConfiguration
     val sqsClient: AmazonSQSClient = config.endpoint.map(SQSClient.withEndpoint).getOrElse(SQSClient.default)
     import scala.collection.JavaConverters._
@@ -54,23 +54,23 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     queues.foreach(queueUrl => logger.info(queueUrl))
   }
 
-  def setupAwsKeysForSqs() = {
+  def setupAwsKeysForSqs(): Any = {
     if(System.getProperty("kouta-backend.awsKeys", "false") == "false") {
-      if (!Option(System.getProperty("aws.accessKeyId", null)).isDefined) {
+      if (Option(System.getProperty("aws.accessKeyId", null)).isEmpty) {
         System.setProperty("aws.accessKeyId", "randomKeyIdForLocalstack")
         System.setProperty("aws.secretKey", "randomKeyForLocalstack")
       }
     }
   }
 
-  def setupWithTemplate(port:Int) = {
+  def setupWithTemplate(port:Int): String = {
     logger.info(s"Setting up test template with Postgres port ${port}")
     Templates.createTestTemplate(port)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)
     System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
   }
 
-  def setupWithEmbeddedPostgres() = {
+  def setupWithEmbeddedPostgres(): String = {
     logger.info("Starting embedded PostgreSQL!")
     System.getProperty("kouta-backend.embeddedPostgresType", "host") match {
       case x if "docker".equalsIgnoreCase(x) => startDockerPostgres()
@@ -78,7 +78,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     }
   }
 
-  private def startHostPostgres() = {
+  private def startHostPostgres(): String = {
     TempLocalDb.start()
     setupWithTemplate(TempLocalDb.port)
   }
@@ -88,20 +88,20 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     setupWithTemplate(TempDockerDb.port)
   }
 
-  def setupWithoutEmbeddedPostgres()=
+  def setupWithoutEmbeddedPostgres(): Object =
     (Option(System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE)),
      Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))) match {
       case (Some(CONFIG_PROFILE_TEMPLATE), None) => setupWithDefaultTestTemplateFile()
       case _ => Unit
   }
 
-  def setupWithDefaultTestTemplateFile() = {
+  def setupWithDefaultTestTemplateFile(): String = {
     logger.info(s"Using default test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
   }
 
-  def setupCasSessionIdForTestDataGenerator()= {
+  def setupCasSessionIdForTestDataGenerator(): UUID = {
     logger.info(s"Adding session for TestDataGenerator")
     Try(SessionDAO.delete(UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)))
     SessionDAO.store(
@@ -122,27 +122,27 @@ object Templates {
   import scala.io.Source
   import scala.util.{Failure, Success, Try}
 
-  def createTestTemplate(port:Int, deleteAutomatically:Boolean = true) = Try(new PrintWriter(new File(TEST_TEMPLATE_FILE_PATH))) match {
+  def createTestTemplate(port:Int, deleteAutomatically:Boolean = true): Unit = Try(new PrintWriter(new File(TEST_TEMPLATE_FILE_PATH))) match {
     case Failure(t) => throw t
     case Success(w) => try {
       Source.fromFile(DEFAULT_TEMPLATE_FILE_PATH)
         .getLines
         .map(l => l match {
-          case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: ${port}"
+          case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: $port"
           case x if x.contains("postgres_app_user") => "postgres_app_user: oph"
           case x if x.contains("host_postgresql_kouta_app_password") => "host_postgresql_kouta_app_password: oph"
           case x if x.contains("host_postgresql_kouta") => "host_postgresql_kouta: localhost"
           case x => x
         })
         .foreach(l => w.println(l))
-      w.flush
+      w.flush()
     } finally { w.close() }
     if(deleteAutomatically) {
       Runtime.getRuntime.addShutdownHook(new Thread(() => Templates.deleteTestTemplate()))
     }
   }
 
-  def deleteTestTemplate() = {
+  def deleteTestTemplate(): Boolean = {
     Files.deleteIfExists(new File(TEST_TEMPLATE_FILE_PATH).toPath)
   }
 }
