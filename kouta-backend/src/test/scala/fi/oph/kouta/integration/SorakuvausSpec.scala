@@ -72,12 +72,12 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
 
   "Create sorakuvaus" should "allow oph user to store sorakuvaus" in {
     val id = put(sorakuvaus)
-    get(id, sorakuvaus(id).copy(muokkaaja = OphUserOid))
+    get(id, sorakuvaus(id).copy(muokkaaja = Some(OphUserOid)))
   }
 
   it should "allow oph user to store korkeakoulutus sorakuvaus" in {
     val id = put(TestData.YoSorakuvaus)
-    get(id, TestData.YoSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid))
+    get(id, TestData.YoSorakuvaus.copy(id = Some(id), muokkaaja = Some(OphUserOid)))
   }
 
   it should "read muokkaaja from the session" in {
@@ -246,8 +246,8 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   it should "store and update unfinished sorakuvaus" in {
     val unfinishedSorakuvaus = TestData.MinSorakuvaus
     val id = put(unfinishedSorakuvaus, ophSession)
-    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid))
-    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid, muokkaaja = OphUserOid)
+    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id), muokkaaja = Some(OphUserOid)))
+    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid, muokkaaja = Some(OphUserOid))
     update(newUnfinishedSorakuvaus, lastModified, ophSession)
     get(id, newUnfinishedSorakuvaus)
   }
