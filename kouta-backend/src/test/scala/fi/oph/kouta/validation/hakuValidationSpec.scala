@@ -119,7 +119,9 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     koulutuksenAlkamispaivamaara = None,
     koulutuksenPaattymispaivamaara = None,
     koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
-    koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear.toString))
+    koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear.toString),
+    henkilokohtaisenSuunnitelmanLisatiedot = Map()
+  )
 
   it should "validate koulutuksen alkamiskausi" in {
     passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi)))
@@ -128,6 +130,7 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = None))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", missingMsg)
     failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamiskausiKoodiUri = Some("mummo")))), "koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri", validationMsg("mummo"))
     failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("100")))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("100"))
+    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(henkilokohtaisenSuunnitelmanLisatiedot = Map(Fi -> "Lisätiedot")))), "koulutuksenAlkamiskausi.henkilokohtaisenSuunnitelmanLisatiedot", invalidKielistetty(Seq(Sv)))
   }
 
   it should "fail if alkamisvuosi or alkamiskausi is invalid even when haku is not julkaistu" in {
