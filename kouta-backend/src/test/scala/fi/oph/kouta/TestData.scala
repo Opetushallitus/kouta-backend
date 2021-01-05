@@ -352,11 +352,13 @@ object TestData {
     tila = Julkaistu,
     nimi = kieliMap("nimi"),
     koulutustyyppi = Yo,
-    julkinen = false,
     kielivalinta = List(Fi, Sv),
-    metadata = Some(SorakuvausMetadata(kuvaus = kieliMap("kuvaus"))),
-    organisaatioOid = ChildOid,
-    muokkaaja = TestUserOid,
+    metadata = Some(SorakuvausMetadata(
+      kuvaus = kieliMap("kuvaus"),
+      koulutusKoodiUrit = Seq("koulutus_371101#1"),
+      koulutusalaKoodiUri = Some("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))),
+    organisaatioOid = OphOid,
+    muokkaaja = OphUserOid,
     modified = None)
 
   val AmmSorakuvaus = YoSorakuvaus.copy(koulutustyyppi = Amm)
@@ -365,8 +367,8 @@ object TestData {
     koulutustyyppi = Yo,
     kielivalinta = Seq(Fi, Sv),
     nimi = kieliMap("Minimi sorakuvaus"),
-    muokkaaja = TestUserOid,
-    organisaatioOid = ChildOid,
+    muokkaaja = OphUserOid,
+    organisaatioOid = OphOid,
     modified = None)
 
   val ToteutuksenOpetus = Opetus(

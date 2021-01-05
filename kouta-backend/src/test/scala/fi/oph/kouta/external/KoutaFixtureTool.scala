@@ -176,7 +176,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val startTime1 = testDate("09:49", 1)
   val endTime1 = testDate("09:58", 1)
   val time3 = testDate("09:58", 3)
-  val thisYear = "2020"
+  val thisYear = "2021"
 
   val ammTutkinnonOsaKoulutusMetadata = write(TestData.AmmTutkinnonOsaKoulutus.metadata)
   val ammOsaamisalaKoulutusMetadata = write(TestData.AmmOsaamisalaKoulutus.metadata)
@@ -313,7 +313,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     NimiKey -> "nimi",
     KoulutustyyppiKey -> Amm.name,
     MuokkaajaKey -> TestUserOid.s,
-    OrganisaatioKey -> OtherOid.s,
+    OrganisaatioKey -> OphOid.s,
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     JulkinenKey -> "false",
@@ -509,7 +509,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Julkaisutila.withName(params(TilaKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
-      params(JulkinenKey).toBoolean,
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName(_)),
       params.get(MetadataKey).map(read[SorakuvausMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
