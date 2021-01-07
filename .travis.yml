@@ -65,12 +65,6 @@ deploy:
       mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
     skip_cleanup: true
     on:
-      branch: master
-  - provider: script
-    script:
-      mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
-    skip_cleanup: true
-    on:
       branch: KTO-706-modified-aikaleimat-sekunnin-tarkkuudella
   - provider: script
     script:
