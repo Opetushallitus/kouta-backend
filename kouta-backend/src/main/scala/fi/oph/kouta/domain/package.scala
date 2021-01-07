@@ -573,7 +573,7 @@ package object domain {
     override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
       validateIfDefined[String](koulutuksenAlkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausiKoodiUri")),
-      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
+      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertMatch(v, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
       validateIfJulkaistu(tila, and(
         assertNotOptional(alkamiskausityyppi, s"$path.alkamiskausityyppi"),
         validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.get, assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
