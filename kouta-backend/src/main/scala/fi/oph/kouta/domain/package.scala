@@ -1,13 +1,12 @@
 package fi.oph.kouta
 
-import java.time.{Instant, LocalDateTime}
-import java.util.UUID
-
-import fi.oph.kouta.domain.{AlkamiskausiJaVuosi, Alkamiskausityyppi, Julkaisutila, Kieli, TarkkaAlkamisajankohta}
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
+
+import java.time.{Instant, LocalDateTime}
+import java.util.UUID
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {
