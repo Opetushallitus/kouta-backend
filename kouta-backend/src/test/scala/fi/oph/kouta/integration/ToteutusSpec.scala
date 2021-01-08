@@ -155,24 +155,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  it should "validate dates only when adding a new julkaistu toteutus" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
-    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
-
-    put(thisToteutus.copy(tila = Tallennettu))
-
-    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
-      )))
-    }
-  }
-
   it should "allow a user of the toteutus organization to create the toteutus" in {
     put(toteutus(koulutusOid), crudSessions(toteutus.organisaatioOid))
   }
@@ -402,6 +384,52 @@ class ToteutusSpec extends KoutaIntegrationSpec
         status should equal(400)
       }
       body should equal (validationErrorBody(validationMsg("katkarapu"), "tarjoajat[0]"))
+    }
+  }
+
+  //feature flag KTO-1036 remove this test
+  it should "validate dates only when adding a new julkaistu toteutus" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+
+    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
+    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
+
+    put(thisToteutus.copy(tila = Tallennettu))
+
+    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(List(
+        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+      )))
+    }
+  }
+
+  def pastAlkamiskausi(alkamispvm: LocalDateTime, paattymispvm: LocalDateTime): Some[KoulutuksenAlkamiskausi] = {
+    Some(KoulutuksenAlkamiskausi(
+      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+      koulutuksenAlkamispaivamaara = Some(alkamispvm),
+      koulutuksenPaattymispaivamaara = Some(paattymispvm)))
+  }
+
+  it should "validate dates only when adding a new julkaistu toteutus UUSI" in { //feature flag KTO-1036
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(past, morePast))
+    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
+
+    put(thisToteutus.copy(tila = Tallennettu))
+
+    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(List(
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+      )))
     }
   }
 
