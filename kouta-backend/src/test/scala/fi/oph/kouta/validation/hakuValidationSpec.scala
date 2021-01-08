@@ -180,6 +180,17 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     failsOnJulkaisuValidation(metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = Some(pastDate)))), "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(pastDate))
   }
 
+  it should "fail if paattymispaiva is in the past on julkaisu" in {
+    val (pastDate, evenMorePast) = (TestData.inPast(300), TestData.inPast(700))
+    val alkaminenAndPaattyminenInThePast = Some(alkamiskausiTarkka.copy(koulutuksenPaattymispaivamaara = Some(pastDate), koulutuksenAlkamispaivamaara = Some(evenMorePast)))
+
+    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = alkaminenAndPaattyminenInThePast))
+    failsOnJulkaisuValidation(
+      metadata.copy(koulutuksenAlkamiskausi = alkaminenAndPaattyminenInThePast),
+      ("koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(evenMorePast)),
+      ("koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(pastDate)))
+  }
+
   it should "validate henkilökohtainen suunnitelma" in {
     val alkamiskausi = KoulutuksenAlkamiskausi(
       alkamiskausityyppi = Some(HenkilökohtainenSuunnitelma),
