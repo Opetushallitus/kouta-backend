@@ -417,7 +417,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "validate dates only when adding a new julkaistu toteutus UUSI" in { //feature flag KTO-1036
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
 
-    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(past, morePast))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
 
     put(thisToteutus.copy(tila = Tallennettu))
