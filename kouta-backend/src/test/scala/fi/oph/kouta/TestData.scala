@@ -381,6 +381,13 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Some(200.5),
+    koulutuksenAlkamiskausiUUSI = Some(KoulutuksenAlkamiskausi(
+      alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+      henkilokohtaisenSuunnitelmanLisatiedot = Map(Fi -> "Jotakin lisätietoa", Sv -> "Jotakin lisätietoa sv"),
+      koulutuksenAlkamispaivamaara = None,
+      koulutuksenPaattymispaivamaara = None,
+      koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
+      koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear.toString))),
     koulutuksenTarkkaAlkamisaika = Some(true),
     koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
     koulutuksenPaattymispaivamaara = Some(inFuture(30000)),
