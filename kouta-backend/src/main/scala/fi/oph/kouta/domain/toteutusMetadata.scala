@@ -545,7 +545,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
       validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
       validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus"),
-      assertNotOptional(koulutuksenAlkamiskausiUUSI, s"$path.koulutuksenAlkamiskausiUUSI"), //Feature flag KTO-1036
+//      assertNotOptional(koulutuksenAlkamiskausiUUSI, s"$path.koulutuksenAlkamiskausiUUSI"), //Feature flag KTO-1036
       validateIfDefined[Boolean](koulutuksenTarkkaAlkamisaika, _ match {
         case true  => assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")
         case false => and(
