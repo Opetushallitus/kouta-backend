@@ -216,7 +216,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
     MockAuditLogger.clean()
-    update(thisToteutus, lastModified, false)
+    update(thisToteutus, lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
     get(oid, thisToteutus)
   }
@@ -278,7 +278,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(toteutus.organisaatioOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(toteutus.organisaatioOid))
   }
 
   it should "deny a user without access to the toteutus organization" in {
@@ -292,14 +292,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(ParentOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "allow a user with only access to a descendant organization" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(GrandChildOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(GrandChildOid))
   }
 
   it should "allow a user of the tarjoaja organization to update the toteutus" in {
@@ -307,7 +307,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(newKoulutusOid).copy(tarjoajat = List(LonelyOid)))
     val thisToteutus = toteutus(oid, newKoulutusOid).copy(tarjoajat = List(LonelyOid))
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(LonelyOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(LonelyOid))
   }
 
   it should "deny a user with the wrong role" in {
@@ -352,7 +352,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "description"))),
       tarjoajat = List(LonelyOid, OtherOid, AmmOid))
-    update(uusiToteutus, lastModified, true)
+    update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus)
   }
 
@@ -362,12 +362,12 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, thisToteutus)
     Thread.sleep(1500)
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
-    update(uusiToteutus, lastModified, true)
-    get(oid, uusiToteutus) should not equal (lastModified)
+    update(uusiToteutus, lastModified, expectUpdate = true)
+    get(oid, uusiToteutus) should not equal lastModified
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
+    val unfinishedToteutus = Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
     val newKoulutusOid = put(koulutus)
@@ -557,7 +557,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "extract toteutus from JSON of correct form" in {
     val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
-    toteutus.metadata.isDefined shouldBe(true)
+    toteutus.metadata.isDefined shouldBe true
   }
 
   it should "fail to extract toteutus from JSON of incorrect form" in {
