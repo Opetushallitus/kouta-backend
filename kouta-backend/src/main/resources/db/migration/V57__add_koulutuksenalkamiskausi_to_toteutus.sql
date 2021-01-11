@@ -17,22 +17,22 @@ update toteutukset
 set metadata = jsonb_set(metadata, '{opetus,koulutuksenAlkamiskausiUUSI,alkamiskausityyppi}', '"alkamiskausi ja -vuosi"', TRUE)
 where (metadata -> 'opetus' ->> 'koulutuksenTarkkaAlkamisaika' = 'false');
 
--- koulutuksen alkamiskausiKoodiUri vanhasta koulutuksenAlkamiskausi-kentästä
+-- kopioitu alkamiskausiKoodiUri vanhasta koulutuksenAlkamiskausi-kentästä
 update toteutukset
 set metadata = jsonb_set(metadata, '{opetus,koulutuksenAlkamiskausiUUSI,koulutuksenAlkamiskausiKoodiUri}', to_jsonb(metadata -> 'opetus' ->> 'koulutuksenAlkamiskausi'), TRUE)
 where metadata -> 'opetus' ->> 'koulutuksenAlkamiskausi' notnull;
 
--- koulutuksen koulutuksenAlkamisvuosi vanhasta koulutuksenAlkamisvuosi-kentästä
+-- kopioitu koulutuksenAlkamisvuosi vanhasta koulutuksenAlkamisvuosi-kentästä
 update toteutukset
 set metadata = jsonb_set(metadata, '{opetus,koulutuksenAlkamiskausiUUSI,koulutuksenAlkamisvuosi}', to_jsonb(metadata -> 'opetus' ->> 'koulutuksenAlkamisvuosi'), TRUE)
 where metadata -> 'opetus' ->> 'koulutuksenAlkamisvuosi' notnull;
 
--- koulutuksen koulutuksenAlkamispaivamaara vanhasta koulutuksenAlkamispaivamaara-kentästä
+-- kopioitu koulutuksenAlkamispaivamaara vanhasta koulutuksenAlkamispaivamaara-kentästä
 update toteutukset
 set metadata = jsonb_set(metadata, '{opetus,koulutuksenAlkamiskausiUUSI,koulutuksenAlkamispaivamaara}', to_jsonb(metadata -> 'opetus' ->> 'koulutuksenAlkamispaivamaara'), TRUE)
 where metadata -> 'opetus' ->> 'koulutuksenAlkamispaivamaara' notnull;
 
--- koulutuksen koulutuksenPaattymispaivamaara vanhasta koulutuksenPaattymispaivamaara-kentästä
+-- kopioitu koulutuksenPaattymispaivamaara vanhasta koulutuksenPaattymispaivamaara-kentästä
 update toteutukset
 set metadata = jsonb_set(metadata, '{opetus,koulutuksenAlkamiskausiUUSI,koulutuksenPaattymispaivamaara}', to_jsonb(metadata -> 'opetus' ->> 'koulutuksenPaattymispaivamaara'), TRUE)
 where metadata -> 'opetus' ->> 'koulutuksenPaattymispaivamaara' notnull;
