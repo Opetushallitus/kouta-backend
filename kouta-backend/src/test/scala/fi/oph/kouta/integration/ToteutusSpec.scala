@@ -415,7 +415,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   //feature flag KTO-1036
-  it should "validate dates only when adding a new julkaistu toteutus UUSI" in {
+  it should "validate koulutuksen alkamisen dates only when adding a new julkaistu toteutus UUSI" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
 
     val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
@@ -459,7 +459,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   //feature flag KTO-1036
-  it should "validate dates when moving from other states to julkaistu UUSI" in {
+  it should "validate koulutuksen alkamisen dates when moving from other states to julkaistu UUSI" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
     val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
@@ -497,7 +497,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   //feature flag KTO-1036
-  it should "not validate dates when updating a julkaistu toteutus UUSI" in {
+  it should "not validate koulutuksen alkamisen dates when updating a julkaistu toteutus UUSI" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
     val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val inPastMetadata = ammMetatieto.copy(opetus = Some(inPastOpetus))
@@ -508,6 +508,21 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, thisToteutus)
 
     update(thisToteutus.copy(metadata = Some(inPastMetadata)), lastModified)
+  }
+
+  //feature flag KTO-1036
+  it should "allow missing koulutuksen alkamiskausi" in {
+    val (future, morefuture) = (TestData.inFuture(5000), TestData.inFuture(6000))
+
+    val futureOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = future, paattymispvm = morefuture))
+    val toteutusMetadata = Some(ammMetatieto.copy(opetus = Some(futureOpetus)))
+    val toteutusOid = put(toteutus(koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu))
+
+    val copyOfJulkaistuToteutus = toteutus(toteutusOid, koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu)
+    val lastModified = get(toteutusOid, copyOfJulkaistuToteutus)
+
+    val toteutusWithoutAlkamiskausi = copyOfJulkaistuToteutus.copy(metadata = Some(ammMetatieto.copy(opetus = Some(opetus.copy(koulutuksenAlkamiskausiUUSI = None)))))
+    update(toteutusWithoutAlkamiskausi, lastModified)
   }
 
   it should "copy a temporary image to a permanent location while updating the toteutus" in {
