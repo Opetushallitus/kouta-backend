@@ -555,15 +555,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  it should "extract toteutus from JSON of correct form" in {
-    val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
-    toteutus.metadata.isDefined shouldBe true
-  }
-
-  it should "fail to extract toteutus from JSON of incorrect form" in {
-    an [org.json4s.MappingException] shouldBe thrownBy(ToteutusJsonMethods.extractJsonString(incorrectJson))
-  }
-
   val correctJson: String = """{
     "oid": "1.2.246.562.17.00000000000000000067",
     "koulutusOid": "1.2.246.562.13.00000000000000000167",
@@ -607,6 +598,11 @@ class ToteutusSpec extends KoutaIntegrationSpec
     ],
     "modified": "2019-10-29T15:21"
   }"""
+
+  it should "extract toteutus from JSON of correct form" in {
+    val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
+    toteutus.metadata.isDefined shouldBe true
+  }
 
   val incorrectJson: String = """{
     "oid": "1.2.246.562.17.00000000000000000067",
@@ -652,6 +648,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
     ],
     "modified": "2019-10-29T15:21"
   }"""
+
+  it should "fail to extract toteutus from JSON of incorrect form" in {
+    an [org.json4s.MappingException] shouldBe thrownBy(ToteutusJsonMethods.extractJsonString(incorrectJson))
+  }
 
   "When tutkintoon johtamaton, toteutus servlet" should "create, get and update ammatillinen osaamisala toteutus" in {
     val sorakuvausId = put(sorakuvaus)
