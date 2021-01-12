@@ -22,28 +22,25 @@ package object valintaperusteMetadata {
       |        valintakokeidenYleiskuvaus:
       |          type: object
       |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty valintaperustekuvauksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        kuvaus:
       |          type: object
       |          description: Valintaperustekuvauksen kuvausteksti eri kielillä. Kielet on määritetty valintaperustekuvauksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        sisalto:
       |          type: array
       |          description: Valintaperusteen kuvauksen sisältö. Voi sisältää sekä teksti- että taulukkoelementtejä.
       |          items:
-      |          type: object
-      |          oneOf:
-      |            - $ref: '#/components/schemas/SisaltoTeksti'
-      |            - $ref: '#/components/schemas/SisaltoTaulukko'
+      |            type: object
+      |            oneOf:
+      |              - $ref: '#/components/schemas/SisaltoTeksti'
+      |              - $ref: '#/components/schemas/SisaltoTaulukko'
       |""".stripMargin
 
   val AmmatillinenValintaperusteMetadataModel =
     """    AmmatillinenValintaperusteMetadata:
       |      type: object
-      |      allOf:
-      |        - $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
       |      properties:
       |        tyyppi:
       |          type: string
@@ -56,8 +53,7 @@ package object valintaperusteMetadata {
   val KorkeakoulutusValintaperusteMetadataModel =
     """    KorkeakoulutusValintaperusteMetadata:
       |      type: object
-      |      allOf:
-      |        - $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
       |      properties:
       |        osaamistaustaKoodiUrit:
       |          type: array
@@ -73,8 +69,7 @@ package object valintaperusteMetadata {
   val YliopistoValintaperusteMetadata =
     """    YliopistoValintaperusteMetadata:
       |      type: object
-      |      allOf:
-      |        - $ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
+      |      $ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
       |      properties:
       |        tyyppi:
       |          type: string
@@ -87,8 +82,7 @@ package object valintaperusteMetadata {
   val AmmattikorkeakouluValintaperusteMetadata =
     """    AmmattikorkeakouluValintaperusteMetadata:
       |      type: object
-      |      allOf:
-      |        - $ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
+      |      $ref: '#/components/schemas/KorkeakoulutusValintaperusteMetadata'
       |      properties:
       |        tyyppi:
       |          type: string
@@ -121,8 +115,7 @@ package object valintaperusteMetadata {
       |              lisatieto:
       |                type: object
       |                description: Kielitaidon osoittamisen lisätieto eri kielillä.
-      |                allOf:
-      |                  - $ref: '#/components/schemas/Lisatieto'
+      |                $ref: '#/components/schemas/Lisatieto'
       |        vaatimukset:
       |          type: array
       |          description: Lista kielitaitovaatimuksista
