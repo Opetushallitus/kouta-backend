@@ -11,10 +11,10 @@ import fi.oph.kouta.validation.Validations._
 
 class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
-  val max = JulkaistuHaku
-  val min = MinHaku
-  val pastAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = Some(TestData.inPast(100)))
-  val onlyAlkaaAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = None)
+  val max: Haku = JulkaistuHaku
+  val min: Haku = MinHaku
+  val pastAjanjakso: Ajanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = Some(TestData.inPast(100)))
+  val onlyAlkaaAjanjakso: Ajanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = None)
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(max.copy(oid = Some(HakuOid("moikka"))), "oid", validationMsg("moikka"))
@@ -93,8 +93,8 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
 }
 
 class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
-  val metadata = JulkaistuHaku.metadata.get
-  val pastAjanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = Some(TestData.inPast(100)))
+  val metadata: HakuMetadata = JulkaistuHaku.metadata.get
+  val pastAjanjakso: Ajanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = Some(TestData.inPast(100)))
 
   "HakuMetadata validation" should "pass a valid haku metadata" in {
     passesValidation(Julkaistu, metadata)
@@ -114,7 +114,7 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = None), "koulutuksenAlkamiskausi", missingMsg)
   }
 
-  val alkamiskausiJaVuosi = KoulutuksenAlkamiskausi(
+  val alkamiskausiJaVuosi: KoulutuksenAlkamiskausi = KoulutuksenAlkamiskausi(
     alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
     koulutuksenAlkamispaivamaara = None,
     koulutuksenPaattymispaivamaara = None,
@@ -151,7 +151,7 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     failsOnJulkaisuValidation(metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("2017")))), "koulutuksenAlkamiskausi.alkamisvuosi", pastDateMsg("2017"))
   }
 
-  val alkamiskausiTarkka = KoulutuksenAlkamiskausi(
+  val alkamiskausiTarkka: KoulutuksenAlkamiskausi = KoulutuksenAlkamiskausi(
     alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
     koulutuksenAlkamispaivamaara = Some(TestData.now()),
     koulutuksenPaattymispaivamaara = Some(TestData.inFuture(300)),
@@ -178,6 +178,17 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     val pastDate = TestData.inPast(300)
     passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = Some(pastDate)))))
     failsOnJulkaisuValidation(metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiTarkka.copy(koulutuksenAlkamispaivamaara = Some(pastDate)))), "koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(pastDate))
+  }
+
+  it should "fail if paattymispaiva is in the past on julkaisu" in {
+    val (pastDate, evenMorePast) = (TestData.inPast(300), TestData.inPast(700))
+    val alkaminenAndPaattyminenInThePast = Some(alkamiskausiTarkka.copy(koulutuksenPaattymispaivamaara = Some(pastDate), koulutuksenAlkamispaivamaara = Some(evenMorePast)))
+
+    passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = alkaminenAndPaattyminenInThePast))
+    failsOnJulkaisuValidation(
+      metadata.copy(koulutuksenAlkamiskausi = alkaminenAndPaattyminenInThePast),
+      ("koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(evenMorePast)),
+      ("koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(pastDate)))
   }
 
   it should "validate henkilökohtainen suunnitelma" in {

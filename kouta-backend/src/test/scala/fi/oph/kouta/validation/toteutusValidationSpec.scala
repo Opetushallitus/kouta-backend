@@ -3,18 +3,20 @@ package fi.oph.kouta.validation
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.validation.Validations._
+
+import java.time.LocalDateTime
 
 class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 
-  val amm = JulkaistuAmmToteutus
-  val ammMetadata = AmmToteutuksenMetatieto
-  val yo = JulkaistuYoToteutus
-  val yoMetadata = YoToteutuksenMetatieto
-  val min = MinToteutus
-  val ammOa = AmmOsaamisalaToteutus
-  val ammTo = AmmTutkinnonOsaToteutus
+  val amm: Toteutus = JulkaistuAmmToteutus
+  val ammMetadata: AmmatillinenToteutusMetadata = AmmToteutuksenMetatieto
+  val yo: Toteutus = JulkaistuYoToteutus
+  val yoMetadata: YliopistoToteutusMetadata = YoToteutuksenMetatieto
+  val min: Toteutus = MinToteutus
+  val ammOa: Toteutus = AmmOsaamisalaToteutus
+  val ammTo: Toteutus = AmmTutkinnonOsaToteutus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -116,10 +118,10 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 }
 
 class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
-  val opetus = ToteutuksenOpetus
+  val opetus: Opetus = ToteutuksenOpetus
 
-  val past = TestData.inPast(1000)
-  val moreInPast = TestData.inPast(9000)
+  val past: LocalDateTime = TestData.inPast(1000)
+  val moreInPast: LocalDateTime = TestData.inPast(9000)
 
   "Opetus validation" should "pass a valid opetus" in {
     passesValidation(Julkaistu, opetus)
