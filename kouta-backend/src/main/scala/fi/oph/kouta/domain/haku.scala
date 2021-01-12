@@ -32,7 +32,7 @@ package object haku {
       |            - $ref: '#/components/schemas/Nimi'
       |        hakutapaKoodiUri:
       |          type: string
-      |          description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
+      |          description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/1)
       |          example: hakutapa_03#1
       |        hakukohteenLiittamisenTakaraja:
       |          type: string
