@@ -9,7 +9,7 @@ import fi.oph.kouta.validation.Validations._
 
 package object haku {
 
-  val HakuModel =
+  val HakuModel: String =
     """    Haku:
       |      type: object
       |      properties:
@@ -115,7 +115,7 @@ package object haku {
       |           example: 2019-08-23T09:55
       |""".stripMargin
 
-  val HakuMetadataModel =
+  val HakuMetadataModel: String =
     """    HakuMetadata:
       |      type: object
       |      properties:
@@ -135,7 +135,7 @@ package object haku {
       |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |""".stripMargin
 
-  val HakuListItemModel =
+  val HakuListItemModel: String =
     """    HakuListItem:
       |      type: object
       |      properties:
