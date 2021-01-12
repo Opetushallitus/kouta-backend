@@ -31,8 +31,8 @@ package object valintatapa {
       |          items:
       |            type: object
       |            oneOf:
-      |              - $ref: '#/components/schemas/ValintatapaSisaltoTeksti'
-      |              - $ref: '#/components/schemas/ValintatapaSisaltoTaulukko'
+      |              - $ref: '#/components/schemas/SisaltoTeksti'
+      |              - $ref: '#/components/schemas/SisaltoTaulukko'
       |        kaytaMuuntotaulukkoa:
       |          type: boolean
       |          description: "Käytetäänkö muuntotaulukkoa?"
@@ -51,8 +51,8 @@ package object valintatapa {
       |          example: 10.0
       |""".stripMargin
 
-  val ValintatapaSisaltoTekstiModel =
-    """    ValintatapaSisaltoTeksti:
+  val SisaltoTekstiModel =
+    """    SisaltoTeksti:
       |      type: object
       |      description: Tekstimuotoinen valintatavan sisällön kuvaus
       |      properties:
@@ -63,8 +63,8 @@ package object valintatapa {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val ValintatapaSisaltoTaulukkoModel =
-    """    ValintatapaSisaltoTaulukko:
+  val SisaltoTaulukkoModel =
+    """    SisaltoTaulukko:
       |      type: object
       |      description: Taulukkomuotoinen valintatavan sisällön kuvaus
       |      properties:
@@ -106,13 +106,13 @@ package object valintatapa {
       |                        - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  def models = List(ValintatapaModel, ValintatapaSisaltoTekstiModel, ValintatapaSisaltoTaulukkoModel)
+  def models = List(ValintatapaModel, SisaltoTekstiModel, SisaltoTaulukkoModel)
 }
 
 case class Valintatapa(nimi: Kielistetty = Map(),
                        valintatapaKoodiUri: Option[String] = None,
                        kuvaus: Kielistetty = Map(),
-                       sisalto: Seq[ValintatapaSisalto],
+                       sisalto: Seq[Sisalto],
                        kaytaMuuntotaulukkoa: Boolean = false,
                        kynnysehto: Kielistetty = Map(),
                        enimmaispisteet: Option[Double] = None,
@@ -120,7 +120,7 @@ case class Valintatapa(nimi: Kielistetty = Map(),
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateKielistetty(kielivalinta, nimi, s"$path.nimi"),
     validateIfDefined[String](valintatapaKoodiUri, assertMatch(_, ValintatapajonoKoodiPattern, s"$path.valintatapaKoodiUri")),
-    validateIfNonEmpty[ValintatapaSisalto](sisalto, s"$path.sisalto", _.validate(tila, kielivalinta, _)),
+    validateIfNonEmpty[Sisalto](sisalto, s"$path.sisalto", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Double](enimmaispisteet, assertNotNegative(_, s"$path.enimmaispisteet")),
     validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, s"$path.vahimmaispisteet")),
     validateIfJulkaistu(tila, and(
@@ -133,16 +133,16 @@ case class Valintatapa(nimi: Kielistetty = Map(),
 
 }
 
-sealed trait ValintatapaSisalto extends ValidatableSubEntity
+sealed trait Sisalto extends ValidatableSubEntity
 
-case class ValintatapaSisaltoTeksti(teksti: Kielistetty) extends ValintatapaSisalto {
+case class SisaltoTeksti(teksti: Kielistetty) extends Sisalto {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, teksti, s"$path.teksti"))
 }
 
 case class Taulukko(id: Option[UUID],
                     nimi: Kielistetty = Map(),
-                    rows: Seq[Row] = Seq()) extends ValintatapaSisalto {
+                    rows: Seq[Row] = Seq()) extends Sisalto {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi")),
     validateIfNonEmpty[Row](rows, s"$path.rows", _.validate(tila, kielivalinta, _))
