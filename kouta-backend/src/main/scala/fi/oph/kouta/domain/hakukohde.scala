@@ -383,6 +383,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus")
     ))
