@@ -184,6 +184,16 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
 
     failsOnJulkaisuValidation(metadataWithAlkamisvuosiInThePast, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2007"))
   }
+
+  it should "validate kaytetaanHaunAlkamiskautta is mandatory" in {
+    val metadataWithoutKaytetaanHaunAlkamiskauttaFlag = HakukohdeMetadata(
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          koulutuksenAlkamisvuosi = Some("2007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+
+    failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "kaytetaanHaunAlkamiskautta", missingMsg)
+  }
 }
 
 class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
