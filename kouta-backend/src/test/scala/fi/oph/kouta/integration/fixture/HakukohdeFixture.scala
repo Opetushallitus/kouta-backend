@@ -30,11 +30,6 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
     addServlet(new HakukohdeServlet(hakukohdeService), HakukohdePath)
   }
   val hakukohde: Hakukohde = JulkaistuHakukohde
-  val hakukohdeWithInvalidAlkamiskausi: Hakukohde = JulkaistuHakukohde.copy(tila = Tallennettu, metadata = Some(HakukohdeMetadata(koulutuksenAlkamiskausi =
-    Some(KoulutuksenAlkamiskausi(
-      alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
-      koulutuksenAlkamisvuosi = Some("200007"),
-      koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))))
 
   def getIds(hakukohde:Hakukohde): Hakukohde = {
     import slick.jdbc.PostgresProfile.api._
