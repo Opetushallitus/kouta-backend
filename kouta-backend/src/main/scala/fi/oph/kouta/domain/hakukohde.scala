@@ -36,8 +36,7 @@ package object hakukohde {
       |        nimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        alkamiskausiKoodiUri:
       |          type: string
       |          description: Hakukohteen koulutusten alkamiskausi, jos ei käytetä haun alkamiskautta.
@@ -70,13 +69,11 @@ package object hakukohde {
       |        hakulomakeKuvaus:
       |          type: object
       |          description: Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        hakulomakeLinkki:
       |          type: object
       |          description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Linkki'
+      |          $ref: '#/components/schemas/Linkki'
       |        kaytetaanHaunHakulomaketta:
       |          type: boolean
       |          description: Käytetäänkö haun hakulomaketta vai onko hakukohteelle määritelty oma hakulomake?
@@ -99,8 +96,7 @@ package object hakukohde {
       |        muuPohjakoulutusvaatimus:
       |          type: object
       |          description: Hakukohteen muiden pohjakoulutusvaatimusten kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        toinenAsteOnkoKaksoistutkinto:
       |          type: boolean
       |          description: Onko hakukohteen toisen asteen koulutuksessa mahdollista suorittaa kaksoistutkinto?
@@ -138,8 +134,7 @@ package object hakukohde {
       |        liitteidenToimitusosoite:
       |          type: object
       |          description: Jos liitteillä on sama toimitusosoite, se ilmoitetaan tässä
-      |          allOf:
-      |            - $ref: '#/components/schemas/LiitteenToimitusosoite'
+      |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |        liitteet:
       |          type: array
       |          description: Hakukohteen liitteet
@@ -207,8 +202,7 @@ package object hakukohde {
       |        nimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        metadata:
       |          type: object
       |          $ref: '#/components/schemas/HakukohdeMetadata'
@@ -238,8 +232,7 @@ package object hakukohde {
       |        valintakokeidenYleiskuvaus:
       |          type: object
       |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
@@ -253,13 +246,11 @@ package object hakukohde {
       |        osoite:
       |          type: object
       |          description: Liitteen toimitusosoite
-      |          allOf:
-      |            - $ref: '#/components/schemas/Osoite'
+      |          $ref: '#/components/schemas/Osoite'
       |        sahkoposti:
       |          type: object
       |          description: Sähköpostiosoite, johon liite voidaan toimittaa
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val LiiteModel: String =
@@ -277,13 +268,11 @@ package object hakukohde {
       |        nimi:
       |          type: object
       |          description: Liitteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        kuvaus:
       |          type: object
       |          description: Liitteen Opintopolussa näytettävä kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        toimitusaika:
       |          type: string
       |          description: Liitteen toimitusaika, jos ei ole sama kuin kaikilla hakukohteen liitteillä
@@ -300,8 +289,7 @@ package object hakukohde {
       |        toimitusosoite:
       |          type: object
       |          description: Liitteen toimitusosoite, jos ei ole sama kuin kaikilla hakukohteen liitteillä
-      |          allOf:
-      |            - $ref: '#/components/schemas/LiitteenToimitusosoite'
+      |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |""".stripMargin
 
   def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel)
