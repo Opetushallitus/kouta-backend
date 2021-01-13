@@ -105,17 +105,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     failsValidation(min.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("koodi")))), "valintakokeet[0].tyyppiKoodiUri", validationMsg("koodi"))
   }
 
-  it should "validate koulutuksenAlkamiskausi" in {
-    val hakukohdeWithInvalidAlkamisvuosi: Hakukohde = max.copy(
-      tila = Tallennettu,
-      metadata = Some(HakukohdeMetadata(koulutuksenAlkamiskausi =
-        Some(KoulutuksenAlkamiskausi(
-          koulutuksenAlkamisvuosi = Some("200007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))))
-
-    failsValidation(hakukohdeWithInvalidAlkamisvuosi, "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
-  }
-
   it should "pass valid julkaistu hakukohde" in {
     passesValidation(max)
   }
@@ -157,6 +146,18 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     val hakukohde = max.copy(valintakokeet = List(Valintakoe1.copy(tilaisuudet = List(tilaisuus))))
     passesValidation(hakukohde)
     failsOnJulkaisuValidation(hakukohde, "valintakokeet[0].tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy.get))
+  }
+}
+
+class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMetadata]{
+
+  "Hakukohde metadata validation" should "validate koulutuksenAlkamiskausi" in {
+    val metadataWithInvalidAlkamisvuosi = HakukohdeMetadata(koulutuksenAlkamiskausi =
+      Some(KoulutuksenAlkamiskausi(
+        koulutuksenAlkamisvuosi = Some("200007"),
+        koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+
+    failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
   }
 }
 
