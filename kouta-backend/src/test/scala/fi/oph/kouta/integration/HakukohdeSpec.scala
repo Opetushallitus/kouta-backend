@@ -198,14 +198,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     }
   }
 
-  it should "validate alkamiskausi when adding a new julkaistu hakukohde" in {
-    put(HakukohdePath, bytes(hakukohdeWithInvalidAlkamiskausi), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(validationMsg("200007"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
-    }
-  }
 
   "Update hakukohde" should "update hakukohde" in {
     val oid = put(uusiHakukohde)
