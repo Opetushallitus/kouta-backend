@@ -194,6 +194,14 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "kaytetaanHaunAlkamiskautta", missingMsg)
   }
+
+  it should "validate koulutuksenAlkamiskausi is given if not using haun alkamiskausi" in {
+    val metadataWithoutKaytetaanHaunAlkamiskauttaFlag = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi = None)
+
+    failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "koulutuksenAlkamiskausi", missingMsg)
+  }
 }
 
 class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
