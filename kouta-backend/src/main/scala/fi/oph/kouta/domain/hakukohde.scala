@@ -237,6 +237,9 @@ package object hakukohde {
       |          type: object
       |          description: Koulutuksen alkamiskausi
       |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
+      |        kaytetaanHaunAlkamiskautta:
+      |          type: boolean
+      |          description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
       |""".stripMargin
 
   val LiitteenToimitusosoiteModel: String =
@@ -381,7 +384,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 }
 
 case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
-                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi]) extends ValidatableSubEntity {
+                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                             kaytetaanHaunAlkamiskautta: Option[Boolean] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     validateIfJulkaistu(tila, and(
