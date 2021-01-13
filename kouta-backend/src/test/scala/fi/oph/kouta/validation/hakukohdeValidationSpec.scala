@@ -10,8 +10,8 @@ import fi.oph.kouta.validation.Validations._
 
 class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
 
-  val max = JulkaistuHakukohde
-  val min = MinHakukohde
+  val max: Hakukohde = JulkaistuHakukohde
+  val min: Hakukohde = MinHakukohde
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(max.copy(oid = Some(HakukohdeOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -206,7 +206,7 @@ class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
 }
 
 class LiitteenToimitusosoiteValidationSpec extends SubEntityValidationSpec[LiitteenToimitusosoite] {
-  val toimitusOsoite = LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))
+  val toimitusOsoite: LiitteenToimitusosoite = LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))
 
   "LiitteenToimitusosoite validation" should "pass a valid LiitteenToimitusosoite" in {
     passesValidation(Julkaistu, toimitusOsoite)
