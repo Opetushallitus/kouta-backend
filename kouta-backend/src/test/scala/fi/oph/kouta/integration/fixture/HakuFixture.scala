@@ -35,6 +35,7 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
   val yhteishakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(
     hakutapaKoodiUri = Some("hakutapa_01#1"),
     metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
+  val jatkuvaHakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
 
   def hakuWithAlkamisvuosi(haku: Haku, alkamisvuosi: String): Haku = haku.copy(metadata = Some(
     haku.metadata.get.copy(koulutuksenAlkamiskausi = Some(

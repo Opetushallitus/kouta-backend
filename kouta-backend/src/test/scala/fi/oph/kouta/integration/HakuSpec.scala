@@ -162,8 +162,13 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     }
   }
 
-  //TODO testi sille että muille kuin yhteishaulle ei ole alkamiskausi pakollinen
-
+  it should "not validate alkamiskausi is given if not yhteishaku" in {
+    put(HakuPath, bytes(jatkuvaHakuWithoutAlkamiskausi), defaultHeaders) {
+      withClue(body) {
+        status should equal(200)
+      }
+    }
+  }
 
   "Update haku" should "update haku" in {
     val oid = put(haku)
