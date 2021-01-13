@@ -5,7 +5,7 @@ import fi.oph.kouta.validation.Validations._
 
 package object koulutusMetadata {
 
-  val KoulutusMetadataModel =
+  val KoulutusMetadataModel: String =
     """    KoulutusMetadata:
       |      type: object
       |      properties:
@@ -26,7 +26,7 @@ package object koulutusMetadata {
       |          example: https://konfo-files.opintopolku.fi/koulutus-teema/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
-  val KorkeakouluMetadataModel =
+  val KorkeakouluMetadataModel: String =
     """    KorkeakouluMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
@@ -58,7 +58,7 @@ package object koulutusMetadata {
       |          example: opintojenlaajuus_40#1
       |""".stripMargin
 
-  val YliopistoKoulutusMetadataModel =
+  val YliopistoKoulutusMetadataModel: String =
     """    YliopistoKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluMetadata'
@@ -72,7 +72,7 @@ package object koulutusMetadata {
       |                - yo
       |""".stripMargin
 
-  val AmmattikorkeaKoulutusMetadataModel =
+  val AmmattikorkeaKoulutusMetadataModel: String =
     """    AmmattikorkeaKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluMetadata'
@@ -86,7 +86,7 @@ package object koulutusMetadata {
       |                - amk
       |""".stripMargin
 
-  val AmmatillinenKoulutusMetadataModel =
+  val AmmatillinenKoulutusMetadataModel: String =
     """    AmmatillinenKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
@@ -100,7 +100,7 @@ package object koulutusMetadata {
       |                - amm
       |""".stripMargin
 
-  val AmmatillinenTutkinnonOsaKoulutusMetadataModel =
+  val AmmatillinenTutkinnonOsaKoulutusMetadataModel: String =
     """    AmmatillinenTutkinnonOsaKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
@@ -120,7 +120,7 @@ package object koulutusMetadata {
       |                $ref: '#/components/schemas/TutkinnonOsa'
       |""".stripMargin
 
-  val AmmatillinenOsaamisalaKoulutusMetadataModel =
+  val AmmatillinenOsaamisalaKoulutusMetadataModel: String =
     """    AmmatillinenOsaamisalaKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
