@@ -584,7 +584,7 @@ package object domain {
       )))
 
     override def validateOnJulkaisu(path: String): IsValid = and(
-      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.alkamisvuosi")),
+      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.koulutuksenAlkamisvuosi")),
       validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
       validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")))
   }
