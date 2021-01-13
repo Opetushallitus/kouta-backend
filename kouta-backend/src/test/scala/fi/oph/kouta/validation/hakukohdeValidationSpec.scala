@@ -152,29 +152,35 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
 class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMetadata]{
 
   "Hakukohde metadata validation" should "validate koulutuksenAlkamiskausi" in {
-    val metadataWithInvalidAlkamisvuosi = HakukohdeMetadata(koulutuksenAlkamiskausi =
-      Some(KoulutuksenAlkamiskausi(
-        koulutuksenAlkamisvuosi = Some("200007"),
-        koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+    val metadataWithInvalidAlkamisvuosi = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          koulutuksenAlkamisvuosi = Some("200007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
 
     failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
   }
 
   it should "validate koulutuksenAlkamiskausi of a julkaistu hakukohde" in {
-    val metadataWithoutAlkamiskausityyppi = HakukohdeMetadata(koulutuksenAlkamiskausi =
-      Some(KoulutuksenAlkamiskausi(
-        alkamiskausityyppi = None,
-        koulutuksenAlkamisvuosi = Some("2007"),
-        koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+    val metadataWithoutAlkamiskausityyppi = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          alkamiskausityyppi = None,
+          koulutuksenAlkamisvuosi = Some("2007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
 
     failsValidation(Julkaistu, metadataWithoutAlkamiskausityyppi, "koulutuksenAlkamiskausi.alkamiskausityyppi", missingMsg)
   }
 
   it should "validate koulutuksenAlkamiskausi on julkaisu of hakukohde" in {
-    val metadataWithAlkamisvuosiInThePast = HakukohdeMetadata(koulutuksenAlkamiskausi =
-      Some(KoulutuksenAlkamiskausi(
-        koulutuksenAlkamisvuosi = Some("2007"),
-        koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+    val metadataWithAlkamisvuosiInThePast = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          koulutuksenAlkamisvuosi = Some("2007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
 
     failsOnJulkaisuValidation(metadataWithAlkamisvuosiInThePast, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2007"))
   }
