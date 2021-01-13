@@ -9,7 +9,7 @@ import fi.oph.kouta.validation.Validations._
 
 package object hakukohde {
 
-  val HakukohdeModel =
+  val HakukohdeModel: String =
     """    Hakukohde:
       |      type: object
       |      properties:
@@ -173,7 +173,7 @@ package object hakukohde {
       |           example: 2019-08-23T09:55
       |""".stripMargin
 
-  val HakukohdeListItemModel =
+  val HakukohdeListItemModel: String =
     """    HakukohdeListItem:
       |      type: object
       |      properties:
@@ -228,7 +228,7 @@ package object hakukohde {
       |           example: 2019-08-23T09:55
       |""".stripMargin
 
-  val HakukohdeMetadataModel =
+  val HakukohdeMetadataModel: String =
     """    HakukohdeMetadata:
       |      type: object
       |      properties:
@@ -239,7 +239,7 @@ package object hakukohde {
       |            - $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
-  val LiitteenToimitusosoiteModel =
+  val LiitteenToimitusosoiteModel: String =
     """    LiitteenToimitusosoite:
       |      type: object
       |      properties:
@@ -255,7 +255,7 @@ package object hakukohde {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val LiiteModel =
+  val LiiteModel: String =
     """    Liite:
       |      type: object
       |      properties:
