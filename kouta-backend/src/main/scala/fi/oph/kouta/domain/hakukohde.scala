@@ -240,6 +240,10 @@ package object hakukohde {
       |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.
       |          allOf:
       |            - $ref: '#/components/schemas/Kuvaus'
+      |        koulutuksenAlkamiskausi:
+      |          type: object
+      |          description: Koulutuksen alkamiskausi
+      |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |""".stripMargin
 
   val LiitteenToimitusosoiteModel: String =
@@ -388,7 +392,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
 }
 
-case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus")

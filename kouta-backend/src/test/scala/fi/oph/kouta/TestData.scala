@@ -211,7 +211,11 @@ object TestData {
     liitteidenToimitustapa = None,
     liitteidenToimitusosoite = None,
     liitteet = List(Liite1, Liite2),
-    metadata = Some(HakukohdeMetadata(valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"))),
+    metadata = Some(HakukohdeMetadata(valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+      koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
+      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+      koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
+      koulutuksenPaattymispaivamaara = Some(inFuture(30000)))))),
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     muokkaaja = TestUserOid,
