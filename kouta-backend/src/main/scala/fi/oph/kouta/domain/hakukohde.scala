@@ -158,6 +158,9 @@ package object hakukohde {
       |          example:
       |            - fi
       |            - sv
+      |        metadata:
+      |          type: object
+      |          $ref: '#/components/schemas/HakukohdeMetadata'
       |        muokkaaja:
       |          type: string
       |          description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
