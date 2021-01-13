@@ -169,6 +169,15 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
 
     failsValidation(Julkaistu, metadataWithoutAlkamiskausityyppi, "koulutuksenAlkamiskausi.alkamiskausityyppi", missingMsg)
   }
+
+  it should "validate koulutuksenAlkamiskausi on julkaisu of hakukohde" in {
+    val metadataWithAlkamisvuosiInThePast = HakukohdeMetadata(koulutuksenAlkamiskausi =
+      Some(KoulutuksenAlkamiskausi(
+        koulutuksenAlkamisvuosi = Some("2007"),
+        koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+
+    failsOnJulkaisuValidation(metadataWithAlkamisvuosiInThePast, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2007"))
+  }
 }
 
 class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
