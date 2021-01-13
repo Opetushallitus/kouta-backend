@@ -254,7 +254,7 @@ object TestData {
     nimi = kieliMap("Valintatapa1"),
     valintatapaKoodiUri = Some("valintatapajono_av#1"),
     kuvaus = kieliMap("kuvaus"),
-    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
     kaytaMuuntotaulukkoa = false,
     kynnysehto = kieliMap("kynnysehto"),
     enimmaispisteet = Some(201.15),
@@ -264,7 +264,7 @@ object TestData {
     nimi = kieliMap("Valintatapa2"),
     valintatapaKoodiUri = Some("valintatapajono_tv#1"),
     kuvaus = kieliMap("kuvaus 2"),
-    sisalto = Seq(ValintatapaSisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
     kaytaMuuntotaulukkoa = true,
     kynnysehto = kieliMap("kynnysehto"),
     enimmaispisteet = Some(18.1),
@@ -297,13 +297,15 @@ object TestData {
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     osaamistaustaKoodiUrit = Seq("osaamistausta_001#1"),
     valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
-    kuvaus = kieliMap("kuvaus"))
+    kuvaus = kieliMap("kuvaus"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
 
   val AmmValintaperusteMetadata: AmmatillinenValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
     kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
-    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
 
   val AmmValintaperuste: Valintaperuste = Valintaperuste(
     koulutustyyppi = Amm,
