@@ -208,7 +208,7 @@ case class Haku(oid: Option[HakuOid] = None,
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
-      validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"),
+      validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), //Yhteishaku
         assertNotOptional(metadata.get.koulutuksenAlkamiskausi, "metadata.koulutuksenAlkamiskausi"))
     ))
   )
