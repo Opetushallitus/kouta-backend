@@ -149,7 +149,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg("2007"), "metadata.koulutuksenAlkamiskausi.alkamisvuosi"))
+      body should equal(validationErrorBody(pastDateMsg("2007"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
     }
   }
 
@@ -322,7 +322,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg("2017"), "metadata.koulutuksenAlkamiskausi.alkamisvuosi"))
+      body should equal(validationErrorBody(pastDateMsg("2017"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
     }
 
     update(thisHakuWithOid.copy(tila = Arkistoitu), lastModified)

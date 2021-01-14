@@ -110,10 +110,6 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     failsValidation(Tallennettu, metadata.copy(tulevaisuudenAikataulu = List(ajanjakso)), "tulevaisuudenAikataulu[0]", invalidAjanjaksoMsg(ajanjakso))
   }
 
-  it should "fail if koulutuksen alkamiskausi not in julkaistu haku" in {
-    failsValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = None), "koulutuksenAlkamiskausi", missingMsg)
-  }
-
   val alkamiskausiJaVuosi: KoulutuksenAlkamiskausi = KoulutuksenAlkamiskausi(
     alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
     koulutuksenAlkamispaivamaara = None,
@@ -148,7 +144,7 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
 
   it should "fail if alkamisvuosi is in the past on julkaisu" in {
     passesValidation(Julkaistu, metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("2017")))))
-    failsOnJulkaisuValidation(metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("2017")))), "koulutuksenAlkamiskausi.alkamisvuosi", pastDateMsg("2017"))
+    failsOnJulkaisuValidation(metadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausiJaVuosi.copy(koulutuksenAlkamisvuosi = Some("2017")))), "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2017"))
   }
 
   val alkamiskausiTarkka: KoulutuksenAlkamiskausi = KoulutuksenAlkamiskausi(
