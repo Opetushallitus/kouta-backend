@@ -28,7 +28,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
     super.beforeAll()
     addServlet(new HakukohdeServlet(hakukohdeService), HakukohdePath)
   }
-  val hakukohde = JulkaistuHakukohde
+  val hakukohde: Hakukohde = JulkaistuHakukohde
 
   def getIds(hakukohde:Hakukohde): Hakukohde = {
     import slick.jdbc.PostgresProfile.api._
@@ -76,7 +76,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
   def update(haku: Hakukohde, lastModified: String, expectUpdate: Boolean): Unit = update(HakukohdePath, haku, lastModified, expectUpdate)
   def update(haku: Hakukohde, lastModified: String): Unit = update(haku, lastModified, expectUpdate = true)
 
-  def addToList(hakukohde: Hakukohde) = {
+  def addToList(hakukohde: Hakukohde): HakukohdeListItem = {
     val oid = put(hakukohde)
     val modified = readHakukohdeModified(oid)
     HakukohdeListItem(HakukohdeOid(oid), hakukohde.toteutusOid, hakukohde.hakuOid, hakukohde.valintaperusteId,

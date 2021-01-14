@@ -29,7 +29,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
     addServlet(new ValintaperusteServlet(valintaperusteService), ValintaperustePath)
   }
 
-  val valintaperuste = TestData.AmmValintaperuste
+  val valintaperuste: Valintaperuste = TestData.AmmValintaperuste
 
   def getIds(valintaperuste: Valintaperuste): Valintaperuste = {
     import slick.jdbc.PostgresProfile.api._
@@ -53,8 +53,8 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   def valintaperuste(id:UUID, sorakuvausId: UUID): Valintaperuste = valintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId))
   def valintaperuste(id:UUID, sorakuvausId: UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId), tila = tila)
 
-  def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id(_))
-  def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID = put(ValintaperustePath, valintaperuste, sessionId, id(_))
+  def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id)
+  def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID = put(ValintaperustePath, valintaperuste, sessionId, id)
 
   implicit val valintaperusteEquality: Equality[Valintaperuste] = (a: Valintaperuste, b: Any) => b match {
     case v: Valintaperuste =>
@@ -70,12 +70,12 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   def update(valintaperuste: Valintaperuste, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, sessionId, expectedStatus)
   def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate, sessionId)
   def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
-  def update(valintaperuste: Valintaperuste, lastModified: String): Unit = update(valintaperuste, lastModified, true)
+  def update(valintaperuste: Valintaperuste, lastModified: String): Unit = update(valintaperuste, lastModified, expectUpdate = true)
 
   def valintaperuste(sorakuvausId: Option[UUID], tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
     valintaperuste.copy(sorakuvausId = sorakuvausId, organisaatioOid = organisaatioOid, tila = tila)
 
-  def addToList(valintaperuste:Valintaperuste) = {
+  def addToList(valintaperuste:Valintaperuste): ValintaperusteListItem = {
     val id = put(valintaperuste)
     val modified = readValintaperusteModified(id)
     ValintaperusteListItem(id, valintaperuste.nimi, valintaperuste.tila,

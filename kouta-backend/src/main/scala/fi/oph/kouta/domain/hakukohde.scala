@@ -9,7 +9,7 @@ import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 package object hakukohde {
 
-  val HakukohdeModel =
+  val HakukohdeModel: String =
     """    Hakukohde:
       |      type: object
       |      properties:
@@ -36,8 +36,7 @@ package object hakukohde {
       |        nimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        alkamiskausiKoodiUri:
       |          type: string
       |          description: Hakukohteen koulutusten alkamiskausi, jos ei käytetä haun alkamiskautta.
@@ -70,13 +69,11 @@ package object hakukohde {
       |        hakulomakeKuvaus:
       |          type: object
       |          description: Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        hakulomakeLinkki:
       |          type: object
       |          description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Linkki'
+      |          $ref: '#/components/schemas/Linkki'
       |        kaytetaanHaunHakulomaketta:
       |          type: boolean
       |          description: Käytetäänkö haun hakulomaketta vai onko hakukohteelle määritelty oma hakulomake?
@@ -99,8 +96,7 @@ package object hakukohde {
       |        muuPohjakoulutusvaatimus:
       |          type: object
       |          description: Hakukohteen muiden pohjakoulutusvaatimusten kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        toinenAsteOnkoKaksoistutkinto:
       |          type: boolean
       |          description: Onko hakukohteen toisen asteen koulutuksessa mahdollista suorittaa kaksoistutkinto?
@@ -138,8 +134,7 @@ package object hakukohde {
       |        liitteidenToimitusosoite:
       |          type: object
       |          description: Jos liitteillä on sama toimitusosoite, se ilmoitetaan tässä
-      |          allOf:
-      |            - $ref: '#/components/schemas/LiitteenToimitusosoite'
+      |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |        liitteet:
       |          type: array
       |          description: Hakukohteen liitteet
@@ -158,6 +153,9 @@ package object hakukohde {
       |          example:
       |            - fi
       |            - sv
+      |        metadata:
+      |          type: object
+      |          $ref: '#/components/schemas/HakukohdeMetadata'
       |        muokkaaja:
       |          type: string
       |          description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
@@ -173,7 +171,7 @@ package object hakukohde {
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
-  val HakukohdeListItemModel =
+  val HakukohdeListItemModel: String =
     """    HakukohdeListItem:
       |      type: object
       |      properties:
@@ -204,8 +202,7 @@ package object hakukohde {
       |        nimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        metadata:
       |          type: object
       |          $ref: '#/components/schemas/HakukohdeMetadata'
@@ -228,34 +225,38 @@ package object hakukohde {
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
-  val HakukohdeMetadataModel =
+  val HakukohdeMetadataModel: String =
     """    HakukohdeMetadata:
       |      type: object
       |      properties:
       |        valintakokeidenYleiskuvaus:
       |          type: object
       |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
+      |        koulutuksenAlkamiskausi:
+      |          type: object
+      |          description: Koulutuksen alkamiskausi
+      |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
+      |        kaytetaanHaunAlkamiskautta:
+      |          type: boolean
+      |          description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
       |""".stripMargin
 
-  val LiitteenToimitusosoiteModel =
+  val LiitteenToimitusosoiteModel: String =
     """    LiitteenToimitusosoite:
       |      type: object
       |      properties:
       |        osoite:
       |          type: object
       |          description: Liitteen toimitusosoite
-      |          allOf:
-      |            - $ref: '#/components/schemas/Osoite'
+      |          $ref: '#/components/schemas/Osoite'
       |        sahkoposti:
       |          type: object
       |          description: Sähköpostiosoite, johon liite voidaan toimittaa
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val LiiteModel =
+  val LiiteModel: String =
     """    Liite:
       |      type: object
       |      properties:
@@ -270,13 +271,11 @@ package object hakukohde {
       |        nimi:
       |          type: object
       |          description: Liitteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        kuvaus:
       |          type: object
       |          description: Liitteen Opintopolussa näytettävä kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        toimitusaika:
       |          type: string
       |          description: Liitteen toimitusaika, jos ei ole sama kuin kaikilla hakukohteen liitteillä
@@ -293,8 +292,7 @@ package object hakukohde {
       |        toimitusosoite:
       |          type: object
       |          description: Liitteen toimitusosoite, jos ei ole sama kuin kaikilla hakukohteen liitteillä
-      |          allOf:
-      |            - $ref: '#/components/schemas/LiitteenToimitusosoite'
+      |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |""".stripMargin
 
   def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel)
@@ -385,12 +383,19 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
 }
 
-case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                             kaytetaanHaunAlkamiskautta: Option[Boolean] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
+    validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus")
     ))
   )
+
+  override def validateOnJulkaisu(path: String): IsValid = validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi"))
 }
 
 case class Liite(id: Option[UUID] = None,

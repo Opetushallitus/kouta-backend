@@ -1,8 +1,5 @@
 package fi.oph.kouta.integration
 
-import java.time.LocalDateTime
-import java.util.UUID
-
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -11,6 +8,9 @@ import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.{TestData, TestOids}
+
+import java.time.LocalDateTime
+import java.util.UUID
 
 class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
@@ -33,7 +33,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     super.afterAll()
   }
 
-  lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
+  lazy val uusiHakukohde: Hakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
   lazy val tallennettuHakukohde: String => Hakukohde = { oid: String =>
     getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))
   }
@@ -198,19 +198,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     }
   }
 
-  it should "validate dates only when adding a new julkaistu hakukohde" in {
-    val thisHakukohde = uusiHakukohde.copy(alkamisvuosi = Some("2017"))
-
-    put(thisHakukohde.copy(tila = Tallennettu))
-
-    put(HakukohdePath, bytes(thisHakukohde.copy(tila = Julkaistu)), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
-    }
-  }
-
   "Update hakukohde" should "update hakukohde" in {
     val oid = put(uusiHakukohde)
     val lastModified = get(oid, tallennettuHakukohde(oid))
@@ -344,14 +331,14 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
-    update(thisHakukohde, lastModified, false, crudSessions(hakukohde.organisaatioOid))
+    update(thisHakukohde, lastModified, expectUpdate = false, crudSessions(hakukohde.organisaatioOid))
   }
 
   it should "allow a user of toteutuksen tarjoaja organization to update the hakukohde" in {
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
-    update(thisHakukohde, lastModified, false, crudSessions(AmmOid))
+    update(thisHakukohde, lastModified, expectUpdate = false, crudSessions(AmmOid))
   }
 
   it should "deny a user without access to the hakukohde organization" in {
@@ -365,7 +352,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
-    update(thisHakukohde, lastModified, false, crudSessions(ParentOid))
+    update(thisHakukohde, lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
@@ -476,9 +463,9 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
     )
     val oid = put(hakukohdeWithValintakokeet)
-    val lastModified = get(oid, getIds(hakukohdeWithValintakokeet.copy(oid = Some((HakukohdeOid(oid))))))
+    val lastModified = get(oid, getIds(hakukohdeWithValintakokeet.copy(oid = Some(HakukohdeOid(oid)))))
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
-    val updateValintakoe = (getIds(tallennettuHakukohde(oid))).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    val updateValintakoe = getIds(tallennettuHakukohde(oid)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
     update(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
     get(oid, getIds(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
   }

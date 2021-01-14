@@ -155,24 +155,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  it should "validate dates only when adding a new julkaistu toteutus" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
-    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
-
-    put(thisToteutus.copy(tila = Tallennettu))
-
-    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
-      )))
-    }
-  }
-
   it should "allow a user of the toteutus organization to create the toteutus" in {
     put(toteutus(koulutusOid), crudSessions(toteutus.organisaatioOid))
   }
@@ -234,7 +216,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
     MockAuditLogger.clean()
-    update(thisToteutus, lastModified, false)
+    update(thisToteutus, lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
     get(oid, thisToteutus)
   }
@@ -296,7 +278,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(toteutus.organisaatioOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(toteutus.organisaatioOid))
   }
 
   it should "deny a user without access to the toteutus organization" in {
@@ -310,14 +292,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(ParentOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "allow a user with only access to a descendant organization" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(GrandChildOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(GrandChildOid))
   }
 
   it should "allow a user of the tarjoaja organization to update the toteutus" in {
@@ -325,7 +307,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid = put(toteutus(newKoulutusOid).copy(tarjoajat = List(LonelyOid)))
     val thisToteutus = toteutus(oid, newKoulutusOid).copy(tarjoajat = List(LonelyOid))
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, false, crudSessions(LonelyOid))
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(LonelyOid))
   }
 
   it should "deny a user with the wrong role" in {
@@ -370,7 +352,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "description"))),
       tarjoajat = List(LonelyOid, OtherOid, AmmOid))
-    update(uusiToteutus, lastModified, true)
+    update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus)
   }
 
@@ -380,12 +362,12 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, thisToteutus)
     Thread.sleep(1500)
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
-    update(uusiToteutus, lastModified, true)
-    get(oid, uusiToteutus) should not equal (lastModified)
+    update(uusiToteutus, lastModified, expectUpdate = true)
+    get(oid, uusiToteutus) should not equal lastModified
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = new Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
+    val unfinishedToteutus = Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
     val newKoulutusOid = put(koulutus)
@@ -405,6 +387,54 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
+  //feature flag KTO-1036 remove this test
+  it should "validate dates only when adding a new julkaistu toteutus" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+
+    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
+    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
+
+    put(thisToteutus.copy(tila = Tallennettu))
+
+    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(List(
+        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+      )))
+    }
+  }
+
+  def pastAlkamiskausi(alkamispvm: LocalDateTime, paattymispvm: LocalDateTime): Some[KoulutuksenAlkamiskausi] = {
+    Some(KoulutuksenAlkamiskausi(
+      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+      koulutuksenAlkamispaivamaara = Some(alkamispvm),
+      koulutuksenPaattymispaivamaara = Some(paattymispvm)))
+  }
+
+  //feature flag KTO-1036
+  it should "validate koulutuksen alkamisen dates only when adding a new julkaistu toteutus UUSI" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
+    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
+
+    put(thisToteutus.copy(tila = Tallennettu))
+
+    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(List(
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+      )))
+    }
+  }
+
+  //feature flag KTO-1036 remove this test
   it should "validate dates when moving from other states to julkaistu" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
     val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
@@ -428,6 +458,31 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutusWithOid.copy(tila = Arkistoitu), lastModified)
   }
 
+  //feature flag KTO-1036
+  it should "validate koulutuksen alkamisen dates when moving from other states to julkaistu UUSI" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
+    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
+
+    val oid = put(thisToteutus)
+    val thisToteutusWithOid = toteutus(oid, koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
+
+    val lastModified = get(oid, thisToteutusWithOid)
+
+    post(ToteutusPath, bytes(thisToteutusWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(List(
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+      )))
+    }
+
+    update(thisToteutusWithOid.copy(tila = Arkistoitu), lastModified)
+  }
+
+  //feature flag KTO-1036 remove this test
   it should "not validate dates when updating a julkaistu toteutus" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
     val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
@@ -439,6 +494,35 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, thisToteutus)
 
     update(thisToteutus.copy(metadata = Some(inPastMetadata)), lastModified)
+  }
+
+  //feature flag KTO-1036
+  it should "not validate koulutuksen alkamisen dates when updating a julkaistu toteutus UUSI" in {
+    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
+    val inPastMetadata = ammMetatieto.copy(opetus = Some(inPastOpetus))
+
+    val oid = put(toteutus(koulutusOid).copy(tila = Julkaistu))
+    val thisToteutus = toteutus(oid, koulutusOid)
+
+    val lastModified = get(oid, thisToteutus)
+
+    update(thisToteutus.copy(metadata = Some(inPastMetadata)), lastModified)
+  }
+
+  //feature flag KTO-1036
+  it should "allow missing koulutuksen alkamiskausi" in {
+    val (future, morefuture) = (TestData.inFuture(5000), TestData.inFuture(6000))
+
+    val futureOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = future, paattymispvm = morefuture))
+    val toteutusMetadata = Some(ammMetatieto.copy(opetus = Some(futureOpetus)))
+    val toteutusOid = put(toteutus(koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu))
+
+    val copyOfJulkaistuToteutus = toteutus(toteutusOid, koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu)
+    val lastModified = get(toteutusOid, copyOfJulkaistuToteutus)
+
+    val toteutusWithoutAlkamiskausi = copyOfJulkaistuToteutus.copy(metadata = Some(ammMetatieto.copy(opetus = Some(opetus.copy(koulutuksenAlkamiskausiUUSI = None)))))
+    update(toteutusWithoutAlkamiskausi, lastModified)
   }
 
   it should "copy a temporary image to a permanent location while updating the toteutus" in {
@@ -469,15 +553,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     def extractJsonString(s: String): Toteutus = {
       parse(s).extract[Toteutus]
     }
-  }
-
-  it should "extract toteutus from JSON of correct form" in {
-    val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
-    toteutus.metadata.isDefined shouldBe(true)
-  }
-
-  it should "fail to extract toteutus from JSON of incorrect form" in {
-    an [org.json4s.MappingException] shouldBe thrownBy(ToteutusJsonMethods.extractJsonString(incorrectJson))
   }
 
   val correctJson: String = """{
@@ -524,6 +599,11 @@ class ToteutusSpec extends KoutaIntegrationSpec
     "modified": "2019-10-29T15:21:23"
   }"""
 
+  it should "extract toteutus from JSON of correct form" in {
+    val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
+    toteutus.metadata.isDefined shouldBe true
+  }
+
   val incorrectJson: String = """{
     "oid": "1.2.246.562.17.00000000000000000067",
     "koulutusOid": "1.2.246.562.13.00000000000000000167",
@@ -568,6 +648,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
     ],
     "modified": "2019-10-29T15:21"
   }"""
+
+  it should "fail to extract toteutus from JSON of incorrect form" in {
+    an [org.json4s.MappingException] shouldBe thrownBy(ToteutusJsonMethods.extractJsonString(incorrectJson))
+  }
 
   "When tutkintoon johtamaton, toteutus servlet" should "create, get and update ammatillinen osaamisala toteutus" in {
     val sorakuvausId = put(sorakuvaus)

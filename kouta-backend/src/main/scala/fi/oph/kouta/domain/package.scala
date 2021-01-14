@@ -1,19 +1,17 @@
 package fi.oph.kouta
 
-import java.time.{Instant, LocalDateTime}
-import java.util.UUID
-
-import fi.oph.kouta.domain.{AlkamiskausiJaVuosi, Alkamiskausityyppi, Julkaisutila, Kieli, TarkkaAlkamisajankohta}
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
+import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
+
+import java.time.{Instant, LocalDateTime}
+import java.util.UUID
 
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {
 
-  val KieliModel =
+  val KieliModel: String =
     """    Kieli:
       |      type: string
       |      enum:
@@ -22,7 +20,7 @@ package object domain {
       |        - en
       |""".stripMargin
 
-  val LiitteenToimitustapaModel =
+  val LiitteenToimitustapaModel: String =
     """    LiitteenToimitustapa:
       |      type: string
       |      enum:
@@ -31,7 +29,7 @@ package object domain {
       |        - lomake
       |""".stripMargin
 
-  val AjanjaksoModel =
+  val AjanjaksoModel: String =
     """    Ajanjakso:
       |      type: object
       |      properties:
@@ -47,7 +45,7 @@ package object domain {
       |           example: 2019-08-23T09:55
       |""".stripMargin
 
-  val JulkaisutilaModel =
+  val JulkaisutilaModel: String =
     """    Julkaisutila:
       |      type: string
       |      enum:
@@ -56,7 +54,7 @@ package object domain {
       |        - arkistoitu
       |""".stripMargin
 
-  val HakulomaketyyppiModel =
+  val HakulomaketyyppiModel: String =
     """    Hakulomaketyyppi:
       |      type: string
       |      enum:
@@ -65,7 +63,7 @@ package object domain {
       |        - muu
       |""".stripMargin
 
-  val TekstiModel =
+  val TekstiModel: String =
     """    Teksti:
       |      type: object
       |      properties:
@@ -83,7 +81,7 @@ package object domain {
       |          description: "Englanninkielinen teksti, jos kielivalinnassa on 'en'"
       |""".stripMargin
 
-  val NimiModel =
+  val NimiModel: String =
     """    Nimi:
       |      type: object
       |      properties:
@@ -101,7 +99,7 @@ package object domain {
       |          description: "Englanninkielinen nimi, jos kielivalinnassa on 'en'"
       |""".stripMargin
 
-  val KuvausModel =
+  val KuvausModel: String =
     """    Kuvaus:
       |      type: object
       |      properties:
@@ -119,7 +117,7 @@ package object domain {
       |          description: "Englanninkielinen kuvaus, jos kielivalinnassa on 'en'"
       |""".stripMargin
 
-  val LinkkiModel =
+  val LinkkiModel: String =
     """    Linkki:
       |      type: object
       |      properties:
@@ -137,7 +135,7 @@ package object domain {
       |          description: "Linkki englanninkieliselle sivulle, jos kielivalinnassa on 'en'"
       |""".stripMargin
 
-  val LisatietoModel =
+  val LisatietoModel: String =
     """    Lisatieto:
       |      type: object
       |      properties:
@@ -152,7 +150,7 @@ package object domain {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val YhteyshenkiloModel =
+  val YhteyshenkiloModel: String =
     """    Yhteyshenkilo:
       |      type: object
       |      properties:
@@ -183,7 +181,7 @@ package object domain {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val OsoiteModel =
+  val OsoiteModel: String =
     """    Osoite:
       |      type: object
       |      properties:
@@ -198,7 +196,7 @@ package object domain {
       |          example: "posti_04230#2"
       |""".stripMargin
 
-  val ValintakoeModel =
+  val ValintakoeModel: String =
     """    Valintakoe:
       |      type: object
       |      description: Valintakokeen tiedot
@@ -226,7 +224,7 @@ package object domain {
       |            $ref: '#/components/schemas/Valintakoetilaisuus'
       |""".stripMargin
 
-  val ValintakoeMetadataModel =
+  val ValintakoeMetadataModel: String =
     """    ValintakoeMetadata:
       |      type: object
       |      properties:
@@ -253,7 +251,7 @@ package object domain {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val ValintakoetilaisuusModel =
+  val ValintakoetilaisuusModel: String =
     """    Valintakoetilaisuus:
       |      type: object
       |      properties:
@@ -279,7 +277,7 @@ package object domain {
       |            - $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val ListEverythingModel =
+  val ListEverythingModel: String =
     """    ListEverything:
       |      type: object
       |      properties:
@@ -334,7 +332,7 @@ package object domain {
       |              - d9afdef2-ae7a-4e78-8366-ab8f97b1fd25
       |""".stripMargin
 
-  val AuthenticatedModel =
+  val AuthenticatedModel: String =
     """    Authenticated:
       |      type: object
       |      properties:
@@ -368,7 +366,7 @@ package object domain {
       |                    example: APP_KOUTA_OPHPAAKAYTTAJA_1.2.246.562.10.00000000001
       |""".stripMargin
 
-  val TutkinnonOsaModel =
+  val TutkinnonOsaModel: String =
     """    TutkinnonOsa:
       |      type: object
       |      properties:
@@ -390,7 +388,7 @@ package object domain {
       |          example: 2449201
       |""".stripMargin
 
-  val KoulutuksenAlkamiskausiModel =
+  val KoulutuksenAlkamiskausiModel: String =
     """    KoulutuksenAlkamiskausi:
       |      type: object
       |      properties:
@@ -421,8 +419,7 @@ package object domain {
       |        henkilokohtaisenSuunnitelmanLisatiedot:
       |          type: object
       |          description: Lisätietoa koulutuksen alkamisesta henkilökohtaisen suunnitelman mukaan eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
@@ -576,19 +573,20 @@ package object domain {
     override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
       validateIfDefined[String](koulutuksenAlkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausiKoodiUri")),
-      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
+      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertMatch(v, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
       validateIfJulkaistu(tila, and(
         assertNotOptional(alkamiskausityyppi, s"$path.alkamiskausityyppi"),
-        validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.get, assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
-        validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.get, and(
+        validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.getOrElse({}), assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
+        validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.getOrElse({}), and(
           assertNotOptional(koulutuksenAlkamiskausiKoodiUri, s"$path.koulutuksenAlkamiskausiKoodiUri"),
           assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi"))),
         validateOptionalKielistetty(kielivalinta, henkilokohtaisenSuunnitelmanLisatiedot, s"$path.henkilokohtaisenSuunnitelmanLisatiedot")
       )))
 
     override def validateOnJulkaisu(path: String): IsValid = and(
-      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.alkamisvuosi")),
-      validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")))
+      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.koulutuksenAlkamisvuosi")),
+      validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
+      validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")))
   }
 
   case class ListEverything(koulutukset: Seq[KoulutusOid] = Seq(),
