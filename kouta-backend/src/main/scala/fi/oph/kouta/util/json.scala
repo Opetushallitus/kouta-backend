@@ -16,7 +16,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
   def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
     koulutusMetadataSerializer,
     toteutusMetadataSerializer,
-    valintatapaSisaltoSerializer,
+    sisaltoSerializer,
     valintaperusteMetadataSerializer,
     sessionSerializer)
 
@@ -64,7 +64,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
 
   private def valintaperusteMetadataSerializer = new CustomSerializer[ValintaperusteMetadata](_ => ( {
     case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats + valintatapaSisaltoSerializer
+      implicit def formats: Formats = genericKoutaFormats + sisaltoSerializer
 
       Try(s \ "tyyppi").toOption.collect {
         case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
@@ -76,17 +76,17 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
       }
   }, {
     case j: ValintaperusteMetadata =>
-      implicit def formats: Formats = genericKoutaFormats + valintatapaSisaltoSerializer
+      implicit def formats: Formats = genericKoutaFormats + sisaltoSerializer
 
       Extraction.decompose(j)
   }))
 
-  private def valintatapaSisaltoSerializer = new CustomSerializer[ValintatapaSisalto](implicit formats => ({
+  private def sisaltoSerializer = new CustomSerializer[Sisalto](implicit formats => ({
     case s: JObject =>
       Try(s \ "tyyppi").collect {
         case JString(tyyppi) if tyyppi == "teksti" =>
           Try(s \ "data").collect {
-            case teksti: JObject => ValintatapaSisaltoTeksti(teksti.extract[Kielistetty])
+            case teksti: JObject => SisaltoTeksti(teksti.extract[Kielistetty])
           }.get
         case JString(tyyppi) if tyyppi == "taulukko" =>
           Try(s \ "data").collect {
@@ -94,7 +94,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           }.get
       }.get
   }, {
-    case j: ValintatapaSisaltoTeksti =>
+    case j: SisaltoTeksti =>
       implicit def formats: Formats = genericKoutaFormats
 
       JObject(List("tyyppi" -> JString("teksti"), "data" -> Extraction.decompose(j.teksti)))

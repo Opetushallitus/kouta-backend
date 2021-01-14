@@ -23,8 +23,7 @@ package object toteutusMetadata {
       |        opetuskieletKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen opetuskieliä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        opetusaikaKoodiUrit:
       |          type: array
       |          description: Lista koulutuksen toteutuksen opetusajoista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opetusaikakk/1)
@@ -36,8 +35,7 @@ package object toteutusMetadata {
       |        opetusaikaKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen opetusaikoja tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        opetustapaKoodiUrit:
       |          type: array
       |          description: Lista koulutuksen toteutuksen opetustavoista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opetuspaikkakk/1)
@@ -49,20 +47,22 @@ package object toteutusMetadata {
       |        opetustapaKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen opetustapoja tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        onkoMaksullinen:
       |          type: boolean
       |          decription: "Onko koulutus maksullinen?"
       |        maksullisuusKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen maksullisuutta tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        maksunMaara:
       |          type: double
       |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
       |          example: 220.50
+      |        koulutuksenAlkamiskausiUUSI:
+      |          type: object
+      |          description: Koulutuksen alkamiskausi
+      |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |        koulutuksenTarkkaAlkamisaika:
       |          type: string
       |          description: Jos alkamisaika on tiedossa niin alkamis- ja päättymispäivämäärä on pakollinen. Muussa tapauksessa kausi ja vuosi on pakollisia tietoja.
@@ -505,6 +505,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
+                  koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = None, //Feature flag KTO-1036, myos swagger skeema
                   koulutuksenTarkkaAlkamisaika: Option[Boolean] = None,
                   koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
                   koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
@@ -521,6 +522,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
     validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
     validateIfNonEmpty[String](opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit", assertMatch(_, OpetustapaKoodiPattern, _)),
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausiUUSI")), //Feature flag KTO-1036
     validateIfDefined[String](koulutuksenAlkamiskausi, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausi")),
     validateIfDefined[Int](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
     validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
@@ -556,5 +558,6 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
   override def validateOnJulkaisu(path: String): IsValid = and(
     validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
     validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")),
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausiUUSI")) //Feature flag KTO-1036
   )
 }

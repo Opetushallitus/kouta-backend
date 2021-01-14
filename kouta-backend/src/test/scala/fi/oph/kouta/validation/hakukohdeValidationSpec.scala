@@ -10,8 +10,8 @@ import fi.oph.kouta.validation.Validations._
 
 class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
 
-  val max = JulkaistuHakukohde
-  val min = MinHakukohde
+  val max: Hakukohde = JulkaistuHakukohde
+  val min: Hakukohde = MinHakukohde
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(max.copy(oid = Some(HakukohdeOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -149,6 +149,61 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
   }
 }
 
+class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMetadata]{
+
+  "Hakukohde metadata validation" should "validate koulutuksenAlkamiskausi" in {
+    val metadataWithInvalidAlkamisvuosi = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          koulutuksenAlkamisvuosi = Some("200007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+
+    failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
+  }
+
+  it should "validate koulutuksenAlkamiskausi of a julkaistu hakukohde" in {
+    val metadataWithoutAlkamiskausityyppi = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          alkamiskausityyppi = None,
+          koulutuksenAlkamisvuosi = Some("2007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+
+    failsValidation(Julkaistu, metadataWithoutAlkamiskausityyppi, "koulutuksenAlkamiskausi.alkamiskausityyppi", missingMsg)
+  }
+
+  it should "validate koulutuksenAlkamiskausi on julkaisu of hakukohde" in {
+    val metadataWithAlkamisvuosiInThePast = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          koulutuksenAlkamisvuosi = Some("2007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+
+    failsOnJulkaisuValidation(metadataWithAlkamisvuosiInThePast, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2007"))
+  }
+
+  it should "validate kaytetaanHaunAlkamiskautta is mandatory" in {
+    val metadataWithoutKaytetaanHaunAlkamiskauttaFlag = HakukohdeMetadata(
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          koulutuksenAlkamisvuosi = Some("2007"),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+
+    failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "kaytetaanHaunAlkamiskautta", missingMsg)
+  }
+
+  it should "validate koulutuksenAlkamiskausi is given if not using haun alkamiskausi" in {
+    val metadataWithoutKaytetaanHaunAlkamiskauttaFlag = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi = None)
+
+    failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "koulutuksenAlkamiskausi", missingMsg)
+  }
+}
+
 class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
 
   "Liite validation" should "pass with a valid liite" in {
@@ -195,7 +250,7 @@ class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
 }
 
 class LiitteenToimitusosoiteValidationSpec extends SubEntityValidationSpec[LiitteenToimitusosoite] {
-  val toimitusOsoite = LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))
+  val toimitusOsoite: LiitteenToimitusosoite = LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))
 
   "LiitteenToimitusosoite validation" should "pass a valid LiitteenToimitusosoite" in {
     passesValidation(Julkaistu, toimitusOsoite)

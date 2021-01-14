@@ -19,7 +19,7 @@ Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10.
 
 Tähän on kaksi vaihtoehtoa, postgresin asentaminen omalle koneelle tai kontissa ajaminen.
 Näitä vaihtoehtoja voi hallita VM-parametreilla (katso ohjeet alempaa). 
-Oletuksena postgresia ajetaan host-koneella. Postgresin asennuksen tai kontti imagen buildin 
+Oletuksena postgresia ajetaan kontissa. Postgresin asennuksen tai kontti imagen buildin 
 jälkeen ei kannasta tarvitse huolehtia sillä sovellus ja testit huoletivat kannan käynnistämisestä 
 
 Kontti-imagen luonti (tarvitsee tehdä vain kerran)
@@ -81,13 +81,13 @@ jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/s
 
 EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
  
-| System property                                 |                                                                                           |   
-| ------------------------------------------------|:-----------------------------------------------------------------------------------------:|   
-| ```-Dkouta-backend.port=xxxx```                 | Määrittää Jettyn portin (default 8099)                                                    |   
-| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                        |   
-| ```-Dkouta-backend.embeddedPostgresType=xxxx``` | Käynnistetäänkö PostgreSQL host-koneella vai kontissa (`host` tai `docker`, default host) |   
-| ```-Dkouta-backend.profile=xxxx```              | Määrittää profiilin                                                                       |   
-| ```-Dkouta-backend.template=xxxx```             | Määrittää template-tiedoston polun                                                        |   
+| System property                                 |                                                                                             |   
+| ------------------------------------------------|:-------------------------------------------------------------------------------------------:|   
+| ```-Dkouta-backend.port=xxxx```                 | Määrittää Jettyn portin (default 8099)                                                      |   
+| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                          |   
+| ```-Dkouta-backend.embeddedPostgresType=xxxx``` | Käynnistetäänkö PostgreSQL host-koneella vai kontissa (`host` tai `docker`, default docker) |   
+| ```-Dkouta-backend.profile=xxxx```              | Määrittää profiilin                                                                         |   
+| ```-Dkouta-backend.template=xxxx```             | Määrittää template-tiedoston polun                                                          |   
 
 * Jos embedded Postgres ei ole käytössä, profiili voi olla joko *default* tai *template*
     * ```default```-profiilissa ```oph-configuration``` luetaan käyttäjän kotihakemistosta
