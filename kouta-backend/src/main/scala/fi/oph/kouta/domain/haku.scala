@@ -9,7 +9,7 @@ import fi.oph.kouta.validation.Validations._
 
 package object haku {
 
-  val HakuModel =
+  val HakuModel: String =
     """    Haku:
       |      type: object
       |      properties:
@@ -32,7 +32,7 @@ package object haku {
       |            - $ref: '#/components/schemas/Nimi'
       |        hakutapaKoodiUri:
       |          type: string
-      |          description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
+      |          description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/1)
       |          example: hakutapa_03#1
       |        hakukohteenLiittamisenTakaraja:
       |          type: string
@@ -115,7 +115,7 @@ package object haku {
       |           example: 2019-08-23T09:55
       |""".stripMargin
 
-  val HakuMetadataModel =
+  val HakuMetadataModel: String =
     """    HakuMetadata:
       |      type: object
       |      properties:
@@ -135,7 +135,7 @@ package object haku {
       |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |""".stripMargin
 
-  val HakuListItemModel =
+  val HakuListItemModel: String =
     """    HakuListItem:
       |      type: object
       |      properties:
@@ -208,10 +208,8 @@ case class Haku(oid: Option[HakuOid] = None,
       assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
-      /*validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), and( // Yhteishaku
-        assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri"),
-        assertNotOptional(alkamisvuosi, "alkamisvuosi")
-      ))*/
+      validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), //Yhteishaku
+        assertNotOptional(metadata.get.koulutuksenAlkamiskausi, "metadata.koulutuksenAlkamiskausi"))
     ))
   )
 
@@ -230,7 +228,6 @@ case class Haku(oid: Option[HakuOid] = None,
   override def withModified(modified: LocalDateTime): Haku = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Haku = this.copy(muokkaaja = oid)
-
 }
 
 case class HakuListItem(oid: HakuOid,
@@ -247,7 +244,7 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
-    validateIfJulkaistu(tila, and(assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"))))
+  )
 
   override def validateOnJulkaisu(path: String): IsValid = and(
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_)),

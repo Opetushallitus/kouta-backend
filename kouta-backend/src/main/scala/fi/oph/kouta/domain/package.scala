@@ -576,15 +576,15 @@ package object domain {
       validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertMatch(v, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
       validateIfJulkaistu(tila, and(
         assertNotOptional(alkamiskausityyppi, s"$path.alkamiskausityyppi"),
-        validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.get, assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
-        validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.get, and(
+        validateIfTrue(TarkkaAlkamisajankohta == alkamiskausityyppi.getOrElse({}), assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")),
+        validateIfTrue(AlkamiskausiJaVuosi == alkamiskausityyppi.getOrElse({}), and(
           assertNotOptional(koulutuksenAlkamiskausiKoodiUri, s"$path.koulutuksenAlkamiskausiKoodiUri"),
           assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi"))),
         validateOptionalKielistetty(kielivalinta, henkilokohtaisenSuunnitelmanLisatiedot, s"$path.henkilokohtaisenSuunnitelmanLisatiedot")
       )))
 
     override def validateOnJulkaisu(path: String): IsValid = and(
-      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.alkamisvuosi")),
+      validateIfDefined[String](koulutuksenAlkamisvuosi, v => assertAlkamisvuosiInFuture(v, s"$path.koulutuksenAlkamisvuosi")),
       validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
       validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")))
   }

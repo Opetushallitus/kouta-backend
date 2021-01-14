@@ -17,7 +17,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   override val roleEntities = Seq(Role.Haku)
 
-  val ophHaku = haku.copy(organisaatioOid = OphOid)
+  val ophHaku: Haku = haku.copy(organisaatioOid = OphOid)
 
   "Get haku by oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(defaultSessionHeader)) {
@@ -149,7 +149,24 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg("2007"), "metadata.koulutuksenAlkamiskausi.alkamisvuosi"))
+      body should equal(validationErrorBody(pastDateMsg("2007"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
+    }
+  }
+
+  it should "validate alkamiskausi is given for yhteishaku" in {
+    put(HakuPath, bytes(yhteishakuWithoutAlkamiskausi), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(missingMsg, "metadata.koulutuksenAlkamiskausi"))
+    }
+  }
+
+  it should "not validate alkamiskausi is given if not yhteishaku" in {
+    put(HakuPath, bytes(jatkuvaHakuWithoutAlkamiskausi), defaultHeaders) {
+      withClue(body) {
+        status should equal(200)
+      }
     }
   }
 
@@ -184,7 +201,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
     MockAuditLogger.clean()
-    update(thisHaku, lastModified, false)
+    update(thisHaku, lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
     get(oid, thisHaku) should equal (lastModified)
   }
@@ -213,7 +230,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val oid = put(haku)
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
-    update(thisHaku, lastModified, false, crudSessions(haku.organisaatioOid))
+    update(thisHaku, lastModified, expectUpdate = false, crudSessions(haku.organisaatioOid))
   }
 
   it should "deny a user without access to the haku organization" in {
@@ -227,7 +244,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val oid = put(haku)
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
-    update(thisHaku, lastModified, false, crudSessions(ParentOid))
+    update(thisHaku, lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
@@ -268,8 +285,8 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val lastModified = get(oid, thisHaku)
     Thread.sleep(1500)
     val uusiHaku = thisHaku.copy(hakuajat = List())
-    update(uusiHaku, lastModified, true)
-    get(oid, uusiHaku) should not equal (lastModified)
+    update(uusiHaku, lastModified, expectUpdate = true)
+    get(oid, uusiHaku) should not equal lastModified
   }
 
   it should "store and update unfinished haku" in {
@@ -305,7 +322,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(pastDateMsg("2017"), "metadata.koulutuksenAlkamiskausi.alkamisvuosi"))
+      body should equal(validationErrorBody(pastDateMsg("2017"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
     }
 
     update(thisHakuWithOid.copy(tila = Arkistoitu), lastModified)

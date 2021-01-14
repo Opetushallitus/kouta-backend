@@ -31,9 +31,13 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
     addServlet(new HakuServlet(hakuService), HakuPath)
   }
 
-  val haku = JulkaistuHaku
+  val haku: Haku = JulkaistuHaku
+  val yhteishakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(
+    hakutapaKoodiUri = Some("hakutapa_01#1"),
+    metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
+  val jatkuvaHakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
 
-  def hakuWithAlkamisvuosi(haku: Haku, alkamisvuosi: String) = haku.copy(metadata = Some(
+  def hakuWithAlkamisvuosi(haku: Haku, alkamisvuosi: String): Haku = haku.copy(metadata = Some(
     haku.metadata.get.copy(koulutuksenAlkamiskausi = Some(
       haku.metadata.get.koulutuksenAlkamiskausi.get.copy(
         koulutuksenAlkamisvuosi = Some(alkamisvuosi))))))
@@ -52,7 +56,7 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
   def update(haku: Haku, lastModified: String, expectUpdate: Boolean): Unit = update(HakuPath, haku, lastModified, expectUpdate)
   def update(haku: Haku, lastModified: String): Unit = update(haku, lastModified, expectUpdate = true)
 
-  def addToList(haku: Haku) = {
+  def addToList(haku: Haku): HakuListItem = {
     val oid = put(haku)
     val modified = readHakuModified(oid)
     HakuListItem(HakuOid(oid), haku.nimi, haku.tila, haku.organisaatioOid, haku.muokkaaja, modified)
