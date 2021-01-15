@@ -54,6 +54,7 @@ object TestData {
     nimi = Map(Fi -> "valintakokeen nimi fi", Sv -> "valintakokeen nimi sv"),
     metadata = Some(ValintakoeMetadata(
       tietoja = Map(Fi -> "tietoa valintakokeesta fi", Sv -> "tietoa valintakokeesta sv"),
+      vahimmaispisteet = Some(182.1),
       liittyyEnnakkovalmistautumista = Some(true),
       ohjeetEnnakkovalmistautumiseen = Map(Fi -> "Ennakko-ohjeet fi", Sv -> "Ennakko-ohjeet sv"),
       erityisjarjestelytMahdollisia = Some(true),

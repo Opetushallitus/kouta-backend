@@ -231,24 +231,25 @@ package object domain {
       |        tietoja:
       |          type: object
       |          description: Tietoa valintakokeesta
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
+      |        vahimmaispisteet:
+      |          type: double
+      |          description: Valintakokeen vähimmäispisteet
+      |          example: 10.0
       |        liittyyEnnakkovalmistautumista:
       |          type: boolean
       |          description: Liittyykö valintakokeeseen ennakkovalmistautumista
       |        ohjeetEnnakkovalmistautumiseen:
       |          type: object
       |          description: Ohjeet valintakokeen ennakkojärjestelyihin
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        erityisjarjestelytMahdollisia:
       |          type: boolean
       |          description: Ovatko erityisjärjestelyt mahdollisia valintakokeessa
       |        ohjeetErityisjarjestelyihin:
       |          type: object
       |          description: Ohjeet valintakokeen erityisjärjestelyihin
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val ValintakoetilaisuusModel: String =
@@ -483,6 +484,7 @@ package object domain {
   }
 
   case class ValintakoeMetadata(tietoja: Kielistetty = Map(),
+                                vahimmaispisteet: Option[Double] = None,
                                 liittyyEnnakkovalmistautumista: Option[Boolean] = None,
                                 ohjeetEnnakkovalmistautumiseen: Kielistetty = Map(),
                                 erityisjarjestelytMahdollisia: Option[Boolean] = None,
@@ -490,6 +492,7 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfJulkaistu(tila, and(
         validateOptionalKielistetty(kielivalinta, tietoja, s"$path.tietoja"),
+        validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, s"$path.vahimmaispisteet")),
         validateIfTrue(liittyyEnnakkovalmistautumista.contains(true), validateKielistetty(kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")),
         validateIfTrue(erityisjarjestelytMahdollisia.contains(true), validateKielistetty(kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin"))
       ))
