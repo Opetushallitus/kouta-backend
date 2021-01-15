@@ -12,6 +12,7 @@ import org.json4s.jackson.Serialization.write
 
 class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with SearchFixture with KoutaIndexMock with BeforeAndAfterEach  {
 
+  /*
   override val roleEntities = RoleEntity.all
   override val DebugJson = false
 
@@ -359,4 +360,6 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
       status should equal (500)
     }
   }
+
+   */
 }
