@@ -267,7 +267,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaPaattyyKey -> formatModified(endTime1),
     AloituspaikatKey -> "100",
     EnsikertalaisenAloituspaikatKey -> "0",
-    PohjakoulutusvaatimusKoodiUritKey -> "pohjakoulutusvaatimuskouta_1#1, pohjakoulutusvaatimuskouta_109#1",
+    PohjakoulutusvaatimusKoodiUritKey -> "pohjakoulutusvaatimuskouta_104#1, pohjakoulutusvaatimuskouta_109#1",
     PohjakoulutusvaatimusTarkenneKey -> "Pohjakoulutusvaatimuksen tarkenne",
     ToinenAsteOnkoKaksoistutkintoKey -> "false",
     KaytetaanHaunAikatauluaKey -> "false",
