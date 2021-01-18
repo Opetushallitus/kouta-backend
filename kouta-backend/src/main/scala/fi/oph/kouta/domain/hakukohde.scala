@@ -91,7 +91,7 @@ package object hakukohde {
       |          items:
       |            type: string
       |          example:
-      |            - pohjakoulutusvaatimuskouta_1#1
+      |            - pohjakoulutusvaatimuskouta_104#1
       |            - pohjakoulutusvaatimuskouta_109#1
       |        muuPohjakoulutusvaatimus:
       |          type: object
