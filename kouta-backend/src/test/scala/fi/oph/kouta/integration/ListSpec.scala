@@ -563,11 +563,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$IndexerPath$OppilaitosPath/${o1.s}/osat", Map[String, String](), 403, addTestSession(Role.Koulutus.Read, OphOid))
   }
 
-  //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
   "Koulutukset hakutiedot" should "return all hakutiedot related to koulutus" in {
     get(s"$IndexerPath$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
-      //debugJson[List[Hakutieto]](body)
 
       val expected = List(Hakutieto(
         toteutusOid = t1.oid,
