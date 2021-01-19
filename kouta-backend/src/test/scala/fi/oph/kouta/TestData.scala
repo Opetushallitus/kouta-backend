@@ -217,6 +217,8 @@ object TestData {
       kaytetaanHaunAlkamiskautta = Some(false),
       koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
         alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+        koulutuksenAlkamisvuosi = None,
+        koulutuksenAlkamiskausiKoodiUri = None,
         koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
         koulutuksenPaattymispaivamaara = Some(inFuture(30000)))))),
     valintakokeet = List(Valintakoe1),

@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid._
 
 package object hakutieto {
-  val HakutietoModel =
+  val HakutietoModel: String =
     """    Hakutieto:
       |      type: object
       |      properties:
@@ -26,8 +26,7 @@ package object hakutieto {
       |              nimi:
       |                type: object
       |                description: Haun Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |                allOf:
-      |                  - $ref: '#/components/schemas/Nimi'
+      |                $ref: '#/components/schemas/Nimi'
       |              hakutapaKoodiUri:
       |                type: string
       |                description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
@@ -58,13 +57,11 @@ package object hakutieto {
       |              hakulomakeKuvaus:
       |                type: object
       |                description: Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa. Hakukohteella voi olla eri hakulomake kuin haulla.
-      |                allOf:
-      |                  - $ref: '#/components/schemas/Kuvaus'
+      |                $ref: '#/components/schemas/Kuvaus'
       |              hakulomakeLinkki:
       |                type: object
       |                description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa. Hakukohteella voi olla eri hakulomake kuin haulla.
-      |                allOf:
-      |                  - $ref: '#/components/schemas/Linkki'
+      |                $ref: '#/components/schemas/Linkki'
       |              organisaatioOid:
       |                 type: string
       |                 description: Haun luoneen organisaation oid
@@ -96,8 +93,7 @@ package object hakutieto {
       |                    nimi:
       |                      type: object
       |                      description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |                      allOf:
-      |                        - $ref: '#/components/schemas/Nimi'
+      |                      $ref: '#/components/schemas/Nimi'
       |                    alkamiskausiKoodiUri:
       |                      type: string
       |                      description: Hakukohteen koulutusten alkamiskausi, jos ei käytetä haun alkamiskautta.
@@ -130,13 +126,11 @@ package object hakutieto {
       |                    hakulomakeKuvaus:
       |                      type: object
       |                      description: Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |                      allOf:
-      |                        - $ref: '#/components/schemas/Kuvaus'
+      |                      $ref: '#/components/schemas/Kuvaus'
       |                    hakulomakeLinkki:
       |                      type: object
       |                      description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |                      allOf:
-      |                        - $ref: '#/components/schemas/Linkki'
+      |                      $ref: '#/components/schemas/Linkki'
       |                    kaytetaanHaunHakulomaketta:
       |                      type: boolean
       |                      description: Käytetäänkö haun hakulomaketta vai onko hakukohteelle määritelty oma hakulomake?

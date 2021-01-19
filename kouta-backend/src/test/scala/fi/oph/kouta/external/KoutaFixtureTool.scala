@@ -240,7 +240,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         KoulutuksenAlkamiskausi(
           alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
           koulutuksenAlkamiskausiKoodiUri = Some( "kausi_k#1"),
-          koulutuksenAlkamisvuosi = Some(thisYear)))))
+          koulutuksenAlkamisvuosi = Some(thisYear),
+          koulutuksenAlkamispaivamaara = None,
+          koulutuksenPaattymispaivamaara = None))))
   )
 
   val DefaultHaku: java.util.Map[String, String] = mapAsJavaMap(DefaultHakuScala)
@@ -272,6 +274,12 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
     ValintaperusteIdKey -> UUID.randomUUID().toString,
+    MetadataKey -> write(TestData.JulkaistuHakukohde.metadata.get.copy(koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
+      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+      koulutuksenAlkamisvuosi = None,
+      koulutuksenAlkamiskausiKoodiUri = None,
+      koulutuksenAlkamispaivamaara = Some(startTime1),
+      koulutuksenPaattymispaivamaara = Some(endTime1))))),
     LiitteetOnkoSamaToimitusaikaKey -> "true",
     LiitteetOnkoSamaToimitusosoiteKey -> "false",
     LiitteidenToimitusaikaKey -> formatModified(time3),
