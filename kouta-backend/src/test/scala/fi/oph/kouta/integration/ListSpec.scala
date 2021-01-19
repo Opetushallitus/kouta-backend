@@ -589,6 +589,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             nimi = hk1.nimi,
             valintaperusteId = hk1.valintaperusteId,
             koulutuksenAlkamiskausi = TestData.JulkaistuHakukohde.metadata.get.koulutuksenAlkamiskausi,
+            kaytetaanHaunAlkamiskauttaUUSI = TestData.JulkaistuHakukohde.metadata.get.kaytetaanHaunAlkamiskautta,
             alkamiskausiKoodiUri = TestData.JulkaistuHakukohde.alkamiskausiKoodiUri,
             alkamisvuosi = TestData.JulkaistuHakukohde.alkamisvuosi,
             kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.kaytetaanHaunAlkamiskautta,
