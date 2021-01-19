@@ -782,6 +782,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val params = haut(oid)
     val kielivalinta = toKielivalinta(params)
     val (alkamiskausiKoodiUri, alkamisvuosi) = getAlkamiskausiInfoFromHakuMetadata(params)
+    val koulutuksenAlkamiskausi = getAlkamiskausiFromHakuMetadata(params)
 
     HakutietoHaku(
       HakuOid(oid),
@@ -789,6 +790,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(HakutapaKoodiUriKey)),
       alkamiskausiKoodiUri,
       alkamisvuosi,
+      koulutuksenAlkamiskausi,
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
@@ -799,6 +801,13 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(parseModified(params(ModifiedKey))),
       List()
     )
+  }
+
+  private def getAlkamiskausiFromHakuMetadata(params: Map[String, String]) = {
+    params
+      .get(MetadataKey)
+      .map(read[HakuMetadata])
+      .flatMap(_.koulutuksenAlkamiskausi)
   }
 
   private def getAlkamiskausiInfoFromHakuMetadata(params: Map[String, String]) = {

@@ -577,6 +577,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
           hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
           alkamiskausiKoodiUri = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi.get.koulutuksenAlkamiskausiKoodiUri,
           alkamisvuosi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi.get.koulutuksenAlkamisvuosi,
+          koulutuksenAlkamiskausi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi,
           hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
           hakulomakeAtaruId = TestData.JulkaistuHaku.hakulomakeAtaruId,
           hakulomakeKuvaus = TestData.JulkaistuHaku.hakulomakeKuvaus,
