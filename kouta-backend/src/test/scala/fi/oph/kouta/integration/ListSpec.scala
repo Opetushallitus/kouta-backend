@@ -563,11 +563,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$IndexerPath$OppilaitosPath/${o1.s}/osat", Map[String, String](), 403, addTestSession(Role.Koulutus.Read, OphOid))
   }
 
-  //TODO: Paremmat testit sitten, kun indeksointi on vakiintunut muotoonsa
   "Koulutukset hakutiedot" should "return all hakutiedot related to koulutus" in {
     get(s"$IndexerPath$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
-      //debugJson[List[Hakutieto]](body)
 
       val expected = List(Hakutieto(
         toteutusOid = t1.oid,
@@ -577,6 +575,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
           hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
           alkamiskausiKoodiUri = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi.get.koulutuksenAlkamiskausiKoodiUri,
           alkamisvuosi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi.get.koulutuksenAlkamisvuosi,
+          koulutuksenAlkamiskausi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi,
           hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
           hakulomakeAtaruId = TestData.JulkaistuHaku.hakulomakeAtaruId,
           hakulomakeKuvaus = TestData.JulkaistuHaku.hakulomakeKuvaus,
@@ -589,6 +588,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             hakukohdeOid = hk1.oid,
             nimi = hk1.nimi,
             valintaperusteId = hk1.valintaperusteId,
+            koulutuksenAlkamiskausi = TestData.JulkaistuHakukohde.metadata.get.koulutuksenAlkamiskausi,
+            kaytetaanHaunAlkamiskauttaUUSI = TestData.JulkaistuHakukohde.metadata.get.kaytetaanHaunAlkamiskautta,
             alkamiskausiKoodiUri = TestData.JulkaistuHakukohde.alkamiskausiKoodiUri,
             alkamisvuosi = TestData.JulkaistuHakukohde.alkamisvuosi,
             kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.kaytetaanHaunAlkamiskautta,

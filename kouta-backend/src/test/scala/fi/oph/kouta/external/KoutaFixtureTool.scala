@@ -782,6 +782,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val params = haut(oid)
     val kielivalinta = toKielivalinta(params)
     val (alkamiskausiKoodiUri, alkamisvuosi) = getAlkamiskausiInfoFromHakuMetadata(params)
+    val koulutuksenAlkamiskausi = getAlkamiskausiFromHakuMetadata(params)
 
     HakutietoHaku(
       HakuOid(oid),
@@ -789,6 +790,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(HakutapaKoodiUriKey)),
       alkamiskausiKoodiUri,
       alkamisvuosi,
+      koulutuksenAlkamiskausi,
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
@@ -801,6 +803,13 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  private def getAlkamiskausiFromHakuMetadata(params: Map[String, String]) = {
+    params
+      .get(MetadataKey)
+      .map(read[HakuMetadata])
+      .flatMap(_.koulutuksenAlkamiskausi)
+  }
+
   private def getAlkamiskausiInfoFromHakuMetadata(params: Map[String, String]) = {
     params
       .get(MetadataKey)
@@ -810,13 +819,26 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       .getOrElse((None, None))
   }
 
+  def getAlkamiskausiFromHakukohdeMetadata(params: Map[String, String]) = {
+    val metadata = params
+      .get(MetadataKey)
+      .map(read[HakukohdeMetadata])
+      .get
+
+    (metadata.koulutuksenAlkamiskausi, metadata.kaytetaanHaunAlkamiskautta)
+  }
+
   private def hakutietoHakukohde(oid:String) = {
     val params = hakukohteet(oid)
     val kielivalinta = toKielivalinta(params)
+    val (koulutuksenAlkamiskausi, kaytetaanHaunAlkamiskautta) = getAlkamiskausiFromHakukohdeMetadata(params)
+
     HakutietoHakukohde(
       HakukohdeOid(oid),
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(ValintaperusteIdKey).map(UUID.fromString),
+      koulutuksenAlkamiskausi,
+      kaytetaanHaunAlkamiskautta,
       Some(params(AlkamiskausiKoodiUriKey)),
       Some(params(AlkamisvuosiKey)),
       params.get(KaytetaanHaunAlkamiskauttaKey).map(_.toBoolean),

@@ -59,13 +59,14 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
   }
 }
 
-sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
+sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
 
   def selectHakujenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakutietoHaku)]] = {
     sql"""select distinct t.oid,
                           h.oid,
                           h.nimi,
                           h.hakutapa_koodi_uri,
+                          h.metadata -> 'koulutuksenAlkamiskausi'                                       as koulutuksen_alkamiskausi,
                           h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamiskausiKoodiUri' as alkamiskausi_koodi_uri,
                           h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamisvuosi'         as alkamisvuosi,
                           h.hakulomaketyyppi,
@@ -95,6 +96,8 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
                  k.oid,
                  k.nimi,
                  k.valintaperuste_id,
+                 k.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
+                 k.metadata ->> 'kaytetaanHaunAlkamiskautta' as kaytetaan_haun_alkamiskautta_uusi,
                  k.alkamiskausi_koodi_uri,
                  k.alkamisvuosi,
                  k.kaytetaan_haun_alkamiskautta,
