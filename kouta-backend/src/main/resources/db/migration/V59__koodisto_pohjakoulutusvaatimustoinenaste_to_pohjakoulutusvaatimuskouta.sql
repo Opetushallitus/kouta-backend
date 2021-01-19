@@ -8,9 +8,8 @@ set pohjakoulutusvaatimus_koodi_urit = array_cat(pohjakoulutusvaatimus_koodi_uri
 where pohjakoulutusvaatimus_koodi_urit @> '{pohjakoulutusvaatimuskouta_pkyo#1}';
 
 -- Jaetaan koodiarvo "yoam" erillisiksi koodiarvoiksi
--- Ammatillinen koulutus (am) on joko Ammatillinen perustutkinto (104), Ammattitutkinto (105) tai Erikoisammattitutkinto (125)
 update hakukohteet
-set pohjakoulutusvaatimus_koodi_urit = array_cat(pohjakoulutusvaatimus_koodi_urit, '{pohjakoulutusvaatimuskouta_yo#1, pohjakoulutusvaatimuskouta_104#1, pohjakoulutusvaatimuskouta_105#1, pohjakoulutusvaatimuskouta_125#1}')
+set pohjakoulutusvaatimus_koodi_urit = array_cat(pohjakoulutusvaatimus_koodi_urit, '{pohjakoulutusvaatimuskouta_yo#1, pohjakoulutusvaatimuskouta_am#1}')
 where pohjakoulutusvaatimus_koodi_urit @> '{pohjakoulutusvaatimuskouta_yoam#1}';
 
 -- Poistetaan vanhat "pkyo" ja "yoam" yhdistelmäarvot
