@@ -18,7 +18,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
   with KeywordFixture with UploadFixture {
 
-  /*
+
   override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
 
   var koulutusOid: String = _
@@ -224,7 +224,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "add toteutuksen tarjoajan oppilaitos to koulutuksen tarjoajat on update if it's not there" in {
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List())
-    val koulutusOid = put(ophKoulutus)
+    val koulutusOid = put(ophKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List())
     val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     val oid = put(newToteutus, session)
@@ -684,6 +684,4 @@ class ToteutusSpec extends KoutaIntegrationSpec
       body should equal (validationErrorBody(notMissingMsg(Some(sorakuvausId)), "sorakuvausId"))
     }
   }
-
-   */
 }

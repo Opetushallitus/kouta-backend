@@ -13,14 +13,13 @@ import org.scalatest.BeforeAndAfterEach
 class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with KeywordFixture
   with KoulutusFixture with ToteutusFixture with BeforeAndAfterEach {
 
-  /*
   var koulutusOid = ""
   var rolelessSession: UUID = _
   var parentSession: UUID = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    koulutusOid = put(koulutus)
+    koulutusOid = put(koulutus, ophSession)
     rolelessSession = addTestSession()
     parentSession = addTestSession(Role.Koulutus.Crud, ParentOid)
   }
@@ -201,6 +200,4 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
       status should equal(403)
     }
   }
-
-   */
 }
