@@ -25,6 +25,9 @@ package object oppilaitos {
       |            - arkistoitu
       |            - tallennettu
       |          description: Oppilaitoksen julkaisutila. Jos oppilaitos on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko koulutus nähtävissä esikatselussa
       |        kielivalinta:
       |          type: array
       |          description: Kielet, joille oppilaitoksen kuvailutiedot ja muut tekstit on käännetty
@@ -126,6 +129,9 @@ package object oppilaitos {
       |            - arkistoitu
       |            - tallennettu
       |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko koulutus nähtävissä esikatselussa
       |        kielivalinta:
       |          type: array
       |          description: Kielet, joille oppilaitoksen osan kuvailutiedot ja muut tekstit on käännetty
@@ -267,6 +273,7 @@ package object oppilaitos {
 
 case class Oppilaitos(oid: OrganisaatioOid,
                       tila: Julkaisutila = Tallennettu,
+                      esikatselu: Boolean = false,
                       metadata: Option[OppilaitosMetadata] = None,
                       kielivalinta: Seq[Kieli] = Seq(),
                       organisaatioOid: OrganisaatioOid,
@@ -304,6 +311,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
 case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             oppilaitosOid: OrganisaatioOid,
                             tila: Julkaisutila = Tallennettu,
+                            esikatselu: Boolean = false,
                             metadata: Option[OppilaitoksenOsaMetadata] = None,
                             kielivalinta: Seq[Kieli] = Seq(),
                             organisaatioOid: OrganisaatioOid,

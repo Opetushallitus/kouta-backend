@@ -33,6 +33,9 @@ package object hakukohde {
       |            - arkistoitu
       |            - tallennettu
       |          description: Haun julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko koulutus nähtävissä esikatselussa
       |        nimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -302,6 +305,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      toteutusOid: ToteutusOid,
                      hakuOid: HakuOid,
                      tila: Julkaisutila = Tallennettu,
+                     esikatselu: Boolean = false,
                      nimi: Kielistetty = Map(),
                      alkamiskausiKoodiUri: Option[String] = None,
                      alkamisvuosi: Option[String] = None,

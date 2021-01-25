@@ -25,6 +25,9 @@ package object toteutus {
       |            - arkistoitu
       |            - tallennettu
       |          description: Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko koulutus nähtävissä esikatselussa
       |        tarjoajat:
       |          type: array
       |          description: Toteutusta tarjoavien organisaatioiden yksilöivät organisaatio-oidit
@@ -212,6 +215,7 @@ package object toteutus {
 case class Toteutus(oid: Option[ToteutusOid] = None,
                     koulutusOid: KoulutusOid,
                     tila: Julkaisutila = Tallennettu,
+                    esikatselu: Boolean = false,
                     tarjoajat: List[OrganisaatioOid] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,
