@@ -28,7 +28,7 @@ package object valintaperuste {
       |          description: Valintaperustekuvauksen julkaisutila. Jos kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
-      |          description: Onko koulutus nähtävissä esikatselussa
+      |          description: Onko valintaperuste nähtävissä esikatselussa
       |        koulutustyyppi:
       |          type: string
       |          description: Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi?

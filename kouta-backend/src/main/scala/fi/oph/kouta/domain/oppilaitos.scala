@@ -27,7 +27,7 @@ package object oppilaitos {
       |          description: Oppilaitoksen julkaisutila. Jos oppilaitos on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
-      |          description: Onko koulutus nähtävissä esikatselussa
+      |          description: Onko oppilaitos nähtävissä esikatselussa
       |        kielivalinta:
       |          type: array
       |          description: Kielet, joille oppilaitoksen kuvailutiedot ja muut tekstit on käännetty
@@ -131,7 +131,7 @@ package object oppilaitos {
       |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
-      |          description: Onko koulutus nähtävissä esikatselussa
+      |          description: Onko oppilaitoksen osa nähtävissä esikatselussa
       |        kielivalinta:
       |          type: array
       |          description: Kielet, joille oppilaitoksen osan kuvailutiedot ja muut tekstit on käännetty

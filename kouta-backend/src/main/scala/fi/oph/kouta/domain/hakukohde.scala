@@ -35,7 +35,7 @@ package object hakukohde {
       |          description: Haun julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
-      |          description: Onko koulutus nähtävissä esikatselussa
+      |          description: Onko hakukohde nähtävissä esikatselussa
       |        nimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.

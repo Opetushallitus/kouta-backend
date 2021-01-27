@@ -27,7 +27,7 @@ package object toteutus {
       |          description: Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
-      |          description: Onko koulutus nähtävissä esikatselussa
+      |          description: Onko toteutus nähtävissä esikatselussa
       |        tarjoajat:
       |          type: array
       |          description: Toteutusta tarjoavien organisaatioiden yksilöivät organisaatio-oidit
