@@ -44,10 +44,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
     val rules = koulutus.koulutustyyppi match {
       case Amm =>
-        logger.info(s"put koulutus ${koulutus.oid}, strict")
         AuthorizationRules(Seq(Role.Paakayttaja))
       case _ =>
-        logger.info(s"put koulutus ${koulutus.oid}, relaxed")
         AuthorizationRules(roleEntity.createRoles)
     }
     authorizePut(koulutus, rules) { k =>
@@ -61,11 +59,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
       case Some((oldKoulutus, _)) =>
         val rules: List[AuthorizationRules] = oldKoulutus.koulutustyyppi match {
           case Amm =>
-            logger.info(s"update koulutus ${newKoulutus.oid} strict rules")
             List(AuthorizationRules(Seq(Role.Paakayttaja)))
           case _ =>
             val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
-            logger.info(s"update koulutus ${newKoulutus.oid} relaxed rules")
             val newTarjoajat = newKoulutus.tarjoajat.toSet
             val oldTarjoajat = oldKoulutus.tarjoajat.toSet
             val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
