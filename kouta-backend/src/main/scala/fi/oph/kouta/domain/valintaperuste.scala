@@ -66,8 +66,7 @@ package object valintaperuste {
       |        nimi:
       |          type: object
       |          description: Valintaperustekuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        valintakokeet:
       |          type: array
       |          description: Hakuun liittyvät valintakokeet
@@ -162,8 +161,7 @@ package object valintaperuste {
       |        nimi:
       |          type: object
       |          description: Valintaperustekuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        muokkaaja:
       |          type: string
       |          description: Valintaperustekuvausta viimeksi muokanneen virkailijan henkilö-oid

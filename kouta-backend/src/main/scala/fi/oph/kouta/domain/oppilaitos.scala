@@ -66,8 +66,7 @@ package object oppilaitos {
       |        yhteystiedot:
       |          type: object
       |          description: Oppilaitoksen Opintopolussa näytettävät yhteystiedot
-      |          allOf:
-      |            - $ref: '#/components/schemas/Yhteystieto'
+      |          $ref: '#/components/schemas/Yhteystieto'
       |        tietoaOpiskelusta:
       |          type: array
       |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
@@ -77,8 +76,7 @@ package object oppilaitos {
       |        esittely:
       |          type: object
       |          description: Oppilaitoksen Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        opiskelijoita:
       |          type: integer
       |          description: Oppilaitoksen opiskelijoiden lkm
@@ -163,18 +161,15 @@ package object oppilaitos {
       |        yhteystiedot:
       |          type: object
       |          description: Oppilaitoksen osan Opintopolussa näytettävät yhteystiedot
-      |          allOf:
-      |            - $ref: '#/components/schemas/Yhteystieto'
+      |          $ref: '#/components/schemas/Yhteystieto'
       |        esittely:
       |          type: object
       |          description: Oppilaitoksen osan Opintopolussa näytettävä esittely eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        kampus:
       |          type: object
       |          description: Oppilaitoksen osan kampuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        opiskelijoita:
       |          type: integer
       |          description: Oppilaitoksen osan opiskelijoiden lkm
@@ -226,23 +221,19 @@ package object oppilaitos {
       |        osoite:
       |          type: object
       |          description: Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Osoite'
+      |          $ref: '#/components/schemas/Osoite'
       |        sahkoposti:
       |          type: object
       |          description: Opintopolussa näytettävä sähköpostiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        puhelinnumero:
       |          type: object
       |          description: Opintopolussa näytettävä puhelinnumero eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        wwwSivu:
       |          type: object
       |          description: Opintopolussa näytettävä www-sivu eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val TietoaOpiskelustaModel =
@@ -256,8 +247,7 @@ package object oppilaitos {
       |        teksti:
       |          type: object
       |          description: Lisätiedon teksti eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
 
