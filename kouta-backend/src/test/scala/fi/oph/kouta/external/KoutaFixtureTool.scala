@@ -232,6 +232,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
     HakukohteenLiittamisenTakarajaKey -> formatModified(startTime1),
     HakukohteenMuokkaamisenTakarajaKey -> formatModified(endTime1),
+    AjastettuJulkaisuKey -> formatModified(time3),
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
