@@ -99,8 +99,7 @@ package object toteutusMetadata {
       |        stipendinKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        suunniteltuKestoVuodet:
       |          type: integer
       |          description: "Koulutuksen suunniteltu kesto vuosina"
@@ -112,8 +111,7 @@ package object toteutusMetadata {
       |        suunniteltuKestoKuvaus:
       |          type: object
       |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
   val ToteutusMetadata =
@@ -123,8 +121,7 @@ package object toteutusMetadata {
       |        kuvaus:
       |          type: object
       |          description: Toteutuksen kuvausteksti eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        opetus:
       |          type: object
       |          $ref: '#/components/schemas/Opetus'
@@ -152,23 +149,19 @@ package object toteutusMetadata {
       |        nimi:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. nimi
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        kuvaus:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. kuvaus
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        linkki:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkki
-      |          allOf:
-      |            - $ref: '#/components/schemas/Linkki'
+      |          $ref: '#/components/schemas/Linkki'
       |        otsikko:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkin otsikko
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val Osaamisala =
@@ -182,13 +175,11 @@ package object toteutusMetadata {
       |        linkki:
       |          type: object
       |          description: Osaamisalan linkki
-      |          allOf:
-      |            - $ref: '#/components/schemas/Linkki'
+      |          $ref: '#/components/schemas/Linkki'
       |        otsikko:
       |          type: object
       |          description: Osaamisalan linkin otsikko
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val KorkeakouluToteutusMetadata =
@@ -282,18 +273,15 @@ package object toteutusMetadata {
       |            hakulomakeLinkki:
       |              type: object
       |              description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |              allOf:
-      |                - $ref: '#/components/schemas/Linkki'
+      |              $ref: '#/components/schemas/Linkki'
       |            lisatietoaHakeutumisesta:
       |              type: object
       |              description: Lisätietoa hakeutumisesta eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |              allOf:
-      |                - $ref: '#/components/schemas/Teksti'
+      |              $ref: '#/components/schemas/Teksti'
       |            lisatietoaValintaperusteista:
       |              type: object
       |              description: Lisätietoa valintaperusteista eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |              allOf:
-      |                - $ref: '#/components/schemas/Teksti'
+      |              $ref: '#/components/schemas/Teksti'
       |            hakuaika:
       |              type: array
       |              description: Toteutuksen hakuaika
