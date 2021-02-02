@@ -22,6 +22,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   val ophKoulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
 
+
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
       status should equal (404)
@@ -36,69 +37,69 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "allow the user of the koulutus organization to read the koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(oid, crudSessions(ChildOid), koulutus(oid))
   }
 
   it should "deny an authenticated user without organization access to access unpublished koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(s"$KoulutusPath/$oid", crudSessions(LonelyOid), 403)
   }
 
   it should "allow the user of a tarjoaja organization without access to the koulutus organization to read the koulutus" in {
-    val oid = put(koulutus.copy(tarjoajat = List(LonelyOid)))
+    val oid = put(koulutus.copy(tarjoajat = List(LonelyOid)), ophSession)
     get(oid, crudSessions(LonelyOid), koulutus(oid).copy(tarjoajat = List(LonelyOid)))
   }
 
   it should "allow the user of a parent organization to read the koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(oid, crudSessions(ParentOid), koulutus(oid))
   }
 
   it should "allow the user of a child organization to read the koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(oid, crudSessions(GrandChildOid), koulutus(oid))
   }
 
   it should "allow the user of proper koulutustyyppi to read julkinen koulutus created by oph" in {
-    val oid = put(ophKoulutus)
+    val oid = put(ophKoulutus, ophSession)
     get(oid, readSessions(AmmOid), ophKoulutus.copy(Some(KoulutusOid(oid))))
   }
 
   it should "deny the user of wrong koulutustyyppi to read julkinen koulutus created by oph" in {
-    val oid = put(ophKoulutus)
+    val oid = put(ophKoulutus, ophSession)
     get(s"$KoulutusPath/$oid", readSessions(YoOid), 403)
   }
 
   it should "deny the user of a wrong role to read the koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(s"$KoulutusPath/$oid", otherRoleSession, 403)
   }
 
   it should "allow the indexer to read any koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(s"$KoulutusPath/$oid", indexerSession, 200)
   }
 
   it should "allow a user of other organization but similar oppilaitostyyppi to access public koulutus" in {
     val sessionId = crudSessions(koulutus.organisaatioOid)
-    val oid = put(koulutus.copy(julkinen = true), sessionId)
-    get(oid, readSessions(AmmOid), koulutus(oid).copy(julkinen = true, muokkaaja = userOidForTestSessionId(sessionId)))
+    val oid = put(koulutus.copy(julkinen = true), ophSession)
+    get(oid, readSessions(AmmOid), koulutus(oid).copy(julkinen = true, muokkaaja = OphUserOid))
   }
 
   it should "deny an authenticated user of a different oppilaitostyyppi to access public koulutus" in {
-    val oid = put(koulutus.copy(julkinen = true))
+    val oid = put(koulutus.copy(julkinen = true), ophSession)
     get(s"$KoulutusPath/$oid", readSessions(YoOid), 403)
   }
 
   "Create koulutus" should "store koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(oid, koulutus(oid))
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(koulutus.copy(muokkaaja = UserOid("random")))
-    get(oid, koulutus(oid).copy(muokkaaja = testUser.oid))
+    val oid = put(koulutus.copy(muokkaaja = UserOid("random")), ophSession)
+    get(oid, koulutus(oid).copy(muokkaaja = OphUserOid))
   }
 
   it should "allow oph to create julkaistu koulutus without tarjoajat" in {
@@ -106,17 +107,13 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid))
   }
 
-  it should "deny other users to create julkaistu koulutus without tarjoajat" in {
-    put(KoulutusPath, ophKoulutus.copy(organisaatioOid = ChildOid), crudSessions(ChildOid), 400)
-  }
-
   it should "store korkeakoulutus koulutus" in {
-    val oid = put(TestData.YoKoulutus)
+    val oid = put(TestData.YoKoulutus, ophSession)
     get(oid, TestData.YoKoulutus.copy(oid = Some(KoulutusOid(oid))))
   }
 
   it should "validate new koulutus" in {
-    put(KoulutusPath, bytes(koulutus.copy(koulutusKoodiUri = None)), defaultHeaders) {
+    put(KoulutusPath, bytes(koulutus.copy(koulutusKoodiUri = None)), customHeaders(ophSession)) {
       withClue(body) {
         status should equal(400)
       }
@@ -126,7 +123,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "write create koulutus to audit log" in {
     MockAuditLogger.clean()
-    val oid = put(koulutus.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    val oid = put(koulutus.withModified(LocalDateTime.parse("1000-01-01T12:00:00")), ophSession)
     MockAuditLogger.find(oid, "koulutus_create") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }
@@ -139,16 +136,8 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     }
   }
 
-  it should "allow access if the user has rights to the koulutus organization" in {
-    put(koulutus.copy(tarjoajat = List(LonelyOid)), crudSessions(ChildOid))
-  }
-
   it should "deny access if the user is missing rights to the koulutus organization" in {
     put(KoulutusPath, koulutus.copy(tarjoajat = List.empty), crudSessions(EvilChildOid), 403)
-  }
-
-  it should "allow access if the user has rights to an ancestor of the koulutus organization" in {
-    put(koulutus, crudSessions(ParentOid))
   }
 
   it should "deny access if the user only has rights to a descendant of the koulutus organization" in {
@@ -163,13 +152,9 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     put(KoulutusPath, koulutus, indexerSession, 403)
   }
 
-  it should "allow access even if the user is missing rights to some of the tarjoajat" in {
-    put(koulutus, crudSessions(ChildOid))
-  }
-
   it should "copy a temporary image to a permanent location while creating the koulutus" in {
     saveLocalPng("temp/image.png")
-    val oid = put(koulutus.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))
+    val oid = put(koulutus.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")), ophSession)
 
     get(oid, koulutus(oid).withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))
 
@@ -179,82 +164,53 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "not touch an image that's not in the temporary location" in {
     val koulutusWithImage = koulutus.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
-    val oid = put(koulutusWithImage)
+    val oid = put(koulutusWithImage, ophSession)
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
   }
 
   "Update koulutus" should "update koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid, Arkistoitu), lastModified)
+    update(koulutus(oid, Arkistoitu), lastModified, ophSession, 200)
     get(oid, koulutus(oid, Arkistoitu))
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(koulutus, crudSessions(ChildOid))
-    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val oid = put(koulutus, ophSession)
+    val userOid = OphUserOid
     val lastModified = get(oid, koulutus(oid).copy(muokkaaja = userOid))
-    update(koulutus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, koulutus(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
+    update(koulutus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified, ophSession, 200)
+    get(oid, koulutus(oid, Arkistoitu).copy(muokkaaja = OphUserOid))
   }
 
   it should "write koulutus update to audit log" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     MockAuditLogger.clean()
-    update(koulutus(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
+    update(koulutus(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified, expectUpdate = true, ophSession)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "koulutus_update") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
-  it should "not update koulutus" in {
-    val oid = put(koulutus)
-    val lastModified = get(oid, koulutus(oid))
-    MockAuditLogger.clean()
-    update(koulutus(oid), lastModified, false)
-    MockAuditLogger.logs shouldBe empty
-    get(oid, koulutus(oid))
-  }
-
   it should "return 401 without a session" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     post(KoulutusPath, bytes(koulutus(oid)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
       status should equal (401)
     }
   }
 
-  it should "allow access if the user has rights to the koulutus organization" in {
-    val oid = put(koulutus)
+  it should "allow put and update access with oph credentials" in {
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    update(muokkaus(koulutus(oid)), lastModified, expectUpdate = true, crudSessions(ChildOid))
+    update(muokkaus(koulutus(oid)), lastModified, expectUpdate = true, ophSession)
   }
 
   it should "deny access if the user is missing rights to the koulutus organization" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(muokkaus(koulutus(oid)), lastModified, crudSessions(LonelyOid), 403)
-  }
-
-  it should "allow access if the user has rights to an ancestor organization" in {
-    val oid = put(koulutus)
-    val lastModified = get(oid, koulutus(oid))
-    update(muokkaus(koulutus(oid)), lastModified, expectUpdate = true, crudSessions(ParentOid))
-  }
-
-  it should "allow access if the user only has rights to a descent organization" in {
-    val oid = put(koulutus)
-    val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid).copy(tarjoajat = GrandChildOid :: koulutus(oid).tarjoajat), lastModified, expectUpdate = false, crudSessions(GrandChildOid))
-  }
-
-  it should "allow the user of proper koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
-    val oid = put(ophKoulutus, ophSession)
-    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid)
-    val lastModified = get(oid, koulutusWithOid)
-    val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(AmmOid))
-    update(koulutusWithNewTarjoaja, lastModified, expectUpdate = true, crudSessions(AmmOid))
   }
 
   it should "deny the user of wrong koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
@@ -266,34 +222,43 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "deny access if the user doesn't have update rights" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(muokkaus(koulutus(oid)), lastModified, readSessions(ChildOid), 403)
   }
 
   it should "deny access for the indexer" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(muokkaus(koulutus(oid)), lastModified, indexerSession, 403)
   }
 
-  it should "allow access even if the user doesn't have rights to a tarjoaja organization being removed" in {
-    val oid = put(koulutus)
+  it should "allow access if the user has OPH CRUD rights when tarjoaja being removed for AmmKoulutus" in {
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
 
-    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(ChildOid))
+    update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
   }
 
-  it should "allow access even if the user doesn't have rights to a tarjoaja organization being added" in {
-    val oid = put(koulutus)
+  it should "not allow access if the user doesn't have rights to a tarjoaja organization being removed for AmmKoulutus" in {
+    val oid = put(koulutus, ophSession)
+    val lastModified = get(oid, koulutus(oid))
+    val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
+
+    update(updatedKoulutus, lastModified, crudSessions(ChildOid), 403)
+  }
+
+  it should "not allow access if the user doesn't have rights to a tarjoaja organization being added for AmmKoulutus" in {
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = EvilChildOid :: koulutus.tarjoajat)
-    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(ChildOid))
+
+    update(updatedKoulutus, lastModified, crudSessions(ChildOid), 403)
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     post(KoulutusPath, bytes(koulutus(oid)), defaultHeaders) {
       status should equal (400)
       body should equal (errorBody(s"Otsake ${KoutaServlet.IfUnmodifiedSinceHeader} on pakollinen."))
@@ -301,17 +266,17 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "fail update if modified in between get and update" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
-    update(koulutus(oid, Arkistoitu), lastModified)
-    post(KoulutusPath, bytes(koulutus(oid)), headersIfUnmodifiedSince(lastModified)) {
+    update(koulutus(oid, Arkistoitu), lastModified, true, ophSession)
+    post(KoulutusPath, bytes(koulutus(oid)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       status should equal (409)
     }
   }
 
   it should "update koulutuksen tekstit ja tarjoajat" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val metadata = koulutus.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
     val lastModified = get(oid, koulutus(oid))
     val uusiKoulutus = koulutus(oid).copy(
@@ -322,12 +287,12 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
         lisatiedot = metadata.lisatiedot.map(_.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
       )))
-    update(uusiKoulutus, lastModified, true)
+    update(uusiKoulutus, lastModified, true, ophSession)
     get(oid, uusiKoulutus)
   }
 
   it should "update the modified time of the koulutus even when just tarjoajat is updated" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
 
     setModifiedToPast(oid, "10 minutes") should be(Success(()))
     val lastModified = get(oid, koulutus(oid))
@@ -335,7 +300,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
 
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, OtherOid, AmmOid))
-    update(uusiKoulutus, lastModified, expectUpdate = true)
+    update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
 
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
       status should equal(200)
@@ -350,27 +315,27 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "delete some tarjoajat and read last modified from history" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(GrandChildOid, EvilGrandChildOid))
-    update(uusiKoulutus, lastModified, true)
-    get(oid, uusiKoulutus) should not equal (lastModified)
+    update(uusiKoulutus, lastModified, true, ophSession)
+    get(oid, uusiKoulutus) should not equal lastModified
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = TestUserOid, organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "koulutus"))
-    val oid = put(unfinishedKoulutus)
+    val unfinishedKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = OphUserOid, organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "koulutus"))
+    val oid = put(unfinishedKoulutus, ophSession)
     val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
     val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid)), johtaaTutkintoon = false)
-    update(newUnfinishedKoulutus, lastModified)
+    update(newUnfinishedKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, newUnfinishedKoulutus)
   }
 
   it should "validate updated koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    post(KoulutusPath, bytes(koulutus(oid).copy(koulutusKoodiUri = None)), headersIfUnmodifiedSince(lastModified)) {
+    post(KoulutusPath, bytes(koulutus(oid).copy(koulutusKoodiUri = None)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       withClue(body) {
         status should equal(400)
       }
@@ -379,24 +344,24 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "copy a temporary image to a permanent location while updating the koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
 
     saveLocalPng("temp/image.png")
     val koulutusWithImage = koulutus(oid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))
 
-    update(koulutusWithImage, lastModified)
+    update(koulutusWithImage, lastModified, expectUpdate = true, ophSession)
     get(oid, koulutusWithImage.withTeemakuva(Some(s"$PublicImageServer/koulutus-teemakuva/$oid/image.png")))
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
   }
 
   it should "not touch an image that's not in the temporary location" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     val koulutusWithImage = koulutus(oid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
 
-    update(koulutusWithImage, lastModified)
+    update(koulutusWithImage, lastModified, expectUpdate = true, ophSession)
 
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))

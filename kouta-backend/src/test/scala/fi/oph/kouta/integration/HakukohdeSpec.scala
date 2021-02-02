@@ -22,7 +22,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    koulutusOid = put(koulutus)
+    koulutusOid = put(koulutus, ophSession)
     toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid)))
     hakuOid = put(haku)
     sorakuvausId = put(sorakuvaus)
