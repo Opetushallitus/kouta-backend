@@ -178,7 +178,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "read muokkaaja from the session" in {
     val oid = put(koulutus, ophSession)
-    //val userOid = userOidForTestSessionId(ophSession)
     val userOid = OphUserOid
     val lastModified = get(oid, koulutus(oid).copy(muokkaaja = userOid))
     update(koulutus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified, ophSession, 200)
@@ -234,13 +233,12 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     update(muokkaus(koulutus(oid)), lastModified, indexerSession, 403)
   }
 
-  it should "allow access if the user has OPH CRUD rights when being removed for AmmKoulutus" in {
+  it should "allow access if the user has OPH CRUD rights when tarjoaja being removed for AmmKoulutus" in {
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
 
     update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
-    //update(updatedKoulutus, lastModified, crudSessions(ChildOid), 400)
   }
 
   it should "not allow access if the user doesn't have rights to a tarjoaja organization being removed for AmmKoulutus" in {
@@ -255,7 +253,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = EvilChildOid :: koulutus.tarjoajat)
-    //update(updatedKoulutus, lastModified, expectUpdate = false, crudSessions(ChildOid))
+
     update(updatedKoulutus, lastModified, crudSessions(ChildOid), 403)
   }
 
