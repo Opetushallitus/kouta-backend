@@ -193,6 +193,7 @@ object TestData {
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some(LocalDate.now().getYear.toString),
     kaytetaanHaunAlkamiskautta = Some(false),
+    esikatselu = true,
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
