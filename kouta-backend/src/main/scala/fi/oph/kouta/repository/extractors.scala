@@ -231,6 +231,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     liitteidenToimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
     liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
+    esikatselu = r.nextBoolean(),
     metadata = r.nextStringOption().map(read[HakukohdeMetadata]),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
