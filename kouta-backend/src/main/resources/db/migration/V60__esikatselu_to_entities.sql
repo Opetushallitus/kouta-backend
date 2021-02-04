@@ -5,7 +5,7 @@ alter table hakukohteet_history
 
 comment on column hakukohteet.esikatselu is 'Onko hakukohde nähtävissä esikatselussa';
 
-create function update_hakukohteet_history() returns trigger
+create or replace function update_hakukohteet_history() returns trigger
     language plpgsql
 as
 $$
