@@ -19,7 +19,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    koulutusOid = put(koulutus)
+    koulutusOid = put(koulutus, ophSession)
     rolelessSession = addTestSession()
     parentSession = addTestSession(Role.Koulutus.Crud, ParentOid)
   }

@@ -12,6 +12,7 @@ import org.json4s.jackson.Serialization.write
 
 class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with SearchFixture with KoutaIndexMock with BeforeAndAfterEach  {
 
+
   override val roleEntities = RoleEntity.all
   override val DebugJson = false
 
@@ -44,12 +45,12 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   }
 
   def createTestData(): Unit = {
-    koid1 = put(koulutus.copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid)))
-    koid2 = put(koulutus.copy(organisaatioOid = ParentOid, tarjoajat = List(ParentOid)))
-    koid3 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
-    koid4 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid), julkinen = true))
-    koid5 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid, ChildOid), julkinen = true))
-    koid6 = put(koulutus.copy(organisaatioOid = OphOid, tarjoajat = List(LonelyOid), julkinen = true))
+    koid1 = put(koulutus.copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid)), ophSession)
+    koid2 = put(koulutus.copy(organisaatioOid = ParentOid, tarjoajat = List(ParentOid)), ophSession)
+    koid3 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)), ophSession)
+    koid4 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid), julkinen = true), ophSession)
+    koid5 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid, ChildOid), julkinen = true), ophSession)
+    koid6 = put(koulutus.copy(organisaatioOid = OphOid, tarjoajat = List(LonelyOid), julkinen = true), ophSession)
 
     toid1 = put(toteutus.copy(koulutusOid = KoulutusOid(koid1), organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid)))
     toid2 = put(toteutus.copy(koulutusOid = KoulutusOid(koid2), organisaatioOid = ParentOid, tarjoajat = List(ParentOid)))

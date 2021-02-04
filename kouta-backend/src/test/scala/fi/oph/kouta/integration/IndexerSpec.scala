@@ -11,7 +11,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
   override val roleEntities: Seq[RoleEntity] = RoleEntity.all
 
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val t1 = put(toteutus(oid))
     val t2 = put(toteutus(oid))
     val t3 = put(toteutus(oid))
@@ -26,7 +26,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
   }
 
   it should "return empty result if koulutus has no toteutukset" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs List()
@@ -53,7 +53,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
   }
 
   "List koulutukset by tarjoaja" should "list all koulutukset distinct" in {
-    val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)))
+    val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)), ophSession)
     mockOrganisaatioResponse()
     get(s"$IndexerPath/tarjoaja/$ChildOid/koulutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
@@ -62,7 +62,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
   }
 
   "List hakutiedot by koulutus" should "list all hakutiedot distinct" in {
-    val koulutusOid = put(koulutus)
+    val koulutusOid = put(koulutus, ophSession)
     val totetusOid = put(toteutus(koulutusOid))
     val hakuOid = put(haku)
     val hkOid1 = put(julkaistuHakukohde(totetusOid, hakuOid))

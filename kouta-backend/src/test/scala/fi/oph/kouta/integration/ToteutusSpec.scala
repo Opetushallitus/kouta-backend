@@ -18,13 +18,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
   with KeywordFixture with UploadFixture {
 
+
   override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
 
   var koulutusOid: String = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    koulutusOid = put(koulutus)
+    koulutusOid = put(koulutus, ophSession)
   }
 
   "Get toteutus by oid" should "return 404 if toteutus not found" in {
@@ -86,14 +87,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "store korkeakoulutus toteutus" in {
-    val koulutusOid = put(TestData.YoKoulutus)
+    val koulutusOid = put(TestData.YoKoulutus, ophSession)
     val oid = put(TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid)))
     get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid)))
   }
 
   it should "add toteutuksen tarjoajan oppilaitos to koulutuksen tarjoajat if it's not there" in {
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List())
-    val koulutusOid = put(ophKoulutus)
+    val koulutusOid = put(ophKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
     val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     val oid = put(newToteutus, session)
@@ -103,7 +104,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "fail to store toteutus if no permission to add toteutuksen tarjoajan oppilaitos to koulutuksen tarjoajat" in {
     val newKoulutus = koulutus.copy(organisaatioOid = LonelyOid, julkinen = false, tarjoajat = List(LonelyOid))
-    val koulutusOid = put(newKoulutus)
+    val koulutusOid = put(newKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
     val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     put(ToteutusPath, newToteutus, session, 403)
@@ -112,7 +113,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "fail to store toteutus if no koulutus permission to add toteutuksen tarjoajan oppilaitos to koulutuksen tarjoajat" in {
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List())
-    val koulutusOid = put(ophKoulutus)
+    val koulutusOid = put(ophKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
     val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role]), GrandChildOid)
     put(ToteutusPath, newToteutus, session, 403)
@@ -129,7 +130,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "fail to store julkaistu toteutus if the koulutus is not yet julkaistu" in {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu))
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
     put(ToteutusPath, toteutus(koulutusOid), 400, "tila", notYetJulkaistu("Koulutusta", koulutusOid))
   }
 
@@ -223,7 +224,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "add toteutuksen tarjoajan oppilaitos to koulutuksen tarjoajat on update if it's not there" in {
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List())
-    val koulutusOid = put(ophKoulutus)
+    val koulutusOid = put(ophKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List())
     val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
     val oid = put(newToteutus, session)
@@ -243,7 +244,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "fail to update julkaistu toteutus if the koulutus is not yet julkaistu" in {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu))
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
     val oid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
     val lastModified = get(oid, toteutus(oid, koulutusOid).copy(tila = Tallennettu))
     update(ToteutusPath, toteutus(oid, koulutusOid), lastModified, 400, "tila", notYetJulkaistu("Koulutusta", koulutusOid))
@@ -303,7 +304,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "allow a user of the tarjoaja organization to update the toteutus" in {
-    val newKoulutusOid = put(koulutus.copy(julkinen = true))
+    val newKoulutusOid = put(koulutus.copy(julkinen = true), ophSession)
     val oid = put(toteutus(newKoulutusOid).copy(tarjoajat = List(LonelyOid)))
     val thisToteutus = toteutus(oid, newKoulutusOid).copy(tarjoajat = List(LonelyOid))
     val lastModified = get(oid, thisToteutus)
@@ -370,7 +371,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val unfinishedToteutus = Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
-    val newKoulutusOid = put(koulutus)
+    val newKoulutusOid = put(koulutus, ophSession)
     val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(newKoulutusOid))
     update(newUnfinishedToteutus, lastModified)
     get(oid, newUnfinishedToteutus)
