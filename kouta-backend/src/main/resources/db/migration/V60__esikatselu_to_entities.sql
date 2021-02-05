@@ -169,3 +169,41 @@ begin
 end;
 $$;
 
+-- Oppilaitosten osat
+alter table oppilaitosten_osat
+    add column esikatselu boolean not null default false;
+alter table oppilaitosten_osat_history
+    add column esikatselu boolean not null default false;
+
+comment on column oppilaitosten_osat.esikatselu is 'Onko oppilaitoksen osa nähtävissä esikatselussa';
+
+create or replace function update_oppilaitosten_osat_history() returns trigger
+    language plpgsql
+as
+$$
+begin
+    insert into oppilaitosten_osat_history (oid,
+                                            oppilaitos_oid,
+                                            tila,
+                                            kielivalinta,
+                                            metadata,
+                                            organisaatio_oid,
+                                            muokkaaja,
+                                            esikatselu,
+                                            transaction_id,
+                                            system_time,
+                                            teemakuva)
+    values (old.oid,
+            old.oppilaitos_oid,
+            old.tila,
+            old.kielivalinta,
+            old.metadata,
+            old.organisaatio_oid,
+            old.muokkaaja,
+            old.esikatselu,
+            old.transaction_id,
+            tstzrange(lower(old.system_time), now(), '[)'),
+            old.teemakuva);
+    return null;
+end;
+$$;
