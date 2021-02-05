@@ -75,8 +75,17 @@ sealed trait OppilaitosModificationSQL extends SQLHelpers {
 sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificationSQL with SQLHelpers {
 
   def selectOppilaitos(oid: OrganisaatioOid): DBIO[Option[Oppilaitos]] = {
-    sql"""select oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, logo, lower(system_time)
-          from oppilaitokset where oid = $oid""".as[Oppilaitos].headOption
+    sql"""select oid,
+                 tila,
+                 kielivalinta,
+                 metadata,
+                 muokkaaja,
+                 organisaatio_oid,
+                 teemakuva,
+                 logo,
+                 lower(system_time)
+          from oppilaitokset
+          where oid = $oid""".as[Oppilaitos].headOption
   }
 
   def insertOppilaitos(oppilaitos: Oppilaitos): DBIO[Int] = {
