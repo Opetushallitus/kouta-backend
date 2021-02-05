@@ -214,7 +214,7 @@ alter table toteutukset
 alter table toteutukset_history
     add column esikatselu boolean not null default false;
 
-comment on column toteutukset.esikatselu is 'Onko toteutukset nähtävissä esikatselussa';
+comment on column toteutukset.esikatselu is 'Onko toteutus nähtävissä esikatselussa';
 
 create or replace function update_toteutukset_history() returns trigger
     language plpgsql
@@ -247,6 +247,55 @@ begin
             old.organisaatio_oid,
             old.teemakuva,
             old.sorakuvaus_id);
+    return null;
+end;
+$$;
+
+-- Valintaperuste
+alter table valintaperusteet
+    add column esikatselu boolean not null default false;
+alter table valintaperusteet_history
+    add column esikatselu boolean not null default false;
+
+comment on column valintaperusteet.esikatselu is 'Onko valintaperuste nähtävissä esikatselussa';
+
+create or replace function update_valintaperusteet_history() returns trigger
+    language plpgsql
+as
+$$
+begin
+    insert into valintaperusteet_history (koulutustyyppi,
+                                          id,
+                                          tila,
+                                          nimi,
+                                          hakutapa_koodi_uri,
+                                          kohdejoukko_koodi_uri,
+                                          kohdejoukon_tarkenne_koodi_uri,
+                                          organisaatio_oid,
+                                          metadata,
+                                          esikatselu,
+                                          kielivalinta,
+                                          julkinen,
+                                          sorakuvaus_id,
+                                          muokkaaja,
+                                          transaction_id,
+                                          system_time)
+    values (old.koulutustyyppi,
+            old.id,
+            old.tila,
+            old.nimi,
+            old.hakutapa_koodi_uri,
+            old.kohdejoukko_koodi_uri,
+            old.kohdejoukon_tarkenne_koodi_uri,
+            old.organisaatio_oid,
+            old.metadata,
+            old.esikatselu,
+            old.kielivalinta,
+            old.julkinen,
+            old.sorakuvaus_id,
+            old.muokkaaja,
+            old.transaction_id,
+            tstzrange(lower(old.system_time), now(), '[)'));
     return null;
 end;
 $$;
