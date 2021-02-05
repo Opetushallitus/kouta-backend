@@ -450,6 +450,7 @@ object TestData {
     oid = None,
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     tila = Julkaistu,
+    esikatselu = true,
     tarjoajat = List(OtherOid, AmmOid),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
