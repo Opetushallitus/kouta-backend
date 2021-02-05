@@ -115,6 +115,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
                  kielivalinta,
                  metadata,
                  muokkaaja,
+                 esikatselu,
                  organisaatio_oid,
                  teemakuva,
                  lower(system_time)
