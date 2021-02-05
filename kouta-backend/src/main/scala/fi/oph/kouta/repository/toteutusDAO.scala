@@ -168,6 +168,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               t.nimi,
               t.metadata,
               t.muokkaaja,
+              t.esikatselu,
               t.organisaatio_oid,
               t.kielivalinta,
               t.teemakuva,
@@ -215,6 +216,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             metadata,
             muokkaaja,
             organisaatio_oid,
+            esikatselu,
             kielivalinta,
             teemakuva,
             sorakuvaus_id
@@ -225,6 +227,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             ${toJsonParam(toteutus.metadata)}::jsonb,
             ${toteutus.muokkaaja},
             ${toteutus.organisaatioOid},
+            ${toteutus.esikatselu},
             ${toJsonParam(toteutus.kielivalinta)}::jsonb,
             ${toteutus.teemakuva},
             ${toteutus.sorakuvausId.map(_.toString)}::uuid
@@ -245,6 +248,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               nimi = ${toJsonParam(toteutus.nimi)}::jsonb,
               metadata = ${toJsonParam(toteutus.metadata)}::jsonb,
               muokkaaja = ${toteutus.muokkaaja},
+              esikatselu = ${toteutus.esikatselu},
               organisaatio_oid = ${toteutus.organisaatioOid},
               kielivalinta = ${toJsonParam(toteutus.kielivalinta)}::jsonb,
               teemakuva = ${toteutus.teemakuva},
@@ -254,6 +258,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             or tila is distinct from ${toteutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(toteutus.nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(toteutus.metadata)}::jsonb
+            or esikatselu is distinct from ${toteutus.esikatselu}
             or kielivalinta is distinct from ${toJsonParam(toteutus.kielivalinta)}::jsonb
             or organisaatio_oid is distinct from ${toteutus.organisaatioOid}
             or teemakuva is distinct from ${toteutus.teemakuva}

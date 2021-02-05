@@ -100,6 +100,7 @@ trait ToteutusExtractors extends ExtractorBase {
     nimi = extractKielistetty(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[ToteutusMetadata]),
     muokkaaja = UserOid(r.nextString()),
+    esikatselu = r.nextBoolean(),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
