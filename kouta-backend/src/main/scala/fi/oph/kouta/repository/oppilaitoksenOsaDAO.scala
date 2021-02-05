@@ -94,8 +94,17 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
   }
 
   def selectOppilaitoksenOsa(oid: OrganisaatioOid): DBIO[Option[OppilaitoksenOsa]] = {
-    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, lower(system_time)
-          from oppilaitosten_osat where oid = $oid""".as[OppilaitoksenOsa].headOption
+    sql"""select oid,
+                 oppilaitos_oid,
+                 tila,
+                 kielivalinta,
+                 metadata,
+                 muokkaaja,
+                 organisaatio_oid,
+                 teemakuva,
+                 lower(system_time)
+          from oppilaitosten_osat
+          where oid = $oid""".as[OppilaitoksenOsa].headOption
   }
 
   def selectByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsa]] = {
