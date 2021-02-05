@@ -68,6 +68,7 @@ object TestData {
   val AmmKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
+    esikatselu = true,
     koulutustyyppi = Amm,
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
@@ -93,6 +94,7 @@ object TestData {
     johtaaTutkintoon = true,
     koulutustyyppi = Yo,
     koulutusKoodiUri = Some("koulutus_371101#1"),
+    esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(YliopistoKoulutusMetadata(
@@ -114,6 +116,7 @@ object TestData {
     johtaaTutkintoon = false,
     koulutustyyppi = AmmTutkinnonOsa,
     koulutusKoodiUri = None,
+    esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata(

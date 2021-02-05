@@ -262,6 +262,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
     KaytetaanHaunHakulomakettaKey -> "false",
+    EsikatseluKey -> "false",
     JarjestyspaikkaOidKey -> OtherOid.s,
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
