@@ -162,18 +162,29 @@ trait ToteutusModificationSQL extends SQLHelpers {
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
 
   val selectToteutusSql =
-    """select t.oid, t.koulutus_oid, t.tila, t.nimi, t.metadata, t.muokkaaja, t.organisaatio_oid, t.kielivalinta, t.teemakuva, t.sorakuvaus_id, m.modified
-         from toteutukset t
-         inner join (
-           select t.oid oid, greatest(
-             max(lower(t.system_time)),
-             max(lower(ta.system_time)),
-             max(upper(th.system_time)),
-             max(upper(tah.system_time))) modified
+    """select t.oid,
+              t.koulutus_oid,
+              t.tila,
+              t.nimi,
+              t.metadata,
+              t.muokkaaja,
+              t.organisaatio_oid,
+              t.kielivalinta,
+              t.teemakuva,
+              t.sorakuvaus_id,
+              m.modified
+       from toteutukset t
+                inner join (
+           select t.oid oid,
+                  greatest(
+                          max(lower(t.system_time)),
+                          max(lower(ta.system_time)),
+                          max(upper(th.system_time)),
+                          max(upper(tah.system_time))) modified
            from toteutukset t
-           left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-           left join toteutukset_history th on t.oid = th.oid
-           left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
+                    left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
+                    left join toteutukset_history th on t.oid = th.oid
+                    left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
            group by t.oid) m on t.oid = m.oid"""
 
   def selectToteutus(oid: ToteutusOid) =
