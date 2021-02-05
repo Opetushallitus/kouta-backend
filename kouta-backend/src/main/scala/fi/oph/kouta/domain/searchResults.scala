@@ -49,8 +49,7 @@ package object searchResults {
       |        paikkakunta:
       |          type: object
       |          description: Organisaation paikkakunta
-      |          allOf:
-      |            - $ref: '#/components/schemas/Paikkakunta'
+      |          $ref: '#/components/schemas/Paikkakunta'
       |""".stripMargin
 
   val MuokkaajaModel =
@@ -74,18 +73,15 @@ package object searchResults {
       |        nimi:
       |          type: object
       |          description: Opintopolussa näytettävä nimi eri kielillä
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        muokkaaja:
       |          type: object
       |          description: Viimeisin muokkaaja
-      |          allOf:
-      |            - $ref: '#/components/schemas/Muokkaaja'
+      |          $ref: '#/components/schemas/Muokkaaja'
       |        organisaatio:
       |          type: object
       |          description: Luoja-organisaatio
-      |          allOf:
-      |            - $ref: '#/components/schemas/Organisaatio'
+      |          $ref: '#/components/schemas/Organisaatio'
       |        modified:
       |          type: string
       |          format: date-time
