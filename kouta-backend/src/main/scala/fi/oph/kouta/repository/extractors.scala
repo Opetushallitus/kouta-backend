@@ -74,6 +74,7 @@ trait KoulutusExtractors extends ExtractorBase {
     julkinen = r.nextBoolean(),
     muokkaaja = UserOid(r.nextString()),
     organisaatioOid = OrganisaatioOid(r.nextString()),
+    esikatselu = r.nextBoolean(),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
     ePerusteId = r.nextLongOption(),
