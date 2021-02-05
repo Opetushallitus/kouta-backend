@@ -563,6 +563,7 @@ object TestData {
   val JulkaistuOppilaitos: Oppilaitos = Oppilaitos(
     oid = ChildOid,
     tila = Julkaistu,
+    esikatselu = true,
     metadata = Some(OppilaitosMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),
@@ -596,6 +597,7 @@ object TestData {
     oid = GrandChildOid,
     oppilaitosOid = ChildOid,
     tila = Julkaistu,
+    esikatselu = true,
     metadata = Some(OppilaitoksenOsaMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),
