@@ -24,10 +24,10 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getInstantOptionResult: GetResult[Option[Instant]] = GetResult(r => r.nextTimestampOption().map(_.toInstant))
   implicit val getInstantResult: GetResult[Instant] = GetResult(r => r.nextTimestamp().toInstant)
 
-  implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => new Tarjoaja(GenericOid(r.nextString()), OrganisaatioOid(r.nextString())))
+  implicit val getTarjoajatResult: GetResult[Tarjoaja] = GetResult(r => Tarjoaja(GenericOid(r.nextString()), OrganisaatioOid(r.nextString())))
 
   implicit val getHakuaikaResult: GetResult[Hakuaika] = GetResult(r => {
-    new Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestampOption().map(_.toLocalDateTime))
+    Hakuaika(GenericOid(r.nextString()), r.nextTimestamp().toLocalDateTime, r.nextTimestampOption().map(_.toLocalDateTime))
   })
 
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
@@ -63,7 +63,7 @@ trait ExtractorBase extends KoutaJsonFormats {
 
 trait KoulutusExtractors extends ExtractorBase {
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
-    oid = r.nextStringOption().map(KoulutusOid(_)),
+    oid = r.nextStringOption().map(KoulutusOid),
     johtaaTutkintoon = r.nextBoolean(),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     koulutusKoodiUri = r.nextStringOption(),
@@ -92,7 +92,7 @@ trait KoulutusExtractors extends ExtractorBase {
 
 trait ToteutusExtractors extends ExtractorBase {
   implicit val getToteutusResult: GetResult[Toteutus] = GetResult(r => Toteutus(
-    oid = r.nextStringOption().map(ToteutusOid(_)),
+    oid = r.nextStringOption().map(ToteutusOid),
     koulutusOid = KoulutusOid(r.nextString()),
     tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
@@ -120,7 +120,7 @@ trait ToteutusExtractors extends ExtractorBase {
 
 trait HakuExtractors extends ExtractorBase {
   implicit val getHakuResult: GetResult[Haku] = GetResult(r => Haku(
-    oid = r.nextStringOption().map(HakuOid(_)),
+    oid = r.nextStringOption().map(HakuOid),
     tila = Julkaisutila.withName(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     hakutapaKoodiUri = r.nextStringOption(),
@@ -204,7 +204,7 @@ trait SorakuvausExtractors extends ExtractorBase {
 
 trait HakukohdeExctractors extends ExtractorBase {
   implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
-    oid = r.nextStringOption().map(HakukohdeOid(_)),
+    oid = r.nextStringOption().map(HakukohdeOid),
     toteutusOid = ToteutusOid(r.nextString()),
     hakuOid = HakuOid(r.nextString()),
     tila = Julkaisutila.withName(r.nextString()),
@@ -217,7 +217,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
     hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
     kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
-    jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid(_)),
+    jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
     aloituspaikat = r.nextIntOption(),
     ensikertalaisenAloituspaikat = r.nextIntOption(),
     pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
@@ -330,7 +330,7 @@ trait HakutietoExtractors extends ExtractorBase {
       alkamiskausiKoodiUri = r.nextStringOption(),
       alkamisvuosi = r.nextStringOption(),
       kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
-      jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid(_)),
+      jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
       hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
       hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
       hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
