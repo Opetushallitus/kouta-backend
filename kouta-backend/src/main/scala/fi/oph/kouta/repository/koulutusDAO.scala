@@ -214,6 +214,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                           k.julkinen,
                           k.muokkaaja,
                           k.organisaatio_oid,
+                          k.esikatselu,
                           k.kielivalinta,
                           k.teemakuva,
                           k.eperuste_id,
