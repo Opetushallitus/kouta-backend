@@ -163,6 +163,7 @@ trait ValintaperusteExtractors extends ExtractorBase {
     kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
     julkinen = r.nextBoolean(),
+    esikatselu = r.nextBoolean(),
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
     sorakuvausId = r.nextStringOption().map(UUID.fromString),
     organisaatioOid = OrganisaatioOid(r.nextString()),

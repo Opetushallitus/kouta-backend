@@ -105,6 +105,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      kohdejoukon_tarkenne_koodi_uri,
                      nimi,
                      julkinen,
+                     esikatselu,
                      metadata,
                      sorakuvaus_id,
                      organisaatio_oid,
@@ -118,6 +119,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      ${valintaperuste.kohdejoukonTarkenneKoodiUri},
                      ${toJsonParam(valintaperuste.nimi)}::jsonb,
                      ${valintaperuste.julkinen},
+                     ${valintaperuste.esikatselu},
                      ${toJsonParam(valintaperuste.metadata)}::jsonb,
                      ${valintaperuste.sorakuvausId.map(_.toString)}::uuid,
                      ${valintaperuste.organisaatioOid},
@@ -151,6 +153,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  kohdejoukon_tarkenne_koodi_uri,
                  nimi,
                  julkinen,
+                 esikatselu,
                  metadata,
                  sorakuvaus_id,
                  organisaatio_oid,
@@ -175,6 +178,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      kohdejoukon_tarkenne_koodi_uri = ${valintaperuste.kohdejoukonTarkenneKoodiUri},
                      nimi = ${toJsonParam(valintaperuste.nimi)}::jsonb,
                      julkinen = ${valintaperuste.julkinen},
+                     esikatselu = ${valintaperuste.esikatselu},
                      metadata = ${toJsonParam(valintaperuste.metadata)}::jsonb,
                      sorakuvaus_id = ${valintaperuste.sorakuvausId.map(_.toString)}::uuid,
                      organisaatio_oid = ${valintaperuste.organisaatioOid},
@@ -188,6 +192,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
              or kohdejoukon_tarkenne_koodi_uri is distinct from ${valintaperuste.kohdejoukonTarkenneKoodiUri}
              or nimi is distinct from ${toJsonParam(valintaperuste.nimi)}::jsonb
              or julkinen is distinct from ${valintaperuste.julkinen}
+             or esikatselu is distinct from ${valintaperuste.esikatselu}
              or metadata is distinct from ${toJsonParam(valintaperuste.metadata)}::jsonb
              or sorakuvaus_id is distinct from ${valintaperuste.sorakuvausId.map(_.toString)}::uuid
              or organisaatio_oid is distinct from ${valintaperuste.organisaatioOid}
