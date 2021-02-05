@@ -143,9 +143,22 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                    $muokkaaja)"""
 
   def selectValintaperuste(id: UUID) =
-    sql"""select id, tila, koulutustyyppi, hakutapa_koodi_uri, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, nimi,
-                 julkinen, metadata, sorakuvaus_id, organisaatio_oid, muokkaaja, kielivalinta, lower(system_time)
-          from valintaperusteet where id = ${id.toString}::uuid"""
+    sql"""select id,
+                 tila,
+                 koulutustyyppi,
+                 hakutapa_koodi_uri,
+                 kohdejoukko_koodi_uri,
+                 kohdejoukon_tarkenne_koodi_uri,
+                 nimi,
+                 julkinen,
+                 metadata,
+                 sorakuvaus_id,
+                 organisaatio_oid,
+                 muokkaaja,
+                 kielivalinta,
+                 lower(system_time)
+          from valintaperusteet
+          where id = ${id.toString}::uuid"""
 
   def selectValintakokeet(id: UUID): DBIO[Vector[Valintakoe]] = {
     sql"""select id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
