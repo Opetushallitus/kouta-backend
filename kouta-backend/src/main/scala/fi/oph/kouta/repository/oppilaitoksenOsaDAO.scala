@@ -100,6 +100,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
                  kielivalinta,
                  metadata,
                  muokkaaja,
+                 esikatselu,
                  organisaatio_oid,
                  teemakuva,
                  lower(system_time)
@@ -119,6 +120,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
              tila,
              kielivalinta,
              metadata,
+             esikatselu,
              muokkaaja,
              organisaatio_oid,
              teemakuva)
@@ -128,6 +130,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
              ${oppilaitoksenOsa.tila.toString}::julkaisutila,
              ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
              ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
+             ${oppilaitoksenOsa.esikatselu},
              ${oppilaitoksenOsa.muokkaaja},
              ${oppilaitoksenOsa.organisaatioOid},
              ${oppilaitoksenOsa.teemakuva})"""
@@ -138,6 +141,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
               tila = ${oppilaitoksenOsa.tila.toString}::julkaisutila,
               kielivalinta = ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
               metadata = ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
+              esikatselu = ${oppilaitoksenOsa.esikatselu},
               muokkaaja = ${oppilaitoksenOsa.muokkaaja},
               organisaatio_oid = ${oppilaitoksenOsa.organisaatioOid},
               teemakuva = ${oppilaitoksenOsa.teemakuva}
@@ -147,6 +151,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
               or metadata is distinct from ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb
               or kielivalinta is distinct from ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb
               or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid}
+              or esikatselu is distinct from ${oppilaitoksenOsa.esikatselu}
               or teemakuva is distinct from ${oppilaitoksenOsa.teemakuva}
             )"""
   }

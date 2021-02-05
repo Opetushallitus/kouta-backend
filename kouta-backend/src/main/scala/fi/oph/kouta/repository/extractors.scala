@@ -287,6 +287,7 @@ trait OppilaitoksenOsaExtractors extends ExtractorBase {
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
     muokkaaja = UserOid(r.nextString()),
+    esikatselu = r.nextBoolean(),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     teemakuva = r.nextStringOption(),
     modified = Some(timeStampToLocalDateTime(r.nextTimestamp()))
