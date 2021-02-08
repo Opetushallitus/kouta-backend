@@ -75,16 +75,17 @@ class MigrationServlet(migrationService: MigrationService,
     Ok(compact(render(hakukohdeOids)))
   }
 
-  post("/hakukohde/:hakukohdeOid") {
+  post("/haku/:hakuOid/hakukohde/:hakukohdeOid") {
     implicit val authenticated: Authenticated = authenticate()
 
     val hakukohdeOid = HakukohdeOid(params("hakukohdeOid"))
-    logger.warn(s"Migration begins for hakukohde $hakukohdeOid!")
+    val hakuOid = HakuOid(params("hakuOid"))
+    logger.warn(s"Migration begins for hakukohde $hakukohdeOid for haku $hakuOid!")
     val result = parse(migrationService.fetch(urlProperties.url("tarjonta-service.hakukohde.oid", hakukohdeOid))) \ "result"
     //val hakuOid = (result \ "hakuOid").extract[String]
     //val komotos = (result \ "koulutusmoduuliToteutusTarjoajatiedot").extract[Map[String, JObject]]
     val hakukohdeKoulutusOids = (result \ "hakukohdeKoulutusOids").extract[List[String]]
-    val hakukohde = migrationService.parseHakukohdeFromResult(result)
+    val hakukohde = migrationService.parseHakukohdeFromResult(hakuOid, result)
     tryPutAndPost(hakukohde, hakukohdeService.put, hakukohdeService.update)
     for(koulutusOid <- hakukohdeKoulutusOids) {
       //val komotoOids = (komotos \ "tarjoajaOids").extract[List[String]]

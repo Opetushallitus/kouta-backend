@@ -231,7 +231,7 @@ class MigrationService {
       modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
   }
 
-  def parseHakukohdeFromResult(result: JValue): Hakukohde = {
+  def parseHakukohdeFromResult(hakuOid: HakuOid, result: JValue): Hakukohde = {
     val tarjoajaOids = (result \ "tarjoajaOids").extract[List[String]]
 
     val toteutusOid = ToteutusOid((result \ "hakukohdeKoulutusOids").extract[List[String]].head)
@@ -242,7 +242,7 @@ class MigrationService {
 
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
       toteutusOid = toteutusOid,
-      hakuOid = HakuOid((result \ "hakuOid").extract[String]),
+      hakuOid = hakuOid,
       tila = toJulkaisutila((result \ "tila").extract[String]),
       nimi = nimi,
       alkamiskausiKoodiUri = None,
