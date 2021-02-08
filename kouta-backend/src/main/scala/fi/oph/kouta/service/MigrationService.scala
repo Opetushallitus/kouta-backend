@@ -1,13 +1,11 @@
 package fi.oph.kouta.service
 
 import java.time.{Instant, LocalDateTime, ZoneId}
-import java.util.{Calendar, UUID}
+import java.util.{UUID}
 
 import fi.oph.kouta.client.{CallerId, HttpClient}
-import fi.oph.kouta.domain.{Ajanjakso, AlkamiskausiJaVuosi, Alkamiskausityyppi, Amk, AmmattikorkeakouluKoulutusMetadata, AmmattikorkeakouluToteutusMetadata, Arkistoitu, Ataru, En, Fi, Haku, HakuMetadata, Hakukohde, Julkaisutila, Kieli, Kielistetty, KoulutuksenAlkamiskausi, Koulutus, KoulutusMetadata, Koulutustyyppi, Liite, Lisatieto, Lomake, Muu, Opetus, Sv, Tallennettu, Toteutus, ToteutusMetadata, Yhteyshenkilo, YliopistoKoulutusMetadata, YliopistoToteutusMetadata, Yo}
+import fi.oph.kouta.domain.{Ajanjakso, AlkamiskausiJaVuosi, Amk, AmmattikorkeakouluKoulutusMetadata, AmmattikorkeakouluToteutusMetadata, Arkistoitu, Ataru, En, Fi, Haku, HakuMetadata, Hakukohde, Julkaisutila, Kieli, Kielistetty, KoulutuksenAlkamiskausi, Koulutus, KoulutusMetadata, Koulutustyyppi, Liite, Lisatieto, Lomake, Muu, Opetus, Sv, Tallennettu, Toteutus, ToteutusMetadata, Yhteyshenkilo, YliopistoKoulutusMetadata, YliopistoToteutusMetadata, Yo}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
-
-import scala.collection.immutable
 
 class MigrationService {
   import org.json4s._
@@ -240,6 +238,9 @@ class MigrationService {
     val opetuskielet = (result \ "opetusKielet").extract[List[String]].map(toKieli)
     val liitteet = (result \ "hakukohteenLiitteet").extract[List[Map[String, JValue]]].map(toLiite)
 
+    val pohjakoulutusvaatimus = ((result \ "hakukelpoisuusvaatimusUris").extract[List[String]])
+      .map(_.split("_").last).map(versio => s"pohjakoulutusvaatimuskouta_$versio#1")
+
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
       toteutusOid = toteutusOid,
       hakuOid = hakuOid,
@@ -265,7 +266,7 @@ class MigrationService {
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       kielivalinta = opetuskielet,
       modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime),
-      pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_100#1"), // TODO
+      pohjakoulutusvaatimusKoodiUrit = pohjakoulutusvaatimus,
       pohjakoulutusvaatimusTarkenne = Map(), // TODO
       muuPohjakoulutusvaatimus = Map(), // TODO
       liitteet = liitteet,
