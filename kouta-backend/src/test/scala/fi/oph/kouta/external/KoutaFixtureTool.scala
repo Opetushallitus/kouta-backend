@@ -191,6 +191,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
     JulkinenKey -> "false",
+    EsikatseluKey -> "false",
     MuokkaajaKey -> TestUserOid.s,
     OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
@@ -206,6 +207,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
+    EsikatseluKey -> "false",
     MuokkaajaKey -> TestUserOid.s,
     OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
@@ -263,6 +265,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
     HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
     KaytetaanHaunHakulomakettaKey -> "false",
+    EsikatseluKey -> "false",
     JarjestyspaikkaOidKey -> OtherOid.s,
     HakuaikaAlkaaKey -> formatModified(startTime1),
     HakuaikaPaattyyKey -> formatModified(endTime1),
@@ -299,6 +302,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KoulutustyyppiKey -> Amm.name,
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
+    EsikatseluKey -> "false",
     MuokkaajaKey -> TestUserOid.s,
     OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
@@ -336,6 +340,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TilaKey -> Julkaistu.name,
     MuokkaajaKey -> TestUserOid.s,
     OrganisaatioKey -> OtherOid.s,
+    EsikatseluKey -> "false",
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/oppilaitos-teemakuva/oid/kuva.jpg",
     LogoKey -> "https://testi.fi/oppilaitos-logo/oid/logo.png",
@@ -349,6 +354,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TilaKey -> Julkaistu.name,
     MuokkaajaKey -> TestUserOid.s,
     OrganisaatioKey -> OtherOid.s,
+    EsikatseluKey -> "false",
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/oppilaitoksen-osa-teemakuva/oid/kuva.jpg",
     ModifiedKey -> formatModified(LocalDateTime.now()),
@@ -379,6 +385,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case Some(x) => Some(x)
       },
       Julkaisutila.withName(params(TilaKey)),
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       params.get(TarjoajatKey) match {
         case None => List[OrganisaatioOid]()
         case Some(x) if x.trim == "" => List[OrganisaatioOid]()
@@ -387,10 +397,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[KoulutusMetadata]),
       params(JulkinenKey).toBoolean,
-      params.get(EsikatseluKey) match {
-        case None => false
-        case Some(x) => x.toBoolean
-      },
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       kielivalinta,
@@ -411,6 +417,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(ToteutusOid(oid)),
       KoulutusOid(params(KoulutusOidKey)),
       Julkaisutila.withName(params(TilaKey)),
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid).toList,
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[ToteutusMetadata]),
@@ -455,6 +465,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       ToteutusOid(params(ToteutusOidKey)),
       HakuOid(params(HakuOidKey)),
       Julkaisutila.withName(params(TilaKey)),
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       toKielistetty(kielivalinta, params(NimiKey)),
       Option(params(AlkamiskausiKoodiUriKey)),
       Option(params(AlkamisvuosiKey)),
@@ -494,6 +508,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     toJsonIfValid( Valintaperuste(
       Some(UUID.fromString(id)),
       Julkaisutila.withName(params(TilaKey)),
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(params(HakutapaKoodiUriKey)),
       Some(params(KohdejoukkoKoodiUriKey)),
@@ -531,6 +549,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     toJsonIfValid( Oppilaitos(
       OrganisaatioOid(oid),
       Julkaisutila.withName(params(TilaKey)),
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       params.get(MetadataKey).map(read[OppilaitosMetadata]),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName),
       OrganisaatioOid(params(OrganisaatioKey)),
@@ -549,6 +571,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       OrganisaatioOid(oid),
       OrganisaatioOid(params(OppilaitosOidKey)),
       Julkaisutila.withName(params(TilaKey)),
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       params.get(MetadataKey).map(read[OppilaitoksenOsaMetadata]),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName),
       OrganisaatioOid(params(OrganisaatioKey)),

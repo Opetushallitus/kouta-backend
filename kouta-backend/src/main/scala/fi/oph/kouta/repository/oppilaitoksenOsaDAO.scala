@@ -94,13 +94,33 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
   }
 
   def selectOppilaitoksenOsa(oid: OrganisaatioOid): DBIO[Option[OppilaitoksenOsa]] = {
-    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, lower(system_time)
-          from oppilaitosten_osat where oid = $oid""".as[OppilaitoksenOsa].headOption
+    sql"""select oid,
+                 oppilaitos_oid,
+                 tila,
+                 kielivalinta,
+                 metadata,
+                 muokkaaja,
+                 esikatselu,
+                 organisaatio_oid,
+                 teemakuva,
+                 lower(system_time)
+          from oppilaitosten_osat
+          where oid = $oid""".as[OppilaitoksenOsa].headOption
   }
 
   def selectByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsa]] = {
-    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, lower(system_time)
-          from oppilaitosten_osat where oppilaitos_oid = $oppilaitosOid""".as[OppilaitoksenOsa]
+    sql"""select oid,
+                 oppilaitos_oid,
+                 tila,
+                 kielivalinta,
+                 metadata,
+                 muokkaaja,
+                 esikatselu,
+                 organisaatio_oid,
+                 teemakuva,
+                 lower(system_time)
+          from oppilaitosten_osat
+          where oppilaitos_oid = $oppilaitosOid""".as[OppilaitoksenOsa]
   }
 
   def insertOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Int] = {
@@ -110,6 +130,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
              tila,
              kielivalinta,
              metadata,
+             esikatselu,
              muokkaaja,
              organisaatio_oid,
              teemakuva)
@@ -119,6 +140,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
              ${oppilaitoksenOsa.tila.toString}::julkaisutila,
              ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
              ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
+             ${oppilaitoksenOsa.esikatselu},
              ${oppilaitoksenOsa.muokkaaja},
              ${oppilaitoksenOsa.organisaatioOid},
              ${oppilaitoksenOsa.teemakuva})"""
@@ -129,6 +151,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
               tila = ${oppilaitoksenOsa.tila.toString}::julkaisutila,
               kielivalinta = ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb,
               metadata = ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb,
+              esikatselu = ${oppilaitoksenOsa.esikatselu},
               muokkaaja = ${oppilaitoksenOsa.muokkaaja},
               organisaatio_oid = ${oppilaitoksenOsa.organisaatioOid},
               teemakuva = ${oppilaitoksenOsa.teemakuva}
@@ -138,6 +161,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
               or metadata is distinct from ${toJsonParam(oppilaitoksenOsa.metadata)}::jsonb
               or kielivalinta is distinct from ${toJsonParam(oppilaitoksenOsa.kielivalinta)}::jsonb
               or organisaatio_oid is distinct from ${oppilaitoksenOsa.organisaatioOid}
+              or esikatselu is distinct from ${oppilaitoksenOsa.esikatselu}
               or teemakuva is distinct from ${oppilaitoksenOsa.teemakuva}
             )"""
   }

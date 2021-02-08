@@ -200,6 +200,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             liitteiden_toimitusaika,
             liitteiden_toimitustapa,
             liitteiden_toimitusosoite,
+            esikatselu,
             metadata,
             muokkaaja,
             organisaatio_oid,
@@ -231,6 +232,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
             ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
             ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
+            ${hakukohde.esikatselu},
             ${toJsonParam(hakukohde.metadata)}::jsonb,
             ${hakukohde.muokkaaja},
             ${hakukohde.organisaatioOid},
@@ -266,6 +268,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               liitteiden_toimitusaika = ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp,
               liitteiden_toimitustapa = ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa,
               liitteiden_toimitusosoite = ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb,
+              esikatselu = ${hakukohde.esikatselu},
               metadata = ${toJsonParam(hakukohde.metadata)}::jsonb,
               muokkaaja = ${hakukohde.muokkaaja},
               organisaatio_oid = ${hakukohde.organisaatioOid},
@@ -297,6 +300,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or liitteiden_toimitusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp
             or liitteiden_toimitustapa is distinct from ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa
             or liitteiden_toimitusosoite is distinct from ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb
+            or esikatselu is distinct from ${hakukohde.esikatselu}
             or metadata is distinct from ${toJsonParam(hakukohde.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb
             or organisaatio_oid is distinct from ${hakukohde.organisaatioOid})"""
@@ -330,6 +334,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              liitteiden_toimitusaika,
              liitteiden_toimitustapa,
              liitteiden_toimitusosoite,
+             esikatselu,
              metadata,
              muokkaaja,
              organisaatio_oid,

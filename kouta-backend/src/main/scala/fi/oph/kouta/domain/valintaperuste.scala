@@ -26,6 +26,9 @@ package object valintaperuste {
       |            - arkistoitu
       |            - tallennettu
       |          description: Valintaperustekuvauksen julkaisutila. Jos kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko valintaperuste nähtävissä esikatselussa
       |        koulutustyyppi:
       |          type: string
       |          description: Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi?
@@ -182,6 +185,7 @@ package object valintaperuste {
 
 case class Valintaperuste(id: Option[UUID] = None,
                           tila: Julkaisutila = Tallennettu,
+                          esikatselu: Boolean = false,
                           koulutustyyppi: Koulutustyyppi,
                           hakutapaKoodiUri: Option[String] = None,
                           kohdejoukkoKoodiUri: Option[String] = None,

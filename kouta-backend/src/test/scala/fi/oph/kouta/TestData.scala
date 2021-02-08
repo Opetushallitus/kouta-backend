@@ -68,6 +68,7 @@ object TestData {
   val AmmKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
+    esikatselu = true,
     koulutustyyppi = Amm,
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
@@ -93,6 +94,7 @@ object TestData {
     johtaaTutkintoon = true,
     koulutustyyppi = Yo,
     koulutusKoodiUri = Some("koulutus_371101#1"),
+    esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(YliopistoKoulutusMetadata(
@@ -114,6 +116,7 @@ object TestData {
     johtaaTutkintoon = false,
     koulutustyyppi = AmmTutkinnonOsa,
     koulutusKoodiUri = None,
+    esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata(
@@ -193,6 +196,7 @@ object TestData {
     alkamiskausiKoodiUri = Some("kausi_k#1"),
     alkamisvuosi = Some(LocalDate.now().getYear.toString),
     kaytetaanHaunAlkamiskautta = Some(false),
+    esikatselu = true,
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
@@ -324,6 +328,7 @@ object TestData {
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    esikatselu = true,
     julkinen = false,
     valintakokeet = List(Valintakoe1),
     metadata = Some(AmmValintaperusteMetadata),
@@ -341,6 +346,7 @@ object TestData {
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_15#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_2#1"),
     nimi = kieliMap("nimi"),
+    esikatselu = true,
     julkinen = true,
     valintakokeet = List(Valintakoe1),
     metadata = Some(YoValintaperusteMetadata),
@@ -446,6 +452,7 @@ object TestData {
     oid = None,
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     tila = Julkaistu,
+    esikatselu = true,
     tarjoajat = List(OtherOid, AmmOid),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
@@ -559,6 +566,7 @@ object TestData {
   val JulkaistuOppilaitos: Oppilaitos = Oppilaitos(
     oid = ChildOid,
     tila = Julkaistu,
+    esikatselu = true,
     metadata = Some(OppilaitosMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),
@@ -592,6 +600,7 @@ object TestData {
     oid = GrandChildOid,
     oppilaitosOid = ChildOid,
     tila = Julkaistu,
+    esikatselu = true,
     metadata = Some(OppilaitoksenOsaMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),

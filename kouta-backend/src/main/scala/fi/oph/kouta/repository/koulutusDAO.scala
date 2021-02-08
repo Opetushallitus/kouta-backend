@@ -156,6 +156,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             julkinen,
             muokkaaja,
             organisaatio_oid,
+            esikatselu,
             kielivalinta,
             teemakuva,
             eperuste_id)
@@ -169,6 +170,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.julkinen},
             ${koulutus.muokkaaja},
             ${koulutus.organisaatioOid},
+            ${koulutus.esikatselu},
             ${toJsonParam(koulutus.kielivalinta)}::jsonb,
             ${koulutus.teemakuva},
             ${koulutus.ePerusteId}) returning oid""".as[KoulutusOid].head
@@ -182,14 +184,41 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def selectKoulutus(oid: KoulutusOid) = {
-    sql"""select oid, johtaa_tutkintoon, tyyppi, koulutus_koodi_uri, tila, nimi, metadata,
-                 julkinen, muokkaaja, organisaatio_oid, kielivalinta, teemakuva, eperuste_id, lower(system_time)
-          from koulutukset where oid = $oid"""
+    sql"""select oid,
+                 johtaa_tutkintoon,
+                 tyyppi,
+                 koulutus_koodi_uri,
+                 tila,
+                 nimi,
+                 metadata,
+                 julkinen,
+                 muokkaaja,
+                 organisaatio_oid,
+                 esikatselu,
+                 kielivalinta,
+                 teemakuva,
+                 eperuste_id,
+                 lower(system_time)
+          from koulutukset
+          where oid = $oid"""
   }
 
   def findJulkaistutKoulutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select distinct k.oid, k.johtaa_tutkintoon, k.tyyppi, k.koulutus_koodi_uri, k.tila, k.nimi, k.metadata,
-                          k.julkinen, k.muokkaaja, k.organisaatio_oid, k.kielivalinta, k.teemakuva, k.eperuste_id, m.modified
+    sql"""select distinct k.oid,
+                          k.johtaa_tutkintoon,
+                          k.tyyppi,
+                          k.koulutus_koodi_uri,
+                          k.tila,
+                          k.nimi,
+                          k.metadata,
+                          k.julkinen,
+                          k.muokkaaja,
+                          k.organisaatio_oid,
+                          k.esikatselu,
+                          k.kielivalinta,
+                          k.teemakuva,
+                          k.eperuste_id,
+                          m.modified
           from koulutukset k
           inner join (
             select k.oid oid, greatest(
@@ -226,6 +255,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               julkinen = ${koulutus.julkinen},
               muokkaaja = ${koulutus.muokkaaja},
               organisaatio_oid = ${koulutus.organisaatioOid},
+              esikatselu = ${koulutus.esikatselu},
               kielivalinta = ${toJsonParam(koulutus.kielivalinta)}::jsonb,
               teemakuva = ${koulutus.teemakuva},
               eperuste_id = ${koulutus.ePerusteId}
@@ -239,6 +269,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or metadata is distinct from ${toJsonParam(koulutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(koulutus.kielivalinta)}::jsonb
             or teemakuva is distinct from ${koulutus.teemakuva}
+            or esikatselu is distinct from ${koulutus.esikatselu}
             or eperuste_id is distinct from ${koulutus.ePerusteId}
             or organisaatio_oid is distinct from ${koulutus.organisaatioOid})"""
   }
