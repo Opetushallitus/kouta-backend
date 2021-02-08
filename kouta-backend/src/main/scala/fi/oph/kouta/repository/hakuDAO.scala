@@ -91,7 +91,8 @@ trait HakuModificationSQL extends SQLHelpers {
 sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHelpers {
 
   def insertHaku(haku: Haku): DBIO[HakuOid] = {
-    sql"""insert into haut ( tila,
+    sql"""insert into haut ( oid,
+                             tila,
                              nimi,
                              hakutapa_koodi_uri,
                              hakukohteen_liittamisen_takaraja,
@@ -107,7 +108,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              organisaatio_oid,
                              muokkaaja,
                              kielivalinta
-          ) values ( ${haku.tila.toString}::julkaisutila,
+          ) values ( ${haku.oid},
+                     ${haku.tila.toString}::julkaisutila,
                      ${toJsonParam(haku.nimi)}::jsonb,
                      ${haku.hakutapaKoodiUri},
                      ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
