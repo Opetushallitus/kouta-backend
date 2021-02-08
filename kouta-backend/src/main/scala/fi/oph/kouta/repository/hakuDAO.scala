@@ -108,7 +108,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              organisaatio_oid,
                              muokkaaja,
                              kielivalinta
-          ) values ( ${haku.oid},
+          ) values ( ${haku.oid.getOrElse(null)},
                      ${haku.tila.toString}::julkaisutila,
                      ${toJsonParam(haku.nimi)}::jsonb,
                      ${haku.hakutapaKoodiUri},
