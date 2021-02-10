@@ -7,18 +7,18 @@ import fi.oph.kouta.client.{CallerId, HttpClient}
 import fi.oph.kouta.domain.{Ajanjakso, AlkamiskausiJaVuosi, Amk, AmmattikorkeakouluKoulutusMetadata, AmmattikorkeakouluToteutusMetadata, Arkistoitu, Ataru, En, Fi, Haku, HakuMetadata, Hakukohde, Julkaisutila, Kieli, Kielistetty, KoulutuksenAlkamiskausi, Koulutus, KoulutusMetadata, Koulutustyyppi, Liite, Lisatieto, Lomake, Muu, Opetus, Sv, Tallennettu, Toteutus, ToteutusMetadata, Yhteyshenkilo, YliopistoKoulutusMetadata, YliopistoToteutusMetadata, Yo}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 
-class MigrationService {
+trait MigrationHelpers {
   import org.json4s._
   private implicit val formats: DefaultFormats.type = DefaultFormats
 
-  private def toKieli(kieli: String): Kieli = kieli match {
+  def toKieli(kieli: String): Kieli = kieli match {
     case "kieli_fi" => Fi
     case "kieli_sv" => Sv
     case "kieli_en" => En
     case _ => throw new RuntimeException(s"Tunnistamaton kieli $kieli")
   }
-  private def mapKieli(entry: (String,String)): (Kieli, String) = (toKieli(entry._1), entry._2)
-  private def toLocalDateTime(time : Long): LocalDateTime = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDateTime
+  def mapKieli(entry: (String,String)): (Kieli, String) = (toKieli(entry._1), entry._2)
+  def toLocalDateTime(time : Long): LocalDateTime = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDateTime
 
   import java.util.Calendar
 
@@ -57,7 +57,7 @@ class MigrationService {
     }
   }
 
-  private def toAjanjakso(a : Map[String, JValue]) = {
+  def toAjanjakso(a : Map[String, JValue]) = {
     val calendar = Calendar.getInstance()
     val alkuPvm = toLocalDateTime(a("alkuPvm").extract[Long])
     val loppuPvm = a.get("loppuPvm").flatMap(_.extractOpt[Long]).map(toLocalDateTime)
@@ -66,13 +66,13 @@ class MigrationService {
 
     Ajanjakso(alku,loppu)
   }
-  private def toJulkaisutila(tila: String): Julkaisutila = tila.toLowerCase() match {
+  def toJulkaisutila(tila: String): Julkaisutila = tila.toLowerCase() match {
     case "peruttu" => Arkistoitu
     case "kopioitu" => Tallennettu
     case "luonnos" => Tallennettu
-    case muu => Tallennettu // Julkaisutila.withName(muu)
+    case _ => Tallennettu // Julkaisutila.withName(muu)
   }
-  private def toLiite(a: Map[String, JValue]): Liite =
+  def toLiite(a: Map[String, JValue]): Liite =
     Liite(id = None,
       tyyppiKoodiUri = None,
       nimi = Map(toKieli(a("kieliUri").extract[String]) -> a("liitteenNimi").extract[String]),
@@ -81,56 +81,6 @@ class MigrationService {
       toimitustapa = Some(Lomake),
       toimitusosoite = None)
 
-  def f(r: JValue, q:String) = r.extract[Map[String, JValue]].filterKeys(_.toLowerCase.contains(q.toLowerCase))
-
-  def parseKoulutusFromResult(result: JValue, komo: JValue): Koulutus = {
-    val opetuskielet = (result \ "opetuskielis" \ "meta").extract[Map[String, Any]].keys.map(toKieli)
-    val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(OrganisaatioOid)
-    val nimi = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
-
-    val tila = toJulkaisutila((result \ "tila").extract[String])
-    val koulutusKoodiUri = s"${(result \ "koulutuskoodi" \ "uri").extract[String]}#${(result \ "koulutuskoodi" \ "versio").extract[Int]}"
-    val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
-    val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
-    val oid = KoulutusOid((komo \ "oid").extract[String])
-
-    val metadata: KoulutusMetadata =
-      koulutustyyppi match {
-        case Amk => AmmattikorkeakouluKoulutusMetadata(
-          kuvaus = opetuskielet.map(k => k -> "").toMap,
-          lisatiedot = Seq(),
-          koulutusalaKoodiUrit = Seq(),
-          tutkintonimikeKoodiUrit = Seq(),
-          opintojenLaajuusKoodiUri = None,
-          kuvauksenNimi = opetuskielet.map(k => k -> "").toMap)
-        case Yo => YliopistoKoulutusMetadata(
-          kuvaus = opetuskielet.map(k => k -> "").toMap,
-          lisatiedot = Seq(),
-          koulutusalaKoodiUrit = Seq(),
-          tutkintonimikeKoodiUrit = Seq(),
-          opintojenLaajuusKoodiUri = None,
-          kuvauksenNimi = opetuskielet.map(k => k -> "").toMap
-        )
-        case _ => throw new RuntimeException(s"Tuntematon koulutustyyppi $koulutusasteUri koulutuksella $oid")
-      }
-
-    Koulutus(oid = Some(oid),
-    johtaaTutkintoon = (result \ "johtaaTutkintoon").extract[Boolean],
-    tila = tila,
-    kielivalinta = opetuskielet.toSeq,
-    tarjoajat = opetusTarjoajat,
-    koulutusKoodiUri = Some(koulutusKoodiUri),
-    nimi = nimi,
-    koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu),
-    metadata = Some(metadata),
-    julkinen = true, // TODO is this ok?
-    esikatselu = false,
-    muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
-    organisaatioOid = OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String]),
-    teemakuva = None,
-    ePerusteId = None,
-    modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
-  }
   def toOpetus(result: JValue): Opetus = {
     val opetuskielis: Seq[String] = (result \ "opetuskielis" \ "uris").extract[Map[String, Int]].map {
       case ("kieli_fi", v) => s"oppilaitoksenopetuskieli_1#$v"
@@ -184,17 +134,94 @@ class MigrationService {
       suunniteltuKestoKuvaus = suunniteltuKestoKuvaus)
   }
 
-  def parseToteutusFromResult(result: JValue): Toteutus = {
+}
+
+class MigrationService extends MigrationHelpers {
+  import org.json4s._
+  private implicit val formats: DefaultFormats.type = DefaultFormats
+
+  def f(r: JValue, q:String) = r.extract[Map[String, JValue]].filterKeys(_.toLowerCase.contains(q.toLowerCase))
+
+  def parseKoulutusFromResult(result: JValue, komo: JValue): Koulutus = {
     val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(OrganisaatioOid)
     val opetuskielet = (result \ "opetuskielis" \ "meta").extract[Map[String, Any]].keys.map(toKieli)
-    val nimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
+    val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
+    val nimi: Map[Kieli, String] =
+      opetuskielet.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
+
+    val tila = toJulkaisutila((result \ "tila").extract[String])
+    val koulutusKoodiUri = s"${(result \ "koulutuskoodi" \ "uri").extract[String]}#${(result \ "koulutuskoodi" \ "versio").extract[Int]}"
+    val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
+    val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
+    val oid = KoulutusOid((komo \ "oid").extract[String])
+    //val kuvausNimi = toKieliMap((result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extract[Map[String,String]])
+
+    val opintojenLaajuusarvo = (result \ "opintojenLaajuusarvo" \ "uri").extractOpt[String]
+    val opintojenLaajuusarvoVersio = (result \ "opintojenLaajuusarvo" \ "versio").extractOpt[Int]
+    val tutikintonimikes = (result \ "tutkintonimikes" \ "uris").extract[Map[String,Int]].map {
+      case (koodi,versio) => s"$koodi#$versio"
+    }.toList
+    val lisatiedot: Seq[Lisatieto] = Seq(
+      Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap((result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap((result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap((result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap((result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap((result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap((result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extract[Map[String,String]]))
+    )
+    val metadata: KoulutusMetadata =
+      koulutustyyppi match {
+        case Amk => AmmattikorkeakouluKoulutusMetadata(
+          kuvaus = Map(),
+          lisatiedot = lisatiedot,
+          koulutusalaKoodiUrit = Seq(),
+          tutkintonimikeKoodiUrit = tutikintonimikes,
+          opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}"),
+          kuvauksenNimi = opetuskielet.map(k => k -> "").toMap)
+        case Yo => YliopistoKoulutusMetadata(
+          kuvaus = Map(),
+          lisatiedot = lisatiedot,
+          koulutusalaKoodiUrit = Seq(),
+          tutkintonimikeKoodiUrit = Seq(),
+          opintojenLaajuusKoodiUri = None,
+          kuvauksenNimi = opetuskielet.map(k => k -> "").toMap
+        )
+        case _ => throw new RuntimeException(s"Tuntematon koulutustyyppi $koulutusasteUri koulutuksella $oid")
+      }
+
+    Koulutus(oid = Some(oid),
+    johtaaTutkintoon = (result \ "johtaaTutkintoon").extract[Boolean],
+    tila = tila,
+    kielivalinta = opetuskielet.toSeq,
+    tarjoajat = opetusTarjoajat,
+    koulutusKoodiUri = Some(koulutusKoodiUri),
+    nimi = nimi,
+    koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu),
+    metadata = Some(metadata),
+    julkinen = false,
+    esikatselu = false,
+    muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
+    organisaatioOid = OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String]),
+    teemakuva = None,
+    ePerusteId = None,
+    modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
+  }
+
+  def parseToteutusFromResult(result: JValue): Toteutus = {
+    val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(OrganisaatioOid)
+
+    val opetuskielet = (result \ "opetuskielis" \ "meta").extract[Map[String, Any]].keys.map(toKieli)
+    val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
+    val nimet: Map[Kieli, String] =
+      opetuskielet.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
+    val kuvaus = toKieliMap((result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extract[Map[String,String]])
     val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
     val oid = (result \ "oid").extractOpt[String].map(ToteutusOid)
     val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
     val metadata: Option[ToteutusMetadata] =
       Some(koulutustyyppi match {
         case Amk => AmmattikorkeakouluToteutusMetadata(
-          kuvaus = Map(),
+          kuvaus = kuvaus,
           opetus = Some(toOpetus(result)),
           asiasanat = List(),
           ammattinimikkeet = List(),
@@ -229,13 +256,17 @@ class MigrationService {
       modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
   }
 
-  def parseHakukohdeFromResult(hakuOid: HakuOid, result: JValue): Hakukohde = {
-    val tarjoajaOids = (result \ "tarjoajaOids").extract[List[String]]
+  def get(kk: Map[Kieli, String], k: Kieli): String = Seq(k, Fi, Sv, En).flatMap(kk.get).head
 
+  def parseHakukohdeFromResult(result: JValue): Hakukohde = {
+    val tarjoajaOids = (result \ "tarjoajaOids").extract[List[String]]
+    val opetuskielet = (result \ "opetusKielet").extract[List[String]].map(toKieli)
     val toteutusOid = ToteutusOid((result \ "hakukohdeKoulutusOids").extract[List[String]].head)
     val hakulomakeAtaruId = (result \ "ataruLomakeAvain").extractOpt[String].map(UUID.fromString)
-    val nimi = toKieliMap((result \ "hakukohteenNimet").extract[Map[String, String]])
-    val opetuskielet = (result \ "opetusKielet").extract[List[String]].map(toKieli)
+    val hakukohteenNimet = toKieliMap((result \ "hakukohteenNimet").extract[Map[String, String]])
+    val nimi: Map[Kieli, String] =
+      opetuskielet.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
+
     val liitteet = (result \ "hakukohteenLiitteet").extract[List[Map[String, JValue]]].map(toLiite)
 
     val pohjakoulutusvaatimus = ((result \ "hakukelpoisuusvaatimusUris").extract[List[String]])
@@ -243,7 +274,7 @@ class MigrationService {
 
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
       toteutusOid = toteutusOid,
-      hakuOid = hakuOid,
+      hakuOid = HakuOid((result \ "hakuOid").extract[String]),
       tila = toJulkaisutila((result \ "tila").extract[String]),
       nimi = nimi,
       alkamiskausiKoodiUri = None,
@@ -259,7 +290,7 @@ class MigrationService {
       hakulomakeLinkki = Map(),
       kaytetaanHaunHakulomaketta = Some(true), // TODO
       aloituspaikat = (result \ "aloituspaikatLkm").extractOpt[Int],
-      ensikertalaisenAloituspaikat = None,
+      ensikertalaisenAloituspaikat = (result \ "ensikertalaistenAloituspaikat").extractOpt[Int],
       hakuajat = Seq(), // TODO TODO TODO
       metadata = None, //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
@@ -326,14 +357,6 @@ class MigrationService {
       kielivalinta = nimi.keySet.toSeq,
       modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
 
-  }
-
-  private val client = new HttpClient with CallerId {}
-
-  def fetch(url: String) = {
-    client.get(url) {
-      response => response
-    }
   }
 
 }

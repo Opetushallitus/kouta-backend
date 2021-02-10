@@ -33,7 +33,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid =
     authorizePut(haku) { h =>
-      withValidation(h, None)(doPut)
+      withValidation(h, None)(haku => doPut(haku))
     }.oid.get
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =

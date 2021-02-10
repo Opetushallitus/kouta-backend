@@ -61,6 +61,11 @@ trait ExtractorBase extends KoutaJsonFormats {
   })
 }
 
+trait MigrationExtractors extends ExtractorBase {
+  implicit val findResult: GetResult[Option[String]] = GetResult(r => r.nextStringOption())
+  implicit val getResult: GetResult[String] = GetResult(r => r.nextString())
+}
+
 trait KoulutusExtractors extends ExtractorBase {
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
     oid = r.nextStringOption().map(KoulutusOid),
