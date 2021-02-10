@@ -280,7 +280,7 @@ class MigrationService extends MigrationHelpers {
       alkamiskausiKoodiUri = None,
       alkamisvuosi = None,
       kaytetaanHaunAlkamiskautta = Some(true), // TODO
-      jarjestyspaikkaOid = None,
+      jarjestyspaikkaOid = Some(OrganisaatioOid(tarjoajaOids.head)),
       hakulomaketyyppi = hakulomakeAtaruId match {
         case Some(_) => Some(Ataru)
         case None => None
