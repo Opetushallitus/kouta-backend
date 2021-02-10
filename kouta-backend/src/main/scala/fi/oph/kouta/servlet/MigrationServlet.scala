@@ -149,7 +149,7 @@ class MigrationServlet(koulutusService: KoulutusService,
       val versio = (obj \ "codeElementVersion").extract[Int]
       s"$uri#$versio"
     }
-    val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso[12]_\d+#\d{1,2}""")
+    val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso2_\d+#\d{1,2}""")
     def koulutuskoodi2koulutusala(uri: String, versio: Int): Seq[String] = {
       val result = parse(fetch(urlProperties.url("koodisto-service.codeelement", uri, s"$versio")))
       val codeelements = (result \ "includesCodeElements")
