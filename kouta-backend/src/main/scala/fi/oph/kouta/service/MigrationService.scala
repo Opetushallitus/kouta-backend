@@ -1,11 +1,10 @@
 package fi.oph.kouta.service
 
-import java.time.{Instant, LocalDateTime, ZoneId}
-import java.util.{UUID}
+import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain._
 
-import fi.oph.kouta.client.{CallerId, HttpClient}
-import fi.oph.kouta.domain.{Ajanjakso, AlkamiskausiJaVuosi, Amk, AmmattikorkeakouluKoulutusMetadata, AmmattikorkeakouluToteutusMetadata, Arkistoitu, Ataru, En, Fi, Haku, HakuMetadata, Hakukohde, Julkaisutila, Kieli, Kielistetty, KoulutuksenAlkamiskausi, Koulutus, KoulutusMetadata, Koulutustyyppi, Liite, Lisatieto, Lomake, Muu, Opetus, Sv, Tallennettu, Toteutus, ToteutusMetadata, Yhteyshenkilo, YliopistoKoulutusMetadata, YliopistoToteutusMetadata, Yo}
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
+import java.time.{Instant, LocalDateTime, ZoneId}
+import java.util.UUID
 
 trait MigrationHelpers {
   import org.json4s._
@@ -81,6 +80,19 @@ trait MigrationHelpers {
       toimitustapa = Some(Lomake),
       toimitusosoite = None)
 
+  def toKoulutuksenAlkamiskausi(result: JValue): Option[KoulutuksenAlkamiskausi] = {
+    ((result \ "koulutuksenAlkamiskausi" \ "uri").extractOpt[String],
+      (result \ "koulutuksenAlkamiskausi" \ "versio").extractOpt[String],
+      (result \ "koulutuksenAlkamisvuosi").extractOpt[Int]) match {
+      case (Some(uri), Some(versio), Some(vuosi)) => Some(KoulutuksenAlkamiskausi(
+        alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+        koulutuksenAlkamiskausiKoodiUri = Some(uri + "#" + versio),
+        koulutuksenAlkamisvuosi = Some((vuosi + 1).toString)
+      ))
+      case _ => None
+    }
+  }
+
   def toOpetus(result: JValue): Opetus = {
     val opetuskielis: Seq[String] = (result \ "opetuskielis" \ "uris").extract[Map[String, Int]].map {
       case ("kieli_fi", v) => s"oppilaitoksenopetuskieli_1#$v"
@@ -95,13 +107,20 @@ trait MigrationHelpers {
     val opetustapaKuvaus: Kielistetty = Map()
     val maksullisuusKuvaus: Kielistetty = Map()
     val maksunMaara: Option[Double] = None
-    val koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = None
+    val koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = toKoulutuksenAlkamiskausi(result)
     val koulutuksenTarkkaAlkamisaika: Option[Boolean] = None
     val koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None
     val koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None
     val koulutuksenAlkamiskausi: Option[String] = None
     val koulutuksenAlkamisvuosi: Option[Int] = None
-    val lisatiedot: Seq[Lisatieto] = Seq()
+    val lisatiedot: Seq[Lisatieto] = Seq(
+      Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap((result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap((result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap((result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap((result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap((result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extract[Map[String,String]])),
+      Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap((result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extract[Map[String,String]]))
+    )
     val onkoStipendia: Option[Boolean] = Some(false)
     val stipendinMaara: Option[Double] = None
     val stipendinKuvaus: Kielistetty = Map()
@@ -161,17 +180,10 @@ class MigrationService extends MigrationHelpers {
     val tutikintonimikes = (result \ "tutkintonimikes" \ "uris").extract[Map[String,Int]].map {
       case (koodi,versio) => s"$koodi#$versio"
     }.toList
-    val lisatiedot: Seq[Lisatieto] = Seq(
-      Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap((result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap((result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap((result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap((result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap((result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap((result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extract[Map[String,String]]))
-    )
     val koulutusalaKoodiUrit =
       koulutuskoodi2koulutusala((result \ "koulutuskoodi" \ "uri").extract[String],
         (result \ "koulutuskoodi" \ "versio").extract[Int])
+    val lisatiedot: Seq[Lisatieto] = Seq()
     val metadata: KoulutusMetadata =
       koulutustyyppi match {
         case Amk => AmmattikorkeakouluKoulutusMetadata(
@@ -328,10 +340,8 @@ class MigrationService extends MigrationHelpers {
         koulutuksenAlkamispaivamaara = None,
         koulutuksenPaattymispaivamaara = None,
         koulutuksenAlkamiskausiKoodiUri = (result \ "koulutuksenAlkamiskausiUri").extractOpt[String],
-        koulutuksenAlkamisvuosi = (result \ "koulutuksenAlkamisVuosi").extractOpt[String]))
-
+        koulutuksenAlkamisvuosi = (result \ "koulutuksenAlkamisVuosi").extractOpt[Int].map(vuosi => (vuosi + 1).toString)))
     val hakuajat = (result \ "hakuaikas").extract[List[Map[String, JValue]]].map(toAjanjakso)
-
 
     Haku(
       oid = Some(HakuOid((result \ "oid").extract[String])),
