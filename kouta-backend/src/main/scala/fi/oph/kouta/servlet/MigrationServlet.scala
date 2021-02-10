@@ -2,6 +2,7 @@ package fi.oph.kouta.servlet
 
 import java.time.{Instant, LocalDateTime, ZoneId}
 import java.util.UUID
+import java.util.regex.Pattern
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.client.{CallerId, HttpClient}
@@ -73,10 +74,8 @@ class MigrationServlet(koulutusService: KoulutusService,
 
   private val migrationService = new MigrationService
 
-  def fetch(url: String) = {
-    client.get(url) {
-      response => response
-    }
+  def fetch(url: String): String = {
+    client.get(url)(response => response)
   }
 
   def this() = this(
@@ -141,10 +140,26 @@ class MigrationServlet(koulutusService: KoulutusService,
 
     Ok(compact(render(hakukohdeOids)))
   }
-
+ // https://virkailija.untuvaopintopolku.fi/koodisto-service/rest/codeelement/koulutus_750401/12?noCache=
   post("/hakukohde/:hakukohdeOid") {
     implicit val authenticated: Authenticated = authenticate()
 
+    def codeelement2koodi(obj: JObject): String = {
+      val uri = (obj \ "codeElementUri").extract[String]
+      val versio = (obj \ "codeElementVersion").extract[Int]
+      s"$uri#$versio"
+    }
+    val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso[12]_\d+#\d{1,2}""")
+    def koulutuskoodi2koulutusala(uri: String, versio: Int): Seq[String] = {
+      val result = parse(fetch(urlProperties.url("koodisto-service.codeelement", uri, s"$versio")))
+      val codeelements = (result \ "includesCodeElements")
+        .extract[List[JObject]]
+        .map(codeelement2koodi)
+          .filter(koodi =>
+            KoulutusalaKoodiPattern.matcher(koodi).matches())
+
+      codeelements
+    }
     val hakukohdeOid = HakukohdeOid(params("hakukohdeOid"))
     logger.warn(s"Migration begins for hakukohde $hakukohdeOid!")
     val result = parse(fetch(urlProperties.url("tarjonta-service.hakukohde.oid", hakukohdeOid))) \ "result"
@@ -162,7 +177,7 @@ class MigrationServlet(koulutusService: KoulutusService,
           val result = parse(fetch(urlProperties.url("tarjonta-service.koulutus.oid", koulutusOid))) \ "result"
           val komoOid = (result \ "komoOid").extract[String]
           val komo = parse(fetch(urlProperties.url("tarjonta-service.komo.oid", komoOid))) \ "result"
-          val koulutus: Koulutus = migrationService.parseKoulutusFromResult(result, komo)
+          val koulutus: Koulutus = migrationService.parseKoulutusFromResult(result, komo, koulutuskoodi2koulutusala)
           tryPutAndPost(koulutus.oid.get,
             koulutus.withOid(KoulutusOid(getMappedOidOrExisting(koulutus.oid.get))),
             koulutusService.put, koulutusService.update)

@@ -142,7 +142,7 @@ class MigrationService extends MigrationHelpers {
 
   def f(r: JValue, q:String) = r.extract[Map[String, JValue]].filterKeys(_.toLowerCase.contains(q.toLowerCase))
 
-  def parseKoulutusFromResult(result: JValue, komo: JValue): Koulutus = {
+  def parseKoulutusFromResult(result: JValue, komo: JValue, koulutuskoodi2koulutusala: (String, Int) => Seq[String]): Koulutus = {
     val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(OrganisaatioOid)
     val opetuskielet = (result \ "opetuskielis" \ "meta").extract[Map[String, Any]].keys.map(toKieli)
     val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
@@ -169,20 +169,23 @@ class MigrationService extends MigrationHelpers {
       Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap((result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extract[Map[String,String]])),
       Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap((result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extract[Map[String,String]]))
     )
+    val koulutusalaKoodiUrit =
+      koulutuskoodi2koulutusala((result \ "koulutuskoodi" \ "uri").extract[String],
+        (result \ "koulutuskoodi" \ "versio").extract[Int])
     val metadata: KoulutusMetadata =
       koulutustyyppi match {
         case Amk => AmmattikorkeakouluKoulutusMetadata(
           kuvaus = Map(),
           lisatiedot = lisatiedot,
-          koulutusalaKoodiUrit = Seq(),
+          koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
           opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}"),
           kuvauksenNimi = opetuskielet.map(k => k -> "").toMap)
         case Yo => YliopistoKoulutusMetadata(
           kuvaus = Map(),
           lisatiedot = lisatiedot,
-          koulutusalaKoodiUrit = Seq(),
-          tutkintonimikeKoodiUrit = Seq(),
+          koulutusalaKoodiUrit = koulutusalaKoodiUrit,
+          tutkintonimikeKoodiUrit = tutikintonimikes,
           opintojenLaajuusKoodiUri = None,
           kuvauksenNimi = opetuskielet.map(k => k -> "").toMap
         )

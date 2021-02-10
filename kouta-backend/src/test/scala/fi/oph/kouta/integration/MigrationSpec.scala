@@ -18,12 +18,15 @@ import org.scalatra.test.scalatest.ScalatraFlatSpec
 import org.scalatra.test.scalatest._
 
 import scala.io.Source
+import scala.util.{Failure, Success, Try}
 
 class UrlToResourceClient extends HttpClient with CallerId {
   override def get[T](url: String, errorHandler: (String, Int, String) => Nothing, followRedirects: Boolean)(parse: String => T): T = {
     val source = Source.fromInputStream(UrlToResourceClient.this.getClass.getClassLoader.getResourceAsStream(url))
-    val text = try source.mkString finally source.close()
-    parse(text)
+    Try(try source.mkString finally source.close()) match {
+      case Success(text) => parse(text)
+      case Failure(x) => throw new RuntimeException(s"Resource $url not found!")
+    }
   }
 }
 class TrailingZeroesLookupDb extends LookupDb {
@@ -41,6 +44,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
     .addOverride("tarjonta-service.koulutus.oid", "tarjonta/$1.json")
     .addOverride("tarjonta-service.toteutus.oid", "tarjonta/$1.json")
     .addOverride("tarjonta-service.komo.oid", "tarjonta/$1.json")
+    .addOverride("koodisto-service.codeelement", "tarjonta/$1#$2.json")
 
   val koulutusService: KoulutusService = mock[KoulutusService]
   val toteutusService: ToteutusService = mock[ToteutusService]

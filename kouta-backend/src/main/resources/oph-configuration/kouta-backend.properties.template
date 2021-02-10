@@ -42,3 +42,4 @@ tarjonta-service.hakukohde.oid=https://{{host_virkailija}}/tarjonta-service/rest
 tarjonta-service.komo.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/komo/$1
 tarjonta-service.komoto.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/komoto/$1
 tarjonta-service.koulutus.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/koulutus/$1
+koodisto-service.codeelement=https://{{host_virkailija}}/koodisto-service/rest/codeelement/$1/$2
