@@ -12,6 +12,18 @@ trait MigrationHelpers extends Logging {
   import org.json4s._
   private implicit val formats: DefaultFormats.type = DefaultFormats
 
+  def isInteger(s: String): Boolean = { Try(s.toInt).isSuccess }
+  def toDouble(s: String): Double = s.replace(',', '.').toDouble
+  def isDouble(s: String): Boolean = { Try(toDouble(s)).isSuccess }
+  def toOptionInt(i: Int): Option[Int] = if (i > 0) Some(i) else None
+
+  def yearDoubleToYearAndMonth(s: String): Tuple2[Option[Int], Option[Int]] = {
+    val d: Double = toDouble(s)
+    val vuosi = d.toInt
+    val kuukausi = (d % 1 * 12).toInt
+    (toOptionInt(vuosi), toOptionInt(kuukausi))
+  }
+
   def toKieli(kieli: String): Option[Kieli] = kieli match {
     case "kieli_fi" => Some(Fi)
     case "kieli_sv" => Some(Sv)
@@ -147,10 +159,11 @@ trait MigrationHelpers extends Logging {
     val onkoStipendia: Option[Boolean] = Some(false)
     val stipendinMaara: Option[Double] = None
     val stipendinKuvaus: Kielistetty = Map()
-    def isInteger(s: String): Boolean = { Try(s.toInt).isSuccess }
+
     val suunniteltuKesto: Tuple2[Option[Int], Option[Int]] = {
     ((result \ "suunniteltuKestoTyyppi" \ "uri").extractOpt[String], (result \ "suunniteltuKestoArvo").extractOpt[String]) match {
       case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_01" && isInteger(arvo) => (Some(arvo.toInt), None)
+      case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_01" && isDouble(arvo) => yearDoubleToYearAndMonth(arvo)
       case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_02" && isInteger(arvo) => (None, Some(arvo.toInt))
       case _ => (None, None)
     }

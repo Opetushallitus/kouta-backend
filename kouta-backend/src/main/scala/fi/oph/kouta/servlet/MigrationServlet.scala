@@ -27,7 +27,7 @@ import scala.util.{Failure, Success, Try}
 
  * Migrate hakukohteet:
 
- for(index in hakukohteet) {console.log(await f("/kouta-backend/migration/hakukohde/" + hakukohteet[index]))}
+ var count = 1; for(index in hakukohteet) {var oid = await f("/kouta-backend/migration/hakukohde/" + hakukohteet[index]); console.log(count++ + '/' + hakukohteet.length + ': ' + oid); }
 
  */
 trait LookupDb {
