@@ -9,6 +9,8 @@ import fi.vm.sade.utils.slf4j.Logging
 
 import scala.util.Try
 
+import scalaz.Scalaz._
+
 trait MigrationHelpers extends Logging {
   import org.json4s._
   private implicit val formats: DefaultFormats.type = DefaultFormats
@@ -28,6 +30,19 @@ trait MigrationHelpers extends Logging {
 
   def toKieliMap(nimi: Map[String, String]): Map[Kieli, String] = {
     nimi.flatMap(mapKieli).filter(k => !k._2.isEmpty)
+  }
+
+  def joinKieliMaps(map1: Map[Kieli, String], map2: Map[Kieli, String], isHtml: Boolean = false): Map[Kieli, String] = {
+    val allList = map1.toSeq ++ map2.toSeq
+    allList.groupBy(_._1).mapValues(_.map(_._2).map(s => {
+      if(isHtml) addP(s)
+      else s
+    }).mkString)
+  }
+
+  def addP(s: String): String = {
+    if(!s.isEmpty) "<p>" + s + "</p>"
+    else s
   }
 
   def localDateTimeToCalendar(localDateTime: LocalDateTime): Calendar = {
@@ -129,8 +144,7 @@ trait MigrationHelpers extends Logging {
       (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
       (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
       (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
-      (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k))),
-      (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap(k)))
+      (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
     ).flatten
     
     val onkoStipendia: Option[Boolean] = Some(false)
@@ -170,7 +184,7 @@ trait MigrationHelpers extends Logging {
       suunniteltuKestoKuukaudet = suunniteltuKesto._2,
       suunniteltuKestoKuvaus = suunniteltuKestoKuvaus)
   }
-  
+
 }
 
 class MigrationService extends MigrationHelpers {
@@ -246,7 +260,12 @@ class MigrationService extends MigrationHelpers {
     val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
     val nimet: Map[Kieli, String] =
       opetuskielet.flatten.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
-    val kuvaus: Map[Kieli, String] = (result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map())
+    val kuvaus: Map[Kieli, String] =
+      joinKieliMaps(
+        (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
+        (result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
+        isHtml = true
+      )
     val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
     val oid = (result \ "oid").extractOpt[String].map(ToteutusOid)
     val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
