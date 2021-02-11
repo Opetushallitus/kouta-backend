@@ -1,15 +1,12 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain._
-
-import java.time.{Instant, LocalDateTime, Period, ZoneId}
-import java.util.UUID
+import fi.oph.kouta.domain.oid._
 import fi.vm.sade.utils.slf4j.Logging
 
+import java.time.{Instant, LocalDateTime, ZoneId}
+import java.util.UUID
 import scala.util.Try
-
-import scalaz.Scalaz._
 
 trait MigrationHelpers extends Logging {
   import org.json4s._
@@ -41,7 +38,7 @@ trait MigrationHelpers extends Logging {
   }
 
   def addP(s: String): String = {
-    if(!s.isEmpty) "<p>" + s + "</p>"
+    if(!s.isEmpty && !s.trim.startsWith("<p>")) "<p>" + s + "</p>"
     else s
   }
 

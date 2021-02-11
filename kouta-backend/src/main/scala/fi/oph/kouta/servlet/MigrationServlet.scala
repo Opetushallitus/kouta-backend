@@ -1,25 +1,19 @@
 package fi.oph.kouta.servlet
 
-import java.time.{Instant, LocalDateTime, ZoneId}
-import java.util.UUID
-import java.util.regex.Pattern
-
-import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.client.{CallerId, HttpClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Ataru, En, Fi, Haku, HakuMetadata, Hakukohde, HakukohdeMetadata, Hakulomaketyyppi, Julkaistu, Julkaisutila, Kieli, Kielistetty, Koulutus, Liite, LiitteenToimitusosoite, LiitteenToimitustapa, Lomake, Muu, PerustiedotWithOid, Sv, Tallennettu, Toteutus, Valintakoe}
-import fi.oph.kouta.domain.oid.{GenericOid, HakuOid, HakukohdeOid, KoulutusOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.{Haku, Koulutus, PerustiedotWithOid, Toteutus}
 import fi.oph.kouta.repository.{KoutaDatabase, MigrationDAO}
-import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, MigrationService, ToteutusService, ValintaperusteService}
+import fi.oph.kouta.service._
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.slf4j.Logging
-import org.json4s.jackson.JsonMethods.parse
-import org.scalatra.{BadRequest, NotFound, Ok}
-import org.json4s._
 import org.json4s.JsonDSL._
-import org.json4s.jackson.JsonMethods._
-import slick.dbio.DBIO
+import org.json4s._
+import org.scalatra.{BadRequest, Ok}
 
+import java.time.Instant
+import java.util.regex.Pattern
 import scala.util.{Failure, Success, Try}
 
 /**
