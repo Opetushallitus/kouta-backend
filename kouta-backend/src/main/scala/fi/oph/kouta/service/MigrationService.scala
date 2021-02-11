@@ -231,7 +231,7 @@ class MigrationService extends MigrationHelpers {
     val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
     val nimet: Map[Kieli, String] =
       opetuskielet.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
-    val kuvaus = toKieliMap((result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extract[Map[String,String]])
+    val kuvaus: Map[Kieli, String] = (result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map())
     val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
     val oid = (result \ "oid").extractOpt[String].map(ToteutusOid)
     val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
