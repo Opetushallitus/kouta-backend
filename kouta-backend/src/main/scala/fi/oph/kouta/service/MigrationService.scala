@@ -1,8 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain._
-
+import fi.oph.kouta.domain.{_}
 import java.time.{Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 
@@ -113,14 +112,17 @@ trait MigrationHelpers {
     val koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None
     val koulutuksenAlkamiskausi: Option[String] = None
     val koulutuksenAlkamisvuosi: Option[Int] = None
+    val v: Option[Map[Kieli, String]] =
+
     val lisatiedot: Seq[Lisatieto] = Seq(
-      Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap((result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap((result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap((result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap((result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap((result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extract[Map[String,String]])),
-      Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap((result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extract[Map[String,String]]))
-    )
+      (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
+      (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
+      (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
+      (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
+      (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k))),
+      (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap(k)))
+    ).flatten
+    
     val onkoStipendia: Option[Boolean] = Some(false)
     val stipendinMaara: Option[Double] = None
     val stipendinKuvaus: Kielistetty = Map()
