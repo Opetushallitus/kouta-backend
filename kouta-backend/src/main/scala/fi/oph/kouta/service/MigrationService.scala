@@ -1,9 +1,11 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{_}
+import fi.oph.kouta.domain._
 import java.time.{Instant, LocalDateTime, ZoneId}
 import java.util.UUID
+
+import scala.collection.immutable
 
 trait MigrationHelpers {
   import org.json4s._
@@ -112,9 +114,8 @@ trait MigrationHelpers {
     val koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None
     val koulutuksenAlkamiskausi: Option[String] = None
     val koulutuksenAlkamisvuosi: Option[Int] = None
-    val v: Option[Map[Kieli, String]] =
 
-    val lisatiedot: Seq[Lisatieto] = Seq(
+    val lisatiedot = List(
       (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
       (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
       (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
