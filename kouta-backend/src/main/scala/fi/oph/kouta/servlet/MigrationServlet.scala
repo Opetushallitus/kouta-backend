@@ -134,9 +134,11 @@ class MigrationServlet(koulutusService: KoulutusService,
       migrationService.parseHakuFromResult(result)
         .withOid(HakuOid(getMappedOidOrExisting(hakuOid)))
 
-    tryPutAndPost(hakuOid, haku, hakuService.put, hakuService.update)
-    val hakukohdeOids = (result \ "hakukohdeOids").extract[List[String]]
+    tryPutAndPost(hakuOid,
+      haku.copy(nimi = haku.nimi.mapValues(nimi => s"$nimi (migraatio)")),
+      hakuService.put, hakuService.update)
 
+    val hakukohdeOids = (result \ "hakukohdeOids").extract[List[String]]
 
     Ok(compact(render(hakukohdeOids)))
   }
