@@ -107,7 +107,7 @@ trait MigrationHelpers extends Logging {
       case ("kieli_en", v) => s"oppilaitoksenopetuskieli_4#$v"
     }.toSeq
     val onkoMaksullinen = (result \ "opintojenMaksullisuus").extractOpt[Boolean]
-    val opetuskieletKuvaus: Kielistetty = Map()
+    val opetuskieletKuvaus: Kielistetty = (result \ "kuvausKomoto" \ "LISATIETOA_OPETUSKIELISTA" \ "tekstis").extractOpt[Map[String,String]].map(k => toKieliMap(k)).getOrElse(Map())
     val opetusaikaKoodiUrit: Seq[String] = (result \ "opetusAikas" \ "uris").extract[Map[String, Int]].map(k => s"${k._1}#${k._2}").toSeq
     val opetusaikaKuvaus: Kielistetty = Map()
     val opetustapaKoodiUrit: Seq[String] = (result \ "opetusPaikkas" \ "uris").extract[Map[String, Int]].map(k => s"${k._1}#${k._2}").toSeq
@@ -133,8 +133,12 @@ trait MigrationHelpers extends Logging {
     val onkoStipendia: Option[Boolean] = Some(false)
     val stipendinMaara: Option[Double] = None
     val stipendinKuvaus: Kielistetty = Map()
-    val suunniteltuKestoVuodet: Option[Int] = None
-    val suunniteltuKestoKuukaudet: Option [Int] = None
+    val suunniteltuKesto: Tuple2[Option[Int], Option[Int]] =
+    ((result \ "suunniteltuKestoTyyppi" \ "uri").extractOpt[String], (result \ "suunniteltuKestoArvo").extractOpt[String]) match {
+      case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_01" => (Some(arvo.toInt), None)
+      case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_02" => (None, Some(arvo.toInt))
+      case _ => (None, None)
+    }
     val suunniteltuKestoKuvaus: Kielistetty = Map()
 
     Opetus(
@@ -157,11 +161,11 @@ trait MigrationHelpers extends Logging {
       onkoStipendia = onkoStipendia,
       stipendinMaara = stipendinMaara,
       stipendinKuvaus = stipendinKuvaus,
-      suunniteltuKestoVuodet = suunniteltuKestoVuodet,
-      suunniteltuKestoKuukaudet = suunniteltuKestoKuukaudet,
+      suunniteltuKestoVuodet = suunniteltuKesto._1,
+      suunniteltuKestoKuukaudet = suunniteltuKesto._2,
       suunniteltuKestoKuvaus = suunniteltuKestoKuvaus)
   }
-
+  
 }
 
 class MigrationService extends MigrationHelpers {
