@@ -2,9 +2,12 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain._
-import java.time.{Instant, LocalDateTime, ZoneId}
+
+import java.time.{Instant, LocalDateTime, Period, ZoneId}
 import java.util.UUID
 import fi.vm.sade.utils.slf4j.Logging
+
+import scala.util.Try
 
 trait MigrationHelpers extends Logging {
   import org.json4s._
@@ -133,11 +136,13 @@ trait MigrationHelpers extends Logging {
     val onkoStipendia: Option[Boolean] = Some(false)
     val stipendinMaara: Option[Double] = None
     val stipendinKuvaus: Kielistetty = Map()
-    val suunniteltuKesto: Tuple2[Option[Int], Option[Int]] =
+    def isInteger(s: String): Boolean = { Try(s.toInt).isSuccess }
+    val suunniteltuKesto: Tuple2[Option[Int], Option[Int]] = {
     ((result \ "suunniteltuKestoTyyppi" \ "uri").extractOpt[String], (result \ "suunniteltuKestoArvo").extractOpt[String]) match {
-      case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_01" => (Some(arvo.toInt), None)
-      case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_02" => (None, Some(arvo.toInt))
+      case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_01" && isInteger(arvo) => (Some(arvo.toInt), None)
+      case (Some(tyyppi), Some(arvo)) if tyyppi == "suunniteltukesto_02" && isInteger(arvo) => (None, Some(arvo.toInt))
       case _ => (None, None)
+    }
     }
     val suunniteltuKestoKuvaus: Kielistetty = Map()
 
