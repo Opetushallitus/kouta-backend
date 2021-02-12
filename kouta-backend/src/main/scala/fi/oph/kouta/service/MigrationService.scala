@@ -239,7 +239,7 @@ class MigrationService extends MigrationHelpers {
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
-          opintojenLaajuusKoodiUri = None,
+          opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}"),
           kuvauksenNimi = opetuskielet.flatten.map(k => k -> "").toMap
         )
         case _ => throw new RuntimeException(s"Tuntematon koulutustyyppi $koulutusasteUri koulutuksella $oid")
