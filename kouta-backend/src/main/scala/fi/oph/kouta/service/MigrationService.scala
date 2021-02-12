@@ -330,14 +330,45 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
   def parseValintakokeetFromResult(result: JValue): Map[String, Valintakoe] = {
     def toValintakoe(obj: JObject): Option[(String, Valintakoe)] = {
+      def toValintakoetilaisuus(obj: JValue, kieli: Kieli): Valintakoetilaisuus = {
+        def toOsoite(obj: JValue, kieli: Kieli): Option[Osoite] = {
+          val katuosoite = (obj \ "osoiterivi1").extractOpt[String]
+          val postinumeroUri = (obj \ "postinumero").extractOpt[String].map(_ + "#2") // TODO: Viimeisimmän koodiversion selvittäminen koodistopalvelusta
+          Some(Osoite(
+            osoite = if(katuosoite.isDefined) Map(kieli -> katuosoite.get) else Map(),
+            postinumeroKoodiUri = postinumeroUri
+          ))
+        }
+        val osoite = toOsoite(obj \ "osoite", kieli)
+        val aika = ((obj \ "alkaa").extractOpt[Long], (obj \ "loppuu").extractOpt[Long]) match {
+          case (Some(alkaa), Some(loppuu)) if alkaa > 0 && loppuu > 0 && alkaa < loppuu => {
+            Some(Ajanjakso(
+              alkaa = toLocalDateTime(alkaa),
+              paattyy = Some(toLocalDateTime(loppuu))
+            ))
+          }
+          case _ => None
+        }
+        val lisatietoja = (obj \ "lisatiedot").extractOpt[String]
+        Valintakoetilaisuus(
+          osoite = osoite,
+          aika = aika,
+          jarjestamispaikka = Map(),
+          lisatietoja = if(lisatietoja.isDefined) Map(kieli -> lisatietoja.get) else Map()
+        )
+      }
       toKieli((obj \ "kieliUri").extract[String]).map(kieli => {
         val oid = (obj \ "oid").extract[String]
         val nimi = (obj \ "valintakoeNimi").extract[String]
+        val valintakokeenKuvaus = (obj \ "valintakokeenKuvaus" \ "teksti").extractOpt[String]
+        val tilaisuudet = (obj \ "valintakoeAjankohtas").extract[List[JValue]].map(toValintakoetilaisuus(_, kieli))
         (oid, Valintakoe(id = None,
           tyyppiKoodiUri = Some("valintakokeentyyppi_8#1"),
           nimi = Map(kieli -> nimi),
-          metadata = None,
-          tilaisuudet = Seq()))
+          metadata = Some(ValintakoeMetadata(
+            tietoja = if(valintakokeenKuvaus.isDefined) Map(kieli -> valintakokeenKuvaus.get) else Map()
+          )),
+          tilaisuudet = tilaisuudet))
       })
     }
     (result \ "valintakokeet").extract[List[JObject]].flatMap(toValintakoe).toMap
