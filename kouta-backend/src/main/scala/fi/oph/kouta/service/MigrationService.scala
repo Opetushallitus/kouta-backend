@@ -343,18 +343,16 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       .map(_.split("_").last).map(versio => s"pohjakoulutusvaatimuskouta_$versio#1")
 
     def toValintakoe(obj: JObject): Option[Valintakoe] = {
-      toKieli((obj \ "kieliUri").extract[String]) match {
-        case Some(kieli) =>
-          val oid = (obj \ "oid").extract[String]
-          val id = UUID.fromString(originalUUID2UUID(oid))
-          val nimi = (obj \ "valintakoeNimi").extract[String]
-          Some(Valintakoe(id = Some(id),
-            tyyppiKoodiUri = Some("valintakokeentyyppi_8#1"),
-            nimi = Map(kieli -> nimi),
-            metadata = None,
-            tilaisuudet = Seq()))
-        case _ => None
-      }
+      toKieli((obj \ "kieliUri").extract[String]).map(kieli => {
+        val oid = (obj \ "oid").extract[String]
+        val id = UUID.fromString(originalUUID2UUID(oid))
+        val nimi = (obj \ "valintakoeNimi").extract[String]
+        Valintakoe(id = Some(id),
+          tyyppiKoodiUri = Some("valintakokeentyyppi_8#1"),
+          nimi = Map(kieli -> nimi),
+          metadata = None,
+          tilaisuudet = Seq())
+      })
     }
     val valintakokeet = (result \ "valintakokeet").extract[List[JObject]].flatMap(toValintakoe)
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
