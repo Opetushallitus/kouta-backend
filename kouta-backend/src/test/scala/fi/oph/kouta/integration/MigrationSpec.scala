@@ -1,12 +1,11 @@
 package fi.oph.kouta.integration
 
 import java.time.Instant
-
-import fi.oph.kouta.client.{CallerId, HttpClient}
+import fi.oph.kouta.client.{CallerId, HttpClient, OidAndChildren}
 import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, Toteutus}
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, Oid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.integration.fixture.AuthFixture
-import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ToteutusService}
+import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, OrganisaatioServiceImpl, ToteutusService}
 import fi.oph.kouta.servlet.{Authenticated, LookupDb, MigrationServlet}
 import fi.oph.kouta.validation.NoErrors
 import fi.vm.sade.properties.OphProperties
@@ -56,6 +55,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
   val toteutusService: ToteutusService = mock[ToteutusService]
   val hakuService: HakuService = mock[HakuService]
   val hakukohdeService: HakukohdeService = mock[HakukohdeService]
+  val organisaatioServiceImpl: OrganisaatioServiceImpl = mock[OrganisaatioServiceImpl]
 
   addServlet(
     new MigrationServlet(
@@ -63,6 +63,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       toteutusService = toteutusService,
       hakuService = hakuService,
       hakukohdeService = hakukohdeService,
+      organisaatioServiceImpl = organisaatioServiceImpl,
       urlProperties = properties,
       client = new UrlToResourceClient,
       db = new TrailingZeroesLookupDb), "/*")
@@ -83,6 +84,17 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
 
   }
   "Migrate hakukohde by oid" should "return 200" in {
+
+    val oidAndChildren = OidAndChildren(
+      oid = OrganisaatioOid("1.2.246.562.10.24790222608"),
+      children = List(),
+      parentOidPath = "",
+      oppilaitostyyppi = None,
+      status = "AKTIIVINEN",
+      organisaatiotyypit = List("organisaatiotyyppi_02")
+
+    )
+    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(Some(oidAndChildren))
 
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)

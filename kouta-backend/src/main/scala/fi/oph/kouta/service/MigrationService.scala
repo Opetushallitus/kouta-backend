@@ -13,12 +13,6 @@ trait MigrationHelpers extends Logging {
   import org.json4s._
   private implicit val formats: DefaultFormats.type = DefaultFormats
 
-  def resolveOrganisationOidForKoulutus(originalOid: OrganisaatioOid): OrganisaatioOid = {
-    val originalOrganisation: OidAndChildren = OrganisaatioServiceImpl.getOrganisaatio(originalOid).get
-    if(originalOrganisation.isKoulutustoimija || originalOrganisation.isKoulutustoimija) originalOrganisation.oid
-    else OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia(originalOid).get
-  }
-
   def isInteger(s: String): Boolean = { Try(s.toInt).isSuccess }
   def toDouble(s: String): Double = s.replace(',', '.').toDouble
   def isDouble(s: String): Boolean = { Try(toDouble(s)).isSuccess }
@@ -204,11 +198,19 @@ trait MigrationHelpers extends Logging {
 
 }
 
-class MigrationService extends MigrationHelpers {
+object MigrationService extends MigrationService(OrganisaatioServiceImpl)
+
+class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends MigrationHelpers {
   import org.json4s._
   private implicit val formats: DefaultFormats.type = DefaultFormats
 
   def f(r: JValue, q:String) = r.extract[Map[String, JValue]].filterKeys(_.toLowerCase.contains(q.toLowerCase))
+
+  def resolveOrganisationOidForKoulutus(originalOid: OrganisaatioOid): OrganisaatioOid = {
+    val originalOrganisation: OidAndChildren = organisaatioServiceImpl.getOrganisaatio(originalOid).get
+    if(originalOrganisation.isKoulutustoimija || originalOrganisation.isOppilaitos) originalOrganisation.oid
+    else organisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia(originalOid).get
+  }
 
   def parseKoulutusFromResult(result: JValue, komo: JValue, koulutuskoodi2koulutusala: (String, Int) => Seq[String]): Koulutus = {
     val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(oid => resolveOrganisationOidForKoulutus(OrganisaatioOid(oid))).distinct

@@ -63,11 +63,12 @@ class MigrationServlet(koulutusService: KoulutusService,
                        toteutusService: ToteutusService,
                        hakuService: HakuService,
                        hakukohdeService: HakukohdeService,
+                       organisaatioServiceImpl: OrganisaatioServiceImpl,
                        urlProperties: OphProperties,
                        client: HttpClient,
                        db: LookupDb) extends KoutaServlet {
 
-  private val migrationService = new MigrationService
+  private val migrationService = new MigrationService(organisaatioServiceImpl)
 
   def fetch(url: String): String = {
     client.get(url)(response => response)
@@ -78,6 +79,7 @@ class MigrationServlet(koulutusService: KoulutusService,
     ToteutusService,
     HakuService,
     HakukohdeService,
+    OrganisaatioServiceImpl,
     KoutaConfigurationFactory.configuration.urlProperties,
     new HttpClient with CallerId {},
     new MigrationDb)
