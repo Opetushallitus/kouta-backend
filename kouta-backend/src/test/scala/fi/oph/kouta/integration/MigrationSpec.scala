@@ -10,6 +10,7 @@ import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, Tot
 import fi.oph.kouta.servlet.{Authenticated, LookupDb, MigrationServlet}
 import fi.oph.kouta.validation.NoErrors
 import fi.vm.sade.properties.OphProperties
+import org.apache.commons.lang3.StringUtils
 import org.mockito.captor.ArgCaptor
 import org.mockito.{ArgumentMatchersSugar, MockitoSugar}
 import org.scalatest.BeforeAndAfterEach
@@ -30,9 +31,14 @@ class UrlToResourceClient extends HttpClient with CallerId {
   }
 }
 class TrailingZeroesLookupDb extends LookupDb {
-  override def findMappedOid(oldOid: Oid): Option[String] = Some(oldOid.toString + "0000")
+  override def findMappedOid(oldOid: String): Option[String] =
+    if(StringUtils.isNumeric(oldOid)) {
+      None
+    } else {
+      Some(oldOid + "0000")
+    }
 
-  override def insertOidMapping(oldOld: Oid, newOid: Oid): Unit = {
+  override def insertOidMapping(oldOld: String, newOid: String): Unit = {
 
   }
 }

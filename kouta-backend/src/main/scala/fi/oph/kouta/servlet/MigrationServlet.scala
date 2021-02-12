@@ -11,9 +11,10 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.scalatra.{BadRequest, Ok}
-
 import java.time.Instant
+import java.util.UUID
 import java.util.regex.Pattern
+
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -31,11 +32,11 @@ import scala.util.{Failure, Success, Try}
 
  */
 trait LookupDb {
-  def findMappedOid(oldOid: Oid): Option[String]
-  def insertOidMapping(oldOld: Oid, newOid: Oid): Unit
+  def findMappedOid(oldOid: String): Option[String]
+  def insertOidMapping(oldOld: String, newOid: String): Unit
 }
 class MigrationDb extends LookupDb with Logging {
-  def findMappedOid(oldOid: Oid): Option[String] = {
+  def findMappedOid(oldOid: String): Option[String] = {
     KoutaDatabase.runBlockingTransactionally {
       MigrationDAO.oldToNewOidMapping(oldOid)
     } match {
@@ -45,7 +46,7 @@ class MigrationDb extends LookupDb with Logging {
         throw exception
     }
   }
-  def insertOidMapping(originalOid: Oid, newOid: Oid): Unit = {
+  def insertOidMapping(originalOid: String, newOid: String): Unit = {
     KoutaDatabase.runBlockingTransactionally {
       MigrationDAO.insertOidMapping(originalOid, newOid)
     } match {
@@ -84,10 +85,10 @@ class MigrationServlet(koulutusService: KoulutusService,
   def f(r: JValue, q:String) = r.extract[Map[String, JValue]].filterKeys(_.toLowerCase.contains(q.toLowerCase))
 
   def getMappedOidOrExisting(obj: Oid): String = {
-    db.findMappedOid(obj).getOrElse(obj.toString)
+    db.findMappedOid(obj.toString).getOrElse(obj.toString)
   }
   def getMappedOid(oid: Oid): String = {
-    db.findMappedOid(oid).getOrElse(throw new RuntimeException(s"Expected $oid not found in migration lookup table!"))
+    db.findMappedOid(oid.toString).getOrElse(throw new RuntimeException(s"Expected $oid not found in migration lookup table!"))
   }
 
   def tryPutAndPost[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => Oid, post: (A, Instant) => Boolean): Unit = {
@@ -104,7 +105,7 @@ class MigrationServlet(koulutusService: KoulutusService,
     } else {
       Try(put(obj)) match {
         case Success(value) =>
-          db.insertOidMapping(originalOid, value)
+          db.insertOidMapping(originalOid.toString, value.toString)
         case Failure(e) =>
           logger.error(s"Exception migrating $originalOid!", e)
           throw e
@@ -136,7 +137,7 @@ class MigrationServlet(koulutusService: KoulutusService,
 
     Ok(compact(render(hakukohdeOids)))
   }
- // https://virkailija.untuvaopintopolku.fi/koodisto-service/rest/codeelement/koulutus_750401/12?noCache=
+
   post("/hakukohde/:hakukohdeOid") {
     implicit val authenticated: Authenticated = authenticate()
 
@@ -160,15 +161,18 @@ class MigrationServlet(koulutusService: KoulutusService,
     logger.warn(s"Migration begins for hakukohde $hakukohdeOid!")
     val result = parse(fetch(urlProperties.url("tarjonta-service.hakukohde.oid", hakukohdeOid))) \ "result"
     val originalHakuOid = HakuOid((result \ "hakuOid").extract[String])
-    db.findMappedOid(originalHakuOid) match {
+    def originalUUID2UUID(oldId: String): String = {
+      db.findMappedOid(oldId).getOrElse {
+        val newId = UUID.randomUUID().toString
+        db.insertOidMapping(oldId, newId)
+        newId
+      }
+    }
+    db.findMappedOid(originalHakuOid.toString) match {
       case Some(hakuOid) =>
-        //val komotos = (result \ "koulutusmoduuliToteutusTarjoajatiedot").extract[Map[String, JObject]]
         val hakukohdeKoulutusOids = (result \ "hakukohdeKoulutusOids").extract[List[String]]
-        val hakukohde = migrationService.parseHakukohdeFromResult(result).copy(hakuOid = HakuOid(hakuOid))
+        val hakukohde = migrationService.parseHakukohdeFromResult(result, originalUUID2UUID).copy(hakuOid = HakuOid(hakuOid))
         for(koulutusOid <- hakukohdeKoulutusOids) {
-          //val komotoOids = (komotos \ "tarjoajaOids").extract[List[String]]
-          //komoAndKomotos += komoOid -> (komotoOids ++ komoAndKomotos.getOrElse(komoOid, List())).distinct
-          //val koulutusOid = komoOid
           logger.warn(s"Migration begins for koulutus $koulutusOid!")
           val result = parse(fetch(urlProperties.url("tarjonta-service.koulutus.oid", koulutusOid))) \ "result"
           val komoOid = (result \ "komoOid").extract[String]
@@ -192,8 +196,5 @@ class MigrationServlet(koulutusService: KoulutusService,
         Ok(hakukohdeOid)
       case None => BadRequest(s"Haku $originalHakuOid must be migrated first!")
     }
-
-
   }
-
 }
