@@ -1,5 +1,6 @@
 package fi.oph.kouta.service
 
+import fi.oph.kouta.client.OidAndChildren
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.vm.sade.utils.slf4j.Logging
@@ -11,6 +12,12 @@ import scala.util.Try
 trait MigrationHelpers extends Logging {
   import org.json4s._
   private implicit val formats: DefaultFormats.type = DefaultFormats
+
+  def resolveOrganisationOidForKoulutus(originalOid: OrganisaatioOid): OrganisaatioOid = {
+    val originalOrganisation: OidAndChildren = OrganisaatioServiceImpl.getOrganisaatio(originalOid).get
+    if(originalOrganisation.isKoulutustoimija || originalOrganisation.isKoulutustoimija) originalOrganisation.oid
+    else OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia(originalOid).get
+  }
 
   def isInteger(s: String): Boolean = { Try(s.toInt).isSuccess }
   def toDouble(s: String): Double = s.replace(',', '.').toDouble
@@ -204,7 +211,7 @@ class MigrationService extends MigrationHelpers {
   def f(r: JValue, q:String) = r.extract[Map[String, JValue]].filterKeys(_.toLowerCase.contains(q.toLowerCase))
 
   def parseKoulutusFromResult(result: JValue, komo: JValue, koulutuskoodi2koulutusala: (String, Int) => Seq[String]): Koulutus = {
-    val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(OrganisaatioOid)
+    val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(oid => resolveOrganisationOidForKoulutus(OrganisaatioOid(oid))).distinct
     val opetuskielet = (result \ "opetuskielis" \ "meta").extract[Map[String, Any]].keys.map(toKieli)
     val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
     val nimi: Map[Kieli, String] =
@@ -257,7 +264,7 @@ class MigrationService extends MigrationHelpers {
     julkinen = false,
     esikatselu = false,
     muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
-    organisaatioOid = OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String]),
+    organisaatioOid = resolveOrganisationOidForKoulutus(OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String])),
     teemakuva = None,
     ePerusteId = None,
     modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
