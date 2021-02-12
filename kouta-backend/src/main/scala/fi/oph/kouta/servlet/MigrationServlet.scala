@@ -3,7 +3,7 @@ package fi.oph.kouta.servlet
 import fi.oph.kouta.client.{CallerId, HttpClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Haku, Koulutus, PerustiedotWithOid, Toteutus}
+import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, PerustiedotWithOid, Toteutus}
 import fi.oph.kouta.repository.{KoutaDatabase, MigrationDAO}
 import fi.oph.kouta.service._
 import fi.vm.sade.properties.OphProperties
@@ -14,6 +14,8 @@ import org.scalatra.{BadRequest, Ok}
 import java.time.Instant
 import java.util.UUID
 import java.util.regex.Pattern
+
+import fi.oph.kouta.domain
 
 import scala.util.{Failure, Success, Try}
 
@@ -93,12 +95,13 @@ class MigrationServlet(koulutusService: KoulutusService,
     db.findMappedOid(oid.toString).getOrElse(throw new RuntimeException(s"Expected $oid not found in migration lookup table!"))
   }
 
-  def tryPutAndPost[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => Oid, post: (A, Instant) => Boolean): Unit = {
+  def tryPutAndPost[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => Oid, post: (A, Instant) => Boolean): String = {
 
     if(!originalOid.toString.equals(obj.oid.get.toString)) {
       Try(post(obj, Instant.now())) match {
         case Success(_) =>
           logger.info(s"Oid $originalOid migrated overriding old!")
+          obj.oid.get.toString
         case Failure(ex) => {
           logger.error(s"Exception migrating $originalOid!", ex)
           throw ex
@@ -108,6 +111,7 @@ class MigrationServlet(koulutusService: KoulutusService,
       Try(put(obj)) match {
         case Success(value) =>
           db.insertOidMapping(originalOid.toString, value.toString)
+          value.toString
         case Failure(e) =>
           logger.error(s"Exception migrating $originalOid!", e)
           throw e
@@ -163,17 +167,10 @@ class MigrationServlet(koulutusService: KoulutusService,
     logger.warn(s"Migration begins for hakukohde $hakukohdeOid!")
     val result = parse(fetch(urlProperties.url("tarjonta-service.hakukohde.oid", hakukohdeOid))) \ "result"
     val originalHakuOid = HakuOid((result \ "hakuOid").extract[String])
-    def originalUUID2UUID(oldId: String): String = {
-      db.findMappedOid(oldId).getOrElse {
-        val newId = UUID.randomUUID().toString
-        db.insertOidMapping(oldId, newId)
-        newId
-      }
-    }
     db.findMappedOid(originalHakuOid.toString) match {
       case Some(hakuOid) =>
         val hakukohdeKoulutusOids = (result \ "hakukohdeKoulutusOids").extract[List[String]]
-        val hakukohde = migrationService.parseHakukohdeFromResult(result, originalUUID2UUID).copy(hakuOid = HakuOid(hakuOid))
+        val hakukohde = migrationService.parseHakukohdeFromResult(result).copy(hakuOid = HakuOid(hakuOid))
         for(koulutusOid <- hakukohdeKoulutusOids) {
           logger.warn(s"Migration begins for koulutus $koulutusOid!")
           val result = parse(fetch(urlProperties.url("tarjonta-service.koulutus.oid", koulutusOid))) \ "result"
@@ -190,11 +187,31 @@ class MigrationServlet(koulutusService: KoulutusService,
             toteutus.withOid(ToteutusOid(getMappedOidOrExisting(toteutus.oid.get))),
             toteutusService.put, toteutusService.update)
         }
-        tryPutAndPost(hakukohdeOid,
+        val valintakokeet: Map[String, domain.Valintakoe] = migrationService.parseValintakokeetFromResult(result)
+        val finalHakukohde =
           hakukohde
-              .copy(toteutusOid = ToteutusOid(getMappedOid(hakukohde.toteutusOid)))
-            .withOid(HakukohdeOid(getMappedOidOrExisting(hakukohdeOid))),
+            .copy(
+              valintakokeet = valintakokeet.map {
+                case (id, koe) =>
+                  db.findMappedOid(id).map(id => koe.copy(id = Some(UUID.fromString(id)))).getOrElse(koe)
+              }.toSeq,
+              toteutusOid = ToteutusOid(getMappedOid(hakukohde.toteutusOid)))
+            .withOid(HakukohdeOid(getMappedOidOrExisting(hakukohdeOid)))
+
+        val newOid = tryPutAndPost(hakukohdeOid,
+          finalHakukohde,
           hakukohdeService.put, hakukohdeService.update)
+
+        if(valintakokeet.nonEmpty) {
+          val saved: (Hakukohde, Instant) = hakukohdeService.get(HakukohdeOid(newOid)).get
+
+          for(vk <- saved._1.valintakokeet;
+              (id, old) <- valintakokeet) {
+            if(old.nimi.equals(vk.nimi)) {
+              Try(db.insertOidMapping(id, vk.id.get.toString))
+            }
+          }
+        }
         Ok(hakukohdeOid)
       case None => BadRequest(s"Haku $originalHakuOid must be migrated first!")
     }

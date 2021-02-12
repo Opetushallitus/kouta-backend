@@ -328,7 +328,22 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
   def get(kk: Map[Kieli, String], k: Kieli): String = Seq(k, Fi, Sv, En).flatMap(kk.get).head
 
-  def parseHakukohdeFromResult(result: JValue, originalUUID2UUID: String => String): Hakukohde = {
+  def parseValintakokeetFromResult(result: JValue): Map[String, Valintakoe] = {
+    def toValintakoe(obj: JObject): Option[(String, Valintakoe)] = {
+      toKieli((obj \ "kieliUri").extract[String]).map(kieli => {
+        val oid = (obj \ "oid").extract[String]
+        val nimi = (obj \ "valintakoeNimi").extract[String]
+        (oid, Valintakoe(id = None,
+          tyyppiKoodiUri = Some("valintakokeentyyppi_8#1"),
+          nimi = Map(kieli -> nimi),
+          metadata = None,
+          tilaisuudet = Seq()))
+      })
+    }
+    (result \ "valintakokeet").extract[List[JObject]].flatMap(toValintakoe).toMap
+  }
+
+  def parseHakukohdeFromResult(result: JValue): Hakukohde = {
     val tarjoajaOids = (result \ "tarjoajaOids").extract[List[String]]
     val opetuskielet = (result \ "opetusKielet").extract[List[String]].map(toKieli)
     val toteutusOid = ToteutusOid((result \ "hakukohdeKoulutusOids").extract[List[String]].head)
@@ -342,19 +357,6 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val pohjakoulutusvaatimus = ((result \ "hakukelpoisuusvaatimusUris").extract[List[String]])
       .map(_.split("_").last).map(versio => s"pohjakoulutusvaatimuskouta_$versio#1")
 
-    def toValintakoe(obj: JObject): Option[Valintakoe] = {
-      toKieli((obj \ "kieliUri").extract[String]).map(kieli => {
-        val oid = (obj \ "oid").extract[String]
-        val id = UUID.fromString(originalUUID2UUID(oid))
-        val nimi = (obj \ "valintakoeNimi").extract[String]
-        Valintakoe(id = Some(id),
-          tyyppiKoodiUri = Some("valintakokeentyyppi_8#1"),
-          nimi = Map(kieli -> nimi),
-          metadata = None,
-          tilaisuudet = Seq())
-      })
-    }
-    val valintakokeet = (result \ "valintakokeet").extract[List[JObject]].flatMap(toValintakoe)
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
       toteutusOid = toteutusOid,
       hakuOid = HakuOid((result \ "hakuOid").extract[String]),
@@ -392,7 +394,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       liitteidenToimitusaika = None,
       liitteidenToimitustapa = None,
       liitteidenToimitusosoite = None,
-      valintakokeet = valintakokeet)
+      valintakokeet = Seq())
 
   }
 
