@@ -402,9 +402,6 @@ object TestData {
       koulutuksenPaattymispaivamaara = None,
       koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
       koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear.toString))),
-    koulutuksenTarkkaAlkamisaika = Some(true),
-    koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
-    koulutuksenPaattymispaivamaara = Some(inFuture(30000)),
     lisatiedot = Seq(
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
