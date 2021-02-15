@@ -182,11 +182,6 @@ trait MigrationHelpers extends Logging {
       maksullisuusKuvaus = maksullisuusKuvaus,
       maksunMaara = maksunMaara,
       koulutuksenAlkamiskausiUUSI = koulutuksenAlkamiskausiUUSI,
-      koulutuksenTarkkaAlkamisaika = koulutuksenTarkkaAlkamisaika,
-      koulutuksenAlkamispaivamaara = koulutuksenAlkamispaivamaara,
-      koulutuksenPaattymispaivamaara = koulutuksenPaattymispaivamaara,
-      koulutuksenAlkamiskausi = koulutuksenAlkamiskausi,
-      koulutuksenAlkamisvuosi = koulutuksenAlkamisvuosi,
       lisatiedot = lisatiedot,
       onkoStipendia = onkoStipendia,
       stipendinMaara = stipendinMaara,
@@ -393,9 +388,6 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       hakuOid = HakuOid((result \ "hakuOid").extract[String]),
       tila = toJulkaisutila((result \ "tila").extract[String]),
       nimi = nimi,
-      alkamiskausiKoodiUri = None,
-      alkamisvuosi = None,
-      kaytetaanHaunAlkamiskautta = Some(true), // TODO
       jarjestyspaikkaOid = Some(OrganisaatioOid(tarjoajaOids.head)),
       hakulomaketyyppi = hakulomakeAtaruId match {
         case Some(_) => Some(Ataru)
