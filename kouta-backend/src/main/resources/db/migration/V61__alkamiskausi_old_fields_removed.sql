@@ -1,3 +1,4 @@
+-- hakukohteet
 alter table hakukohteet drop column alkamiskausi_koodi_uri;
 alter table hakukohteet_history drop column alkamiskausi_koodi_uri;
 
@@ -75,3 +76,19 @@ values (old.oid,
 return null;
 end;
 $$;
+
+-- toteutukset
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenAlkamispaivamaara}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenPaattymispaivamaara}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenTarkkaAlkamisaika}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenAlkamiskausi}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenAlkamisvuosi}';
