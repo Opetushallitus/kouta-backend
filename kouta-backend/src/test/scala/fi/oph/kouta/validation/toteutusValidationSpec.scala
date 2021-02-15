@@ -161,11 +161,6 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Julkaistu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")), "stipendinKuvaus", invalidKielistetty(Seq(Sv)))
   }
 
-  it should "fail if alkamispaivamaarat are invalid" in {
-    val o = opetus.copy(koulutuksenAlkamispaivamaara = Some(TestData.inFuture(9000)), koulutuksenPaattymispaivamaara = Some(TestData.inFuture(300)))
-    failsValidation(Tallennettu, o, "koulutuksenAlkamispaivamaara", InvalidKoulutuspaivamaarat)
-  }
-
   it should "fail if stipendinMaara is negative" in {
     failsValidation(Tallennettu, opetus.copy(stipendinMaara = Some(-2)), "stipendinMaara", notNegativeMsg)
   }
@@ -182,11 +177,6 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
   it should "fail a julkaistu, maksullinen opetus if maksunMaara is not defined" in {
     passesValidation(Tallennettu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None))
     failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None), "maksunMaara", missingMsg)
-  }
-
-  it should "fail if julkaistu opetus is missing koulutuksenAlkamispaivamaara" in {
-    passesValidation(Tallennettu, opetus.copy(koulutuksenAlkamispaivamaara = None))
-    failsValidation(Julkaistu, opetus.copy(koulutuksenAlkamispaivamaara = None), "koulutuksenAlkamispaivamaara", missingMsg)
   }
 
   it should "fail if onkoStipendia is missing in a julkaistu opetus" in {
@@ -211,28 +201,9 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     passesOnJulkaisuValidation(opetus)
   }
 
-  it should "fail a julkaistu opetus if koulutuksen koulutuksenAlkamispaivamaara is in the past" in {
-    passesValidation(Julkaistu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast)))
-    failsOnJulkaisuValidation(opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast)), "koulutuksenAlkamispaivamaara", pastDateMsg(moreInPast))
-  }
-
-  it should "fail a julkaistu opetus if koulutuksen koulutuksenPaattymispaivamaara is in the past" in {
-    passesValidation(Arkistoitu, opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast), koulutuksenPaattymispaivamaara = Some(past)))
-
-    failsOnJulkaisuValidation(opetus.copy(koulutuksenAlkamispaivamaara = Some(moreInPast), koulutuksenPaattymispaivamaara = Some(past)),
-      ("koulutuksenAlkamispaivamaara", pastDateMsg(moreInPast)), ("koulutuksenPaattymispaivamaara", pastDateMsg(past)))
-  }
-
   it should "fail if suunniteltu kesto is not valid" in {
     failsValidation(Tallennettu, opetus.copy(suunniteltuKestoVuodet = Some(-1)), "suunniteltuKestoVuodet", notNegativeMsg)
     failsValidation(Tallennettu, opetus.copy(suunniteltuKestoKuukaudet = Some(-1)), "suunniteltuKestoKuukaudet", notNegativeMsg)
     failsValidation(Julkaistu, opetus.copy(suunniteltuKestoKuvaus = Map(Sv -> "moi")), "suunniteltuKestoKuvaus", invalidKielistetty(Seq(Fi)))
-  }
-
-  it should "not treat alkamiskausi as mandatory" in {
-    val opetusWithoutAlkamisajankohta = opetus.copy(koulutuksenTarkkaAlkamisaika = None, koulutuksenAlkamispaivamaara = None, koulutuksenPaattymispaivamaara = None, koulutuksenAlkamiskausi = None, koulutuksenAlkamisvuosi = None)
-    passesValidation(Julkaistu, opetusWithoutAlkamisajankohta)
-    failsValidation(Julkaistu, opetusWithoutAlkamisajankohta.copy(koulutuksenTarkkaAlkamisaika = Some(true)), "koulutuksenAlkamispaivamaara", missingMsg)
-    failsValidation(Julkaistu, opetusWithoutAlkamisajankohta.copy(koulutuksenTarkkaAlkamisaika = Some(false)), ("koulutuksenAlkamisvuosi", missingMsg), ("koulutuksenAlkamiskausi", missingMsg))
   }
 }

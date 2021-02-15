@@ -33,8 +33,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
   }
 
   it should "fail if tallennettu hakukohde has invalid information" in {
-    failsValidation(min.copy(alkamiskausiKoodiUri = Some("tintti")), "alkamiskausiKoodiUri", validationMsg("tintti"))
-
     val invalidHakuajat = TestData.getInvalidHakuajat
     failsValidation(min.copy(hakuajat = invalidHakuajat), "hakuajat[0]", invalidAjanjaksoMsg(invalidHakuajat.head))
 
@@ -46,9 +44,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
   }
 
   it should "fail if julkaistu hakukohde is invalid" in {
-    passesValidation(max.copy(tila = Tallennettu, alkamisvuosi = Some("20180")))
-    failsValidation(max.copy(alkamisvuosi = Some("20180")), "alkamisvuosi", validationMsg("20180"))
-
     passesValidation(max.copy(tila = Julkaistu, liitteetOnkoSamaToimitusaika = Some(false), liitteidenToimitusaika = None))
     passesValidation(max.copy(tila = Tallennettu, liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None))
     failsValidation(max.copy(liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None), "liitteidenToimitusaika", missingMsg)
@@ -71,12 +66,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     passesValidation(max.copy(tila = Tallennettu, kaytetaanHaunAikataulua = Some(false), hakuajat = List()))
     failsValidation(max.copy(kaytetaanHaunAikataulua = Some(false), hakuajat = List()), "hakuajat", missingMsg)
     failsValidation(max.copy(kaytetaanHaunAikataulua = None), "kaytetaanHaunAikataulua", missingMsg)
-
-    passesValidation(max.copy(tila = Julkaistu, kaytetaanHaunAlkamiskautta = Some(true), alkamisvuosi = None))
-    passesValidation(max.copy(tila = Tallennettu, kaytetaanHaunAlkamiskautta = Some(false), alkamisvuosi = None))
-    failsValidation(max.copy(kaytetaanHaunAlkamiskautta = Some(false), alkamisvuosi = None), "alkamisvuosi", missingMsg)
-    failsValidation(max.copy(kaytetaanHaunAlkamiskautta = Some(false), alkamiskausiKoodiUri = None), "alkamiskausiKoodiUri", missingMsg)
-    failsValidation(max.copy(kaytetaanHaunAlkamiskautta = None), "kaytetaanHaunAlkamiskautta", missingMsg)
   }
 
   it should "validate hakulomake information of a julkaistu hakukohde" in {
@@ -122,11 +111,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     val past = inPast()
     passesValidation(max.copy(tila = Julkaistu, liitteidenToimitusaika = Some(past)))
     failsOnJulkaisuValidation(max.copy(liitteidenToimitusaika = Some(past)), "liitteidenToimitusaika", pastDateMsg(past))
-  }
-
-  it should "fail if alkamisvuosi is in the past" in {
-    passesValidation(max.copy(tila = Julkaistu, alkamisvuosi = Some("2017")))
-    failsOnJulkaisuValidation(max.copy(alkamisvuosi = Some("2017")), "alkamisvuosi", pastDateMsg("2017"))
   }
 
   it should "fail if hakuajat are in the past" in {

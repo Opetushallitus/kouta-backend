@@ -31,15 +31,10 @@ package object hakutieto {
       |                type: string
       |                description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
       |                example: hakutapa_03#1
-      |              alkamiskausiKoodiUri:
-      |                type: string
-      |                description: Haun koulutusten alkamiskausi. Hakukohteella voi olla eri alkamiskausi kuin haulla.
-      |                  Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |                example: kausi_k#1
-      |              alkamisvuosi:
-      |                type: string
-      |                description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
-      |                example: 2020
+      |              koulutuksenAlkamiskausi:
+      |                type: object
+      |                description: Koulutuksen alkamiskausi
+      |                $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |              hakulomaketyyppi:
       |                type: string
       |                description: Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta
@@ -94,16 +89,11 @@ package object hakutieto {
       |                      type: object
       |                      description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |                      $ref: '#/components/schemas/Nimi'
-      |                    alkamiskausiKoodiUri:
-      |                      type: string
-      |                      description: Hakukohteen koulutusten alkamiskausi, jos ei käytetä haun alkamiskautta.
-      |                        Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |                      example: kausi_k#1
-      |                    alkamisvuosi:
-      |                      type: string
-      |                      description: Hakukohteen koulutusten alkamisvuosi, jos ei käytetä haun alkamisvuotta
-      |                      example: 2020
-      |                    kaytetaanHaunAlkamiskautta:
+      |                    koulutuksenAlkamiskausi:
+      |                      type: object
+      |                      description: Koulutuksen alkamiskausi
+      |                      $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
+      |                    kaytetaanHaunAlkamiskauttaUUSI:
       |                      type: boolean
       |                      description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
       |                    jarjestyspaikkaOid:
@@ -182,8 +172,6 @@ case class Hakutieto(toteutusOid:ToteutusOid,
 case class HakutietoHaku(hakuOid: HakuOid,
                          nimi: Kielistetty = Map(),
                          hakutapaKoodiUri: Option[String] = None,
-                         alkamiskausiKoodiUri: Option[String] = None,
-                         alkamisvuosi: Option[String] = None,
                          koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
                          hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                          hakulomakeAtaruId: Option[UUID] = None,
@@ -200,9 +188,6 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               valintaperusteId: Option[UUID] = None,
                               koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
                               kaytetaanHaunAlkamiskauttaUUSI: Option[Boolean] = None,
-                              alkamiskausiKoodiUri: Option[String] = None,
-                              alkamisvuosi: Option[String] = None,
-                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
                               jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                               hakulomakeAtaruId: Option[UUID] = None,

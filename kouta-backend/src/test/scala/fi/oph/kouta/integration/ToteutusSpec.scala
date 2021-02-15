@@ -388,26 +388,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  //feature flag KTO-1036 remove this test
-  it should "validate dates only when adding a new julkaistu toteutus" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-
-    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
-    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
-
-    put(thisToteutus.copy(tila = Tallennettu))
-
-    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
-      )))
-    }
-  }
-
   def pastAlkamiskausi(alkamispvm: LocalDateTime, paattymispvm: LocalDateTime): Some[KoulutuksenAlkamiskausi] = {
     Some(KoulutuksenAlkamiskausi(
       alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
@@ -415,8 +395,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       koulutuksenPaattymispaivamaara = Some(paattymispvm)))
   }
 
-  //feature flag KTO-1036
-  it should "validate koulutuksen alkamisen dates only when adding a new julkaistu toteutus UUSI" in {
+  it should "validate koulutuksen alkamisen dates only when adding a new julkaistu toteutus" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
 
     val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
@@ -435,32 +414,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  //feature flag KTO-1036 remove this test
-  it should "validate dates when moving from other states to julkaistu" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
-    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
-
-    val oid = put(thisToteutus)
-    val thisToteutusWithOid = toteutus(oid, koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
-
-    val lastModified = get(oid, thisToteutusWithOid)
-
-    post(ToteutusPath, bytes(thisToteutusWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
-      )))
-    }
-
-    update(thisToteutusWithOid.copy(tila = Arkistoitu), lastModified)
-  }
-
-  //feature flag KTO-1036
-  it should "validate koulutuksen alkamisen dates when moving from other states to julkaistu UUSI" in {
+  it should "validate koulutuksen alkamisen dates when moving from other states to julkaistu" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
     val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
@@ -483,22 +437,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutusWithOid.copy(tila = Arkistoitu), lastModified)
   }
 
-  //feature flag KTO-1036 remove this test
-  it should "not validate dates when updating a julkaistu toteutus" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamispaivamaara = Some(morePast), koulutuksenPaattymispaivamaara = Some(past))
-    val inPastMetadata = ammMetatieto.copy(opetus = Some(inPastOpetus))
-
-    val oid = put(toteutus(koulutusOid).copy(tila = Julkaistu))
-    val thisToteutus = toteutus(oid, koulutusOid)
-
-    val lastModified = get(oid, thisToteutus)
-
-    update(thisToteutus.copy(metadata = Some(inPastMetadata)), lastModified)
-  }
-
-  //feature flag KTO-1036
-  it should "not validate koulutuksen alkamisen dates when updating a julkaistu toteutus UUSI" in {
+  it should "not validate koulutuksen alkamisen dates when updating a julkaistu toteutus" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
     val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val inPastMetadata = ammMetatieto.copy(opetus = Some(inPastOpetus))
@@ -511,7 +450,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutus.copy(metadata = Some(inPastMetadata)), lastModified)
   }
 
-  //feature flag KTO-1036
   it should "allow missing koulutuksen alkamiskausi" in {
     val (future, morefuture) = (TestData.inFuture(5000), TestData.inFuture(6000))
 
