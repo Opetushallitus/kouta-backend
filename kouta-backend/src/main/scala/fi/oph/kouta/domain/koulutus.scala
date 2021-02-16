@@ -41,6 +41,9 @@ package object koulutus {
       |            - arkistoitu
       |            - tallennettu
       |          description: Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko koulutus nähtävissä esikatselussa
       |        tarjoajat:
       |          type: array
       |          description: Koulutusta tarjoavien organisaatioiden yksilöivät organisaatio-oidit
@@ -63,8 +66,7 @@ package object koulutus {
       |        nimi:
       |          type: object
       |          description: Koulutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        metadata:
       |          type: object
       |          oneOf:
@@ -136,8 +138,7 @@ package object koulutus {
       |        nimi:
       |          type: object
       |          description: Koulutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        muokkaaja:
       |          type: string
       |          description: Koulutusta viimeksi muokanneen virkailijan henkilö-oid
@@ -161,11 +162,11 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     koulutustyyppi: Koulutustyyppi,
                     koulutusKoodiUri: Option[String] = None,
                     tila: Julkaisutila = Tallennettu,
+                    esikatselu: Boolean = false,
                     tarjoajat: List[OrganisaatioOid] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[KoulutusMetadata] = None,
                     julkinen: Boolean = false,
-                    esikatselu: Boolean = true,
                     muokkaaja: UserOid,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),

@@ -54,6 +54,7 @@ object TestData {
     nimi = Map(Fi -> "valintakokeen nimi fi", Sv -> "valintakokeen nimi sv"),
     metadata = Some(ValintakoeMetadata(
       tietoja = Map(Fi -> "tietoa valintakokeesta fi", Sv -> "tietoa valintakokeesta sv"),
+      vahimmaispisteet = Some(182.1),
       liittyyEnnakkovalmistautumista = Some(true),
       ohjeetEnnakkovalmistautumiseen = Map(Fi -> "Ennakko-ohjeet fi", Sv -> "Ennakko-ohjeet sv"),
       erityisjarjestelytMahdollisia = Some(true),
@@ -67,6 +68,7 @@ object TestData {
   val AmmKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
+    esikatselu = true,
     koulutustyyppi = Amm,
     koulutusKoodiUri = Some("koulutus_371101#1"),
     tila = Julkaistu,
@@ -77,7 +79,7 @@ object TestData {
         Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
           teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
-    muokkaaja = TestUserOid,
+    muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/ammkuva"),
@@ -92,6 +94,7 @@ object TestData {
     johtaaTutkintoon = true,
     koulutustyyppi = Yo,
     koulutusKoodiUri = Some("koulutus_371101#1"),
+    esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(YliopistoKoulutusMetadata(
@@ -101,7 +104,7 @@ object TestData {
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(Lisatieto1))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
-    muokkaaja = TestUserOid,
+    muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/yokuva"),
@@ -113,6 +116,7 @@ object TestData {
     johtaaTutkintoon = false,
     koulutustyyppi = AmmTutkinnonOsa,
     koulutusKoodiUri = None,
+    esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata(
@@ -189,9 +193,7 @@ object TestData {
     hakuOid = HakuOid("1.2.246.562.29.123"),
     tila = Julkaistu,
     nimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
-    alkamiskausiKoodiUri = Some("kausi_k#1"),
-    alkamisvuosi = Some(LocalDate.now().getYear.toString),
-    kaytetaanHaunAlkamiskautta = Some(false),
+    esikatselu = true,
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomakeAtaruId = Some(UUID.randomUUID()),
     hakulomakeKuvaus = Map( Fi -> "Hakulomake tulostetaan ja toimitetaan postitse", Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"),
@@ -199,7 +201,7 @@ object TestData {
     kaytetaanHaunHakulomaketta = Some(false),
     aloituspaikat = Some(2),
     ensikertalaisenAloituspaikat = Some(1),
-    pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimustoinenaste_pk#1", "pohjakoulutusvaatimustoinenaste_yo#1"),
+    pohjakoulutusvaatimusKoodiUrit = Seq("pohjakoulutusvaatimuskouta_pk#1", "pohjakoulutusvaatimuskouta_yo#1"),
     pohjakoulutusvaatimusTarkenne = kieliMap("Pohjakoulutusvaatimuksen tarkenne"),
     muuPohjakoulutusvaatimus = Map(),
     toinenAsteOnkoKaksoistutkinto = None,
@@ -216,6 +218,8 @@ object TestData {
       kaytetaanHaunAlkamiskautta = Some(false),
       koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
         alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+        koulutuksenAlkamisvuosi = None,
+        koulutuksenAlkamiskausiKoodiUri = None,
         koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
         koulutuksenPaattymispaivamaara = Some(inFuture(30000)))))),
     valintakokeet = List(Valintakoe1),
@@ -321,6 +325,7 @@ object TestData {
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    esikatselu = true,
     julkinen = false,
     valintakokeet = List(Valintakoe1),
     metadata = Some(AmmValintaperusteMetadata),
@@ -338,6 +343,7 @@ object TestData {
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_15#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_2#1"),
     nimi = kieliMap("nimi"),
+    esikatselu = true,
     julkinen = true,
     valintakokeet = List(Valintakoe1),
     metadata = Some(YoValintaperusteMetadata),
@@ -396,9 +402,6 @@ object TestData {
       koulutuksenPaattymispaivamaara = None,
       koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
       koulutuksenAlkamisvuosi = Some(LocalDate.now().getYear.toString))),
-    koulutuksenTarkkaAlkamisaika = Some(true),
-    koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
-    koulutuksenPaattymispaivamaara = Some(inFuture(30000)),
     lisatiedot = Seq(
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
@@ -443,6 +446,7 @@ object TestData {
     oid = None,
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     tila = Julkaistu,
+    esikatselu = true,
     tarjoajat = List(OtherOid, AmmOid),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmToteutuksenMetatieto),
@@ -556,6 +560,7 @@ object TestData {
   val JulkaistuOppilaitos: Oppilaitos = Oppilaitos(
     oid = ChildOid,
     tila = Julkaistu,
+    esikatselu = true,
     metadata = Some(OppilaitosMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),
@@ -589,6 +594,7 @@ object TestData {
     oid = GrandChildOid,
     oppilaitosOid = ChildOid,
     tila = Julkaistu,
+    esikatselu = true,
     metadata = Some(OppilaitoksenOsaMetadata(
       yhteystiedot = Some(Yhteystieto(
         osoite = Some(Osoite1),

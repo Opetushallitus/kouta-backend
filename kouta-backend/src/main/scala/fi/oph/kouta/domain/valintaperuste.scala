@@ -25,6 +25,9 @@ package object valintaperuste {
       |            - arkistoitu
       |            - tallennettu
       |          description: Valintaperustekuvauksen julkaisutila. Jos kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko valintaperuste nähtävissä esikatselussa
       |        koulutustyyppi:
       |          type: string
       |          description: Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi?
@@ -65,8 +68,7 @@ package object valintaperuste {
       |        nimi:
       |          type: object
       |          description: Valintaperustekuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        valintakokeet:
       |          type: array
       |          description: Hakuun liittyvät valintakokeet
@@ -161,8 +163,7 @@ package object valintaperuste {
       |        nimi:
       |          type: object
       |          description: Valintaperustekuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        muokkaaja:
       |          type: string
       |          description: Valintaperustekuvausta viimeksi muokanneen virkailijan henkilö-oid
@@ -183,6 +184,7 @@ package object valintaperuste {
 
 case class Valintaperuste(id: Option[UUID] = None,
                           tila: Julkaisutila = Tallennettu,
+                          esikatselu: Boolean = false,
                           koulutustyyppi: Koulutustyyppi,
                           hakutapaKoodiUri: Option[String] = None,
                           kohdejoukkoKoodiUri: Option[String] = None,

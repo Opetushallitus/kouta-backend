@@ -46,8 +46,7 @@ package object sorakuvaus {
       |        nimi:
       |          type: object
       |          description: SORA-kuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty SORA-kuvauksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        metadata:
       |          type: object
       |          description: SORA-kuvauksen kuvailutiedot eri kielillä
@@ -55,8 +54,7 @@ package object sorakuvaus {
       |            kuvaus:
       |              type: object
       |              description: SORA-kuvauksen kuvausteksti eri kielillä. Kielet on määritetty kuvauksen kielivalinnassa.
-      |              allOf:
-      |                - $ref: '#/components/schemas/Kuvaus'
+      |              $ref: '#/components/schemas/Kuvaus'
       |            koulutusKoodiUrit:
       |              type: array
       |              description: Koulutuksen koodi URIt. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
@@ -102,8 +100,7 @@ package object sorakuvaus {
       |        nimi:
       |          type: object
       |          description: SORA-kuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty SORA-kuvauksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        muokkaaja:
       |          type: string
       |          description: SORA-kuvausta viimeksi muokanneen virkailijan henkilö-oid

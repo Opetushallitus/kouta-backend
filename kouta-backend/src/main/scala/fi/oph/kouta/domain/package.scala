@@ -146,8 +146,7 @@ package object domain {
       |        teksti:
       |          type: object
       |          description: Lisätiedon teksti eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val YhteyshenkiloModel: String =
@@ -157,28 +156,23 @@ package object domain {
       |        nimi:
       |          type: object
       |          description: Yhteyshenkilön nimi eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        titteli:
       |          type: object
       |          description: Yhteyshenkilön titteli eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        sahkoposti:
       |          type: object
       |          description: Yhteyshenkilön sähköpostiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        puhelinnumero:
       |          type: object
       |          description: Yhteyshenkilön puhelinnumero eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        wwwSivu:
       |          type: object
       |          description: Yhteyshenkilön www-sivu eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val OsoiteModel: String =
@@ -188,8 +182,7 @@ package object domain {
       |        osoite:
       |          type: object
       |          description: Osoite eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        postinumeroKoodiUri:
       |          type: string
       |          description: Postinumero. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/posti/2)
@@ -212,8 +205,7 @@ package object domain {
       |        nimi:
       |          type: object
       |          description: Valintakokeen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        metadata:
       |          type: object
       |          $ref: '#/components/schemas/ValintakoeMetadata'
@@ -231,24 +223,25 @@ package object domain {
       |        tietoja:
       |          type: object
       |          description: Tietoa valintakokeesta
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
+      |        vahimmaispisteet:
+      |          type: double
+      |          description: Valintakokeen vähimmäispisteet
+      |          example: 10.0
       |        liittyyEnnakkovalmistautumista:
       |          type: boolean
       |          description: Liittyykö valintakokeeseen ennakkovalmistautumista
       |        ohjeetEnnakkovalmistautumiseen:
       |          type: object
       |          description: Ohjeet valintakokeen ennakkojärjestelyihin
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        erityisjarjestelytMahdollisia:
       |          type: boolean
       |          description: Ovatko erityisjärjestelyt mahdollisia valintakokeessa
       |        ohjeetErityisjarjestelyihin:
       |          type: object
       |          description: Ohjeet valintakokeen erityisjärjestelyihin
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val ValintakoetilaisuusModel: String =
@@ -258,8 +251,7 @@ package object domain {
       |        osoite:
       |          type: object
       |          description: Valintakokeen järjestämispaikan osoite
-      |          allOf:
-      |            - $ref: '#/components/schemas/Osoite'
+      |          $ref: '#/components/schemas/Osoite'
       |        aika:
       |          type: array
       |          description: Valintakokeen järjestämisaika
@@ -268,13 +260,11 @@ package object domain {
       |        jarjestamispaikka:
       |          type: object
       |          description: Valintakokeen järjestämispaikka eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |        lisatietoja:
       |          type: object
       |          description: Lisätietoja valintakokeesta eri kielillä. Kielet on määritetty kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val ListEverythingModel: String =
@@ -483,6 +473,7 @@ package object domain {
   }
 
   case class ValintakoeMetadata(tietoja: Kielistetty = Map(),
+                                vahimmaispisteet: Option[Double] = None,
                                 liittyyEnnakkovalmistautumista: Option[Boolean] = None,
                                 ohjeetEnnakkovalmistautumiseen: Kielistetty = Map(),
                                 erityisjarjestelytMahdollisia: Option[Boolean] = None,
@@ -490,6 +481,7 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfJulkaistu(tila, and(
         validateOptionalKielistetty(kielivalinta, tietoja, s"$path.tietoja"),
+        validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, s"$path.vahimmaispisteet")),
         validateIfTrue(liittyyEnnakkovalmistautumista.contains(true), validateKielistetty(kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")),
         validateIfTrue(erityisjarjestelytMahdollisia.contains(true), validateKielistetty(kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin"))
       ))

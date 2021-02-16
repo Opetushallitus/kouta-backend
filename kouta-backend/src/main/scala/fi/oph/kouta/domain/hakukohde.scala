@@ -33,22 +33,13 @@ package object hakukohde {
       |            - arkistoitu
       |            - tallennettu
       |          description: Haun julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko hakukohde nähtävissä esikatselussa
       |        nimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
-      |        alkamiskausiKoodiUri:
-      |          type: string
-      |          description: Hakukohteen koulutusten alkamiskausi, jos ei käytetä haun alkamiskautta.
-      |            Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |          example: kausi_k#1
-      |        alkamisvuosi:
-      |          type: string
-      |          description: Hakukohteen koulutusten alkamisvuosi, jos ei käytetä haun alkamisvuotta
-      |          example: 2020
-      |        kaytetaanHaunAlkamiskautta:
-      |          type: boolean
-      |          description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
       |        jarjestyspaikkaOid:
       |          type: string
       |          description: Hakukohteen järjestyspaikan organisaatio
@@ -87,12 +78,12 @@ package object hakukohde {
       |          example: 50
       |        pohjakoulutusvaatimusKoodiUrit:
       |          type: array
-      |          description: Lista toisen asteen hakukohteen pohjakoulutusvaatimuksista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/pohjakoulutusvaatimustoinenaste/1)
+      |          description: Lista hakukohteen pohjakoulutusvaatimuksista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/pohjakoulutusvaatimuskouta/1)
       |          items:
       |            type: string
       |          example:
-      |            - pohjakoulutusvaatimustoinenaste_pk#1
-      |            - pohjakoulutusvaatimustoinenaste_yo#1
+      |            - pohjakoulutusvaatimuskouta_104#1
+      |            - pohjakoulutusvaatimuskouta_109#1
       |        muuPohjakoulutusvaatimus:
       |          type: object
       |          description: Hakukohteen muiden pohjakoulutusvaatimusten kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -302,10 +293,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      toteutusOid: ToteutusOid,
                      hakuOid: HakuOid,
                      tila: Julkaisutila = Tallennettu,
+                     esikatselu: Boolean = false,
                      nimi: Kielistetty = Map(),
-                     alkamiskausiKoodiUri: Option[String] = None,
-                     alkamisvuosi: Option[String] = None,
-                     kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
                      jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                      hakulomakeAtaruId: Option[UUID] = None,
@@ -338,7 +327,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     super.validate(),
     assertValid(toteutusOid, "toteutusOid"),
     assertValid(hakuOid, "hakuOid"),
-    validateIfDefined[String](alkamiskausiKoodiUri, assertMatch(_, KausiKoodiPattern, "alkamiskausiKoodiUri")),
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit", assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)),
     validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
@@ -348,7 +336,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
     validateIfDefined[HakukohdeMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
-      validateIfDefined[String](alkamisvuosi, assertMatch(_, VuosiPattern,"alkamisvuosi")),
       validateIfTrue(liitteetOnkoSamaToimitusaika.contains(true), assertNotOptional(liitteidenToimitusaika, "liitteidenToimitusaika")),
       validateIfTrue(liitteetOnkoSamaToimitusosoite.contains(true), assertNotOptional(liitteidenToimitustapa, "liitteidenToimitustapa")),
       validateIfTrue(liitteetOnkoSamaToimitusosoite.contains(true) && liitteidenToimitustapa.contains(MuuOsoite), assertNotOptional(liitteidenToimitusosoite, "liitteidenToimitusosoite")),
@@ -358,19 +345,13 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
       validateOptionalKielistetty(kielivalinta, muuPohjakoulutusvaatimus, "muuPohjakoulutusvaatimus"),
       assertNotOptional(kaytetaanHaunAikataulua, "kaytetaanHaunAikataulua"),
       assertNotOptional(kaytetaanHaunHakulomaketta, "kaytetaanHaunHakulomaketta"),
-      assertNotOptional(kaytetaanHaunAlkamiskautta, "kaytetaanHaunAlkamiskautta"),
       validateIfTrue(kaytetaanHaunAikataulua.contains(false), assertNotEmpty(hakuajat, "hakuajat")),
       validateIfTrue(kaytetaanHaunHakulomaketta.contains(false), assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")),
-      validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), and(
-        assertNotOptional(alkamisvuosi, "alkamisvuosi"),
-        assertNotOptional(alkamiskausiKoodiUri, "alkamiskausiKoodiUri")
-      ))
     ))
   )
 
   override def validateOnJulkaisu(): IsValid = and(
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
-    validateIfDefined[String](alkamisvuosi, assertAlkamisvuosiInFuture(_, "alkamisvuosi")),
     validateIfDefined[LocalDateTime](liitteidenToimitusaika, assertInFuture(_, "liitteidenToimitusaika")),
     validateIfNonEmpty[Liite](liitteet, "liitteet", _.validateOnJulkaisu(_)),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validateOnJulkaisu(_))
