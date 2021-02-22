@@ -202,4 +202,5 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
                               muokkaaja: UserOid,
                               organisaatioOid: OrganisaatioOid,
+                              valintatapaKoodiUrit: Seq[String] = Seq(),
                               modified: Option[LocalDateTime])

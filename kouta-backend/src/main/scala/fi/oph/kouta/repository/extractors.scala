@@ -341,6 +341,7 @@ trait HakutietoExtractors extends ExtractorBase {
       organisaatioOid = OrganisaatioOid(r.nextString()),
       hakuajat = List(),
       muokkaaja = UserOid(r.nextString()),
+      valintatapaKoodiUrit = extractArray[String](r.nextObjectOption()),
       modified = Some(timeStampToLocalDateTime(r.nextTimestamp())))))
 }
 

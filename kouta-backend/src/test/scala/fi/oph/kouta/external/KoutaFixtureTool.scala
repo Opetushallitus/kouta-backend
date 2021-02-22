@@ -143,6 +143,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val AloituspaikatKey = "aloituspaikat"
   val EnsikertalaisenAloituspaikatKey = "ensikertalaisenAloituspaikat"
   val PohjakoulutusvaatimusKoodiUritKey = "pohjakoulutusvaatimusKoodiUrit"
+  val ValintatapaKoodiUritKey = "valintatapaKoodiUritKey"
   val PohjakoulutusvaatimusTarkenneKey = "pohjakoulutusvaatimusTarkenne"
   val ToinenAsteOnkoKaksoistutkintoKey = "toinenAsteOnkoKaksoistutkinto"
   val KaytetaanHaunAikatauluaKey = "kaytetaanHaunAikataulua"
@@ -876,6 +877,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
+      params.get(ValintatapaKoodiUritKey) match {
+        case None => List[String]()
+        case Some(x) if x.trim == "" => List[String]()
+        case Some(x)  => x.split(",").map(_.trim).toList
+      },
       Some(parseModified(params(ModifiedKey)))
     )
   }
