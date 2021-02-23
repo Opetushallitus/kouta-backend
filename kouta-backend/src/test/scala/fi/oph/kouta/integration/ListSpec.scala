@@ -601,6 +601,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             pohjakoulutusvaatimusTarkenne = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusTarkenne,
             muokkaaja = hk1.muokkaaja,
             organisaatioOid = hk1.organisaatioOid,
+            valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.map(_.valintatapaKoodiUri).flatten,
             modified = Some(hk1.modified)))))))
 
       read[List[Hakutieto]](body) should equal(expected)
