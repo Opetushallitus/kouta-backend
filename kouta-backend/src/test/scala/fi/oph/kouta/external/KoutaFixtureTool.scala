@@ -850,6 +850,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
   private def hakutietoHakukohde(oid:String) = {
     val params = hakukohteet(oid)
+    val valintaperusteMetadata = params
+      .get(ValintaperusteIdKey)
+      .flatMap(valintaperusteId => valintaperusteet.get(valintaperusteId))
+      .flatMap(valintaperuste => valintaperuste.get(MetadataKey))
+      .map(read[ValintaperusteMetadata])
     val kielivalinta = toKielivalinta(params)
     val (koulutuksenAlkamiskausi, kaytetaanHaunAlkamiskautta) = getAlkamiskausiFromHakukohdeMetadata(params)
 
@@ -877,10 +882,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
-      params.get(ValintatapaKoodiUritKey) match {
+      valintaperusteMetadata match {
         case None => List[String]()
-        case Some(x) if x.trim == "" => List[String]()
-        case Some(x)  => x.split(",").map(_.trim).toList
+        case Some(x) => x.valintatavat.flatMap(_.valintatapaKoodiUri).toList
       },
       Some(parseModified(params(ModifiedKey)))
     )
