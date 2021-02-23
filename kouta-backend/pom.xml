@@ -15,7 +15,7 @@
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>1.3.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.0.0-SNAPSHOT</kouta-common.version>
     </properties>
 
 
