@@ -480,7 +480,8 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   stipendinKuvaus: Kielistetty = Map(),
                   suunniteltuKestoVuodet: Option[Int] = None,
                   suunniteltuKestoKuukaudet: Option [Int] = None,
-                  suunniteltuKestoKuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+                  suunniteltuKestoKuvaus: Kielistetty = Map(),
+                  ammatillinenPerustutkintoErityisopetuksena: Boolean = false) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
