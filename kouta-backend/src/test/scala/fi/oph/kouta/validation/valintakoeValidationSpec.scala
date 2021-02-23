@@ -33,6 +33,14 @@ class ValintakoeValidationSpec extends SubEntityValidationSpec[Valintakoe] {
     passesValidation(Julkaistu, koe)
     failsOnJulkaisuValidation(koe, "tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy.get))
   }
+
+  "Valintakoe metadata on julkaisu validation" should "fail if the vahimmaispistemaara is negative" in {
+    failsValidation(
+      Julkaistu,
+      Valintakoe1.copy(metadata = Some(ValintakoeMetadata(vahimmaispisteet = Some(-182.1)))),
+      "metadata.vahimmaispisteet",
+      notNegativeMsg)
+  }
 }
 
 class ValintakoetilaisuusValidationSpec extends SubEntityValidationSpec[Valintakoetilaisuus] {

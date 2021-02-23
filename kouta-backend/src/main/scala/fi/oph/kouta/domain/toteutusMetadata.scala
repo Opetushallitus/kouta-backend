@@ -1,10 +1,10 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
-
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
+
+import java.time.LocalDateTime
 
 package object toteutusMetadata {
 
@@ -63,26 +63,6 @@ package object toteutusMetadata {
       |          type: object
       |          description: Koulutuksen alkamiskausi
       |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
-      |        koulutuksenTarkkaAlkamisaika:
-      |          type: string
-      |          description: Jos alkamisaika on tiedossa niin alkamis- ja päättymispäivämäärä on pakollinen. Muussa tapauksessa kausi ja vuosi on pakollisia tietoja.
-      |          example: true
-      |        koulutuksenAlkamispaivamaara:
-      |          type: string
-      |          description: Koulutuksen alkamisen päivämäärä
-      |          example: 2019-11-20T12:00
-      |        koulutuksenPaattymispaivamaara:
-      |          type: string
-      |          description: Koulutuksen päättymisen päivämäärä
-      |          example: 2019-12-20T12:00
-      |        koulutuksenAlkamiskausi:
-      |          type: string
-      |          description: Koulutuksen alkamiskausi (koodistoarvo)
-      |          example: kausi_k#1
-      |        koulutuksenAlkamisvuosi:
-      |          type: string
-      |          description: Koulutuksen alkamisvuosi
-      |          example: 2020
       |        lisatiedot:
       |          type: array
       |          description: Koulutuksen toteutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
@@ -99,8 +79,7 @@ package object toteutusMetadata {
       |        stipendinKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        suunniteltuKestoVuodet:
       |          type: integer
       |          description: "Koulutuksen suunniteltu kesto vuosina"
@@ -112,8 +91,7 @@ package object toteutusMetadata {
       |        suunniteltuKestoKuvaus:
       |          type: object
       |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
   val ToteutusMetadata =
@@ -123,8 +101,7 @@ package object toteutusMetadata {
       |        kuvaus:
       |          type: object
       |          description: Toteutuksen kuvausteksti eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        opetus:
       |          type: object
       |          $ref: '#/components/schemas/Opetus'
@@ -152,23 +129,19 @@ package object toteutusMetadata {
       |        nimi:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. nimi
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        kuvaus:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. kuvaus
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        linkki:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkki
-      |          allOf:
-      |            - $ref: '#/components/schemas/Linkki'
+      |          $ref: '#/components/schemas/Linkki'
       |        otsikko:
       |          type: object
       |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkin otsikko
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val Osaamisala =
@@ -182,13 +155,11 @@ package object toteutusMetadata {
       |        linkki:
       |          type: object
       |          description: Osaamisalan linkki
-      |          allOf:
-      |            - $ref: '#/components/schemas/Linkki'
+      |          $ref: '#/components/schemas/Linkki'
       |        otsikko:
       |          type: object
       |          description: Osaamisalan linkin otsikko
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val KorkeakouluToteutusMetadata =
@@ -282,18 +253,15 @@ package object toteutusMetadata {
       |            hakulomakeLinkki:
       |              type: object
       |              description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |              allOf:
-      |                - $ref: '#/components/schemas/Linkki'
+      |              $ref: '#/components/schemas/Linkki'
       |            lisatietoaHakeutumisesta:
       |              type: object
       |              description: Lisätietoa hakeutumisesta eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |              allOf:
-      |                - $ref: '#/components/schemas/Teksti'
+      |              $ref: '#/components/schemas/Teksti'
       |            lisatietoaValintaperusteista:
       |              type: object
       |              description: Lisätietoa valintaperusteista eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |              allOf:
-      |                - $ref: '#/components/schemas/Teksti'
+      |              $ref: '#/components/schemas/Teksti'
       |            hakuaika:
       |              type: array
       |              description: Toteutuksen hakuaika
@@ -506,11 +474,6 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
                   koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = None, //Feature flag KTO-1036, myos swagger skeema
-                  koulutuksenTarkkaAlkamisaika: Option[Boolean] = None,
-                  koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
-                  koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
-                  koulutuksenAlkamiskausi: Option[String] = None,
-                  koulutuksenAlkamisvuosi: Option[Int] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
@@ -523,9 +486,6 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
     validateIfNonEmpty[String](opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit", assertMatch(_, OpetustapaKoodiPattern, _)),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausiUUSI")), //Feature flag KTO-1036
-    validateIfDefined[String](koulutuksenAlkamiskausi, assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausi")),
-    validateIfDefined[Int](koulutuksenAlkamisvuosi, v => assertMatch(v.toString, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")),
-    validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara, koulutuksenPaattymispaivamaara, s"$path.koulutuksenAlkamispaivamaara"),
     validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Double](stipendinMaara, assertNotNegative(_, s"$path.stipendinMaara")),
     validateIfDefined[Double](maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
@@ -544,20 +504,11 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       assertNotOptional(onkoStipendia, s"$path.onkoStipendia"),
       validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
       validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
-      validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus"),
-      validateIfDefined[Boolean](koulutuksenTarkkaAlkamisaika, _ match {
-        case true  => assertNotOptional(koulutuksenAlkamispaivamaara, s"$path.koulutuksenAlkamispaivamaara")
-        case false => and(
-          assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi"),
-          assertNotOptional(koulutuksenAlkamisvuosi, s"$path.koulutuksenAlkamisvuosi")
-        )
-      })
+      validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
     ))
   )
 
   override def validateOnJulkaisu(path: String): IsValid = and(
-    validateIfDefined[LocalDateTime](koulutuksenAlkamispaivamaara, assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")),
-    validateIfDefined[LocalDateTime](koulutuksenPaattymispaivamaara, assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausiUUSI")) //Feature flag KTO-1036
   )
 }

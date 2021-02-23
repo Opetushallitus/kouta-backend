@@ -37,7 +37,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def createTestData(n: Int = 10) = {
     timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
-    koulutusOids = List.fill(n)(put(koulutus.copy(tila = Tallennettu)))
+    koulutusOids = List.fill(n)(put(koulutus.copy(tila = Tallennettu), ophSession))
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid).copy(tila = Tallennettu)))
     hakuOids = List.fill(n)(put(haku))
     sorakuvausIds = List.fill(n)(put(sorakuvaus))
@@ -68,9 +68,9 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     timestampAfterAllModifications = renderHttpDate(now())
   }
 
-  def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
-  def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
+  def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts, ophSession, 200)
+  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts, ophSession, 200)
+  def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts, ophSession, 200)
   def updateInToteutusTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
   def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
   def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)

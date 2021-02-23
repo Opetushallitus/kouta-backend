@@ -75,8 +75,18 @@ sealed trait OppilaitosModificationSQL extends SQLHelpers {
 sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificationSQL with SQLHelpers {
 
   def selectOppilaitos(oid: OrganisaatioOid): DBIO[Option[Oppilaitos]] = {
-    sql"""select oid, tila, kielivalinta, metadata, muokkaaja, organisaatio_oid, teemakuva, logo, lower(system_time)
-          from oppilaitokset where oid = $oid""".as[Oppilaitos].headOption
+    sql"""select oid,
+                 tila,
+                 kielivalinta,
+                 metadata,
+                 muokkaaja,
+                 esikatselu,
+                 organisaatio_oid,
+                 teemakuva,
+                 logo,
+                 lower(system_time)
+          from oppilaitokset
+          where oid = $oid""".as[Oppilaitos].headOption
   }
 
   def insertOppilaitos(oppilaitos: Oppilaitos): DBIO[Int] = {
@@ -86,6 +96,7 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
             kielivalinta,
             metadata,
             muokkaaja,
+            esikatselu,
             organisaatio_oid,
             teemakuva,
             logo)
@@ -95,6 +106,7 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
             ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
             ${toJsonParam(oppilaitos.metadata)}::jsonb,
             ${oppilaitos.muokkaaja},
+            ${oppilaitos.esikatselu},
             ${oppilaitos.organisaatioOid},
             ${oppilaitos.teemakuva},
             ${oppilaitos.logo})"""
@@ -106,6 +118,7 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
               kielivalinta = ${toJsonParam(oppilaitos.kielivalinta)}::jsonb,
               metadata = ${toJsonParam(oppilaitos.metadata)}::jsonb,
               muokkaaja = ${oppilaitos.muokkaaja},
+              esikatselu = ${oppilaitos.esikatselu},
               organisaatio_oid = ${oppilaitos.organisaatioOid},
               teemakuva = ${oppilaitos.teemakuva},
               logo = ${oppilaitos.logo}
@@ -115,6 +128,7 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
               or metadata is distinct from ${toJsonParam(oppilaitos.metadata)}::jsonb
               or kielivalinta is distinct from ${toJsonParam(oppilaitos.kielivalinta)}::jsonb
               or organisaatio_oid is distinct from ${oppilaitos.organisaatioOid}
+              or esikatselu is distinct from ${oppilaitos.esikatselu}
               or teemakuva is distinct from ${oppilaitos.teemakuva}
               or logo is distinct from ${oppilaitos.logo}
             )"""

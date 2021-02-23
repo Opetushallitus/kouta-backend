@@ -18,13 +18,11 @@ package object valintatapa {
       |        nimi:
       |          type: object
       |          description: Valintatapakuvauksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        kuvaus:
       |          type: object
       |          description: Valintatavan kuvausteksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        sisalto:
       |          type: array
       |          description: Valintatavan sisältö. Voi sisältää sekä teksti- että taulukkoelementtejä.
@@ -39,8 +37,7 @@ package object valintatapa {
       |        kynnysehto:
       |          type: object
       |          description: Kynnysehdon kuvausteksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        enimmaispisteet:
       |          type: double
       |          description: Valintatavan enimmäispisteet
@@ -59,8 +56,7 @@ package object valintatapa {
       |        teksti:
       |          type: object
       |          description: Valintatavan Opintopolussa näytettävä kuvausteksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Teksti'
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val SisaltoTaulukkoModel =
@@ -75,8 +71,7 @@ package object valintatapa {
       |        nimi:
       |          type: object
       |          description: Taulukon Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        rows:
       |          type: array
       |          description: Taukon rivit
@@ -102,8 +97,7 @@ package object valintatapa {
       |                      type: object
       |                      description: Sarakkeen Opintopolussa näytettävä teksti eri kielillä.
       |                        Kielet on määritetty valintaperusteen kielivalinnassa.
-      |                      allOf:
-      |                        - $ref: '#/components/schemas/Teksti'
+      |                      $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   def models = List(ValintatapaModel, SisaltoTekstiModel, SisaltoTaulukkoModel)

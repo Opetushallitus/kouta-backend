@@ -22,7 +22,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    koulutusOid = put(koulutus)
+    koulutusOid = put(koulutus, ophSession)
     toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid)))
     hakuOid = put(haku)
     sorakuvausId = put(sorakuvaus)
@@ -420,33 +420,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     }
   }
 
-  it should "validate dates when moving from other states to julkaistu" in {
-    val thisHakukohde = uusiHakukohde.copy(alkamisvuosi = Some("2017"), tila = Tallennettu, liitteet = List(), valintakokeet = List())
-
-    val oid = put(thisHakukohde)
-    val thisHakukohdeWithOid = thisHakukohde.copy(oid = Some(HakukohdeOid(oid)))
-    val lastModified = get(oid, thisHakukohdeWithOid)
-
-    post(HakukohdePath, bytes(thisHakukohdeWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(pastDateMsg("2017"), "alkamisvuosi"))
-    }
-
-    update(thisHakukohdeWithOid.copy(tila = Arkistoitu), lastModified)
-  }
-
-  it should "not validate dates when updating a julkaistu hakukohde" in {
-    val thisHakukohde = uusiHakukohde.copy(tila = Julkaistu, liitteet = List(), valintakokeet = List())
-
-    val oid = put(thisHakukohde)
-    val thisHakukohdeWithOid = thisHakukohde.copy(oid = Some(HakukohdeOid(oid)))
-    val lastModified = get(oid, thisHakukohdeWithOid)
-
-    update(thisHakukohdeWithOid.copy(alkamisvuosi = Some("2017")), lastModified)
-  }
-
   it should "update hakukohteen liitteet ja valintakokeet" in {
     val oid = put(uusiHakukohde)
     val tallennettu = tallennettuHakukohde(oid)
@@ -478,5 +451,4 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde)
   }
-
 }

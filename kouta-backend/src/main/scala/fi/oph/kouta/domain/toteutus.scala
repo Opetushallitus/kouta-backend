@@ -25,6 +25,9 @@ package object toteutus {
       |            - arkistoitu
       |            - tallennettu
       |          description: Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa.
+      |        esikatselu:
+      |          type: boolean
+      |          description: Onko toteutus nähtävissä esikatselussa
       |        tarjoajat:
       |          type: array
       |          description: Toteutusta tarjoavien organisaatioiden yksilöivät organisaatio-oidit
@@ -44,8 +47,7 @@ package object toteutus {
       |        nimi:
       |          type: object
       |          description: Toteutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        metadata:
       |          type: object
       |          oneOf:
@@ -189,8 +191,7 @@ package object toteutus {
       |        nimi:
       |          type: object
       |          description: Toteutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        muokkaaja:
       |          type: string
       |          description: Toteutusta viimeksi muokanneen virkailijan henkilö-oid
@@ -212,6 +213,7 @@ package object toteutus {
 case class Toteutus(oid: Option[ToteutusOid] = None,
                     koulutusOid: KoulutusOid,
                     tila: Julkaisutila = Tallennettu,
+                    esikatselu: Boolean = false,
                     tarjoajat: List[OrganisaatioOid] = List(),
                     nimi: Kielistetty = Map(),
                     metadata: Option[ToteutusMetadata] = None,

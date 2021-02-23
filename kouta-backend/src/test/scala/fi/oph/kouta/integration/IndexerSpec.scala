@@ -8,28 +8,28 @@ import org.json4s.jackson.Serialization.read
 
 class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec {
 
-  override val roleEntities = RoleEntity.all
+  override val roleEntities: Seq[RoleEntity] = RoleEntity.all
 
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     val t1 = put(toteutus(oid))
     val t2 = put(toteutus(oid))
     val t3 = put(toteutus(oid))
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[Toteutus]](body) should contain theSameElementsAs(List(
+      read[List[Toteutus]](body) should contain theSameElementsAs List(
         toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
         toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
         toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)))
-      ))
+      )
     }
   }
 
   it should "return empty result if koulutus has no toteutukset" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[Toteutus]](body) should contain theSameElementsAs(List())
+      read[List[Toteutus]](body) should contain theSameElementsAs List()
     }
   }
 
@@ -53,16 +53,16 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
   }
 
   "List koulutukset by tarjoaja" should "list all koulutukset distinct" in {
-    val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)))
+    val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)), ophSession)
     mockOrganisaatioResponse()
     get(s"$IndexerPath/tarjoaja/$ChildOid/koulutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[Koulutus]](body).filter(_.oid.get.s == oid).size should equal (1)
+      read[List[Koulutus]](body).count(_.oid.get.s == oid) should equal (1)
     }
   }
 
   "List hakutiedot by koulutus" should "list all hakutiedot distinct" in {
-    val koulutusOid = put(koulutus)
+    val koulutusOid = put(koulutus, ophSession)
     val totetusOid = put(toteutus(koulutusOid))
     val hakuOid = put(haku)
     val hkOid1 = put(julkaistuHakukohde(totetusOid, hakuOid))
@@ -97,7 +97,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val oid = put(oppilaitos)
     get(s"$IndexerPath/oppilaitos/$oid/osat", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[OppilaitoksenOsa]](body) should contain theSameElementsAs(List())
+      read[List[OppilaitoksenOsa]](body) should contain theSameElementsAs List()
     }
   }
 

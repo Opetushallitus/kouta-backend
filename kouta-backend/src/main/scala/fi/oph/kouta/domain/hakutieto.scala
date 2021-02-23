@@ -6,7 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.domain.oid._
 
 package object hakutieto {
-  val HakutietoModel =
+  val HakutietoModel: String =
     """    Hakutieto:
       |      type: object
       |      properties:
@@ -26,21 +26,15 @@ package object hakutieto {
       |              nimi:
       |                type: object
       |                description: Haun Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |                allOf:
-      |                  - $ref: '#/components/schemas/Nimi'
+      |                $ref: '#/components/schemas/Nimi'
       |              hakutapaKoodiUri:
       |                type: string
       |                description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
       |                example: hakutapa_03#1
-      |              alkamiskausiKoodiUri:
-      |                type: string
-      |                description: Haun koulutusten alkamiskausi. Hakukohteella voi olla eri alkamiskausi kuin haulla.
-      |                  Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |                example: kausi_k#1
-      |              alkamisvuosi:
-      |                type: string
-      |                description: Haun koulutusten alkamisvuosi. Hakukohteella voi olla eri alkamisvuosi kuin haulla.
-      |                example: 2020
+      |              koulutuksenAlkamiskausi:
+      |                type: object
+      |                description: Koulutuksen alkamiskausi
+      |                $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
       |              hakulomaketyyppi:
       |                type: string
       |                description: Hakulomakkeen tyyppi. Kertoo, käytetäänkö Atarun (hakemuspalvelun) hakulomaketta, muuta hakulomaketta
@@ -58,13 +52,11 @@ package object hakutieto {
       |              hakulomakeKuvaus:
       |                type: object
       |                description: Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa. Hakukohteella voi olla eri hakulomake kuin haulla.
-      |                allOf:
-      |                  - $ref: '#/components/schemas/Kuvaus'
+      |                $ref: '#/components/schemas/Kuvaus'
       |              hakulomakeLinkki:
       |                type: object
       |                description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa. Hakukohteella voi olla eri hakulomake kuin haulla.
-      |                allOf:
-      |                  - $ref: '#/components/schemas/Linkki'
+      |                $ref: '#/components/schemas/Linkki'
       |              organisaatioOid:
       |                 type: string
       |                 description: Haun luoneen organisaation oid
@@ -96,18 +88,12 @@ package object hakutieto {
       |                    nimi:
       |                      type: object
       |                      description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |                      allOf:
-      |                        - $ref: '#/components/schemas/Nimi'
-      |                    alkamiskausiKoodiUri:
-      |                      type: string
-      |                      description: Hakukohteen koulutusten alkamiskausi, jos ei käytetä haun alkamiskautta.
-      |                        Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
-      |                      example: kausi_k#1
-      |                    alkamisvuosi:
-      |                      type: string
-      |                      description: Hakukohteen koulutusten alkamisvuosi, jos ei käytetä haun alkamisvuotta
-      |                      example: 2020
-      |                    kaytetaanHaunAlkamiskautta:
+      |                      $ref: '#/components/schemas/Nimi'
+      |                    koulutuksenAlkamiskausi:
+      |                      type: object
+      |                      description: Koulutuksen alkamiskausi
+      |                      $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
+      |                    kaytetaanHaunAlkamiskauttaUUSI:
       |                      type: boolean
       |                      description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
       |                    jarjestyspaikkaOid:
@@ -130,13 +116,11 @@ package object hakutieto {
       |                    hakulomakeKuvaus:
       |                      type: object
       |                      description: Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |                      allOf:
-      |                        - $ref: '#/components/schemas/Kuvaus'
+      |                      $ref: '#/components/schemas/Kuvaus'
       |                    hakulomakeLinkki:
       |                      type: object
       |                      description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa.
-      |                      allOf:
-      |                        - $ref: '#/components/schemas/Linkki'
+      |                      $ref: '#/components/schemas/Linkki'
       |                    kaytetaanHaunHakulomaketta:
       |                      type: boolean
       |                      description: Käytetäänkö haun hakulomaketta vai onko hakukohteelle määritelty oma hakulomake?
@@ -164,6 +148,16 @@ package object hakutieto {
       |                      description: Hakukohteen hakuajat, jos ei käytetä haun hakuaikoja
       |                      items:
       |                        $ref: '#/components/schemas/Ajanjakso'
+      |                    pohjakoulutusvaatimusKoodiUrit:
+      |                      type: array
+      |                      description: Hakukohteen pohjakoulutusvaatimusKoodiUrit
+      |                      items:
+      |                        type: string
+      |                      example: ["pohjakoulutusvaatimuskouta_pk#1", "pohjakoulutusvaatimuskouta_yo#1"]
+      |                    pohjakoulutusvaatimusTarkenne:
+      |                      type: object
+      |                      description: Hakukohteen pohjakoulutusvaatimuksen tarkennus
+      |                      $ref: '#/components/schemas/Kuvaus'
       |                    muokkaaja:
       |                      type: string
       |                      description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
@@ -172,6 +166,12 @@ package object hakutieto {
       |                       type: string
       |                       description: Hakukohteen luoneen organisaation oid
       |                       example: 1.2.246.562.10.00101010101
+      |                    valintatapaKoodiUrit:
+      |                       type: array
+      |                       description: Hakukohteeseen liitetyn valintaperusteen valintatapojen koodiUrit
+      |                       items:
+      |                         type: string
+      |                       example: ["valintatapajono_av#1", "valintatapajono_tv#1"]
       |                    modified:
       |                       type: string
       |                       format: date-time
@@ -188,8 +188,7 @@ case class Hakutieto(toteutusOid:ToteutusOid,
 case class HakutietoHaku(hakuOid: HakuOid,
                          nimi: Kielistetty = Map(),
                          hakutapaKoodiUri: Option[String] = None,
-                         alkamiskausiKoodiUri: Option[String] = None,
-                         alkamisvuosi: Option[String] = None,
+                         koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
                          hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                          hakulomakeAtaruId: Option[UUID] = None,
                          hakulomakeKuvaus: Kielistetty = Map(),
@@ -203,9 +202,8 @@ case class HakutietoHaku(hakuOid: HakuOid,
 case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               nimi: Kielistetty = Map(),
                               valintaperusteId: Option[UUID] = None,
-                              alkamiskausiKoodiUri: Option[String] = None,
-                              alkamisvuosi: Option[String] = None,
-                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
+                              koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                              kaytetaanHaunAlkamiskauttaUUSI: Option[Boolean] = None,
                               jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                               hakulomakeAtaruId: Option[UUID] = None,
@@ -220,4 +218,5 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
                               muokkaaja: UserOid,
                               organisaatioOid: OrganisaatioOid,
+                              valintatapaKoodiUrit: Seq[String] = Seq(),
                               modified: Option[LocalDateTime])

@@ -172,6 +172,8 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def defaultHeaders: Seq[(String, String)] = Seq(defaultSessionHeader, jsonHeader)
 
+  def customHeaders(sessionId: UUID): Seq[(String, String)] = Seq(sessionHeader(sessionId), jsonHeader)
+
   def bytes(o: AnyRef) = write(o).getBytes
 
   val oid = (body: String) => read[Oid](body).oid

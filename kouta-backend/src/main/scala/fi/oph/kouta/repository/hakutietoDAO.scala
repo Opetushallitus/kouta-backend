@@ -59,15 +59,14 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
   }
 }
 
-sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
+sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
 
   def selectHakujenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakutietoHaku)]] = {
     sql"""select distinct t.oid,
                           h.oid,
                           h.nimi,
                           h.hakutapa_koodi_uri,
-                          h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamiskausiKoodiUri' as alkamiskausi_koodi_uri,
-                          h.metadata -> 'koulutuksenAlkamiskausi' ->> 'koulutuksenAlkamisvuosi'         as alkamisvuosi,
+                          h.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
                           h.hakulomaketyyppi,
                           h.hakulomake_ataru_id,
                           h.hakulomake_kuvaus,
@@ -95,9 +94,8 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
                  k.oid,
                  k.nimi,
                  k.valintaperuste_id,
-                 k.alkamiskausi_koodi_uri,
-                 k.alkamisvuosi,
-                 k.kaytetaan_haun_alkamiskautta,
+                 k.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
+                 k.metadata ->> 'kaytetaanHaunAlkamiskautta' as kaytetaan_haun_alkamiskautta_uusi,
                  k.jarjestyspaikka_oid,
                  k.hakulomaketyyppi,
                  k.hakulomake_ataru_id,
@@ -111,11 +109,13 @@ sealed trait  HakutietoSQL extends  HakutietoExtractors with SQLHelpers {
                  k.pohjakoulutusvaatimus_tarkenne,
                  k.organisaatio_oid,
                  k.muokkaaja,
+                 array(select jsonb_array_elements(v.metadata -> 'valintatavat') ->> 'valintatapaKoodiUri') as valintatapa_koodi_urit,
                  lower(k.system_time)
           from hakukohteet k
                    inner join haut h on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
                    inner join toteutukset t on t.oid = k.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
                    inner join koulutukset o on o.oid = t.koulutus_oid and o.tila = 'julkaistu'::julkaisutila
+                   left join valintaperusteet v on v.id = k.valintaperuste_id and v.tila = 'julkaistu'::julkaisutila
           where o.oid = ${koulutusOid.toString}
             and k.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }

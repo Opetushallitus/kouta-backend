@@ -12,8 +12,7 @@ package object koulutusMetadata {
       |        kuvaus:
       |          type: object
       |          description: Koulutuksen kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        lisatiedot:
       |          type: array
       |          description: Koulutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
@@ -42,8 +41,7 @@ package object koulutusMetadata {
       |        kuvauksenNimi:
       |          type: object
       |          description: Koulutuksen kuvaukseni nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        tutkintonimikeKoodiUrit:
       |          type: array
       |          description: Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/tutkintonimikekk/2)

@@ -27,13 +27,13 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
     val oid = "1.2.246.562.13.00000000000000000009"
     KFT.addKoulutus(oid, KFT.DefaultKoulutus)
     val koulutus = KFT.getKoulutus(oid)
-    doPut(KoulutusPath, koulutus)
+    doPut(KoulutusPath, koulutus, ophHeaders)
   }
 
   it should "be able to save default toteutus" in {
     KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutus)
     val koulutus = KFT.getKoulutus("1.2.246.562.13.00000000000000000009")
-    val koulutusOid = oid(doPut(KoulutusPath, koulutus))
+    val koulutusOid = oid(doPut(KoulutusPath, koulutus, ophHeaders))
 
     val toteutusOid = "1.2.246.562.17.00000000000000000009"
     val toteutusMap = KFT.DefaultToteutusScala + (KFT.KoulutusOidKey -> koulutusOid)
@@ -71,7 +71,7 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
   it should "be able to save default hakukohde" in {
     KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutus)
     val koulutus = KFT.getKoulutus("1.2.246.562.13.00000000000000000009")
-    val koulutusOid = oid(doPut(KoulutusPath, koulutus))
+    val koulutusOid = oid(doPut(KoulutusPath, koulutus, ophHeaders))
 
     val toteutusMap = KFT.DefaultToteutusScala + (KFT.KoulutusOidKey -> koulutusOid)
     KFT.addToteutus("1.2.246.562.17.00000000000000000009", toteutusMap)

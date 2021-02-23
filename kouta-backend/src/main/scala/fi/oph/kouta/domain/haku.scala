@@ -28,8 +28,7 @@ package object haku {
       |        nimi:
       |          type: object
       |          description: Haun Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        hakutapaKoodiUri:
       |          type: string
       |          description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/1)
@@ -77,13 +76,11 @@ package object haku {
       |        hakulomakeKuvaus:
       |          type: object
       |          description: Hakulomakkeen kuvausteksti eri kielillä. Kielet on määritetty haun kielivalinnassa. Hakukohteella voi olla eri hakulomake kuin haulla.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Kuvaus'
+      |          $ref: '#/components/schemas/Kuvaus'
       |        hakulomakeLinkki:
       |          type: object
       |          description: Hakulomakkeen linkki eri kielillä. Kielet on määritetty haun kielivalinnassa. Hakukohteella voi olla eri hakulomake kuin haulla.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Linkki'
+      |          $ref: '#/components/schemas/Linkki'
       |        hakuajat:
       |          type: array
       |          description: Haun hakuajat. Hakukohteella voi olla omat hakuajat.
@@ -154,8 +151,7 @@ package object haku {
       |        nimi:
       |          type: object
       |          description: Haun Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          allOf:
-      |            - $ref: '#/components/schemas/Nimi'
+      |          $ref: '#/components/schemas/Nimi'
       |        muokkaaja:
       |          type: string
       |          description: Hakua viimeksi muokanneen virkailijan henkilö-oid
@@ -243,7 +239,7 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi"))
   )
 
   override def validateOnJulkaisu(path: String): IsValid = and(

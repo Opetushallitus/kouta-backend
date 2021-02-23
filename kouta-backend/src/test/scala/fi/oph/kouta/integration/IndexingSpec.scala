@@ -15,7 +15,7 @@ class IndexingSpec extends KoutaIntegrationSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    koulutusOid = put(koulutus)
+    koulutusOid = put(koulutus, ophSession)
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)
     sorakuvausId = put(sorakuvaus)
@@ -40,15 +40,15 @@ class IndexingSpec extends KoutaIntegrationSpec
   }
 
   "Create koulutus" should "send indexing message after creating koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
   }
 
   "Update koulutus" should "send indexing message after updating koulutus" in {
-    val oid = put(koulutus)
+    val oid = put(koulutus, ophSession)
     eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
 
-    update(koulutus(oid, Arkistoitu), lastModified = get(oid, koulutus(oid)))
+    update(koulutus(oid, Arkistoitu), lastModified = get(oid, koulutus(oid)), ophSession, 200)
 
     eventuallyIndexingMessages { _ should contain (s"""{"koulutukset":["$oid"]}""") }
   }

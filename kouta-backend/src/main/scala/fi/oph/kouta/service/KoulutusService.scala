@@ -41,32 +41,40 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     authorizeGet(koulutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime)))
   }
 
-  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid =
-    authorizePut(koulutus) { k =>
+  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
+    val rules = koulutus.koulutustyyppi match {
+      case Amm =>
+        AuthorizationRules(Seq(Role.Paakayttaja))
+      case _ =>
+        AuthorizationRules(roleEntity.createRoles)
+    }
+    authorizePut(koulutus, rules) { k =>
       withValidation(k, None)(doPut)
     }.oid.get
+  }
 
-  def update(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val koulutusWithInstant = KoulutusDAO.get(koulutus.oid.get)
-
-    koulutusWithInstant match {
+  def update(newKoulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val oldKoulutusWithInstant: Option[(Koulutus, Instant)] = KoulutusDAO.get(newKoulutus.oid.get)
+    oldKoulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
         val rules = oldKoulutus.koulutustyyppi match {
           case Amm => List(AuthorizationRules(roleEntity.updateRoles))
           case Lk  => List(AuthorizationRules(roleEntity.updateRoles))
           case _ => {
-            val newTarjoajat = koulutus.tarjoajat.toSet
+            val rules: List[AuthorizationRules] = oldKoulutus.koulutustyyppi match {
+            case Amm =>
+            List(AuthorizationRules(Seq(Role.Paakayttaja)))
+          case _ =>
+            val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
+            val newTarjoajat = newKoulutus.tarjoajat.toSet
             val oldTarjoajat = oldKoulutus.tarjoajat.toSet
-            val updatesOnKoulutus = oldKoulutus.copy(modified=None, tarjoajat = List()) != koulutus.copy(tarjoajat = List())
-            val rulesForUpdatingKoulutus = if(updatesOnKoulutus) Some(AuthorizationRules(roleEntity.updateRoles)) else None
-
             val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
             val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
 
             (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
           }
         }
-        rules.nonEmpty && authorizeUpdate(koulutusWithInstant, koulutus, rules) { (_, k) =>
+        rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           withValidation(k, Some(oldKoulutus)) {
             doUpdate(_, notModifiedSince, oldKoulutus)
           }
