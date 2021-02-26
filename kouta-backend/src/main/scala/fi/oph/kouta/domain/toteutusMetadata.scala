@@ -92,6 +92,9 @@ package object toteutusMetadata {
       |          type: object
       |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
       |          $ref: '#/components/schemas/Kuvaus'
+      |        ammatillinenPerustutkintoErityisopetuksena:
+      |          type: boolean
+      |          description: Onko koulutuksen tyyppi \"Ammatillinen perustutkinto erityisopetuksena\"?
       |""".stripMargin
 
   val ToteutusMetadata =
