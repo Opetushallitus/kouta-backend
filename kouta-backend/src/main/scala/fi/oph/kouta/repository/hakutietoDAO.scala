@@ -109,11 +109,13 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  k.pohjakoulutusvaatimus_tarkenne,
                  k.organisaatio_oid,
                  k.muokkaaja,
+                 array(select jsonb_array_elements(v.metadata -> 'valintatavat') ->> 'valintatapaKoodiUri') as valintatapa_koodi_urit,
                  lower(k.system_time)
           from hakukohteet k
                    inner join haut h on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
                    inner join toteutukset t on t.oid = k.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
                    inner join koulutukset o on o.oid = t.koulutus_oid and o.tila = 'julkaistu'::julkaisutila
+                   left join valintaperusteet v on v.id = k.valintaperuste_id and v.tila = 'julkaistu'::julkaisutila
           where o.oid = ${koulutusOid.toString}
             and k.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }

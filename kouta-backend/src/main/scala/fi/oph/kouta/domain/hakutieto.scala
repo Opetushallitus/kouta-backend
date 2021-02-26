@@ -148,6 +148,16 @@ package object hakutieto {
       |                      description: Hakukohteen hakuajat, jos ei käytetä haun hakuaikoja
       |                      items:
       |                        $ref: '#/components/schemas/Ajanjakso'
+      |                    pohjakoulutusvaatimusKoodiUrit:
+      |                      type: array
+      |                      description: Hakukohteen pohjakoulutusvaatimusKoodiUrit
+      |                      items:
+      |                        type: string
+      |                      example: ["pohjakoulutusvaatimuskouta_pk#1", "pohjakoulutusvaatimuskouta_yo#1"]
+      |                    pohjakoulutusvaatimusTarkenne:
+      |                      type: object
+      |                      description: Hakukohteen pohjakoulutusvaatimuksen tarkennus
+      |                      $ref: '#/components/schemas/Kuvaus'
       |                    muokkaaja:
       |                      type: string
       |                      description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
@@ -156,6 +166,12 @@ package object hakutieto {
       |                       type: string
       |                       description: Hakukohteen luoneen organisaation oid
       |                       example: 1.2.246.562.10.00101010101
+      |                    valintatapaKoodiUrit:
+      |                       type: array
+      |                       description: Hakukohteeseen liitetyn valintaperusteen valintatapojen koodiUrit
+      |                       items:
+      |                         type: string
+      |                       example: ["valintatapajono_av#1", "valintatapajono_tv#1"]
       |                    modified:
       |                       type: string
       |                       format: date-time
@@ -202,4 +218,5 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
                               muokkaaja: UserOid,
                               organisaatioOid: OrganisaatioOid,
+                              valintatapaKoodiUrit: Seq[String] = Seq(),
                               modified: Option[LocalDateTime])

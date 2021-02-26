@@ -38,7 +38,7 @@ abstract class CasSessionService(val securityContext: SecurityContext,
 
   private def validateServiceTicket(ticket: ServiceTicket): Either[Throwable, Username] = {
     val ServiceTicket(s) = ticket
-    casClient.validateServiceTicket(securityContext.casServiceIdentifier)(s).handleWith {
+    casClient.validateServiceTicketWithVirkailijaUsername(securityContext.casServiceIdentifier)(s).handleWith {
       case NonFatal(t) =>
         logger.debug("Ticket validation error", t)
         Task.fail(new AuthenticationFailedException(s"Failed to validate service ticket $s", t))
