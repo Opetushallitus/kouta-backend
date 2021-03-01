@@ -49,7 +49,7 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
         AuthorizationRules(roleEntity.createRoles)
     }
     authorizePut(koulutus, rules) { k =>
-      withValidation(k, None)(doPut)
+      withValidation(k, None)(k => doPut(k))
     }.oid.get
   }
 

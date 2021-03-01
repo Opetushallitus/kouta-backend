@@ -23,6 +23,18 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
   def isTutkintoonJohtava(koulutustyyppi: Koulutustyyppi): Boolean =
     tutkintoonJohtavat.contains(koulutustyyppi)
 
+  val koulutusaste2koulutustyyppi: Map[String, Koulutustyyppi] = Map(
+    "koulutusasteoph2002_62" -> Amk,
+    "koulutusasteoph2002_71" -> Amk,
+    //
+    "koulutusasteoph2002_63" -> Yo,
+    "koulutusasteoph2002_72" -> Yo,
+    "koulutusasteoph2002_73" -> Yo,
+    "koulutusasteoph2002_81" -> Yo,
+    "koulutusasteoph2002_82" -> Yo,
+    //
+  )
+
   val oppilaitostyyppi2koulutustyyppi: Map[String, Koulutustyyppi] = Map(
     "oppilaitostyyppi_01#1" -> Muu, //Taiteen perusopetuksen oppilaitokset (ei musiikki)
     "oppilaitostyyppi_11#1" -> Muu, //Peruskoulut
