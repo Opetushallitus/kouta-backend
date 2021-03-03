@@ -128,7 +128,7 @@ trait MigrationHelpers extends Logging {
     }
   }
 
-  def toOpetus(result: JValue): Opetus = {
+  def toOpetus(result: JValue, koulutustyyppi: Koulutustyyppi): Opetus = {
     val opetuskielis: Seq[String] = (result \ "opetuskielis" \ "uris").extract[Map[String, Int]].map {
       case ("kieli_fi", v) => s"oppilaitoksenopetuskieli_1#$v"
       case ("kieli_sv", v) => s"oppilaitoksenopetuskieli_2#$v"
@@ -149,13 +149,17 @@ trait MigrationHelpers extends Logging {
     val koulutuksenAlkamiskausi: Option[String] = None
     val koulutuksenAlkamisvuosi: Option[Int] = None
 
-    val lisatiedot = List(
-      (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
-      (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
-      (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
-      (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
-      (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
-    ).flatten
+    val lisatiedot: List[Lisatieto] =
+      koulutustyyppi match {
+        case Yo => List()
+        case _ => List(
+          (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
+          (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
+          (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
+          (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
+          (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
+        ).flatten
+      }
     
     val onkoStipendia: Option[Boolean] = Some(false)
     val stipendinMaara: Option[Double] = None
@@ -228,7 +232,17 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val koulutusalaKoodiUrit =
       koulutuskoodi2koulutusala((result \ "koulutuskoodi" \ "uri").extract[String],
         (result \ "koulutuskoodi" \ "versio").extract[Int])
-    val lisatiedot: Seq[Lisatieto] = Seq()
+    val lisatiedot: Seq[Lisatieto] =
+      koulutustyyppi match {
+        case Yo => Seq(
+          (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
+          (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
+          (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
+          (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
+          (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
+        ).flatten
+        case _ => Seq()
+      }
     val metadata: KoulutusMetadata =
       koulutustyyppi match {
         case Amk => AmmattikorkeakouluKoulutusMetadata(
@@ -287,7 +301,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       Some(koulutustyyppi match {
         case Amk => AmmattikorkeakouluToteutusMetadata(
           kuvaus = kuvaus,
-          opetus = Some(toOpetus(result)),
+          opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = List(),
           ammattinimikkeet = List(),
           yhteyshenkilot = Seq(),
@@ -296,7 +310,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
         )
         case Yo => YliopistoToteutusMetadata(
           kuvaus = Map(),
-          opetus = Some(toOpetus(result)),
+          opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = List(),
           ammattinimikkeet = List(),
           yhteyshenkilot = Seq(),
