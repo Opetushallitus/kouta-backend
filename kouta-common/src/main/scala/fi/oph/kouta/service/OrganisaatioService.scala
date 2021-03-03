@@ -50,6 +50,8 @@ trait OrganisaatioService {
       .flatten
       .distinct
       .map(Koulutustyyppi.fromOppilaitostyyppi)
+      .flatten
+      .distinct
 
   @tailrec
   private def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
