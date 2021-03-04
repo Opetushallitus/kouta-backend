@@ -97,6 +97,31 @@ package object toteutusMetadata {
       |          description: Onko koulutuksen tyyppi \"Ammatillinen perustutkinto erityisopetuksena\"?
       |""".stripMargin
 
+  val Apuraha =
+    """    Apuraha:
+      |      type: object
+      |      properties:
+      |        min:
+      |          type: int
+      |          description: Apurahan minimi euromäärä tai minimi prosenttiosuus lukuvuosimaksusta
+      |          example: 100
+      |        max:
+      |          type: int
+      |          description: Apurahan maksimi euromäärä tai maksimi prosenttiosuus lukuvuosimaksusta
+      |          example: 200
+      |        yksikko:
+      |          type: string
+      |          description: Apurahan yksikkö
+      |          enum:
+      |            - euro
+      |            - prosentti
+      |          example: euro
+      |        kuvaus:
+      |          type: object
+      |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
   val ToteutusMetadata =
     """    ToteutusMetadata:
       |      type: object
@@ -303,7 +328,7 @@ package object toteutusMetadata {
       |                - amm-osaamisala
       |""".stripMargin
 
-  val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
+  val models = List(Opetus, Apuraha, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
     AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
     TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata)
 }
