@@ -523,6 +523,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
       "maksunMaara": {"a": "b"},
       "alkamisaikaKuvaus": {},
       "lisatiedot": [],
+      "onkoStipendia": false,
+      "stipendinKuvaus": {}
     },
       "asiasanat": [],
       "ammattinimikkeet": []
