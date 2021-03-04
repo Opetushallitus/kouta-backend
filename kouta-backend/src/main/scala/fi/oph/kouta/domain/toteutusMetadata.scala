@@ -4,11 +4,9 @@ import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
-import java.time.LocalDateTime
-
 package object toteutusMetadata {
 
-  val Opetus =
+  val Opetus: String =
     """    Opetus:
       |      type: object
       |      properties:
@@ -97,7 +95,7 @@ package object toteutusMetadata {
       |          description: Onko koulutuksen tyyppi \"Ammatillinen perustutkinto erityisopetuksena\"?
       |""".stripMargin
 
-  val Apuraha =
+  val Apuraha: String =
     """    Apuraha:
       |      type: object
       |      properties:
@@ -122,7 +120,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
-  val ToteutusMetadata =
+  val ToteutusMetadata: String =
     """    ToteutusMetadata:
       |      type: object
       |      properties:
@@ -150,7 +148,7 @@ package object toteutusMetadata {
       |            $ref: '#/components/schemas/Ammattinimike'
       |""".stripMargin
 
-  val KorkeakouluOsaamisala =
+  val KorkeakouluOsaamisala: String =
     """    KorkeakouluOsaamisala:
       |      type: object
       |      properties:
@@ -172,7 +170,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val Osaamisala =
+  val Osaamisala: String =
     """    Osaamisala:
       |      type: object
       |      properties:
@@ -190,7 +188,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val KorkeakouluToteutusMetadata =
+  val KorkeakouluToteutusMetadata: String =
     """    KorkeakouluToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -207,7 +205,7 @@ package object toteutusMetadata {
       |          description: Lista ylemmän korkeakoulututkinnon erikoistumisalojen, opintosuuntien, pääaineiden tms. kuvauksista.
       |""".stripMargin
 
-  val YliopistoToteutusMetadata =
+  val YliopistoToteutusMetadata: String =
     """    YliopistoToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
@@ -221,7 +219,7 @@ package object toteutusMetadata {
       |                - yo
       |""".stripMargin
 
-  val AmmattikorkeaToteutusMetadata =
+  val AmmattikorkeaToteutusMetadata: String =
     """    AmmattikorkeaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
@@ -235,7 +233,7 @@ package object toteutusMetadata {
       |                - amk
       |""".stripMargin
 
-  val AmmatillinenToteutusMetadata =
+  val AmmatillinenToteutusMetadata: String =
     """    AmmatillinenToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -254,7 +252,7 @@ package object toteutusMetadata {
       |                - amm
       |""".stripMargin
 
-  val TutkintoonJohtamatonToteutusMetadata =
+  val TutkintoonJohtamatonToteutusMetadata: String =
     """    TutkintoonJohtamatonToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -300,7 +298,7 @@ package object toteutusMetadata {
       |              example: 100
       |""".stripMargin
 
-  val AmmatillinenTutkinnonOsaToteutusMetadata =
+  val AmmatillinenTutkinnonOsaToteutusMetadata: String =
     """    AmmatillinenTutkinnonOsaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
@@ -314,7 +312,7 @@ package object toteutusMetadata {
       |                - amm-tutkinnon-osa
       |""".stripMargin
 
-  val AmmatillinenOsaamisalaToteutusMetadata =
+  val AmmatillinenOsaamisalaToteutusMetadata: String =
     """    AmmatillinenOsaamisalaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
@@ -397,18 +395,18 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutermi, s"$path.hakutermi"),
       assertNotOptional(hakulomaketyyppi, s"$path.hakulomaketyyppi"),
-      validateIfTrue(hakulomaketyyppi.exists(_ == MuuHakulomake), and(
+      validateIfTrue(hakulomaketyyppi.contains(MuuHakulomake), and(
         validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"),
         validateKielistetty(kielivalinta, hakulomakeLinkki, s"$path.hakulomakeLinkki"),
         validateOptionalKielistetty(kielivalinta, lisatietoaValintaperusteista, s"$path.lisatietoaValintaperusteista"),
         assertNotOptional(hakuaika, s"$path.hakuaika")
       )),
-      validateIfTrue(hakulomaketyyppi.exists(_ == EiSähköistä),
+      validateIfTrue(hakulomaketyyppi.contains(EiSähköistä),
         validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"))
     )))
 
   override def allowSorakuvaus: Boolean =
-    hakulomaketyyppi.exists(_ == MuuHakulomake)
+    hakulomaketyyppi.contains(MuuHakulomake)
 }
 
 case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
