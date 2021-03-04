@@ -467,6 +467,12 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
   )
 }
 
+
+case class Apuraha(min: Double,
+                   max: Double,
+                   yksikko: Apurahayksikko,
+                   kuvaus: Kielistetty = Map())
+
 case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetuskieletKuvaus: Kielistetty = Map(),
                   opetusaikaKoodiUrit: Seq[String] = Seq(),
@@ -478,6 +484,8 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   maksunMaara: Option[Double] = None,
                   koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = None, //Feature flag KTO-1036, myos swagger skeema
                   lisatiedot: Seq[Lisatieto] = Seq(),
+                  onkoApuraha: Boolean = false,
+                  apuraha: Option[Apuraha] = None,
                   onkoStipendia: Option[Boolean] = Some(false),
                   stipendinMaara: Option[Double] = None,
                   stipendinKuvaus: Kielistetty = Map(),
@@ -505,9 +513,6 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       assertNotOptional(onkoMaksullinen, s"$path.onkoMaksullinen"),
       validateOptionalKielistetty(kielivalinta, maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
       validateIfTrue(onkoMaksullinen.contains(true), assertNotOptional(maksunMaara, s"$path.maksunMaara")),
-      assertNotOptional(onkoStipendia, s"$path.onkoStipendia"),
-      validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
-      validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
       validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
     ))
   )
