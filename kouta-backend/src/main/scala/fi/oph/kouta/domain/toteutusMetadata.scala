@@ -67,17 +67,13 @@ package object toteutusMetadata {
       |          items:
       |            type: object
       |            $ref: '#/components/schemas/Lisatieto'
-      |        onkoStipendia:
+      |        onkoApuraha:
       |          type: boolean
-      |          description: "Onko koulutukseen stipendiä?"
-      |        stipendinMaara:
-      |          type: double
-      |          description: Koulutuksen toteutuksen stipendin määrä.
-      |          example: 10.0
-      |        stipendinKuvaus:
+      |          description: Onko koulutukseen apurahaa?
+      |        apuraha:
       |          type: object
-      |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          $ref: '#/components/schemas/Kuvaus'
+      |          description: Koulutuksen apurahatiedot
+      |          $ref: '#/components/schemas/Apuraha'
       |        suunniteltuKestoVuodet:
       |          type: integer
       |          description: "Koulutuksen suunniteltu kesto vuosina"
