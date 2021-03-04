@@ -243,6 +243,12 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
         ).flatten
         case _ => Seq()
       }
+    val kuvaus: Map[Kieli, String] =
+      joinKieliMaps(
+        (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
+        (result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
+        isHtml = true
+      )
     val metadata: KoulutusMetadata =
       koulutustyyppi match {
         case Amk => AmmattikorkeakouluKoulutusMetadata(
@@ -253,7 +259,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}"),
           kuvauksenNimi = opetuskielet.flatten.map(k => k -> "").toMap)
         case Yo => YliopistoKoulutusMetadata(
-          kuvaus = Map(),
+          kuvaus = kuvaus,
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
