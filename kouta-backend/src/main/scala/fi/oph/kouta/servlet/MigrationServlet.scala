@@ -26,7 +26,18 @@ import scala.util.{Failure, Success, Try}
 
  * Migrate haku:
 
+ * Korkeakoulujen yhteishaku syksy 2020
  var hakukohteet = await f("/kouta-backend/migration/haku/1.2.246.562.29.98666182252")
+
+ * or
+
+ * Korkeakoulujen kevään 2021 ensimmäinen yhteishaku
+ var hakukohteet = await f("/kouta-backend/migration/haku/1.2.246.562.29.72389663526")
+
+ * or
+
+ * Korkeakoulujen kevään 2021 toinen yhteishaku
+ var hakukohteet = await f("/kouta-backend/migration/haku/1.2.246.562.29.98117005904")
 
  * Migrate hakukohteet:
 
