@@ -181,15 +181,20 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None), "maksunMaara", missingMsg)
   }
 
-//  it should "fail if onkoStipendia is missing in a julkaistu opetus" in {
-//    passesValidation(Tallennettu, opetus.copy(onkoStipendia = None))
-//    failsValidation(Julkaistu, opetus.copy(onkoStipendia = None), "onkoStipendia", missingMsg)
-//  }
-
-//  it should "fail if a julkaistu, stipendillinen opetus is missing stipendinMaara" in {
-//    passesValidation(Tallennettu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None))
-//    failsValidation(Julkaistu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None), "stipendinMaara", missingMsg)
-//  }
+  it should "fail if a julkaistu, stipendillinen opetus is missing stipendinMaara" in {
+    passesValidation(Tallennettu, opetus.copy(onkoApuraha = true, apuraha = Some(apuraha.copy(min = None))))
+    passesValidation(Tallennettu, opetus.copy(onkoApuraha = true, apuraha = Some(apuraha.copy(max = None))))
+    failsValidation(Julkaistu, opetus.copy(
+      onkoApuraha = true,
+      apuraha = Some(apuraha.copy(
+        min = None,
+        kuvaus = Map(Fi -> "", Sv -> "")))), "apuraha.min", missingMsg)
+    failsValidation(Julkaistu, opetus.copy(
+      onkoApuraha = true,
+      apuraha = Some(
+        apuraha.copy(max = None, kuvaus
+          = Map(Fi -> "", Sv -> "")))), "apuraha.max", missingMsg)
+  }
 
   it should "fail if lisatiedot are invalid" in {
     val lisatieto = Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",

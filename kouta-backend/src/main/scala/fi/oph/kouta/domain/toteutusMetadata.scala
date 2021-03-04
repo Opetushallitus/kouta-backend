@@ -497,6 +497,8 @@ case class Apuraha(min: Option[Int],
     validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+      assertNotOptional(min, s"$path.min"),
+      assertNotOptional(max, s"$path.max")
     ))
   )
 }
