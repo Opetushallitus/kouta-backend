@@ -803,7 +803,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   private def hakutietoHaku(oid:String) = {
     val params = haut(oid)
     val kielivalinta = toKielivalinta(params)
-    val (alkamiskausiKoodiUri, alkamisvuosi) = getAlkamiskausiInfoFromHakuMetadata(params)
     val koulutuksenAlkamiskausi = getAlkamiskausiFromHakuMetadata(params)
 
     HakutietoHaku(
