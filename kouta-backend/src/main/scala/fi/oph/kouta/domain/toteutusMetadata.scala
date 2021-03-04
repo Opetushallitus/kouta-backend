@@ -468,8 +468,8 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
 }
 
 
-case class Apuraha(min: Double,
-                   max: Double,
+case class Apuraha(min: Int,
+                   max: Int,
                    yksikko: Apurahayksikko,
                    kuvaus: Kielistetty = Map())
 
