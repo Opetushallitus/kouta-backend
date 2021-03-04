@@ -216,8 +216,8 @@ class MigrationServlet(koulutusService: KoulutusService,
 
           for(vk <- saved._1.valintakokeet;
               (id, old) <- valintakokeet) {
-            if(old.nimi.equals(vk.nimi)) {
-              Try(db.insertOidMapping(id, vk.id.get.toString))
+            if(old.nimi.equals(vk.nimi) && db.findMappedOid(id).isEmpty) {
+              db.insertOidMapping(id, vk.id.get.toString)
             }
           }
         }
