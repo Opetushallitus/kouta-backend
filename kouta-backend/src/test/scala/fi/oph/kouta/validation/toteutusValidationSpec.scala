@@ -188,7 +188,7 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None), "maksunMaara", missingMsg)
   }
 
-  it should "fail if a julkaistu, stipendillinen opetus is missing stipendinMaara" in {
+  it should "fail if a julkaistu apuraha is missing min or max" in {
     passesValidation(Tallennettu, opetus.copy(onkoApuraha = true, apuraha = Some(apuraha.copy(min = None))))
     passesValidation(Tallennettu, opetus.copy(onkoApuraha = true, apuraha = Some(apuraha.copy(max = None))))
     failsValidation(Julkaistu, opetus.copy(
