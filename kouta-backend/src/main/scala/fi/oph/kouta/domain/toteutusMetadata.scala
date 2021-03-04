@@ -487,10 +487,22 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
 }
 
 
-case class Apuraha(min: Int,
-                   max: Int,
+case class Apuraha(min: Option[Int],
+                   max: Option[Int],
                    yksikko: Apurahayksikko,
-                   kuvaus: Kielistetty = Map())
+                   kuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateMinMax(min, max, s"$path.min"),
+    validateIfDefined[Int](min, assertNotNegative(_, s"$path.min")),
+    validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+    ))
+  )
+}
+
+//TODO jos prosentti, ei saa max olla yli 100
+
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetuskieletKuvaus: Kielistetty = Map(),
@@ -514,6 +526,9 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
     validateIfNonEmpty[String](opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit", assertMatch(_, OpetustapaKoodiPattern, _)),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausiUUSI")), //Feature flag KTO-1036
+
+    validateIfDefined[Apuraha](apuraha, _.validate(tila, kielivalinta, s"$path.apuraha")),
+
     validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Double](maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
     validateIfDefined[Int](suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),
@@ -522,6 +537,9 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       assertNotEmpty(opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit"),
       assertNotEmpty(opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit"),
       assertNotEmpty(opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit"),
+
+      validateIfTrue(onkoApuraha, assertNotOptional(apuraha, s"$path.apuraha")),
+
       validateOptionalKielistetty(kielivalinta, opetuskieletKuvaus, s"$path.opetuskieletKuvaus"),
       validateOptionalKielistetty(kielivalinta, opetusaikaKuvaus, s"$path.opetusaikaKuvaus"),
       validateOptionalKielistetty(kielivalinta, opetustapaKuvaus, s"$path.opetustapaKuvaus"),

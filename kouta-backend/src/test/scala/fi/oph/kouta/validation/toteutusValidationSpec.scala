@@ -123,6 +123,8 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
   val past: LocalDateTime = TestData.inPast(1000)
   val moreInPast: LocalDateTime = TestData.inPast(9000)
 
+  val apuraha: Apuraha = Apuraha(min = Some(50), max = Some(70), yksikko = Prosentti, kuvaus = Map(Fi -> "kuvaus"))
+
   "Opetus validation" should "pass a valid opetus" in {
     passesValidation(Julkaistu, opetus)
   }
@@ -157,13 +159,13 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     passesValidation(Tallennettu, opetus.copy(maksullisuusKuvaus = Map(Fi -> "kuvaus")))
     failsValidation(Julkaistu, opetus.copy(maksullisuusKuvaus = Map(Fi -> "kuvaus")), "maksullisuusKuvaus", invalidKielistetty(Seq(Sv)))
 
-//    passesValidation(Tallennettu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")))
-//    failsValidation(Julkaistu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")), "stipendinKuvaus", invalidKielistetty(Seq(Sv)))
+    passesValidation(Tallennettu, opetus.copy(apuraha = Some(apuraha)))
+    failsValidation(Julkaistu, opetus.copy(apuraha = Some(apuraha)), "apuraha.kuvaus", invalidKielistetty(Seq(Sv)))
   }
 
-//  it should "fail if stipendinMaara is negative" in {
-//    failsValidation(Tallennettu, opetus.copy(stipendinMaara = Some(-2)), "stipendinMaara", notNegativeMsg)
-//  }
+  it should "fail if apuraha is negative" in {
+    failsValidation(Tallennettu, opetus.copy(apuraha = Some(apuraha.copy(min = Some(-10)))), "apuraha.min", notNegativeMsg)
+  }
 
   it should "fail if onkoMaksullinen is missing in a julkaistu opetus" in {
     passesValidation(Tallennettu, opetus.copy(onkoMaksullinen = None))
