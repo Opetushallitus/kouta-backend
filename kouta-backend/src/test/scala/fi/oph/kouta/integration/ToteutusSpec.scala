@@ -494,55 +494,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  val correctJson: String = """{
-    "oid": "1.2.246.562.17.00000000000000000067",
-    "koulutusOid": "1.2.246.562.13.00000000000000000167",
-    "tila": "tallennettu",
-    "tarjoajat": [],
-    "nimi": {
-      "fi": "Metalliseppäalan osaamisala, pk (Taideteollisuusalan perustutkinto)"
-    },
-    "metadata": {
-      "tyyppi": "amm",
-      "kuvaus": {},
-      "osaamisalat": [],
-      "opetus": {
-      "opetuskieliKoodiUrit": [
-      "oppilaitoksenopetuskieli_1#1",
-      "oppilaitoksenopetuskieli_2#1"
-      ],
-      "opetuskieletKuvaus": {},
-      "opetusaikaKoodiUrit": [
-      "opetusaikakk_1#1"
-      ],
-      "opetusaikaKuvaus": {},
-      "opetustapaKoodiUrit": [],
-      "opetustapaKuvaus": {},
-      "onkoMaksullinen": false,
-      "maksullisuusKuvaus": {},
-      "alkamisaikaKuvaus": {},
-      "lisatiedot": [],
-      "onkoStipendia": false,
-      "stipendinKuvaus": {}
-    },
-      "asiasanat": [],
-      "ammattinimikkeet": []
-    },
-    "muokkaaja": "1.2.246.562.24.87917166937",
-    "organisaatioOid": "1.2.246.562.10.53642770753",
-    "kielivalinta": [
-    "fi",
-    "sv",
-    "en"
-    ],
-    "modified": "2019-10-29T15:21"
-  }"""
-
-  it should "extract toteutus from JSON of correct form" in {
-    val toteutus: Toteutus = ToteutusJsonMethods.extractJsonString(correctJson)
-    toteutus.metadata.isDefined shouldBe true
-  }
-
   val incorrectJson: String = """{
     "oid": "1.2.246.562.17.00000000000000000067",
     "koulutusOid": "1.2.246.562.13.00000000000000000167",
