@@ -157,13 +157,13 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     passesValidation(Tallennettu, opetus.copy(maksullisuusKuvaus = Map(Fi -> "kuvaus")))
     failsValidation(Julkaistu, opetus.copy(maksullisuusKuvaus = Map(Fi -> "kuvaus")), "maksullisuusKuvaus", invalidKielistetty(Seq(Sv)))
 
-    passesValidation(Tallennettu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")))
-    failsValidation(Julkaistu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")), "stipendinKuvaus", invalidKielistetty(Seq(Sv)))
+//    passesValidation(Tallennettu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")))
+//    failsValidation(Julkaistu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")), "stipendinKuvaus", invalidKielistetty(Seq(Sv)))
   }
 
-  it should "fail if stipendinMaara is negative" in {
-    failsValidation(Tallennettu, opetus.copy(stipendinMaara = Some(-2)), "stipendinMaara", notNegativeMsg)
-  }
+//  it should "fail if stipendinMaara is negative" in {
+//    failsValidation(Tallennettu, opetus.copy(stipendinMaara = Some(-2)), "stipendinMaara", notNegativeMsg)
+//  }
 
   it should "fail if onkoMaksullinen is missing in a julkaistu opetus" in {
     passesValidation(Tallennettu, opetus.copy(onkoMaksullinen = None))
@@ -179,15 +179,15 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None), "maksunMaara", missingMsg)
   }
 
-  it should "fail if onkoStipendia is missing in a julkaistu opetus" in {
-    passesValidation(Tallennettu, opetus.copy(onkoStipendia = None))
-    failsValidation(Julkaistu, opetus.copy(onkoStipendia = None), "onkoStipendia", missingMsg)
-  }
+//  it should "fail if onkoStipendia is missing in a julkaistu opetus" in {
+//    passesValidation(Tallennettu, opetus.copy(onkoStipendia = None))
+//    failsValidation(Julkaistu, opetus.copy(onkoStipendia = None), "onkoStipendia", missingMsg)
+//  }
 
-  it should "fail if a julkaistu, stipendillinen opetus is missing stipendinMaara" in {
-    passesValidation(Tallennettu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None))
-    failsValidation(Julkaistu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None), "stipendinMaara", missingMsg)
-  }
+//  it should "fail if a julkaistu, stipendillinen opetus is missing stipendinMaara" in {
+//    passesValidation(Tallennettu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None))
+//    failsValidation(Julkaistu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None), "stipendinMaara", missingMsg)
+//  }
 
   it should "fail if lisatiedot are invalid" in {
     val lisatieto = Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
