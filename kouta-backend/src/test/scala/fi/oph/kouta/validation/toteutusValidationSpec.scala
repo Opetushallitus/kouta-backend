@@ -167,6 +167,13 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Tallennettu, opetus.copy(apuraha = Some(apuraha.copy(min = Some(-10)))), "apuraha.min", notNegativeMsg)
   }
 
+  it should "fail if yksikko is prosentti and max is more than 100" in {
+    val prosentti = 120
+    val maxProsentti = 100
+    failsValidation(Tallennettu, opetus.copy(
+      apuraha = Some(apuraha.copy(yksikko = Prosentti, max = Some(prosentti)))), "apuraha.max", lessOrEqualMsg(prosentti, maxProsentti))
+  }
+
   it should "fail if onkoMaksullinen is missing in a julkaistu opetus" in {
     passesValidation(Tallennettu, opetus.copy(onkoMaksullinen = None))
     failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = None), "onkoMaksullinen", missingMsg)

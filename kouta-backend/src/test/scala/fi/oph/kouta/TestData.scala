@@ -409,8 +409,8 @@ object TestData {
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
     onkoApuraha = true,
     apuraha = Some(Apuraha(
-      min = 100,
-      max = 200,
+      min = Some(100),
+      max = Some(200),
       yksikko = Euro,
       kuvaus = Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"),
     )),

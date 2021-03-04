@@ -495,6 +495,7 @@ case class Apuraha(min: Option[Int],
     validateMinMax(min, max, s"$path.min"),
     validateIfDefined[Int](min, assertNotNegative(_, s"$path.min")),
     validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
+    validateIfTrue(yksikko == Prosentti, validateIfDefined(max, assertLessOrEqual(_, 100, s"$path.max"))),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
       assertNotOptional(min, s"$path.min"),
@@ -502,9 +503,6 @@ case class Apuraha(min: Option[Int],
     ))
   )
 }
-
-//TODO jos prosentti, ei saa max olla yli 100
-
 
 case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetuskieletKuvaus: Kielistetty = Map(),

@@ -20,6 +20,7 @@ object Validations {
   def validationMsg(value: String) = s"'${value}' ei ole validi"
   val missingMsg = s"Pakollinen tieto puuttuu"
   val notNegativeMsg = s"ei voi olla negatiivinen"
+  def lessOrEqualMsg(value: Long, comparedValue: Long) = s"$value saa olla pienempi kuin $comparedValue"
   def invalidKielistetty(values: Seq[Kieli]) = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]"
   def invalidTutkintoonjohtavuus(tyyppi: String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
   def invalidUrl(url: String) = s"'${url}' ei ole validi URL"
@@ -69,6 +70,7 @@ object Validations {
   def assertTrue(b: Boolean, path: String, msg: String): IsValid = if (b) NoErrors else error(path, msg)
   def assertNotNegative(i: Long, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertNotNegative(i: Double, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
+  def assertLessOrEqual(i: Int, x: Int, path: String): IsValid = assertTrue(i <= x, path, lessOrEqualMsg(i, x))
   def assertMatch(value: String, pattern: Pattern, path: String): IsValid = assertTrue(pattern.matcher(value).matches(), path, validationMsg(value))
   def assertValid(oid: Oid, path: String): IsValid = assertTrue(oid.isValid, path, validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
