@@ -110,7 +110,16 @@ class MigrationServlet(koulutusService: KoulutusService,
     } else {
       Try(put(obj)) match {
         case Success(value) =>
-          db.insertOidMapping(originalOid.toString, value.toString)
+          db.findMappedOid(originalOid.toString) match {
+            case Some(existing) =>
+              if(existing.equals(value.toString)) {
+                logger.debug(s"Mapping already existed! ${originalOid.toString} -> ${value.toString}")
+              } else {
+                throw new RuntimeException(s"Mapping ${originalOid.toString} -> ${existing} exists, but tried to add mapping ${originalOid.toString} -> ${value.toString}!")
+              }
+            case None =>
+              db.insertOidMapping(originalOid.toString, value.toString)
+          }
           value.toString
         case Failure(e) =>
           logger.error(s"Exception migrating $originalOid!", e)
