@@ -74,6 +74,14 @@ object Validations {
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
+  def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
+    assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))
+
+  def assertValidUrl(url: String, path: String): IsValid = assertTrue(urlValidator.isValid(url), path, invalidUrl(url))
+  def assertValidEmail(email: String, path: String): IsValid = assertTrue(emailValidator.isValid(email), path, invalidEmail(email))
+
+  def assertInFuture(date: LocalDateTime, path: String): IsValid =
+    assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
   def validateIfDefined[T](value: Option[T], f: (T) => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
@@ -103,9 +111,6 @@ object Validations {
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
 
-  def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
-    assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))
-
   def validateHakulomake(hakulomaketyyppi: Option[Hakulomaketyyppi],
                          hakulomakeAtaruId: Option[UUID],
                          hakulomakeKuvaus: Kielistetty,
@@ -119,9 +124,6 @@ object Validations {
     case Some(EiSähköistä) => validateOptionalKielistetty(kielivalinta, hakulomakeKuvaus, "hakulomakeKuvaus")
     case _ => NoErrors
   }
-
-  def assertValidUrl(url: String, path: String): IsValid = assertTrue(urlValidator.isValid(url), path, invalidUrl(url))
-  def assertValidEmail(email: String, path: String): IsValid = assertTrue(emailValidator.isValid(email), path, invalidEmail(email))
 
   def validateKoulutusPaivamaarat(koulutuksenAlkamispaivamaara: Option[LocalDateTime],
                                   koulutuksenPaattymispaivamaara: Option[LocalDateTime],
@@ -137,9 +139,6 @@ object Validations {
     case (Some(min), Some(max)) => assertTrue(n.toDouble(min) <= n.toDouble(max), minPath, minmaxMsg(min, max))
     case _ => NoErrors
   }
-
-  def assertInFuture(date: LocalDateTime, path: String): IsValid =
-    assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
   def validateDependency(validatableTila: Julkaisutila,
                          dependencyTila: Option[Julkaisutila],
