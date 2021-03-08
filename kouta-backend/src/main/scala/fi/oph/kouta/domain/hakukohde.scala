@@ -4,8 +4,8 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 package object hakukohde {
 
@@ -159,7 +159,7 @@ package object hakukohde {
       |           type: string
       |           format: date-time
       |           description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val HakukohdeListItemModel: String =
@@ -213,7 +213,7 @@ package object hakukohde {
       |           type: string
       |           format: date-time
       |           description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val HakukohdeMetadataModel: String =
@@ -321,7 +321,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[LocalDateTime]) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
+                     modified: Option[Modified]) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -359,7 +359,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 
   def withOid(oid: HakukohdeOid): Hakukohde = copy(oid = Some(oid))
 
-  override def withModified(modified: LocalDateTime): Hakukohde = copy(modified = Some(modified))
+  override def withModified(modified: Modified): Hakukohde = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
 }
@@ -419,4 +419,4 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              jarjestyspaikkaOid: Option[OrganisaatioOid],
                              organisaatioOid: OrganisaatioOid,
                              muokkaaja: UserOid,
-                             modified: LocalDateTime) extends OidListItem
+                             modified: Modified) extends OidListItem

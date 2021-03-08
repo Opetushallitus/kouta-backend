@@ -1,6 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -77,7 +76,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
       toteutus.tarjoajat, toteutus.organisaatioOid, toteutus.muokkaaja, modified)
   }
 
-  def readToteutusModified(oid: String): LocalDateTime = readToteutusModified(ToteutusOid(oid))
-  def readToteutusModified(oid: ToteutusOid): LocalDateTime =
+  def readToteutusModified(oid: String): Modified = readToteutusModified(ToteutusOid(oid))
+  def readToteutusModified(oid: ToteutusOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(ToteutusDAO.selectLastModified(oid)).get)
 }

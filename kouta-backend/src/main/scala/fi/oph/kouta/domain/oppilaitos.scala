@@ -1,7 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
-
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
@@ -59,7 +57,7 @@ package object oppilaitos {
       |           type: string
       |           format: date-time
       |           description: Oppilaitoksen kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val OppilaitosMetadataModel =
@@ -157,7 +155,7 @@ package object oppilaitos {
       |           type: string
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val OppilaitoksenOsaMetadataModel =
@@ -217,7 +215,7 @@ package object oppilaitos {
       |           type: string
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val YhteystietoModel =
@@ -270,7 +268,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       muokkaaja: UserOid,
                       teemakuva: Option[String] = None,
                       logo: Option[String] = None,
-                      modified: Option[LocalDateTime] = None)
+                      modified: Option[Modified] = None)
   extends Validatable
     with AuthorizableEntity[Oppilaitos]
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
@@ -293,7 +291,7 @@ case class Oppilaitos(oid: OrganisaatioOid,
 
   override def withTeemakuva(teemakuva: Option[String]): Oppilaitos = copy(teemakuva = teemakuva)
 
-  override def withModified(modified: LocalDateTime): Oppilaitos = copy(modified = Some(modified))
+  override def withModified(modified: Modified): Oppilaitos = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Oppilaitos = this.copy(muokkaaja = oid)
 }
@@ -307,7 +305,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             teemakuva: Option[String] = None,
-                            modified: Option[LocalDateTime] = None)
+                            modified: Option[Modified] = None)
   extends Validatable
     with AuthorizableEntity[OppilaitoksenOsa]
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
@@ -330,7 +328,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
 
   override def withTeemakuva(teemakuva: Option[String]): OppilaitoksenOsa = copy(teemakuva = teemakuva)
 
-  override def withModified(modified: LocalDateTime): OppilaitoksenOsa = copy(modified = Some(modified))
+  override def withModified(modified: Modified): OppilaitoksenOsa = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = oid)
 }
@@ -385,7 +383,7 @@ case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
                                     tila: Julkaisutila,
                                     organisaatioOid: OrganisaatioOid,
                                     muokkaaja: UserOid,
-                                    modified: LocalDateTime)
+                                    modified: Modified)
 
 case class Yhteystieto(osoite: Option[Osoite] = None,
                        wwwSivu: Kielistetty = Map(),

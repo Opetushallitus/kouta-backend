@@ -307,7 +307,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
       val koulutus = read[Koulutus](body)
       koulutus.modified.isDefined should be(true)
-      val modifiedInstant = koulutus.modified.get.atZone(ZoneId.of("Europe/Helsinki")).toInstant
+      val modifiedInstant = koulutus.modified.get.value.atZone(ZoneId.of("Europe/Helsinki")).toInstant
 
       Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(5)) should equal(1)
       Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(15)) should equal(-1)
