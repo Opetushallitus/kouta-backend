@@ -1,11 +1,10 @@
 package fi.oph.kouta.integration.fixture
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Julkaisutila, Sorakuvaus, SorakuvausListItem}
+import fi.oph.kouta.domain.{Julkaisutila, Modified, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.SorakuvausDAO
@@ -56,7 +55,7 @@ trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
       sorakuvaus.organisaatioOid, sorakuvaus.muokkaaja, modified)
   }
 
-  def readSorakuvausModified(id: String): LocalDateTime = readSorakuvausModified(UUID.fromString(id))
-  def readSorakuvausModified(id: UUID): LocalDateTime =
+  def readSorakuvausModified(id: String): Modified = readSorakuvausModified(UUID.fromString(id))
+  def readSorakuvausModified(id: UUID): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(SorakuvausDAO.selectLastModified(id)).get)
 }

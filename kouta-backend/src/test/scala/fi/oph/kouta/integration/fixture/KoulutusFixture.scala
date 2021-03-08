@@ -1,6 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.auditlog.AuditLog
@@ -83,8 +82,8 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
     new KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
   }
 
-  def readKoulutusModified(oid: String): LocalDateTime = readKoulutusModified(KoulutusOid(oid))
-  def readKoulutusModified(oid: KoulutusOid): LocalDateTime =
+  def readKoulutusModified(oid: String): Modified = readKoulutusModified(KoulutusOid(oid))
+  def readKoulutusModified(oid: KoulutusOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(KoulutusDAO.selectLastModified(oid)).get)
 }
 

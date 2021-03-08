@@ -5,7 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Hakulomaketyyppi, Toteutus, ToteutusListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
+import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -54,7 +54,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       tt <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
       l <- selectLastModified(oid)
     } yield (t, tt, l)).get match {
-      case (Some(t), tt, Some(l)) => Some((t.copy(modified = Some(instantToLocalDateTime(l)), tarjoajat = tt.map(_.tarjoajaOid).toList), l))
+      case (Some(t), tt, Some(l)) => Some((t.copy(modified = Some(instantToModified(l)), tarjoajat = tt.map(_.tarjoajaOid).toList), l))
       case _ => None
     }
   }

@@ -513,7 +513,7 @@ package object domain {
     val tila: Julkaisutila
     val organisaatioOid: OrganisaatioOid
     val muokkaaja: UserOid
-    val modified: LocalDateTime
+    val modified: Modified
   }
 
   abstract class IdListItem {
@@ -522,7 +522,7 @@ package object domain {
     val tila: Julkaisutila
     val organisaatioOid: OrganisaatioOid
     val muokkaaja: UserOid
-    val modified: LocalDateTime
+    val modified: Modified
   }
 
   case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) extends ValidatableSubEntity {
@@ -602,8 +602,9 @@ package object domain {
   }
 
   trait HasModified[T] {
-    def modified: Option[LocalDateTime]
-    def withModified(modified: LocalDateTime): T
-    def withModified(modified: Instant): T = withModified(TimeUtils.instantToLocalDateTime(modified))
+    def modified: Option[Modified]
+    def withModified(modified: Modified): T
+    def withModified(modified: Instant): T = withModified(TimeUtils.instantToModified(modified))
+    def withModified(modified: LocalDateTime): T = withModified(Modified(modified))
   }
 }

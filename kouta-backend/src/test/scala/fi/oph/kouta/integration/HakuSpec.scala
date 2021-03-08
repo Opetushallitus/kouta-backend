@@ -3,8 +3,8 @@ package fi.oph.kouta.integration
 import java.time.{Instant, LocalDateTime}
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.client.HaunOhjausparametrit
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.client.HaunOhjausparametrit
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
@@ -191,7 +191,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
     MockAuditLogger.clean()
-    update(thisHaku.copy(tila = Arkistoitu, modified = Some(LocalDateTime.parse("1000-01-01T12:00:00"))), lastModified)
+    update(thisHaku.copy(tila = Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "haku_update") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }
