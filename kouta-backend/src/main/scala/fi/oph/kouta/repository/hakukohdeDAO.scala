@@ -7,7 +7,7 @@ import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToLocalDateTime
+import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -57,7 +57,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       l <- selectLastModified(oid)
     } yield (h, a, k, i, l) ).get match {
       case (Some(h), a, k, i, Some(l)) => Some((h.copy(
-        modified = Some(instantToLocalDateTime(l)),
+        modified = Some(instantToModified(l)),
         hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
         valintakokeet = k.toList,
         liitteet = i.toList), l))

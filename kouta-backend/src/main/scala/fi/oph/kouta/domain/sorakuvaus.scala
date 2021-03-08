@@ -1,12 +1,11 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableByKoulutustyyppi
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 package object sorakuvaus {
 
@@ -79,7 +78,7 @@ package object sorakuvaus {
       |           type: string
       |           format: date-time
       |           description: SORA-kuvauksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val SorakuvausListItemModel =
@@ -114,7 +113,7 @@ package object sorakuvaus {
       |           type: string
       |           format: date-time
       |           description: SORA-kuvauksen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55
+      |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
   def models = List(SorakuvausModel, SorakuvausListItemModel)
@@ -128,14 +127,14 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[LocalDateTime]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableByKoulutustyyppi[Sorakuvaus] {
+                      modified: Option[Modified]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableByKoulutustyyppi[Sorakuvaus] {
   override def validate(): IsValid = and(
     super.validate(),
     validateIfDefined[SorakuvausMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
   )
 
-  override def withModified(modified: LocalDateTime): Sorakuvaus = copy(modified = Some(modified))
+  override def withModified(modified: Modified): Sorakuvaus = copy(modified = Some(modified))
 
   override def withId(id: UUID): Sorakuvaus = copy(id = Some(id))
 
@@ -159,4 +158,4 @@ case class SorakuvausListItem(id: UUID,
                               tila: Julkaisutila,
                               organisaatioOid: OrganisaatioOid,
                               muokkaaja: UserOid,
-                              modified: LocalDateTime) extends IdListItem
+                              modified: Modified) extends IdListItem

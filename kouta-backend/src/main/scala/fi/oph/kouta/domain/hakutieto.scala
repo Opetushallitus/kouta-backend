@@ -1,6 +1,5 @@
 package fi.oph.kouta.domain
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
@@ -74,7 +73,7 @@ package object hakutieto {
       |                type: string
       |                format: date-time
       |                description: Haun viimeisin muokkausaika. Järjestelmän generoima
-      |                example: 2019-08-23T09:55
+      |                example: 2019-08-23T09:55:17
       |              hakukohteet:
       |                type: array
       |                description: Hakuun liittyvien hakukohteiden hakutiedot
@@ -176,7 +175,7 @@ package object hakutieto {
       |                       type: string
       |                       format: date-time
       |                       description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
-      |                       example: 2019-08-23T09:55
+      |                       example: 2019-08-23T09:55:17
       |""".stripMargin
 
   val models = List(HakutietoModel)
@@ -196,7 +195,7 @@ case class HakutietoHaku(hakuOid: HakuOid,
                          organisaatioOid: OrganisaatioOid,
                          hakuajat: Seq[Ajanjakso] = Seq(),
                          muokkaaja: UserOid,
-                         modified: Option[LocalDateTime],
+                         modified: Option[Modified],
                          hakukohteet: Seq[HakutietoHakukohde])
 
 case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
@@ -219,4 +218,4 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               muokkaaja: UserOid,
                               organisaatioOid: OrganisaatioOid,
                               valintatapaKoodiUrit: Seq[String] = Seq(),
-                              modified: Option[LocalDateTime])
+                              modified: Option[Modified])

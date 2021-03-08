@@ -1,6 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.time.LocalDateTime
 import java.util.UUID
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
@@ -62,7 +61,7 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
     HakuListItem(HakuOid(oid), haku.nimi, haku.tila, haku.organisaatioOid, haku.muokkaaja, modified)
   }
 
-  def readHakuModified(oid: String): LocalDateTime = readHakuModified(HakuOid(oid))
-  def readHakuModified(oid: HakuOid): LocalDateTime =
+  def readHakuModified(oid: String): Modified = readHakuModified(HakuOid(oid))
+  def readHakuModified(oid: HakuOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(HakuDAO.selectLastModified(oid)).get)
 }

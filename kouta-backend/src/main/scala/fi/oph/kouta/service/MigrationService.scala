@@ -35,6 +35,7 @@ trait MigrationHelpers extends Logging {
   }
   def mapKieli(entry: (String,String)): Option[(Kieli, String)] = toKieli(entry._1).map(k => (k, entry._2))
   def toLocalDateTime(time : Long): LocalDateTime = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDateTime
+  def toModified(time : Long): Modified = Modified(toLocalDateTime(time))
 
   import java.util.Calendar
 
@@ -262,7 +263,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     organisaatioOid = resolveOrganisationOidForKoulutus(OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String])),
     teemakuva = None,
     ePerusteId = None,
-    modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
+    modified = (result \ "modified").extractOpt[Long].map(toModified))
   }
 
   def parseToteutusFromResult(result: JValue): Toteutus = {
@@ -316,7 +317,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       organisaatioOid = OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String]),
       kielivalinta = opetuskielet.flatten.toSeq,
       teemakuva = None,
-      modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
+      modified = (result \ "modified").extractOpt[Long].map(toModified))
   }
 
   def get(kk: Map[Kieli, String], k: Kieli): String = Seq(k, Fi, Sv, En).flatMap(kk.get).head
@@ -402,7 +403,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       kielivalinta = opetuskielet.flatten,
-      modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime),
+      modified = (result \ "modified").extractOpt[Long].map(toModified),
       pohjakoulutusvaatimusKoodiUrit = pohjakoulutusvaatimus,
       pohjakoulutusvaatimusTarkenne = Map(), // TODO
       muuPohjakoulutusvaatimus = Map(), // TODO
@@ -459,7 +460,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       hakuajat = hakuajat,
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
       kielivalinta = nimi.keySet.toSeq,
-      modified = (result \ "modified").extractOpt[Long].map(toLocalDateTime))
+      modified = (result \ "modified").extractOpt[Long].map(toModified))
 
   }
 
