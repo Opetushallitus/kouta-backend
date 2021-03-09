@@ -1,9 +1,10 @@
-import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.config.{KoutaConfiguration, KoutaConfigurationFactory}
 import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.servlet._
 import fi.oph.kouta.SwaggerServlet
 import fi.oph.kouta.auditlog.AuditLog
 import fi.vm.sade.utils.slf4j.Logging
+
 import javax.servlet.ServletContext
 import org.scalatra._
 
@@ -13,6 +14,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     super.init(context)
 
     KoutaConfigurationFactory.init()
+    val config: KoutaConfiguration = KoutaConfigurationFactory.configuration
     KoutaDatabase.init()
     AuditLog.init()
 
@@ -34,7 +36,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context.mount(new IndexerServlet(), "/indexer", "indexer")
     context.mount(new ExternalServlet(), "/external", "external")
     context.mount(new SwaggerServlet, "/swagger")
-//    context.mount(new MigrationServlet(), "/migration", "migration")
+    if(config.migrationConfiguration.enabled) context.mount(new MigrationServlet(), "/migration", "migration")
   }
 
   override def destroy(context: ServletContext): Unit = {
