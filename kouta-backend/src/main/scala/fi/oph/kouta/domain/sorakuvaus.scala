@@ -9,7 +9,7 @@ import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 package object sorakuvaus {
 
-  val SorakuvausModel =
+  val SorakuvausModel: String =
     """    Sorakuvaus:
       |      type: object
       |      properties:
@@ -81,7 +81,7 @@ package object sorakuvaus {
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
-  val SorakuvausListItemModel =
+  val SorakuvausListItemModel: String =
     """    SorakuvausListItem:
       |      type: object
       |      properties:
