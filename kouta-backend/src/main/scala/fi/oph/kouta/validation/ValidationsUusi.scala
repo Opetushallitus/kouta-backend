@@ -18,11 +18,11 @@ object ValidationsUusi {
   def and(validations: IsValid*): IsValid = validations.flatten.distinct
   def or(first: IsValid, second: IsValid): IsValid = if (first.isEmpty) second else first
 
-  def validationMsg(value: String) = s"'${value}' ei ole validi"
-  val missingMsg = s"Pakollinen tieto puuttuu"
-  val notNegativeMsg = s"ei voi olla negatiivinen"
-  def invalidKielistetty(values: Seq[Kieli]) = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]"
-  def invalidTutkintoonjohtavuus(tyyppi: String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
+  def validationMsg(value: String) = ErrorMessage(msg = s"'$value' ei ole validi", id = "validationMsg")
+  val missingMsg = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg")
+  val notNegativeMsg = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
+  def invalidKielistetty(values: Seq[Kieli]) = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
+  def invalidTutkintoonjohtavuus(tyyppi: String) = ErrorMessage(msg = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String) = s"'${url}' ei ole validi URL"
   def invalidEmail(email: String) = s"'${email}' ei ole validi email"
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
