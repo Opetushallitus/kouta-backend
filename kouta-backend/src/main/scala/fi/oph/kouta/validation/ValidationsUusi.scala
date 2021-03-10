@@ -23,11 +23,11 @@ object ValidationsUusi {
   val notNegativeMsg: ErrorMessage = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage = ErrorMessage(msg = s"Koulutuksen tyyppiä $tyyppi pitäisi olla tutkintoon johtavaa", id = "invalidTutkintoonjohtavuus")
-  def invalidUrl(url: String) = s"'$url' ei ole validi URL"
-  def invalidEmail(email: String) = s"'$email' ei ole validi email"
-  def invalidAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
-  def pastDateMsg(date: LocalDateTime) = s"$date on menneisyydessä"
-  def pastDateMsg(date: String) = s"$date on menneisyydessä"
+  def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
+  def invalidEmail(email: String): ErrorMessage = ErrorMessage(msg = s"'$email' ei ole validi email", id = "invalidEmail")
+  def invalidAjanjaksoMsg(ajanjakso: Ajanjakso): ErrorMessage = ErrorMessage(msg = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen", id = "invalidAjanjaksoMsg")
+  def pastDateMsg(date: LocalDateTime): ErrorMessage = ErrorMessage(msg = s"$date on menneisyydessä", id = "pastDateMsg")
+  def pastDateMsg(date: String): ErrorMessage = ErrorMessage(msg = s"$date on menneisyydessä", id = "pastDateMsg")
   def minmaxMsg(minValue: Any, maxValue: Any) = s"$minValue on suurempi kuin $maxValue"
   def notYetJulkaistu(field: String, id: Any) = s"$field ($id) ei ole vielä julkaistu"
   def nonExistent(field: String, id: Any) = s"$field ($id) ei ole olemassa"
