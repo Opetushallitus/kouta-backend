@@ -441,17 +441,15 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
       assertTrue(paattyy.forall(_.isAfter(alkaa)), path, invalidAjanjaksoMsg(this))
 
-    override def validateOnJulkaisu(path: String): IsValid =
-      paattyy match {
-        case Some(p) => assertInFuture(p, s"$path.paattyy")
-        case _ => error(path, s"$path.paattyy")
-      }
+    override def validateOnJulkaisu(path: String): IsValid = {
+      and(
+        assertNotOptional(paattyy, s"$path.paattyy"),
+        validateIfDefined[LocalDateTime](paattyy, assertInFuture(_, s"$path.paattyy")),
+      )
+    }
 
     def validateOnJulkaisuForJatkuvaHaku(path: String): IsValid =
-      paattyy match {
-        case Some(p) => assertInFuture(p, s"$path.paattyy")
-        case _ => NoErrors
-      }
+      validateIfDefined[LocalDateTime](paattyy, assertInFuture(_, s"$path.paattyy")),
   }
 
   case class Valintakoe(id: Option[UUID] = None,
