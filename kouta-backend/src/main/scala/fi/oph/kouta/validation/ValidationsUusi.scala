@@ -18,13 +18,13 @@ object ValidationsUusi {
   def and(validations: IsValid*): IsValid = validations.flatten.distinct
   def or(first: IsValid, second: IsValid): IsValid = if (first.isEmpty) second else first
 
-  def validationMsg(value: String) = ErrorMessage(msg = s"'$value' ei ole validi", id = "validationMsg")
-  val missingMsg = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg")
-  val notNegativeMsg = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
-  def invalidKielistetty(values: Seq[Kieli]) = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
-  def invalidTutkintoonjohtavuus(tyyppi: String) = ErrorMessage(msg = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa", id = "invalidTutkintoonjohtavuus")
-  def invalidUrl(url: String) = s"'${url}' ei ole validi URL"
-  def invalidEmail(email: String) = s"'${email}' ei ole validi email"
+  def validationMsg(value: String): ErrorMessage = ErrorMessage(msg = s"'$value' ei ole validi", id = "validationMsg")
+  val missingMsg: ErrorMessage = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg")
+  val notNegativeMsg: ErrorMessage = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
+  def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
+  def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage = ErrorMessage(msg = s"Koulutuksen tyyppiä $tyyppi pitäisi olla tutkintoon johtavaa", id = "invalidTutkintoonjohtavuus")
+  def invalidUrl(url: String) = s"'$url' ei ole validi URL"
+  def invalidEmail(email: String) = s"'$email' ei ole validi email"
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
   def pastDateMsg(date: LocalDateTime) = s"$date on menneisyydessä"
   def pastDateMsg(date: String) = s"$date on menneisyydessä"
@@ -76,7 +76,7 @@ object ValidationsUusi {
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
 
-  def validateIfDefined[T](value: Option[T], f: (T) => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
+  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
