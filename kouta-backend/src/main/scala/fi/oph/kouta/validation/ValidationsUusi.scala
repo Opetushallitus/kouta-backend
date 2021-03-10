@@ -28,14 +28,14 @@ object ValidationsUusi {
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso): ErrorMessage = ErrorMessage(msg = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen", id = "invalidAjanjaksoMsg")
   def pastDateMsg(date: LocalDateTime): ErrorMessage = ErrorMessage(msg = s"$date on menneisyydessä", id = "pastDateMsg")
   def pastDateMsg(date: String): ErrorMessage = ErrorMessage(msg = s"$date on menneisyydessä", id = "pastDateMsg")
-  def minmaxMsg(minValue: Any, maxValue: Any) = s"$minValue on suurempi kuin $maxValue"
-  def notYetJulkaistu(field: String, id: Any) = s"$field ($id) ei ole vielä julkaistu"
-  def nonExistent(field: String, id: Any) = s"$field ($id) ei ole olemassa"
-  def notMissingMsg(value: Any) = s"Arvo $value ei saisi olla määritelty"
-  def tyyppiMismatch(field: String, id: Any) = s"Tyyppi ei vastaa $field ($id) tyyppiä"
-  def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any) =
-    s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä"
-  def cannotLinkToHakukohde(oid: String) = s"Toteutusta ($oid) ei voi liittää hakukohteeseen"
+  def minmaxMsg(minValue: Any, maxValue: Any): ErrorMessage = ErrorMessage(msg = s"$minValue on suurempi kuin $maxValue", id = "minmaxMsg")
+  def notYetJulkaistu(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"$field ($id) ei ole vielä julkaistu", id = "notYetJulkaistu")
+  def nonExistent(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"$field ($id) ei ole olemassa", id = "nonExistent")
+  def notMissingMsg(value: Any): ErrorMessage = ErrorMessage(msg = s"Arvo $value ei saisi olla määritelty", id = "notMissingMsg")
+  def tyyppiMismatch(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"Tyyppi ei vastaa $field ($id) tyyppiä", id = "tyyppiMismatch")
+  def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any): ErrorMessage =
+    ErrorMessage(msg = s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä", id = "tyyppiMismatch")
+  def cannotLinkToHakukohde(oid: String): ErrorMessage = ErrorMessage(msg = s"Toteutusta ($oid) ei voi liittää hakukohteeseen", id = "cannotLinkToHakukohde")
 
   val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
   val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"
