@@ -26,7 +26,18 @@ import scala.util.{Failure, Success, Try}
 
  * Migrate haku:
 
+ * Korkeakoulujen yhteishaku syksy 2020
  var hakukohteet = await f("/kouta-backend/migration/haku/1.2.246.562.29.98666182252")
+
+ * or
+
+ * Korkeakoulujen kevään 2021 ensimmäinen yhteishaku
+ var hakukohteet = await f("/kouta-backend/migration/haku/1.2.246.562.29.72389663526")
+
+ * or
+
+ * Korkeakoulujen kevään 2021 toinen yhteishaku
+ var hakukohteet = await f("/kouta-backend/migration/haku/1.2.246.562.29.98117005904")
 
  * Migrate hakukohteet:
 
@@ -110,7 +121,16 @@ class MigrationServlet(koulutusService: KoulutusService,
     } else {
       Try(put(obj)) match {
         case Success(value) =>
-          db.insertOidMapping(originalOid.toString, value.toString)
+          db.findMappedOid(originalOid.toString) match {
+            case Some(existing) =>
+              if(existing.equals(value.toString)) {
+                logger.debug(s"Mapping already existed! ${originalOid.toString} -> ${value.toString}")
+              } else {
+                throw new RuntimeException(s"Mapping ${originalOid.toString} -> ${existing} exists, but tried to add mapping ${originalOid.toString} -> ${value.toString}!")
+              }
+            case None =>
+              db.insertOidMapping(originalOid.toString, value.toString)
+          }
           value.toString
         case Failure(e) =>
           logger.error(s"Exception migrating $originalOid!", e)
@@ -207,8 +227,8 @@ class MigrationServlet(koulutusService: KoulutusService,
 
           for(vk <- saved._1.valintakokeet;
               (id, old) <- valintakokeet) {
-            if(old.nimi.equals(vk.nimi)) {
-              Try(db.insertOidMapping(id, vk.id.get.toString))
+            if(old.nimi.equals(vk.nimi) && db.findMappedOid(id).isEmpty) {
+              db.insertOidMapping(id, vk.id.get.toString)
             }
           }
         }
