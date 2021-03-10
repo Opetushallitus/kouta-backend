@@ -23,7 +23,7 @@ where metadata -> 'opetus' ->> 'stipendinMaara' notnull and metadata -> 'opetus'
 
 update toteutukset
 set metadata = jsonb_set(metadata, '{opetus,apuraha,kuvaus}', to_jsonb(metadata -> 'opetus' -> 'stipendinKuvaus'), TRUE)
-where metadata -> 'opetus' ->> 'stipendinKuvaus' notnull;
+where metadata -> 'opetus' ->> 'stipendinMaara' notnull and metadata -> 'opetus' ->> 'onkoStipendia' = 'true';
 
 update toteutukset
 set metadata = metadata #- '{opetus, onkoStipendia}';
