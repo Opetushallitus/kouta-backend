@@ -1,7 +1,6 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
-
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.config.KoutaConfigurationFactory
@@ -12,7 +11,7 @@ import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.validation.ValidationError
+import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
@@ -159,7 +158,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def validationErrorBody(expected: List[ValidationError]): String = "[" + expected.map(_.toString).mkString(",") + "]"
 
-  def validationErrorBody(expected: String, path: String): String = validationErrorBody(List(ValidationError(path, expected)))
+  def validationErrorBody(expected: ErrorMessage, path: String): String = validationErrorBody(List(ValidationError(path, expected)))
 
   def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
 
