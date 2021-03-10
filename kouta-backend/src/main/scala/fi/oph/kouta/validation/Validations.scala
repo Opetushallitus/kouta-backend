@@ -147,7 +147,7 @@ object Validations {
                          dependencyName: String,
                          dependencyIdPath: String): IsValid = {
     dependencyTila.map { tila =>
-      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId))),
+      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId)))
     }.getOrElse(error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId)))
   }
 }
