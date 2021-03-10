@@ -33,12 +33,11 @@ object ValidationsUusi {
   def nonExistent(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"$field ($id) ei ole olemassa", id = "nonExistent")
   def notMissingMsg(value: Any): ErrorMessage = ErrorMessage(msg = s"Arvo $value ei saisi olla määritelty", id = "notMissingMsg")
   def tyyppiMismatch(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"Tyyppi ei vastaa $field ($id) tyyppiä", id = "tyyppiMismatch")
-  def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any): ErrorMessage =
-    ErrorMessage(msg = s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä", id = "tyyppiMismatch")
+  def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any): ErrorMessage = ErrorMessage(msg = s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä", id = "tyyppiMismatch")
   def cannotLinkToHakukohde(oid: String): ErrorMessage = ErrorMessage(msg = s"Toteutusta ($oid) ei voi liittää hakukohteeseen", id = "cannotLinkToHakukohde")
 
-  val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
-  val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"
+  val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen", id = "InvalidKoulutuspaivamaarat")
+  val InvalidMetadataTyyppi: ErrorMessage = ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
 
   val KoulutusKoodiPattern: Pattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val HakutapaKoodiPattern: Pattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
