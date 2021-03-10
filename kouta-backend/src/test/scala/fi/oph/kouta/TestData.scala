@@ -411,7 +411,7 @@ object TestData {
     apuraha = Some(Apuraha(
       min = Some(100),
       max = Some(200),
-      yksikko = Euro,
+      yksikko = Some(Euro),
       kuvaus = Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"),
     )),
     suunniteltuKestoVuodet = Some(3),

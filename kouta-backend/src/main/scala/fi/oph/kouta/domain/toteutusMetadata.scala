@@ -487,15 +487,15 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
 }
 
 
-case class Apuraha(min: Option[Int],
-                   max: Option[Int],
-                   yksikko: Apurahayksikko,
+case class Apuraha(min: Option[Int] = None,
+                   max: Option[Int] = None,
+                   yksikko: Option[Apurahayksikko] = None,
                    kuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateMinMax(min, max, s"$path.min"),
     validateIfDefined[Int](min, assertNotNegative(_, s"$path.min")),
     validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
-    validateIfTrue(yksikko == Prosentti, validateIfDefined(max, assertLessOrEqual(_, 100, s"$path.max"))),
+    validateIfTrue(yksikko.orNull == Prosentti, validateIfDefined(max, assertLessOrEqual(_, 100, s"$path.max"))),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
       assertNotOptional(min, s"$path.min"),

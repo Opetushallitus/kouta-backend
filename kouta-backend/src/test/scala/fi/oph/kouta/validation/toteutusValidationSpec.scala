@@ -123,7 +123,7 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
   val past: LocalDateTime = TestData.inPast(1000)
   val moreInPast: LocalDateTime = TestData.inPast(9000)
 
-  val apuraha: Apuraha = Apuraha(min = Some(50), max = Some(70), yksikko = Prosentti, kuvaus = Map(Fi -> "kuvaus"))
+  val apuraha: Apuraha = Apuraha(min = Some(50), max = Some(70), yksikko = Some(Prosentti), kuvaus = Map(Fi -> "kuvaus"))
 
   "Opetus validation" should "pass a valid opetus" in {
     passesValidation(Julkaistu, opetus)
@@ -171,7 +171,7 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     val prosentti = 120
     val maxProsentti = 100
     failsValidation(Tallennettu, opetus.copy(
-      apuraha = Some(apuraha.copy(yksikko = Prosentti, max = Some(prosentti)))), "apuraha.max", lessOrEqualMsg(prosentti, maxProsentti))
+      apuraha = Some(apuraha.copy(yksikko = Some(Prosentti), max = Some(prosentti)))), "apuraha.max", lessOrEqualMsg(prosentti, maxProsentti))
   }
 
   it should "fail if onkoMaksullinen is missing in a julkaistu opetus" in {
