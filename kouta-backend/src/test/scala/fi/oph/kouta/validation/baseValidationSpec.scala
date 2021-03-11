@@ -22,10 +22,7 @@ abstract class BaseValidationSpec[E <: Validatable] extends ScalatraFlatSpec {
   def passesOnJulkaisuValidation(e: E): Assertion = e.validateOnJulkaisu() shouldEqual NoErrors
 
   def failsOnJulkaisuValidation(e: E, path: String, message: ErrorMessage): Assertion =
-    failsOnJulkaisuValidation(e, (path, message))
-
-  def failsOnJulkaisuValidation( e: E, expected: (String, ErrorMessage), moreExpected: (String, ErrorMessage)*): Assertion =
-    failsOnJulkaisuValidation(e, (expected +: moreExpected).map (ValidationError.tupled) )
+    failsOnJulkaisuValidation(e, List(ValidationError(path, message)))
 
   def failsOnJulkaisuValidation( e: E, expected: Seq[ValidationError]): Assertion =
     e.validateOnJulkaisu() match {
@@ -33,7 +30,6 @@ abstract class BaseValidationSpec[E <: Validatable] extends ScalatraFlatSpec {
       case errors => errors should contain theSameElementsAs expected
     }
 }
-
 
 abstract class SubEntityValidationSpec[E <: ValidatableSubEntity] extends ScalatraFlatSpec {
 
