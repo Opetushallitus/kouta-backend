@@ -74,7 +74,7 @@ object Validations {
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
 
-  def validateIfDefined[T](value: Option[T], f: (T) => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
+  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
