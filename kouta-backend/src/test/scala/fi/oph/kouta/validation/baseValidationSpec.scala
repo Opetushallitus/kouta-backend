@@ -40,7 +40,7 @@ abstract class SubEntityValidationSpec[E <: ValidatableSubEntity] extends Scalat
     failsValidation(tila, e, (path, expected))
 
   def failsValidation(tila: Julkaisutila, e: E, expected: (String, ErrorMessage), moreExpected: (String, ErrorMessage)*): Assertion =
-    failsValidation(tila, e, (expected +: moreExpected).map { case (path, value) => ValidationError(s"$pathPrefix.$path", value) })
+    failsValidation(tila, e, (expected +: moreExpected).map { case (path, error) => ValidationError(s"$pathPrefix.$path", error) })
 
   def failsValidation(tila: Julkaisutila, e: E, expected: Seq[ValidationError]): Assertion =
     e.validate(tila, DefaultKielivalinta, pathPrefix) match {
@@ -56,7 +56,7 @@ abstract class SubEntityValidationSpec[E <: ValidatableSubEntity] extends Scalat
     failsOnJulkaisuValidation(e, (path, expected))
 
   def failsOnJulkaisuValidation( e: E, expected: (String, ErrorMessage), moreExpected: (String, ErrorMessage)*): Assertion =
-    failsOnJulkaisuValidation(e, (expected +: moreExpected).map { case (path, value) => ValidationError(s"$pathPrefix.$path", value) })
+    failsOnJulkaisuValidation(e, (expected +: moreExpected).map{case (path, error) => ValidationError(s"$pathPrefix.$path", error)})
 
   def failsOnJulkaisuValidation( e: E, expected: Seq[ValidationError]): Assertion =
     e.validateOnJulkaisu(pathPrefix) match {
