@@ -20,7 +20,7 @@ object Validations {
   def validationMsg(value: String): ErrorMessage = ErrorMessage(msg = s"'$value' ei ole validi", id = "validationMsg")
   val missingMsg: ErrorMessage = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg")
   val notNegativeMsg: ErrorMessage = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
-  def lessOrEqualMsg(value: Long, comparedValue: Long) = s"$value saa olla pienempi kuin $comparedValue"
+  def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage = ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage = ErrorMessage(msg = s"Koulutuksen tyyppiä $tyyppi pitäisi olla tutkintoon johtavaa", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
