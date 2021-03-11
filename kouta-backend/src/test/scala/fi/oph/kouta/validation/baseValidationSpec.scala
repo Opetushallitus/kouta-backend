@@ -9,10 +9,10 @@ abstract class BaseValidationSpec[E <: Validatable] extends ScalatraFlatSpec {
   def passesValidation(e: E) = e.validate() should equal(NoErrors)
 
   def failsValidation(e: E, path: String, message: ErrorMessage): Assertion =
-    failsValidation(e, (path, message))
+    failsValidation(e, ValidationError(path, message))
 
-  def failsValidation(e: E, expected: (String, ErrorMessage), moreExpected: (String, ErrorMessage)*): Assertion =
-    failsValidation(e, (expected +: moreExpected).map(ValidationError.tupled))
+  def failsValidation(e: E, expected: ValidationError, moreExpected: ValidationError*): Assertion =
+    failsValidation(e, expected +: moreExpected)
 
   def failsValidation(e: E, expected: Seq[ValidationError]): Assertion = e.validate() match {
     case NoErrors => fail("Expecting validation failure, but it succeeded")
