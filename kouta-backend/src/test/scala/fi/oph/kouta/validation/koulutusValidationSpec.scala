@@ -34,7 +34,9 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(koulutusKoodiUri = None), "koulutusKoodiUri", missingMsg)
     failsValidation(amm.copy(koulutusKoodiUri = Some("mummo")), "koulutusKoodiUri", validationMsg("mummo"))
     failsValidation(amm.copy(tarjoajat = List("mummo", "varis", "1.2.3").map(OrganisaatioOid)),
-      ("tarjoajat[0]", validationMsg("mummo")), ("tarjoajat[1]", validationMsg("varis")), ("tarjoajat[2]", validationMsg("1.2.3")))
+      ValidationError("tarjoajat[0]", validationMsg("mummo")),
+      ValidationError("tarjoajat[1]", validationMsg("varis")),
+      ValidationError("tarjoajat[2]", validationMsg("1.2.3")))
     failsValidation(amm.copy(metadata = None), "metadata", missingMsg)
     failsValidation(amm.copy(teemakuva = Some("mummo")), "teemakuva", invalidUrl("mummo"))
   }
@@ -94,7 +96,8 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "return multiple error messages" in {
     failsValidation(min.copy(koulutusKoodiUri = Some("ankka"), oid = Some(KoulutusOid("2017"))),
-      ("koulutusKoodiUri", validationMsg("ankka")), ("oid", validationMsg("2017")))
+      ValidationError("koulutusKoodiUri", validationMsg("ankka")),
+      ValidationError("oid", validationMsg("2017")))
   }
 }
 

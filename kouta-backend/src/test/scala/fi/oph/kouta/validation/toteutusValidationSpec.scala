@@ -35,7 +35,9 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail if julkaistu toteutus is invalid" in {
     failsValidation(amm.copy(tarjoajat = List("mummo", "varis", "1.2.3").map(OrganisaatioOid)),
-      ("tarjoajat[0]", validationMsg("mummo")), ("tarjoajat[1]", validationMsg("varis")), ("tarjoajat[2]", validationMsg("1.2.3")))
+      ValidationError("tarjoajat[0]", validationMsg("mummo")),
+      ValidationError("tarjoajat[1]", validationMsg("varis")),
+      ValidationError("tarjoajat[2]", validationMsg("1.2.3")))
 
     failsValidation(amm.copy(metadata = None), "metadata", missingMsg)
     failsValidation(amm.copy(teemakuva = Some("url")), "teemakuva", invalidUrl("url"))
@@ -86,7 +88,8 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "return multiple error messages" in {
     failsValidation(min.copy(oid = Some(ToteutusOid("kurppa")), koulutusOid = KoulutusOid("Hannu Hanhi")),
-      ("oid", validationMsg("kurppa")), ("koulutusOid", validationMsg("Hannu Hanhi")))
+      ValidationError("oid", validationMsg("kurppa")),
+      ValidationError("koulutusOid", validationMsg("Hannu Hanhi")))
   }
 
   "Ammatillinen osaamisala toteutus validation" should "pass valid toteutus" in {

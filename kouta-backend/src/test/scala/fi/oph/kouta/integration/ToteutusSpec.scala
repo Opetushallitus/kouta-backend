@@ -126,7 +126,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "fail to store toteutus if toteutus tyyppi does not match koulutustyyppi of koulutus" in {
     val toteutus = TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
-    put(ToteutusPath, toteutus, 400, "metadata.tyyppi", s"Tyyppi ei vastaa koulutuksen ($koulutusOid) tyyppiä")
+    put(ToteutusPath, toteutus, 400, "metadata.tyyppi", tyyppiMismatch("koulutuksen", koulutusOid))
   }
 
   it should "fail to store julkaistu toteutus if the koulutus is not yet julkaistu" in {

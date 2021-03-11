@@ -46,7 +46,7 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
 
   it should "return multiple error messages" in {
     failsValidation(max.copy(hakutapaKoodiUri = None, kohdejoukkoKoodiUri = None),
-      ("hakutapaKoodiUri", missingMsg), ("kohdejoukkoKoodiUri", missingMsg))
+      ValidationError("hakutapaKoodiUri", missingMsg), ValidationError("kohdejoukkoKoodiUri", missingMsg))
   }
 }
 

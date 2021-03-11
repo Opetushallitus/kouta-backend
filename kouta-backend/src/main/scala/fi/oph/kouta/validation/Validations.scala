@@ -12,33 +12,32 @@ object Validations {
   private val urlValidator = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
 
-  def error(path: String, msg: String): IsValid = List(ValidationError(path, msg))
+  def error(path: String, msg: ErrorMessage): IsValid = List(ValidationError(path, msg))
 
   def and(validations: IsValid*): IsValid = validations.flatten.distinct
   def or(first: IsValid, second: IsValid): IsValid = if (first.isEmpty) second else first
 
-  def validationMsg(value: String) = s"'${value}' ei ole validi"
-  val missingMsg = s"Pakollinen tieto puuttuu"
-  val notNegativeMsg = s"ei voi olla negatiivinen"
+  def validationMsg(value: String): ErrorMessage = ErrorMessage(msg = s"'$value' ei ole validi", id = "validationMsg")
+  val missingMsg: ErrorMessage = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg")
+  val notNegativeMsg: ErrorMessage = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
   def lessOrEqualMsg(value: Long, comparedValue: Long) = s"$value saa olla pienempi kuin $comparedValue"
-  def invalidKielistetty(values: Seq[Kieli]) = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]"
-  def invalidTutkintoonjohtavuus(tyyppi: String) = s"Koulutuksen tyyppiä ${tyyppi} pitäisi olla tutkintoon johtavaa"
-  def invalidUrl(url: String) = s"'${url}' ei ole validi URL"
-  def invalidEmail(email: String) = s"'${email}' ei ole validi email"
-  def invalidAjanjaksoMsg(ajanjakso: Ajanjakso) = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen"
-  def pastDateMsg(date: LocalDateTime) = s"$date on menneisyydessä"
-  def pastDateMsg(date: String) = s"$date on menneisyydessä"
-  def minmaxMsg(minValue: Any, maxValue: Any) = s"$minValue on suurempi kuin $maxValue"
-  def notYetJulkaistu(field: String, id: Any) = s"$field ($id) ei ole vielä julkaistu"
-  def nonExistent(field: String, id: Any) = s"$field ($id) ei ole olemassa"
-  def notMissingMsg(value: Any) = s"Arvo $value ei saisi olla määritelty"
-  def tyyppiMismatch(field: String, id: Any) = s"Tyyppi ei vastaa $field ($id) tyyppiä"
-  def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any) =
-    s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä"
-  def cannotLinkToHakukohde(oid: String) = s"Toteutusta ($oid) ei voi liittää hakukohteeseen"
+  def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
+  def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage = ErrorMessage(msg = s"Koulutuksen tyyppiä $tyyppi pitäisi olla tutkintoon johtavaa", id = "invalidTutkintoonjohtavuus")
+  def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
+  def invalidEmail(email: String): ErrorMessage = ErrorMessage(msg = s"'$email' ei ole validi email", id = "invalidEmail")
+  def invalidAjanjaksoMsg(ajanjakso: Ajanjakso): ErrorMessage = ErrorMessage(msg = s"${ajanjakso.alkaa} - ${ajanjakso.paattyy} on virheellinen", id = "invalidAjanjaksoMsg")
+  def pastDateMsg(date: LocalDateTime): ErrorMessage = ErrorMessage(msg = s"$date on menneisyydessä", id = "pastDateMsg")
+  def pastDateMsg(date: String): ErrorMessage = ErrorMessage(msg = s"$date on menneisyydessä", id = "pastDateMsg")
+  def minmaxMsg(minValue: Any, maxValue: Any): ErrorMessage = ErrorMessage(msg = s"$minValue on suurempi kuin $maxValue", id = "minmaxMsg")
+  def notYetJulkaistu(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"$field ($id) ei ole vielä julkaistu", id = "notYetJulkaistu")
+  def nonExistent(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"$field ($id) ei ole olemassa", id = "nonExistent")
+  def notMissingMsg(value: Any): ErrorMessage = ErrorMessage(msg = s"Arvo $value ei saisi olla määritelty", id = "notMissingMsg")
+  def tyyppiMismatch(field: String, id: Any): ErrorMessage = ErrorMessage(msg = s"Tyyppi ei vastaa $field ($id) tyyppiä", id = "tyyppiMismatch")
+  def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any): ErrorMessage = ErrorMessage(msg = s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä", id = "tyyppiMismatch")
+  def cannotLinkToHakukohde(oid: String): ErrorMessage = ErrorMessage(msg = s"Toteutusta ($oid) ei voi liittää hakukohteeseen", id = "cannotLinkToHakukohde")
 
-  val InvalidKoulutuspaivamaarat = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen"
-  val InvalidMetadataTyyppi = "Koulutustyyppi ei vastaa metadatan tyyppiä"
+  val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen", id = "InvalidKoulutuspaivamaarat")
+  val InvalidMetadataTyyppi: ErrorMessage = ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
 
   val KoulutusKoodiPattern: Pattern = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val HakutapaKoodiPattern: Pattern = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
@@ -67,7 +66,7 @@ object Validations {
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
-  def assertTrue(b: Boolean, path: String, msg: String): IsValid = if (b) NoErrors else error(path, msg)
+  def assertTrue(b: Boolean, path: String, msg: ErrorMessage): IsValid = if (b) NoErrors else error(path, msg)
   def assertNotNegative(i: Long, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertNotNegative(i: Double, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertLessOrEqual(i: Int, x: Int, path: String): IsValid = assertTrue(i <= x, path, lessOrEqualMsg(i, x))
@@ -85,7 +84,7 @@ object Validations {
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
-  def validateIfDefined[T](value: Option[T], f: (T) => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
+  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
@@ -148,7 +147,7 @@ object Validations {
                          dependencyName: String,
                          dependencyIdPath: String): IsValid = {
     dependencyTila.map { tila =>
-      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId))),
+      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId)))
     }.getOrElse(error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId)))
   }
 }
