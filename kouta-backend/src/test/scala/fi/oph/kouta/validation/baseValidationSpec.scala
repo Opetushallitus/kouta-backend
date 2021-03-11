@@ -6,7 +6,7 @@ import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 abstract class BaseValidationSpec[E <: Validatable] extends ScalatraFlatSpec {
 
-  def passesValidation(e: E) = e.validate() should equal(NoErrors)
+  def passesValidation(e: E): Assertion = e.validate() should equal(NoErrors)
 
   def failsValidation(e: E, path: String, message: ErrorMessage): Assertion =
     failsValidation(e, ValidationError(path, message))
@@ -50,7 +50,7 @@ abstract class SubEntityValidationSpec[E <: ValidatableSubEntity] extends Scalat
 
   def passesValidation(tila: Julkaisutila, e: E): Assertion = e.validate(tila, DefaultKielivalinta, pathPrefix) shouldEqual NoErrors
 
-  def passesOnJulkaisuValidation(e: E) = e.validateOnJulkaisu(pathPrefix) shouldEqual NoErrors
+  def passesOnJulkaisuValidation(e: E): Assertion = e.validateOnJulkaisu(pathPrefix) shouldEqual NoErrors
 
   def failsOnJulkaisuValidation(e: E, path: String, expected: ErrorMessage): Assertion =
     failsOnJulkaisuValidation(e, (path, expected))
