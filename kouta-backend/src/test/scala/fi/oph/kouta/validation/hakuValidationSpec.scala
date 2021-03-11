@@ -81,7 +81,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   it should "fail if hakuajat are in the past unless jatkuva haku" in {
     passesValidation(max.copy(tila = Julkaistu, hakuajat = List(pastAjanjakso)))
     failsOnJulkaisuValidation(max.copy(hakutapaKoodiUri = Some("hakutapa_01#1"), hakuajat = List(pastAjanjakso)), "hakuajat[0].paattyy", pastDateMsg(pastAjanjakso.paattyy.get))
-    failsOnJulkaisuValidation(max.copy(hakutapaKoodiUri = Some("hakutapa_01#1"), hakuajat = List(onlyAlkaaAjanjakso)), "hakuajat[0]", missingMsg)
+    failsOnJulkaisuValidation(max.copy(hakutapaKoodiUri = Some("hakutapa_01#1"), hakuajat = List(onlyAlkaaAjanjakso)), "hakuajat[0].paattyy", missingMsg)
     passesOnJulkaisuValidation(max.copy(hakutapaKoodiUri = Some("hakutapa_03#1"), hakuajat = List(onlyAlkaaAjanjakso)))
   }
 
