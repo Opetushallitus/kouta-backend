@@ -1,7 +1,5 @@
 package fi.oph.kouta.integration
 
-import java.util.UUID
-
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.config.KoutaConfigurationFactory
@@ -12,31 +10,31 @@ import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.validation.ValidationError
+import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
+import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
+import java.util.UUID
 import scala.collection.mutable
 import scala.reflect.Manifest
 
 case class TestUser(oid: UserOid, username: String, sessionId: UUID) {
-  val ticket = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
+  val ticket: SessionCookie = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
 }
 
 trait DefaultTestImplicits {
 
-  implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = new Ordering[OrganisaatioOid] {
-    def compare(a:OrganisaatioOid, b:OrganisaatioOid): Int = a.s compare b.s
-  }
+  implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = (a: OrganisaatioOid, b: OrganisaatioOid) => a.s compare b.s
 }
 
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits {
 
-  val serviceIdentifier = KoutaIntegrationSpec.serviceIdentifier
-  val defaultAuthorities = KoutaIntegrationSpec.defaultAuthorities
+  val serviceIdentifier: String = KoutaIntegrationSpec.serviceIdentifier
+  val defaultAuthorities: Set[Authority] = KoutaIntegrationSpec.defaultAuthorities
 
-  val testUser = TestUser(TestUserOid, "testuser", defaultSessionId)
+  val testUser: TestUser = TestUser(TestUserOid, "testuser", defaultSessionId)
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid.s, defaultAuthorities), testUser.sessionId)
@@ -137,11 +135,11 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
 }
 
 sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
-  val defaultSessionId = UUID.randomUUID()
+  val defaultSessionId: UUID = UUID.randomUUID()
 
   val DebugJson = false
 
-  def debugJson[E <: AnyRef](body: String)(implicit mf: Manifest[E]) = {
+  def debugJson[E <: AnyRef](body: String)(implicit mf: Manifest[E]): Unit = {
     if(DebugJson) {
       import org.json4s.jackson.Serialization.writePretty
       println(writePretty[E](read[E](body)))
@@ -150,18 +148,18 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   import org.json4s.jackson.Serialization.{read, write}
 
-  def paramString(params: List[(String, String)]) =
+  def paramString(params: List[(String, String)]): String =
     if (params.isEmpty) ""
     else
       s"""?${params.map(p => s"${p._1}=${p._2}").mkString("&")}"""
 
-  def errorBody(expected: String): String = s"""{"error":"${expected}"}"""
+  def errorBody(expected: String): String = s"""{"error":"$expected"}"""
 
   def validationErrorBody(expected: List[ValidationError]): String = "[" + expected.map(_.toString).mkString(",") + "]"
 
-  def validationErrorBody(expected: String, path: String): String = validationErrorBody(List(ValidationError(path, expected)))
+  def validationErrorBody(expected: ErrorMessage, path: String): String = validationErrorBody(List(ValidationError(path, expected)))
 
-  def jsonHeader = "Content-Type" -> "application/json; charset=utf-8"
+  def jsonHeader: (String, String) = "Content-Type" -> "application/json; charset=utf-8"
 
   def headersIfUnmodifiedSince(lastModified: String, sessionHeader: (String, String) = defaultSessionHeader) = List(jsonHeader, sessionHeader, KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)
 
@@ -174,13 +172,13 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   def customHeaders(sessionId: UUID): Seq[(String, String)] = Seq(sessionHeader(sessionId), jsonHeader)
 
-  def bytes(o: AnyRef) = write(o).getBytes
+  def bytes(o: AnyRef): Array[Byte] = write(o).getBytes
 
-  val oid = (body: String) => read[Oid](body).oid
+  val oid: String => String = (body: String) => read[Oid](body).oid
 
-  def id(body: String) = (read[Id](body)).id
+  def id(body: String): UUID = read[Id](body).id
 
-  def updated(body: String) = read[Updated](body).updated
+  def updated(body: String): Boolean = read[Updated](body).updated
 
   def put[E <: scala.AnyRef, R](path: String, entity: E, sessionId: UUID, result: String => R): R = {
     put(path, bytes(entity), headers = Seq(sessionHeader(sessionId))) {
@@ -202,7 +200,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
-  def put[E <: AnyRef](path: String, entity: E, expectedStatus: Int, errorPath: String, errorMsg: String): Unit =
+  def put[E <: AnyRef](path: String, entity: E, expectedStatus: Int, errorPath: String, errorMsg: ErrorMessage): Unit =
     put(path, entity, expectedStatus, Seq(ValidationError(errorPath, errorMsg)))
 
   def put[E <: AnyRef, M <: AnyRef](path: String, entity: E, expectedStatus: Int, errorMessage: M)(implicit equality: Equality[M], mf: Manifest[M]): Unit =
@@ -258,7 +256,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
     }
   }
 
-  def update[E <: AnyRef](path: String, entity: E, lastModified: String, expectedStatus: Int, errorPath: String, errorMsg: String): Unit =
+  def update[E <: AnyRef](path: String, entity: E, lastModified: String, expectedStatus: Int, errorPath: String, errorMsg: ErrorMessage): Unit =
     update(path, entity, lastModified, expectedStatus, Seq(ValidationError(errorPath, errorMsg)))
 
   def update[E <: AnyRef, M <: AnyRef](path: String, entity: E, lastModified: String, expectedStatus: Int, errorMessage: M)(implicit equality: Equality[M], mf: Manifest[M]): Unit =
@@ -301,9 +299,9 @@ sealed trait DatabaseSpec {
   import fi.oph.kouta.repository.KoutaDatabase
   import slick.jdbc.PostgresProfile.api._
 
-  lazy val db = KoutaDatabase
+  lazy val db: KoutaDatabase.type = KoutaDatabase
 
-  def truncateDatabase() = {
+  def truncateDatabase(): Int = {
     db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet""")
     db.runBlocking(sqlu"""delete from hakukohteiden_liitteet""")
     db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
@@ -339,7 +337,7 @@ sealed trait DatabaseSpec {
     deleteAsiasanat()
   }
 
-  def deleteAsiasanat() = {
+  def deleteAsiasanat(): Int = {
     db.runBlocking(sqlu"""delete from asiasanat""")
     db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }

@@ -20,7 +20,15 @@ package object validation {
     def validateOnJulkaisu(path: String): IsValid = NoErrors
   }
 
-  case class ValidationError(path: String, msg: String) {
-    override def toString: String = s"""{"path":"$path","msg":"$msg"}"""
+  case class ErrorMessage(msg: String, id: String)
+
+  case class ValidationError(path: String, msg: String, errorType: String) {
+    override def toString: String = s"""{"path":"$path","msg":"$msg","errorType":"$errorType"}"""
+  }
+
+  object ValidationError {
+    def apply(path: String, error: ErrorMessage): ValidationError = {
+      ValidationError(path, error.msg, error.id)
+    }
   }
 }

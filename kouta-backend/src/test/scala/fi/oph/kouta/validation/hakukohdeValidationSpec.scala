@@ -37,7 +37,8 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     failsValidation(min.copy(hakuajat = invalidHakuajat), "hakuajat[0]", invalidAjanjaksoMsg(invalidHakuajat.head))
 
     failsValidation(min.copy(pohjakoulutusvaatimusKoodiUrit = Seq("tintti", "huuhkaja")),
-      ("pohjakoulutusvaatimusKoodiUrit[0]", validationMsg("tintti")), ("pohjakoulutusvaatimusKoodiUrit[1]", validationMsg("huuhkaja")))
+      ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", validationMsg("tintti")),
+      ValidationError("pohjakoulutusvaatimusKoodiUrit[1]", validationMsg("huuhkaja")))
 
     failsValidation(min.copy(aloituspaikat = Some(-1)), "aloituspaikat", notNegativeMsg)
     failsValidation(min.copy(ensikertalaisenAloituspaikat = Some(-1)), "ensikertalaisenAloituspaikat", notNegativeMsg)
@@ -100,7 +101,8 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
 
   it should "return multiple error messages" in {
     failsValidation(max.copy(aloituspaikat = Some(-1), liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None),
-      ("aloituspaikat", notNegativeMsg), ("liitteidenToimitusaika", missingMsg))
+      ValidationError("aloituspaikat", notNegativeMsg),
+      ValidationError("liitteidenToimitusaika", missingMsg))
   }
 
   "Hakukohde on julkaisu validation" should "pass a valid hakukohde" in {
