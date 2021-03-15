@@ -7,7 +7,7 @@ import fi.oph.kouta.validation.Validations.{validateIfTrue, _}
 
 package object koulutus {
 
-  val KoulutusModel =
+  val KoulutusModel: String =
     """    Koulutus:
       |      type: object
       |      properties:
@@ -111,7 +111,7 @@ package object koulutus {
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
-  val KoulutusListItemModel =
+  val KoulutusListItemModel: String =
     """    KoulutusListItem:
       |      type: object
       |      properties:
