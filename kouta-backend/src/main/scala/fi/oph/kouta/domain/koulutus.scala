@@ -33,6 +33,14 @@ package object koulutus {
       |          type: string
       |          description: Koulutuksen koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
       |          example: koulutus_371101#1
+      |        koulutusUUSIKoodiUrit:
+      |          type: array
+      |          description: Koulutuksen koodi URIt. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
+      |          items:
+      |            type: string
+      |          example:
+      |            - koulutus_371101#1
+      |            - koulutus_371101#1
       |        tila:
       |          type: string
       |          example: "julkaistu"
@@ -161,6 +169,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,
                     koulutustyyppi: Koulutustyyppi,
                     koulutusKoodiUri: Option[String] = None,
+                    koulutusUUSIKoodiUrit: Seq[String] = Seq(),
                     tila: Julkaisutila = Tallennettu,
                     esikatselu: Boolean = false,
                     tarjoajat: List[OrganisaatioOid] = List(),
