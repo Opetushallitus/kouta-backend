@@ -86,9 +86,6 @@ package object toteutusMetadata {
       |          type: object
       |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
       |          $ref: '#/components/schemas/Kuvaus'
-      |        ammatillinenPerustutkintoErityisopetuksena:
-      |          type: boolean
-      |          description: Onko koulutuksen tyyppi \"Ammatillinen perustutkinto erityisopetuksena\"?
       |""".stripMargin
 
   val Apuraha: String =
@@ -246,6 +243,9 @@ package object toteutusMetadata {
       |              example: amm
       |              enum:
       |                - amm
+      |            ammatillinenPerustutkintoErityisopetuksena:
+      |              type: boolean
+      |              description: Onko koulutuksen tyyppi \"Ammatillinen perustutkinto erityisopetuksena\"?
       |""".stripMargin
 
   val TutkintoonJohtamatonToteutusMetadata: String =
@@ -367,7 +367,8 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         opetus: Option[Opetus] = None,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
-                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
+                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                        ammatillinenPerustutkintoErityisopetuksena: Boolean = false) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat", _.validate(tila, kielivalinta, _))
@@ -519,8 +520,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   apuraha: Option[Apuraha] = None,
                   suunniteltuKestoVuodet: Option[Int] = None,
                   suunniteltuKestoKuukaudet: Option [Int] = None,
-                  suunniteltuKestoKuvaus: Kielistetty = Map(),
-                  ammatillinenPerustutkintoErityisopetuksena: Boolean = false) extends ValidatableSubEntity {
+                  suunniteltuKestoKuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
