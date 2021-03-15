@@ -101,6 +101,6 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       hakuOid = haku.oid.get,
       paikanVastaanottoPaattyy = Some(Instant.ofEpochMilli(46800000L)), // 1970-01-01T15:00+02
       hakijakohtainenPaikanVastaanottoaika = Some(14),
-      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1612130399000L)))) // 2021-01-31T23:59:59+02
+      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1640987999000L)))) // 2021-12-31T23:59:59+02
     ).toDBIO
 }
