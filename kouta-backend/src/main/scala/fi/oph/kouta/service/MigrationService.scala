@@ -143,12 +143,7 @@ trait MigrationHelpers extends Logging {
     val opetustapaKuvaus: Kielistetty = Map()
     val maksullisuusKuvaus: Kielistetty = Map()
     val maksunMaara: Option[Double] = None
-    val koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = toKoulutuksenAlkamiskausi(result)
-    val koulutuksenTarkkaAlkamisaika: Option[Boolean] = None
-    val koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None
-    val koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None
-    val koulutuksenAlkamiskausi: Option[String] = None
-    val koulutuksenAlkamisvuosi: Option[Int] = None
+    val koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = toKoulutuksenAlkamiskausi(result)
 
     val lisatiedot: List[Lisatieto] =
       koulutustyyppi match {
@@ -185,7 +180,7 @@ trait MigrationHelpers extends Logging {
       onkoMaksullinen = onkoMaksullinen,
       maksullisuusKuvaus = maksullisuusKuvaus,
       maksunMaara = maksunMaara,
-      koulutuksenAlkamiskausiUUSI = koulutuksenAlkamiskausiUUSI,
+      koulutuksenAlkamiskausi = koulutuksenAlkamiskausi,
       lisatiedot = lisatiedot,
       onkoApuraha = onkoApuraha,
       apuraha = apuraha,

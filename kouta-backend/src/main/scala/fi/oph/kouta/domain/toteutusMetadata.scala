@@ -57,7 +57,7 @@ package object toteutusMetadata {
       |          type: double
       |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
       |          example: 220.50
-      |        koulutuksenAlkamiskausiUUSI:
+      |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
       |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
@@ -513,7 +513,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoMaksullinen: Option[Boolean] = Some(false),
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
-                  koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = None, //Feature flag KTO-1036, myos swagger skeema
+                  koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoApuraha: Boolean = false,
                   apuraha: Option[Apuraha] = None,
@@ -525,7 +525,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
     validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
     validateIfNonEmpty[String](opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit", assertMatch(_, OpetustapaKoodiPattern, _)),
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausiUUSI")), //Feature flag KTO-1036
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     validateIfDefined[Apuraha](apuraha, _.validate(tila, kielivalinta, s"$path.apuraha")),
     validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Double](maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
@@ -547,6 +547,6 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
   )
 
   override def validateOnJulkaisu(path: String): IsValid = and(
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausiUUSI")) //Feature flag KTO-1036
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi"))
   )
 }
