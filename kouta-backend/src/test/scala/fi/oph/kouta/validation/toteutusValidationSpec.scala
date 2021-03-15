@@ -126,6 +126,8 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
   val past: LocalDateTime = TestData.inPast(1000)
   val moreInPast: LocalDateTime = TestData.inPast(9000)
 
+  val apuraha: Apuraha = Apuraha(min = Some(50), max = Some(70), yksikko = Some(Prosentti), kuvaus = Map(Fi -> "kuvaus"))
+
   "Opetus validation" should "pass a valid opetus" in {
     passesValidation(Julkaistu, opetus)
   }
@@ -160,12 +162,19 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     passesValidation(Tallennettu, opetus.copy(maksullisuusKuvaus = Map(Fi -> "kuvaus")))
     failsValidation(Julkaistu, opetus.copy(maksullisuusKuvaus = Map(Fi -> "kuvaus")), "maksullisuusKuvaus", invalidKielistetty(Seq(Sv)))
 
-    passesValidation(Tallennettu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")))
-    failsValidation(Julkaistu, opetus.copy(stipendinKuvaus = Map(Fi -> "kuvaus")), "stipendinKuvaus", invalidKielistetty(Seq(Sv)))
+    passesValidation(Tallennettu, opetus.copy(apuraha = Some(apuraha)))
+    failsValidation(Julkaistu, opetus.copy(apuraha = Some(apuraha)), "apuraha.kuvaus", invalidKielistetty(Seq(Sv)))
   }
 
-  it should "fail if stipendinMaara is negative" in {
-    failsValidation(Tallennettu, opetus.copy(stipendinMaara = Some(-2)), "stipendinMaara", notNegativeMsg)
+  it should "fail if apuraha is negative" in {
+    failsValidation(Tallennettu, opetus.copy(apuraha = Some(apuraha.copy(min = Some(-10)))), "apuraha.min", notNegativeMsg)
+  }
+
+  it should "fail if yksikko is prosentti and max is more than 100" in {
+    val prosentti = 120
+    val maxProsentti = 100
+    failsValidation(Tallennettu, opetus.copy(
+      apuraha = Some(apuraha.copy(yksikko = Some(Prosentti), max = Some(prosentti)))), "apuraha.max", lessOrEqualMsg(prosentti, maxProsentti))
   }
 
   it should "fail if onkoMaksullinen is missing in a julkaistu opetus" in {
@@ -182,14 +191,19 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None), "maksunMaara", missingMsg)
   }
 
-  it should "fail if onkoStipendia is missing in a julkaistu opetus" in {
-    passesValidation(Tallennettu, opetus.copy(onkoStipendia = None))
-    failsValidation(Julkaistu, opetus.copy(onkoStipendia = None), "onkoStipendia", missingMsg)
-  }
-
-  it should "fail if a julkaistu, stipendillinen opetus is missing stipendinMaara" in {
-    passesValidation(Tallennettu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None))
-    failsValidation(Julkaistu, opetus.copy(onkoStipendia = Some(true), stipendinMaara = None), "stipendinMaara", missingMsg)
+  it should "fail if a julkaistu apuraha is missing min or max" in {
+    passesValidation(Tallennettu, opetus.copy(onkoApuraha = true, apuraha = Some(apuraha.copy(min = None))))
+    passesValidation(Tallennettu, opetus.copy(onkoApuraha = true, apuraha = Some(apuraha.copy(max = None))))
+    failsValidation(Julkaistu, opetus.copy(
+      onkoApuraha = true,
+      apuraha = Some(apuraha.copy(
+        min = None,
+        kuvaus = Map(Fi -> "", Sv -> "")))), "apuraha.min", missingMsg)
+    failsValidation(Julkaistu, opetus.copy(
+      onkoApuraha = true,
+      apuraha = Some(
+        apuraha.copy(max = None, kuvaus
+          = Map(Fi -> "", Sv -> "")))), "apuraha.max", missingMsg)
   }
 
   it should "fail if lisatiedot are invalid" in {

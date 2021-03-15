@@ -407,9 +407,13 @@ object TestData {
            teksti = Map(Fi -> "Opintojen rakenteen kuvaus", Sv -> "Rakenne kuvaus sv")),
       Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
            teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv"))),
-    onkoStipendia = Some(false),
-    stipendinMaara = Some(100.0),
-    stipendinKuvaus = Map(Fi -> "Stipendin kuvaus fi", Sv -> "Stipendin kuvaus sv"),
+    onkoApuraha = true,
+    apuraha = Some(Apuraha(
+      min = Some(100),
+      max = Some(200),
+      yksikko = Some(Euro),
+      kuvaus = Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"),
+    )),
     suunniteltuKestoVuodet = Some(3),
     suunniteltuKestoKuukaudet = Some(10),
     suunniteltuKestoKuvaus = Map(Fi -> "Keston kuvaus fi", Sv -> "Keston kuvaus sv")

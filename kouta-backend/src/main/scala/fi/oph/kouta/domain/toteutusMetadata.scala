@@ -4,11 +4,9 @@ import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
-import java.time.LocalDateTime
-
 package object toteutusMetadata {
 
-  val Opetus =
+  val Opetus: String =
     """    Opetus:
       |      type: object
       |      properties:
@@ -69,17 +67,13 @@ package object toteutusMetadata {
       |          items:
       |            type: object
       |            $ref: '#/components/schemas/Lisatieto'
-      |        onkoStipendia:
+      |        onkoApuraha:
       |          type: boolean
-      |          description: "Onko koulutukseen stipendiä?"
-      |        stipendinMaara:
-      |          type: double
-      |          description: Koulutuksen toteutuksen stipendin määrä.
-      |          example: 10.0
-      |        stipendinKuvaus:
+      |          description: Onko koulutukseen apurahaa?
+      |        apuraha:
       |          type: object
-      |          description: Koulutuksen toteutuksen stipendiä tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          $ref: '#/components/schemas/Kuvaus'
+      |          description: Koulutuksen apurahatiedot
+      |          $ref: '#/components/schemas/Apuraha'
       |        suunniteltuKestoVuodet:
       |          type: integer
       |          description: "Koulutuksen suunniteltu kesto vuosina"
@@ -97,7 +91,32 @@ package object toteutusMetadata {
       |          description: Onko koulutuksen tyyppi \"Ammatillinen perustutkinto erityisopetuksena\"?
       |""".stripMargin
 
-  val ToteutusMetadata =
+  val Apuraha: String =
+    """    Apuraha:
+      |      type: object
+      |      properties:
+      |        min:
+      |          type: int
+      |          description: Apurahan minimi euromäärä tai minimi prosenttiosuus lukuvuosimaksusta
+      |          example: 100
+      |        max:
+      |          type: int
+      |          description: Apurahan maksimi euromäärä tai maksimi prosenttiosuus lukuvuosimaksusta
+      |          example: 200
+      |        yksikko:
+      |          type: string
+      |          description: Apurahan yksikkö
+      |          enum:
+      |            - euro
+      |            - prosentti
+      |          example: euro
+      |        kuvaus:
+      |          type: object
+      |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
+  val ToteutusMetadata: String =
     """    ToteutusMetadata:
       |      type: object
       |      properties:
@@ -125,7 +144,7 @@ package object toteutusMetadata {
       |            $ref: '#/components/schemas/Ammattinimike'
       |""".stripMargin
 
-  val KorkeakouluOsaamisala =
+  val KorkeakouluOsaamisala: String =
     """    KorkeakouluOsaamisala:
       |      type: object
       |      properties:
@@ -147,7 +166,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val Osaamisala =
+  val Osaamisala: String =
     """    Osaamisala:
       |      type: object
       |      properties:
@@ -165,7 +184,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val KorkeakouluToteutusMetadata =
+  val KorkeakouluToteutusMetadata: String =
     """    KorkeakouluToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -182,7 +201,7 @@ package object toteutusMetadata {
       |          description: Lista ylemmän korkeakoulututkinnon erikoistumisalojen, opintosuuntien, pääaineiden tms. kuvauksista.
       |""".stripMargin
 
-  val YliopistoToteutusMetadata =
+  val YliopistoToteutusMetadata: String =
     """    YliopistoToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
@@ -196,7 +215,7 @@ package object toteutusMetadata {
       |                - yo
       |""".stripMargin
 
-  val AmmattikorkeaToteutusMetadata =
+  val AmmattikorkeaToteutusMetadata: String =
     """    AmmattikorkeaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
@@ -210,7 +229,7 @@ package object toteutusMetadata {
       |                - amk
       |""".stripMargin
 
-  val AmmatillinenToteutusMetadata =
+  val AmmatillinenToteutusMetadata: String =
     """    AmmatillinenToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -229,7 +248,7 @@ package object toteutusMetadata {
       |                - amm
       |""".stripMargin
 
-  val TutkintoonJohtamatonToteutusMetadata =
+  val TutkintoonJohtamatonToteutusMetadata: String =
     """    TutkintoonJohtamatonToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -275,7 +294,7 @@ package object toteutusMetadata {
       |              example: 100
       |""".stripMargin
 
-  val AmmatillinenTutkinnonOsaToteutusMetadata =
+  val AmmatillinenTutkinnonOsaToteutusMetadata: String =
     """    AmmatillinenTutkinnonOsaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
@@ -289,7 +308,7 @@ package object toteutusMetadata {
       |                - amm-tutkinnon-osa
       |""".stripMargin
 
-  val AmmatillinenOsaamisalaToteutusMetadata =
+  val AmmatillinenOsaamisalaToteutusMetadata: String =
     """    AmmatillinenOsaamisalaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
@@ -303,7 +322,7 @@ package object toteutusMetadata {
       |                - amm-osaamisala
       |""".stripMargin
 
-  val models = List(Opetus, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
+  val models = List(Opetus, Apuraha, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
     AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
     TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata)
 }
@@ -372,18 +391,18 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
     validateIfJulkaistu(tila, and(
       assertNotOptional(hakutermi, s"$path.hakutermi"),
       assertNotOptional(hakulomaketyyppi, s"$path.hakulomaketyyppi"),
-      validateIfTrue(hakulomaketyyppi.exists(_ == MuuHakulomake), and(
+      validateIfTrue(hakulomaketyyppi.contains(MuuHakulomake), and(
         validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"),
         validateKielistetty(kielivalinta, hakulomakeLinkki, s"$path.hakulomakeLinkki"),
         validateOptionalKielistetty(kielivalinta, lisatietoaValintaperusteista, s"$path.lisatietoaValintaperusteista"),
         assertNotOptional(hakuaika, s"$path.hakuaika")
       )),
-      validateIfTrue(hakulomaketyyppi.exists(_ == EiSähköistä),
+      validateIfTrue(hakulomaketyyppi.contains(EiSähköistä),
         validateKielistetty(kielivalinta, lisatietoaHakeutumisesta, s"$path.lisatietoaHakeutumisesta"))
     )))
 
   override def allowSorakuvaus: Boolean =
-    hakulomaketyyppi.exists(_ == MuuHakulomake)
+    hakulomaketyyppi.contains(MuuHakulomake)
 }
 
 case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
@@ -467,6 +486,24 @@ case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
   )
 }
 
+
+case class Apuraha(min: Option[Int] = None,
+                   max: Option[Int] = None,
+                   yksikko: Option[Apurahayksikko] = None,
+                   kuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateMinMax(min, max, s"$path.min"),
+    validateIfDefined[Int](min, assertNotNegative(_, s"$path.min")),
+    validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
+    validateIfTrue(yksikko.orNull == Prosentti, validateIfDefined(max, assertLessOrEqual(_, 100, s"$path.max"))),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+      assertNotOptional(min, s"$path.min"),
+      assertNotOptional(max, s"$path.max")
+    ))
+  )
+}
+
 case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetuskieletKuvaus: Kielistetty = Map(),
                   opetusaikaKoodiUrit: Seq[String] = Seq(),
@@ -478,9 +515,8 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   maksunMaara: Option[Double] = None,
                   koulutuksenAlkamiskausiUUSI: Option[KoulutuksenAlkamiskausi] = None, //Feature flag KTO-1036, myos swagger skeema
                   lisatiedot: Seq[Lisatieto] = Seq(),
-                  onkoStipendia: Option[Boolean] = Some(false),
-                  stipendinMaara: Option[Double] = None,
-                  stipendinKuvaus: Kielistetty = Map(),
+                  onkoApuraha: Boolean = false,
+                  apuraha: Option[Apuraha] = None,
                   suunniteltuKestoVuodet: Option[Int] = None,
                   suunniteltuKestoKuukaudet: Option [Int] = None,
                   suunniteltuKestoKuvaus: Kielistetty = Map(),
@@ -490,8 +526,8 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
     validateIfNonEmpty[String](opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit", assertMatch(_, OpetusaikaKoodiPattern, _)),
     validateIfNonEmpty[String](opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit", assertMatch(_, OpetustapaKoodiPattern, _)),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausiUUSI, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausiUUSI")), //Feature flag KTO-1036
+    validateIfDefined[Apuraha](apuraha, _.validate(tila, kielivalinta, s"$path.apuraha")),
     validateIfNonEmpty[Lisatieto](lisatiedot, s"$path.lisatiedot", _.validate(tila, kielivalinta, _)),
-    validateIfDefined[Double](stipendinMaara, assertNotNegative(_, s"$path.stipendinMaara")),
     validateIfDefined[Double](maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
     validateIfDefined[Int](suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),
     validateIfDefined[Int](suunniteltuKestoKuukaudet, assertNotNegative(_, s"$path.suunniteltuKestoKuukaudet")),
@@ -499,15 +535,13 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       assertNotEmpty(opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit"),
       assertNotEmpty(opetusaikaKoodiUrit, s"$path.opetusaikaKoodiUrit"),
       assertNotEmpty(opetustapaKoodiUrit, s"$path.opetustapaKoodiUrit"),
+      validateIfTrue(onkoApuraha, assertNotOptional(apuraha, s"$path.apuraha")),
       validateOptionalKielistetty(kielivalinta, opetuskieletKuvaus, s"$path.opetuskieletKuvaus"),
       validateOptionalKielistetty(kielivalinta, opetusaikaKuvaus, s"$path.opetusaikaKuvaus"),
       validateOptionalKielistetty(kielivalinta, opetustapaKuvaus, s"$path.opetustapaKuvaus"),
       assertNotOptional(onkoMaksullinen, s"$path.onkoMaksullinen"),
       validateOptionalKielistetty(kielivalinta, maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
       validateIfTrue(onkoMaksullinen.contains(true), assertNotOptional(maksunMaara, s"$path.maksunMaara")),
-      assertNotOptional(onkoStipendia, s"$path.onkoStipendia"),
-      validateIfTrue(onkoStipendia.contains(true), assertNotOptional(stipendinMaara, s"$path.stipendinMaara")),
-      validateOptionalKielistetty(kielivalinta, stipendinKuvaus, s"$path.stipendinKuvaus"),
       validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
     ))
   )

@@ -161,10 +161,9 @@ trait MigrationHelpers extends Logging {
           (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
         ).flatten
       }
-    
-    val onkoStipendia: Option[Boolean] = Some(false)
-    val stipendinMaara: Option[Double] = None
-    val stipendinKuvaus: Kielistetty = Map()
+
+    val apuraha: Option[Apuraha] = None
+    val onkoApuraha: Boolean = false
 
     val suunniteltuKesto: Tuple2[Option[Int], Option[Int]] = {
     ((result \ "suunniteltuKestoTyyppi" \ "uri").extractOpt[String], (result \ "suunniteltuKestoArvo").extractOpt[String]) match {
@@ -188,9 +187,8 @@ trait MigrationHelpers extends Logging {
       maksunMaara = maksunMaara,
       koulutuksenAlkamiskausiUUSI = koulutuksenAlkamiskausiUUSI,
       lisatiedot = lisatiedot,
-      onkoStipendia = onkoStipendia,
-      stipendinMaara = stipendinMaara,
-      stipendinKuvaus = stipendinKuvaus,
+      onkoApuraha = onkoApuraha,
+      apuraha = apuraha,
       suunniteltuKestoVuodet = suunniteltuKesto._1,
       suunniteltuKestoKuukaudet = suunniteltuKesto._2,
       suunniteltuKestoKuvaus = suunniteltuKestoKuvaus)

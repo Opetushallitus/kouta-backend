@@ -31,6 +31,7 @@ trait GenericKoutaFormats {
       stringSerializer(Koulutustyyppi.withName),
       stringSerializer(Hakulomaketyyppi.withName),
       stringSerializer(Hakutermi.withName),
+      stringSerializer(Apurahayksikko.withName),
       stringSerializer(Alkamiskausityyppi.withName),
       stringSerializer(Kieli.withName),
       stringSerializer(UUID.fromString),
