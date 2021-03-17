@@ -1,6 +1,7 @@
 -- Varmistetaan että vanhat koulutuksenAlkamiskausi-kentät on poistettu
 update toteutukset
-set metadata = metadata #- '{opetus, koulutuksenAlkamiskausi}';
+set metadata = metadata #- '{opetus, koulutuksenAlkamiskausi}'
+where jsonb_typeof(metadata -> 'opetus' -> 'koulutuksenAlkamiskausi') != 'object';
 
 update toteutukset
 set metadata = metadata #- '{opetus, koulutuksenTarkkaAlkamisaika}';
