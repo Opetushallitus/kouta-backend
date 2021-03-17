@@ -1,6 +1,18 @@
--- Varmistetaan että koulutuksenAlkamiskausi-kentässä ei ole enää vanhaa dataa
+-- Varmistetaan että vanhat koulutuksenAlkamiskausi-kentät on poistettu
 update toteutukset
 set metadata = metadata #- '{opetus, koulutuksenAlkamiskausi}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenTarkkaAlkamisaika}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenAlkamispaivamaara}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenPaattymispaivamaara}';
+
+update toteutukset
+set metadata = metadata #- '{opetus, koulutuksenAlkamisvuosi}';
 
 -- Kopioidaan koulutuksenAlkamiskausiUUSI-kentästä tiedot koulutuksenAlkamiskausi-kenttään
 update toteutukset
