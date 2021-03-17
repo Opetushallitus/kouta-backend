@@ -25,7 +25,7 @@ set metadata = metadata #- '{opetus, koulutuksenAlkamiskausiUUSI}';
 
 -- Siirretään ammatillinenPerustutkintoErityisopetuksena-kenttä opetuksen alta toteutuksen metadatan päätasolle ja ainoastaan ammatillisille koulutuksille
 update toteutukset
-set metadata = jsonb_set(metadata, '{ammatillinenPerustutkintoErityisopetuksena}', to_jsonb(metadata -> 'opetus' ->> 'ammatillinenPerustutkintoErityisopetuksena'), TRUE)
+set metadata = jsonb_set(metadata, '{ammatillinenPerustutkintoErityisopetuksena}', to_jsonb(metadata -> 'opetus' -> 'ammatillinenPerustutkintoErityisopetuksena'), TRUE)
 where metadata ->> 'tyyppi' = 'amm';
 
 -- Poistetaan ammatillinenPerustutkintoErityisopetuksena-kenttä opetuksen alta
