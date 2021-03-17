@@ -96,7 +96,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       hakuOid = oid,
       paikanVastaanottoPaattyy = Some(Instant.ofEpochMilli(46800000L)),
       hakijakohtainenPaikanVastaanottoaika = Some(14),
-      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1612130399000L))))
+      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1640987999000L))))
   }
 
   it should "return 401 without a valid session" in {
