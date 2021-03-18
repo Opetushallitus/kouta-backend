@@ -71,6 +71,7 @@ object TestData {
     esikatselu = true,
     koulutustyyppi = Amm,
     koulutusKoodiUri = Some("koulutus_371101#1"),
+    koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmatillinenKoulutusMetadata(
@@ -94,6 +95,7 @@ object TestData {
     johtaaTutkintoon = true,
     koulutustyyppi = Yo,
     koulutusKoodiUri = Some("koulutus_371101#1"),
+    koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1"),
     esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
@@ -135,6 +137,7 @@ object TestData {
   val AmmOsaamisalaKoulutus: Koulutus = AmmTutkinnonOsaKoulutus.copy(
     koulutustyyppi = AmmOsaamisala,
     koulutusKoodiUri = Some("koulutus_371101#1"),
+    koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1"),
     ePerusteId = Some(11L),
     metadata = Some(AmmatillinenOsaamisalaKoulutusMetadata(
       tyyppi = AmmOsaamisala,
