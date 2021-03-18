@@ -20,7 +20,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   override val roleEntities = Seq(Role.Koulutus)
 
-  val ophKoulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
+  val ophKoulutus: Koulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
 
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
