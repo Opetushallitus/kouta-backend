@@ -198,6 +198,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
 //          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")), //TODO KTO-1174 enabloi kun frontit tukevat kenttää
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
+//        validateIfTrue(!Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertTrue(koulutuksetKoodiUri.size < 2, "koulutuksetKoodiUri", tooManyKoodiUris)), //TODO KTO-1174 enabloi kun frontit tukevat kenttää
         validateIfTrue(koulutustyyppi == AmmTutkinnonOsa, and(
           assertNotDefined(ePerusteId, "ePerusteId"),
           assertNotDefined(koulutusKoodiUri, "koulutusKoodiUri"),

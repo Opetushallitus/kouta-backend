@@ -45,6 +45,11 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(teemakuva = Some("mummo")), "teemakuva", invalidUrl("mummo"))
   }
 
+  //TODO KTO-1174
+//  it should "contain only one koulutusKoodiUri if not korkeakoulutus" in {
+//    failsValidation(amm.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", tooManyKoodiUris)
+//  }
+
   it should "validate metadata" in {
     val metadata = amm.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
     failsValidation(amm.copy(metadata = Some(metadata.copy(kuvaus = Map(Fi -> "kuvaus")))), "metadata.kuvaus", invalidKielistetty(Seq(Sv)))
