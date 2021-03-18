@@ -193,6 +193,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     JohtaaTutkintoonKey -> "true",
     KoulutustyyppiKey -> Amm.name,
     KoulutusKoodiUriKey -> "koulutus_371101#1",
+    KoulutuksetKoodiUriKey -> "koulutus_371101#1, koulutus_201000#1",
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
