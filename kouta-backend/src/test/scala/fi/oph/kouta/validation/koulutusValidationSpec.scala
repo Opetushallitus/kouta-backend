@@ -7,11 +7,11 @@ import fi.oph.kouta.validation.Validations._
 
 class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
-  val amm = AmmKoulutus
-  val yo = YoKoulutus
-  val min = MinKoulutus
-  val ammTk = AmmTutkinnonOsaKoulutus
-  val ammOa = AmmOsaamisalaKoulutus
+  val amm: Koulutus = AmmKoulutus
+  val yo: Koulutus = YoKoulutus
+  val min: Koulutus = MinKoulutus
+  val ammTk: Koulutus = AmmTutkinnonOsaKoulutus
+  val ammOa: Koulutus = AmmOsaamisalaKoulutus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(KoulutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -103,11 +103,11 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
 class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMetadata] {
 
-  val amm = AmmKoulutus.metadata.get
-  val yo = YoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata]
-  val min = AmmatillinenKoulutusMetadata()
-  val ammOa = AmmOsaamisalaKoulutus.metadata.get.asInstanceOf[AmmatillinenOsaamisalaKoulutusMetadata]
-  val ammTo = AmmTutkinnonOsaKoulutus.metadata.get.asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
+  val amm: KoulutusMetadata = AmmKoulutus.metadata.get
+  val yo: YliopistoKoulutusMetadata = YoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata]
+  val min: AmmatillinenKoulutusMetadata = AmmatillinenKoulutusMetadata()
+  val ammOa: AmmatillinenOsaamisalaKoulutusMetadata = AmmOsaamisalaKoulutus.metadata.get.asInstanceOf[AmmatillinenOsaamisalaKoulutusMetadata]
+  val ammTo: AmmatillinenTutkinnonOsaKoulutusMetadata = AmmTutkinnonOsaKoulutus.metadata.get.asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
 
   "Koulutus metadata validator" should "pass a valid metadata" in {
     passesValidation(Julkaistu, amm)
