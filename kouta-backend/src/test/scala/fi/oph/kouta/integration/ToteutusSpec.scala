@@ -398,7 +398,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "validate koulutuksen alkamisen dates only when adding a new julkaistu toteutus" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
 
-    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
 
     put(thisToteutus.copy(tila = Tallennettu))
@@ -408,15 +408,15 @@ class ToteutusSpec extends KoutaIntegrationSpec
         status should equal(400)
       }
       body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
       )))
     }
   }
 
   it should "validate koulutuksen alkamisen dates when moving from other states to julkaistu" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
 
     val oid = put(thisToteutus)
@@ -429,8 +429,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
         status should equal(400)
       }
       body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausiUUSI.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
+        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
       )))
     }
 
@@ -439,7 +439,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "not validate koulutuksen alkamisen dates when updating a julkaistu toteutus" in {
     val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
+    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
     val inPastMetadata = ammMetatieto.copy(opetus = Some(inPastOpetus))
 
     val oid = put(toteutus(koulutusOid).copy(tila = Julkaistu))
@@ -453,14 +453,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "allow missing koulutuksen alkamiskausi" in {
     val (future, morefuture) = (TestData.inFuture(5000), TestData.inFuture(6000))
 
-    val futureOpetus = opetus.copy(koulutuksenAlkamiskausiUUSI = pastAlkamiskausi(alkamispvm = future, paattymispvm = morefuture))
+    val futureOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = future, paattymispvm = morefuture))
     val toteutusMetadata = Some(ammMetatieto.copy(opetus = Some(futureOpetus)))
     val toteutusOid = put(toteutus(koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu))
 
     val copyOfJulkaistuToteutus = toteutus(toteutusOid, koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu)
     val lastModified = get(toteutusOid, copyOfJulkaistuToteutus)
 
-    val toteutusWithoutAlkamiskausi = copyOfJulkaistuToteutus.copy(metadata = Some(ammMetatieto.copy(opetus = Some(opetus.copy(koulutuksenAlkamiskausiUUSI = None)))))
+    val toteutusWithoutAlkamiskausi = copyOfJulkaistuToteutus.copy(metadata = Some(ammMetatieto.copy(opetus = Some(opetus.copy(koulutuksenAlkamiskausi = None)))))
     update(toteutusWithoutAlkamiskausi, lastModified)
   }
 

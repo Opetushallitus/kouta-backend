@@ -33,13 +33,13 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     addServlet(new ToteutusServlet(toteutusService), ToteutusPath)
   }
 
-  val opetus = ToteutuksenOpetus
-  val ammMetatieto = AmmToteutuksenMetatieto
-  val toteutus = JulkaistuAmmToteutus
-  val ammTutkinnonOsaToteutus = TestData.AmmTutkinnonOsaToteutus
-  val ammOsaamisalaToteutus = TestData.AmmOsaamisalaToteutus
-  val ammTutkinnonOsaToteutusAtaru = TestData.AmmTutkinnonOsaToteutus.copy(metadata = Some(TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu))
-  val ammOsaamisalaToteutusAtaru = TestData.AmmOsaamisalaToteutus.copy(metadata = Some(TestData.AmmOsaamisalaToteutusMetadataHakemuspalvelu))
+  val opetus: Opetus = ToteutuksenOpetus
+  val ammMetatieto: AmmatillinenToteutusMetadata = AmmToteutuksenMetatieto
+  val toteutus: Toteutus = JulkaistuAmmToteutus
+  val ammTutkinnonOsaToteutus: Toteutus = TestData.AmmTutkinnonOsaToteutus
+  val ammOsaamisalaToteutus: Toteutus = TestData.AmmOsaamisalaToteutus
+  val ammTutkinnonOsaToteutusAtaru: Toteutus = TestData.AmmTutkinnonOsaToteutus.copy(metadata = Some(TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu))
+  val ammOsaamisalaToteutusAtaru: Toteutus = TestData.AmmOsaamisalaToteutus.copy(metadata = Some(TestData.AmmOsaamisalaToteutusMetadataHakemuspalvelu))
 
   def toteutus(koulutusOid:String): Toteutus = toteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
   def toteutus(oid:String, koulutusOid:String): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid))
@@ -67,12 +67,12 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   def update(toteutus:Toteutus, lastModified:String, expectedStatus: Int, sessionId: UUID): Unit = update(ToteutusPath, toteutus, lastModified, sessionId, expectedStatus)
   def update(toteutus:Toteutus, lastModified:String, expectUpdate:Boolean, sessionId: UUID): Unit = update(ToteutusPath, toteutus, lastModified, expectUpdate, sessionId)
   def update(toteutus:Toteutus, lastModified:String, expectUpdate:Boolean): Unit = update(ToteutusPath, toteutus, lastModified, expectUpdate)
-  def update(toteutus:Toteutus, lastModified:String): Unit = update(toteutus, lastModified, true)
+  def update(toteutus:Toteutus, lastModified:String): Unit = update(toteutus, lastModified, expectUpdate = true)
 
-  def addToList(toteutus:Toteutus) = {
+  def addToList(toteutus:Toteutus): ToteutusListItem = {
     val oid = put(toteutus)
     val modified = readToteutusModified(oid)
-    new ToteutusListItem(ToteutusOid(oid), toteutus.koulutusOid, toteutus.nimi, toteutus.tila,
+    ToteutusListItem(ToteutusOid(oid), toteutus.koulutusOid, toteutus.nimi, toteutus.tila,
       toteutus.tarjoajat, toteutus.organisaatioOid, toteutus.muokkaaja, modified)
   }
 

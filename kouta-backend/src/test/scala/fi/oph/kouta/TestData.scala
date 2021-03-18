@@ -395,7 +395,7 @@ object TestData {
     onkoMaksullinen = Some(true),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Some(200.5),
-    koulutuksenAlkamiskausiUUSI = Some(KoulutuksenAlkamiskausi(
+    koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
       alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
       henkilokohtaisenSuunnitelmanLisatiedot = Map(Fi -> "Jotakin lisätietoa", Sv -> "Jotakin lisätietoa sv"),
       koulutuksenAlkamispaivamaara = None,

@@ -92,7 +92,7 @@ package object hakutieto {
       |                      type: object
       |                      description: Koulutuksen alkamiskausi
       |                      $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
-      |                    kaytetaanHaunAlkamiskauttaUUSI:
+      |                    kaytetaanHaunAlkamiskautta:
       |                      type: boolean
       |                      description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
       |                    jarjestyspaikkaOid:
@@ -202,7 +202,7 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               nimi: Kielistetty = Map(),
                               valintaperusteId: Option[UUID] = None,
                               koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
-                              kaytetaanHaunAlkamiskauttaUUSI: Option[Boolean] = None,
+                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
                               jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                               hakulomakeAtaruId: Option[UUID] = None,
