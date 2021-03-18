@@ -188,6 +188,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
       validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern, "koulutusKoodiUri")),
+      validateIfNonEmpty[String](koulutuksetKoodiUri, "koulutuksetKoodiUri", assertMatch(_, KoulutusKoodiPattern, _)),
       validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
@@ -195,10 +196,12 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
         assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         validateIfTrue(koulutustyyppi != AmmTutkinnonOsa, and(
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
+//          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")), //TODO KTO-1174 enabloi kun frontit tukevat kenttää
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
         validateIfTrue(koulutustyyppi == AmmTutkinnonOsa, and(
           assertNotDefined(ePerusteId, "ePerusteId"),
-          assertNotDefined(koulutusKoodiUri, "koulutusKoodiUri")
+          assertNotDefined(koulutusKoodiUri, "koulutusKoodiUri"),
+//          assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri") //TODO KTO-1174 enabloi kun frontit tukevat kenttää
         )),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
