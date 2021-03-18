@@ -75,7 +75,7 @@ object Validations {
   def assertValid(oid: Oid, path: String): IsValid = assertTrue(oid.isValid, path, validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
-  def assertEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.isEmpty, path, missingMsg)
+  def assertEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.isEmpty, path, notEmptyMsg)
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
   def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
     assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))
