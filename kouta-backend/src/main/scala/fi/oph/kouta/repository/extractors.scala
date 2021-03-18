@@ -72,6 +72,7 @@ trait KoulutusExtractors extends ExtractorBase {
     johtaaTutkintoon = r.nextBoolean(),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     koulutusKoodiUri = r.nextStringOption(),
+    koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
     tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption()),

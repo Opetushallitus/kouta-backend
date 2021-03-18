@@ -150,6 +150,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             johtaa_tutkintoon,
             tyyppi,
             koulutus_koodi_uri,
+            koulutukset_koodi_uri,
             tila,
             nimi,
             metadata,
@@ -164,6 +165,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.johtaaTutkintoon},
             ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
             ${koulutus.koulutusKoodiUri},
+            ${koulutus.koulutuksetKoodiUri},
             ${koulutus.tila.toString}::julkaisutila,
             ${toJsonParam(koulutus.nimi)}::jsonb,
             ${toJsonParam(koulutus.metadata)}::jsonb,
@@ -188,6 +190,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  johtaa_tutkintoon,
                  tyyppi,
                  koulutus_koodi_uri,
+                 koulutukset_koodi_uri,
                  tila,
                  nimi,
                  metadata,
@@ -208,6 +211,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                           k.johtaa_tutkintoon,
                           k.tyyppi,
                           k.koulutus_koodi_uri,
+                          k.koulutukset_koodi_uri,
                           k.tila,
                           k.nimi,
                           k.metadata,
@@ -249,6 +253,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               johtaa_tutkintoon = ${koulutus.johtaaTutkintoon},
               tyyppi = ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
               koulutus_koodi_uri = ${koulutus.koulutusKoodiUri},
+              koulutukset_koodi_uri = ${koulutus.koulutuksetKoodiUri},
               tila = ${koulutus.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(koulutus.nimi)}::jsonb,
               metadata = ${toJsonParam(koulutus.metadata)}::jsonb,
@@ -263,6 +268,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             and ( johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
             or koulutus_koodi_uri is distinct from ${koulutus.koulutusKoodiUri}
+            or koulutukset_koodi_uri is distinct from ${koulutus.koulutuksetKoodiUri}
             or tila is distinct from ${koulutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(koulutus.nimi)}::jsonb
             or julkinen is distinct from ${koulutus.julkinen}
