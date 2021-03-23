@@ -62,44 +62,36 @@ trait MigrationHelpers extends Logging {
     calendar.set(localDateTime.getYear, localDateTime.getMonthValue - 1, localDateTime.getDayOfMonth, localDateTime.getHour, localDateTime.getMinute, localDateTime.getSecond)
     calendar
   }
-  def setYearAfter(source: LocalDateTime, target: LocalDateTime): LocalDateTime = {
-    val nowCalendar = localDateTimeToCalendar(target)
-    val calendar = localDateTimeToCalendar(source)
-    if(nowCalendar.before(calendar)) {
-      source
-    } else {
-      calendar.set(Calendar.YEAR, source.getYear + 1)
-      setYearAfter(LocalDateTime.ofInstant(calendar.toInstant(), calendar.getTimeZone().toZoneId()), target)
-    }
+  
+  def parseLisatiedot(result: JValue): Seq[Lisatieto] = {
+    Seq(
+      (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
+      (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
+      (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
+      (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
+      (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
+    ).flatten
   }
 
-  def ensureLoppuInFuture(alku: LocalDateTime, loppu: Option[LocalDateTime]): (LocalDateTime, Option[LocalDateTime]) = {
-    loppu match {
-      case None =>
-        (alku, loppu)
-      case Some(loppu) =>
-        val now = LocalDateTime.now()
-        if(now.isBefore(loppu)) {
-          (alku, Some(loppu))
-        } else {
-          (setYearAfter(alku, now), Some(setYearAfter(loppu, now)))
-        }
-    }
+  def parseKuvaus(result: JValue): Map[Kieli, String] = {
+    joinKieliMaps(
+      (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
+      (result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
+      isHtml = true
+    )
+  }
+
+  def isYAMKKoulutus(koulutusasteUri: String): Boolean = {
+    if(koulutusasteUri.contains("koulutusasteoph2002_71")) true
+    else false
   }
 
   def toAjanjakso(a : Map[String, JValue]) = {
-    val calendar = Calendar.getInstance()
     val alkuPvm = toLocalDateTime(a("alkuPvm").extract[Long])
     val loppuPvm = a.get("loppuPvm").flatMap(_.extractOpt[Long]).map(toLocalDateTime)
-    val (alku, loppu) = ensureLoppuInFuture(alkuPvm,loppuPvm)
-
-
-    Ajanjakso(alku,loppu)
+    Ajanjakso(alkuPvm, loppuPvm)
   }
   def toJulkaisutila(tila: String): Julkaisutila = tila.toLowerCase() match {
-    case "peruttu" => Arkistoitu
-    case "kopioitu" => Tallennettu
-    case "luonnos" => Tallennettu
     case _ => Tallennettu // Julkaisutila.withName(muu)
   }
   def toLiite(a: Map[String, JValue]): Option[Liite] =
@@ -109,7 +101,7 @@ trait MigrationHelpers extends Logging {
           tyyppiKoodiUri = None,
           nimi = Map(kieli -> a("liitteenNimi").extract[String]),
           kuvaus = a("liitteenKuvaukset").extract[Map[String, String]].flatMap(mapKieli),
-          toimitusaika = (a("toimitettavaMennessa").extractOpt[Long]).map(t => setYearAfter(toLocalDateTime(t),LocalDateTime.now())),
+          toimitusaika = a("toimitettavaMennessa").extractOpt[Long].map(t => toLocalDateTime(t)),
           toimitustapa = Some(Lomake),
           toimitusosoite = None))
       case _ => None
@@ -144,17 +136,13 @@ trait MigrationHelpers extends Logging {
     val maksullisuusKuvaus: Kielistetty = Map()
     val maksunMaara: Option[Double] = None
     val koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = toKoulutuksenAlkamiskausi(result)
+    val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
 
     val lisatiedot: List[Lisatieto] =
       koulutustyyppi match {
         case Yo => List()
-        case _ => List(
-          (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
-          (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
-          (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
-          (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
-          (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
-        ).flatten
+        case Amk if isYAMKKoulutus(koulutusasteUri) => List()
+        case _ => parseLisatiedot(result).toList
       }
 
     val apuraha: Option[Apuraha] = None
@@ -228,25 +216,15 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
         (result \ "koulutuskoodi" \ "versio").extract[Int])
     val lisatiedot: Seq[Lisatieto] =
       koulutustyyppi match {
-        case Yo => Seq(
-          (result \ "kuvausKomo" \ "KOULUTUKSEN_RAKENNE" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_01#1", toKieliMap(k))),
-          (result \ "kuvausKomo" \ "JATKOOPINTO_MAHDOLLISUUDET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_02#1", toKieliMap(k))),
-          (result \ "kuvausKomoto" \ "SIJOITTUMINEN_TYOELAMAAN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_03#1", toKieliMap(k))),
-          (result \ "kuvausKomoto" \ "YHTEISTYO_MUIDEN_TOIMIJOIDEN_KANSSA" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_04#1", toKieliMap(k))),
-          (result \ "kuvausKomoto" \ "KANSAINVALISTYMINEN" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_06#1", toKieliMap(k)))
-        ).flatten
+        case Yo => parseLisatiedot(result)
+        case Amk if isYAMKKoulutus(koulutusasteUri) => parseLisatiedot(result)
         case _ => Seq()
       }
-    val kuvaus: Map[Kieli, String] =
-      joinKieliMaps(
-        (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
-        (result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
-        isHtml = true
-      )
+    val kuvaus: Map[Kieli, String] = parseKuvaus(result)
     val metadata: KoulutusMetadata =
       koulutustyyppi match {
         case Amk => AmmattikorkeakouluKoulutusMetadata(
-          kuvaus = Map(),
+          kuvaus = if(isYAMKKoulutus(koulutusasteUri)) kuvaus else Map(),
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
@@ -288,19 +266,14 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
     val nimet: Map[Kieli, String] =
       opetuskielet.flatten.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
-    val kuvaus: Map[Kieli, String] =
-      joinKieliMaps(
-        (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
-        (result \ "kuvausKomo" \ "TAVOITTEET" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map()),
-        isHtml = true
-      )
+    val kuvaus: Map[Kieli, String] = parseKuvaus(result)
     val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
     val oid = (result \ "oid").extractOpt[String].map(ToteutusOid)
     val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
     val metadata: Option[ToteutusMetadata] =
       Some(koulutustyyppi match {
         case Amk => AmmattikorkeakouluToteutusMetadata(
-          kuvaus = kuvaus,
+          kuvaus = if(isYAMKKoulutus(koulutusasteUri)) Map() else kuvaus,
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = List(),
           ammattinimikkeet = List(),

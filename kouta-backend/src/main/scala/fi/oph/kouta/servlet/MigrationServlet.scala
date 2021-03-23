@@ -41,7 +41,7 @@ import scala.util.{Failure, Success, Try}
 
  * Migrate hakukohteet:
 
- var count = 1; for(index in hakukohteet) {var oid = await f("/kouta-backend/migration/hakukohde/" + hakukohteet[index]); console.log(count++ + '/' + hakukohteet.length + ': ' + oid); }
+ var count = 1; for(index in hakukohteet) {var resp = await f("/kouta-backend/migration/hakukohde/" + hakukohteet[index]); console.log(count++ + '/' + hakukohteet.length + ': ' + JSON.stringify(resp)); }
 
  */
 trait LookupDb {
@@ -186,54 +186,68 @@ class MigrationServlet(koulutusService: KoulutusService,
     val hakukohdeOid = HakukohdeOid(params("hakukohdeOid"))
     logger.warn(s"Migration begins for hakukohde $hakukohdeOid!")
     val result = parse(fetch(urlProperties.url("tarjonta-service.hakukohde.oid", hakukohdeOid))) \ "result"
-    val originalHakuOid = HakuOid((result \ "hakuOid").extract[String])
-    db.findMappedOid(originalHakuOid.toString) match {
-      case Some(hakuOid) =>
-        val hakukohdeKoulutusOids = (result \ "hakukohdeKoulutusOids").extract[List[String]]
-        val hakukohde = migrationService.parseHakukohdeFromResult(result).copy(hakuOid = HakuOid(hakuOid))
-        for(koulutusOid <- hakukohdeKoulutusOids) {
-          logger.warn(s"Migration begins for koulutus $koulutusOid!")
-          val result = parse(fetch(urlProperties.url("tarjonta-service.koulutus.oid", koulutusOid))) \ "result"
-          val komoOid = (result \ "komoOid").extract[String]
-          val komo = parse(fetch(urlProperties.url("tarjonta-service.komo.oid", komoOid))) \ "result"
-          val koulutus: Koulutus = migrationService.parseKoulutusFromResult(result, komo, koulutuskoodi2koulutusala)
-          tryPutAndPost(koulutus.oid.get,
-            koulutus.withOid(KoulutusOid(getMappedOidOrExisting(koulutus.oid.get))),
-            koulutusService.put, koulutusService.update)
+    val hakukohdeTila: String = (result \ "tila").extract[String]
+    if(hakukohdeTila.equals("JULKAISTU")) {
+      val originalHakuOid = HakuOid((result \ "hakuOid").extract[String])
+      db.findMappedOid(originalHakuOid.toString) match {
+        case Some(hakuOid) =>
+          val hakukohdeKoulutusOids = (result \ "hakukohdeKoulutusOids").extract[List[String]]
+          val hakukohde = migrationService.parseHakukohdeFromResult(result).copy(hakuOid = HakuOid(hakuOid))
+          for(koulutusOid <- hakukohdeKoulutusOids) {
+            logger.warn(s"Migration begins for koulutus $koulutusOid!")
+            val result = parse(fetch(urlProperties.url("tarjonta-service.koulutus.oid", koulutusOid))) \ "result"
+            val tarjontaKomotoTila: String = (result \ "tila").extract[String]
+            if(tarjontaKomotoTila.equals("JULKAISTU")) {
+              val komoOid = (result \ "komoOid").extract[String]
+              val komo = parse(fetch(urlProperties.url("tarjonta-service.komo.oid", komoOid))) \ "result"
+              val koulutus: Koulutus = migrationService.parseKoulutusFromResult(result, komo, koulutuskoodi2koulutusala)
+              tryPutAndPost(koulutus.oid.get,
+                koulutus.withOid(KoulutusOid(getMappedOidOrExisting(koulutus.oid.get))),
+                koulutusService.put, koulutusService.update)
 
-          val toteutus: Toteutus = migrationService.parseToteutusFromResult(result)
-            .copy(koulutusOid = KoulutusOid(getMappedOid(koulutus.oid.get)))
-          tryPutAndPost(toteutus.oid.get,
-            toteutus.withOid(ToteutusOid(getMappedOidOrExisting(toteutus.oid.get))),
-            toteutusService.put, toteutusService.update)
-        }
-        val valintakokeet: Map[String, domain.Valintakoe] = migrationService.parseValintakokeetFromResult(result)
-        val finalHakukohde =
-          hakukohde
-            .copy(
-              valintakokeet = valintakokeet.map {
-                case (id, koe) =>
-                  db.findMappedOid(id).map(id => koe.copy(id = Some(UUID.fromString(id)))).getOrElse(koe)
-              }.toSeq,
-              toteutusOid = ToteutusOid(getMappedOid(hakukohde.toteutusOid)))
-            .withOid(HakukohdeOid(getMappedOidOrExisting(hakukohdeOid)))
-
-        val newOid = tryPutAndPost(hakukohdeOid,
-          finalHakukohde,
-          hakukohdeService.put, hakukohdeService.update)
-
-        if(valintakokeet.nonEmpty) {
-          val saved: (Hakukohde, Instant) = hakukohdeService.get(HakukohdeOid(newOid)).get
-
-          for(vk <- saved._1.valintakokeet;
-              (id, old) <- valintakokeet) {
-            if(old.nimi.equals(vk.nimi) && db.findMappedOid(id).isEmpty) {
-              db.insertOidMapping(id, vk.id.get.toString)
+              val toteutus: Toteutus = migrationService.parseToteutusFromResult(result)
+                .copy(koulutusOid = KoulutusOid(getMappedOid(koulutus.oid.get)))
+              tryPutAndPost(toteutus.oid.get,
+                toteutus.withOid(ToteutusOid(getMappedOidOrExisting(toteutus.oid.get))),
+                toteutusService.put, toteutusService.update)
+            } else {
+              logger.warn(s"Migration skipped for koulutus $koulutusOid!")
             }
           }
-        }
-        Ok(hakukohdeOid)
-      case None => BadRequest(s"Haku $originalHakuOid must be migrated first!")
+          val valintakokeet: Map[String, domain.Valintakoe] = migrationService.parseValintakokeetFromResult(result)
+          val finalHakukohde =
+            hakukohde
+              .copy(
+                valintakokeet = valintakokeet.map {
+                  case (id, koe) =>
+                    db.findMappedOid(id).map(id => koe.copy(id = Some(UUID.fromString(id)))).getOrElse(koe)
+                }.toSeq,
+                toteutusOid = ToteutusOid(getMappedOid(hakukohde.toteutusOid)))
+              .withOid(HakukohdeOid(getMappedOidOrExisting(hakukohdeOid)))
+
+          val newOid = tryPutAndPost(hakukohdeOid,
+            finalHakukohde,
+            hakukohdeService.put, hakukohdeService.update)
+
+          if(valintakokeet.nonEmpty) {
+            val saved: (Hakukohde, Instant) = hakukohdeService.get(HakukohdeOid(newOid)).get
+
+            for(vk <- saved._1.valintakokeet;
+                (id, old) <- valintakokeet) {
+              if(old.nimi.equals(vk.nimi) && db.findMappedOid(id).isEmpty) {
+                db.insertOidMapping(id, vk.id.get.toString)
+              }
+            }
+          }
+          Ok(MigrationStatus(hakukohdeOid, "SUCCESSFULLY MIGRATED"))
+        case None => BadRequest(s"Haku $originalHakuOid must be migrated first!")
+      }
+    } else {
+      logger.warn(s"Migration skipped for hakukohde $hakukohdeOid!")
+      Ok(MigrationStatus(hakukohdeOid, "SKIPPED MIGRATION"))
     }
+
   }
 }
+
+case class MigrationStatus(hakukohdeOid: HakukohdeOid, status: String)
