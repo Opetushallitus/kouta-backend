@@ -43,6 +43,8 @@ class TrailingZeroesLookupDb extends LookupDb {
   override def insertOidMapping(oldOld: String, newOid: String): Unit = {
 
   }
+
+  override def updateAllowed(oldOid: String): Option[Boolean] = None
 }
 class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfterEach with ScalatraSuite with ScalatraFlatSpec with MatcherWords with MockitoSugar with ArgumentMatchersSugar {
 
