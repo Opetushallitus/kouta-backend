@@ -391,7 +391,7 @@ object TestData {
     opetusaikaKuvaus = Map(Fi -> "Opetusaikakuvaus fi", Sv -> "Opetusaikakuvaus sv"),
     opetustapaKoodiUrit = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
     opetustapaKuvaus = Map(Fi -> "Opetustapakuvaus fi", Sv -> "Opetustapakuvaus sv"),
-    onkoMaksullinen = Some(true),
+    maksullisuustyyppi = Some(Maksullinen),
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
     maksunMaara = Some(200.5),
     koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
