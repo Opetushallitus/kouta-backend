@@ -46,9 +46,13 @@ package object toteutusMetadata {
       |          type: object
       |          description: Koulutuksen toteutuksen opetustapoja tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
-      |        onkoMaksullinen:
-      |          type: boolean
-      |          decription: "Onko koulutus maksullinen?"
+      |        maksullisuustyyppi:
+      |          type: string
+      |          description: Maksullisuuden tyyppi
+      |          enum:
+      |            - 'maksullinen'
+      |            - 'maksuton'
+      |            - 'lukuvuosimaksu'
       |        maksullisuusKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen maksullisuutta tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -511,7 +515,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   opetusaikaKuvaus: Kielistetty = Map(),
                   opetustapaKoodiUrit: Seq[String] = Seq(),
                   opetustapaKuvaus: Kielistetty = Map(),
-                  onkoMaksullinen: Option[Boolean] = Some(false),
+                  maksullisuustyyppi: Option[Maksullisuustyyppi] = None,
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
                   koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
@@ -539,9 +543,9 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
       validateOptionalKielistetty(kielivalinta, opetuskieletKuvaus, s"$path.opetuskieletKuvaus"),
       validateOptionalKielistetty(kielivalinta, opetusaikaKuvaus, s"$path.opetusaikaKuvaus"),
       validateOptionalKielistetty(kielivalinta, opetustapaKuvaus, s"$path.opetustapaKuvaus"),
-      assertNotOptional(onkoMaksullinen, s"$path.onkoMaksullinen"),
+      assertNotOptional(maksullisuustyyppi, s"$path.maksullisuustyyppi"),
       validateOptionalKielistetty(kielivalinta, maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
-      validateIfTrue(onkoMaksullinen.contains(true), assertNotOptional(maksunMaara, s"$path.maksunMaara")),
+      validateIfTrue(maksullisuustyyppi.contains(Maksullinen) || maksullisuustyyppi.contains(Lukuvuosimaksu), assertNotOptional(maksunMaara, s"$path.maksunMaara")),
       validateOptionalKielistetty(kielivalinta, suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
     ))
   )

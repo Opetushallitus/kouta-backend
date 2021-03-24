@@ -518,7 +518,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       "opetusaikaKuvaus": {},
       "opetustapaKoodiUrit": [],
       "opetustapaKuvaus": {},
-      "onkoMaksullinen": false,
+      "maksullisuustyyppi": "maksuton",
       "maksullisuusKuvaus": {},
       "maksunMaara": {"a": "b"},
       "alkamisaikaKuvaus": {},
