@@ -134,6 +134,7 @@ trait MigrationHelpers extends Logging {
       case ("kieli_en", v) => s"oppilaitoksenopetuskieli_4#$v"
     }.toSeq
     val onkoMaksullinen = (result \ "opintojenMaksullisuus").extractOpt[Boolean]
+    val maksullisuustyyppi = if (onkoMaksullinen.contains(true)) Maksullinen else Maksuton
     val opetuskieletKuvaus: Kielistetty = (result \ "kuvausKomoto" \ "LISATIETOA_OPETUSKIELISTA" \ "tekstis").extractOpt[Map[String,String]].map(k => toKieliMap(k)).getOrElse(Map())
     val opetusaikaKoodiUrit: Seq[String] = (result \ "opetusAikas" \ "uris").extract[Map[String, Int]].map(k => s"${k._1}#${k._2}").toSeq
     val opetusaikaKuvaus: Kielistetty = Map()
@@ -171,7 +172,7 @@ trait MigrationHelpers extends Logging {
       opetusaikaKuvaus = opetusaikaKuvaus,
       opetustapaKoodiUrit = opetustapaKoodiUrit,
       opetustapaKuvaus = opetustapaKuvaus,
-      onkoMaksullinen = onkoMaksullinen,
+      maksullisuustyyppi = Some(maksullisuustyyppi),
       maksullisuusKuvaus = maksullisuusKuvaus,
       maksunMaara = maksunMaara,
       koulutuksenAlkamiskausi = koulutuksenAlkamiskausi,
