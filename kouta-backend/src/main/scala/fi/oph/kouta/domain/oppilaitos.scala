@@ -65,9 +65,11 @@ package object oppilaitos {
       |      type: object
       |      properties:
       |        yhteystiedot:
-      |          type: object
+      |          type: array
       |          description: Oppilaitoksen Opintopolussa näytettävät yhteystiedot
-      |          $ref: '#/components/schemas/Yhteystieto'
+      |          items:
+      |            type: object
+      |            $ref: '#/components/schemas/Yhteystieto'
       |        tietoaOpiskelusta:
       |          type: array
       |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa
@@ -163,8 +165,14 @@ package object oppilaitos {
       |      type: object
       |      properties:
       |        yhteystiedot:
+      |          type: array
+      |          description: Oppilaitoksen Opintopolussa näytettävät yhteystiedot
+      |          items:
+      |            type: object
+      |            $ref: '#/components/schemas/Yhteystieto'
+      |        hakijapalveluidenYhteystiedot:
       |          type: object
-      |          description: Oppilaitoksen osan Opintopolussa näytettävät yhteystiedot
+      |          description: Oppilaitoksen Opintopolussa näytettävät hakijapalveluiden yhteystiedot
       |          $ref: '#/components/schemas/Yhteystieto'
       |        esittely:
       |          type: object
@@ -222,9 +230,17 @@ package object oppilaitos {
     """    Yhteystieto:
       |      type: object
       |      properties:
+      |        nimi:
+      |          type: object
+      |          description: Opintopolussa näytettävä yhteystiedon nimi eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          $ref: '#/components/schemas/Teksti'
       |        osoite:
       |          type: object
       |          description: Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          $ref: '#/components/schemas/Osoite'
+      |        kayntiOsoite:
+      |          type: object
+      |          description: Opintopolussa näytettävä käyntiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Osoite'
       |        sahkoposti:
       |          type: object
@@ -334,7 +350,8 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
 }
 
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
-                              yhteystiedot: Option[Yhteystieto] = None,
+                              yhteystiedot: Seq[Yhteystieto] = Seq(),
+                              hakijapalveluidenYhteystiedot: Option[Yhteystieto] = None,
                               esittely: Kielistetty = Map(),
                               opiskelijoita: Option[Int] = None,
                               korkeakouluja: Option[Int] = None,
@@ -345,7 +362,8 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
                               akatemioita: Option[Int] = None) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[TietoaOpiskelusta](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
-    validateIfDefined[Yhteystieto](yhteystiedot, _.validate(tila, kielivalinta, s"$path.yhteystiedot")),
+    validateIfNonEmpty[Yhteystieto](yhteystiedot, s"$path.yhteystiedot", _.validate(tila, kielivalinta, _)),
+    validateIfDefined[Yhteystieto](hakijapalveluidenYhteystiedot, _.validate(tila, kielivalinta, s"$path.hakijapalveluidenYhteystiedot")),
     validateIfDefined[Int](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
     validateIfDefined[Int](korkeakouluja, assertNotNegative(_, s"$path.korkeakouluja")),
     validateIfDefined[Int](tiedekuntia,   assertNotNegative(_, s"$path.tiedekuntia")),
@@ -364,12 +382,12 @@ case class TietoaOpiskelusta(otsikkoKoodiUri: String, teksti: Kielistetty) exten
   )
 }
 
-case class OppilaitoksenOsaMetadata(yhteystiedot: Option[Yhteystieto] = None,
+case class OppilaitoksenOsaMetadata(yhteystiedot: Seq[Yhteystieto] = Seq(),
                                     opiskelijoita: Option[Int] = None,
                                     kampus: Kielistetty = Map(),
                                     esittely: Kielistetty = Map()) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfDefined[Yhteystieto](yhteystiedot, _.validate(tila, kielivalinta, s"$path.yhteystiedot")),
+    validateIfNonEmpty[Yhteystieto](yhteystiedot, s"$path.yhteystiedot", _.validate(tila, kielivalinta, _)),
     validateIfDefined[Int](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kampus, s"$path.kampus"),
@@ -385,15 +403,19 @@ case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
                                     muokkaaja: UserOid,
                                     modified: Modified)
 
-case class Yhteystieto(osoite: Option[Osoite] = None,
+case class Yhteystieto(nimi: Kielistetty = Map(),
+                       osoite: Option[Osoite] = None,
+                       kayntiOsoite: Option[Osoite] = None,
                        wwwSivu: Kielistetty = Map(),
                        puhelinnumero: Kielistetty = Map(),
                        sahkoposti: Kielistetty = Map()) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta, s"$path.osoite")),
+    validateIfDefined[Osoite](kayntiOsoite, _.validate(tila, kielivalinta, s"$path.kayntiOsoite")),
     validateIfNonEmpty(wwwSivu, s"$path.wwwSivu", assertValidUrl _),
     validateIfNonEmpty(sahkoposti, s"$path.sahkoposti", assertValidEmail _),
     validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, nimi, s"$path.nimi"),
       validateOptionalKielistetty(kielivalinta, wwwSivu, s"$path.wwwSivu"),
       validateOptionalKielistetty(kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
       validateOptionalKielistetty(kielivalinta, sahkoposti, s"$path.sahkoposti")

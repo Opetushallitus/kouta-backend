@@ -49,8 +49,13 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
   }
 
   it should "validate yhteystiedot" in {
-    val metadata = min.copy(yhteystiedot = Some(Yhteystieto(wwwSivu = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
-    failsValidation(Tallennettu, metadata, "yhteystiedot.wwwSivu.sv", invalidUrl("urli"))
+    val metadata = min.copy(yhteystiedot = Seq(Yhteystieto(wwwSivu = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
+    failsValidation(Tallennettu, metadata, "yhteystiedot[0].wwwSivu.sv", invalidUrl("urli"))
+  }
+
+  it should "validate hakijapalveluidenYhteystiedot" in {
+    val metadata = min.copy(hakijapalveluidenYhteystiedot = Some(Yhteystieto(wwwSivu = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
+    failsValidation(Tallennettu, metadata, "hakijapalveluidenYhteystiedot.wwwSivu.sv", invalidUrl("urli"))
   }
 
   it should "fail if esittely is present only for some languages in a julkaistu oppilaitos" in {
@@ -71,7 +76,7 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
 }
 
 class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
-  val max = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot.get
+  val max = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot(0)
 
   it should "pass valid yhteystiedot" in {
      passesValidation(Julkaistu, max)
@@ -80,6 +85,11 @@ class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
   it should "validate osoite" in {
     val yhteystiedot = max.copy(osoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
     failsValidation(Tallennettu, yhteystiedot, "osoite.postinumeroKoodiUri", validationMsg("virhe"))
+  }
+
+  it should "validate kayntiOsoite" in {
+    val yhteystiedot = max.copy(kayntiOsoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
+    failsValidation(Tallennettu, yhteystiedot, "kayntiOsoite.postinumeroKoodiUri", validationMsg("virhe"))
   }
 
   it should "fail on an invalid sahkoposti" in {
@@ -93,6 +103,8 @@ class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
   }
 
   it should "fail if a julkaistu yhteystieto is missing some languages in kielistetty fields" in {
+    passesValidation(Tallennettu, max.copy(nimi = Map(Fi -> "Yhteystiedon nimi")))
+    failsValidation(Julkaistu, max.copy(nimi = Map(Fi -> "Yhteystiedon nimi")), "nimi", invalidKielistetty(Seq(Sv)))
 
     passesValidation(Tallennettu, max.copy(wwwSivu = Map(Fi -> "https://url.fi")))
     failsValidation(Julkaistu, max.copy(wwwSivu = Map(Fi -> "https://url.fi")), "wwwSivu", invalidKielistetty(Seq(Sv)))

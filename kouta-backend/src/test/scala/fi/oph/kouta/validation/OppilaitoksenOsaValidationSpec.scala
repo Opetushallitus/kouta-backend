@@ -44,8 +44,8 @@ class OppilaitoksenOsaMetadataValidationSpec extends SubEntityValidationSpec[Opp
   }
 
   it should "validate yhteystiedot" in {
-    val metadata = min.copy(yhteystiedot = Some(Yhteystieto(wwwSivu = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
-    failsValidation(Tallennettu, metadata, "yhteystiedot.wwwSivu.sv", invalidUrl("urli"))
+    val metadata = min.copy(yhteystiedot = Seq(Yhteystieto(wwwSivu = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
+    failsValidation(Tallennettu, metadata, "yhteystiedot[0].wwwSivu.sv", invalidUrl("urli"))
   }
 
   it should "fail if esittely is present only for some languages in a julkaistu oppilaitoksenOsa" in {

@@ -565,7 +565,14 @@ object TestData {
     tila = Julkaistu,
     esikatselu = true,
     metadata = Some(OppilaitosMetadata(
-      yhteystiedot = Some(Yhteystieto(
+      yhteystiedot = Seq(Yhteystieto(
+        nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+        osoite = Some(Osoite1),
+        wwwSivu = Map(Fi -> "http://www.oppilaitos.fi", Sv -> "http://www.oppilaitos.sv"),
+        puhelinnumero = Map(Fi -> "123", Sv -> "123"),
+        sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
+      hakijapalveluidenYhteystiedot = Some(Yhteystieto(
+        nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
         osoite = Some(Osoite1),
         wwwSivu = Map(Fi -> "http://www.oppilaitos.fi", Sv -> "http://www.oppilaitos.sv"),
         puhelinnumero = Map(Fi -> "123", Sv -> "123"),
@@ -599,7 +606,8 @@ object TestData {
     tila = Julkaistu,
     esikatselu = true,
     metadata = Some(OppilaitoksenOsaMetadata(
-      yhteystiedot = Some(Yhteystieto(
+      yhteystiedot = Seq(Yhteystieto(
+        nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
         osoite = Some(Osoite1),
         wwwSivu = Map(Fi -> "https://www.tiedekunta.fi", Sv -> "https://www.tiedekunta.sv"),
         puhelinnumero = Map(Fi -> "123", Sv -> "123"),
