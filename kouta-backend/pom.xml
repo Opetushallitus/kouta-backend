@@ -7,15 +7,15 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>4.1.0-SNAPSHOT</version>
+        <version>5.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>kouta-backend</artifactId>
-    <version>4.1.0-SNAPSHOT</version>
+    <version>5.0.0-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.1.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.2.0-SNAPSHOT</kouta-common.version>
     </properties>
 
 
