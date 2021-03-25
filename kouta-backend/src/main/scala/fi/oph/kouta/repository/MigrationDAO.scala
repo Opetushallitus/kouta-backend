@@ -22,4 +22,10 @@ object MigrationDAO extends MigrationExtractors with SQLHelpers {
             $newOid) returning new_oid""".as[String].head
   }
 
+  def updateAllowed(oldOid: String): DBIO[Option[Boolean]] = {
+    sql"""select update_allowed
+          from migration_old_to_new_oid_lookup
+          where old_oid = $oldOid""".as[Boolean].headOption
+  }
+
 }

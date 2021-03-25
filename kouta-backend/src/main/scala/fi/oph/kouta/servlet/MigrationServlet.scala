@@ -47,6 +47,7 @@ import scala.util.{Failure, Success, Try}
 trait LookupDb {
   def findMappedOid(oldOid: String): Option[String]
   def insertOidMapping(oldOld: String, newOid: String): Unit
+  def updateAllowed(oldOid: String): Option[Boolean]
 }
 class MigrationDb extends LookupDb with Logging {
   def findMappedOid(oldOid: String): Option[String] = {
@@ -69,6 +70,16 @@ class MigrationDb extends LookupDb with Logging {
       }
       case _ =>
         logger.info(s"Oid $newOid migrated as new!")
+    }
+  }
+  def updateAllowed(oldOid: String): Option[Boolean] = {
+    KoutaDatabase.runBlockingTransactionally {
+      MigrationDAO.updateAllowed(oldOid)
+    } match {
+      case Success(allowed) => allowed
+      case Failure(exception) =>
+        logger.error(s"Unable to read update allowed for $oldOid")
+        throw exception
     }
   }
 }
@@ -104,6 +115,9 @@ class MigrationServlet(koulutusService: KoulutusService,
   }
   def getMappedOid(oid: Oid): String = {
     db.findMappedOid(oid.toString).getOrElse(throw new RuntimeException(s"Expected $oid not found in migration lookup table!"))
+  }
+  def updateAllowed(oldOid: Oid): Boolean = {
+    db.updateAllowed(oldOid.toString).getOrElse(true)
   }
 
   def tryPutAndPost[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => Oid, post: (A, Instant) => Boolean): String = {
@@ -201,9 +215,13 @@ class MigrationServlet(koulutusService: KoulutusService,
               val komoOid = (result \ "komoOid").extract[String]
               val komo = parse(fetch(urlProperties.url("tarjonta-service.komo.oid", komoOid))) \ "result"
               val koulutus: Koulutus = migrationService.parseKoulutusFromResult(result, komo, koulutuskoodi2koulutusala)
-              tryPutAndPost(koulutus.oid.get,
-                koulutus.withOid(KoulutusOid(getMappedOidOrExisting(koulutus.oid.get))),
-                koulutusService.put, koulutusService.update)
+              if(updateAllowed(koulutus.oid.get)) {
+                tryPutAndPost(koulutus.oid.get,
+                  koulutus.withOid(KoulutusOid(getMappedOidOrExisting(koulutus.oid.get))),
+                  koulutusService.put, koulutusService.update)
+              } else {
+                logger.warn(s"Skipped koulutus update because updating is not allowed | TarjontaOid: ${koulutus.oid.get} | KoutaOid: ${getMappedOidOrExisting(koulutus.oid.get)}")
+              }
 
               val toteutus: Toteutus = migrationService.parseToteutusFromResult(result)
                 .copy(koulutusOid = KoulutusOid(getMappedOid(koulutus.oid.get)))
@@ -211,7 +229,7 @@ class MigrationServlet(koulutusService: KoulutusService,
                 toteutus.withOid(ToteutusOid(getMappedOidOrExisting(toteutus.oid.get))),
                 toteutusService.put, toteutusService.update)
             } else {
-              logger.warn(s"Migration skipped for koulutus $koulutusOid!")
+              logger.warn(s"Migration skipped for koulutus $koulutusOid is not JULKAISTU!")
             }
           }
           val valintakokeet: Map[String, domain.Valintakoe] = migrationService.parseValintakokeetFromResult(result)
@@ -243,7 +261,7 @@ class MigrationServlet(koulutusService: KoulutusService,
         case None => BadRequest(s"Haku $originalHakuOid must be migrated first!")
       }
     } else {
-      logger.warn(s"Migration skipped for hakukohde $hakukohdeOid!")
+      logger.warn(s"Migration skipped for hakukohde $hakukohdeOid because it is not JULKAISTU!")
       Ok(MigrationStatus(hakukohdeOid, "SKIPPED MIGRATION"))
     }
 
