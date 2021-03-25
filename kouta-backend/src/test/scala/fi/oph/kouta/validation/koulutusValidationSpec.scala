@@ -32,7 +32,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
   it should "fail if julkaistu koulutus is invalid" in {
     failsValidation(amm.copy(johtaaTutkintoon = false), "johtaaTutkintoon", invalidTutkintoonjohtavuus("amm"))
     failsValidation(amm.copy(koulutusKoodiUri = None), "koulutusKoodiUri", missingMsg)
-//    failsValidation(amm.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg) //TODO KTO-1174
+    failsValidation(amm.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
     failsValidation(amm.copy(koulutusKoodiUri = Some("mummo")), "koulutusKoodiUri", validationMsg("mummo"))
     failsValidation(amm.copy(koulutuksetKoodiUri = Seq("mummo", "väärä")),
       ValidationError("koulutuksetKoodiUri[0]", validationMsg("mummo")),
@@ -45,10 +45,11 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(teemakuva = Some("mummo")), "teemakuva", invalidUrl("mummo"))
   }
 
-  //TODO KTO-1174
-//  it should "contain only one koulutusKoodiUri if not korkeakoulutus" in {
-//    failsValidation(amm.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", tooManyKoodiUris)
-//  }
+  it should "contain only one koulutusKoodiUri if not korkeakoulutus" in {
+    failsValidation(amm.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", tooManyKoodiUris)
+  }
+
+  //TODO tähän testi korkeakoulujen pakollisuudelle
 
   it should "validate metadata" in {
     val metadata = amm.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
@@ -97,7 +98,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
   it should "fail if amm tutkinnon osa has ePerusteId or koulutusKoodi" in {
     failsValidation(ammTk.copy(ePerusteId = Some(123)), "ePerusteId", notMissingMsg(Some("123")))
     failsValidation(ammTk.copy(koulutusKoodiUri = Some("koulutus_371101#1")), "koulutusKoodiUri", notMissingMsg(Some("koulutus_371101#1")))
-//    failsValidation(ammTk.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", notEmptyMsg) //TODO KTO-1174
+    failsValidation(ammTk.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", notEmptyMsg) //TODO KTO-1174
   }
 
   it should "pass amm osaamisala koulutus" in {
