@@ -247,7 +247,6 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     tila = tila,
     kielivalinta = opetuskielet.flatten.toSeq,
     tarjoajat = opetusTarjoajat,
-    koulutusKoodiUri = Some(koulutusKoodiUri),
     koulutuksetKoodiUri = koulutuksetKoodiUri,
     nimi = nimi,
     koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu),

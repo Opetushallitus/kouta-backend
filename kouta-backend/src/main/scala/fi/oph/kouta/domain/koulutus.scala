@@ -29,10 +29,6 @@ package object koulutus {
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
       |          example: amm
-      |        koulutusKoodiUri:
-      |          type: string
-      |          description: Koulutuksen koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
-      |          example: koulutus_371101#1
       |        koulutuksetKoodiUri:
       |          type: array
       |          description: Koulutuksen koodi URIt. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
@@ -168,7 +164,6 @@ package object koulutus {
 case class Koulutus(oid: Option[KoulutusOid] = None,
                     johtaaTutkintoon: Boolean,
                     koulutustyyppi: Koulutustyyppi,
-                    koulutusKoodiUri: Option[String] = None,
                     koulutuksetKoodiUri: Seq[String] = Seq(),
                     tila: Julkaisutila = Tallennettu,
                     esikatselu: Boolean = false,
@@ -187,7 +182,6 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   override def validate(): IsValid = {
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
-      validateIfDefined[String](koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern, "koulutusKoodiUri")),
       validateIfNonEmpty[String](koulutuksetKoodiUri, "koulutuksetKoodiUri", assertMatch(_, KoulutusKoodiPattern, _)),
       validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
@@ -195,14 +189,12 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
       validateIfJulkaistu(tila, and(
         assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         validateIfTrue(koulutustyyppi != AmmTutkinnonOsa, and(
-          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
           validateIfTrue(Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
         validateIfTrue(!Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertTrue(koulutuksetKoodiUri.size < 2, "koulutuksetKoodiUri", tooManyKoodiUris)),
         validateIfTrue(koulutustyyppi == AmmTutkinnonOsa, and(
           assertNotDefined(ePerusteId, "ePerusteId"),
-          assertNotDefined(koulutusKoodiUri, "koulutusKoodiUri"),
           assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
         )),
         assertNotOptional(metadata, "metadata"),

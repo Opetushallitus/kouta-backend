@@ -384,10 +384,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(KoulutusOid(oid)),
       params(JohtaaTutkintoonKey).toBoolean,
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
-      params.get(KoulutusKoodiUriKey) match {
-        case None | Some(null) => None
-        case Some(x) => Some(x)
-      },
       params(KoulutuksetKoodiUriKey).split(",").map(_.trim).toSeq,
       Julkaisutila.withName(params(TilaKey)),
       params.get(EsikatseluKey) match {

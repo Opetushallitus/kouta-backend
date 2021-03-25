@@ -31,10 +31,8 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail if julkaistu koulutus is invalid" in {
     failsValidation(amm.copy(johtaaTutkintoon = false), "johtaaTutkintoon", invalidTutkintoonjohtavuus("amm"))
-    failsValidation(amm.copy(koulutusKoodiUri = None), "koulutusKoodiUri", missingMsg)
     failsValidation(amm.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
-    failsValidation(amm.copy(koulutusKoodiUri = Some("mummo")), "koulutusKoodiUri", validationMsg("mummo"))
-    failsValidation(amm.copy(koulutuksetKoodiUri = Seq("mummo", "väärä")),
+    failsValidation(yo.copy(koulutuksetKoodiUri = Seq("mummo", "väärä")),
       ValidationError("koulutuksetKoodiUri[0]", validationMsg("mummo")),
       ValidationError("koulutuksetKoodiUri[1]", validationMsg("väärä")))
     failsValidation(amm.copy(tarjoajat = List("mummo", "varis", "1.2.3").map(OrganisaatioOid)),
@@ -99,8 +97,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail if amm tutkinnon osa has ePerusteId or koulutusKoodi" in {
     failsValidation(ammTk.copy(ePerusteId = Some(123)), "ePerusteId", notMissingMsg(Some("123")))
-    failsValidation(ammTk.copy(koulutusKoodiUri = Some("koulutus_371101#1")), "koulutusKoodiUri", notMissingMsg(Some("koulutus_371101#1")))
-    failsValidation(ammTk.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", notEmptyMsg) //TODO KTO-1174
+    failsValidation(ammTk.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", notEmptyMsg)
   }
 
   it should "pass amm osaamisala koulutus" in {
@@ -108,8 +105,8 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "return multiple error messages" in {
-    failsValidation(min.copy(koulutusKoodiUri = Some("ankka"), oid = Some(KoulutusOid("2017"))),
-      ValidationError("koulutusKoodiUri", validationMsg("ankka")),
+    failsValidation(min.copy(koulutuksetKoodiUri = Seq("ankka"), oid = Some(KoulutusOid("2017"))),
+      ValidationError("koulutuksetKoodiUri[0]", validationMsg("ankka")),
       ValidationError("oid", validationMsg("2017")))
   }
 }

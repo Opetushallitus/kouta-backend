@@ -112,12 +112,12 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, TestData.YoKoulutus.copy(oid = Some(KoulutusOid(oid))))
   }
 
-  it should "validate new koulutus" in {
-    put(KoulutusPath, bytes(koulutus.copy(koulutusKoodiUri = None)), customHeaders(ophSession)) {
+  it should "validate new julkaistu koulutus" in {
+    put(KoulutusPath, bytes(koulutus.copy(koulutuksetKoodiUri = Seq())), customHeaders(ophSession)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(missingMsg, "koulutusKoodiUri"))
+      body should equal(validationErrorBody(missingMsg, "koulutuksetKoodiUri"))
     }
   }
 
@@ -335,11 +335,11 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "validate updated koulutus" in {
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    post(KoulutusPath, bytes(koulutus(oid).copy(koulutusKoodiUri = None)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
+    post(KoulutusPath, bytes(koulutus(oid).copy(koulutuksetKoodiUri = Seq())), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal(validationErrorBody(missingMsg, "koulutusKoodiUri"))
+      body should equal(validationErrorBody(missingMsg, "koulutuksetKoodiUri"))
     }
   }
 

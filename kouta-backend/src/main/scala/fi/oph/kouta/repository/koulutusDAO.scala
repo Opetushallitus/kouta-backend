@@ -149,7 +149,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""insert into koulutukset (
             johtaa_tutkintoon,
             tyyppi,
-            koulutus_koodi_uri,
             koulutukset_koodi_uri,
             tila,
             nimi,
@@ -164,7 +163,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           values (
             ${koulutus.johtaaTutkintoon},
             ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
-            ${koulutus.koulutusKoodiUri},
             ${koulutus.koulutuksetKoodiUri},
             ${koulutus.tila.toString}::julkaisutila,
             ${toJsonParam(koulutus.nimi)}::jsonb,
@@ -189,7 +187,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""select oid,
                  johtaa_tutkintoon,
                  tyyppi,
-                 koulutus_koodi_uri,
                  koulutukset_koodi_uri,
                  tila,
                  nimi,
@@ -210,7 +207,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""select distinct k.oid,
                           k.johtaa_tutkintoon,
                           k.tyyppi,
-                          k.koulutus_koodi_uri,
                           k.koulutukset_koodi_uri,
                           k.tila,
                           k.nimi,
@@ -252,7 +248,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sqlu"""update koulutukset set
               johtaa_tutkintoon = ${koulutus.johtaaTutkintoon},
               tyyppi = ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
-              koulutus_koodi_uri = ${koulutus.koulutusKoodiUri},
               koulutukset_koodi_uri = ${koulutus.koulutuksetKoodiUri},
               tila = ${koulutus.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(koulutus.nimi)}::jsonb,
@@ -267,7 +262,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             where oid = ${koulutus.oid}
             and ( johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
-            or koulutus_koodi_uri is distinct from ${koulutus.koulutusKoodiUri}
             or koulutukset_koodi_uri is distinct from ${koulutus.koulutuksetKoodiUri}
             or tila is distinct from ${koulutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(koulutus.nimi)}::jsonb
