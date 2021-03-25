@@ -1,5 +1,5 @@
-alter table koulutukset add column koulutukset_koodi_uri varchar[];
-alter table koulutukset_history add column koulutukset_koodi_uri varchar[];
+alter table koulutukset add column if not exists koulutukset_koodi_uri varchar[];
+alter table koulutukset_history add column if not exists koulutukset_koodi_uri varchar[];
 
 comment on column koulutukset.koulutukset_koodi_uri is 'Koulutusten koodi URIt';
 
@@ -47,4 +47,6 @@ end;
 $$;
 
 -- Kopioidaan arvot vanhasta kentästä joka tullaan poistamaan myöhemmin
-update koulutukset set koulutukset_koodi_uri = Array[koulutus_koodi_uri]
+update koulutukset
+set koulutukset_koodi_uri = Array [koulutus_koodi_uri]
+where koulutukset_koodi_uri is null and koulutus_koodi_uri is not null;
