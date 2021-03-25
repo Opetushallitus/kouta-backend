@@ -18,8 +18,10 @@ object Validations {
   def or(first: IsValid, second: IsValid): IsValid = if (first.isEmpty) second else first
 
   def validationMsg(value: String): ErrorMessage = ErrorMessage(msg = s"'$value' ei ole validi", id = "validationMsg")
+  val notEmptyMsg: ErrorMessage = ErrorMessage(msg = s"Ei saa sisältää arvoa", id = "notEmptyMsg")
   val missingMsg: ErrorMessage = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg")
   val notNegativeMsg: ErrorMessage = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
+  val tooManyKoodiUris: ErrorMessage = ErrorMessage(msg = s"Ainoastaan korkeakoulutuksella voi olla useampi kuin yksi koulutus", id = "tooManyKoodiUris")
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage = ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage = ErrorMessage(msg = s"Koulutuksen tyyppiä $tyyppi pitäisi olla tutkintoon johtavaa", id = "invalidTutkintoonjohtavuus")
@@ -74,6 +76,7 @@ object Validations {
   def assertValid(oid: Oid, path: String): IsValid = assertTrue(oid.isValid, path, validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
+  def assertEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.isEmpty, path, notEmptyMsg)
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
   def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
     assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))

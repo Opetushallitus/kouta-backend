@@ -115,6 +115,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val JohtaaTutkintoonKey = "johtaaTutkintoon"
   val KoulutustyyppiKey = "koulutustyyppi"
   val KoulutusKoodiUriKey = "koulutusKoodiUri"
+  val KoulutuksetKoodiUriKey = "koulutuksetKoodiUri"
   val TilaKey = "tila"
   val TarjoajatKey = "tarjoajat"
   val NimiKey = "nimi"
@@ -192,6 +193,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     JohtaaTutkintoonKey -> "true",
     KoulutustyyppiKey -> Amm.name,
     KoulutusKoodiUriKey -> "koulutus_371101#1",
+    KoulutuksetKoodiUriKey -> "koulutus_371101#1",
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
@@ -382,10 +384,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(KoulutusOid(oid)),
       params(JohtaaTutkintoonKey).toBoolean,
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
-      params.get(KoulutusKoodiUriKey) match {
-        case None | Some(null) => None
-        case Some(x) => Some(x)
-      },
+      params(KoulutuksetKoodiUriKey).split(",").map(_.trim).toSeq,
       Julkaisutila.withName(params(TilaKey)),
       params.get(EsikatseluKey) match {
         case None => false

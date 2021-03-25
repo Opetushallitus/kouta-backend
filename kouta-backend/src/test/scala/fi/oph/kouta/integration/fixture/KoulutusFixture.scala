@@ -30,10 +30,10 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
     addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
   }
 
-  val koulutus = TestData.AmmKoulutus
-  val yoKoulutus = TestData.YoKoulutus
-  val ammOsaamisalaKoulutus = TestData.AmmOsaamisalaKoulutus
-  val ammTutkinnonOsaKoulutus = TestData.AmmTutkinnonOsaKoulutus
+  val koulutus: Koulutus = TestData.AmmKoulutus
+  val yoKoulutus: Koulutus = TestData.YoKoulutus
+  val ammOsaamisalaKoulutus: Koulutus = TestData.AmmOsaamisalaKoulutus
+  val ammTutkinnonOsaKoulutus: Koulutus = TestData.AmmTutkinnonOsaKoulutus
 
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
   def muokkaus(k: Koulutus): Koulutus = k.copy(nimi = k.nimi.map{case (k, v) => k -> (v + v) })
@@ -71,7 +71,7 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
   def update(koulutus: Koulutus, lastModified: String): Unit =
     update(koulutus, lastModified, expectUpdate = true)
 
-  def addToList(koulutus:Koulutus) = {
+  def addToList(koulutus:Koulutus): KoulutusListItem = {
     val oid = if (koulutus.johtaaTutkintoon) {
       put(koulutus, ophSession)
     } else {
@@ -79,7 +79,7 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
     }
 
     val modified = readKoulutusModified(oid)
-    new KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
+    KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
   }
 
   def readKoulutusModified(oid: String): Modified = readKoulutusModified(KoulutusOid(oid))

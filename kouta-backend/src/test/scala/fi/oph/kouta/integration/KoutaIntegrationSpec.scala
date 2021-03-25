@@ -331,6 +331,11 @@ sealed trait DatabaseSpec {
     db.runBlocking(sqlu"""delete from sorakuvaukset""")
     db.runBlocking(sqlu"""delete from sorakuvaukset_history""")
 
+    db.runBlocking(sqlu"""delete from oppilaitosten_osat""")
+    db.runBlocking(sqlu"""delete from oppilaitosten_osat_history""")
+    db.runBlocking(sqlu"""delete from oppilaitokset""")
+    db.runBlocking(sqlu"""delete from oppilaitokset_history""")
+
     db.runBlocking(sqlu"""delete from authorities""")
     db.runBlocking(sqlu"""delete from sessions""")
 

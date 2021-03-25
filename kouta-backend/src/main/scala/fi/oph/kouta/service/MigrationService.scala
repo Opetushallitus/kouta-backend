@@ -202,6 +202,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
     val tila = toJulkaisutila((result \ "tila").extract[String])
     val koulutusKoodiUri = s"${(result \ "koulutuskoodi" \ "uri").extract[String]}#${(result \ "koulutuskoodi" \ "versio").extract[Int]}"
+    val koulutuksetKoodiUri = Seq(koulutusKoodiUri)
     val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
     val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
     val oid = KoulutusOid((komo \ "oid").extract[String])
@@ -246,7 +247,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     tila = tila,
     kielivalinta = opetuskielet.flatten.toSeq,
     tarjoajat = opetusTarjoajat,
-    koulutusKoodiUri = Some(koulutusKoodiUri),
+    koulutuksetKoodiUri = koulutuksetKoodiUri,
     nimi = nimi,
     koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu),
     metadata = Some(metadata),
