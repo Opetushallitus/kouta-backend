@@ -40,7 +40,7 @@ package object koulutus {
       |            type: string
       |          example:
       |            - koulutus_371101#1
-      |            - koulutus_371101#1
+      |            - koulutus_201000#1
       |        tila:
       |          type: string
       |          example: "julkaistu"
