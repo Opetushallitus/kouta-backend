@@ -97,7 +97,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail if amm tutkinnon osa has ePerusteId or koulutusKoodi" in {
     failsValidation(ammTk.copy(ePerusteId = Some(123)), "ePerusteId", notMissingMsg(Some("123")))
-    failsValidation(ammTk.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", notEmptyMsg)
+    failsValidation(ammTk.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1")), "koulutuksetKoodiUri", notEmptyMsg)
   }
 
   it should "pass amm osaamisala koulutus" in {
