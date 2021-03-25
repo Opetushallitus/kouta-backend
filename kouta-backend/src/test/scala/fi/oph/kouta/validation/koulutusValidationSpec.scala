@@ -49,7 +49,9 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(amm.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")), "koulutuksetKoodiUri", tooManyKoodiUris)
   }
 
-  //TODO tähän testi korkeakoulujen pakollisuudelle
+  it should "require koulutuksetKoodiUri for julkaistu korkeakoulutus" in {
+    failsValidation(yo.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
+  }
 
   it should "validate metadata" in {
     val metadata = amm.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]

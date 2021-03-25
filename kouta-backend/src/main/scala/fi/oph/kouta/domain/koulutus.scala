@@ -197,7 +197,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
         validateIfTrue(koulutustyyppi != AmmTutkinnonOsa, and(
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(koulutusKoodiUri, "koulutusKoodiUri")),
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
-//          validateIfTrue(Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
+          validateIfTrue(Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
         validateIfTrue(!Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertTrue(koulutuksetKoodiUri.size < 2, "koulutuksetKoodiUri", tooManyKoodiUris)),
         validateIfTrue(koulutustyyppi == AmmTutkinnonOsa, and(
