@@ -192,7 +192,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultKoulutusScala: Map[String, String] = Map[String, String](
     JohtaaTutkintoonKey -> "true",
     KoulutustyyppiKey -> Amm.name,
-    KoulutusKoodiUriKey -> "koulutus_371101#1",
     KoulutuksetKoodiUriKey -> "koulutus_371101#1",
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
@@ -384,7 +383,10 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(KoulutusOid(oid)),
       params(JohtaaTutkintoonKey).toBoolean,
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
-      params(KoulutuksetKoodiUriKey).split(",").map(_.trim).toSeq,
+      params.get(KoulutuksetKoodiUriKey) match {
+        case None | Some(null) => Seq()
+        case Some(x) => x.split(",").map(_.trim).toSeq
+      },
       Julkaisutila.withName(params(TilaKey)),
       params.get(EsikatseluKey) match {
         case None => false
@@ -393,7 +395,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params.get(TarjoajatKey) match {
         case None => List[OrganisaatioOid]()
         case Some(x) if x.trim == "" => List[OrganisaatioOid]()
-        case Some(x)  => x.split(",").map(_.trim).map(OrganisaatioOid).toList
+        case Some(x) => x.split(",").map(_.trim).map(OrganisaatioOid).toList
       },
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(MetadataKey).map(read[KoulutusMetadata]),
