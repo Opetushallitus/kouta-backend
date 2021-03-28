@@ -34,10 +34,6 @@ class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
     failsValidation(max.copy(metadata = None), "metadata", missingMsg)
   }
 
-  it should "fail if koulutusala is missing from julkaistu sorakuvaus" in {
-    failsValidation(max.copy(metadata = Some(max.metadata.get.copy(koulutusalaKoodiUri = None))), "metadata.koulutusalaKoodiUri", missingMsg)
-  }
-
   it should "fail if koulutusala or koulutus is invalid" in {
     failsValidation(max.copy(metadata = Some(max.metadata.get.copy(koulutusalaKoodiUri = Some("mummo")))), "metadata.koulutusalaKoodiUri", validationMsg("mummo"))
     failsValidation(max.copy(metadata = Some(max.metadata.get.copy(koulutusKoodiUrit = Seq("mummo")))), "metadata.koulutusKoodiUrit[0]", validationMsg("mummo"))
