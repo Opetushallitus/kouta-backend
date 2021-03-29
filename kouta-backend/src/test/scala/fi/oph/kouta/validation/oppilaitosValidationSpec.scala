@@ -7,8 +7,8 @@ import fi.oph.kouta.validation.Validations._
 
 class OppilaitosValidationSpec extends BaseValidationSpec[Oppilaitos] {
 
-  val min = TestData.MinOppilaitos
-  val max = TestData.JulkaistuOppilaitos
+  val min: Oppilaitos = TestData.MinOppilaitos
+  val max: Oppilaitos = TestData.JulkaistuOppilaitos
 
   it should "fail if perustiedot are invalid" in {
     failsValidation(max.copy(oid = OrganisaatioOid("virhe")), "oid", validationMsg("virhe"))
@@ -36,8 +36,8 @@ class OppilaitosValidationSpec extends BaseValidationSpec[Oppilaitos] {
 
 class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[OppilaitosMetadata] {
 
-  val min = OppilaitosMetadata()
-  val max = TestData.JulkaistuOppilaitos.metadata.get
+  val min: OppilaitosMetadata = OppilaitosMetadata()
+  val max: OppilaitosMetadata = TestData.JulkaistuOppilaitos.metadata.get
 
   it should "pass a valid metadata" in {
     passesValidation(Julkaistu, max)
@@ -76,7 +76,7 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
 }
 
 class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
-  val max = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot(0)
+  val max: Yhteystieto = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot(0)
 
   it should "pass valid yhteystiedot" in {
      passesValidation(Julkaistu, max)
@@ -84,7 +84,7 @@ class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
 
   it should "validate osoite" in {
     val yhteystiedot = max.copy(postiosoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
-    failsValidation(Tallennettu, yhteystiedot, "osoite.postinumeroKoodiUri", validationMsg("virhe"))
+    failsValidation(Tallennettu, yhteystiedot, "postiosoite.postinumeroKoodiUri", validationMsg("virhe"))
   }
 
   it should "validate kayntiosoite" in {
