@@ -177,9 +177,9 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
       apuraha = Some(apuraha.copy(yksikko = Some(Prosentti), max = Some(prosentti)))), "apuraha.max", lessOrEqualMsg(prosentti, maxProsentti))
   }
 
-  it should "fail if onkoMaksullinen is missing in a julkaistu opetus" in {
-    passesValidation(Tallennettu, opetus.copy(onkoMaksullinen = None))
-    failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = None), "onkoMaksullinen", missingMsg)
+  it should "fail if maksullisuustyyppi is missing in a julkaistu opetus" in {
+    passesValidation(Tallennettu, opetus.copy(maksullisuustyyppi = None))
+    failsValidation(Julkaistu, opetus.copy(maksullisuustyyppi = None), "maksullisuustyyppi", missingMsg)
   }
 
   it should "fail if maksunMaara is negative" in {
@@ -187,8 +187,9 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
   }
 
   it should "fail a julkaistu, maksullinen opetus if maksunMaara is not defined" in {
-    passesValidation(Tallennettu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None))
-    failsValidation(Julkaistu, opetus.copy(onkoMaksullinen = Some(true), maksunMaara = None), "maksunMaara", missingMsg)
+    passesValidation(Tallennettu, opetus.copy(maksullisuustyyppi = Some(Maksuton), maksunMaara = None))
+    failsValidation(Julkaistu, opetus.copy(maksullisuustyyppi = Some(Maksullinen), maksunMaara = None), "maksunMaara", missingMsg)
+    failsValidation(Julkaistu, opetus.copy(maksullisuustyyppi = Some(Lukuvuosimaksu), maksunMaara = None), "maksunMaara", missingMsg)
   }
 
   it should "fail if a julkaistu apuraha is missing min or max" in {

@@ -85,7 +85,7 @@ package object toteutus {
       |              opetustapaKuvaus:
       |                fi: Opetustavan suomenkielinen kuvaus
       |                sv: Opetustavan ruotsinkielinen kuvaus
-      |              onkoMaksullinen: true
+      |              maksullisuustyyppi: 'maksullinen',
       |              maksullisuusKuvaus:
       |                fi: Maksullisuuden suomenkielinen kuvaus
       |                sv: Maksullisuuden ruotsinkielinen kuvaus
@@ -100,7 +100,6 @@ package object toteutus {
       |                  teksti:
       |                    fi: Suomenkielinen lisätietoteksti
       |                    sv: Ruotsinkielinen lisätietoteksti
-      |              onkoLukuvuosimaksua: true
       |              lukuvuosimaksu:
       |                 fi: 200 lukukaudessa
       |                 sv: 200 på svenska
