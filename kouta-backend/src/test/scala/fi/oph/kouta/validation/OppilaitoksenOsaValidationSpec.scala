@@ -7,8 +7,8 @@ import fi.oph.kouta.validation.Validations.{invalidKielistetty, invalidUrl, miss
 
 class OppilaitoksenOsaValidationSpec extends BaseValidationSpec[OppilaitoksenOsa] {
 
-  val min = TestData.MinOppilaitoksenOsa
-  val max = TestData.JulkaistuOppilaitoksenOsa
+  val min: OppilaitoksenOsa = TestData.MinOppilaitoksenOsa
+  val max: OppilaitoksenOsa = TestData.JulkaistuOppilaitoksenOsa
 
   it should "fail if perustiedot are invalid" in {
     failsValidation(max.copy(oid = OrganisaatioOid("virhe")), "oid", validationMsg("virhe"))
@@ -36,8 +36,8 @@ class OppilaitoksenOsaValidationSpec extends BaseValidationSpec[OppilaitoksenOsa
 
 class OppilaitoksenOsaMetadataValidationSpec extends SubEntityValidationSpec[OppilaitoksenOsaMetadata] {
 
-  val min = OppilaitoksenOsaMetadata()
-  val max = TestData.JulkaistuOppilaitoksenOsa.metadata.get
+  val min: OppilaitoksenOsaMetadata = OppilaitoksenOsaMetadata()
+  val max: OppilaitoksenOsaMetadata = TestData.JulkaistuOppilaitoksenOsa.metadata.get
 
   it should "pass a valid metadata" in {
     passesValidation(Julkaistu, max)
