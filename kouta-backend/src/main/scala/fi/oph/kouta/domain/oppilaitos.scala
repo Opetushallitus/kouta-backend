@@ -234,11 +234,11 @@ package object oppilaitos {
       |          type: object
       |          description: Opintopolussa näytettävä yhteystiedon nimi eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Teksti'
-      |        osoite:
+      |        postiosoite:
       |          type: object
-      |          description: Opintopolussa näytettävä osoite eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          description: Opintopolussa näytettävä postiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Osoite'
-      |        kayntiOsoite:
+      |        kayntiosoite:
       |          type: object
       |          description: Opintopolussa näytettävä käyntiosoite eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Osoite'
@@ -404,14 +404,14 @@ case class OppilaitoksenOsaListItem(oid: OrganisaatioOid,
                                     modified: Modified)
 
 case class Yhteystieto(nimi: Kielistetty = Map(),
-                       osoite: Option[Osoite] = None,
-                       kayntiOsoite: Option[Osoite] = None,
+                       postiosoite: Option[Osoite] = None,
+                       kayntiosoite: Option[Osoite] = None,
                        wwwSivu: Kielistetty = Map(),
                        puhelinnumero: Kielistetty = Map(),
                        sahkoposti: Kielistetty = Map()) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta, s"$path.osoite")),
-    validateIfDefined[Osoite](kayntiOsoite, _.validate(tila, kielivalinta, s"$path.kayntiOsoite")),
+    validateIfDefined[Osoite](postiosoite, _.validate(tila, kielivalinta, s"$path.postiosoite")),
+    validateIfDefined[Osoite](kayntiosoite, _.validate(tila, kielivalinta, s"$path.kayntiosoite")),
     validateIfNonEmpty(wwwSivu, s"$path.wwwSivu", assertValidUrl _),
     validateIfNonEmpty(sahkoposti, s"$path.sahkoposti", assertValidEmail _),
     validateIfJulkaistu(tila, and(

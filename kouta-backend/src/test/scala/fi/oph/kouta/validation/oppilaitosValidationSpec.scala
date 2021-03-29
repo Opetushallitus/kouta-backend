@@ -83,13 +83,13 @@ class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
   }
 
   it should "validate osoite" in {
-    val yhteystiedot = max.copy(osoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
+    val yhteystiedot = max.copy(postiosoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
     failsValidation(Tallennettu, yhteystiedot, "osoite.postinumeroKoodiUri", validationMsg("virhe"))
   }
 
-  it should "validate kayntiOsoite" in {
-    val yhteystiedot = max.copy(kayntiOsoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
-    failsValidation(Tallennettu, yhteystiedot, "kayntiOsoite.postinumeroKoodiUri", validationMsg("virhe"))
+  it should "validate kayntiosoite" in {
+    val yhteystiedot = max.copy(kayntiosoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
+    failsValidation(Tallennettu, yhteystiedot, "kayntiosoite.postinumeroKoodiUri", validationMsg("virhe"))
   }
 
   it should "fail on an invalid sahkoposti" in {
