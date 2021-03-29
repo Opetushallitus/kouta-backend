@@ -1,5 +1,6 @@
 update toteutukset
-set metadata = jsonb_set(metadata, '{opetus, maksullisuustyyppi}', '"maksuton"', TRUE);
+set metadata = jsonb_set(metadata, '{opetus, maksullisuustyyppi}', '"maksuton"', TRUE)
+where metadata -> 'opetus' ->> 'maksullisuustyyppi' is null;
 
 update toteutukset
 set metadata = jsonb_set(metadata, '{opetus, maksullisuustyyppi}', '"maksullinen"', TRUE)
