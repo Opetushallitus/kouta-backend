@@ -81,7 +81,7 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
 }
 
 class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
-  val max: Yhteystieto = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot(0)
+  val max: Yhteystieto = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot.head
 
   it should "pass valid yhteystiedot" in {
      passesValidation(Julkaistu, max)
