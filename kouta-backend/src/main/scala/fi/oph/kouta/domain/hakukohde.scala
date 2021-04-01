@@ -242,7 +242,30 @@ package object hakukohde {
       |        kaytetaanHaunAlkamiskautta:
       |          type: boolean
       |          description: Käytetäänkö haun alkamiskautta ja -vuotta vai onko hakukohteelle määritelty oma alkamisajankohta?
+      |        aloituspaikat:
+      |          type: object
+      |          description: Hakukohteen aloituspaikkojen tiedot
+      |          $ref: '#/components/schemas/Aloituspaikat'
       |""".stripMargin
+
+  val AloituspaikatModel: String =
+    """    Aloituspaikat:
+      |      type: object
+      |      properties:
+      |        lukumaara:
+      |          type: integer
+      |          description: Hakukohteen aloituspaikkojen lukumäärä
+      |          example: 100
+      |        ensikertalaisille:
+      |          type: integer
+      |          description: Hakukohteen ensikertalaisten aloituspaikkojen lukumäärä
+      |          example: 50
+      |        kuvaus:
+      |          type: object
+      |          description: Tarkempi kuvaus aloituspaikoista
+      |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
 
   val LiitteenToimitusosoiteModel: String =
     """    LiitteenToimitusosoite:
@@ -297,7 +320,7 @@ package object hakukohde {
       |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |""".stripMargin
 
-  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel)
+  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel, AloituspaikatModel)
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,
@@ -377,28 +400,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
 }
 
-case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
-                             valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
-                             kynnysehto: Kielistetty = Map(),
-                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
-                             kaytetaanHaunAlkamiskautta: Option[Boolean] = None) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
-    assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
-    validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")),
-    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validate(tila, kielivalinta, _)),
-    validateIfJulkaistu(tila, and(
-      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
-      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto")
-    ))
-  )
-
-  override def validateOnJulkaisu(path: String): IsValid = and(
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")),
-    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validateOnJulkaisu(_))
-  )
-}
-
 case class Liite(id: Option[UUID] = None,
                  tyyppiKoodiUri: Option[String],
                  nimi: Kielistetty = Map(),
@@ -429,6 +430,34 @@ case class LiitteenToimitusosoite(osoite: Osoite,
     validateIfDefined[String](sahkoposti, assertValidEmail(_, s"$path.sahkoposti"))
   )
 }
+
+case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                             valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
+                             kynnysehto: Kielistetty = Map(),
+                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                             kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
+                             aloituspaikat: Option[Aloituspaikat]) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
+    validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")),
+    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validate(tila, kielivalinta, _)),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
+      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto")
+    ))
+  )
+
+  override def validateOnJulkaisu(path: String): IsValid = and(
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")),
+    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validateOnJulkaisu(_))
+  )
+}
+
+
+case class Aloituspaikat(lukumaara: Option[Int] = None,
+                         ensikertalaisille: Option[Int] = None,
+                         kuvaus: Kielistetty = Map())
 
 case class HakukohdeListItem(oid: HakukohdeOid,
                              toteutusOid: ToteutusOid,
