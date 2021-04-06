@@ -1,14 +1,14 @@
 package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Fi, Julkaistu, Lisatieto, OppilaitoksenOsa, OppilaitoksenOsaMetadata, OppilaitosMetadata, Sv, Tallennettu, Yhteystieto}
-import fi.oph.kouta.validation.Validations.{invalidKielistetty, invalidUrl, missingMsg, notNegativeMsg, validationMsg}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid}
+import fi.oph.kouta.domain.{Fi, Julkaistu, NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Sv, Tallennettu, Yhteystieto}
+import fi.oph.kouta.validation.Validations.{invalidKielistetty, invalidUrl, invalidEmail, missingMsg, notNegativeMsg, validationMsg}
 
 class OppilaitoksenOsaValidationSpec extends BaseValidationSpec[OppilaitoksenOsa] {
 
-  val min = TestData.MinOppilaitoksenOsa
-  val max = TestData.JulkaistuOppilaitoksenOsa
+  val min: OppilaitoksenOsa = TestData.MinOppilaitoksenOsa
+  val max: OppilaitoksenOsa = TestData.JulkaistuOppilaitoksenOsa
 
   it should "fail if perustiedot are invalid" in {
     failsValidation(max.copy(oid = OrganisaatioOid("virhe")), "oid", validationMsg("virhe"))
@@ -36,16 +36,21 @@ class OppilaitoksenOsaValidationSpec extends BaseValidationSpec[OppilaitoksenOsa
 
 class OppilaitoksenOsaMetadataValidationSpec extends SubEntityValidationSpec[OppilaitoksenOsaMetadata] {
 
-  val min = OppilaitoksenOsaMetadata()
-  val max = TestData.JulkaistuOppilaitoksenOsa.metadata.get
+  val min: OppilaitoksenOsaMetadata = OppilaitoksenOsaMetadata()
+  val max: OppilaitoksenOsaMetadata = TestData.JulkaistuOppilaitoksenOsa.metadata.get
 
   it should "pass a valid metadata" in {
     passesValidation(Julkaistu, max)
   }
 
+  it should "validate wwwSivu" in {
+    val metadata = min.copy(wwwSivu = Some(NimettyLinkki(url = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
+    failsValidation(Tallennettu, metadata, "wwwSivu.url.sv", invalidUrl("urli"))
+  }
+
   it should "validate yhteystiedot" in {
-    val metadata = min.copy(yhteystiedot = Some(Yhteystieto(wwwSivu = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
-    failsValidation(Tallennettu, metadata, "yhteystiedot.wwwSivu.sv", invalidUrl("urli"))
+    val metadata = min.copy(yhteystiedot = Seq(Yhteystieto(sahkoposti = Map(Fi -> "validi@eemeli.fi", Sv -> "epavalidi@eemeli"))))
+    failsValidation(Tallennettu, metadata, "yhteystiedot[0].sahkoposti.sv", invalidEmail("epavalidi@eemeli"))
   }
 
   it should "fail if esittely is present only for some languages in a julkaistu oppilaitoksenOsa" in {

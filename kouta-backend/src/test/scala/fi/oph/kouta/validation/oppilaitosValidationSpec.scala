@@ -2,13 +2,13 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Fi, Julkaistu, Oppilaitos, OppilaitosMetadata, Osoite, Sv, Tallennettu, TietoaOpiskelusta, Yhteystieto}
+import fi.oph.kouta.domain.{Fi, Julkaistu, NimettyLinkki, Oppilaitos, OppilaitosMetadata, Osoite, Sv, Tallennettu, TietoaOpiskelusta, Yhteystieto}
 import fi.oph.kouta.validation.Validations._
 
 class OppilaitosValidationSpec extends BaseValidationSpec[Oppilaitos] {
 
-  val min = TestData.MinOppilaitos
-  val max = TestData.JulkaistuOppilaitos
+  val min: Oppilaitos = TestData.MinOppilaitos
+  val max: Oppilaitos = TestData.JulkaistuOppilaitos
 
   it should "fail if perustiedot are invalid" in {
     failsValidation(max.copy(oid = OrganisaatioOid("virhe")), "oid", validationMsg("virhe"))
@@ -36,8 +36,8 @@ class OppilaitosValidationSpec extends BaseValidationSpec[Oppilaitos] {
 
 class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[OppilaitosMetadata] {
 
-  val min = OppilaitosMetadata()
-  val max = TestData.JulkaistuOppilaitos.metadata.get
+  val min: OppilaitosMetadata = OppilaitosMetadata()
+  val max: OppilaitosMetadata = TestData.JulkaistuOppilaitos.metadata.get
 
   it should "pass a valid metadata" in {
     passesValidation(Julkaistu, max)
@@ -48,9 +48,19 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
     failsValidation(Tallennettu, metadata, "tietoaOpiskelusta[0].otsikkoKoodiUri", validationMsg("virhe"))
   }
 
+  it should "validate wwwSivu" in {
+    val metadata = min.copy(wwwSivu = Some(NimettyLinkki(url = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
+    failsValidation(Tallennettu, metadata, "wwwSivu.url.sv", invalidUrl("urli"))
+  }
+
   it should "validate yhteystiedot" in {
-    val metadata = min.copy(yhteystiedot = Some(Yhteystieto(wwwSivu = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
-    failsValidation(Tallennettu, metadata, "yhteystiedot.wwwSivu.sv", invalidUrl("urli"))
+    val metadata = min.copy(yhteystiedot = Seq(Yhteystieto(sahkoposti = Map(Fi -> "validi@eemeli.fi", Sv -> "epavalidi@eemeli"))))
+    failsValidation(Tallennettu, metadata, "yhteystiedot[0].sahkoposti.sv", invalidEmail("epavalidi@eemeli"))
+  }
+
+  it should "validate hakijapalveluidenYhteystiedot" in {
+    val metadata = min.copy(hakijapalveluidenYhteystiedot = Some(Yhteystieto(sahkoposti = Map(Fi -> "validi@eemeli.fi", Sv -> "epavalidi@eemeli"))))
+    failsValidation(Tallennettu, metadata, "hakijapalveluidenYhteystiedot.sahkoposti.sv", invalidEmail("epavalidi@eemeli"))
   }
 
   it should "fail if esittely is present only for some languages in a julkaistu oppilaitos" in {
@@ -71,15 +81,20 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
 }
 
 class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
-  val max = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot.get
+  val max: Yhteystieto = TestData.JulkaistuOppilaitos.metadata.get.yhteystiedot.head
 
   it should "pass valid yhteystiedot" in {
      passesValidation(Julkaistu, max)
   }
 
   it should "validate osoite" in {
-    val yhteystiedot = max.copy(osoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
-    failsValidation(Tallennettu, yhteystiedot, "osoite.postinumeroKoodiUri", validationMsg("virhe"))
+    val yhteystiedot = max.copy(postiosoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
+    failsValidation(Tallennettu, yhteystiedot, "postiosoite.postinumeroKoodiUri", validationMsg("virhe"))
+  }
+
+  it should "validate kayntiosoite" in {
+    val yhteystiedot = max.copy(kayntiosoite = Some(Osoite(postinumeroKoodiUri = Some("virhe"))))
+    failsValidation(Tallennettu, yhteystiedot, "kayntiosoite.postinumeroKoodiUri", validationMsg("virhe"))
   }
 
   it should "fail on an invalid sahkoposti" in {
@@ -87,15 +102,9 @@ class YhteystietoValidationSpec extends SubEntityValidationSpec[Yhteystieto] {
     failsValidation(Tallennettu, yhteystiedot, "sahkoposti.sv", invalidEmail("email"))
   }
 
-  it should "fail on an invalid wwwSivu" in {
-    val yhteystiedot = max.copy(wwwSivu = Map(Fi -> "https://url.fi", Sv -> "url"))
-    failsValidation(Tallennettu, yhteystiedot, "wwwSivu.sv", invalidUrl("url"))
-  }
-
   it should "fail if a julkaistu yhteystieto is missing some languages in kielistetty fields" in {
-
-    passesValidation(Tallennettu, max.copy(wwwSivu = Map(Fi -> "https://url.fi")))
-    failsValidation(Julkaistu, max.copy(wwwSivu = Map(Fi -> "https://url.fi")), "wwwSivu", invalidKielistetty(Seq(Sv)))
+    passesValidation(Tallennettu, max.copy(nimi = Map(Fi -> "Yhteystiedon nimi")))
+    failsValidation(Julkaistu, max.copy(nimi = Map(Fi -> "Yhteystiedon nimi")), "nimi", invalidKielistetty(Seq(Sv)))
 
     passesValidation(Tallennettu, max.copy(puhelinnumero = Map(Fi -> "puh")))
     failsValidation(Julkaistu, max.copy(puhelinnumero = Map(Fi -> "puh")), "puhelinnumero", invalidKielistetty(Seq(Sv)))

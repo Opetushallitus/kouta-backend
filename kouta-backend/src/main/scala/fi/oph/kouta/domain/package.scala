@@ -135,6 +135,20 @@ package object domain {
       |          description: "Linkki englanninkieliselle sivulle, jos kielivalinnassa on 'en'"
       |""".stripMargin
 
+  val NimettyLinkkiModel: String =
+    """    NimettyLinkki:
+      |      type: object
+      |      properties:
+      |        url:
+      |          type: object
+      |          description: Linkin url eri kielillä
+      |          $ref: '#/components/schemas/Linkki
+      |        nimi:
+      |          type: object
+      |          description: Käyttäjälle näkyvä teksti linkissä
+      |          $ref: '#/components/schemas/Teksti
+      |""".stripMargin
+
   val LisatietoModel: String =
     """    Lisatieto:
       |      type: object
@@ -415,7 +429,7 @@ package object domain {
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
     ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel,
-    KoulutuksenAlkamiskausiModel)
+    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel)
 
   type Kielistetty = Map[Kieli,String]
 
@@ -431,7 +445,7 @@ package object domain {
         validateOptionalKielistetty(kielivalinta, sahkoposti, s"$path.sahkoposti"),
         validateOptionalKielistetty(kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
         validateOptionalKielistetty(kielivalinta, wwwSivu, s"$path.wwwSivu"),
-        validateIfNonEmpty(wwwSivu, s"$path/wwwSivu", assertValidUrl _)
+        validateIfNonEmpty(wwwSivu, s"$path.wwwSivu", assertValidUrl _)
       ))
     }
   }
@@ -586,6 +600,18 @@ package object domain {
                             valintaperusteet: Seq[UUID] = Seq(),
                             oppilaitokset: Seq[OrganisaatioOid] = Seq(),
                             sorakuvaukset: Seq[UUID] = Seq())
+
+  case class NimettyLinkki(nimi: Kielistetty = Map(),
+                           url: Kielistetty = Map()) extends ValidatableSubEntity {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+      validateIfNonEmpty(url, s"$path.url", assertValidUrl _),
+      validateIfJulkaistu(tila, and(
+        validateKielistetty(kielivalinta, url, s"$path.url"),
+        validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi")
+      ))
+    )
+  }
+
 
   trait HasTeemakuva[T] {
     val teemakuva: Option[String]
