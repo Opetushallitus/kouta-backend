@@ -228,6 +228,11 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen kynnysehto eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
+      |        valintaperusteenValintakokeidenLisatilaisuudet:
+      |          type: array
+      |          description: Hakukohteeseen liitetyn valintaperusteen valintakokeisiin liitetyt lisätilaisuudet
+      |          items:
+      |            $ref: '#/components/schemas/ValintakokeenLisatilaisuudet'
       |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
@@ -369,6 +374,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 }
 
 case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                             valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
                              kynnysehto: Kielistetty = Map(),
                              koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None) extends ValidatableSubEntity {
@@ -376,13 +382,17 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
     validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")),
+    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validate(tila, kielivalinta, _)),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
       validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto")
     ))
   )
 
-  override def validateOnJulkaisu(path: String): IsValid = validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi"))
+  override def validateOnJulkaisu(path: String): IsValid = and(
+    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")),
+    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validateOnJulkaisu(_))
+  )
 }
 
 case class Liite(id: Option[UUID] = None,

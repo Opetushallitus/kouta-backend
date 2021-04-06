@@ -48,6 +48,14 @@ object TestData {
     toimitustapa = Some(MuuOsoite),
     toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))))
 
+  val ValintakokeenLisatilaisuudet1: ValintakokeenLisatilaisuudet = ValintakokeenLisatilaisuudet(
+    id = None,
+    tilaisuudet = List(Valintakoetilaisuus(
+      jarjestamispaikka = Map(Fi -> "Lisä järjestämispaikka fi", Sv -> "Lisä järjestämispaikka sv"),
+      osoite = Some(Osoite1),
+      aika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+      lisatietoja = Map(Fi -> "lisätieto fi", Sv -> "lisätieto sv"))))
+
   val Valintakoe1: Valintakoe = Valintakoe(
     id = None,
     tyyppiKoodiUri = Some("valintakokeentyyppi_1#1"),
@@ -63,7 +71,7 @@ object TestData {
       jarjestamispaikka = Map(Fi -> "Järjestämispaikka fi", Sv -> "Järjestämispaikka sv"),
       osoite = Some(Osoite1),
       aika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
-      lisatietoja = Map(Fi -> "lisätietieto fi", Sv -> "lisätieto sv"))))
+      lisatietoja = Map(Fi -> "lisätieto fi", Sv -> "lisätieto sv"))))
 
   val AmmKoulutus: Koulutus = Koulutus(
     oid = None,
@@ -214,6 +222,7 @@ object TestData {
     liitteet = List(Liite1, Liite2),
     metadata = Some(HakukohdeMetadata(
       valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+      valintaperusteenValintakokeidenLisatilaisuudet = List(ValintakokeenLisatilaisuudet1),
       kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
       kaytetaanHaunAlkamiskautta = Some(false),
       koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(

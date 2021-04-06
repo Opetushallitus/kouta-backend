@@ -203,6 +203,22 @@ package object domain {
       |          example: "posti_04230#2"
       |""".stripMargin
 
+  val ValintakokeenLisatilaisuudetModel: String =
+    """    ValintakokeenLisatilaisuudet:
+      |      type: object
+      |      description: Hakukohteella lisätyt valintakokeen lisätilaisuudet
+      |      properties:
+      |        id:
+      |          type: string
+      |          description: Valintakokeen yksilöivä tunniste. Järjestelmän generoima.
+      |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
+      |        tilaisuudet:
+      |          type: array
+      |          description: Hakukohteella syötetyt valintaperusteen valintakokeen lisäjärjestämistilaisuudet
+      |          items:
+      |            $ref: '#/components/schemas/Valintakoetilaisuus'
+      |""".stripMargin
+
   val ValintakoeModel: String =
     """    Valintakoe:
       |      type: object
@@ -429,7 +445,7 @@ package object domain {
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
     ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel,
-    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel)
+    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel)
 
   type Kielistetty = Map[Kieli,String]
 
@@ -464,6 +480,17 @@ package object domain {
 
     def validateOnJulkaisuForJatkuvaHaku(path: String): IsValid =
       validateIfDefined[LocalDateTime](paattyy, assertInFuture(_, s"$path.paattyy")),
+  }
+
+  // NOTE: Tätä käyttää hakukohde lisäämään tilaisuuksia valintaperusteen valintakokeelle
+  case class ValintakokeenLisatilaisuudet(id: Option[UUID] = None,
+                                          tilaisuudet: Seq[Valintakoetilaisuus] = Seq()) extends ValidatableSubEntity {
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _)),
+    )
+
+    override def validateOnJulkaisu(path: String): IsValid =
+      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validateOnJulkaisu(_))
   }
 
   case class Valintakoe(id: Option[UUID] = None,

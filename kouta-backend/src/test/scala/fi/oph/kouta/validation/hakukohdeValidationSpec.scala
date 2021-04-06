@@ -148,6 +148,23 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
   }
 
+
+  it should "validate valintaperusteenValintakokeidenLisatilaisuudet" in {
+    val ajanjakso = Ajanjakso(alkaa = inPast(4000), paattyy = Some(inPast(2000)))
+    val tilaisuus = ValintakokeenLisatilaisuudet1.tilaisuudet.head.copy(aika = Some(ajanjakso))
+    val metadataWithPastTilaisuus = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(false),
+      koulutuksenAlkamiskausi =
+        Some(KoulutuksenAlkamiskausi(
+          alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+          koulutuksenAlkamisvuosi = Some(now().getYear.toString()),
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      valintaperusteenValintakokeidenLisatilaisuudet = List(ValintakokeenLisatilaisuudet(id = None, tilaisuudet = List(tilaisuus)))
+    )
+
+    failsOnJulkaisuValidation(metadataWithPastTilaisuus, "valintaperusteenValintakokeidenLisatilaisuudet[0].tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy.get))
+  }
+
   it should "validate koulutuksenAlkamiskausi of a julkaistu hakukohde" in {
     val metadataWithoutAlkamiskausityyppi = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(false),
