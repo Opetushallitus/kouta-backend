@@ -224,6 +224,10 @@ package object hakukohde {
       |          type: object
       |          description: Valintakokeiden yleiskuvaus eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
+      |        hakukohteenKynnysehto:
+      |          type: object
+      |          description: Hakukohteen kynnysehto eri kielillä. Kielet on määritetty hakukohteen kielivalinnassa.
+      |          $ref: '#/components/schemas/Kuvaus'
       |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
@@ -365,6 +369,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 }
 
 case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                             hakukohteenKynnysehto: Kielistetty = Map(),
                              koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
@@ -372,7 +377,8 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
     assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
     validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")),
     validateIfJulkaistu(tila, and(
-      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus")
+      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
+      validateOptionalKielistetty(kielivalinta, hakukohteenKynnysehto, s"$path.hakukohteenKynnysehto")
     ))
   )
 

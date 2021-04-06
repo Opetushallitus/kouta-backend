@@ -214,6 +214,7 @@ object TestData {
     liitteet = List(Liite1, Liite2),
     metadata = Some(HakukohdeMetadata(
       valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+      hakukohteenKynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
       kaytetaanHaunAlkamiskautta = Some(false),
       koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
         alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
