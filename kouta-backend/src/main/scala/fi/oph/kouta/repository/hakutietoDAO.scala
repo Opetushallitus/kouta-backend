@@ -102,15 +102,15 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  hk.hakulomake_kuvaus,
                  hk.hakulomake_linkki,
                  hk.kaytetaan_haun_hakulomaketta,
-                 hk.aloituspaikat,
-                 hk.ensikertalaisen_aloituspaikat,
+                 hk.metadata -> 'aloituspaikat' ->> 'lukumaara' as aloituspaikat,
+                 hk.metadata -> 'aloituspaikat' ->> 'ensikertalaisille' as ensikertalaisen_aloituspaikat,
                  hk.kaytetaan_haun_aikataulua,
                  hk.pohjakoulutusvaatimus_koodi_urit,
                  hk.pohjakoulutusvaatimus_tarkenne,
                  hk.organisaatio_oid,
                  hk.muokkaaja,
                  array(select jsonb_array_elements(v.metadata -> 'valintatavat') ->> 'valintatapaKoodiUri') as valintatapa_koodi_urit,
-                 lower(k.system_time)
+                 lower(hk.system_time)
           from hakukohteet hk
                    inner join haut h on hk.haku_oid = h.oid and hk.tila = 'julkaistu'::julkaisutila
                    inner join toteutukset t on t.oid = hk.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
