@@ -114,9 +114,9 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
           from hakukohteet hk
                    inner join haut h on hk.haku_oid = h.oid and hk.tila = 'julkaistu'::julkaisutila
                    inner join toteutukset t on t.oid = hk.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
-                   inner join koulutukset o on o.oid = t.koulutus_oid and o.tila = 'julkaistu'::julkaisutila
+                   inner join koulutukset k on k.oid = t.koulutus_oid and k.tila = 'julkaistu'::julkaisutila
                    left join valintaperusteet v on v.id = hk.valintaperuste_id and v.tila = 'julkaistu'::julkaisutila
-          where o.oid = ${koulutusOid.toString}
+          where k.oid = ${koulutusOid.toString}
             and hk.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }
 
