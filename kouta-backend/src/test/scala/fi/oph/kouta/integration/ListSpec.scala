@@ -594,8 +594,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             hakulomakeLinkki = TestData.JulkaistuHakukohde.hakulomakeLinkki,
             kaytetaanHaunHakulomaketta = TestData.JulkaistuHakukohde.kaytetaanHaunHakulomaketta,
             aloituspaikatUUSI = TestData.JulkaistuHakukohde.metadata.get.aloituspaikat,
-            aloituspaikat = TestData.JulkaistuHakukohde.metadata.get.aloituspaikat.get.lukumaara,
-            ensikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.metadata.get.aloituspaikat.get.ensikertalaisille,
             kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
             hakuajat = TestData.JulkaistuHakukohde.hakuajat,
             pohjakoulutusvaatimusKoodiUrit = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusKoodiUrit,
