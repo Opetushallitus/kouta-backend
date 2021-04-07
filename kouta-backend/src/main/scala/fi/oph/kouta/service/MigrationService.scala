@@ -40,7 +40,7 @@ trait MigrationHelpers extends Logging {
   import java.util.Calendar
 
   def toKieliMap(nimi: Map[String, String]): Map[Kieli, String] = {
-    nimi.flatMap(mapKieli).filter(k => !k._2.isEmpty)
+    nimi.flatMap(mapKieli).filter(k => k._2.nonEmpty)
   }
 
   def joinKieliMaps(map1: Map[Kieli, String], map2: Map[Kieli, String], isHtml: Boolean = false): Map[Kieli, String] = {
@@ -52,7 +52,7 @@ trait MigrationHelpers extends Logging {
   }
 
   def addP(s: String): String = {
-    if(!s.isEmpty && !s.trim.startsWith("<p>")) "<p>" + s + "</p>"
+    if(s.nonEmpty && !s.trim.startsWith("<p>")) "<p>" + s + "</p>"
     else s
   }
 
@@ -76,7 +76,7 @@ trait MigrationHelpers extends Logging {
       (result \ "kuvausKomo" \ "PATEVYYS" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_09#1", toKieliMap(k))), // Koulutuksen antama pätevyys
       (result \ "kuvausKomoto" \ "TUTKIMUKSEN_PAINOPISTEET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_10#1", toKieliMap(k))), // Tutkimuksen painopisteet
       (result \ "kuvausKomoto" \ "LOPPUKOEVAATIMUKSET" \ "tekstis").extractOpt[Map[String,String]].map(k => Lisatieto("koulutuksenlisatiedot_11#1", toKieliMap(k))) // Opinnäytetyö
-    ).flatten.filter(l => l.teksti.size > 0)
+    ).flatten.filter(l => l.teksti.nonEmpty)
   }
 
   def parseKuvaus(result: JValue): Map[Kieli, String] = {
@@ -375,7 +375,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
     val liitteet = (result \ "hakukohteenLiitteet").extract[List[Map[String, JValue]]].flatMap(toLiite)
 
-    val pohjakoulutusvaatimus = ((result \ "hakukelpoisuusvaatimusUris").extract[List[String]])
+    val pohjakoulutusvaatimus = (result \ "hakukelpoisuusvaatimusUris").extract[List[String]]
       .map(_.split("_").last).map(versio => s"pohjakoulutusvaatimuskouta_$versio#1")
 
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
