@@ -102,7 +102,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  hk.hakulomake_kuvaus,
                  hk.hakulomake_linkki,
                  hk.kaytetaan_haun_hakulomaketta,
-                 hk.metadata -> 'aloituspaikat' as aloituspaikat_UUSI,
+                 hk.metadata -> 'aloituspaikat' as aloituspaikat,
                  hk.kaytetaan_haun_aikataulua,
                  hk.pohjakoulutusvaatimus_koodi_urit,
                  hk.pohjakoulutusvaatimus_tarkenne,
