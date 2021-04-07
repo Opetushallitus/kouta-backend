@@ -593,15 +593,15 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             hakulomakeKuvaus = TestData.JulkaistuHakukohde.hakulomakeKuvaus,
             hakulomakeLinkki = TestData.JulkaistuHakukohde.hakulomakeLinkki,
             kaytetaanHaunHakulomaketta = TestData.JulkaistuHakukohde.kaytetaanHaunHakulomaketta,
-            aloituspaikat = TestData.JulkaistuHakukohde.aloituspaikat,
-            ensikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.ensikertalaisenAloituspaikat,
+            aloituspaikat = TestData.JulkaistuHakukohde.metadata.get.aloituspaikat.get.lukumaara,
+            ensikertalaisenAloituspaikat = TestData.JulkaistuHakukohde.metadata.get.aloituspaikat.get.ensikertalaisille,
             kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
             hakuajat = TestData.JulkaistuHakukohde.hakuajat,
             pohjakoulutusvaatimusKoodiUrit = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusKoodiUrit,
             pohjakoulutusvaatimusTarkenne = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusTarkenne,
             muokkaaja = hk1.muokkaaja,
             organisaatioOid = hk1.organisaatioOid,
-            valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.map(_.valintatapaKoodiUri).flatten,
+            valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
             modified = Some(hk1.modified)))))))
 
       read[List[Hakutieto]](body) should equal(expected)

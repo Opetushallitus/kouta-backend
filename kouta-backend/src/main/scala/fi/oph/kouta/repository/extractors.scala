@@ -223,8 +223,6 @@ trait HakukohdeExctractors extends ExtractorBase {
     hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
     kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
     jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
-    aloituspaikat = r.nextIntOption(),
-    ensikertalaisenAloituspaikat = r.nextIntOption(),
     pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
     pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
     muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption()),
