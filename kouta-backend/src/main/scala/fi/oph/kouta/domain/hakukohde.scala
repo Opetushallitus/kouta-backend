@@ -363,8 +363,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     assertValid(hakuOid, "hakuOid"),
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit", assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)),
-    validateIfDefined[Int](aloituspaikat, assertNotNegative(_, "aloituspaikat")),
-    validateIfDefined[Int](ensikertalaisenAloituspaikat, assertNotNegative(_, "ensikertalaisenAloituspaikat")),
     validateIfDefined[LiitteenToimitusosoite](liitteidenToimitusosoite, _.validate(tila, kielivalinta, "liitteidenToimitusosoite")),
     validateIfNonEmpty[Liite](liitteet, "liitteet", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
@@ -451,7 +449,6 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
     validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validateOnJulkaisu(_))
   )
 }
-
 
 case class Aloituspaikat(lukumaara: Option[Int] = None,
                          ensikertalaisille: Option[Int] = None,
