@@ -378,6 +378,8 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val pohjakoulutusvaatimus = (result \ "hakukelpoisuusvaatimusUris").extract[List[String]]
       .map(_.split("_").last).map(versio => s"pohjakoulutusvaatimuskouta_$versio#1")
 
+    val aloituspaikat = Aloituspaikat(lukumaara = (result \ "aloituspaikatLkm").extractOpt[Int], ensikertalaisille = (result \ "ensikertalaistenAloituspaikat").extractOpt[Int])
+
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
       toteutusOid = toteutusOid,
       hakuOid = HakuOid((result \ "hakuOid").extract[String]),
@@ -392,10 +394,8 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       hakulomakeKuvaus = Map(),
       hakulomakeLinkki = Map(),
       kaytetaanHaunHakulomaketta = Some(true), // TODO
-      aloituspaikat = (result \ "aloituspaikatLkm").extractOpt[Int],
-      ensikertalaisenAloituspaikat = (result \ "ensikertalaistenAloituspaikat").extractOpt[Int],
       hakuajat = Seq(), // TODO TODO TODO
-      metadata = None, //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
+      metadata = Some(HakukohdeMetadata(koulutuksenAlkamiskausi = None, aloituspaikat = Some(aloituspaikat))), //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       kielivalinta = opetuskielet.flatten,
