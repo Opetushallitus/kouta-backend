@@ -395,7 +395,10 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       hakulomakeLinkki = Map(),
       kaytetaanHaunHakulomaketta = Some(true), // TODO
       hakuajat = Seq(), // TODO TODO TODO
-      metadata = Some(HakukohdeMetadata(koulutuksenAlkamiskausi = None, aloituspaikat = Some(aloituspaikat))), //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
+      metadata = Some(HakukohdeMetadata(
+        koulutuksenAlkamiskausi = None,
+        kaytetaanHaunAlkamiskautta = Some(true),
+        aloituspaikat = Some(aloituspaikat))), //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       kielivalinta = opetuskielet.flatten,
@@ -413,7 +416,6 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       liitteidenToimitustapa = None,
       liitteidenToimitusosoite = None,
       valintakokeet = Seq())
-
   }
 
   def parseHakuFromResult(result: JValue): Haku = {
@@ -457,7 +459,5 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
       kielivalinta = nimi.keySet.toSeq,
       modified = (result \ "modified").extractOpt[Long].map(toModified))
-
   }
-
 }
