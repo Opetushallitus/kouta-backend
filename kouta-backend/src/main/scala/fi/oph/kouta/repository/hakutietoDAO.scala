@@ -91,33 +91,33 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
   def selectHakukohteidenHakutiedot(koulutusOid: KoulutusOid): DBIO[Vector[(ToteutusOid, HakuOid, HakutietoHakukohde)]] = {
     sql"""select t.oid,
                  h.oid,
-                 k.oid,
-                 k.nimi,
-                 k.valintaperuste_id,
-                 k.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
-                 k.metadata ->> 'kaytetaanHaunAlkamiskautta' as kaytetaan_haun_alkamiskautta_uusi,
-                 k.jarjestyspaikka_oid,
-                 k.hakulomaketyyppi,
-                 k.hakulomake_ataru_id,
-                 k.hakulomake_kuvaus,
-                 k.hakulomake_linkki,
-                 k.kaytetaan_haun_hakulomaketta,
-                 k.aloituspaikat,
-                 k.ensikertalaisen_aloituspaikat,
-                 k.kaytetaan_haun_aikataulua,
-                 k.pohjakoulutusvaatimus_koodi_urit,
-                 k.pohjakoulutusvaatimus_tarkenne,
-                 k.organisaatio_oid,
-                 k.muokkaaja,
+                 hk.oid,
+                 hk.nimi,
+                 hk.valintaperuste_id,
+                 hk.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
+                 hk.metadata ->> 'kaytetaanHaunAlkamiskautta' as kaytetaan_haun_alkamiskautta_uusi,
+                 hk.jarjestyspaikka_oid,
+                 hk.hakulomaketyyppi,
+                 hk.hakulomake_ataru_id,
+                 hk.hakulomake_kuvaus,
+                 hk.hakulomake_linkki,
+                 hk.kaytetaan_haun_hakulomaketta,
+                 hk.aloituspaikat,
+                 hk.ensikertalaisen_aloituspaikat,
+                 hk.kaytetaan_haun_aikataulua,
+                 hk.pohjakoulutusvaatimus_koodi_urit,
+                 hk.pohjakoulutusvaatimus_tarkenne,
+                 hk.organisaatio_oid,
+                 hk.muokkaaja,
                  array(select jsonb_array_elements(v.metadata -> 'valintatavat') ->> 'valintatapaKoodiUri') as valintatapa_koodi_urit,
                  lower(k.system_time)
-          from hakukohteet k
-                   inner join haut h on k.haku_oid = h.oid and k.tila = 'julkaistu'::julkaisutila
-                   inner join toteutukset t on t.oid = k.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
+          from hakukohteet hk
+                   inner join haut h on hk.haku_oid = h.oid and hk.tila = 'julkaistu'::julkaisutila
+                   inner join toteutukset t on t.oid = hk.toteutus_oid and t.tila = 'julkaistu'::julkaisutila
                    inner join koulutukset o on o.oid = t.koulutus_oid and o.tila = 'julkaistu'::julkaisutila
-                   left join valintaperusteet v on v.id = k.valintaperuste_id and v.tila = 'julkaistu'::julkaisutila
+                   left join valintaperusteet v on v.id = hk.valintaperuste_id and v.tila = 'julkaistu'::julkaisutila
           where o.oid = ${koulutusOid.toString}
-            and k.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
+            and hk.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }
 
   def selectHakukohteidenHakuajat(hakutiedot: Seq[(ToteutusOid, HakuOid, HakutietoHakukohde)]): DBIO[Vector[Hakuaika]] = {
