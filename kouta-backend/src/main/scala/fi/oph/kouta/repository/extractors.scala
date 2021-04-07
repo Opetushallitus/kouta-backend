@@ -336,6 +336,7 @@ trait HakutietoExtractors extends ExtractorBase {
       hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
       hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
       kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
+      aloituspaikatUUSI = r.nextStringOption().map(read[Aloituspaikat]),
       aloituspaikat = r.nextIntOption(),
       ensikertalaisenAloituspaikat = r.nextIntOption(),
       kaytetaanHaunAikataulua = r.nextBooleanOption(),
