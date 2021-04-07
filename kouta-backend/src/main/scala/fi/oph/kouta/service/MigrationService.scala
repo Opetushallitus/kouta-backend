@@ -395,10 +395,10 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       hakulomakeLinkki = Map(),
       kaytetaanHaunHakulomaketta = Some(true), // TODO
       hakuajat = Seq(), // TODO TODO TODO
-      metadata = Some(HakukohdeMetadata(
+      metadata = Some(HakukohdeMetadata( //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
         koulutuksenAlkamiskausi = None,
         kaytetaanHaunAlkamiskautta = Some(true),
-        aloituspaikat = Some(aloituspaikat))), //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
+        aloituspaikat = Some(aloituspaikat))),
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       kielivalinta = opetuskielet.flatten,
