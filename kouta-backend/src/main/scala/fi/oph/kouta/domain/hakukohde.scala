@@ -451,16 +451,6 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
   )
 }
 
-case class Aloituspaikat(lukumaara: Option[Int] = None,
-                         ensikertalaisille: Option[Int] = None,
-                         kuvaus: Kielistetty = Map()) extends ValidatableSubEntity{
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfDefined[Int](lukumaara, assertNotNegative(_, s"$path.lukumaara")),
-    validateIfDefined[Int](ensikertalaisille, assertNotNegative(_, s"$path.ensikertalaisille")),
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
-  )
-}
-
 case class HakukohdeListItem(oid: HakukohdeOid,
                              toteutusOid: ToteutusOid,
                              hakuOid: HakuOid,
