@@ -435,6 +435,7 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              aloituspaikat: Option[Aloituspaikat]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
     assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
     validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")),
     validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validate(tila, kielivalinta, _)),
@@ -452,7 +453,13 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
 
 case class Aloituspaikat(lukumaara: Option[Int] = None,
                          ensikertalaisille: Option[Int] = None,
-                         kuvaus: Kielistetty = Map())
+                         kuvaus: Kielistetty = Map()) extends ValidatableSubEntity{
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[Int](lukumaara, assertNotNegative(_, s"$path.lukumaara")),
+    validateIfDefined[Int](ensikertalaisille, assertNotNegative(_, s"$path.ensikertalaisille")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
+  )
+}
 
 case class HakukohdeListItem(oid: HakukohdeOid,
                              toteutusOid: ToteutusOid,

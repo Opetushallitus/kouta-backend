@@ -207,6 +207,20 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "koulutuksenAlkamiskausi", missingMsg)
   }
+
+  it should "validate aloituspaikat" in {
+    val invalidAloituspaikatMetadata = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(true),
+      koulutuksenAlkamiskausi = None,
+      aloituspaikat = Some(Aloituspaikat(lukumaara = Some(-10), ensikertalaisille = Some(-5), kuvaus = Map(Fi -> "kuvaus", Sv -> ""))))
+
+    failsValidation(
+      Julkaistu,
+      invalidAloituspaikatMetadata,
+      ("aloituspaikat.lukumaara", notNegativeMsg),
+      ("aloituspaikat.ensikertalaisille", notNegativeMsg),
+      ("aloituspaikat.kuvaus", invalidKielistetty(Seq(Sv))))
+  }
 }
 
 class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
