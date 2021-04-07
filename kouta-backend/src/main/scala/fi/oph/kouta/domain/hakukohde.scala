@@ -335,10 +335,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      hakulomakeKuvaus: Kielistetty = Map(),
                      hakulomakeLinkki: Kielistetty = Map(),
                      kaytetaanHaunHakulomaketta: Option[Boolean] = None,
-                     @deprecated("kenttä siirretty metadatan alle")
-                     aloituspaikat: Option[Int] = None,
-                     @deprecated("kenttä siirretty metadatan alle")
-                     ensikertalaisenAloituspaikat: Option[Int] = None,
+                     @deprecated("kenttä siirretty metadatan alle") aloituspaikat: Option[Int] = None,
+                     @deprecated("kenttä siirretty metadatan alle") ensikertalaisenAloituspaikat: Option[Int] = None,
                      pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
                      pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
                      muuPohjakoulutusvaatimus: Kielistetty = Map(),

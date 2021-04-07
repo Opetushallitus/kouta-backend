@@ -143,7 +143,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       koulutuksenAlkamiskausi =
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("200007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
   }
@@ -172,7 +173,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         Some(KoulutuksenAlkamiskausi(
           alkamiskausityyppi = None,
           koulutuksenAlkamisvuosi = Some("2007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsValidation(Julkaistu, metadataWithoutAlkamiskausityyppi, "koulutuksenAlkamiskausi.alkamiskausityyppi", missingMsg)
   }
@@ -183,7 +185,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       koulutuksenAlkamiskausi =
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("2007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsOnJulkaisuValidation(metadataWithAlkamisvuosiInThePast, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2007"))
   }
@@ -193,7 +196,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       koulutuksenAlkamiskausi =
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("2007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "kaytetaanHaunAlkamiskautta", missingMsg)
   }
@@ -201,7 +205,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
   it should "validate koulutuksenAlkamiskausi is given if not using haun alkamiskausi" in {
     val metadataWithoutKaytetaanHaunAlkamiskauttaFlag = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(false),
-      koulutuksenAlkamiskausi = None)
+      koulutuksenAlkamiskausi = None,
+      aloituspaikat = None)
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "koulutuksenAlkamiskausi", missingMsg)
   }
