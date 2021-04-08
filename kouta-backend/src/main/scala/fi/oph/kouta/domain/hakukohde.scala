@@ -430,9 +430,9 @@ case class LiitteenToimitusosoite(osoite: Osoite,
 case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
                              kynnysehto: Kielistetty = Map(),
-                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
-                             aloituspaikat: Option[Aloituspaikat]) extends ValidatableSubEntity {
+                             aloituspaikat: Option[Aloituspaikat] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
