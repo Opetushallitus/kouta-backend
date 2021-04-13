@@ -289,41 +289,20 @@ object TestData {
     enimmaispisteet = Some(18.1),
     vahimmaispisteet = Some(10.1))
 
-  val Kielitaitovaatimus1: ValintaperusteKielitaitovaatimus = ValintaperusteKielitaitovaatimus(
-    kieliKoodiUri = Some("kieli_en#1"),
-    kielitaidonVoiOsoittaa = Seq(
-      Kielitaito(kielitaitoKoodiUri = Some("kielitaidonosoittaminen_01#1") ),
-      Kielitaito(kielitaitoKoodiUri = Some("kielitaidonosoittaminen_03#1"), lisatieto = Map( Fi -> "muu", Sv -> "muu sv"))),
-    vaatimukset = Seq(
-      Kielitaitovaatimus(
-        kielitaitovaatimusKoodiUri = Some("kielitaitovaatimustyypit_01#1"),
-        kielitaitovaatimusKuvaukset = Seq(
-          KielitaitovaatimusKuvaus(
-            kielitaitovaatimusKuvausKoodiUri = Some("kielitaitovaatimustyypitkuvaus_01#1"),
-            kielitaitovaatimusTaso = Some("1")))),
-      Kielitaitovaatimus(
-        kielitaitovaatimusKoodiUri = Some("kielitaitovaatimustyypit_02#1"),
-        kielitaitovaatimusKuvaukset = Seq(
-          KielitaitovaatimusKuvaus(
-            kielitaitovaatimusKuvausKoodiUri = Some("kielitaitovaatimustyypitkuvaus_01#1"),
-            kielitaitovaatimusTaso = Some("A")),
-          KielitaitovaatimusKuvaus(
-            kielitaitovaatimusKuvausKoodiUri = Some("kielitaitovaatimustyypitkuvaus_02#1"),
-            kielitaitovaatimusTaso = Some("A"))))))
-
   val YoValintaperusteMetadata: YliopistoValintaperusteMetadata = YliopistoValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
-    kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
-    osaamistaustaKoodiUrit = Seq("osaamistausta_001#1"),
     valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
     kuvaus = kieliMap("kuvaus"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
 
   val AmmValintaperusteMetadata: AmmatillinenValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
-    kielitaitovaatimukset = Seq(Kielitaitovaatimus1),
     valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
 
   val AmmValintaperuste: Valintaperuste = Valintaperuste(
