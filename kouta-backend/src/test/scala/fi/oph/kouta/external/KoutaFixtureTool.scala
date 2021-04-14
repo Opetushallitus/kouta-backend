@@ -862,7 +862,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
       toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
       params.get(KaytetaanHaunHakulomakettaKey).map(_.toBoolean),
-      params.get(AloituspaikatKey).map(read[Aloituspaikat]),
+      params.get(MetadataKey).map(read[HakukohdeMetadata]).get.aloituspaikat,
       Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
       List(Ajanjakso(parseLocalDateTime(params(HakuaikaAlkaaKey)), Some(parseLocalDateTime(params(HakuaikaPaattyyKey))))),
       params.get(PohjakoulutusvaatimusKoodiUritKey) match {
