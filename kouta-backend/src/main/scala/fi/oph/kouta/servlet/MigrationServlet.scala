@@ -169,9 +169,13 @@ class MigrationServlet(koulutusService: KoulutusService,
       migrationService.parseHakuFromResult(result)
         .withOid(HakuOid(getMappedOidOrExisting(hakuOid)))
 
-    tryPutAndPost(hakuOid,
-      haku.copy(nimi = haku.nimi.mapValues(nimi => s"$nimi (migraatio)")),
-      hakuService.put, hakuService.update)
+    if(updateAllowed(hakuOid)) {
+      tryPutAndPost(hakuOid,
+        haku.copy(nimi = haku.nimi.mapValues(nimi => s"$nimi (migraatio)")),
+        hakuService.put, hakuService.update)
+    } else {
+      logger.warn(s"Skipped haku update because updating is not allowed | TarjontaOid: ${hakuOid} | KoutaOid: ${getMappedOidOrExisting(hakuOid)}")
+    }
 
     val hakukohdeOids = (result \ "hakukohdeOids").extract[List[String]]
 
@@ -225,9 +229,13 @@ class MigrationServlet(koulutusService: KoulutusService,
 
               val toteutus: Toteutus = migrationService.parseToteutusFromResult(result)
                 .copy(koulutusOid = KoulutusOid(getMappedOid(koulutus.oid.get)))
-              tryPutAndPost(toteutus.oid.get,
-                toteutus.withOid(ToteutusOid(getMappedOidOrExisting(toteutus.oid.get))),
-                toteutusService.put, toteutusService.update)
+              if(updateAllowed(toteutus.oid.get)) {
+                tryPutAndPost(toteutus.oid.get,
+                  toteutus.withOid(ToteutusOid(getMappedOidOrExisting(toteutus.oid.get))),
+                  toteutusService.put, toteutusService.update)
+              } else {
+                logger.warn(s"Skipped toteutus update because updating is not allowed | TarjontaOid: ${toteutus.oid.get} | KoutaOid: ${getMappedOidOrExisting(toteutus.oid.get)}")
+              }
             } else {
               logger.warn(s"Migration skipped for koulutus $koulutusOid is not JULKAISTU!")
             }
@@ -243,19 +251,23 @@ class MigrationServlet(koulutusService: KoulutusService,
                 toteutusOid = ToteutusOid(getMappedOid(hakukohde.toteutusOid)))
               .withOid(HakukohdeOid(getMappedOidOrExisting(hakukohdeOid)))
 
-          val newOid = tryPutAndPost(hakukohdeOid,
-            finalHakukohde,
-            hakukohdeService.put, hakukohdeService.update)
+          if(updateAllowed(hakukohde.oid.get)) {
+            val newOid = tryPutAndPost(hakukohdeOid,
+              finalHakukohde,
+              hakukohdeService.put, hakukohdeService.update)
 
-          if(valintakokeet.nonEmpty) {
-            val saved: (Hakukohde, Instant) = hakukohdeService.get(HakukohdeOid(newOid)).get
+            if(valintakokeet.nonEmpty) {
+              val saved: (Hakukohde, Instant) = hakukohdeService.get(HakukohdeOid(newOid)).get
 
-            for(vk <- saved._1.valintakokeet;
-                (id, old) <- valintakokeet) {
-              if(old.nimi.equals(vk.nimi) && db.findMappedOid(id).isEmpty) {
-                db.insertOidMapping(id, vk.id.get.toString)
+              for(vk <- saved._1.valintakokeet;
+                  (id, old) <- valintakokeet) {
+                if(old.nimi.equals(vk.nimi) && db.findMappedOid(id).isEmpty) {
+                  db.insertOidMapping(id, vk.id.get.toString)
+                }
               }
             }
+          } else {
+            logger.warn(s"Skipped hakukohde update because updating is not allowed | TarjontaOid: ${hakukohde.oid.get} | KoutaOid: ${getMappedOidOrExisting(hakukohde.oid.get)}")
           }
           Ok(MigrationStatus(hakukohdeOid, "SUCCESSFULLY MIGRATED"))
         case None => BadRequest(s"Haku $originalHakuOid must be migrated first!")
