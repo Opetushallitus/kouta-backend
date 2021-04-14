@@ -184,8 +184,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             hakulomake_linkki,
             kaytetaan_haun_hakulomaketta,
             jarjestyspaikka_oid,
-            aloituspaikat,
-            ensikertalaisen_aloituspaikat,
             pohjakoulutusvaatimus_koodi_urit,
             pohjakoulutusvaatimus_tarkenne,
             muu_pohjakoulutusvaatimus_kuvaus,
@@ -213,8 +211,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
             ${hakukohde.kaytetaanHaunHakulomaketta},
             ${hakukohde.jarjestyspaikkaOid},
-            ${hakukohde.aloituspaikat},
-            ${hakukohde.ensikertalaisenAloituspaikat},
             ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
             ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
             ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
@@ -246,8 +242,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               hakulomake_linkki = ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb,
               kaytetaan_haun_hakulomaketta = ${hakukohde.kaytetaanHaunHakulomaketta},
               jarjestyspaikka_oid = ${hakukohde.jarjestyspaikkaOid},
-              aloituspaikat = ${hakukohde.aloituspaikat},
-              ensikertalaisen_aloituspaikat = ${hakukohde.ensikertalaisenAloituspaikat},
               pohjakoulutusvaatimus_koodi_urit = ${hakukohde.pohjakoulutusvaatimusKoodiUrit},
               pohjakoulutusvaatimus_tarkenne = ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb,
               muu_pohjakoulutusvaatimus_kuvaus = ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb,
@@ -275,8 +269,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or hakulomake_linkki is distinct from ${toJsonParam(hakukohde.hakulomakeLinkki)}::jsonb
             or kaytetaan_haun_hakulomaketta is distinct from ${hakukohde.kaytetaanHaunHakulomaketta}
             or jarjestyspaikka_oid is distinct from ${hakukohde.jarjestyspaikkaOid}
-            or aloituspaikat is distinct from ${hakukohde.aloituspaikat}
-            or ensikertalaisen_aloituspaikat is distinct from ${hakukohde.ensikertalaisenAloituspaikat}
             or pohjakoulutusvaatimus_koodi_urit is distinct from ${hakukohde.pohjakoulutusvaatimusKoodiUrit}
             or pohjakoulutusvaatimus_tarkenne is distinct from ${toJsonParam(hakukohde.pohjakoulutusvaatimusTarkenne)}::jsonb
             or muu_pohjakoulutusvaatimus_kuvaus is distinct from ${toJsonParam(hakukohde.muuPohjakoulutusvaatimus)}::jsonb
@@ -306,8 +298,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              hakulomake_linkki,
              kaytetaan_haun_hakulomaketta,
              jarjestyspaikka_oid,
-             aloituspaikat,
-             ensikertalaisen_aloituspaikat,
              pohjakoulutusvaatimus_koodi_urit,
              pohjakoulutusvaatimus_tarkenne,
              muu_pohjakoulutusvaatimus_kuvaus,

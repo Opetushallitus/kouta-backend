@@ -142,7 +142,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val HakuaikaAlkaaKey = "hakuaikaAlkaa"
   val HakuaikaPaattyyKey = "hakuaikaPaattyy"
   val AloituspaikatKey = "aloituspaikat"
-  val EnsikertalaisenAloituspaikatKey = "ensikertalaisenAloituspaikat"
   val PohjakoulutusvaatimusKoodiUritKey = "pohjakoulutusvaatimusKoodiUrit"
   val ValintatapaKoodiUritKey = "valintatapaKoodiUritKey"
   val PohjakoulutusvaatimusTarkenneKey = "pohjakoulutusvaatimusTarkenne"
@@ -167,9 +166,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
   def formatModified(date: LocalDateTime): String = ISO_MODIFIED_FORMATTER.format(date)
 
-  def parseModified(date: String) = Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(date)))
+  def parseModified(date: String): Modified = Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(date)))
 
-  def formatLocalDateTime(date: LocalDateTime) = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
+  def formatLocalDateTime(date: LocalDateTime): String = ISO_LOCAL_DATE_TIME_FORMATTER.format(date)
 
   def parseLocalDateTime(date: String): LocalDateTime = LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(date))
 
@@ -272,8 +271,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     JarjestyspaikkaOidKey -> OtherOid.s,
     HakuaikaAlkaaKey -> formatLocalDateTime(startTime1),
     HakuaikaPaattyyKey -> formatLocalDateTime(endTime1),
-    AloituspaikatKey -> "100",
-    EnsikertalaisenAloituspaikatKey -> "0",
     PohjakoulutusvaatimusKoodiUritKey -> "pohjakoulutusvaatimuskouta_104#1, pohjakoulutusvaatimuskouta_109#1",
     PohjakoulutusvaatimusTarkenneKey -> "Pohjakoulutusvaatimuksen tarkenne",
     ToinenAsteOnkoKaksoistutkintoKey -> "false",
@@ -479,8 +476,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
       toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
       Some(params(KaytetaanHaunHakulomakettaKey).toBoolean),
-      Some(params(AloituspaikatKey).toInt),
-      Some(params(EnsikertalaisenAloituspaikatKey).toInt),
+      None,
+      None,
       params(PohjakoulutusvaatimusKoodiUritKey).split(",").map(_.trim).toSeq,
       toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),
       params.get(MuuPohjakoulutusvaatimusKey).map(toKielistetty(kielivalinta, _)).getOrElse(Map()),
@@ -680,7 +677,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     toJson(
       valintaperusteet.filter {
         case (_, params) => params(SorakuvausIdKey) == sorakuvausId
-      }.map(_._1).toSeq.map(valintaperusteListItem)
+      }.keys.toSeq.map(valintaperusteListItem)
     )
   }
 
@@ -688,7 +685,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     toJson(
       hakukohteet.filter {
         case (_, params) => params(ValintaperusteIdKey) == valintaperusteId
-      }.map(_._1).toSeq.map(hakukohdeListItem)
+      }.keys.toSeq.map(hakukohdeListItem)
     )
   }
 
@@ -703,7 +700,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   def listOppilaitostenOsatByOppilaitos(oppilaitosOid: String): String = {
     toJson( oppilaitostenOsat.filter {
       case (_, params) => params(OppilaitosOidKey) == oppilaitosOid
-    }.map(_._1).toSeq.map(oppilaitoksenOsaListItem))
+    }.keys.toSeq.map(oppilaitoksenOsaListItem))
   }
 
   def getLastModified(since:String): String = {
@@ -834,16 +831,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       .flatMap(_.koulutuksenAlkamiskausi)
   }
 
-  private def getAlkamiskausiInfoFromHakuMetadata(params: Map[String, String]) = {
-    params
-      .get(MetadataKey)
-      .map(read[HakuMetadata])
-      .flatMap(_.koulutuksenAlkamiskausi)
-      .map(alkamiskausi => (alkamiskausi.koulutuksenAlkamiskausiKoodiUri, alkamiskausi.koulutuksenAlkamisvuosi))
-      .getOrElse((None, None))
-  }
-
-  def getAlkamiskausiFromHakukohdeMetadata(params: Map[String, String]) = {
+  def getAlkamiskausiFromHakukohdeMetadata(params: Map[String, String]): (Option[KoulutuksenAlkamiskausi], Option[Boolean]) = {
     val metadata = params
       .get(MetadataKey)
       .map(read[HakukohdeMetadata])
@@ -874,8 +862,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
       toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
       params.get(KaytetaanHaunHakulomakettaKey).map(_.toBoolean),
-      Some(params(AloituspaikatKey).toInt),
-      Some(params(EnsikertalaisenAloituspaikatKey).toInt),
+      params.get(MetadataKey).map(read[HakukohdeMetadata]).get.aloituspaikat,
       Some(params(KaytetaanHaunAikatauluaKey).toBoolean),
       List(Ajanjakso(parseLocalDateTime(params(HakuaikaAlkaaKey)), Some(parseLocalDateTime(params(HakuaikaPaattyyKey))))),
       params.get(PohjakoulutusvaatimusKoodiUritKey) match {

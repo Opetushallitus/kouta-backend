@@ -39,9 +39,6 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     failsValidation(min.copy(pohjakoulutusvaatimusKoodiUrit = Seq("tintti", "huuhkaja")),
       ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", validationMsg("tintti")),
       ValidationError("pohjakoulutusvaatimusKoodiUrit[1]", validationMsg("huuhkaja")))
-
-    failsValidation(min.copy(aloituspaikat = Some(-1)), "aloituspaikat", notNegativeMsg)
-    failsValidation(min.copy(ensikertalaisenAloituspaikat = Some(-1)), "ensikertalaisenAloituspaikat", notNegativeMsg)
   }
 
   it should "fail if julkaistu hakukohde is invalid" in {
@@ -100,8 +97,8 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
   }
 
   it should "return multiple error messages" in {
-    failsValidation(max.copy(aloituspaikat = Some(-1), liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None),
-      ValidationError("aloituspaikat", notNegativeMsg),
+    failsValidation(max.copy(pohjakoulutusvaatimusKoodiUrit = Seq("vaara uri"), liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None),
+      ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", validationMsg("vaara uri")),
       ValidationError("liitteidenToimitusaika", missingMsg))
   }
 
@@ -143,7 +140,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       koulutuksenAlkamiskausi =
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("200007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
   }
@@ -172,7 +170,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         Some(KoulutuksenAlkamiskausi(
           alkamiskausityyppi = None,
           koulutuksenAlkamisvuosi = Some("2007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsValidation(Julkaistu, metadataWithoutAlkamiskausityyppi, "koulutuksenAlkamiskausi.alkamiskausityyppi", missingMsg)
   }
@@ -183,7 +182,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       koulutuksenAlkamiskausi =
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("2007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsOnJulkaisuValidation(metadataWithAlkamisvuosiInThePast, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2007"))
   }
@@ -193,7 +193,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       koulutuksenAlkamiskausi =
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("2007"),
-          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))))
+          koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
+      aloituspaikat = None)
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "kaytetaanHaunAlkamiskautta", missingMsg)
   }
@@ -201,9 +202,24 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
   it should "validate koulutuksenAlkamiskausi is given if not using haun alkamiskausi" in {
     val metadataWithoutKaytetaanHaunAlkamiskauttaFlag = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(false),
-      koulutuksenAlkamiskausi = None)
+      koulutuksenAlkamiskausi = None,
+      aloituspaikat = None)
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "koulutuksenAlkamiskausi", missingMsg)
+  }
+
+  it should "validate aloituspaikat" in {
+    val invalidAloituspaikatMetadata = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(true),
+      koulutuksenAlkamiskausi = None,
+      aloituspaikat = Some(Aloituspaikat(lukumaara = Some(-10), ensikertalaisille = Some(-5), kuvaus = Map(Fi -> "kuvaus", Sv -> ""))))
+
+    failsValidation(
+      Julkaistu,
+      invalidAloituspaikatMetadata,
+      ("aloituspaikat.lukumaara", notNegativeMsg),
+      ("aloituspaikat.ensikertalaisille", notNegativeMsg),
+      ("aloituspaikat.kuvaus", invalidKielistetty(Seq(Sv))))
   }
 }
 
