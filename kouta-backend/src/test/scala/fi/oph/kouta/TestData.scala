@@ -1,7 +1,7 @@
 package fi.oph.kouta
 
 import java.time.temporal.ChronoUnit
-import java.time.{LocalDate, LocalDateTime}
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.util.UUID
 
 import fi.oph.kouta.TestOids._
@@ -14,6 +14,8 @@ object TestData {
   def now(): LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
   def inFuture(s:Long = 500): LocalDateTime = LocalDateTime.now().plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
   def inPast(s:Long = 500): LocalDateTime = LocalDateTime.now().minusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
+  val startTime1: LocalDateTime = LocalDate.now().plusDays(1).atTime(LocalTime.parse("09:49")).truncatedTo(ChronoUnit.MINUTES)
+  val endTime1: LocalDateTime = LocalDate.now().plusDays(1).atTime(LocalTime.parse("09:58")).truncatedTo(ChronoUnit.MINUTES)
 
   def kieliMap(text: String): Kielistetty = Map(Fi -> s"$text fi", Sv -> s"$text sv")
 
@@ -53,7 +55,7 @@ object TestData {
     tilaisuudet = List(Valintakoetilaisuus(
       jarjestamispaikka = Map(Fi -> "Lisä järjestämispaikka fi", Sv -> "Lisä järjestämispaikka sv"),
       osoite = Some(Osoite1),
-      aika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+      aika = Some(Ajanjakso(alkaa = startTime1, paattyy = Some(endTime1))),
       lisatietoja = Map(Fi -> "lisätieto fi", Sv -> "lisätieto sv"))))
 
   val Valintakoe1: Valintakoe = Valintakoe(
