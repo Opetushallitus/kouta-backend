@@ -85,7 +85,7 @@ package object toteutus {
       |              opetustapaKuvaus:
       |                fi: Opetustavan suomenkielinen kuvaus
       |                sv: Opetustavan ruotsinkielinen kuvaus
-      |              maksullisuustyyppi: 'maksullinen',
+      |              maksullisuustyyppi: maksullinen,
       |              maksullisuusKuvaus:
       |                fi: Maksullisuuden suomenkielinen kuvaus
       |                sv: Maksullisuuden ruotsinkielinen kuvaus
