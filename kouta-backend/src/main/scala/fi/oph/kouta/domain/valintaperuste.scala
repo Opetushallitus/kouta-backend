@@ -9,7 +9,7 @@ import fi.oph.kouta.validation.Validations._
 
 package object valintaperuste {
 
-  val ValintaperusteModel =
+  val ValintaperusteModel: String =
     """    Valintaperuste:
       |      type: object
       |      properties:
@@ -132,7 +132,7 @@ package object valintaperuste {
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
-  val ValintaperusteListItemModel =
+  val ValintaperusteListItemModel: String =
     """    ValintaperusteListItem:
       |      type: object
       |      properties:
