@@ -271,8 +271,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val oid = put(hakukohde(toteutusOid, hakuOid))
     val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
     val lastModified = get(oid, savedHakukohde)
-    val sorakuvausId = put(TestData.YoSorakuvaus)
-    val valintaperusteId = put(TestData.YoValintaperuste.copy(sorakuvausId = Some(sorakuvausId)))
+    val valintaperusteId = put(TestData.YoValintaperuste)
     val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
     update(HakukohdePath, updatedHakukohde, lastModified, 400, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
   }
