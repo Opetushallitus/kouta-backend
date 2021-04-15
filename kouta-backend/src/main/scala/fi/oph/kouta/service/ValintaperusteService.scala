@@ -23,7 +23,7 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
-  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, true)
+  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
     authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
