@@ -41,7 +41,7 @@ case class S3Configuration(imageBucket: String, imageBucketPublicUrl: String, re
 case class OhjausparametritClientConfiguration(username: String, password: String)
 
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
-  val databaseConfiguration = KoutaDatabaseConfiguration(
+  val databaseConfiguration: KoutaDatabaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
     username = config.getString("kouta-backend.db.user"),
     password = config.getString("kouta-backend.db.password"),
@@ -53,26 +53,26 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis"))
   )
 
-  val indexingConfiguration = IndexingConfiguration(
+  val indexingConfiguration: IndexingConfiguration = IndexingConfiguration(
     config.getString("kouta-backend.sqs.queue.priority"),
     Try(config.getString("kouta-backend.sqs.endpoint")).filter(_.trim.nonEmpty).toOption,
     Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
 
-  val s3Configuration = S3Configuration(
+  val s3Configuration: S3Configuration = S3Configuration(
     config.getString("kouta-backend.s3.imageBucket"),
     config.getString("kouta-backend.s3.imageBucketPublicUrl"),
     Try(config.getString("kouta-backend.s3.region")).filter(_.trim.nonEmpty).toOption
   )
 
-  val securityConfiguration = SecurityConfiguration(
+  val securityConfiguration: SecurityConfiguration = SecurityConfiguration(
     casUrl = config.getString("cas.url"),
     casServiceIdentifier = config.getString("kouta-backend.cas.service"),
     kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername"),
     useSecureCookies = !("false".equals(System.getProperty("kouta-backend.useSecureCookies")))
   )
 
-  val ohjausparametritClientConfiguration = OhjausparametritClientConfiguration(
+  val ohjausparametritClientConfiguration: OhjausparametritClientConfiguration = OhjausparametritClientConfiguration(
     username = config.getString("kouta-backend.cas.username"),
     password = config.getString("kouta-backend.cas.password")
   )
@@ -88,7 +88,7 @@ trait KoutaConfigurationConstants {
 
 object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstants {
 
-  val profile = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
+  val profile: String = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
   logger.info(s"Using profile '${profile}'")
 
   val configuration: KoutaConfiguration = profile match {
@@ -99,12 +99,12 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
       s"'${CONFIG_PROFILE_DEFAULT}' or '${CONFIG_PROFILE_TEMPLATE}' profiles.")
   }
 
-  def init() = {}
+  def init(): Unit = {}
 
   private def loadOphConfiguration(): KoutaConfiguration = {
     val configFilePath = System.getProperty("user.home") + "/oph-configuration/kouta-backend.properties"
 
-    implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaConfiguration] {
+    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = new ApplicationSettingsParser[KoutaConfiguration] {
       override def parse(config: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(config, new OphProperties(configFilePath))
     }
 
@@ -117,7 +117,7 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
       throw new IllegalArgumentException(s"Using 'template' profile but '${SYSTEM_PROPERTY_NAME_TEMPLATE}' " +
         "system property is missing. Cannot create oph-properties!"))
 
-    implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaConfiguration] {
+    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = new ApplicationSettingsParser[KoutaConfiguration] {
       override def parse(c: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(c,
         new OphProperties("src/test/resources/kouta-backend.properties") {
           addDefault("host.virkailija", c.getString("host.virkailija"))
