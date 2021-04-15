@@ -31,7 +31,6 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) { v =>
       withValidation(v, None) { v =>
-        validateSorakuvausIntegrity(v)
         doPut(v)
       }
     }.id.get
@@ -40,7 +39,6 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
             (implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get), valintaperuste) { (oldValintaperuste, v) =>
       withValidation(v, Some(oldValintaperuste)) { v =>
-        validateSorakuvausIntegrity(v)
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
     }.nonEmpty
@@ -66,21 +64,21 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
-  private def validateSorakuvausIntegrity(valintaperuste: Valintaperuste): Unit = {
-    import Validations._
-
-    throwValidationErrors(
-      validateIfDefined[UUID](valintaperuste.sorakuvausId, sorakuvausId => {
-        val (sorakuvausTila, sorakuvausTyyppi) = SorakuvausDAO.getTilaAndTyyppi(sorakuvausId)
-        and(
-          validateDependency(valintaperuste.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
-          validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
-            assertTrue(sorakuvausTyyppi == valintaperuste.koulutustyyppi, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
-          )
-        )
-      })
-    )
-  }
+//  private def validateSorakuvausIntegrity(valintaperuste: Valintaperuste): Unit = {
+//    import Validations._
+//
+//    throwValidationErrors(
+//      validateIfDefined[UUID](valintaperuste.sorakuvausId, sorakuvausId => {
+//        val (sorakuvausTila, sorakuvausTyyppi) = SorakuvausDAO.getTilaAndTyyppi(sorakuvausId)
+//        and(
+//          validateDependency(valintaperuste.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
+//          validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
+//            assertTrue(sorakuvausTyyppi == valintaperuste.koulutustyyppi, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
+//          )
+//        )
+//      })
+//    )
+//  }
 
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally {

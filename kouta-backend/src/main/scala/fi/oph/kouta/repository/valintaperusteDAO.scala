@@ -19,7 +19,7 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
   def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
-  def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem]
+  @deprecated("SorakuvausId tullaan siirtämään koulutukselle") def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -108,7 +108,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      julkinen,
                      esikatselu,
                      metadata,
-                     sorakuvaus_id,
                      organisaatio_oid,
                      muokkaaja,
                      kielivalinta
@@ -122,7 +121,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      ${valintaperuste.julkinen},
                      ${valintaperuste.esikatselu},
                      ${toJsonParam(valintaperuste.metadata)}::jsonb,
-                     ${valintaperuste.sorakuvausId.map(_.toString)}::uuid,
                      ${valintaperuste.organisaatioOid},
                      ${valintaperuste.muokkaaja},
                      ${toJsonParam(valintaperuste.kielivalinta)}::jsonb )"""
@@ -156,7 +154,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  julkinen,
                  esikatselu,
                  metadata,
-                 sorakuvaus_id,
                  organisaatio_oid,
                  muokkaaja,
                  kielivalinta,
@@ -181,7 +178,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      julkinen = ${valintaperuste.julkinen},
                      esikatselu = ${valintaperuste.esikatselu},
                      metadata = ${toJsonParam(valintaperuste.metadata)}::jsonb,
-                     sorakuvaus_id = ${valintaperuste.sorakuvausId.map(_.toString)}::uuid,
                      organisaatio_oid = ${valintaperuste.organisaatioOid},
                      muokkaaja = ${valintaperuste.muokkaaja},
                      kielivalinta = ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
@@ -195,7 +191,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
              or julkinen is distinct from ${valintaperuste.julkinen}
              or esikatselu is distinct from ${valintaperuste.esikatselu}
              or metadata is distinct from ${toJsonParam(valintaperuste.metadata)}::jsonb
-             or sorakuvaus_id is distinct from ${valintaperuste.sorakuvausId.map(_.toString)}::uuid
              or organisaatio_oid is distinct from ${valintaperuste.organisaatioOid}
              or kielivalinta is distinct from ${toJsonParam(valintaperuste.kielivalinta)}::jsonb )"""
   }
