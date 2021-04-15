@@ -175,12 +175,10 @@ object TestDataGenerator extends KoutaJsonFormats {
     case 0 => AmmValintaperuste.copy(
       nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
       tila = shuffle(Julkaisutila.values).head,
-      sorakuvausId = Some(UUID.fromString(sorakuvausId)),
       organisaatioOid = organisaatioOid(i))
     case 1 => YoValintaperuste.copy(
       nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
       tila = shuffle(Julkaisutila.values).head,
-      sorakuvausId = Some(UUID.fromString(sorakuvausId)),
       organisaatioOid = organisaatioOid(i))
   }
 

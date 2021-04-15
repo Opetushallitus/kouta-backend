@@ -63,7 +63,7 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
     val sorakuvausId = id(doPut(SorakuvausPath, sorakuvaus, ophHeaders)).toString
 
     val valintaperusteId = UUID.randomUUID().toString
-    KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala + (KFT.SorakuvausIdKey -> sorakuvausId))
+    KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala)
     val valintaperuste = KFT.getValintaperuste(valintaperusteId)
     doPut(ValintaperustePath, valintaperuste)
   }
@@ -88,7 +88,7 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
     val sorakuvausId = id(doPut(SorakuvausPath, sorakuvaus, ophHeaders)).toString
 
     val tempValintaperusteId = UUID.randomUUID().toString
-    KFT.addValintaperuste(tempValintaperusteId, KFT.DefaultValintaperusteScala + (KFT.SorakuvausIdKey -> sorakuvausId))
+    KFT.addValintaperuste(tempValintaperusteId, KFT.DefaultValintaperusteScala)
     val valintaperuste = KFT.getValintaperuste(tempValintaperusteId)
     val valintaperusteId = id(doPut(ValintaperustePath, valintaperuste)).toString
 

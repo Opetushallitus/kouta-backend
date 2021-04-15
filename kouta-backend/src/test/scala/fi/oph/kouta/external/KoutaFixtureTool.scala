@@ -312,7 +312,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
     JulkinenKey -> "false",
     MetadataKey -> write(TestData.AmmValintaperuste.metadata),
-    SorakuvausIdKey -> UUID.randomUUID().toString,
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
       tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, Some(endTime1)))))
@@ -331,7 +330,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ModifiedKey -> formatModified(LocalDateTime.now()),
     JulkinenKey -> "false",
     MetadataKey -> write(TestData.AmmSorakuvaus.metadata.get),
-    SorakuvausIdKey -> UUID.randomUUID().toString,
   )
 
   val DefaultSorakuvaus: java.util.Map[String, String] = mapAsJavaMap(DefaultSorakuvausScala)
@@ -515,7 +513,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(KohdejoukonTarkenneKoodiUriKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       params(JulkinenKey).toBoolean,
-      Some(UUID.fromString(params(SorakuvausIdKey))),
+      None,
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       params.get(MetadataKey).map(read[ValintaperusteMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
@@ -670,14 +668,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
               }.toSeq
           )
         }
-    )
-  }
-
-  def listValintaperusteetBySorakuvaus(sorakuvausId: String): String = {
-    toJson(
-      valintaperusteet.filter {
-        case (_, params) => params(SorakuvausIdKey) == sorakuvausId
-      }.keys.toSeq.map(valintaperusteListItem)
     )
   }
 
