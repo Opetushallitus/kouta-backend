@@ -104,9 +104,7 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
   private def loadOphConfiguration(): KoutaConfiguration = {
     val configFilePath = System.getProperty("user.home") + "/oph-configuration/kouta-backend.properties"
 
-    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = new ApplicationSettingsParser[KoutaConfiguration] {
-      override def parse(config: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(config, new OphProperties(configFilePath))
-    }
+    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = (config: TypesafeConfig) => KoutaConfiguration(config, new OphProperties(configFilePath))
 
     logger.info(s"Reading properties from '$configFilePath'")
     ApplicationSettingsLoader.loadSettings(configFilePath)
@@ -117,12 +115,10 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
       throw new IllegalArgumentException(s"Using 'template' profile but '$SYSTEM_PROPERTY_NAME_TEMPLATE' " +
         "system property is missing. Cannot create oph-properties!"))
 
-    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = new ApplicationSettingsParser[KoutaConfiguration] {
-      override def parse(c: TypesafeConfig): KoutaConfiguration = KoutaConfiguration(c,
-        new OphProperties("src/test/resources/kouta-backend.properties") {
-          addDefault("host.virkailija", c.getString("host.virkailija"))
-        })
-    }
+    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = (c: TypesafeConfig) => KoutaConfiguration(c,
+      new OphProperties("src/test/resources/kouta-backend.properties") {
+        addDefault("host.virkailija", c.getString("host.virkailija"))
+      })
 
     logger.info(s"Reading template variables from '$templateFilePath'")
     ConfigTemplateProcessor.createSettings("kouta-backend", templateFilePath)
