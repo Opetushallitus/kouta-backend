@@ -18,7 +18,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
-  def ophValintaperuste(sorakuvausId: UUID) = valintaperuste(sorakuvausId).copy(julkinen = true, organisaatioOid = OphOid)
+  def ophValintaperuste(sorakuvausId: UUID): Valintaperuste = valintaperuste(sorakuvausId).copy(julkinen = true, organisaatioOid = OphOid)
 
   var sorakuvausId: UUID = _
 
@@ -230,7 +230,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     MockAuditLogger.clean()
-    update(tallennettuValintaperuste(id), lastModified, false)
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
     get(id, valintaperuste(id, sorakuvausId)) should equal (lastModified)
   }
@@ -246,7 +246,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "allow a user of the valintaperuste organization to update the valintaperuste" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(valintaperuste.organisaatioOid))
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false, crudSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
@@ -258,7 +258,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "allow a user of an ancestor organization to create the valintaperuste" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(ParentOid))
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
@@ -314,7 +314,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperusteWithValintakokeet)
     val lastModified = get(id, getIds(valintaperusteWithValintakokeet.copy(id = Some(id))))
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
-    val updateValintakoe = (getIds(valintaperuste(id, sorakuvausId))).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    val updateValintakoe = getIds(valintaperuste(id, sorakuvausId)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
     update(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
     get(id, getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
   }
@@ -325,7 +325,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     Thread.sleep(1500)
     val uusiValintaperuste = getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = List()))
     update(uusiValintaperuste, lastModified, expectUpdate = true)
-    get(id, uusiValintaperuste) should not equal (lastModified)
+    get(id, uusiValintaperuste) should not equal lastModified
   }
 
   it should "store and update unfinished valintaperuste" in {
