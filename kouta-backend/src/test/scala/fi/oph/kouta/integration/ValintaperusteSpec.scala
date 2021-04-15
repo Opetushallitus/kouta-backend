@@ -94,21 +94,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = testUser.oid))
   }
 
-  it should "fail to store valintaperuste if sorakuvaus doesn't exist" in {
-    val sorakuvausId = UUID.randomUUID()
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "sorakuvausId", nonExistent("Sorakuvausta", sorakuvausId))
-  }
-
-  it should "fail to store julkaistu valintaperuste if sorakuvaus is not yet julkaistu" in {
-    val sorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "tila", notYetJulkaistu("Sorakuvausta", sorakuvausId))
-  }
-
-  it should "fail to store valintaperuste if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val sorakuvausId = put(TestData.YoSorakuvaus)
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
-  }
-
   it should "write create valintaperuste in audit log" in {
     val sorakuvausId = put(sorakuvaus)
     MockAuditLogger.clean()
@@ -120,8 +105,8 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   it should "store korkeakoulutus valintaperuste" in {
     val sorakuvausId = put(TestData.YoSorakuvaus)
-    val id = put(TestData.YoValintaperuste.copy(sorakuvausId = Some(sorakuvausId)))
-    get(id, TestData.YoValintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId)))
+    val id = put(TestData.YoValintaperuste)
+    get(id, TestData.YoValintaperuste.copy(id = Some(id)))
   }
 
   it should "return 401 if no session is found" in {
@@ -194,27 +179,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = userOid))
     update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
     get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
-  }
-
-  it should "fail to update valintaperuste if sorakuvaus doesn't exist" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    val nonExistentSorakuvausId = UUID.randomUUID()
-    update(ValintaperustePath, valintaperuste(id, nonExistentSorakuvausId), lastModified, 400, "sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId))
-  }
-
-  it should "fail to update julkaistu valintaperuste if sorakuvaus is not yet julkaistu" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    val tallennettuSorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
-    update(ValintaperustePath, valintaperuste(id, tallennettuSorakuvausId), lastModified, 400, "tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId))
-  }
-
-  it should "fail to update valintaperuste if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    val yoSorakuvausId = put(TestData.YoSorakuvaus)
-    update(ValintaperustePath, valintaperuste(id, yoSorakuvausId), lastModified, 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", yoSorakuvausId))
   }
 
   it should "write valintaperuste update to audit log" in {

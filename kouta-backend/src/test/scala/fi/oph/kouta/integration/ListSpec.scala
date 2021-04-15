@@ -506,25 +506,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String, String](), 403, crudSessions(ParentOid))
   }
 
-  "Sorakuvausta käyttävät valintaperusteet for indexer" should "list all valintaperusteet using given sorakuvaus for indexer" in {
-    list(s"$IndexerPath$SorakuvausPath/${s1.id}/valintaperusteet", Map[String,String](), List(v1, v2), indexerSession)
-  }
-  it should "list all valintaperusteet using given sorakuvaus 2" in {
-    list(s"$IndexerPath$SorakuvausPath/${s3.id}/valintaperusteet", Map[String,String](), List(v4), indexerSession)
-  }
-  it should "deny access to root user without indexer role" in {
-    list(s"$IndexerPath$SorakuvausPath/${s1.id}/valintaperusteet", Map[String, String](), 403)
-  }
-  it should "deny access to a non-root user, even if they own the toteutus" in {
-    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(ChildOid))
-  }
-  it should "deny access without the valintaperuste read role" in {
-    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
-  }
-  it should "deny access with the valintaperuste read role" in {
-    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Valintaperuste.Read, OphOid))
-  }
-
   "Oppilaitoksen osat list" should "list all oppilaitoksen osat for this oppilaitos" in {
     list(s"$OppilaitosPath/${o1.s}/osat", Map("organisaatioOid" -> ParentOid.s), List(oo1, oo2))
   }
