@@ -80,7 +80,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   def updateInHakukohteenHakuajatTable(i: Int): Unit = update(iHakukohde(i).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(5000))))), timestampAfterInserts)
   def updateInHakukohteenLiitteetTable(i: Int): Unit = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"liitetyypitamm_$i#1")))), timestampAfterInserts)
   def updateInHakukohteenValintakokeetTable(i: Int): Unit = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"valintakokeentyyppi_$i#1")))), timestampAfterInserts)
-  def updateInValintaperusteetTable(i: Int): Any = update(valintaperuste(valintaperusteIds(i), sorakuvausIds(i), Arkistoitu), timestampAfterInserts)
+  def updateInValintaperusteetTable(i: Int): Any = update(valintaperuste(valintaperusteIds(i), Arkistoitu), timestampAfterInserts)
   def updateInSorakuvauksetTable(i: Int): Unit = update(sorakuvaus(sorakuvausIds(i), Tallennettu), timestampAfterInserts)
 
   "Modified since" should "return 401 without a valid session" in {

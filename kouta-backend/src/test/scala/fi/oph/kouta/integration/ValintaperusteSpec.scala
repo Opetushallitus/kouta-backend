@@ -104,7 +104,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "store korkeakoulutus valintaperuste" in {
-    val sorakuvausId = put(TestData.YoSorakuvaus)
     val id = put(TestData.YoValintaperuste)
     get(id, TestData.YoValintaperuste.copy(id = Some(id)))
   }
@@ -169,25 +168,25 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   "Update valintaperuste" should "update valintaperuste" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
-    get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
+    update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
+    get(id, valintaperuste(id, Arkistoitu))
   }
 
   it should "read muokkaaja from the session" in {
     val id = put(valintaperuste(sorakuvausId), crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
     val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = userOid))
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
-    get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
+    update(getIds(valintaperuste(id, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
+    get(id, valintaperuste(id, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write valintaperuste update to audit log" in {
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     MockAuditLogger.clean()
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
+    update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "valintaperuste_update")
-    get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
+    get(id, valintaperuste(id, Arkistoitu))
   }
 
   it should "not update valintaperuste" in {
@@ -255,7 +254,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste(sorakuvausId))
     val lastModified = get(id, valintaperuste(id, sorakuvausId))
     Thread.sleep(1500)
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
+    update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
     post(ValintaperustePath, bytes(valintaperuste(id, sorakuvausId)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }

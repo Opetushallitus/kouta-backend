@@ -75,7 +75,7 @@ class IndexingSpec extends KoutaIntegrationSpec
     val id = put(valintaperuste(sorakuvausId))
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
 
-    update(valintaperuste(id, sorakuvausId = sorakuvausId, Arkistoitu), lastModified = get(id, valintaperuste(id, sorakuvausId)))
+    update(valintaperuste(id, Arkistoitu), lastModified = get(id, valintaperuste(id, sorakuvausId)))
 
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }

@@ -50,7 +50,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
 
   def valintaperuste(sorakuvausId: UUID): Valintaperuste = valintaperuste
   def valintaperuste(id:UUID, sorakuvausId: UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
-  def valintaperuste(id:UUID, sorakuvausId: UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
+  def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
 
   def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id)
   def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID = put(ValintaperustePath, valintaperuste, sessionId, id)
