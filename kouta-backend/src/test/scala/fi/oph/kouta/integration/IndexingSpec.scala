@@ -22,7 +22,7 @@ class IndexingSpec extends KoutaIntegrationSpec
     valintaperusteId = put(valintaperuste(sorakuvausId))
   }
 
-  lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
+  lazy val uusiHakukohde: Hakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
   lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))}
 
   "Create haku" should "send indexing message after creating haku" in {
@@ -99,7 +99,7 @@ class IndexingSpec extends KoutaIntegrationSpec
       hakulomaketyyppi = Some(Ataru),
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake"),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))))
-    update(muokattuHakukohde, lastModified, true)
+    update(muokattuHakukohde, lastModified, expectUpdate = true)
 
     eventuallyIndexingMessages {
       _ should contain(s"""{"hakukohteet":["$oid"]}""")
