@@ -94,6 +94,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  hk.oid,
                  hk.nimi,
                  hk.tila,
+                 hk.esikatselu,
                  hk.valintaperuste_id,
                  hk.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
                  hk.metadata ->> 'kaytetaanHaunAlkamiskautta' as kaytetaan_haun_alkamiskautta_uusi,

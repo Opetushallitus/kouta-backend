@@ -92,6 +92,9 @@ package object hakutieto {
       |                        - arkistoitu
       |                        - tallennettu
       |                      description: Hakukohteen julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa.
+      |                    esikatselu:
+      |                      type: boolean
+      |                      description: Onko hakukohde nähtävissä esikatselussa
       |                    nimi:
       |                      type: object
       |                      description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -209,6 +212,7 @@ case class HakutietoHaku(hakuOid: HakuOid,
 case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               nimi: Kielistetty = Map(),
                               tila: Julkaisutila = Tallennettu,
+                              esikatselu: Boolean = false,
                               valintaperusteId: Option[UUID] = None,
                               koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
                               kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
