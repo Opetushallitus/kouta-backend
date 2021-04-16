@@ -21,11 +21,11 @@ import scala.util.Random.shuffle
 /* Generate random test data to local kouta-backend */
 object TestDataGenerator extends KoutaJsonFormats {
 
-  def inPast() = LocalDateTime.now().minusWeeks(2).truncatedTo(ChronoUnit.MINUTES)
-  def now() = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-  def inFuture(weeks: Int = 2) = LocalDateTime.now().plusWeeks(weeks).truncatedTo(ChronoUnit.MINUTES)
+  def inPast(): LocalDateTime = LocalDateTime.now().minusWeeks(2).truncatedTo(ChronoUnit.MINUTES)
+  def now(): LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+  def inFuture(weeks: Int = 2): LocalDateTime = LocalDateTime.now().plusWeeks(weeks).truncatedTo(ChronoUnit.MINUTES)
 
-  val KoutaBackendPath = System.getProperty(
+  val KoutaBackendPath: String = System.getProperty(
     "test-data-generator.path",
     s"http://localhost:${System.getProperty("kouta-backend.port", DefaultPort)}/kouta-backend")
 
@@ -38,7 +38,7 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   val DebugOids = false
 
-  val userOid = UserOid("1.2.246.562.24.62301161440")
+  val userOid: UserOid = UserOid("1.2.246.562.24.62301161440")
 
   def main(args: Array[String]) {
     println(s"Generating test data to path $KoutaBackendPath")
@@ -79,7 +79,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     println(s"Test session id=$TestDataGeneratorSessionId")
   }
 
-  def debug(oid: String, path: String) = {
+  def debug(oid: String, path: String): String = {
     if(DebugOids) {
       println(s"$oid $path")
     }
@@ -88,9 +88,9 @@ object TestDataGenerator extends KoutaJsonFormats {
 
   private val organisaatioOids = Seq(OtherOid, ParentOid)
 
-  def organisaatioOid(i: Int) = organisaatioOids(i % 2)
+  def organisaatioOid(i: Int): OrganisaatioOid = organisaatioOids(i % 2)
 
-  def getTarjoajat(i: Int) = i % 4 match {
+  def getTarjoajat(i: Int): List[OrganisaatioOid] = i % 4 match {
     case 0 => List(GrandChildOid, EvilGrandChildOid)
     case 2 => List(GrandChildOid, EvilCousin)
     case _ => List(LonelyOid, EvilGrandChildOid)
@@ -103,11 +103,11 @@ object TestDataGenerator extends KoutaJsonFormats {
     Map(Fi -> s"Autoalan perustutkinto $i", Sv -> s"Autoaland perustutkinto $i sv"),
     Map(Fi -> s"Lääketieteen koulutus $i", Sv -> s"Lääketieteen koulutus $i sv"))).head
 
-  def koulutus(i: Int) = i % 2 match {
+  def koulutus(i: Int): Koulutus = i % 2 match {
     case 0 => AmmKoulutus.copy(
       nimi = koulutusNimi(i),
       tila = shuffle(Julkaisutila.values).head,
-      julkinen = (i % 4 == 0),
+      julkinen = i % 4 == 0,
       organisaatioOid = organisaatioOid(i),
       tarjoajat = List(organisaatioOid(i)),
       muokkaaja = userOid
@@ -115,7 +115,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     case _ => YoKoulutus.copy(
       nimi = koulutusNimi(i),
       tila = shuffle(Julkaisutila.values).head,
-      julkinen = (i % 4 == 0),
+      julkinen = i % 4 == 0,
       organisaatioOid = organisaatioOid(i),
       tarjoajat = List(organisaatioOid(i)),
       muokkaaja = userOid
@@ -129,7 +129,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     )
   }
 
-  def toteutus(koulutusOid: String, i: Int, j: Int) = i % 2 match {
+  def toteutus(koulutusOid: String, i: Int, j: Int): Toteutus = i % 2 match {
     case 0 => JulkaistuAmmToteutus.copy(
       nimi = Map(Fi -> s"Koulutuksen $i toteutus $j", Sv -> s"Koulutuksen $i toteutus $j sv"),
       tila = shuffle(Julkaisutila.values).head,
@@ -147,14 +147,14 @@ object TestDataGenerator extends KoutaJsonFormats {
       muokkaaja = userOid)
   }
 
-  def haku(i: Int) = JulkaistuHaku.copy(
+  def haku(i: Int): Haku = JulkaistuHaku.copy(
     nimi = Map(Fi -> s"Haku $i", Sv -> s"Haku $i sv"),
     tila = shuffle(Julkaisutila.values).head,
     hakuajat = List(Ajanjakso(alkaa = inPast(), paattyy = Some(inFuture()))),
     organisaatioOid = organisaatioOid(i)
   )
 
-  def hakukohde(i: Int, j: Int, k: Int, toteutusOid: String, hakuOid: String, valintaperusteId: String) = JulkaistuHakukohde.copy(
+  def hakukohde(i: Int, j: Int, k: Int, toteutusOid: String, hakuOid: String, valintaperusteId: String): Hakukohde = JulkaistuHakukohde.copy(
     nimi = Map(Fi -> s"Koulutuksen $i toteutuksen $j hakukohde $k", Sv -> s"Koulutuksen $i toteutuksen $j hakukohde $k sv"),
     tila = shuffle(Julkaisutila.values).head,
     toteutusOid = ToteutusOid(toteutusOid),
@@ -165,7 +165,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     organisaatioOid = getTarjoajat(i)(k)
   )
 
-  def sorakuvaus(i: Int) = AmmSorakuvaus.copy(
+  def sorakuvaus(i: Int): Sorakuvaus = AmmSorakuvaus.copy(
     nimi = Map(Fi -> s"Sorakuvaus $i", Sv -> s"Sorakuvaus $i sv"),
     tila = shuffle(Julkaisutila.values).head,
     organisaatioOid = organisaatioOid(i)
@@ -182,12 +182,12 @@ object TestDataGenerator extends KoutaJsonFormats {
       organisaatioOid = organisaatioOid(i))
   }
 
-  def oppilaitos(oid: String) = JulkaistuOppilaitos.copy(
+  def oppilaitos(oid: String): Oppilaitos = JulkaistuOppilaitos.copy(
     oid = OrganisaatioOid(oid),
     organisaatioOid = OrganisaatioOid(oid)
   )
 
-  def oppilaitoksenOsa(oid: String, oppilaitosOid: String) = JulkaistuOppilaitoksenOsa.copy(
+  def oppilaitoksenOsa(oid: String, oppilaitosOid: String): OppilaitoksenOsa = JulkaistuOppilaitoksenOsa.copy(
     oid = OrganisaatioOid(oid),
     oppilaitosOid = OrganisaatioOid(oppilaitosOid),
     organisaatioOid = OrganisaatioOid(oid)
@@ -204,7 +204,7 @@ object TestDataGenerator extends KoutaJsonFormats {
         s"Got status code $xxx from kouta-backend with response body [$result]! Cannot continue generating test data...")
     }
 
-  def exists(path: String) = new DefaultHttpRequest(
+  def exists(path: String): Boolean = new DefaultHttpRequest(
     Http(s"$KoutaBackendPath$path").header("Cookie", s"session=$TestDataGeneratorSessionId")
   ).responseWithHeaders match {
     case (200, _, _) => true
@@ -218,7 +218,7 @@ object TestDataGenerator extends KoutaJsonFormats {
       put(path: String, data: T)
     }
 
-  def oid(body: String) = (read[Oid](body)).oid
+  def oid(body: String): String = read[Oid](body).oid
 
-  def id(body: String) = (read[Id](body)).id
+  def id(body: String): UUID = read[Id](body).id
 }
