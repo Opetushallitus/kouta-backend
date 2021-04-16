@@ -41,7 +41,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid).copy(tila = Tallennettu)))
     hakuOids = List.fill(n)(put(haku))
     sorakuvausIds = List.fill(n)(put(sorakuvaus))
-    valintaperusteIds = sorakuvausIds.map(id => put(valintaperuste(id)))
+    valintaperusteIds = List.fill(n)(put(valintaperuste))
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) =>
       put(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu))
     }

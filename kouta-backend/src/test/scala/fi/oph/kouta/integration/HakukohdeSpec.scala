@@ -18,15 +18,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId: UUID = _
-  var sorakuvausId: UUID = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
     koulutusOid = put(koulutus, ophSession)
     toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid)))
     hakuOid = put(haku)
-    sorakuvausId = put(sorakuvaus)
-    valintaperusteId = put(valintaperuste(sorakuvausId))
+    valintaperusteId = put(valintaperuste)
   }
 
   override def afterAll(): Unit = {
@@ -123,13 +121,12 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "fail to store julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
-    val valintaperusteId = put(valintaperuste(sorakuvausId).copy(tila = Tallennettu, metadata = None))
+    val valintaperusteId = put(valintaperuste.copy(tila = Tallennettu, metadata = None))
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Valintaperustetta", valintaperusteId))
   }
 
   it should "fail to store hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
-    val sorakuvausId = put(TestData.YoSorakuvaus)
-    val valintaperusteId = put(valintaperuste(sorakuvausId).copy(koulutustyyppi = Yo, metadata = Some(TestData.YoValintaperusteMetadata)))
+    val valintaperusteId = put(valintaperuste.copy(koulutustyyppi = Yo, metadata = Some(TestData.YoValintaperusteMetadata)))
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
   }
 
@@ -259,7 +256,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "fail to update julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
-    val valintaperusteId = put(valintaperuste(sorakuvausId).copy(tila = Tallennettu))
+    val valintaperusteId = put(valintaperuste.copy(tila = Tallennettu))
     val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
     val savedHakukohde = tallennettuHakukohde(oid).copy(valintaperusteId = Some(valintaperusteId), tila = Tallennettu)
     val lastModified = get(oid, savedHakukohde)

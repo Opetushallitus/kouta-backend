@@ -45,8 +45,8 @@ object TestDataGenerator extends KoutaJsonFormats {
     println(s"Koulutus count = $KoulutusCount")
     println(s"Starting...")
 
-    val sorakuvausIds = (0 until SorakuvausCount).map(i => put("/sorakuvaus", sorakuvaus(i)))
-    val valintaperusteIds = (0 until ValintaperusteCount).map(i => put("/valintaperuste", valintaperuste(i, sorakuvausIds(i))))
+    (0 until SorakuvausCount).map(i => put("/sorakuvaus", sorakuvaus(i)))
+    val valintaperusteIds = (0 until ValintaperusteCount).map(i => put("/valintaperuste", valintaperuste(i)))
     println(s"Valintaperusteet ready...")
 
     val hakuOids = (0 until HakuCount).map(i => put("/haku", haku(i)))
@@ -171,7 +171,7 @@ object TestDataGenerator extends KoutaJsonFormats {
     organisaatioOid = organisaatioOid(i)
   )
 
-  def valintaperuste(i: Int, sorakuvausId: String) = i % 2 match {
+  def valintaperuste(i: Int): Valintaperuste = i % 2 match {
     case 0 => AmmValintaperuste.copy(
       nimi = Map(Fi -> s"Valintaperuste $i", Sv -> s"Valintaperuste $i sv"),
       tila = shuffle(Julkaisutila.values).head,

@@ -57,11 +57,6 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
   }
 
   it should "be able to save default valintaperuste" in {
-    val tempSorakuvausId = UUID.randomUUID().toString
-    KFT.addSorakuvaus(tempSorakuvausId, KFT.DefaultSorakuvausScala)
-    val sorakuvaus = KFT.getSorakuvaus(tempSorakuvausId)
-    val sorakuvausId = id(doPut(SorakuvausPath, sorakuvaus, ophHeaders)).toString
-
     val valintaperusteId = UUID.randomUUID().toString
     KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala)
     val valintaperuste = KFT.getValintaperuste(valintaperusteId)

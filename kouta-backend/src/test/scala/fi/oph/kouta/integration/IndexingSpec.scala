@@ -19,7 +19,7 @@ class IndexingSpec extends KoutaIntegrationSpec
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)
     sorakuvausId = put(sorakuvaus)
-    valintaperusteId = put(valintaperuste(sorakuvausId))
+    valintaperusteId = put(valintaperuste)
   }
 
   lazy val uusiHakukohde: Hakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
@@ -67,15 +67,15 @@ class IndexingSpec extends KoutaIntegrationSpec
   }
 
   "Create valintaperuste" should "send indexing message after creating valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
+    val id = put(valintaperuste)
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
 
   "Update valintaperuste"  should "send indexing message after updating valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
+    val id = put(valintaperuste)
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
 
-    update(valintaperuste(id, Arkistoitu), lastModified = get(id, valintaperuste(id, sorakuvausId)))
+    update(valintaperuste(id, Arkistoitu), lastModified = get(id, valintaperuste(id)))
 
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }

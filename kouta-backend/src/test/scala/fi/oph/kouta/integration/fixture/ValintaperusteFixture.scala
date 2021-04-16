@@ -48,8 +48,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
 
   def tallennettuValintaperuste(id: UUID): Valintaperuste = getIds(valintaperuste.copy(id = Some(id)))
 
-  def valintaperuste(sorakuvausId: UUID): Valintaperuste = valintaperuste
-  def valintaperuste(id:UUID, sorakuvausId: UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
+  def valintaperuste(id:UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
   def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
 
   def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id)
@@ -71,7 +70,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
   def update(valintaperuste: Valintaperuste, lastModified: String): Unit = update(valintaperuste, lastModified, expectUpdate = true)
 
-  def valintaperuste(sorakuvausId: Option[UUID], tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
+  def valintaperuste(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
     valintaperuste.copy(organisaatioOid = organisaatioOid, tila = tila)
 
   def addToList(valintaperuste:Valintaperuste): ValintaperusteListItem = {
