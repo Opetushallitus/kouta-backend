@@ -393,6 +393,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case Some(x) => x.split(",").map(_.trim).map(OrganisaatioOid).toList
       },
       toKielistetty(kielivalinta, params(NimiKey)),
+      None,
       params.get(MetadataKey).map(read[KoulutusMetadata]),
       params(JulkinenKey).toBoolean,
       UserOid(params(MuokkaajaKey)),
