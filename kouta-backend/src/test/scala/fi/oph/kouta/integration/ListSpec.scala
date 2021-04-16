@@ -585,6 +585,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
           hakukohteet = Seq(HakutietoHakukohde(
             hakukohdeOid = hk1.oid,
             nimi = hk1.nimi,
+            tila = hk1.tila,
             valintaperusteId = hk1.valintaperusteId,
             koulutuksenAlkamiskausi = TestData.JulkaistuHakukohde.metadata.get.koulutuksenAlkamiskausi,
             kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.metadata.get.kaytetaanHaunAlkamiskautta,

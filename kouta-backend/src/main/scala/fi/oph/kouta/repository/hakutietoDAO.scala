@@ -93,6 +93,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  h.oid,
                  hk.oid,
                  hk.nimi,
+                 hk.tila,
                  hk.valintaperuste_id,
                  hk.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
                  hk.metadata ->> 'kaytetaanHaunAlkamiskautta' as kaytetaan_haun_alkamiskautta_uusi,
@@ -116,7 +117,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                    inner join koulutukset k on k.oid = t.koulutus_oid and k.tila = 'julkaistu'::julkaisutila
                    left join valintaperusteet v on v.id = hk.valintaperuste_id and v.tila = 'julkaistu'::julkaisutila
           where k.oid = ${koulutusOid.toString}
-            and hk.tila = 'julkaistu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
+            and (hk.tila = 'tallennettu'::julkaisutila or hk.tila = 'julkaistu'::julkaisutila)""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }
 
   def selectHakukohteidenHakuajat(hakutiedot: Seq[(ToteutusOid, HakuOid, HakutietoHakukohde)]): DBIO[Vector[Hakuaika]] = {
