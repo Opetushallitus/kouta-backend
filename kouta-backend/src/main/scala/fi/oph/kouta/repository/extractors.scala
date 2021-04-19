@@ -75,6 +75,7 @@ trait KoulutusExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption()),
+    sorakuvausId = r.nextStringOption().map(UUID.fromString),
     metadata = r.nextStringOption().map(read[KoulutusMetadata]),
     julkinen = r.nextBoolean(),
     muokkaaja = UserOid(r.nextString()),

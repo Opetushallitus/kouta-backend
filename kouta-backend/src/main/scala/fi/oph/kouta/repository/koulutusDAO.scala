@@ -152,6 +152,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             koulutukset_koodi_uri,
             tila,
             nimi,
+            sorakuvaus_id,
             metadata,
             julkinen,
             muokkaaja,
@@ -166,6 +167,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.koulutuksetKoodiUri},
             ${koulutus.tila.toString}::julkaisutila,
             ${toJsonParam(koulutus.nimi)}::jsonb,
+            ${koulutus.sorakuvausId.map(_.toString)}::uuid,
             ${toJsonParam(koulutus.metadata)}::jsonb,
             ${koulutus.julkinen},
             ${koulutus.muokkaaja},
@@ -190,6 +192,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  koulutukset_koodi_uri,
                  tila,
                  nimi,
+                 sorakuvaus_id,
                  metadata,
                  julkinen,
                  muokkaaja,
@@ -251,6 +254,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               koulutukset_koodi_uri = ${koulutus.koulutuksetKoodiUri},
               tila = ${koulutus.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(koulutus.nimi)}::jsonb,
+              sorakuvaus_id = ${koulutus.sorakuvausId.map(_.toString)}::uuid,
               metadata = ${toJsonParam(koulutus.metadata)}::jsonb,
               julkinen = ${koulutus.julkinen},
               muokkaaja = ${koulutus.muokkaaja},
@@ -264,6 +268,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
             or koulutukset_koodi_uri is distinct from ${koulutus.koulutuksetKoodiUri}
             or tila is distinct from ${koulutus.tila.toString}::julkaisutila
+            or sorakuvaus_id is distinct from ${koulutus.sorakuvausId.map(_.toString)}::uuid
             or nimi is distinct from ${toJsonParam(koulutus.nimi)}::jsonb
             or julkinen is distinct from ${koulutus.julkinen}
             or metadata is distinct from ${toJsonParam(koulutus.metadata)}::jsonb
