@@ -207,6 +207,11 @@ trait SorakuvausExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     modified = timeStampToModified(r.nextTimestamp())
   ))
+
+  implicit val getTilaTyyppiAndKoulutusKoodit: GetResult[(Julkaisutila, Koulutustyyppi, Seq[String])] = GetResult(r =>
+    (Julkaisutila.withName(r.nextString()),
+      Koulutustyyppi.withName(r.nextString()),
+      extractArray[String](r.nextObjectOption())))
 }
 
 trait HakukohdeExctractors extends ExtractorBase {

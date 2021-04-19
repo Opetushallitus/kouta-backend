@@ -51,10 +51,10 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
       case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit, myosArkistoidut))
     }
 
-  def getTilaAndTyyppi(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi]) =
-    KoutaDatabase.runBlocking(selectTilaAndTyyppi(sorakuvausId)) match {
-      case None => (None, None)
-      case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
+  def getTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi], Option[Seq[String]]) =
+    KoutaDatabase.runBlocking(selectTilaTyyppiAndKoulutusKoodit(sorakuvausId)) match {
+      case None => (None, None, None)
+      case Some((tila, tyyppi, koulutusKoodiUrit)) => (Some(tila), Some(tyyppi), Some(koulutusKoodiUrit))
     }
 }
 
@@ -129,8 +129,11 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
           #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
   }
 
-  def selectTilaAndTyyppi(sorakuvausId: UUID): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =
-    sql"""select tila, koulutustyyppi from sorakuvaukset
-            where id = ${sorakuvausId.toString}::uuid
-    """.as[(Julkaisutila, Koulutustyyppi)].headOption
+  def selectTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): DBIO[Option[(Julkaisutila, Koulutustyyppi, Seq[String])]] =
+    sql"""select tila,
+                 koulutustyyppi,
+                 array(select metadata -> 'koulutusKoodiUrit') as koulutus_koodi_urit
+          from sorakuvaukset
+          where id = ${sorakuvausId.toString}::uuid
+    """.as[(Julkaisutila, Koulutustyyppi, Seq[String])].headOption
 }
