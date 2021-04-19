@@ -853,6 +853,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakutietoHakukohde(
       HakukohdeOid(oid),
       toKielistetty(kielivalinta, params(NimiKey)),
+      Julkaisutila.withName(params(TilaKey)),
+      params.get(EsikatseluKey) match {
+        case None => false
+        case Some(x) => x.toBoolean
+      },
       params.get(ValintaperusteIdKey).map(UUID.fromString),
       koulutuksenAlkamiskausi,
       kaytetaanHaunAlkamiskautta,

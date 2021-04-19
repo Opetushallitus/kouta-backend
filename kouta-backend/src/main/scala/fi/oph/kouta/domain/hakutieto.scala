@@ -84,6 +84,17 @@ package object hakutieto {
       |                      type: string
       |                      description: Hakukohteen yksilöivä tunniste. Järjestelmän generoima.
       |                      example: "1.2.246.562.20.00000000000000000009"
+      |                    tila:
+      |                      type: string
+      |                      example: "julkaistu"
+      |                      enum:
+      |                        - julkaistu
+      |                        - arkistoitu
+      |                        - tallennettu
+      |                      description: Hakukohteen julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa.
+      |                    esikatselu:
+      |                      type: boolean
+      |                      description: Onko hakukohde nähtävissä esikatselussa
       |                    nimi:
       |                      type: object
       |                      description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -200,6 +211,8 @@ case class HakutietoHaku(hakuOid: HakuOid,
 
 case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               nimi: Kielistetty = Map(),
+                              tila: Julkaisutila = Tallennettu,
+                              esikatselu: Boolean = false,
                               valintaperusteId: Option[UUID] = None,
                               koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
                               kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
