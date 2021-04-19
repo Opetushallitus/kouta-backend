@@ -64,22 +64,6 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
-//  private def validateSorakuvausIntegrity(valintaperuste: Valintaperuste): Unit = {
-//    import Validations._
-//
-//    throwValidationErrors(
-//      validateIfDefined[UUID](valintaperuste.sorakuvausId, sorakuvausId => {
-//        val (sorakuvausTila, sorakuvausTyyppi) = SorakuvausDAO.getTilaAndTyyppi(sorakuvausId)
-//        and(
-//          validateDependency(valintaperuste.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
-//          validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
-//            assertTrue(sorakuvausTyyppi == valintaperuste.koulutustyyppi, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
-//          )
-//        )
-//      })
-//    )
-//  }
-
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
     KoutaDatabase.runBlockingTransactionally {
       for {
