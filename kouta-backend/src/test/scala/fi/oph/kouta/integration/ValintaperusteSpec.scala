@@ -8,13 +8,13 @@ import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.integration.fixture.{SorakuvausFixture, ValintaperusteFixture}
+import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
 
-class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture with SorakuvausFixture {
+class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture {
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
