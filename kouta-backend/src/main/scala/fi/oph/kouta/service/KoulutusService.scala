@@ -90,8 +90,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
           validateDependency(koulutus.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
           validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
             assertTrue(sorakuvausTyyppi == koulutus.koulutustyyppi, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))),
-          validateIfDefined[Seq[String]](koulutuskoodiUrit, koulutuskoodiUrit =>
-            assertTrue(koulutuskoodiUrit == koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit"))))
+          validateIfDefined[Seq[String]](koulutuskoodiUrit, koulutuskoodiUrit => {
+            validateIfTrue(koulutuskoodiUrit.nonEmpty, assertTrue(koulutuskoodiUrit == koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")))
+          }))
       }))
   }
 
