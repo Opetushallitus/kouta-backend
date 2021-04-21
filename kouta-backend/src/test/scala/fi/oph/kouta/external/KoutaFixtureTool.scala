@@ -195,6 +195,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
+    SorakuvausIdKey -> UUID.randomUUID().toString,
     JulkinenKey -> "false",
     EsikatseluKey -> "false",
     MuokkaajaKey -> TestUserOid.s,
@@ -330,6 +331,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ModifiedKey -> formatModified(LocalDateTime.now()),
     JulkinenKey -> "false",
     MetadataKey -> write(TestData.AmmSorakuvaus.metadata.get),
+    SorakuvausIdKey -> UUID.randomUUID().toString,
   )
 
   val DefaultSorakuvaus: java.util.Map[String, String] = mapAsJavaMap(DefaultSorakuvausScala)
@@ -393,7 +395,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case Some(x) => x.split(",").map(_.trim).map(OrganisaatioOid).toList
       },
       toKielistetty(kielivalinta, params(NimiKey)),
-      None,
+      Some(UUID.fromString(params(SorakuvausIdKey))),
       params.get(MetadataKey).map(read[KoulutusMetadata]),
       params(JulkinenKey).toBoolean,
       UserOid(params(MuokkaajaKey)),
