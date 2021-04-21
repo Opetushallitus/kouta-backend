@@ -414,7 +414,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val sorakuvausId = put(sorakuvaus)
     val koulutusOid = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
     val koulutusLastModified = get(koulutusOid, koulutus(koulutusOid).copy(sorakuvausId = Some(sorakuvausId)))
-    (koulutusOid, koulutusLastModified¨)
+    (koulutusOid, koulutusLastModified)
   }
 
   it should "fail to update julkaistu koulutus if sorakuvaus is not yet julkaistu" in {

@@ -211,6 +211,14 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
       }
     }
 
+  def put[E <: AnyRef](path: String, entity: E, sessionId: UUID, expectedStatus: Int, errors: List[ValidationError]): Unit =
+    put(path, bytes(entity), headers = Seq(sessionHeader(sessionId))) {
+      withClue(body) {
+        status should equal(expectedStatus)
+        body shouldEqual validationErrorBody(errors)
+      }
+    }
+
   def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
     get(path, id, defaultSessionId, expected)
 
