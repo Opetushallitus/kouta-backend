@@ -429,4 +429,13 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val yoSorakuvausId = put(TestData.YoSorakuvaus)
     update(KoulutusPath, koulutus(id).copy(sorakuvausId = Some(yoSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutustyyppi", tyyppiMismatch("sorakuvauksen", yoSorakuvausId))))
   }
+
+  it should "fail to update koulutus if koulutusKoodit doesn't match sorakuvaus koulutuskoodit" in {
+    val sorakuvausId = put(sorakuvaus)
+    val oid = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
+    val lastModified = get(oid, koulutus(oid).copy(sorakuvausId = Some(sorakuvausId)))
+
+    val incorrectKoulutuksetSorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
+    update(KoulutusPath, koulutus(oid).copy(sorakuvausId = Some(incorrectKoulutuksetSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit"))))
+  }
 }
