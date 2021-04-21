@@ -132,7 +132,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
   def selectTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): DBIO[Option[(Julkaisutila, Koulutustyyppi, Seq[String])]] =
     sql"""select tila,
                  koulutustyyppi,
-                 array(select metadata -> 'koulutusKoodiUrit') as koulutus_koodi_urit
+                 array_remove(array(select jsonb_array_elements_text(metadata -> 'koulutusKoodiUrit')), NULL) as koulutus_koodi_urit
           from sorakuvaukset
           where id = ${sorakuvausId.toString}::uuid
     """.as[(Julkaisutila, Koulutustyyppi, Seq[String])].headOption
