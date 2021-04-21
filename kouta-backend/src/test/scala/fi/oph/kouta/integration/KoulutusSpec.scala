@@ -404,38 +404,37 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "fail to update koulutus if sorakuvaus doesn't exist" in {
-    val sorakuvausId = put(sorakuvaus)
-    val id = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
-    val lastModified = get(id, koulutus(id).copy(sorakuvausId = Some(sorakuvausId)))
+    val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
     val nonExistentSorakuvausId = UUID.randomUUID()
-    update(KoulutusPath, koulutus(id).copy(sorakuvausId = Some(nonExistentSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId))))
+    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(nonExistentSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId))))
+  }
+
+  private def createKoulutusWithSorakuvaus = {
+    val sorakuvausId = put(sorakuvaus)
+    val koulutusOid = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
+    val koulutusLastModified = get(koulutusOid, koulutus(koulutusOid).copy(sorakuvausId = Some(sorakuvausId)))
+    (koulutusOid, koulutusLastModified¨)
   }
 
   it should "fail to update julkaistu koulutus if sorakuvaus is not yet julkaistu" in {
-    val sorakuvausId = put(sorakuvaus)
-    val id = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
-    val lastModified = get(id, koulutus(id).copy(sorakuvausId = Some(sorakuvausId)))
+    val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
     val tallennettuSorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
-    update(KoulutusPath, koulutus(id).copy(sorakuvausId = Some(tallennettuSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId))))
+    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(tallennettuSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId))))
   }
 
   it should "fail to update koulutus if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val sorakuvausId = put(sorakuvaus)
-    val id = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
-    val lastModified = get(id, koulutus(id).copy(sorakuvausId = Some(sorakuvausId)))
+    val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
     val yoSorakuvausId = put(TestData.YoSorakuvaus)
-    update(KoulutusPath, koulutus(id).copy(sorakuvausId = Some(yoSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutustyyppi", tyyppiMismatch("sorakuvauksen", yoSorakuvausId))))
+    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(yoSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutustyyppi", tyyppiMismatch("sorakuvauksen", yoSorakuvausId))))
   }
 
   it should "fail to update koulutus if koulutusKoodit doesn't match sorakuvaus koulutuskoodit" in {
-    val sorakuvausId = put(sorakuvaus)
-    val oid = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
-    val lastModified = get(oid, koulutus(oid).copy(sorakuvausId = Some(sorakuvausId)))
+    val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
     val incorrectKoulutuksetSorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
-    update(KoulutusPath, koulutus(oid).copy(sorakuvausId = Some(incorrectKoulutuksetSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit"))))
+    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(incorrectKoulutuksetSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit"))))
   }
 }
