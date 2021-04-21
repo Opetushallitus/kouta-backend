@@ -93,7 +93,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   "Create koulutus" should "store koulutus" in {
-    val oid = put(yoKoulutus, ophSession)
+    val oid = put(koulutus, ophSession)
     get(oid, koulutus(oid))
   }
 
