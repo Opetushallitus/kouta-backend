@@ -375,11 +375,11 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id"))))
   }
 
-  registerPath( "/indexer/sorakuvaus/{id}/valintaperusteet/list",
+  registerPath( "/indexer/sorakuvaus/{id}/koulutukset/list",
     """    get:
-      |      summary: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty
-      |      operationId: Listaa sorakuvauksen valintaperusteet
-      |      description: Listaa kaikki valintaperusteet, joihin SORA-kuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
+      |      summary: Listaa kaikki koulutukset, joihin SORA-kuvaus on liitetty
+      |      operationId: Listaa sorakuvauksen koulutukset
+      |      description: Listaa kaikki koulutukset, joihin SORA-kuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
       |      tags:
       |        - Indexer
       |      parameters:
@@ -398,13 +398,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |              schema:
       |                type: array
       |                items:
-      |                  $ref: '#/components/schemas/ValintaperusteListItem'
+      |                 type: string
       |""".stripMargin)
-  get("/sorakuvaus/:id/valintaperusteet/list") {
+  get("/sorakuvaus/:id/koulutukset/list") {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(sorakuvausService.listValintaperusteet(UUID.fromString(params("id"))))
+    Ok(sorakuvausService.listKoulutusOids(UUID.fromString(params("id"))))
   }
 
   registerPath( "/indexer/oppilaitos/{oid}/osat/list",

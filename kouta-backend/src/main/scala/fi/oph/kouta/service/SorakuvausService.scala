@@ -1,18 +1,17 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
-import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem, ValintaperusteListItem}
+import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
-import fi.oph.kouta.repository.{KoutaDatabase, SorakuvausDAO, ValintaperusteDAO}
+import fi.oph.kouta.repository.{KoulutusDAO, KoutaDatabase, SorakuvausDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import slick.dbio.DBIO
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl)
@@ -39,9 +38,9 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
       }
     }.nonEmpty
 
-  def listValintaperusteet(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+  def listKoulutusOids(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
-      ValintaperusteDAO.listBySorakuvausId(sorakuvausId)
+      KoulutusDAO.listBySorakuvausId(sorakuvausId).getOrElse(Seq())
     }
 
   def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =

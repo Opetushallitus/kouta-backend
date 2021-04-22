@@ -1,7 +1,6 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
@@ -9,6 +8,7 @@ import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
@@ -20,6 +20,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
+  def listBySorakuvausId(sorakuvausId: UUID): Option[Seq[String]]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -114,6 +115,9 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       case None => (None, None)
       case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
     }
+
+  override def listBySorakuvausId(sorakuvausId: UUID): Option[Seq[String]] =
+    KoutaDatabase.runBlocking(selectOidBySorakuvausId(sorakuvausId))
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -338,4 +342,10 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""select tila, tyyppi from koulutukset
             where oid = $koulutusOid
     """.as[(Julkaisutila, Koulutustyyppi)].headOption
+
+  def selectOidBySorakuvausId(sorakuvausId: UUID): DBIO[Option[Seq[String]]] = {
+    sql"""select oid
+          from koulutukset
+          where sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[Seq[String]].headOption
+  }
 }
