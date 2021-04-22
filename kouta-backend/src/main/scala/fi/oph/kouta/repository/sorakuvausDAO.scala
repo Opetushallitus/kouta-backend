@@ -1,14 +1,12 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
-import java.util.UUID
-
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Julkaisutila, Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait SorakuvausDAO extends EntityModificationDAO[UUID] {
