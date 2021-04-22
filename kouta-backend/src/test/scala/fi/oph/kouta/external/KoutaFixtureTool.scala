@@ -674,6 +674,14 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  def listKoulutusOidsBySorakuvaus(sorakuvausId: String): String = {
+    toJson(
+      koulutukset.filter {
+        case (_, params) => params(SorakuvausIdKey) == sorakuvausId
+      }.keys.toSeq
+    )
+  }
+
   def listHakukohteetByValintaperuste(valintaperusteId: String): String = {
     toJson(
       hakukohteet.filter {
