@@ -719,19 +719,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
-  private def valintaperusteListItem(id: String) = {
-    val params = valintaperusteet(id)
-    val kielivalinta = toKielivalinta(params)
-    ValintaperusteListItem(
-      UUID.fromString(id),
-      toKielistetty(kielivalinta, params(NimiKey)),
-      Julkaisutila.withName(params(TilaKey)),
-      OrganisaatioOid(params(OrganisaatioKey)),
-      UserOid(params(MuokkaajaKey)),
-      parseModified(params(ModifiedKey))
-    )
-  }
-
   private def hakukohdeListItem(oid:String) = {
     val params = hakukohteet(oid)
     val kielivalinta = toKielivalinta(params)
