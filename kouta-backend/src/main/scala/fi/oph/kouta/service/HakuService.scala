@@ -64,7 +64,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
     def assocHakukohdeCounts(r: HakuSearchResult): HakuSearchResult =
       r.copy(result = r.result.map {
-        h => h.copy(hakukohdeCount = listHakukohteet(h.oid, organisaatioOid).size)
+        h => h.copy(hakukohdeCount = listHakukohteet(h.oid, organisaatioOid).count(_.tila != Arkistoitu))
       })
 
     list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
