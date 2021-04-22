@@ -19,7 +19,6 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
   def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
-  @deprecated("SorakuvausId tullaan siirtämään koulutukselle") def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -66,9 +65,6 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids, hakuOid, myosArkistoidut)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
       case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids, koulutustyypit, hakuOid, myosArkistoidut))
     }
-
-  override def listBySorakuvausId(sorakuvausId: UUID): Seq[ValintaperusteListItem] =
-    KoutaDatabase.runBlocking(selectBySorakuvausId(sorakuvausId))
 }
 
 sealed trait ValintaperusteModificationSQL extends SQLHelpers {
@@ -292,10 +288,5 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
               v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
           #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
-  }
-
-  def selectBySorakuvausId(sorakuvausId: UUID): DBIO[Vector[ValintaperusteListItem]] = {
-    sql"""#$selectValintaperusteListSql
-          where v.sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[ValintaperusteListItem]
   }
 }
