@@ -1,7 +1,6 @@
 package fi.oph.kouta.service
 
 import java.time.Instant
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
@@ -112,10 +111,33 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): KoulutusSearchResult = {
 
-    def assocToteutusCounts(r: KoulutusSearchResult): KoulutusSearchResult =
-      r.copy(result = r.result.map {
-          k => k.copy(toteutukset = listToteutukset(k.oid, organisaatioOid).size)
-      })
+    def getCount(k: KoulutusSearchItemFromIndex): Integer =
+      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
+        case Seq(RootOrganisaatioOid) => k.toteutukset.length
+        case x => {
+          val oidStrings = x.map(_.toString())
+          return k.toteutukset.count(t => t.tila != Arkistoitu && t.organisaatiot.exists(o => oidStrings.contains(o)))
+        }
+    }
+
+    def assocToteutusCounts(r: KoulutusSearchResultFromIndex): KoulutusSearchResult = {
+      KoulutusSearchResult(
+        totalCount = r.totalCount,
+        result = r.result.map {
+          k =>
+            KoulutusSearchItem(
+              oid = k.oid,
+              nimi = k.nimi,
+              organisaatio = k.organisaatio,
+              muokkaaja = k.muokkaaja,
+              modified = k.modified,
+              tila = k.tila,
+              eperuste = k.eperuste,
+              toteutusCount = getCount(k)
+            )
+        }
+      )
+    }
 
     list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil          => KoulutusSearchResult()
