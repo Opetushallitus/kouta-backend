@@ -158,7 +158,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
   val MetadataKey = "metadata"
-  val SorakuvausIdKey = "sorakuvaus"
+  val SorakuvausIdKey = "sorakuvausId"
   val OppilaitosOidKey = "oppilaitosOid"
   val TeemakuvaKey = "teemakuva"
   val LogoKey = "logo"
