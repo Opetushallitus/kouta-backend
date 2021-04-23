@@ -95,9 +95,6 @@ trait KoulutusExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     modified = timeStampToModified(r.nextTimestamp())
   ))
-
-  implicit val getOidBySorakuvausId: GetResult[Seq[String]] = GetResult(r =>
-      extractArray[String](r.nextObjectOption()))
 }
 
 trait ToteutusExtractors extends ExtractorBase {
