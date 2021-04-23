@@ -398,7 +398,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       |              schema:
       |                type: array
       |                items:
-      |                 type: string
+      |                  type: string
       |""".stripMargin)
   get("/sorakuvaus/:id/koulutukset/list") {
 

@@ -30,6 +30,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   def createTestData(): Unit = {
+    s1 = addToList(sorakuvaus(Julkaistu, OphOid))
+    s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
+    s3 = addToList(sorakuvaus(Julkaistu, OphOid))
     k1 = addToList(koulutus(julkinen = false, ParentOid, Julkaistu))
     k2 = addToList(koulutus(julkinen = false, ChildOid, Arkistoitu))
     k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
@@ -50,9 +53,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
-    s1 = addToList(sorakuvaus(Julkaistu, OphOid))
-    s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
-    s3 = addToList(sorakuvaus(Julkaistu, OphOid))
     s4 = addToList(yoSorakuvaus.copy(tila = Julkaistu, organisaatioOid = OphOid))
     v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(julkinen = false))
     v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(julkinen = true))
