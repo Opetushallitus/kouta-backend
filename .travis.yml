@@ -67,11 +67,11 @@ deploy:
     on:
       branch: master
   - provider: script
-      script:
-        mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
-      skip_cleanup: true
-      on:
-        branch: KTO-1060-sorakuvausid-siirto
+    script:
+      mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
+    skip_cleanup: true
+    on:
+      branch: KTO-1060-sorakuvausid-siirto
   - provider: script
     script:
       ./ci-tools/build/upload-image.sh $ARTIFACT_NAME
