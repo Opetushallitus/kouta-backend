@@ -33,10 +33,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     s1 = addToList(sorakuvaus(Julkaistu, OphOid))
     s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
     s3 = addToList(sorakuvaus(Julkaistu, OphOid))
-    k1 = addToList(koulutus(julkinen = false, ParentOid, Julkaistu))
-    k2 = addToList(koulutus(julkinen = false, ChildOid, Arkistoitu))
+    k1 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ParentOid, tila = Julkaistu, sorakuvausId = Some(s1.id)))
+    k2 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ChildOid, tila = Arkistoitu, sorakuvausId = Some(s1.id)))
     k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
-    k4 = addToList(koulutus(julkinen = false, LonelyOid, Julkaistu))
+    k4 = addToList(koulutus.copy(julkinen = false, organisaatioOid = LonelyOid, tila = Julkaistu, sorakuvausId =  Some(s3.id)))
     k5 = addToList(koulutus(julkinen = true, LonelyOid, Julkaistu))
     k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu))
     k7 = addToList(ammTutkinnonOsaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
@@ -504,6 +504,25 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
   it should "deny access to all koulutukset without root organization access" in {
     list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String, String](), 403, crudSessions(ParentOid))
+  }
+
+  "Sorakuvausta käyttävät koulutukset for indexer" should "list all koulutukset using given sorakuvaus for indexer" in {
+    list(s"$IndexerPath$SorakuvausPath/${s1.id}/koulutukset", Map[String,String](), List(k1.oid, k2.oid), indexerSession)
+  }
+  it should "list all koulutukset using given sorakuvaus 2" in {
+    list(s"$IndexerPath$SorakuvausPath/${s3.id}/koulutukset", Map[String,String](), List(k4.oid), indexerSession)
+  }
+  it should "deny access to root user without indexer role" in {
+    list(s"$IndexerPath$SorakuvausPath/${s1.id}/koulutukset", Map[String, String](), 403)
+  }
+  it should "deny access to a non-root user, even if they own the toteutus" in {
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/koulutukset", Map.empty[String, String], 403, crudSessions(ChildOid))
+  }
+  it should "deny access without the valintaperuste read role" in {
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/koulutukset", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
+  }
+  it should "deny access with the valintaperuste read role" in {
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/koulutukset", Map.empty[String, String], 403, addTestSession(Role.Valintaperuste.Read, OphOid))
   }
 
   "Oppilaitoksen osat list" should "list all oppilaitoksen osat for this oppilaitos" in {
