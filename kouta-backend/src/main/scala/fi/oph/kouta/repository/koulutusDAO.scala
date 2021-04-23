@@ -20,7 +20,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
-  def listBySorakuvausId(sorakuvausId: UUID): Option[Seq[String]]
+  def listBySorakuvausId(sorakuvausId: UUID): Seq[String]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -116,8 +116,9 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
     }
 
-  override def listBySorakuvausId(sorakuvausId: UUID): Option[Seq[String]] =
+  override def listBySorakuvausId(sorakuvausId: UUID): Seq[String] = {
     KoutaDatabase.runBlocking(selectOidBySorakuvausId(sorakuvausId))
+  }
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -343,9 +344,9 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             where oid = $koulutusOid
     """.as[(Julkaisutila, Koulutustyyppi)].headOption
 
-  def selectOidBySorakuvausId(sorakuvausId: UUID): DBIO[Option[Seq[String]]] = {
+  def selectOidBySorakuvausId(sorakuvausId: UUID) = {
     sql"""select oid
           from koulutukset
-          where sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[Seq[String]].headOption
+          where sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[String]
   }
 }

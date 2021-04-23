@@ -40,7 +40,7 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
 
   def listKoulutusOids(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
-      KoulutusDAO.listBySorakuvausId(sorakuvausId).getOrElse(Seq())
+      KoulutusDAO.listBySorakuvausId(sorakuvausId)
     }
 
   def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
