@@ -5,7 +5,7 @@ import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
@@ -51,7 +51,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
   def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      HakukohdeDAO.listByHakuOidAndAllowedOrganisaatiot(hakuOid, _)
+      case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByHakuOid(hakuOid)
+      case x => HakukohdeDAO.listByHakuOidAndAllowedOrganisaatiot(hakuOid, x)
     }
 
   def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =

@@ -6,7 +6,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid, RootOrganisaatioOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
@@ -68,7 +68,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, _)
+      case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByToteutusOid(oid)
+      case x => HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, x)
     }
   }
 
