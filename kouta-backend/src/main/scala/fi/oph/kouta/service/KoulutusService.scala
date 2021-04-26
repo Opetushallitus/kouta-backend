@@ -114,8 +114,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     def getCount(k: KoulutusSearchItemFromIndex): Integer =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => k.toteutukset.length
-        case x => {
-          val oidStrings = x.map(_.toString())
+        case organisaatioOids => {
+          val oidStrings = organisaatioOids.map(_.toString())
           return k.toteutukset.count(t => t.tila != Arkistoitu && t.organisaatiot.exists(o => oidStrings.contains(o)))
         }
     }
