@@ -69,7 +69,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
       case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByToteutusOid(oid)
-      case x => HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, x)
+      case organisaatioOids => HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, organisaatioOids)
     }
   }
 
