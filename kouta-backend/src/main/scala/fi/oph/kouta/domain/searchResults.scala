@@ -348,7 +348,7 @@ trait ToteutusItemCommon {
 }
 
 case class ToteutusSearchItemHakukohde(tila: Julkaisutila,
-                                       organisaatioOid: String)
+                                       organisaatio: Organisaatio)
 
 case class HakuSearchResult(totalCount: Int = 0,
                             result: Seq[HakuSearchItem] = Seq())
