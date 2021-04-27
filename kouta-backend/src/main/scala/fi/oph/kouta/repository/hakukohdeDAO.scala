@@ -479,7 +479,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def selectByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
-          inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
+          left join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
           and ha.haku_oid = $hakuOid""".as[HakukohdeListItem]
   }
@@ -496,7 +496,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def selectByToteutusOidAndAllowedOrganisaatiot(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
-          inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
+          left join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
           and ha.toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
   }

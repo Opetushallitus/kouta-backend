@@ -97,7 +97,22 @@ package object searchResults {
       |""".stripMargin
 
   val KoulutusSearchItemModel =
-    """    KoulutusSearchItem:
+    """    EPeruste:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          description: Koulutuksen ePerusteen id
+      |          example: 1234
+      |        diaarinumero:
+      |          type: string
+      |          description: Koulutuksen ePerusteen diaarinumero
+      |          example: 1234-OPH-2021
+      |        voimassaoloLoppuu:
+      |          type: string
+      |          description: Koulutuksen ePerusteen voimassaolon loppumishetki
+      |          example: 2030-12-12T00:00:00
+      |    KoulutusSearchItem:
       |      allOf:
       |        - $ref: '#/components/schemas/SearchItem'
       |        - type: object
@@ -106,7 +121,11 @@ package object searchResults {
       |              type: string
       |              description: Koulutuksen yksilöivä tunniste
       |              example: "1.2.246.562.13.00000000000000000009"
-      |            toteutukset:
+      |            eperuste:
+      |              type: object
+      |              description: Koulutuksen ePerusteen tiedot
+      |              $ref: '#/components/schemas/EPeruste'
+      |            toteutusCount:
       |              type: integer
       |              description: Koulutukseen liitettyjen organisaation toteutusten lukumäärä
       |              example: 6
@@ -122,7 +141,7 @@ package object searchResults {
       |              type: string
       |              description: Toteutuksen yksilöivä tunniste
       |              example: "1.2.246.562.17.00000000000000000009"
-      |            hakukohteet:
+      |            hakukohdeCount:
       |              type: integer
       |              description: Toteutukseen liitettyjen hakukohteiden lukumäärä
       |              example: 6
@@ -138,7 +157,7 @@ package object searchResults {
       |              type: string
       |              description: Haun yksilöivä tunniste
       |              example: "1.2.246.562.29.00000000000000000009"
-      |            hakukohteet:
+      |            hakukohdeCount:
       |              type: integer
       |              description: Hakuun liitettyjen hakukohteiden lukumäärä
       |              example: 6
@@ -257,16 +276,50 @@ package object searchResults {
 case class KoulutusSearchResult(totalCount: Int = 0,
                                 result: Seq[KoulutusSearchItem] = Seq())
 
-case class KoulutusSearchItem(oid: KoulutusOid,
-                              nimi: Kielistetty,
-                              organisaatio: Organisaatio,
-                              muokkaaja: Muokkaaja,
-                              modified: Modified,
-                              tila: Julkaisutila,
-                              toteutukset: Int = 0)
+case class KoulutusSearchResultFromIndex(totalCount: Int = 0,
+                                         result: Seq[KoulutusSearchItemFromIndex] = Seq())
+
+case class KoulutusSearchItem (oid: KoulutusOid,
+                               nimi: Kielistetty,
+                               organisaatio: Organisaatio,
+                               muokkaaja: Muokkaaja,
+                               modified: Modified,
+                               tila: Julkaisutila,
+                               eperuste: Option[EPeruste] = None,
+                               toteutusCount: Int = 0) extends KoulutusItemCommon
+
+case class KoulutusSearchItemFromIndex (oid: KoulutusOid,
+                                        nimi: Kielistetty,
+                                        organisaatio: Organisaatio,
+                                        muokkaaja: Muokkaaja,
+                                        modified: Modified,
+                                        tila: Julkaisutila,
+                                        eperuste: Option[EPeruste] = None,
+                                        toteutukset: Seq[KoulutusSearchItemToteutus] = Seq()) extends KoulutusItemCommon
+
+trait KoulutusItemCommon {
+  val oid: KoulutusOid
+  val nimi: Kielistetty
+  val organisaatio: Organisaatio
+  val muokkaaja: Muokkaaja
+  val modified: Modified
+  val tila: Julkaisutila
+  val eperuste: Option[EPeruste]
+}
+
+case class EPeruste(id: String,
+                    diaarinumero: String,
+                    voimassaoloLoppuu: Option[String])
+
+case class KoulutusSearchItemToteutus(oid: ToteutusOid,
+                                      tila: Julkaisutila,
+                                      organisaatiot: Array[String])
 
 case class ToteutusSearchResult(totalCount: Int = 0,
                                 result: Seq[ToteutusSearchItem] = Seq())
+
+case class ToteutusSearchResultFromIndex(totalCount: Int = 0,
+                                         result: Seq[ToteutusSearchItemFromIndex] = Seq())
 
 case class ToteutusSearchItem(oid: ToteutusOid,
                               nimi: Kielistetty,
@@ -274,7 +327,28 @@ case class ToteutusSearchItem(oid: ToteutusOid,
                               muokkaaja: Muokkaaja,
                               modified: Modified,
                               tila: Julkaisutila,
-                              hakukohteet: Int = 0)
+                              hakukohdeCount: Int = 0) extends ToteutusItemCommon
+
+case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
+                                       nimi: Kielistetty,
+                                       organisaatio: Organisaatio,
+                                       muokkaaja: Muokkaaja,
+                                       modified: Modified,
+                                       tila: Julkaisutila,
+                                       organisaatiot: Array[String],
+                                       hakukohteet: Array[ToteutusSearchItemHakukohde]) extends ToteutusItemCommon
+
+trait ToteutusItemCommon {
+  val oid: ToteutusOid
+  val nimi: Kielistetty
+  val organisaatio: Organisaatio
+  val muokkaaja: Muokkaaja
+  val modified: Modified
+  val tila: Julkaisutila
+}
+
+case class ToteutusSearchItemHakukohde(tila: Julkaisutila,
+                                       organisaatioOid: String)
 
 case class HakuSearchResult(totalCount: Int = 0,
                             result: Seq[HakuSearchItem] = Seq())
@@ -285,7 +359,7 @@ case class HakuSearchItem(oid: HakuOid,
                           muokkaaja: Muokkaaja,
                           modified: Modified,
                           tila: Julkaisutila,
-                          hakukohteet: Int = 0)
+                          hakukohdeCount: Int = 0)
 
 case class HakukohdeSearchResult(totalCount: Int = 0,
                                  result: Seq[HakuSearchItem] = Seq())

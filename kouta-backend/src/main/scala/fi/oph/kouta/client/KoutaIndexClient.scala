@@ -17,11 +17,11 @@ trait KoutaIndexClient extends HttpClient with CallerId with Logging with KoutaJ
 
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
-  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: Map[String, String]): KoulutusSearchResult =
-    search[KoulutusSearchResult]("kouta-index.koulutus.filtered-list", koulutusOids.map(_.s), params)
+  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: Map[String, String]): KoulutusSearchResultFromIndex =
+    search[KoulutusSearchResultFromIndex]("kouta-index.koulutus.filtered-list", koulutusOids.map(_.s), params)
 
-  def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: Map[String, String]): ToteutusSearchResult =
-    search[ToteutusSearchResult]("kouta-index.toteutus.filtered-list", toteutusOids.map(_.s), params)
+  def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: Map[String, String]): ToteutusSearchResultFromIndex =
+    search[ToteutusSearchResultFromIndex]("kouta-index.toteutus.filtered-list", toteutusOids.map(_.s), params)
 
   def searchHaut(hakuOids: Seq[HakuOid], params: Map[String, String]): HakuSearchResult =
     search[HakuSearchResult]("kouta-index.haku.filtered-list", hakuOids.map(_.s), params)
