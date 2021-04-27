@@ -75,11 +75,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ToteutusSearchResult = {
 
-    def getCount(k: ToteutusSearchItemFromIndex): Integer =
+    def getCount(t: ToteutusSearchItemFromIndex): Integer =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true))(
         oids => {
           val oidStrings = oids.map(_.toString())
-          return k.hakukohteet.count(x => x.tila != Arkistoitu && oidStrings.contains(x.organisaatioOid))
+          return t.hakukohteet.count(x => x.tila != Arkistoitu && oidStrings.contains(x.organisaatio.oid.toString()))
         }
       )
 
