@@ -312,7 +312,10 @@ case class EPeruste(id: String,
                     voimassaoloLoppuu: Option[String])
 
 case class KoulutusSearchItemToteutus(oid: ToteutusOid,
+                                      nimi: Kielistetty,
                                       tila: Julkaisutila,
+                                      modified: Modified,
+                                      organisaatio: Organisaatio,
                                       organisaatiot: Array[String])
 
 case class ToteutusSearchResult(totalCount: Int = 0,
@@ -347,11 +350,17 @@ trait ToteutusItemCommon {
   val tila: Julkaisutila
 }
 
-case class ToteutusSearchItemHakukohde(tila: Julkaisutila,
+case class ToteutusSearchItemHakukohde(hakukohdeOid: HakukohdeOid, // TODO: Why is this hakukohdeOid?
+                                       nimi: Kielistetty,
+                                       tila: Julkaisutila,
+                                       modified: Modified,
                                        organisaatio: Organisaatio)
 
 case class HakuSearchResult(totalCount: Int = 0,
                             result: Seq[HakuSearchItem] = Seq())
+
+case class HakuSearchResultFromIndex(totalCount: Int = 0,
+                                     result: Seq[HakuSearchItemFromIndex] = Seq())
 
 case class HakuSearchItem(oid: HakuOid,
                           nimi: Kielistetty,
@@ -359,7 +368,30 @@ case class HakuSearchItem(oid: HakuOid,
                           muokkaaja: Muokkaaja,
                           modified: Modified,
                           tila: Julkaisutila,
-                          hakukohdeCount: Int = 0)
+                          hakukohdeCount: Int = 0) extends HakuItemCommon
+
+case class HakuSearchItemFromIndex(oid: HakuOid,
+                                   nimi: Kielistetty,
+                                   organisaatio: Organisaatio,
+                                   muokkaaja: Muokkaaja,
+                                   modified: Modified,
+                                   tila: Julkaisutila,
+                                   hakukohteet: Array[HakuSearchItemHakukohde]) extends HakuItemCommon
+
+trait HakuItemCommon {
+  val oid: HakuOid
+  val nimi: Kielistetty
+  val organisaatio: Organisaatio
+  val muokkaaja: Muokkaaja
+  val modified: Modified
+  val tila: Julkaisutila
+}
+
+case class HakuSearchItemHakukohde(oid: HakukohdeOid,
+                                   nimi: Kielistetty,
+                                   tila: Julkaisutila,
+                                   modified: Modified,
+                                   organisaatio: Organisaatio)
 
 case class HakukohdeSearchResult(totalCount: Int = 0,
                                  result: Seq[HakuSearchItem] = Seq())

@@ -62,11 +62,34 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     withRootAccess(indexerRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakuSearchResult = {
+    def getCount(t: HakuSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
+      organisaatioOids match {
+        case Seq(RootOrganisaatioOid) => t.hakukohteet.length
+        case _ =>
+          val oidStrings = organisaatioOids.map(_.toString())
+          t.hakukohteet.count(x => x.tila != Arkistoitu && oidStrings.contains(x.organisaatio.oid.toString()))
+      }
+    }
 
-    def assocHakukohdeCounts(r: HakuSearchResult): HakuSearchResult =
-      r.copy(result = r.result.map {
-        h => h.copy(hakukohdeCount = listHakukohteet(h.oid, organisaatioOid).count(_.tila != Arkistoitu))
-      })
+    def assocHakukohdeCounts(r: HakuSearchResultFromIndex): HakuSearchResult =
+      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true))(
+        organisaatioOids => {
+          HakuSearchResult(
+            totalCount = r.totalCount,
+            result = r.result.map {
+              h =>
+                HakuSearchItem(
+                  oid = h.oid,
+                  nimi = h.nimi,
+                  organisaatio = h.organisaatio,
+                  muokkaaja = h.muokkaaja,
+                  modified = h.modified,
+                  tila = h.tila,
+                  hakukohdeCount = getCount(h, organisaatioOids))
+            }
+          )
+        }
+      )
 
     list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil      => HakuSearchResult()

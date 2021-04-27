@@ -23,8 +23,8 @@ trait KoutaIndexClient extends HttpClient with CallerId with Logging with KoutaJ
   def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: Map[String, String]): ToteutusSearchResultFromIndex =
     search[ToteutusSearchResultFromIndex]("kouta-index.toteutus.filtered-list", toteutusOids.map(_.s), params)
 
-  def searchHaut(hakuOids: Seq[HakuOid], params: Map[String, String]): HakuSearchResult =
-    search[HakuSearchResult]("kouta-index.haku.filtered-list", hakuOids.map(_.s), params)
+  def searchHaut(hakuOids: Seq[HakuOid], params: Map[String, String]): HakuSearchResultFromIndex =
+    search[HakuSearchResultFromIndex]("kouta-index.haku.filtered-list", hakuOids.map(_.s), params)
 
   def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: Map[String, String]): HakukohdeSearchResult =
     search[HakukohdeSearchResult]("kouta-index.hakukohde.filtered-list", hakukohdeOids.map(_.s),params)

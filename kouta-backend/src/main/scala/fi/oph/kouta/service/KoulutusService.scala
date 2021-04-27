@@ -130,34 +130,35 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): KoulutusSearchResult = {
-
-    def getCount(k: KoulutusSearchItemFromIndex): Integer =
-      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
+    def getCount(k: KoulutusSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
+      organisaatioOids match {
         case Seq(RootOrganisaatioOid) => k.toteutukset.length
-        case organisaatioOids => {
+        case _ =>
           val oidStrings = organisaatioOids.map(_.toString())
-          return k.toteutukset.count(t => t.tila != Arkistoitu && t.organisaatiot.exists(o => oidStrings.contains(o)))
-        }
+          k.toteutukset.count(t => t.tila != Arkistoitu && t.organisaatiot.exists(o => oidStrings.contains(o)))
+      }
     }
 
-    def assocToteutusCounts(r: KoulutusSearchResultFromIndex): KoulutusSearchResult = {
-      KoulutusSearchResult(
-        totalCount = r.totalCount,
-        result = r.result.map {
-          k =>
-            KoulutusSearchItem(
-              oid = k.oid,
-              nimi = k.nimi,
-              organisaatio = k.organisaatio,
-              muokkaaja = k.muokkaaja,
-              modified = k.modified,
-              tila = k.tila,
-              eperuste = k.eperuste,
-              toteutusCount = getCount(k)
-            )
+    def assocToteutusCounts(r: KoulutusSearchResultFromIndex): KoulutusSearchResult =
+      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true))(
+        organisaatioOids => {
+          KoulutusSearchResult(
+            totalCount = r.totalCount,
+            result = r.result.map {
+              k =>
+                KoulutusSearchItem(
+                  oid = k.oid,
+                  nimi = k.nimi,
+                  organisaatio = k.organisaatio,
+                  muokkaaja = k.muokkaaja,
+                  modified = k.modified,
+                  tila = k.tila,
+                  eperuste = k.eperuste,
+                  toteutusCount = getCount(k, organisaatioOids))
+            }
+          )
         }
       )
-    }
 
     list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil          => KoulutusSearchResult()

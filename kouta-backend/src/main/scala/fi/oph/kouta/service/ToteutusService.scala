@@ -75,31 +75,34 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ToteutusSearchResult = {
 
-    def getCount(t: ToteutusSearchItemFromIndex): Integer =
+    def getCount(t: ToteutusSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
+      organisaatioOids match {
+        case Seq(RootOrganisaatioOid) => t.hakukohteet.length
+        case _ =>
+          val oidStrings = organisaatioOids.map(_.toString())
+          t.hakukohteet.count(x => x.tila != Arkistoitu && oidStrings.contains(x.organisaatio.oid.toString()))
+      }
+    }
+
+    def assocHakukohdeCounts(r: ToteutusSearchResultFromIndex): ToteutusSearchResult =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true))(
-        oids => {
-          val oidStrings = oids.map(_.toString())
-          return t.hakukohteet.count(x => x.tila != Arkistoitu && oidStrings.contains(x.organisaatio.oid.toString()))
+        organisaatioOids => {
+          ToteutusSearchResult(
+            totalCount = r.totalCount,
+            result = r.result.map {
+              t =>
+                ToteutusSearchItem(
+                  oid = t.oid,
+                  nimi = t.nimi,
+                  organisaatio = t.organisaatio,
+                  muokkaaja = t.muokkaaja,
+                  modified = t.modified,
+                  tila = t.tila,
+                  hakukohdeCount = getCount(t, organisaatioOids))
+            }
+          )
         }
       )
-
-    def assocHakukohdeCounts(r: ToteutusSearchResultFromIndex): ToteutusSearchResult = {
-      ToteutusSearchResult(
-        totalCount = r.totalCount,
-        result = r.result.map {
-            t =>
-              ToteutusSearchItem(
-                oid = t.oid,
-                nimi = t.nimi,
-                organisaatio = t.organisaatio,
-                muokkaaja = t.muokkaaja,
-                modified = t.modified,
-                tila = t.tila,
-                hakukohdeCount = getCount(t)
-              )
-          }
-      )
-    }
 
     list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil          => ToteutusSearchResult()
