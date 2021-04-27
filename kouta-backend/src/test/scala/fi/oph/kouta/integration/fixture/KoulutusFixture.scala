@@ -1,7 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -11,9 +9,11 @@ import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.{KoulutusService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.KoulutusServlet
 import fi.oph.kouta.util.TimeUtils
+import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 
+import java.util.UUID
 import scala.util.Try
 
 trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with AccessControlSpec {
@@ -38,12 +38,14 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
   def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
   def muokkaus(k: Koulutus): Koulutus = k.copy(nimi = k.nimi.map{case (k, v) => k -> (v + v) })
   def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
-  def koulutus(julkinen:Boolean, organisaatioOid: OrganisaatioOid, tila:Julkaisutila):Koulutus =
-    koulutus.copy(julkinen = julkinen, organisaatioOid = organisaatioOid, tila = tila)
+  def koulutus(julkinen:Boolean, organisaatioOid: OrganisaatioOid, tila:Julkaisutila, sorakuvausId: Option[UUID] = None):Koulutus =
+    koulutus.copy(julkinen = julkinen, organisaatioOid = organisaatioOid, tila = tila, sorakuvausId = sorakuvausId)
 
   def put(koulutus:Koulutus):String = put(KoulutusPath, koulutus, oid(_))
 
   def put(koulutus: Koulutus, sessionId: UUID): String = put(KoulutusPath, koulutus, sessionId, oid(_))
+
+  def put(koulutus: Koulutus, errors: List[ValidationError]): Unit = put(KoulutusPath, koulutus, ophSession, 400, errors)
 
   implicit val koulutusEquality: Equality[Koulutus] = (a: Koulutus, b: Any) => b match {
     case _:Koulutus => Equality.default[Koulutus].areEqual(

@@ -24,14 +24,26 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
   }
 
   "Kouta fixture tool" should "be able to save default koulutus" in {
+    val sorakuvausId = saveSorakuvaus
+
     val oid = "1.2.246.562.13.00000000000000000009"
-    KFT.addKoulutus(oid, KFT.DefaultKoulutus)
+    KFT.addKoulutus(oid, KFT.DefaultKoulutusScala + (KFT.SorakuvausIdKey -> sorakuvausId))
     val koulutus = KFT.getKoulutus(oid)
     doPut(KoulutusPath, koulutus, ophHeaders)
   }
 
+  private def saveSorakuvaus = {
+    val tempSorakuvausId = UUID.randomUUID().toString
+    KFT.addSorakuvaus(tempSorakuvausId, KFT.DefaultSorakuvausScala)
+    val sorakuvaus = KFT.getSorakuvaus(tempSorakuvausId)
+    val sorakuvausId = id(doPut(SorakuvausPath, sorakuvaus, ophHeaders)).toString
+    sorakuvausId
+  }
+
   it should "be able to save default toteutus" in {
-    KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutus)
+    val sorakuvausId = saveSorakuvaus
+
+    KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutusScala + (KFT.SorakuvausIdKey -> sorakuvausId))
     val koulutus = KFT.getKoulutus("1.2.246.562.13.00000000000000000009")
     val koulutusOid = oid(doPut(KoulutusPath, koulutus, ophHeaders))
 
@@ -57,19 +69,16 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
   }
 
   it should "be able to save default valintaperuste" in {
-    val tempSorakuvausId = UUID.randomUUID().toString
-    KFT.addSorakuvaus(tempSorakuvausId, KFT.DefaultSorakuvausScala)
-    val sorakuvaus = KFT.getSorakuvaus(tempSorakuvausId)
-    val sorakuvausId = id(doPut(SorakuvausPath, sorakuvaus, ophHeaders)).toString
-
     val valintaperusteId = UUID.randomUUID().toString
-    KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala + (KFT.SorakuvausIdKey -> sorakuvausId))
+    KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala)
     val valintaperuste = KFT.getValintaperuste(valintaperusteId)
     doPut(ValintaperustePath, valintaperuste)
   }
 
   it should "be able to save default hakukohde" in {
-    KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutus)
+    val sorakuvausId = saveSorakuvaus
+
+    KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutusScala + (KFT.SorakuvausIdKey -> sorakuvausId))
     val koulutus = KFT.getKoulutus("1.2.246.562.13.00000000000000000009")
     val koulutusOid = oid(doPut(KoulutusPath, koulutus, ophHeaders))
 
@@ -82,13 +91,8 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
     val haku = KFT.getHaku("1.2.246.562.29.00000000000000000009")
     val hakuOid = oid(doPut(HakuPath, haku))
 
-    val tempSorakuvausId = UUID.randomUUID().toString
-    KFT.addSorakuvaus(tempSorakuvausId, KFT.DefaultSorakuvausScala)
-    val sorakuvaus = KFT.getSorakuvaus(tempSorakuvausId)
-    val sorakuvausId = id(doPut(SorakuvausPath, sorakuvaus, ophHeaders)).toString
-
     val tempValintaperusteId = UUID.randomUUID().toString
-    KFT.addValintaperuste(tempValintaperusteId, KFT.DefaultValintaperusteScala + (KFT.SorakuvausIdKey -> sorakuvausId))
+    KFT.addValintaperuste(tempValintaperusteId, KFT.DefaultValintaperusteScala)
     val valintaperuste = KFT.getValintaperuste(tempValintaperusteId)
     val valintaperusteId = id(doPut(ValintaperustePath, valintaperuste)).toString
 

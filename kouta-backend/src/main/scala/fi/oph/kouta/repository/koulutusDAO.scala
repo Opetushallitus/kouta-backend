@@ -1,7 +1,6 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
@@ -9,6 +8,7 @@ import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
@@ -20,6 +20,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
+  def listBySorakuvausId(sorakuvausId: UUID): Seq[String]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -114,6 +115,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       case None => (None, None)
       case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
     }
+
+  override def listBySorakuvausId(sorakuvausId: UUID): Seq[String] = {
+    KoutaDatabase.runBlocking(selectOidBySorakuvausId(sorakuvausId))
+  }
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -152,6 +157,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             koulutukset_koodi_uri,
             tila,
             nimi,
+            sorakuvaus_id,
             metadata,
             julkinen,
             muokkaaja,
@@ -166,6 +172,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.koulutuksetKoodiUri},
             ${koulutus.tila.toString}::julkaisutila,
             ${toJsonParam(koulutus.nimi)}::jsonb,
+            ${koulutus.sorakuvausId.map(_.toString)}::uuid,
             ${toJsonParam(koulutus.metadata)}::jsonb,
             ${koulutus.julkinen},
             ${koulutus.muokkaaja},
@@ -190,6 +197,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  koulutukset_koodi_uri,
                  tila,
                  nimi,
+                 sorakuvaus_id,
                  metadata,
                  julkinen,
                  muokkaaja,
@@ -210,6 +218,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                           k.koulutukset_koodi_uri,
                           k.tila,
                           k.nimi,
+                          k.sorakuvaus_id,
                           k.metadata,
                           k.julkinen,
                           k.muokkaaja,
@@ -251,6 +260,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               koulutukset_koodi_uri = ${koulutus.koulutuksetKoodiUri},
               tila = ${koulutus.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(koulutus.nimi)}::jsonb,
+              sorakuvaus_id = ${koulutus.sorakuvausId.map(_.toString)}::uuid,
               metadata = ${toJsonParam(koulutus.metadata)}::jsonb,
               julkinen = ${koulutus.julkinen},
               muokkaaja = ${koulutus.muokkaaja},
@@ -264,6 +274,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
             or koulutukset_koodi_uri is distinct from ${koulutus.koulutuksetKoodiUri}
             or tila is distinct from ${koulutus.tila.toString}::julkaisutila
+            or sorakuvaus_id is distinct from ${koulutus.sorakuvausId.map(_.toString)}::uuid
             or nimi is distinct from ${toJsonParam(koulutus.nimi)}::jsonb
             or julkinen is distinct from ${koulutus.julkinen}
             or metadata is distinct from ${toJsonParam(koulutus.metadata)}::jsonb
@@ -332,4 +343,10 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""select tila, tyyppi from koulutukset
             where oid = $koulutusOid
     """.as[(Julkaisutila, Koulutustyyppi)].headOption
+
+  def selectOidBySorakuvausId(sorakuvausId: UUID) = {
+    sql"""select oid
+          from koulutukset
+          where sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[String]
+  }
 }

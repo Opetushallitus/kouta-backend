@@ -71,11 +71,11 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
 
     val sorakuvausId = put(sorakuvaus)
 
-    vpid1 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = GrandChildOid, julkinen = false)).toString
-    vpid2 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = ParentOid, julkinen = false)).toString
-    vpid3 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = OphOid, julkinen = false)).toString
-    vpid4 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = LonelyOid, julkinen = false)).toString
-    vpid5 = put(valintaperuste(sorakuvausId).copy(organisaatioOid = LonelyOid, julkinen = true)).toString
+    vpid1 = put(valintaperuste.copy(organisaatioOid = GrandChildOid, julkinen = false)).toString
+    vpid2 = put(valintaperuste.copy(organisaatioOid = ParentOid, julkinen = false)).toString
+    vpid3 = put(valintaperuste.copy(organisaatioOid = OphOid, julkinen = false)).toString
+    vpid4 = put(valintaperuste.copy(organisaatioOid = LonelyOid, julkinen = false)).toString
+    vpid5 = put(valintaperuste.copy(organisaatioOid = LonelyOid, julkinen = true)).toString
   }
 
   "Search koulutukset" should "search allowed koulutukset and allowed toteutus counts 1" in {

@@ -15,13 +15,13 @@ import org.json4s.jackson.Serialization.read
 
 class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
     createTestData(15)
     updateTestData()
   }
 
-  def iHakukohde(i: Int) = hakukohde(hakukohdeOids(i), toteutusOids(i), hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)
+  def iHakukohde(i: Int): Hakukohde = hakukohde(hakukohdeOids(i), toteutusOids(i), hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)
 
   var koulutusOids: List[String] = List()
   var toteutusOids: List[String] = List()
@@ -34,14 +34,14 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   var timestampAfterInserts = ""
   var timestampAfterAllModifications = ""
 
-  def createTestData(n: Int = 10) = {
+  def createTestData(n: Int = 10): Unit = {
     timestampBeforeAllModifications = renderHttpDate(now())
     Thread.sleep(1000)
     koulutusOids = List.fill(n)(put(koulutus.copy(tila = Tallennettu), ophSession))
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid).copy(tila = Tallennettu)))
     hakuOids = List.fill(n)(put(haku))
     sorakuvausIds = List.fill(n)(put(sorakuvaus))
-    valintaperusteIds = sorakuvausIds.map(id => put(valintaperuste(id)))
+    valintaperusteIds = List.fill(n)(put(valintaperuste))
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) =>
       put(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu))
     }
@@ -49,7 +49,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     timestampAfterInserts = renderHttpDate(now())
   }
 
-  def updateTestData() = {
+  def updateTestData(): Unit = {
     updateInKoulutusTable(0)
     updateInKoulutuksenTarjoajatTable(1)
     deleteInKoulutuksenTarjoajatTable(2)
@@ -68,20 +68,20 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     timestampAfterAllModifications = renderHttpDate(now())
   }
 
-  def updateInKoulutusTable(i: Int) = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts, ophSession, 200)
-  def updateInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts, ophSession, 200)
-  def deleteInKoulutuksenTarjoajatTable(i: Int) = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts, ophSession, 200)
-  def updateInToteutusTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
-  def deleteInToteutuksenTarjoajatTable(i: Int) = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
-  def updateInHakuTable(i: Int) = update(haku(hakuOids(i), Arkistoitu), timestampAfterInserts)
-  def updateInHakuHakuajatTable(i: Int) = update(haku(hakuOids(i)).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(5000))))), timestampAfterInserts)
-  def updateInHakukohdeTable(i: Int) = update(iHakukohde(i).copy(tila = Arkistoitu), timestampAfterInserts)
-  def updateInHakukohteenHakuajatTable(i: Int) = update(iHakukohde(i).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(5000))))), timestampAfterInserts)
-  def updateInHakukohteenLiitteetTable(i: Int) = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"liitetyypitamm_$i#1")))), timestampAfterInserts)
-  def updateInHakukohteenValintakokeetTable(i: Int) = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"valintakokeentyyppi_$i#1")))), timestampAfterInserts)
-  def updateInValintaperusteetTable(i: Int) = update(valintaperuste(valintaperusteIds(i), sorakuvausIds(i), Arkistoitu), timestampAfterInserts)
-  def updateInSorakuvauksetTable(i: Int) = update(sorakuvaus(sorakuvausIds(i), Tallennettu), timestampAfterInserts)
+  def updateInKoulutusTable(i: Int): Unit = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts, ophSession, 200)
+  def updateInKoulutuksenTarjoajatTable(i: Int): Unit = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts, ophSession, 200)
+  def deleteInKoulutuksenTarjoajatTable(i: Int): Unit = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts, ophSession, 200)
+  def updateInToteutusTable(i: Int): Unit = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
+  def updateInToteutuksenTarjoajatTable(i: Int): Unit = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts)
+  def deleteInToteutuksenTarjoajatTable(i: Int): Unit = update(toteutus(toteutusOids(i), koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts)
+  def updateInHakuTable(i: Int): Unit = update(haku(hakuOids(i), Arkistoitu), timestampAfterInserts)
+  def updateInHakuHakuajatTable(i: Int): Unit = update(haku(hakuOids(i)).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(5000))))), timestampAfterInserts)
+  def updateInHakukohdeTable(i: Int): Unit = update(iHakukohde(i).copy(tila = Arkistoitu), timestampAfterInserts)
+  def updateInHakukohteenHakuajatTable(i: Int): Unit = update(iHakukohde(i).copy(hakuajat = List(Ajanjakso(alkaa = inFuture(2000), paattyy = Some(inFuture(5000))))), timestampAfterInserts)
+  def updateInHakukohteenLiitteetTable(i: Int): Unit = update(iHakukohde(i).copy(liitteet = List(Liite(tyyppiKoodiUri = Some(s"liitetyypitamm_$i#1")))), timestampAfterInserts)
+  def updateInHakukohteenValintakokeetTable(i: Int): Unit = update(iHakukohde(i).copy(valintakokeet = List(Valintakoe(tyyppiKoodiUri = Some(s"valintakokeentyyppi_$i#1")))), timestampAfterInserts)
+  def updateInValintaperusteetTable(i: Int): Any = update(valintaperuste(valintaperusteIds(i), Arkistoitu), timestampAfterInserts)
+  def updateInSorakuvauksetTable(i: Int): Unit = update(sorakuvaus(sorakuvausIds(i), Tallennettu), timestampAfterInserts)
 
   "Modified since" should "return 401 without a valid session" in {
 
@@ -117,7 +117,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
-      result.koulutukset should contain theSameElementsAs List(koulutusOids(0), koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
+      result.koulutukset should contain theSameElementsAs List(koulutusOids.head, koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
       result.toteutukset should contain theSameElementsAs List(toteutusOids(3), toteutusOids(4), toteutusOids(5)).map(ToteutusOid)
       result.haut should contain theSameElementsAs List(hakuOids(6), hakuOids(7)).map(HakuOid)
       result.hakukohteet should contain theSameElementsAs List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)).map(HakukohdeOid)

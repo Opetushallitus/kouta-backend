@@ -5,6 +5,8 @@ import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations.{validateIfTrue, _}
 
+import java.util.UUID
+
 package object koulutus {
 
   val KoulutusModel: String =
@@ -71,6 +73,10 @@ package object koulutus {
       |          type: object
       |          description: Koulutuksen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
+      |        sorakuvausId:
+      |          type: string
+      |          description: Koulutukseen liittyvän SORA-kuvauksen yksilöivä tunniste
+      |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
       |        metadata:
       |          type: object
       |          oneOf:
@@ -169,6 +175,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     esikatselu: Boolean = false,
                     tarjoajat: List[OrganisaatioOid] = List(),
                     nimi: Kielistetty = Map(),
+                    sorakuvausId: Option[UUID] = None,
                     metadata: Option[KoulutusMetadata] = None,
                     julkinen: Boolean = false,
                     muokkaaja: UserOid,

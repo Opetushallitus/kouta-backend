@@ -75,6 +75,7 @@ trait KoulutusExtractors extends ExtractorBase {
     tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
     nimi = extractKielistetty(r.nextStringOption()),
+    sorakuvausId = r.nextStringOption().map(UUID.fromString),
     metadata = r.nextStringOption().map(read[KoulutusMetadata]),
     julkinen = r.nextBoolean(),
     muokkaaja = UserOid(r.nextString()),
@@ -170,7 +171,6 @@ trait ValintaperusteExtractors extends ExtractorBase {
     julkinen = r.nextBoolean(),
     esikatselu = r.nextBoolean(),
     metadata = r.nextStringOption().map(read[ValintaperusteMetadata]),
-    sorakuvausId = r.nextStringOption().map(UUID.fromString),
     organisaatioOid = OrganisaatioOid(r.nextString()),
     muokkaaja = UserOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
@@ -208,6 +208,11 @@ trait SorakuvausExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     modified = timeStampToModified(r.nextTimestamp())
   ))
+
+  implicit val getTilaTyyppiAndKoulutusKoodit: GetResult[(Julkaisutila, Koulutustyyppi, Seq[String])] = GetResult(r =>
+    (Julkaisutila.withName(r.nextString()),
+      Koulutustyyppi.withName(r.nextString()),
+      extractArray[String](r.nextObjectOption())))
 }
 
 trait HakukohdeExctractors extends ExtractorBase {

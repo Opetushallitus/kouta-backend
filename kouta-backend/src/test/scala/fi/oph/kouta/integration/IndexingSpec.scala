@@ -19,10 +19,10 @@ class IndexingSpec extends KoutaIntegrationSpec
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)
     sorakuvausId = put(sorakuvaus)
-    valintaperusteId = put(valintaperuste(sorakuvausId))
+    valintaperusteId = put(valintaperuste)
   }
 
-  lazy val uusiHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
+  lazy val uusiHakukohde: Hakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
   lazy val tallennettuHakukohde: String => Hakukohde = {oid:String => getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))}
 
   "Create haku" should "send indexing message after creating haku" in {
@@ -67,15 +67,15 @@ class IndexingSpec extends KoutaIntegrationSpec
   }
 
   "Create valintaperuste" should "send indexing message after creating valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
+    val id = put(valintaperuste)
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
 
   "Update valintaperuste"  should "send indexing message after updating valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
+    val id = put(valintaperuste)
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
 
-    update(valintaperuste(id, sorakuvausId = sorakuvausId, Arkistoitu), lastModified = get(id, valintaperuste(id, sorakuvausId)))
+    update(valintaperuste(id, Arkistoitu), lastModified = get(id, valintaperuste(id)))
 
     eventuallyIndexingMessages { _ should contain (s"""{"valintaperusteet":["$id"]}""") }
   }
@@ -99,7 +99,7 @@ class IndexingSpec extends KoutaIntegrationSpec
       hakulomaketyyppi = Some(Ataru),
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake"),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))))
-    update(muokattuHakukohde, lastModified, true)
+    update(muokattuHakukohde, lastModified, expectUpdate = true)
 
     eventuallyIndexingMessages {
       _ should contain(s"""{"hakukohteet":["$oid"]}""")

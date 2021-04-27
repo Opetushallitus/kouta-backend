@@ -8,12 +8,13 @@ import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOi
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
-import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
+import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object KoulutusService extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl)
@@ -48,7 +49,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
         AuthorizationRules(roleEntity.createRoles)
     }
     authorizePut(koulutus, rules) { k =>
-      withValidation(k, None)(k => doPut(k))
+      withValidation(k, None){k =>
+        validateSorakuvausIntegrity(koulutus)
+        doPut(k)}
     }.oid.get
   }
 
@@ -69,11 +72,28 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
         }
         rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           withValidation(k, Some(oldKoulutus)) {
+            validateSorakuvausIntegrity(k)
             doUpdate(_, notModifiedSince, oldKoulutus)
           }
         }.nonEmpty
       case _ => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
     }
+  }
+
+  private def validateSorakuvausIntegrity(koulutus: Koulutus): Unit = {
+    import fi.oph.kouta.validation.Validations._
+
+    throwValidationErrors(
+      validateIfDefined[UUID](koulutus.sorakuvausId, sorakuvausId => {
+        val (sorakuvausTila, sorakuvausTyyppi, koulutuskoodiUrit) = SorakuvausDAO.getTilaTyyppiAndKoulutusKoodit(sorakuvausId)
+        and(
+          validateDependency(koulutus.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
+          validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
+            assertTrue(sorakuvausTyyppi == koulutus.koulutustyyppi, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))),
+          validateIfDefined[Seq[String]](koulutuskoodiUrit, koulutuskoodiUrit => {
+            validateIfTrue(koulutuskoodiUrit.nonEmpty, assertTrue(koulutuskoodiUrit == koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")))
+          }))
+      }))
   }
 
   def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =

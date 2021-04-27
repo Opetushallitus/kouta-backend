@@ -8,23 +8,20 @@ import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.integration.fixture.{SorakuvausFixture, ValintaperusteFixture}
+import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
 
-class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture with SorakuvausFixture {
+class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with ValintaperusteFixture {
 
   override val roleEntities = Seq(Role.Valintaperuste)
 
-  def ophValintaperuste(sorakuvausId: UUID) = valintaperuste(sorakuvausId).copy(julkinen = true, organisaatioOid = OphOid)
-
-  var sorakuvausId: UUID = _
+  def ophValintaperuste: Valintaperuste = valintaperuste.copy(julkinen = true, organisaatioOid = OphOid)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    sorakuvausId = put(sorakuvaus)
   }
 
   "Get valintaperuste by id" should "return 404 if valintaperuste not found" in {
@@ -41,123 +38,101 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "allow a user of the valintaperuste organization to read the valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    get(id, crudSessions(valintaperuste.organisaatioOid), valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    get(id, crudSessions(valintaperuste.organisaatioOid), valintaperuste(id))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
-    val id = put(valintaperuste(sorakuvausId))
+    val id = put(valintaperuste)
     get(s"$ValintaperustePath/$id", crudSessions(LonelyOid), 403)
   }
 
   it should "allow a user of an ancestor organization to read the valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    get(id, crudSessions(ParentOid), valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    get(id, crudSessions(ParentOid), valintaperuste(id))
   }
 
   it should "allow a user with only access to a descendant organization" in {
-    val id = put(valintaperuste(sorakuvausId))
-    get(id, crudSessions(GrandChildOid), valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    get(id, crudSessions(GrandChildOid), valintaperuste(id))
   }
 
   it should "deny a user with the wrong role" in {
-    val id = put(valintaperuste(sorakuvausId))
+    val id = put(valintaperuste)
     get(s"$ValintaperustePath/$id", otherRoleSession, 403)
   }
 
   it should "allow the user of proper koulutustyyppi to read julkinen valintaperuste created by oph" in {
-    val id = put(ophValintaperuste(sorakuvausId))
-    get(id, readSessions(AmmOid), ophValintaperuste(sorakuvausId).copy(id = Some(id)))
+    val id = put(ophValintaperuste)
+    get(id, readSessions(AmmOid), ophValintaperuste.copy(id = Some(id)))
   }
 
   it should "deny the user of wrong koulutustyyppi to read julkinen valintaperuste created by oph" in {
-    val id = put(ophValintaperuste(sorakuvausId))
+    val id = put(ophValintaperuste)
     get(s"$ValintaperustePath/$id", readSessions(YoOid), 403)
   }
 
   it should "allow indexer access" in {
-    val sorakuvausId = put(sorakuvaus)
-    val id = put(valintaperuste(sorakuvausId))
-    get(id, indexerSession, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    get(id, indexerSession, valintaperuste(id))
   }
 
 
   "Create valintaperuste" should "store valintaperuste" in {
-    val sorakuvausId = put(sorakuvaus)
-    val id = put(valintaperuste(sorakuvausId))
-    get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    get(id, valintaperuste(id))
   }
 
   it should "read muokkaaja from the session" in {
-    val sorakuvausId = put(sorakuvaus)
-    val id = put(valintaperuste(sorakuvausId).copy(muokkaaja = UserOid("random")))
-    get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = testUser.oid))
-  }
-
-  it should "fail to store valintaperuste if sorakuvaus doesn't exist" in {
-    val sorakuvausId = UUID.randomUUID()
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "sorakuvausId", nonExistent("Sorakuvausta", sorakuvausId))
-  }
-
-  it should "fail to store julkaistu valintaperuste if sorakuvaus is not yet julkaistu" in {
-    val sorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "tila", notYetJulkaistu("Sorakuvausta", sorakuvausId))
-  }
-
-  it should "fail to store valintaperuste if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val sorakuvausId = put(TestData.YoSorakuvaus)
-    put(ValintaperustePath, valintaperuste(sorakuvausId), 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))
+    val id = put(valintaperuste.copy(muokkaaja = UserOid("random")))
+    get(id, valintaperuste(id).copy(muokkaaja = testUser.oid))
   }
 
   it should "write create valintaperuste in audit log" in {
-    val sorakuvausId = put(sorakuvaus)
     MockAuditLogger.clean()
-    val id = put(valintaperuste(sorakuvausId).withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    val id = put(valintaperuste.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
     MockAuditLogger.find(id.toString, "valintaperuste_create")
     MockAuditLogger.find("1000-01-01") should not be defined
-    get(id, valintaperuste(id, sorakuvausId))
+    get(id, valintaperuste(id))
   }
 
   it should "store korkeakoulutus valintaperuste" in {
-    val sorakuvausId = put(TestData.YoSorakuvaus)
-    val id = put(TestData.YoValintaperuste.copy(sorakuvausId = Some(sorakuvausId)))
-    get(id, TestData.YoValintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId)))
+    val id = put(TestData.YoValintaperuste)
+    get(id, TestData.YoValintaperuste.copy(id = Some(id)))
   }
 
   it should "return 401 if no session is found" in {
-    val sorakuvausId = put(sorakuvaus)
-    put(s"$ValintaperustePath", bytes(valintaperuste(sorakuvausId))) {
+    put(s"$ValintaperustePath", bytes(valintaperuste)) {
       status should equal (401)
     }
   }
 
   it should "allow a user of the valintaperuste organization to create the valintaperuste" in {
-    val sorakuvausId = put(sorakuvaus)
-    put(valintaperuste(sorakuvausId), crudSessions(valintaperuste.organisaatioOid))
+    put(valintaperuste, crudSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
-    put(ValintaperustePath, valintaperuste(sorakuvausId), crudSessions(LonelyOid), 403)
+    put(ValintaperustePath, valintaperuste, crudSessions(LonelyOid), 403)
   }
 
   it should "allow a user of an ancestor organization to create the valintaperuste" in {
-    put(valintaperuste(sorakuvausId), crudSessions(ParentOid))
+    put(valintaperuste, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
-    put(ValintaperustePath, valintaperuste(sorakuvausId), crudSessions(GrandChildOid), 403)
+    put(ValintaperustePath, valintaperuste, crudSessions(GrandChildOid), 403)
   }
 
   it should "deny a user with the wrong role" in {
-    put(ValintaperustePath, valintaperuste(sorakuvausId), readSessions(ChildOid), 403)
+    put(ValintaperustePath, valintaperuste, readSessions(ChildOid), 403)
   }
 
   it should "deny indexer access" in {
-    put(ValintaperustePath, valintaperuste(sorakuvausId), indexerSession, 403)
+    put(ValintaperustePath, valintaperuste, indexerSession, 403)
   }
 
   it should "validate new valintaperuste" in {
-    put(ValintaperustePath, bytes(valintaperuste(sorakuvausId).copy(organisaatioOid = OrganisaatioOid("saippua"))), defaultHeaders) {
+    put(ValintaperustePath, bytes(valintaperuste.copy(organisaatioOid = OrganisaatioOid("saippua"))), defaultHeaders) {
       withClue(body) {
         status should equal(400)
       }
@@ -169,7 +144,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
     val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
-    val thisValintaperuste = valintaperuste(sorakuvausId).copy(valintakokeet = List(koe))
+    val thisValintaperuste = valintaperuste.copy(valintakokeet = List(koe))
 
     put(thisValintaperuste.copy(tila = Tallennettu))
 
@@ -182,125 +157,104 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   "Update valintaperuste" should "update valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
-    get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
+    get(id, valintaperuste(id, Arkistoitu))
   }
 
   it should "read muokkaaja from the session" in {
-    val id = put(valintaperuste(sorakuvausId), crudSessions(ChildOid))
+    val id = put(valintaperuste, crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId).copy(muokkaaja = userOid))
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
-    get(id, valintaperuste(id, sorakuvausId, Arkistoitu).copy(muokkaaja = testUser.oid))
-  }
-
-  it should "fail to update valintaperuste if sorakuvaus doesn't exist" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    val nonExistentSorakuvausId = UUID.randomUUID()
-    update(ValintaperustePath, valintaperuste(id, nonExistentSorakuvausId), lastModified, 400, "sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId))
-  }
-
-  it should "fail to update julkaistu valintaperuste if sorakuvaus is not yet julkaistu" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    val tallennettuSorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
-    update(ValintaperustePath, valintaperuste(id, tallennettuSorakuvausId), lastModified, 400, "tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId))
-  }
-
-  it should "fail to update valintaperuste if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    val yoSorakuvausId = put(TestData.YoSorakuvaus)
-    update(ValintaperustePath, valintaperuste(id, yoSorakuvausId), lastModified, 400, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", yoSorakuvausId))
+    val lastModified = get(id, valintaperuste(id).copy(muokkaaja = userOid))
+    update(getIds(valintaperuste(id, Arkistoitu).copy(muokkaaja = userOid)), lastModified)
+    get(id, valintaperuste(id, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write valintaperuste update to audit log" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     MockAuditLogger.clean()
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
+    update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "valintaperuste_update")
-    get(id, valintaperuste(id, sorakuvausId, Arkistoitu))
+    get(id, valintaperuste(id, Arkistoitu))
   }
 
   it should "not update valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     MockAuditLogger.clean()
-    update(tallennettuValintaperuste(id), lastModified, false)
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
-    get(id, valintaperuste(id, sorakuvausId)) should equal (lastModified)
+    get(id, valintaperuste(id)) should equal (lastModified)
   }
 
   it should "return 401 if no session is found" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    post(ValintaperustePath, bytes(valintaperuste(id, sorakuvausId)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    post(ValintaperustePath, bytes(valintaperuste(id)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
       status should equal (401)
     }
   }
 
   it should "allow a user of the valintaperuste organization to update the valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(valintaperuste.organisaatioOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false, crudSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny a user without access to the valintaperuste organization" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     update(tallennettuValintaperuste(id), lastModified, 403, crudSessions(LonelyOid))
   }
 
   it should "allow a user of an ancestor organization to create the valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(tallennettuValintaperuste(id), lastModified, false, crudSessions(ParentOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     update(tallennettuValintaperuste(id), lastModified, 403, crudSessions(GrandChildOid))
   }
 
   it should "deny a user with the wrong role" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    update(tallennettuValintaperuste(id), lastModified, 403, readSessions(valintaperuste(sorakuvausId).organisaatioOid))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(tallennettuValintaperuste(id), lastModified, 403, readSessions(valintaperuste.organisaatioOid))
   }
 
   it should "deny indexer access" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     update(tallennettuValintaperuste(id), lastModified, 403, indexerSession)
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
-    val id = put(valintaperuste(sorakuvausId))
-    post(ValintaperustePath, bytes(valintaperuste(id, sorakuvausId)), defaultHeaders) {
+    val id = put(valintaperuste)
+    post(ValintaperustePath, bytes(valintaperuste(id)), defaultHeaders) {
       status should equal (400)
       body should include (KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 
   it should "fail update if modified in between get and update" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     Thread.sleep(1500)
-    update(getIds(valintaperuste(id, sorakuvausId, Arkistoitu)), lastModified)
-    post(ValintaperustePath, bytes(valintaperuste(id, sorakuvausId)), headersIfUnmodifiedSince(lastModified)) {
+    update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
+    post(ValintaperustePath, bytes(valintaperuste(id)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
   }
 
   it should "update valintakokeet" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    val uusiValintaperuste = valintaperuste(id, sorakuvausId).copy(
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    val uusiValintaperuste = valintaperuste(id).copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2"))))
     update(getIds(uusiValintaperuste), lastModified, expectUpdate = true)
@@ -308,24 +262,24 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "put, update and delete valintakokeet correctly" in {
-    val valintaperusteWithValintakokeet = valintaperuste(sorakuvausId).copy(
+    val valintaperusteWithValintakokeet = valintaperuste.copy(
       valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
     )
     val id = put(valintaperusteWithValintakokeet)
     val lastModified = get(id, getIds(valintaperusteWithValintakokeet.copy(id = Some(id))))
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
-    val updateValintakoe = (getIds(valintaperuste(id, sorakuvausId))).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
-    update(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
-    get(id, getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
+    val updateValintakoe = getIds(valintaperuste(id)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    update(valintaperuste(id).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
+    get(id, getIds(valintaperuste(id).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
   }
 
   it should "delete all valintakokeet and read last modified from history" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
     Thread.sleep(1500)
-    val uusiValintaperuste = getIds(valintaperuste(id, sorakuvausId).copy(valintakokeet = List()))
+    val uusiValintaperuste = getIds(valintaperuste(id).copy(valintakokeet = List()))
     update(uusiValintaperuste, lastModified, expectUpdate = true)
-    get(id, uusiValintaperuste) should not equal (lastModified)
+    get(id, uusiValintaperuste) should not equal lastModified
   }
 
   it should "store and update unfinished valintaperuste" in {
@@ -338,9 +292,9 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "validate updated valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
-    post(ValintaperustePath, bytes(valintaperuste(id, sorakuvausId).copy(organisaatioOid = OrganisaatioOid("saippua"))), headersIfUnmodifiedSince(lastModified)) {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    post(ValintaperustePath, bytes(valintaperuste(id).copy(organisaatioOid = OrganisaatioOid("saippua"))), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
@@ -352,7 +306,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
     val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
-    val thisValintaperuste = valintaperuste(sorakuvausId).copy(valintakokeet = List(koe), tila = Tallennettu)
+    val thisValintaperuste = valintaperuste.copy(valintakokeet = List(koe), tila = Tallennettu)
 
     val id = put(thisValintaperuste)
     val thisValintaperusteWithOid = thisValintaperuste.copy(id = Some(id))
@@ -369,13 +323,13 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   }
 
   it should "not validate dates when update a julkaistu valintaperuste" in {
-    val id = put(valintaperuste(sorakuvausId))
-    val lastModified = get(id, valintaperuste(id, sorakuvausId))
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
 
     val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
     val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
     val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
-    val thisValintaperuste = valintaperuste(id, sorakuvausId).copy(valintakokeet = List(koe), tila = Julkaistu)
+    val thisValintaperuste = valintaperuste(id).copy(valintakokeet = List(koe), tila = Julkaistu)
 
     update(thisValintaperuste, lastModified)
   }

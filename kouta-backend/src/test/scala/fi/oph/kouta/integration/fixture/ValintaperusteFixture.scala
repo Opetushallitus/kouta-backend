@@ -42,16 +42,14 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
       valintakokeet = valintaperuste.valintakokeet.map(valintakoe => valintakoe.copy(id = db.runBlocking(
         sql"""select id from valintaperusteiden_valintakokeet
               where valintaperuste_id = ${valintaperuste.id.map(_.toString)}::uuid
-                and tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString))),
-      sorakuvausId = db.runBlocking(sql"select sorakuvaus_id from valintaperusteet where id = ${valintaperuste.id.map(_.toString)}::uuid".as[UUID].headOption)
+                and tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString)))
     )
   }
 
   def tallennettuValintaperuste(id: UUID): Valintaperuste = getIds(valintaperuste.copy(id = Some(id)))
 
-  def valintaperuste(sorakuvausId: UUID): Valintaperuste = valintaperuste.copy(sorakuvausId = Some(sorakuvausId))
-  def valintaperuste(id:UUID, sorakuvausId: UUID): Valintaperuste = valintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId))
-  def valintaperuste(id:UUID, sorakuvausId: UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), sorakuvausId = Some(sorakuvausId), tila = tila)
+  def valintaperuste(id:UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
+  def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
 
   def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id)
   def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID = put(ValintaperustePath, valintaperuste, sessionId, id)
@@ -72,8 +70,8 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
   def update(valintaperuste: Valintaperuste, lastModified: String): Unit = update(valintaperuste, lastModified, expectUpdate = true)
 
-  def valintaperuste(sorakuvausId: Option[UUID], tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
-    valintaperuste.copy(sorakuvausId = sorakuvausId, organisaatioOid = organisaatioOid, tila = tila)
+  def valintaperuste(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
+    valintaperuste.copy(organisaatioOid = organisaatioOid, tila = tila)
 
   def addToList(valintaperuste:Valintaperuste): ValintaperusteListItem = {
     val id = put(valintaperuste)

@@ -9,7 +9,7 @@ import fi.oph.kouta.validation.Validations._
 
 package object valintaperuste {
 
-  val ValintaperusteModel =
+  val ValintaperusteModel: String =
     """    Valintaperuste:
       |      type: object
       |      properties:
@@ -52,6 +52,7 @@ package object valintaperuste {
       |          example: haunkohdejoukontarkenne_1#1
       |        sorakuvausId:
       |          type: string
+      |          deprecated: true
       |          description: Valintaperustekuvaukseen liittyvän SORA-kuvauksen yksilöivä tunniste
       |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
       |        julkinen:
@@ -132,7 +133,7 @@ package object valintaperuste {
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
-  val ValintaperusteListItemModel =
+  val ValintaperusteListItemModel: String =
     """    ValintaperusteListItem:
       |      type: object
       |      properties:
@@ -179,7 +180,7 @@ case class Valintaperuste(id: Option[UUID] = None,
                           kohdejoukonTarkenneKoodiUri: Option[String] = None,
                           nimi: Kielistetty = Map(),
                           julkinen: Boolean = false,
-                          sorakuvausId: Option[UUID] = None,
+                          @deprecated("Kenttä siirretty koulutukselle") sorakuvausId: Option[UUID] = None,
                           valintakokeet: Seq[Valintakoe] = Seq(),
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,

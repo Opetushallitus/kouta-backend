@@ -158,7 +158,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
   val MetadataKey = "metadata"
-  val SorakuvausIdKey = "sorakuvaus"
+  val SorakuvausIdKey = "sorakuvausId"
   val OppilaitosOidKey = "oppilaitosOid"
   val TeemakuvaKey = "teemakuva"
   val LogoKey = "logo"
@@ -195,6 +195,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
+    SorakuvausIdKey -> UUID.randomUUID().toString,
     JulkinenKey -> "false",
     EsikatseluKey -> "false",
     MuokkaajaKey -> TestUserOid.s,
@@ -312,7 +313,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
     JulkinenKey -> "false",
     MetadataKey -> write(TestData.AmmValintaperuste.metadata),
-    SorakuvausIdKey -> UUID.randomUUID().toString,
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
       id = Some(UUID.fromString("f50c7536-1c50-4fa8-b13c-514877be71a0")),
       tilaisuudet = List(TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(Ajanjakso(startTime1, Some(endTime1)))))
@@ -395,6 +395,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case Some(x) => x.split(",").map(_.trim).map(OrganisaatioOid).toList
       },
       toKielistetty(kielivalinta, params(NimiKey)),
+      Some(UUID.fromString(params(SorakuvausIdKey))),
       params.get(MetadataKey).map(read[KoulutusMetadata]),
       params(JulkinenKey).toBoolean,
       UserOid(params(MuokkaajaKey)),
@@ -515,7 +516,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(KohdejoukonTarkenneKoodiUriKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       params(JulkinenKey).toBoolean,
-      Some(UUID.fromString(params(SorakuvausIdKey))),
+      None,
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       params.get(MetadataKey).map(read[ValintaperusteMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
@@ -673,11 +674,11 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
-  def listValintaperusteetBySorakuvaus(sorakuvausId: String): String = {
+  def listKoulutusOidsBySorakuvaus(sorakuvausId: String): String = {
     toJson(
-      valintaperusteet.filter {
+      koulutukset.filter {
         case (_, params) => params(SorakuvausIdKey) == sorakuvausId
-      }.keys.toSeq.map(valintaperusteListItem)
+      }.keys.toSeq
     )
   }
 
@@ -715,19 +716,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
           oppilaitokset.keySet.map(OrganisaatioOid).toSeq
         )
       )
-    )
-  }
-
-  private def valintaperusteListItem(id: String) = {
-    val params = valintaperusteet(id)
-    val kielivalinta = toKielivalinta(params)
-    ValintaperusteListItem(
-      UUID.fromString(id),
-      toKielistetty(kielivalinta, params(NimiKey)),
-      Julkaisutila.withName(params(TilaKey)),
-      OrganisaatioOid(params(OrganisaatioKey)),
-      UserOid(params(MuokkaajaKey)),
-      parseModified(params(ModifiedKey))
     )
   }
 

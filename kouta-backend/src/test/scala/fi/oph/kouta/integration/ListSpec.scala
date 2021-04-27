@@ -30,10 +30,13 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   def createTestData(): Unit = {
-    k1 = addToList(koulutus(julkinen = false, ParentOid, Julkaistu))
-    k2 = addToList(koulutus(julkinen = false, ChildOid, Arkistoitu))
+    s1 = addToList(sorakuvaus(Julkaistu, OphOid))
+    s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
+    s3 = addToList(sorakuvaus(Julkaistu, OphOid))
+    k1 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ParentOid, tila = Julkaistu, sorakuvausId = Some(s1.id)))
+    k2 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ChildOid, tila = Arkistoitu, sorakuvausId = Some(s1.id)))
     k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
-    k4 = addToList(koulutus(julkinen = false, LonelyOid, Julkaistu))
+    k4 = addToList(koulutus.copy(julkinen = false, organisaatioOid = LonelyOid, tila = Julkaistu, sorakuvausId =  Some(s3.id)))
     k5 = addToList(koulutus(julkinen = true, LonelyOid, Julkaistu))
     k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu))
     k7 = addToList(ammTutkinnonOsaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
@@ -50,14 +53,11 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
-    s1 = addToList(sorakuvaus(Julkaistu, OphOid))
-    s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
-    s3 = addToList(sorakuvaus(Julkaistu, OphOid))
     s4 = addToList(yoSorakuvaus.copy(tila = Julkaistu, organisaatioOid = OphOid))
-    v1 = addToList(valintaperuste(Some(s1.id), Julkaistu, ParentOid).copy(julkinen = false))
-    v2 = addToList(valintaperuste(Some(s1.id), Arkistoitu, ChildOid).copy(julkinen = true))
-    v3 = addToList(valintaperuste(None, Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None, julkinen = false))
-    v4 = addToList(valintaperuste(Some(s3.id), Julkaistu, LonelyOid).copy(julkinen = false))
+    v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(julkinen = false))
+    v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(julkinen = true))
+    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None, julkinen = false))
+    v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(julkinen = false))
     hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
     hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid).copy(tila = Tallennettu))
     hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Arkistoitu))
@@ -506,23 +506,23 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String, String](), 403, crudSessions(ParentOid))
   }
 
-  "Sorakuvausta käyttävät valintaperusteet for indexer" should "list all valintaperusteet using given sorakuvaus for indexer" in {
-    list(s"$IndexerPath$SorakuvausPath/${s1.id}/valintaperusteet", Map[String,String](), List(v1, v2), indexerSession)
+  "Sorakuvausta käyttävät koulutukset for indexer" should "list all koulutukset using given sorakuvaus for indexer" in {
+    list(s"$IndexerPath$SorakuvausPath/${s1.id}/koulutukset", Map[String,String](), List(k1.oid, k2.oid), indexerSession)
   }
-  it should "list all valintaperusteet using given sorakuvaus 2" in {
-    list(s"$IndexerPath$SorakuvausPath/${s3.id}/valintaperusteet", Map[String,String](), List(v4), indexerSession)
+  it should "list all koulutukset using given sorakuvaus 2" in {
+    list(s"$IndexerPath$SorakuvausPath/${s3.id}/koulutukset", Map[String,String](), List(k4.oid), indexerSession)
   }
   it should "deny access to root user without indexer role" in {
-    list(s"$IndexerPath$SorakuvausPath/${s1.id}/valintaperusteet", Map[String, String](), 403)
+    list(s"$IndexerPath$SorakuvausPath/${s1.id}/koulutukset", Map[String, String](), 403)
   }
   it should "deny access to a non-root user, even if they own the toteutus" in {
-    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, crudSessions(ChildOid))
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/koulutukset", Map.empty[String, String], 403, crudSessions(ChildOid))
   }
   it should "deny access without the valintaperuste read role" in {
-    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/koulutukset", Map.empty[String, String], 403, addTestSession(Role.Toteutus.Read, OphOid))
   }
   it should "deny access with the valintaperuste read role" in {
-    list(s"$IndexerPath$SorakuvausPath/${s2.id}/valintaperusteet", Map.empty[String, String], 403, addTestSession(Role.Valintaperuste.Read, OphOid))
+    list(s"$IndexerPath$SorakuvausPath/${s2.id}/koulutukset", Map.empty[String, String], 403, addTestSession(Role.Valintaperuste.Read, OphOid))
   }
 
   "Oppilaitoksen osat list" should "list all oppilaitoksen osat for this oppilaitos" in {
