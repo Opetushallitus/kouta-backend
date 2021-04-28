@@ -53,7 +53,24 @@ trait KoutaIndexMock extends ServiceMocks with KoutaJsonFormats {
     },
     "toteutukset": [{
       "oid": "1.2.246.562.17.00000000000000000999",
+      "nimi": {
+        "fi": "Toteutusnimi fi"
+      },
+      "modified": "2021-01-01T00:00:00",
       "tila": "julkaistu",
+      "organisaatio": {
+        "paikkakunta": {
+          "koodiUri": "kunta_398",
+          "nimi": {
+            "sv": "Lahtis",
+            "fi": "Lahti"
+          }
+        },
+        "nimi": {
+          "fi": "Koulutuskeskus"
+        },
+        "oid": "1.2.246.562.10.594252633210"
+      },
       "organisaatiot": ["${organisaatioOids.mkString("\",\"")}"]
     }]""".stripMargin
   }
