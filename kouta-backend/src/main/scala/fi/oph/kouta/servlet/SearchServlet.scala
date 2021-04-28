@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ToteutusService, ValintaperusteService}
 import org.scalatra.{NotFound, Ok}
 
@@ -117,6 +117,33 @@ class SearchServlet(koulutusService: KoulutusService,
     }
   }
 
+  registerPath("/search/koulutus",
+    s"""    get:
+       |      summary: Hakee rikastetun koulutuksen annetulla oidilla
+       |      operationId: Koulutuksen haku
+       |      description: Hakee rikastetun koulutuksen annetulla oidilla
+       |      tags:
+       |        - Search
+       |$searchParams
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: object
+       |                $$ref: '#/components/schemas/KoulutusSearchItemWithToteutukset'
+       |""".stripMargin)
+  get("/koulutus") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("koulutusOid").map(KoulutusOid)) match {
+      case (Some(organisaatioOid), Some(koulutusOid)) => Ok(koulutusService.search(organisaatioOid, koulutusOid, params.toMap.filterKeys(SearchParams.contains)))
+      case _ => NotFound()
+    }
+  }
+
   registerPath("/search/toteutukset",
     s"""    get:
        |      summary: Hakee organisaation toteutuksia annetuilla parametreilla
@@ -145,6 +172,33 @@ class SearchServlet(koulutusService: KoulutusService,
     }
   }
 
+  registerPath("/search/toteutus",
+    s"""    get:
+       |      summary: Hakee rikastetun toteutuksen annetulla oidilla
+       |      operationId: Toteutuksen haku
+       |      description: Hakee rikastetun toteutuksen annetulla oidilla
+       |      tags:
+       |        - Search
+       |$searchParams
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: object
+       |                $$ref: '#/components/schemas/ToteutusSearchItemWithHakukohteet'
+       |""".stripMargin)
+  get("/toteutus") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("toteutusOid").map(ToteutusOid)) match {
+      case (Some(organisaatioOid), Some(toteutusOid)) => Ok(toteutusService.search(organisaatioOid, toteutusOid, params.toMap.filterKeys(SearchParams.contains)))
+      case _ => NotFound()
+    }
+  }
+
   registerPath("/search/haut",
     s"""    get:
        |      summary: Hakee organisaation hakuja annetuilla parametreilla
@@ -170,6 +224,33 @@ class SearchServlet(koulutusService: KoulutusService,
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(organisaatioOid) => Ok(hakuService.search(organisaatioOid, params.toMap.filterKeys(SearchParams.contains)))
+    }
+  }
+
+  registerPath("/search/haku",
+    s"""    get:
+       |      summary: Hakee rikastetun haun annetulla oidilla
+       |      operationId: Haun haku
+       |      description: Hakee rikastetun toteutuksen annetulla oidilla
+       |      tags:
+       |        - Search
+       |$searchParams
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                type: object
+       |                $$ref: '#/components/schemas/HakuSearchItemWithHakukohteet'
+       |""".stripMargin)
+  get("/haku") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("hakuOid").map(HakuOid)) match {
+      case (Some(organisaatioOid), Some(hakuOid)) => Ok(hakuService.search(organisaatioOid, hakuOid, params.toMap.filterKeys(SearchParams.contains)))
+      case _ => NotFound()
     }
   }
 

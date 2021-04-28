@@ -129,6 +129,48 @@ package object searchResults {
       |              type: integer
       |              description: Koulutukseen liitettyjen organisaation toteutusten lukumäärä
       |              example: 6
+      |    KoulutusSearchItemWithToteutukset:
+      |      allOf:
+      |        - $ref: '#/components/schemas/SearchItem'
+      |        - type: object
+      |          properties:
+      |            oid:
+      |              type: string
+      |              description: Koulutuksen yksilöivä tunniste
+      |              example: "1.2.246.562.13.00000000000000000009"
+      |            eperuste:
+      |              type: object
+      |              description: Koulutuksen ePerusteen tiedot
+      |              $ref: '#/components/schemas/EPeruste'
+      |            toteutukset:
+      |              type: object
+      |              description: Koulutukseen liitetyt toteutukset
+      |              properties:
+      |                oid:
+      |                  type: string
+      |                  description: Toteutuksen yksilöivä tunniste
+      |                  example: "1.2.246.562.17.00000000000000000009"
+      |                nimi:
+      |                  type: object
+      |                  description: Opintopolussa näytettävä nimi eri kielillä
+      |                  $ref: '#/components/schemas/Nimi'
+      |                organisaatio:
+      |                  type: object
+      |                  description: Luoja-organisaatio
+      |                  $ref: '#/components/schemas/Organisaatio'
+      |                modified:
+      |                  type: string
+      |                  format: date-time
+      |                  description: Viimeisin muokkausaika
+      |                  example: 2019-08-23T09:55:17
+      |                tila:
+      |                  type: string
+      |                  example: "julkaistu"
+      |                  enum:
+      |                    - julkaistu
+      |                    - arkistoitu
+      |                    - tallennettu
+      |                  description: Julkaisutila. Jos julkaistu, näkyy oppijalle Opintopolussa.
       |""".stripMargin
 
   val ToteutusSearchItemModel =
@@ -145,6 +187,44 @@ package object searchResults {
       |              type: integer
       |              description: Toteutukseen liitettyjen hakukohteiden lukumäärä
       |              example: 6
+      |    ToteutusSearchItemWithHakukohteet:
+      |      allOf:
+      |        - $ref: '#/components/schemas/SearchItem'
+      |        - type: object
+      |          properties:
+      |            oid:
+      |              type: string
+      |              description: Toteutuksen yksilöivä tunniste
+      |              example: "1.2.246.562.17.00000000000000000009"
+      |            hakukohteet:
+      |              type: object
+      |              description: Toteutukseen liitetyt hakukohteet
+      |              properties:
+      |                hakukohdeOid:
+      |                  type: string
+      |                  description: Hakukohteen yksilöivä tunniste
+      |                  example: "1.2.246.562.20.00000000000000000009"
+      |                nimi:
+      |                  type: object
+      |                  description: Opintopolussa näytettävä nimi eri kielillä
+      |                  $ref: '#/components/schemas/Nimi'
+      |                organisaatio:
+      |                  type: object
+      |                  description: Luoja-organisaatio
+      |                  $ref: '#/components/schemas/Organisaatio'
+      |                modified:
+      |                  type: string
+      |                  format: date-time
+      |                  description: Viimeisin muokkausaika
+      |                  example: 2019-08-23T09:55:17
+      |                tila:
+      |                  type: string
+      |                  example: "julkaistu"
+      |                  enum:
+      |                    - julkaistu
+      |                    - arkistoitu
+      |                    - tallennettu
+      |                  description: Julkaisutila. Jos julkaistu, näkyy oppijalle Opintopolussa.
       |""".stripMargin
 
   val HakuSearchItemModel =
@@ -161,6 +241,44 @@ package object searchResults {
       |              type: integer
       |              description: Hakuun liitettyjen hakukohteiden lukumäärä
       |              example: 6
+      |    HakuSearchItemWithHakukohteet:
+      |      allOf:
+      |        - $ref: '#/components/schemas/SearchItem'
+      |        - type: object
+      |          properties:
+      |            oid:
+      |              type: string
+      |              description: Haun yksilöivä tunniste
+      |              example: "1.2.246.562.29.00000000000000000009"
+      |            hakukohteet:
+      |              type: object
+      |              description: Hakuun liitetyt hakukohteet
+      |              properties:
+      |                oid:
+      |                  type: string
+      |                  description: Hakukohteen yksilöivä tunniste
+      |                  example: "1.2.246.562.20.00000000000000000009"
+      |                nimi:
+      |                  type: object
+      |                  description: Opintopolussa näytettävä nimi eri kielillä
+      |                  $ref: '#/components/schemas/Nimi'
+      |                organisaatio:
+      |                  type: object
+      |                  description: Luoja-organisaatio
+      |                  $ref: '#/components/schemas/Organisaatio'
+      |                modified:
+      |                  type: string
+      |                  format: date-time
+      |                  description: Viimeisin muokkausaika
+      |                  example: 2019-08-23T09:55:17
+      |                tila:
+      |                  type: string
+      |                  example: "julkaistu"
+      |                  enum:
+      |                    - julkaistu
+      |                    - arkistoitu
+      |                    - tallennettu
+      |                  description: Julkaisutila. Jos julkaistu, näkyy oppijalle Opintopolussa.
       |""".stripMargin
 
   val HakukohdeSearchItemModel =

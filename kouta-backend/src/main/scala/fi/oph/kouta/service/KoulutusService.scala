@@ -166,6 +166,24 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
   }
 
+  def search(organisaatioOid: OrganisaatioOid, koulutusOid: KoulutusOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[KoulutusSearchItemFromIndex] = {
+    def filterToteutukset(k: Option[KoulutusSearchItemFromIndex]): Option[KoulutusSearchItemFromIndex] =
+      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
+        case Seq(RootOrganisaatioOid) => k
+        case organisaatioOids => {
+          k match {
+            case None => k
+            case Some(ki) => {
+              val oidStrings = organisaatioOids.map(_.toString())
+              Some(ki.copy(toteutukset = ki.toteutukset.filter(t => t.organisaatiot.exists(o => oidStrings.contains(o)))))
+            }
+          }
+        }
+      }
+
+    filterToteutukset(KoutaIndexClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption)
+  }
+
   def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
     val koulutusWithLastModified = get(koulutusOid)
 
