@@ -1,14 +1,13 @@
 package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData.{MinSorakuvaus, YoSorakuvaus}
-import fi.oph.kouta.domain.oid.UserOid
-import fi.oph.kouta.domain.{Fi, Sorakuvaus, SorakuvausMetadata, Sv, Tallennettu}
+import fi.oph.kouta.domain.{Fi, Sorakuvaus, Sv, Tallennettu}
 import fi.oph.kouta.validation.Validations._
 
 class SorakuvausValidationSpec extends BaseValidationSpec[Sorakuvaus] {
 
-  val max = YoSorakuvaus
-  val min = MinSorakuvaus
+  val max: Sorakuvaus = YoSorakuvaus
+  val min: Sorakuvaus = MinSorakuvaus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
