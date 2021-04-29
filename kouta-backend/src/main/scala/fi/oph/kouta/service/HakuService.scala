@@ -98,17 +98,14 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def search(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[HakuSearchItemFromIndex] = {
-    def filterHakukohteet(h: Option[HakuSearchItemFromIndex]): Option[HakuSearchItemFromIndex] =
+    def filterHakukohteet(haku: Option[HakuSearchItemFromIndex]): Option[HakuSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
-        case Seq(RootOrganisaatioOid) => h
+        case Seq(RootOrganisaatioOid) => haku
         case organisaatioOids => {
-          h match {
-            case None => h
-            case Some(hi) => {
-              val oidStrings = organisaatioOids.map(_.toString())
-              Some(hi.copy(hakukohteet = hi.hakukohteet.filter(hk => oidStrings.contains(hk.organisaatio.oid.toString()))))
-            }
-          }
+          haku.flatMap(hakuItem => {
+            val oidStrings = organisaatioOids.map(_.toString())
+            Some(hakuItem.copy(hakukohteet = hakuItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
+          })
         }
       }
 

@@ -111,17 +111,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def search(organisaatioOid: OrganisaatioOid, toteutusOid: ToteutusOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[ToteutusSearchItemFromIndex] = {
-    def filterHakukohteet(t: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItemFromIndex] =
+    def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
-        case Seq(RootOrganisaatioOid) => t
+        case Seq(RootOrganisaatioOid) => toteutus
         case organisaatioOids => {
-          t match {
-            case None => t
-            case Some(ti) => {
-              val oidStrings = organisaatioOids.map(_.toString())
-              Some(ti.copy(hakukohteet = ti.hakukohteet.filter(hk => oidStrings.contains(hk.organisaatio.oid.toString()))))
-            }
-          }
+          toteutus.flatMap(toteutusItem => {
+            val oidStrings = organisaatioOids.map(_.toString())
+            Some(toteutusItem.copy(hakukohteet = toteutusItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
+          })
         }
       }
 
