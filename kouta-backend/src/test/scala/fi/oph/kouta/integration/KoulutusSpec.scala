@@ -196,6 +196,13 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, koulutusWithSoraKuvaus.copy(oid = Some(KoulutusOid(oid))))
   }
 
+  it should "succeed in storing koulutus when SORA-kuvaus has one same koulutuskoodi as koulutus and one different" in {
+    val sorakuvausId = put(yoSorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1", "koulutus_371101#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
+    val koulutusWithSoraKuvaus = yoKoulutus.copy(sorakuvausId = Some(sorakuvausId), koulutuksetKoodiUri = Seq("koulutus_222222#2" ,"koulutus_371101#1"))
+    val oid = put(koulutusWithSoraKuvaus, ophSession)
+    get(oid, koulutusWithSoraKuvaus.copy(oid = Some(KoulutusOid(oid))))
+  }
+
   "Update koulutus" should "update koulutus" in {
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
