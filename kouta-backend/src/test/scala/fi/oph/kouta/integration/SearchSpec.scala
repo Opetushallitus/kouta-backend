@@ -212,6 +212,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
     }
   } */
 
+  /*
   "Search haut" should "search allowed haut and allowed hakukohde counts 1" in {
     addMock(mockHakuResponse(List(hoid1, hoid3), params, List(hoid1, hoid3)))
 
@@ -244,7 +245,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
       debugJson[HakuSearchResult](body)
       read[HakuSearchResult](body).result.size should be (0)
     }
-  }
+  } */
 
   ignore should "return empty result if there are no allowed haut" in { //TODO: koulutustyyppi haulle?
     get(s"$SearchPath/haut", barams(YoOid), Seq(sessionHeader(readSessions(YoOid)))) {
@@ -253,19 +254,20 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
     }
   }
 
-  it should "return 403 if organisaatio is not allowed" in {
+  "Search haut" should "return 403 if organisaatio is not allowed" in {
     get(s"$SearchPath/haut", barams(ChildOid), Seq(sessionHeader(readSessions(YoOid)))) {
       status should equal (403)
     }
   }
 
+  /*
   it should "return 500 if kouta index returns 500" in {
     addMock(mockHakuResponse(List(hoid1, hoid3), params, List(), 500))
 
     get(s"$SearchPath/haut", barams(LonelyOid), Seq(sessionHeader(crudSessions(LonelyOid)))) {
       status should equal (500)
     }
-  }
+  }*/
 
   "Search hakukohteet" should "search allowed hakukohteet 1" in {
     addMock(mockHakukohdeResponse(List(hkoid1, hkoid5), params, List(hkoid1, hkoid5)))
