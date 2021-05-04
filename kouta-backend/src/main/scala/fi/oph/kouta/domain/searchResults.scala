@@ -434,7 +434,7 @@ case class KoulutusSearchItemToteutus(oid: ToteutusOid,
                                       tila: Julkaisutila,
                                       modified: Modified,
                                       organisaatio: Organisaatio,
-                                      organisaatiot: Array[String])
+                                      organisaatiot: Seq[String] = Seq())
 
 case class ToteutusSearchResult(totalCount: Int = 0,
                                 result: Seq[ToteutusSearchItem] = Seq())
@@ -456,8 +456,8 @@ case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
                                        muokkaaja: Muokkaaja,
                                        modified: Modified,
                                        tila: Julkaisutila,
-                                       organisaatiot: Array[String],
-                                       hakukohteet: Array[ToteutusSearchItemHakukohde]) extends ToteutusItemCommon
+                                       organisaatiot: Seq[String] = Seq(),
+                                       hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq()) extends ToteutusItemCommon
 
 trait ToteutusItemCommon {
   val oid: ToteutusOid
@@ -494,7 +494,7 @@ case class HakuSearchItemFromIndex(oid: HakuOid,
                                    muokkaaja: Muokkaaja,
                                    modified: Modified,
                                    tila: Julkaisutila,
-                                   hakukohteet: Array[HakuSearchItemHakukohde]) extends HakuItemCommon
+                                   hakukohteet: Seq[HakuSearchItemHakukohde] = Seq()) extends HakuItemCommon
 
 trait HakuItemCommon {
   val oid: HakuOid
