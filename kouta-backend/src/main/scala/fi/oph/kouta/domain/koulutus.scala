@@ -85,6 +85,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/AmmattikorkeaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/LukioKoulutusMetadata'
       |          example:
       |            koulutustyyppi: amm
       |            koulutusalaKoodiUrit:

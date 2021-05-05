@@ -136,8 +136,22 @@ package object koulutusMetadata {
       |              example: osaamisala_10#1
       |""".stripMargin
 
+  val LukioKoulutusMetadataModel: String =
+    """    LukioKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: lk
+      |              enum:
+      |                - lk
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel)
+    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, LukioKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
@@ -208,3 +222,7 @@ case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                               opintojenLaajuusKoodiUri: Option[String] = None,
                                               kuvauksenNimi: Kielistetty = Map()) extends KorkeakoulutusKoulutusMetadata
+
+case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
+                                 kuvaus: Kielistetty = Map(),
+                                 lisatiedot: Seq[Lisatieto] = Seq()) extends KoulutusMetadata
