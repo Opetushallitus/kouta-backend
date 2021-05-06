@@ -10,8 +10,8 @@ class UploadServlet(val s3ImageService: S3ImageService) extends KoutaServlet wit
 
   def this() = this(S3ImageService)
 
-  val teemakuvaSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = 2 * 1024 * 1024, minWidth = 1260, minHeight = 400)
-  val logoSizes: ImageSizeSpecs      = ImageSizeSpecs(maxSize = 100 * 1024, minWidth = 100, minHeight = 100)
+  val teemakuvaSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = 2 * 1000 * 1000, minWidth = 1260, minHeight = 400)
+  val logoSizes: ImageSizeSpecs      = ImageSizeSpecs(maxSize = 100 * 1000, minWidth = 0, minHeight = 0)
 
   registerPath("/upload/teemakuva",
     """    post:
