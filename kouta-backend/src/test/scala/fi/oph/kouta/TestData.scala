@@ -151,6 +151,27 @@ object TestData {
       lisatiedot = Seq(Lisatieto1),
       osaamisalaKoodiUri = Some("osaamisala_01"))))
 
+  val LukioKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = true,
+    koulutustyyppi = Lk,
+    koulutuksetKoodiUri = Seq("koulutus_301101#1"),
+    esikatselu = true,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(LukioKoulutusMetadata(
+      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_001#1"),
+      lisatiedot = Seq(Lisatieto1))),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/lkkuva"),
+    ePerusteId = Some(12L),
+    modified = None)
+
   val MinKoulutus: Koulutus = Koulutus(
     koulutustyyppi = Amm,
     johtaaTutkintoon = false,
