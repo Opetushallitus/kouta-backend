@@ -89,7 +89,8 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
         and(
           validateDependency(koulutus.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
           validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
-            assertTrue(sorakuvausTyyppi == koulutus.koulutustyyppi, "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))),
+            // "Tutkinnon osa" ja Osaamisala koulutuksiin saa liittää myös SORA-kuvauksen, jonka koulutustyyppi on "ammatillinen"
+            assertTrue(sorakuvausTyyppi == koulutus.koulutustyyppi || (sorakuvausTyyppi == Amm && Seq(AmmOsaamisala, AmmTutkinnonOsa).contains(koulutus.koulutustyyppi)), "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))),
           validateIfDefined[Seq[String]](koulutuskoodiUrit, koulutuskoodiUrit => {
             validateIfTrue(koulutuskoodiUrit.nonEmpty, assertTrue(koulutuskoodiUrit.intersect(koulutus.koulutuksetKoodiUri).nonEmpty, "koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")))
           }))
