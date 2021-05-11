@@ -118,6 +118,7 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
   val min: AmmatillinenKoulutusMetadata = AmmatillinenKoulutusMetadata()
   val ammOa: AmmatillinenOsaamisalaKoulutusMetadata = AmmOsaamisalaKoulutus.metadata.get.asInstanceOf[AmmatillinenOsaamisalaKoulutusMetadata]
   val ammTo: AmmatillinenTutkinnonOsaKoulutusMetadata = AmmTutkinnonOsaKoulutus.metadata.get.asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
+  val lukio: LukioKoulutusMetadata = LukioKoulutus.metadata.get.asInstanceOf[LukioKoulutusMetadata]
 
   "Koulutus metadata validator" should "pass a valid metadata" in {
     passesValidation(Julkaistu, amm)
@@ -178,4 +179,15 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
     failsValidation(Julkaistu, ammTo.copy(tutkinnonOsat = Seq(TutkinnonOsa(None, Some("koulutus_371101#1"), Some(123L), Some(123L)))), "tutkinnonOsat[0].ePerusteId", missingMsg)
   }
 
+  "Lukio metadata validation" should "pass valid metadata" in {
+    passesValidation(Julkaistu, lukio)
+  }
+
+  it should "fail if any opintojenLaajuusKoodiUri is invalid" in {
+    failsValidation(Tallennettu, lukio.copy(opintojenLaajuusKoodiUri = Some("mummo")), "opintojenLaajuusKoodiUri", validationMsg("mummo"))
+  }
+
+  it should "fail if any koulutusalaKoodiUrit are invalid" in {
+    failsValidation(Tallennettu, lukio.copy(koulutusalaKoodiUrit = Seq("mummo")), "koulutusalaKoodiUrit[0]", validationMsg("mummo"))
+  }
 }

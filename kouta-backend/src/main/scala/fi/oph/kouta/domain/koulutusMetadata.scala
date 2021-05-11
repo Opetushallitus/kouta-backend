@@ -19,10 +19,6 @@ package object koulutusMetadata {
       |          items:
       |            type: object
       |            $ref: '#/components/schemas/Lisatieto'
-      |        teemakuva:
-      |          type: string
-      |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
-      |          example: https://konfo-files.opintopolku.fi/koulutus-teema/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |""".stripMargin
 
   val KorkeakouluMetadataModel: String =
@@ -136,8 +132,33 @@ package object koulutusMetadata {
       |              example: osaamisala_10#1
       |""".stripMargin
 
+  val LukioKoulutusMetadataModel: String =
+    """    LukioKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: lk
+      |              enum:
+      |                - lk
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
+      |            opintojenLaajuusKoodiUri:
+      |              type: string
+      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
+      |              example: opintojenlaajuus_40#1
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel)
+    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, LukioKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
@@ -208,3 +229,15 @@ case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                               opintojenLaajuusKoodiUri: Option[String] = None,
                                               kuvauksenNimi: Kielistetty = Map()) extends KorkeakoulutusKoulutusMetadata
+
+case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
+                                 kuvaus: Kielistetty = Map(),
+                                 lisatiedot: Seq[Lisatieto] = Seq(),
+                                 opintojenLaajuusKoodiUri: Option[String] = None,
+                                 koulutusalaKoodiUrit: Seq[String] = Seq()) extends KoulutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
+    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _))
+  )
+}

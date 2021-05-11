@@ -112,6 +112,11 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, TestData.YoKoulutus.copy(oid = Some(KoulutusOid(oid))))
   }
 
+  it should "store lukio koulutus" in {
+    val oid = put(TestData.LukioKoulutus, ophSession)
+    get(oid, TestData.LukioKoulutus.copy(oid = Some(KoulutusOid(oid))))
+  }
+
   it should "validate new julkaistu koulutus" in {
     put(KoulutusPath, bytes(koulutus.copy(koulutuksetKoodiUri = Seq())), customHeaders(ophSession)) {
       withClue(body) {
