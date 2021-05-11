@@ -146,11 +146,11 @@ package object koulutusMetadata {
       |                - lk
       |            koulutusalaKoodiUrit:
       |              type: array
-      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso2/1)
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
       |              items:
       |                type: string
       |                example:
-      |                  - kansallinenkoulutusluokitus2016koulutusalataso2_001#1
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
       |            opintojenLaajuusKoodiUri:
       |              type: string
       |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"

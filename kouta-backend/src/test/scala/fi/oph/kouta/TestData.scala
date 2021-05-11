@@ -162,7 +162,7 @@ object TestData {
     metadata = Some(LukioKoulutusMetadata(
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_001#1"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
       lisatiedot = Seq(Lisatieto1))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = OphUserOid,
