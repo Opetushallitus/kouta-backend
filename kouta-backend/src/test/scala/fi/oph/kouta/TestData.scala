@@ -438,6 +438,16 @@ object TestData {
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     yhteyshenkilot = Seq(Yhteystieto1))
 
+  val LukioToteutuksenMetatieto: LukioToteutusMetadata = LukioToteutusMetadata(
+    kuvaus = Map(),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "tutkija")),
+    ammattinimikkeet = List(),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    painotukset = List(LukiolinjaTieto(koodiUri = "painotus_1#1", Map(Fi -> "painotus 1 kuvaus", Sv -> "painotus 1 kuvaus sv"))),
+    erityisetKoulutustehtavat = List(LukiolinjaTieto(koodiUri = "erityinenkoulutustehtava_1#1", Map(Fi -> "erityinen koulutustehtava 1 kuvaus", Sv -> "erityinen koulutustehtava 1 kuvaus sv"))),
+  )
+
   val YoToteutuksenMetatieto: YliopistoToteutusMetadata = YliopistoToteutusMetadata(
     kuvaus = Map(),
     alemmanKorkeakoulututkinnonOsaamisalat = Seq(KorkeakouluOsaamisala(

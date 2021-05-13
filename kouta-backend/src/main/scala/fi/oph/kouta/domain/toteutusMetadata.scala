@@ -326,9 +326,23 @@ package object toteutusMetadata {
       |                - amm-osaamisala
       |""".stripMargin
 
+  val LukioToteutusMetadata: String =
+    """    LukioToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: lk
+      |              enum:
+      |                - lk
+      |""".stripMargin
+
   val models = List(Opetus, Apuraha, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
     AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
-    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata)
+    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata, LukioToteutusMetadata)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
@@ -455,6 +469,19 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                               alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                               ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
+
+case class LukiolinjaTieto(koodiUri: String, kuvaus: Kielistetty)
+
+case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
+                                 kuvaus: Kielistetty = Map(),
+                                 opetus: Option[Opetus] = None,
+                                 asiasanat: List[Keyword] = List(),
+                                 ammattinimikkeet: List[Keyword] = List(),
+                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                 painotukset: Seq[LukiolinjaTieto] = Seq(),
+                                 erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq()
+                                ) extends ToteutusMetadata
+// TODO: Validate every "kuvaus" (optional kielistetty) in painotukset and erityisetKoulutustehtavat
 
 trait Osaamisala extends ValidatableSubEntity {
   val linkki: Kielistetty

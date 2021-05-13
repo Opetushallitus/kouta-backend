@@ -12,6 +12,7 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 
   val amm: Toteutus = JulkaistuAmmToteutus
   val ammMetadata: AmmatillinenToteutusMetadata = AmmToteutuksenMetatieto
+  val lukioMetadata: LukioToteutusMetadata = LukioToteutuksenMetatieto
   val yo: Toteutus = JulkaistuYoToteutus
   val yoMetadata: YliopistoToteutusMetadata = YoToteutuksenMetatieto
   val min: Toteutus = MinToteutus
