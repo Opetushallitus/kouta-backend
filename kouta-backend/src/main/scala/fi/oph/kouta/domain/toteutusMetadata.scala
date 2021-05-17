@@ -88,7 +88,7 @@ package object toteutusMetadata {
       |          example: 2
       |        suunniteltuKestoKuvaus:
       |          type: object
-      |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
+      |          description: "Koulutuksen toteutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa."
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
@@ -113,7 +113,7 @@ package object toteutusMetadata {
       |          example: euro
       |        kuvaus:
       |          type: object
-      |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
@@ -306,7 +306,7 @@ package object toteutusMetadata {
       |          properties:
       |            tyyppi:
       |              type: string
-      |              description: Koulutuksen metatiedon tyyppi
+      |              description: Toteutuksen metatiedon tyyppi
       |              example: amm-tutkinnon-osa
       |              enum:
       |                - amm-tutkinnon-osa
@@ -320,11 +320,25 @@ package object toteutusMetadata {
       |          properties:
       |            tyyppi:
       |              type: string
-      |              description: Koulutuksen metatiedon tyyppi
+      |              description: Toteutuksen metatiedon tyyppi
       |              example: amm-osaamisala
       |              enum:
       |                - amm-osaamisala
       |""".stripMargin
+
+  val LukiolinjaTieto: String =
+  """    LukiolinjaTieto:
+    |      type: object
+    |      description: Toteutuksen yksittäisen lukiolinjatiedon kentät
+    |      properties:
+    |        koodiUri:
+    |          type: string
+    |          description: Lukiolinjatiedon koodiUri.
+    |        kuvaus:
+    |          type: object
+    |          description: Lukiolinjatiedon kuvaus eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
+    |          $ref: '#/components/schemas/Kuvaus'
+    |""".stripMargin
 
   val LukioToteutusMetadata: String =
     """    LukioToteutusMetadata:
@@ -334,15 +348,27 @@ package object toteutusMetadata {
       |          properties:
       |            tyyppi:
       |              type: string
-      |              description: Koulutuksen metatiedon tyyppi
+      |              description: Toteutuksen metatiedon tyyppi
       |              example: lk
       |              enum:
       |                - lk
+      |            painotukset:
+      |              type: array
+      |              description: Lukio-toteutuksen painotukset. Taulukon alkioiden koodiUri-kentät viittaavat [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/lukiopainotukset/1).
+      |              items:
+      |                type: object
+      |                $ref: '#/components/schemas/LukiolinjaTieto'
+      |            erityisetKoulutustehtavat:
+      |              type: array
+      |              description: Lukio-toteutuksen erityiset koulutustehtävät. Taulukon alkioiden koodiUri-kentät viittaavat [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/lukiolinjaterityinenkoulutustehtava/1).
+      |              items:
+      |                type: object
+      |                $ref: '#/components/schemas/LukiolinjaTieto'
       |""".stripMargin
 
   val models = List(Opetus, Apuraha, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
     AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
-    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata, LukioToteutusMetadata)
+    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata, LukiolinjaTieto, LukioToteutusMetadata)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
