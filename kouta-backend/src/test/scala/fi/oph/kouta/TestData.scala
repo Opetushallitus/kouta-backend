@@ -444,8 +444,8 @@ object TestData {
     asiasanat = List(Keyword(Fi, "tutkija")),
     ammattinimikkeet = List(),
     yhteyshenkilot = Seq(Yhteystieto1),
-    painotukset = List(LukiolinjaTieto(koodiUri = "painotus_1#1", Map(Fi -> "painotus 1 kuvaus", Sv -> "painotus 1 kuvaus sv"))),
-    erityisetKoulutustehtavat = List(LukiolinjaTieto(koodiUri = "erityinenkoulutustehtava_1#1", Map(Fi -> "erityinen koulutustehtava 1 kuvaus", Sv -> "erityinen koulutustehtava 1 kuvaus sv"))),
+    painotukset = List(LukiolinjaTieto(koodiUri = "lukiopainotukset_1#1", Map(Fi -> "painotus 1 kuvaus", Sv -> "painotus 1 kuvaus sv"))),
+    erityisetKoulutustehtavat = List(LukiolinjaTieto(koodiUri = "lukiolinjaerityinenkoulutustehtava_1#1", Map(Fi -> "erityinen koulutustehtava 1 kuvaus", Sv -> "erityinen koulutustehtava 1 kuvaus sv"))),
   )
 
   val YoToteutuksenMetatieto: YliopistoToteutusMetadata = YliopistoToteutusMetadata(
@@ -503,6 +503,19 @@ object TestData {
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
       aloituspaikat = Some(23))))
+
+  val LukioToteutus: Toteutus = Toteutus(
+    oid = None,
+    koulutusOid = KoulutusOid("1.2.246.562.13.123"),
+    tila = Julkaistu,
+    esikatselu = true,
+    tarjoajat = List(OtherOid, AmmOid),
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(LukioToteutuksenMetatieto),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = Seq(Fi, Sv),
+    modified = None)
 
   val AmmOsaamisalaToteutusMetadataHakemuspalvelu: AmmatillinenOsaamisalaToteutusMetadata = AmmatillinenOsaamisalaToteutusMetadata(
     tyyppi = AmmOsaamisala,

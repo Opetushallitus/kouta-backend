@@ -18,6 +18,7 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val min: Toteutus = MinToteutus
   val ammOa: Toteutus = AmmOsaamisalaToteutus
   val ammTo: Toteutus = AmmTutkinnonOsaToteutus
+  val lukioTo: Toteutus = LukioToteutus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -118,6 +119,59 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     passesValidation(ammTo)
     passesValidation(ammTo.copy(metadata = Some(AmmTutkinnonOsaToteutusMetadataHakemuspalvelu)))
     passesValidation(ammTo.copy(metadata = Some(AmmTutkinnonOsaToteutusMetadataEiSahkoista)))
+  }
+
+  it should "pass valid lukio toteutus" in {
+    passesValidation(lukioTo)
+  }
+
+  it should "pass with empty painotukset and erityiset koulutustehtävät" in {
+    passesValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      painotukset = Seq(),
+      erityisetKoulutustehtavat = Seq()
+    ))))
+  }
+
+  it should "fail when julkaistu if only one kuvaus given for any lukiolinja painotus" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      painotukset = Seq(LukiolinjaTieto(
+        koodiUri = "lukiopainotukset_0000#1",
+        kuvaus = Map(Fi -> "Painotus 0 fi")
+        )
+      )))), "metadata.painotukset[0].kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if using wrong koodisto for lukiolinja painotus" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      painotukset = Seq(
+        LukiolinjaTieto(
+          koodiUri = "asdf_1#1",
+          kuvaus = Map(Fi -> "Kuvaus fi", Sv -> "Kuvaus sv")
+        )
+      )
+    ))), "metadata.painotukset[0].koodiUri", validationMsg("asdf_1#1"))
+  }
+
+  it should "fail when julkaistu if only one kuvaus given for any lukiolinja erityinen koulutustehtävä" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      erityisetKoulutustehtavat = Seq(
+        LukiolinjaTieto(
+          koodiUri = "lukiolinjaerityinenkoulutustehtava_0000#1",
+          kuvaus = Map(Fi -> "Koulutustehtava 0 fi")
+        )
+      )
+    ))), "metadata.erityisetKoulutustehtavat[0].kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if using wrong koodisto for lukiolinja erityiset koulutustehtävät" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      erityisetKoulutustehtavat = Seq(
+        LukiolinjaTieto(
+          koodiUri = "asdf_1#1",
+          kuvaus = Map(Fi -> "Kuvaus fi", Sv -> "Kuvaus sv")
+        )
+      )
+    ))), "metadata.erityisetKoulutustehtavat[0].koodiUri", validationMsg("asdf_1#1"))
   }
 }
 
