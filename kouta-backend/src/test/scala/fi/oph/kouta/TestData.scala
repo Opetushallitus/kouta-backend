@@ -312,6 +312,14 @@ object TestData {
     enimmaispisteet = Some(18.1),
     vahimmaispisteet = Some(10.1))
 
+  val LkValintaperusteMetadata: LukioValintaperusteMetadata = LukioValintaperusteMetadata(
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+    kuvaus = kieliMap("kuvaus"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+
   val YoValintaperusteMetadata: YliopistoValintaperusteMetadata = YliopistoValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
     valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),

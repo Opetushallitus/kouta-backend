@@ -432,7 +432,7 @@ case class HakukohteenLinja(linja: Option[String] = None, // NOTE: Tyhjä arvo t
                             lisatietoa: Kielistetty = Map()) extends ValidatableSubEntity{
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, assertNotNegative(alinHyvaksyttyKeskiarvo, s"$path.alinHyvaksyttyKeskiarvo")),
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatietoa, s"$path.kuvaus"))
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatietoa, s"$path.lisatietoa"))
   )
 }
 
@@ -451,7 +451,9 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
     validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validate(tila, kielivalinta, _)),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
-      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto")
+      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto"),
+      // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
+      validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
     ))
   )
 

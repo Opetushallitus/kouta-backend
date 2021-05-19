@@ -221,6 +221,16 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       ("aloituspaikat.ensikertalaisille", notNegativeMsg),
       ("aloituspaikat.kuvaus", invalidKielistetty(Seq(Sv))))
   }
+
+  it should "validate hakukohteenLinja" in {
+    val metadataWithoutAllTranslations = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(true),
+      koulutuksenAlkamiskausi = None,
+      hakukohteenLinja = Some(HakukohteenLinja(linja = None, alinHyvaksyttyKeskiarvo = 7.5, lisatietoa = Map(Fi -> "lisatietoa", Sv -> ""))))
+
+    passesValidation(Tallennettu, metadataWithoutAllTranslations)
+    failsValidation(Julkaistu, metadataWithoutAllTranslations, "hakukohteenLinja.lisatietoa", invalidKielistetty(Seq(Sv)))
+  }
 }
 
 class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {

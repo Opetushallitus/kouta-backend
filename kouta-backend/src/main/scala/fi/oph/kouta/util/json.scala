@@ -72,6 +72,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
         case JString(tyyppi) => Koulutustyyppi.withName(tyyppi)
       }.getOrElse(Amm) match {
         case Yo => s.extract[YliopistoValintaperusteMetadata]
+        case Lk => s.extract[LukioValintaperusteMetadata]
         case Amm => s.extract[AmmatillinenValintaperusteMetadata]
         case Amk => s.extract[AmmattikorkeakouluValintaperusteMetadata]
         case kt => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")

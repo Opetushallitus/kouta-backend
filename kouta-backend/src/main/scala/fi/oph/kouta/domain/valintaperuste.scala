@@ -79,6 +79,7 @@ package object valintaperuste {
       |          type: object
       |          oneOf:
       |            - $ref: '#/components/schemas/YliopistoValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/LukioValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
       |          example:
