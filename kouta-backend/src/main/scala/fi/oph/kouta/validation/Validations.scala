@@ -63,7 +63,7 @@ object Validations {
   val ValintakokeenTyyppiKoodiPattern: Pattern = Pattern.compile("""valintakokeentyyppi_\d+(#\d{1,2})?""")
   val KieliKoodiPattern: Pattern = Pattern.compile("""kieli_\w+(#\d{1,2})?""")
   val LukioPainotusKoodiPattern: Pattern = Pattern.compile("""lukiopainotukset_\d+(#\d{1,2})?""")
-  val LukioErityinenKoulutustehtavaKoodiPattern: Pattern = Pattern.compile("""lukiolinjaerityinenkoulutustehtava_\d+(#\d{1,2})?""")
+  val LukioErityinenKoulutustehtavaKoodiPattern: Pattern = Pattern.compile("""lukiolinjaterityinenkoulutustehtava_\d+(#\d{1,2})?""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 

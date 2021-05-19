@@ -156,7 +156,7 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
       erityisetKoulutustehtavat = Seq(
         LukiolinjaTieto(
-          koodiUri = "lukiolinjaerityinenkoulutustehtava_0000#1",
+          koodiUri = "lukiolinjaterityinenkoulutustehtava_0000#1",
           kuvaus = Map(Fi -> "Koulutustehtava 0 fi")
         )
       )

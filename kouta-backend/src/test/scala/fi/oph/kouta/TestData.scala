@@ -445,7 +445,7 @@ object TestData {
     ammattinimikkeet = List(),
     yhteyshenkilot = Seq(Yhteystieto1),
     painotukset = List(LukiolinjaTieto(koodiUri = "lukiopainotukset_1#1", Map(Fi -> "painotus 1 kuvaus", Sv -> "painotus 1 kuvaus sv"))),
-    erityisetKoulutustehtavat = List(LukiolinjaTieto(koodiUri = "lukiolinjaerityinenkoulutustehtava_1#1", Map(Fi -> "erityinen koulutustehtava 1 kuvaus", Sv -> "erityinen koulutustehtava 1 kuvaus sv"))),
+    erityisetKoulutustehtavat = List(LukiolinjaTieto(koodiUri = "lukiolinjaterityinenkoulutustehtava_1#1", Map(Fi -> "erityinen koulutustehtava 1 kuvaus", Sv -> "erityinen koulutustehtava 1 kuvaus sv"))),
   )
 
   val YoToteutuksenMetatieto: YliopistoToteutusMetadata = YliopistoToteutusMetadata(
