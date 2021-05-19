@@ -573,4 +573,13 @@ class ToteutusSpec extends KoutaIntegrationSpec
       body should equal (validationErrorBody(notMissingMsg(Some(sorakuvausId)), "sorakuvausId"))
     }
   }
+
+  it should "create, get and update lukio toteutus" in {
+    val lukioToKoulutusOid = put(TestData.LukioKoulutus.copy(tila = Julkaistu))
+    val lukioToToteutus = TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioToKoulutusOid), tila = Tallennettu)
+    val oid = put(lukioToToteutus)
+    val lastModified = get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
 }

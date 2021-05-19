@@ -4,6 +4,8 @@ import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
+import java.util.regex.Pattern
+
 package object toteutusMetadata {
 
   val Opetus: String =
@@ -88,7 +90,7 @@ package object toteutusMetadata {
       |          example: 2
       |        suunniteltuKestoKuvaus:
       |          type: object
-      |          description: "Koulutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa."
+      |          description: "Koulutuksen toteutuksen suunnitellun keston kuvaus eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa."
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
@@ -113,7 +115,7 @@ package object toteutusMetadata {
       |          example: euro
       |        kuvaus:
       |          type: object
-      |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
@@ -306,7 +308,7 @@ package object toteutusMetadata {
       |          properties:
       |            tyyppi:
       |              type: string
-      |              description: Koulutuksen metatiedon tyyppi
+      |              description: Toteutuksen metatiedon tyyppi
       |              example: amm-tutkinnon-osa
       |              enum:
       |                - amm-tutkinnon-osa
@@ -320,15 +322,55 @@ package object toteutusMetadata {
       |          properties:
       |            tyyppi:
       |              type: string
-      |              description: Koulutuksen metatiedon tyyppi
+      |              description: Toteutuksen metatiedon tyyppi
       |              example: amm-osaamisala
       |              enum:
       |                - amm-osaamisala
       |""".stripMargin
 
+  val LukiolinjaTieto: String =
+    """    LukiolinjaTieto:
+      |      type: object
+      |      description: Toteutuksen yksittäisen lukiolinjatiedon kentät
+      |      properties:
+      |        koodiUri:
+      |          type: string
+      |          description: Lukiolinjatiedon koodiUri.
+      |        kuvaus:
+      |          type: object
+      |          description: Lukiolinjatiedon kuvaus eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
+  val LukioToteutusMetadata: String =
+    """    LukioToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: lk
+      |              enum:
+      |                - lk
+      |            painotukset:
+      |              type: array
+      |              description: Lukio-toteutuksen painotukset. Taulukon alkioiden koodiUri-kentät viittaavat [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/lukiopainotukset/1).
+      |              items:
+      |                type: object
+      |                $ref: '#/components/schemas/LukiolinjaTieto'
+      |            erityisetKoulutustehtavat:
+      |              type: array
+      |              description: Lukio-toteutuksen erityiset koulutustehtävät. Taulukon alkioiden koodiUri-kentät viittaavat [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/lukiolinjaterityinenkoulutustehtava/1).
+      |              items:
+      |                type: object
+      |                $ref: '#/components/schemas/LukiolinjaTieto'
+      |""".stripMargin
+
   val models = List(Opetus, Apuraha, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
     AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
-    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata)
+    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata, LukiolinjaTieto, LukioToteutusMetadata)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
@@ -381,11 +423,17 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
 
 trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
   def hakutermi: Option[Hakutermi]
+
   def hakulomaketyyppi: Option[Hakulomaketyyppi]
+
   def hakulomakeLinkki: Kielistetty
+
   def lisatietoaHakeutumisesta: Kielistetty
+
   def lisatietoaValintaperusteista: Kielistetty
+
   def hakuaika: Option[Ajanjakso]
+
   def aloituspaikat: Option[Int]
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
@@ -523,7 +571,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   onkoApuraha: Boolean = false,
                   apuraha: Option[Apuraha] = None,
                   suunniteltuKestoVuodet: Option[Int] = None,
-                  suunniteltuKestoKuukaudet: Option [Int] = None,
+                  suunniteltuKestoKuukaudet: Option[Int] = None,
                   suunniteltuKestoKuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[String](opetuskieliKoodiUrit, s"$path.opetuskieliKoodiUrit", assertMatch(_, OpetuskieliKoodiPattern, _)),
@@ -552,5 +600,35 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
 
   override def validateOnJulkaisu(path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi"))
+  )
+}
+
+case class LukiolinjaTieto(koodiUri: String, kuvaus: Kielistetty) {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], koodiUriPattern: Pattern, path: String) = and(
+    validateIfJulkaistu(tila,
+      validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ),
+    assertMatch(koodiUri, koodiUriPattern, s"$path.koodiUri")
+  )
+}
+
+case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
+                                 kuvaus: Kielistetty = Map(),
+                                 opetus: Option[Opetus] = None,
+                                 asiasanat: List[Keyword] = List(),
+                                 ammattinimikkeet: List[Keyword] = List(),
+                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                 painotukset: Seq[LukiolinjaTieto] = Seq(),
+                                 erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq()
+                                ) extends ToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfNonEmpty[LukiolinjaTieto](
+      painotukset, s"$path.painotukset", _.validate(tila, kielivalinta, LukioPainotusKoodiPattern, _)
+    ),
+    validateIfNonEmpty[LukiolinjaTieto](
+      erityisetKoulutustehtavat, s"$path.erityisetKoulutustehtavat",
+      _.validate(tila, kielivalinta, LukioErityinenKoulutustehtavaKoodiPattern, _)
+    )
   )
 }
