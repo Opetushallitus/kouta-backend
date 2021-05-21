@@ -226,7 +226,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val metadataWithoutAllTranslations = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      hakukohteenLinja = Some(HakukohteenLinja(linja = None, alinHyvaksyttyKeskiarvo = 7.5, lisatietoa = Map(Fi -> "lisatietoa", Sv -> ""))))
+      hakukohteenLinja = Some(HakukohteenLinja(linja = None, alinHyvaksyttyKeskiarvo = Some(7.5), lisatietoa = Map(Fi -> "lisatietoa", Sv -> ""))))
 
     passesValidation(Tallennettu, metadataWithoutAllTranslations)
     failsValidation(Julkaistu, metadataWithoutAllTranslations, "hakukohteenLinja.lisatietoa", invalidKielistetty(Seq(Sv)))

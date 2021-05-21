@@ -308,7 +308,7 @@ package object hakukohde {
       |        linja:
       |          type: string
       |          description: Linjan koodiUri, tai tyhjä arvo (= yleislinja)
-      |          example:
+      |          example: lukiopainotukset_0102#1
       |        alinHyvaksyttyKeskiarvo:
       |          type: number
       |          description: Linjan alin hyväksytty keskiarvo
@@ -428,10 +428,10 @@ case class LiitteenToimitusosoite(osoite: Osoite,
 }
 
 case class HakukohteenLinja(linja: Option[String] = None, // NOTE: Tyhjä arvo tarkoittaa Yleislinjaa
-                            alinHyvaksyttyKeskiarvo: Double,
+                            alinHyvaksyttyKeskiarvo: Option[Double] = None,
                             lisatietoa: Kielistetty = Map()) extends ValidatableSubEntity{
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfJulkaistu(tila, assertNotNegative(alinHyvaksyttyKeskiarvo, s"$path.alinHyvaksyttyKeskiarvo")),
+    validateIfDefined[Double](alinHyvaksyttyKeskiarvo, assertNotNegative(_, s"$path.alinHyvaksyttyKeskiarvo")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatietoa, s"$path.lisatietoa"))
   )
 }
