@@ -248,25 +248,6 @@ package object hakukohde {
       |          $ref: '#/components/schemas/Aloituspaikat'
       |""".stripMargin
 
-  val AloituspaikatModel: String =
-    """    Aloituspaikat:
-      |      type: object
-      |      properties:
-      |        lukumaara:
-      |          type: integer
-      |          description: Hakukohteen aloituspaikkojen lukumäärä
-      |          example: 100
-      |        ensikertalaisille:
-      |          type: integer
-      |          description: Hakukohteen ensikertalaisten aloituspaikkojen lukumäärä
-      |          example: 50
-      |        kuvaus:
-      |          type: object
-      |          description: Tarkempi kuvaus aloituspaikoista
-      |          $ref: '#/components/schemas/Kuvaus'
-      |""".stripMargin
-
-
   val LiitteenToimitusosoiteModel: String =
     """    LiitteenToimitusosoite:
       |      type: object
@@ -320,7 +301,26 @@ package object hakukohde {
       |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |""".stripMargin
 
-  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel, AloituspaikatModel)
+  val HakukohteenLinjaModel: String =
+    """    HakukohteenLinja:
+      |      type: object
+      |      properties:
+      |        linja:
+      |          type: string
+      |          description: Linjan koodiUri, tai tyhjä arvo (= yleislinja)
+      |          example:
+      |        alinHyvaksyttyKeskiarvo:
+      |          type: number
+      |          description: Linjan alin hyväksytty keskiarvo
+      |          example: 8,2
+      |        lisatietoa:
+      |          type: object
+      |          description: Lisätietoa keskiarvosta
+      |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
+  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
+                    HakukohteenLinjaModel)
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,

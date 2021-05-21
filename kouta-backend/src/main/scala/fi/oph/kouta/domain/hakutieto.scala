@@ -135,21 +135,13 @@ package object hakutieto {
       |                      type: boolean
       |                      description: Käytetäänkö haun hakulomaketta vai onko hakukohteelle määritelty oma hakulomake?
       |                    aloituspaikat:
-      |                      type: integer
-      |                      description: Hakukohteen aloituspaikkojen lukumäärä
-      |                      example: 100
-      |                    minAloituspaikat:
-      |                      type: integer
-      |                      description: Hakukohteen aloituspaikkojen minimimäärä
-      |                      example: 75
-      |                    maxAloituspaikat:
-      |                      type: integer
-      |                      description: Hakukohteen aloituspaikkojen maksimimäärä
-      |                      example: 110
-      |                    ensikertalaisenAloituspaikat:
-      |                      type: integer
-      |                      description: Hakukohteen ensikertalaisen aloituspaikkojen lukumäärä
-      |                      example: 50
+      |                      type: object
+      |                      description: Hakukohteen aloituspaikat
+      |                      $ref: '#/components/schemas/Aloituspaikat'
+      |                    hakukohteenLinja:
+      |                      type: object
+      |                      description: lukiototeutuksen hakukohteen linja
+      |                      $ref: '#/components/schemas/HakukohteenLinja'
       |                    kaytetaanHaunAikataulua:
       |                      type: boolean
       |                      description: Käytetäänkö haun hakuaikoja vai onko hakukohteelle määritelty omat hakuajat?
