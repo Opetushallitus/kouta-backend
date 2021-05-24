@@ -442,10 +442,28 @@ package object domain {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
+  val AloituspaikatModel: String =
+    """    Aloituspaikat:
+      |      type: object
+      |      properties:
+      |        lukumaara:
+      |          type: integer
+      |          description: Hakukohteen aloituspaikkojen lukumäärä
+      |          example: 100
+      |        ensikertalaisille:
+      |          type: integer
+      |          description: Hakukohteen ensikertalaisten aloituspaikkojen lukumäärä
+      |          example: 50
+      |        kuvaus:
+      |          type: object
+      |          description: Tarkempi kuvaus aloituspaikoista
+      |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
   val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
     ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel,
-    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel)
+    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel, AloituspaikatModel)
 
   type Kielistetty = Map[Kieli,String]
 

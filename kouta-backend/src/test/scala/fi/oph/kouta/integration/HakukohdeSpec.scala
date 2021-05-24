@@ -130,6 +130,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
   }
 
+  it should "fail to store lukiokoulutus if hakukohde does not contain hakukohteenLinja" in {
+    val koulutusOid = put(koulutus.copy(koulutustyyppi = Lk, metadata = Some(LukioKoulutusMetadata())), ophSession)
+    val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), metadata = Some(TestData.LukioToteutus.metadata.get)))
+    val valintaperusteId = put(valintaperuste.copy(koulutustyyppi = Lk, metadata = Some(TestData.LkValintaperusteMetadata)))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "metadata.hakukohteenLinja", missingMsg)
+  }
+
   it should "store tutkintoon johtamaton hakukohde if toteutus uses hakemuspalvelu" in {
     val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
     val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(

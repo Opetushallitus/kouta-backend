@@ -51,7 +51,7 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakukohdeSearchResult =
     list(organisaatioOid).map(_.oid) match {
-      case Nil           => HakukohdeSearchResult()
+      case Nil => HakukohdeSearchResult()
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
@@ -77,7 +77,10 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
         validateIfTrue(metadata.tyyppi == AmmTutkinnonOsa,
           assertTrue(metadata.asInstanceOf[AmmatillinenTutkinnonOsaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
         validateIfTrue(metadata.tyyppi == AmmOsaamisala,
-          assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid)))))
+          assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
+        validateIfTrue(metadata.tyyppi == Lk,
+          assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
+      ))
     ))
   }
 

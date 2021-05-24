@@ -248,25 +248,6 @@ package object hakukohde {
       |          $ref: '#/components/schemas/Aloituspaikat'
       |""".stripMargin
 
-  val AloituspaikatModel: String =
-    """    Aloituspaikat:
-      |      type: object
-      |      properties:
-      |        lukumaara:
-      |          type: integer
-      |          description: Hakukohteen aloituspaikkojen lukumäärä
-      |          example: 100
-      |        ensikertalaisille:
-      |          type: integer
-      |          description: Hakukohteen ensikertalaisten aloituspaikkojen lukumäärä
-      |          example: 50
-      |        kuvaus:
-      |          type: object
-      |          description: Tarkempi kuvaus aloituspaikoista
-      |          $ref: '#/components/schemas/Kuvaus'
-      |""".stripMargin
-
-
   val LiitteenToimitusosoiteModel: String =
     """    LiitteenToimitusosoite:
       |      type: object
@@ -320,7 +301,26 @@ package object hakukohde {
       |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |""".stripMargin
 
-  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel, AloituspaikatModel)
+  val HakukohteenLinjaModel: String =
+    """    HakukohteenLinja:
+      |      type: object
+      |      properties:
+      |        linja:
+      |          type: string
+      |          description: Linjan koodiUri, tai tyhjä arvo (= yleislinja)
+      |          example: lukiopainotukset_0102#1
+      |        alinHyvaksyttyKeskiarvo:
+      |          type: number
+      |          description: Linjan alin hyväksytty keskiarvo
+      |          example: 8,2
+      |        lisatietoa:
+      |          type: object
+      |          description: Lisätietoa keskiarvosta
+      |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
+  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
+                    HakukohteenLinjaModel)
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,
@@ -427,12 +427,23 @@ case class LiitteenToimitusosoite(osoite: Osoite,
   )
 }
 
+case class HakukohteenLinja(linja: Option[String] = None, // NOTE: None tarkoittaa Yleislinjaa
+                            alinHyvaksyttyKeskiarvo: Option[Double] = None,
+                            lisatietoa: Kielistetty = Map()) extends ValidatableSubEntity{
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfDefined[Double](alinHyvaksyttyKeskiarvo, assertNotNegative(_, s"$path.alinHyvaksyttyKeskiarvo")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatietoa, s"$path.lisatietoa"))
+  )
+}
+
 case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
                              kynnysehto: Kielistetty = Map(),
                              koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
-                             aloituspaikat: Option[Aloituspaikat] = None) extends ValidatableSubEntity {
+                             aloituspaikat: Option[Aloituspaikat] = None,
+                             // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
+                             hakukohteenLinja: Option[HakukohteenLinja] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
@@ -441,7 +452,9 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
     validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validate(tila, kielivalinta, _)),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
-      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto")
+      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto"),
+      // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
+      validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
     ))
   )
 
