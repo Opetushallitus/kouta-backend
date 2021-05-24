@@ -427,7 +427,7 @@ case class LiitteenToimitusosoite(osoite: Osoite,
   )
 }
 
-case class HakukohteenLinja(linja: Option[String] = None, // NOTE: Tyhjä arvo tarkoittaa Yleislinjaa
+case class HakukohteenLinja(linja: Option[String] = None, // NOTE: None tarkoittaa Yleislinjaa
                             alinHyvaksyttyKeskiarvo: Option[Double] = None,
                             lisatietoa: Kielistetty = Map()) extends ValidatableSubEntity{
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
@@ -442,6 +442,7 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
                              aloituspaikat: Option[Aloituspaikat] = None,
+                             // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
                              hakukohteenLinja: Option[HakukohteenLinja] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
