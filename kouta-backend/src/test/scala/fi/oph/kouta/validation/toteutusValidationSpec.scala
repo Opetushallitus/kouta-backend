@@ -270,6 +270,15 @@ class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
     failsValidation(Julkaistu, opetus.copy(lisatiedot = Seq(lisatieto.copy(teksti = Map(Fi -> "lisatieto")))), "lisatiedot[0].teksti", invalidKielistetty(Seq(Sv)))
   }
 
+  it should "fail if kielivalikoima is invalid" in {
+    failsValidation(Julkaistu, opetus.copy(kielivalikoima = Some(Kielivalikoima(A1JaA2Kielet = Seq("mummo"))) ), "kielivalikoima.A1JaA2Kielet[0]", validationMsg("mummo"))
+    failsValidation(Julkaistu, opetus.copy(kielivalikoima = Some(Kielivalikoima(B1Kielet = Seq("mummo"))) ), "kielivalikoima.B1Kielet[0]", validationMsg("mummo"))
+    failsValidation(Julkaistu, opetus.copy(kielivalikoima = Some(Kielivalikoima(B2Kielet = Seq("mummo"))) ), "kielivalikoima.B2Kielet[0]", validationMsg("mummo"))
+    failsValidation(Julkaistu, opetus.copy(kielivalikoima = Some(Kielivalikoima(B3Kielet = Seq("mummo"))) ), "kielivalikoima.B3Kielet[0]", validationMsg("mummo"))
+    failsValidation(Julkaistu, opetus.copy(kielivalikoima = Some(Kielivalikoima(aidinkielet = Seq("mummo"))) ), "kielivalikoima.aidinkielet[0]", validationMsg("mummo"))
+    failsValidation(Julkaistu, opetus.copy(kielivalikoima = Some(Kielivalikoima(muutKielet = Seq("mummo"))) ), "kielivalikoima.muutKielet[0]", validationMsg("mummo"))
+  }
+
   "Opetus on julkaisu validation" should "pass a valid opetus" in {
     passesOnJulkaisuValidation(opetus)
   }

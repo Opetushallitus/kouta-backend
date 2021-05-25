@@ -448,7 +448,13 @@ object TestData {
 
   val LukioToteutuksenMetatieto: LukioToteutusMetadata = LukioToteutusMetadata(
     kuvaus = Map(),
-    opetus = Some(ToteutuksenOpetus),
+    opetus = Some(ToteutuksenOpetus.copy(kielivalikoima = Some(Kielivalikoima(
+      A1JaA2Kielet = Seq("kieli_EN#1"),
+      B1Kielet = Seq("kieli_SV#1"),
+      B2Kielet = Seq("kieli_FR#1"),
+      B3Kielet = Seq("kieli_ES#1"),
+      aidinkielet = Seq("kieli_FI#1"),
+      muutKielet = Seq("kieli_ET#1"))))),
     asiasanat = List(Keyword(Fi, "tutkija")),
     ammattinimikkeet = List(),
     yhteyshenkilot = Seq(Yhteystieto1),
