@@ -564,7 +564,8 @@ case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                  kielivalikoima: Option[Kielivalikoima] = None,
                                  painotukset: Seq[LukiolinjaTieto] = Seq(),
-                                 erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq()
+                                 erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq(),
+                                 diplomit: Seq[LukiodiplomiTieto] = Seq()
                                 ) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
@@ -575,7 +576,8 @@ case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
     validateIfNonEmpty[LukiolinjaTieto](
       erityisetKoulutustehtavat, s"$path.erityisetKoulutustehtavat",
       _.validate(tila, kielivalinta, LukioErityinenKoulutustehtavaKoodiPattern, _)
-    )
+    ),
+    validateIfNonEmpty[LukiodiplomiTieto](diplomit, s"$path.diplomit", _.validate(tila, kielivalinta, _)),
   )
 }
 
@@ -699,5 +701,16 @@ case class LukiolinjaTieto(koodiUri: String, kuvaus: Kielistetty) {
       validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
     ),
     assertMatch(koodiUri, koodiUriPattern, s"$path.koodiUri")
+  )
+}
+
+case class LukiodiplomiTieto(koodiUri: String, linkki: Kielistetty = Map(), linkinAltTeksti: Kielistetty = Map()) extends ValidatableSubEntity {
+  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    assertMatch(koodiUri, LukioDiplomiKoodiPattern, s"$path.koodiUri"),
+    validateIfNonEmpty(linkki, s"$path.linkki", assertValidUrl _),
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, linkki, s"$path.linkki"),
+      validateOptionalKielistetty(kielivalinta, linkinAltTeksti, s"$path.linkinAltTeksti"),
+    ))
   )
 }
