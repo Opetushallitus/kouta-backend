@@ -213,6 +213,18 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     ))), "metadata.diplomit[0].linkki.fi", invalidUrl("ei linkki"))
   }
 
+  it should "fail if lukiodiplomi link is only given in some of the selected languages" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      diplomit = Seq(
+        LukiodiplomiTieto(
+          koodiUri = "moduulikoodistolops2021_kald3#1",
+          linkki = Map(Fi -> "http://linkki.fi"),
+          linkinAltTeksti = Map(Fi -> "Suomeksi", Sv -> "På svenska")
+        )
+      )
+    ))), "metadata.diplomit[0].linkki", invalidKielistetty(Seq(Sv)))
+  }
+
   it should "fail if lukiodiplomi link alt text is only given in some of the selected languages" in {
     failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
       diplomit = Seq(
