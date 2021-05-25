@@ -2,7 +2,7 @@ package fi.oph.kouta.domain
 
 package object keyword {
 
-  val AsiasanaModel =
+  val AsiasanaModel: String =
     """    Asiasana:
       |      type: object
       |      properties:
@@ -18,7 +18,7 @@ package object keyword {
       |          example: robotiikka
       |""".stripMargin
 
-  val AmmattinimikeModel =
+  val AmmattinimikeModel: String =
     """    Ammattinimike:
       |      type: object
       |      properties:
