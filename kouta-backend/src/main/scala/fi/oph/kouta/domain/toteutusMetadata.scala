@@ -8,7 +8,7 @@ import java.util.regex.Pattern
 
 package object toteutusMetadata {
 
-  val Opetus: String =
+  val OpetusModel: String =
     """    Opetus:
       |      type: object
       |      properties:
@@ -94,7 +94,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
-  val Apuraha: String =
+  val ApurahaModel: String =
     """    Apuraha:
       |      type: object
       |      properties:
@@ -119,7 +119,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
-  val ToteutusMetadata: String =
+  val ToteutusMetadataModel: String =
     """    ToteutusMetadata:
       |      type: object
       |      properties:
@@ -147,7 +147,7 @@ package object toteutusMetadata {
       |            $ref: '#/components/schemas/Ammattinimike'
       |""".stripMargin
 
-  val KorkeakouluOsaamisala: String =
+  val KorkeakouluOsaamisalaModel: String =
     """    KorkeakouluOsaamisala:
       |      type: object
       |      properties:
@@ -169,7 +169,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val Osaamisala: String =
+  val OsaamisalaModel: String =
     """    Osaamisala:
       |      type: object
       |      properties:
@@ -187,7 +187,7 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val KorkeakouluToteutusMetadata: String =
+  val KorkeakouluToteutusMetadataModel: String =
     """    KorkeakouluToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -204,7 +204,7 @@ package object toteutusMetadata {
       |          description: Lista ylemmän korkeakoulututkinnon erikoistumisalojen, opintosuuntien, pääaineiden tms. kuvauksista.
       |""".stripMargin
 
-  val YliopistoToteutusMetadata: String =
+  val YliopistoToteutusMetadataModel: String =
     """    YliopistoToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
@@ -218,7 +218,7 @@ package object toteutusMetadata {
       |                - yo
       |""".stripMargin
 
-  val AmmattikorkeaToteutusMetadata: String =
+  val AmmattikorkeaToteutusMetadataModel: String =
     """    AmmattikorkeaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
@@ -232,7 +232,7 @@ package object toteutusMetadata {
       |                - amk
       |""".stripMargin
 
-  val AmmatillinenToteutusMetadata: String =
+  val AmmatillinenToteutusMetadataModel: String =
     """    AmmatillinenToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -254,7 +254,7 @@ package object toteutusMetadata {
       |              description: Onko koulutuksen tyyppi \"Ammatillinen perustutkinto erityisopetuksena\"?
       |""".stripMargin
 
-  val TutkintoonJohtamatonToteutusMetadata: String =
+  val TutkintoonJohtamatonToteutusMetadataModel: String =
     """    TutkintoonJohtamatonToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -300,7 +300,7 @@ package object toteutusMetadata {
       |              example: 100
       |""".stripMargin
 
-  val AmmatillinenTutkinnonOsaToteutusMetadata: String =
+  val AmmatillinenTutkinnonOsaToteutusMetadataModel: String =
     """    AmmatillinenTutkinnonOsaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
@@ -314,7 +314,7 @@ package object toteutusMetadata {
       |                - amm-tutkinnon-osa
       |""".stripMargin
 
-  val AmmatillinenOsaamisalaToteutusMetadata: String =
+  val AmmatillinenOsaamisalaToteutusMetadataModel: String =
     """    AmmatillinenOsaamisalaToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
@@ -328,7 +328,7 @@ package object toteutusMetadata {
       |                - amm-osaamisala
       |""".stripMargin
 
-  val LukiolinjaTieto: String =
+  val LukiolinjaTietoModel: String =
     """    LukiolinjaTieto:
       |      type: object
       |      description: Toteutuksen yksittäisen lukiolinjatiedon kentät
@@ -342,7 +342,25 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
-  val LukioToteutusMetadata: String =
+  val LukiodiplomiTietoModel: String =
+    """    LukiodiplomiTieto:
+      |      type: object
+      |      description: Toteutuksen yksittäisen lukiodiplomitiedon kentät
+      |      properties:
+      |        koodiUri:
+      |          type: string
+      |          description: Lukiodiplomin koodiUri. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/moduulikoodistolops2021/1).
+      |        linkki:
+      |          type: object
+      |          description: Lukiodiplomin kielistetyt lisätietolinkit. Kielet on määritetty toteutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Linkki'
+      |        linkinAltTeksti:
+      |          type: object
+      |          description: Lukiodiplomin kielistettyjen lisätietolinkkien alt-tekstit. Kielet on määritetty toteutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Teksti'
+      |""".stripMargin
+
+  val LukioToteutusMetadataModel: String =
     """    LukioToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/ToteutusMetadata'
@@ -370,9 +388,15 @@ package object toteutusMetadata {
       |              items:
       |                type: object
       |                $ref: '#/components/schemas/LukiolinjaTieto'
+      |            diplomit:
+      |              type: array
+      |              description: Lukio-toteutuksen diplomit
+      |              items:
+      |                type: object
+      |                $ref: '#/components/schemas/LukiodiplomiTieto'
       |""".stripMargin
 
-  val Kielivalikoima: String =
+  val KielivalikoimaModel: String =
     """    Kielivalikoima:
       |      type: object
       |      properties:
@@ -426,9 +450,9 @@ package object toteutusMetadata {
       |              - kieli_FI#1
       |""".stripMargin
 
-  val models = List(Opetus, Apuraha, Kielivalikoima, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
-    AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
-    TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata, LukiolinjaTieto, LukioToteutusMetadata)
+  val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel, KorkeakouluToteutusMetadataModel,
+    AmmattikorkeaToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
+    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel, LukiodiplomiTietoModel)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
