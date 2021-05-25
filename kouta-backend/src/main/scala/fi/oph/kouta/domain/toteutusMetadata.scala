@@ -63,6 +63,10 @@ package object toteutusMetadata {
       |          type: double
       |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
       |          example: 220.50
+      |        kielivalikoima:
+      |          type: object
+      |          description: Koulutuksen kielivalikoima
+      |          $ref: '#/components/schemas/Kielivalikoima'
       |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
@@ -117,6 +121,60 @@ package object toteutusMetadata {
       |          type: object
       |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
+  val Kielivalikoima: String =
+    """    Kielivalikoima:
+      |      type: object
+      |      properties:
+      |        A1JaA2Kielet:
+      |          type: array
+      |          description: Lista koulutuksen toteutuksen A1 ja A2 kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kieli_EN#1
+      |              - kieli_FI#1
+      |        B1Kielet:
+      |          type: array
+      |          description: Lista koulutuksen toteutuksen B1 kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kieli_EN#1
+      |              - kieli_FI#1
+      |        B2Kielet:
+      |          type: array
+      |          description: Lista koulutuksen toteutuksen B2 kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kieli_EN#1
+      |              - kieli_FI#1
+      |        B3Kielet:
+      |          type: array
+      |          description: Lista koulutuksen toteutuksen B3 kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kieli_EN#1
+      |              - kieli_FI#1
+      |        aidinkielet:
+      |          type: array
+      |          description: Lista koulutuksen toteutuksen äidinkielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kieli_EN#1
+      |              - kieli_FI#1
+      |        muutKielet:
+      |          type: array
+      |          description: Lista koulutuksen toteutuksen muista kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kieli_EN#1
+      |              - kieli_FI#1
       |""".stripMargin
 
   val ToteutusMetadata: String =
@@ -368,7 +426,7 @@ package object toteutusMetadata {
       |                $ref: '#/components/schemas/LukiolinjaTieto'
       |""".stripMargin
 
-  val models = List(Opetus, Apuraha, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
+  val models = List(Opetus, Apuraha, Kielivalikoima, ToteutusMetadata, KorkeakouluOsaamisala, Osaamisala, KorkeakouluToteutusMetadata,
     AmmattikorkeaToteutusMetadata, YliopistoToteutusMetadata, AmmatillinenToteutusMetadata,
     TutkintoonJohtamatonToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata, LukiolinjaTieto, LukioToteutusMetadata)
 }
@@ -581,6 +639,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   maksullisuustyyppi: Option[Maksullisuustyyppi] = None,
                   maksullisuusKuvaus: Kielistetty = Map(),
                   maksunMaara: Option[Double] = None,
+                  kielivalikoima: Option[Kielivalikoima] = None,
                   koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
                   lisatiedot: Seq[Lisatieto] = Seq(),
                   onkoApuraha: Boolean = false,
@@ -616,6 +675,21 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
   override def validateOnJulkaisu(path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi"))
   )
+}
+
+case class Kielivalikoima(A1JaA2Kielet: Seq[String] = Seq(),
+                          B1Kielet: Seq[String] = Seq(),
+                          B2Kielet: Seq[String] = Seq(),
+                          B3Kielet: Seq[String] = Seq(),
+                          aidinkielet: Seq[String] = Seq(),
+                          muutKielet: Seq[String] = Seq()) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfNonEmpty[String](A1JaA2Kielet, s"$path.A1JaA2Kielet", assertMatch(_, KieliKoodiPattern, _)),
+    validateIfNonEmpty[String](B1Kielet, s"$path.B1Kielet", assertMatch(_, KieliKoodiPattern, _)),
+    validateIfNonEmpty[String](B2Kielet, s"$path.B2Kielet", assertMatch(_, KieliKoodiPattern, _)),
+    validateIfNonEmpty[String](B3Kielet, s"$path.B3Kielet", assertMatch(_, KieliKoodiPattern, _)),
+    validateIfNonEmpty[String](aidinkielet, s"$path.aidinkielet", assertMatch(_, KieliKoodiPattern, _)),
+    validateIfNonEmpty[String](muutKielet, s"$path.muutKielet", assertMatch(_, KieliKoodiPattern, _)))
 }
 
 case class LukiolinjaTieto(koodiUri: String, kuvaus: Kielistetty) {
