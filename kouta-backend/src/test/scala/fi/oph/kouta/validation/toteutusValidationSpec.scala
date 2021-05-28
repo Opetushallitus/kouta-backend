@@ -121,7 +121,7 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     passesValidation(ammTo.copy(metadata = Some(AmmTutkinnonOsaToteutusMetadataEiSahkoista)))
   }
 
-  it should "pass valid lukio toteutus" in {
+  "Lukio validation" should "pass valid lukio toteutus" in {
     passesValidation(lukioTo)
   }
 
