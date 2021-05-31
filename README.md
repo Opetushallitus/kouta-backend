@@ -53,6 +53,11 @@ cd kouta-backend/postgresql/docker
 docker build --tag kouta-postgres .
 ```
 
+#### 3.1.1 Kehitysympäristön ongelmat
+
+Jos jostain syystä esivaatimusten jälkeen projektia avatessa koodi punoittaa paljon IDEA:ssa, eikä syntaksin väritys toimi, valitse IDEA:n project-ikkunassa
+src/main-kansion alainen scala-kansio ja right click -> Mark directory as -> Sources root. Samoin src/test-kansion alainen scala-kansio, right click -> Mark directory as -> Test Sources root. Tee sama toimenpide sekä kouta-backendille että kouta-commonille.
+
 ### 3.2. Testien ajaminen
 
 Jos Maven on asennettuna voi testit ajaa komentoriviltä `mvn test` komennolla tai rajaamalla ajettavien testejä
