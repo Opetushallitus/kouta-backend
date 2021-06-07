@@ -182,6 +182,60 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(aidinkielet = Seq("mummo")))))), "metadata.kielivalikoima.aidinkielet[0]", validationMsg("mummo"))
     failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(muutKielet = Seq("mummo")))))), "metadata.kielivalikoima.muutKielet[0]", validationMsg("mummo"))
   }
+  
+  it should "pass with empty diplomit" in {
+    passesValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      diplomit = Seq()
+    ))))
+  }
+
+  it should "fail if using wrong koodisto for lukiodiplomi" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      diplomit = Seq(
+        LukiodiplomiTieto(
+          koodiUri = "asdf_1#1",
+          linkki = Map(Fi -> "http://linkki.fi", Sv -> "http://link.se"),
+          linkinAltTeksti = Map(Fi -> "Suomeksi", Sv -> "På svenska")
+        )
+      )
+    ))), "metadata.diplomit[0].koodiUri", validationMsg("asdf_1#1"))
+  }
+
+  it should "fail if lukiodiplomi link is not a valid URL" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      diplomit = Seq(
+        LukiodiplomiTieto(
+          koodiUri = "moduulikoodistolops2021_kald3#1",
+          linkki = Map(Fi -> "ei linkki", Sv -> "http://link.se"),
+          linkinAltTeksti = Map(Fi -> "Suomeksi", Sv -> "På svenska")
+        )
+      )
+    ))), "metadata.diplomit[0].linkki.fi", invalidUrl("ei linkki"))
+  }
+
+  it should "fail if lukiodiplomi link is only given in some of the selected languages" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      diplomit = Seq(
+        LukiodiplomiTieto(
+          koodiUri = "moduulikoodistolops2021_kald3#1",
+          linkki = Map(Fi -> "http://linkki.fi"),
+          linkinAltTeksti = Map(Fi -> "Suomeksi", Sv -> "På svenska")
+        )
+      )
+    ))), "metadata.diplomit[0].linkki", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if lukiodiplomi link alt text is only given in some of the selected languages" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      diplomit = Seq(
+        LukiodiplomiTieto(
+          koodiUri = "moduulikoodistolops2021_kald3#1",
+          linkki = Map(Fi -> "http://linkki.fi", Sv -> "http://link.se"),
+          linkinAltTeksti = Map(Fi -> "Suomeksi")
+        )
+      )
+    ))), "metadata.diplomit[0].linkinAltTeksti", invalidKielistetty(Seq(Sv)))
+  }
 }
 
 class OpetusValidationSpec extends SubEntityValidationSpec[Opetus] {
