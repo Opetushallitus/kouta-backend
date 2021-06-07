@@ -2,7 +2,7 @@ package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{ErrorMessage, IsValid, ValidatableSubEntity}
+import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
 import java.util.regex.Pattern
 
