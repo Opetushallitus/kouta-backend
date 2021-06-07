@@ -18,7 +18,7 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
 
   def get(id: UUID): Option[(Valintaperuste, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
-  def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
+  def listAllowedByOrganisaatiotAndHakukohde(organisaatioOids: Seq[OrganisaatioOid], hakukohdeOid: HakukohdeOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -59,11 +59,10 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut))
     }
 
-  override def listAllowedByOrganisaatiotAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem] =
-    (organisaatioOids, koulutustyypit) match {
-      case (Nil, _) => Seq()
-      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids, hakuOid, myosArkistoidut)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
-      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids, koulutustyypit, hakuOid, myosArkistoidut))
+  override def listAllowedByOrganisaatiotAndHakukohde(organisaatioOids: Seq[OrganisaatioOid], hakukohdeOid: HakukohdeOid, myosArkistoidut: Boolean): Seq[ValintaperusteListItem] =
+    organisaatioOids match {
+      case Nil => Seq()
+      case _   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForHakukohde(organisaatioOids, hakukohdeOid, myosArkistoidut))
     }
 }
 
@@ -224,7 +223,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: Seq[UUID]): DBIO[Int] = {
     sqlu"""delete from valintaperusteiden_valintakokeet
            where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id not in (#${createUUIDInParams(exclude)})"""
-  }
+}
 
   def deleteValintakokeet(valintaperusteId: Option[UUID]): DBIO[Int] = {
     sqlu"""delete from valintaperusteiden_valintakokeet
@@ -267,26 +266,29 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
     if (myosArkistoidut) "" else s"and v.tila <> '$Arkistoitu'"
   }
 
-  def selectByCreatorAndNotOphForHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
-    sql"""#$selectValintaperusteListSql
+  def selectByCreatorOrJulkinenForHakukohde(organisaatioOids: Seq[OrganisaatioOid], hakukohdeOid: HakukohdeOid, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
+    sql"""with related_koulutus as (select k.tyyppi, hk.haku_oid
+                                    from hakukohteet hk
+                                      inner join toteutukset t on hk.toteutus_oid = t.oid
+                                      inner join koulutukset k on t.koulutus_oid = k.oid
+                                    where hk.oid = $hakukohdeOid)
+          #$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
-          where h.oid = $hakuOid
-          and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
-               v.organisaatio_oid <> ${RootOrganisaatioOid})
-          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
-      """.as[ValintaperusteListItem]
-  }
-
-  def selectByCreatorOrJulkinenForKoulutustyyppiAndHaunKohdejoukko(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], hakuOid: HakuOid, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
-    sql"""#$selectValintaperusteListSql
-          inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
-          where h.oid = $hakuOid
-          and ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
-                (v.organisaatio_oid <> ${RootOrganisaatioOid} or
-                 v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-          or (v.julkinen  = ${true} and
-              v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+          where h.oid = (select haku_oid from related_koulutus)
+          and v.koulutustyyppi = (select tyyppi from related_koulutus)
+          and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or v.julkinen = ${true})
           #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 }
+
+
+//
+// with related_koulutus as (select k.tyyppi
+// from hakukohteet hk
+// inner join toteutukset t on hk.toteutus_oid = t.oid
+// inner join koulutukset k on t.koulutus_oid = k.oid
+// where hk.oid = '1.2.246.562.20.00000000000000001126')
+// select * from valintaperusteet vp
+// where vp.koulutustyyppi = (select tyyppi from related_koulutus)
+// and (vp.organisaatio_oid in ('1.2.246.562.10.83097956748', '1.2.246.562.10.00000000001') or vp.julkinen = true);

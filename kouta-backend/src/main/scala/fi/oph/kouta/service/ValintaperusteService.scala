@@ -1,20 +1,18 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
-import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{HakukohdeListItem, Koulutustyyppi, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
+import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
+import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, SorakuvausDAO, ValintaperusteDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl)
@@ -48,9 +46,9 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
-  def listByHaunKohdejoukko(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
-    withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      ValintaperusteDAO.listAllowedByOrganisaatiotAndHaunKohdejoukko(oids, koulutustyypit, hakuOid, myosArkistoidut)
+  def listByHakukohde(organisaatioOid: OrganisaatioOid, hakukohdeOid: HakukohdeOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid, readRules) { oids =>
+      ValintaperusteDAO.listAllowedByOrganisaatiotAndHakukohde(oids, hakukohdeOid, myosArkistoidut)
     }
 
   def listHakukohteet(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =

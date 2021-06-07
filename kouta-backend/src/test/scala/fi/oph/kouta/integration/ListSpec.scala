@@ -16,7 +16,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   var h1, h2, h3, h4                 :HakuListItem = _
   var v1, v2, v3, v4                 :ValintaperusteListItem = _
   var s1, s2, s3, s4                 :SorakuvausListItem = _
-  var hk1, hk2, hk3, hk4             :HakukohdeListItem = _
+  var hk1, hk2, hk3, hk4, hk5, hk6   :HakukohdeListItem = _
   var o1, o2                         :OrganisaatioOid = _
   var oo1, oo2, oo3                  :OppilaitoksenOsaListItem = _
 
@@ -62,6 +62,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid).copy(tila = Tallennettu))
     hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Arkistoitu))
     hk4 = addToList(hakukohde(t4.oid, h1.oid, v1.id, LonelyOid))
+    hk5 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Tallennettu))
+    hk6 = addToList(hakukohde(t1.oid, h3.oid, v1.id, GrandChildOid).copy(tila = Tallennettu))
 
     o1 = OrganisaatioOid(put(oppilaitos(Julkaistu, ParentOid)))
     o2 = OrganisaatioOid(put(oppilaitos(Julkaistu, EvilChildOid)))
@@ -217,10 +219,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid.s), List(v2, v4))
   }
   it should "list all valintaperustekuvaukset that can be joined to given haku" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString), List(v1, v2))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakukohdeOid" -> hk5.oid.toString), List(v1, v2))
   }
   it should "list all valinteperustekuvaukset that can be joiden to given haku even when kohdejoukko is null" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h3.oid.toString), List(v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakukohdeOid" -> hk6.oid.toString), List(v3))
   }
   it should "return forbidden if oid is unknown" in {
     list(ValintaperustePath, Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -261,8 +263,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "filter out arkistoidut if instructed" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(v1, v3))
   }
-  it should "filter out arkistoidut and list valintaperusteet that can be joined to given haku" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString, "myosArkistoidut" -> "false"), List(v1))
+  it should "filter out arkistoidut and list valintaperusteet that can be joined to given hakukohde" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakukohdeOid" -> hk5.oid.toString, "myosArkistoidut" -> "false"), List(v1))
   }
 
   "Sorakuvaus list" should "list all sorakuvaukset for non oph organisation 1" in {
@@ -312,7 +314,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4))
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6))
   }
   it should "return 401 if session is not valid" in {
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 401, Map.empty)
@@ -321,7 +323,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 403, crudSessions(v1.organisaatioOid))
   }
   it should "allow access to the indexer" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4), indexerSession)
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6), indexerSession)
   }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
@@ -369,7 +371,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Toteutukseen liitetyt haut" should "list all haut mapped to given toteutus for indexer" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2), indexerSession)
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/haut", Map[String,String](), List(h1, h2, h3), indexerSession)
   }
   it should "deny access to root user without indexer role" in {
     list(s"$IndexerPath$ToteutusPath/${t1.oid}/haut", Map[String,String](), 403)
@@ -394,7 +396,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Toteutukseen liitetyt hakukohteet" should "list all hakukohteet mapped to given toteutus" in {
-    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), List(hk1, hk3))
+    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), List(hk1, hk3, hk5, hk6))
   }
   it should "return 401 if no session is found" in {
     list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), 401, Map.empty)
@@ -422,7 +424,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Toteutukseen liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given toteutus for indexer" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3), indexerSession)
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3, hk5, hk6), indexerSession)
   }
   it should "deny access to root user without indexer role" in {
     list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), 403)
@@ -603,7 +605,43 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             muokkaaja = hk1.muokkaaja,
             organisaatioOid = hk1.organisaatioOid,
             valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
-            modified = Some(hk1.modified)))))))
+            modified = Some(hk1.modified)))),
+
+          HakutietoHaku(
+            hakuOid = h3.oid,
+            nimi = h3.nimi,
+            hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
+            koulutuksenAlkamiskausi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi,
+            hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
+            hakulomakeAtaruId = TestData.JulkaistuHaku.hakulomakeAtaruId,
+            hakulomakeKuvaus = TestData.JulkaistuHaku.hakulomakeKuvaus,
+            hakulomakeLinkki = TestData.JulkaistuHaku.hakulomakeLinkki,
+            organisaatioOid = h3.organisaatioOid,
+            hakuajat = TestData.JulkaistuHaku.hakuajat,
+            muokkaaja = h3.muokkaaja,
+            modified = Some(h3.modified),
+            hakukohteet = Seq(HakutietoHakukohde(
+              hakukohdeOid = hk6.oid,
+              nimi = hk6.nimi,
+              tila = hk6.tila,
+              esikatselu = true,
+              valintaperusteId = hk6.valintaperusteId,
+              koulutuksenAlkamiskausi = TestData.JulkaistuHakukohde.metadata.get.koulutuksenAlkamiskausi,
+              kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.metadata.get.kaytetaanHaunAlkamiskautta,
+              hakulomaketyyppi = TestData.JulkaistuHakukohde.hakulomaketyyppi,
+              hakulomakeAtaruId = TestData.JulkaistuHakukohde.hakulomakeAtaruId,
+              hakulomakeKuvaus = TestData.JulkaistuHakukohde.hakulomakeKuvaus,
+              hakulomakeLinkki = TestData.JulkaistuHakukohde.hakulomakeLinkki,
+              kaytetaanHaunHakulomaketta = TestData.JulkaistuHakukohde.kaytetaanHaunHakulomaketta,
+              aloituspaikat = TestData.JulkaistuHakukohde.metadata.get.aloituspaikat,
+              kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
+              hakuajat = TestData.JulkaistuHakukohde.hakuajat,
+              pohjakoulutusvaatimusKoodiUrit = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusKoodiUrit,
+              pohjakoulutusvaatimusTarkenne = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusTarkenne,
+              muokkaaja = hk6.muokkaaja,
+              organisaatioOid = hk6.organisaatioOid,
+              valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
+              modified = Some(hk6.modified)))))))
 
       read[List[Hakutieto]](body) should equal(expected)
     }
