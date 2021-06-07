@@ -2,8 +2,8 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
-import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{HakukohdeListItem, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
+import fi.oph.kouta.domain.{HakukohdeListItem, Koulutustyyppi, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
@@ -46,9 +46,9 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
-  def listByHakukohde(organisaatioOid: OrganisaatioOid, hakukohdeOid: HakukohdeOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+  def listByHakuAndKoulutustyyppi(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules) { oids =>
-      ValintaperusteDAO.listAllowedByOrganisaatiotAndHakukohde(oids, hakukohdeOid, myosArkistoidut)
+      ValintaperusteDAO.listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(oids, hakuOid, koulutustyyppi, myosArkistoidut)
     }
 
   def listHakukohteet(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =

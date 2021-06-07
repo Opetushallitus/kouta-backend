@@ -219,10 +219,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(ValintaperustePath, Map("organisaatioOid" -> LonelyOid.s), List(v2, v4))
   }
   it should "list all valintaperustekuvaukset that can be joined to given haku" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakukohdeOid" -> hk5.oid.toString), List(v1, v2))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString, "koulutustyyppi" -> Amm.toString), List(v1, v2))
   }
   it should "list all valinteperustekuvaukset that can be joiden to given haku even when kohdejoukko is null" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakukohdeOid" -> hk6.oid.toString), List(v3))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h3.oid.toString, "koulutustyyppi" -> Amm.toString), List(v3))
   }
   it should "return forbidden if oid is unknown" in {
     list(ValintaperustePath, Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -264,7 +264,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(v1, v3))
   }
   it should "filter out arkistoidut and list valintaperusteet that can be joined to given hakukohde" in {
-    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakukohdeOid" -> hk5.oid.toString, "myosArkistoidut" -> "false"), List(v1))
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString, "koulutustyyppi" -> Amm.toString, "myosArkistoidut" -> "false"), List(v1))
+  }
+  it should "filter out wrong type of koulutustyyppi" in {
+    list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s, "hakuOid" -> h2.oid.toString, "koulutustyyppi" -> Lk.toString, "myosArkistoidut" -> "false"), List())
   }
 
   "Sorakuvaus list" should "list all sorakuvaukset for non oph organisation 1" in {
