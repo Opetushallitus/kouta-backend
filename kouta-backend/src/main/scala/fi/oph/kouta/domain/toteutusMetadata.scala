@@ -2,7 +2,7 @@ package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
+import fi.oph.kouta.validation.{ErrorMessage, IsValid, ValidatableSubEntity}
 
 import java.util.regex.Pattern
 
@@ -376,6 +376,9 @@ package object toteutusMetadata {
       |              type: object
       |              description: Koulutuksen kielivalikoima
       |              $ref: '#/components/schemas/Kielivalikoima'
+      |            yleislinja:
+      |              type: boolean,
+      |              description: Onko lukio-toteutuksella yleislinja?
       |            painotukset:
       |              type: array
       |              description: Lukio-toteutuksen painotukset. Taulukon alkioiden koodiUri-kentät viittaavat [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/lukiopainotukset/1).
@@ -587,6 +590,7 @@ case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  ammattinimikkeet: List[Keyword] = List(),
                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                  kielivalikoima: Option[Kielivalikoima] = None,
+                                 yleislinja: Boolean = false,
                                  painotukset: Seq[LukiolinjaTieto] = Seq(),
                                  erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq(),
                                  diplomit: Seq[LukiodiplomiTieto] = Seq()
@@ -594,6 +598,8 @@ case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[Kielivalikoima](kielivalikoima, _.validate(tila, kielivalinta, s"$path.kielivalikoima")),
+    // Yleislinja täytyy olla true, jos painotukset ja erityisetKoulutustehtavat tyhjiä.
+    validateIfTrue(painotukset.isEmpty && erityisetKoulutustehtavat.isEmpty, assertTrue(yleislinja, s"$path.yleislinja", withoutLukiolinja)),
     validateIfNonEmpty[LukiolinjaTieto](
       painotukset, s"$path.painotukset", _.validate(tila, kielivalinta, LukioPainotusKoodiPattern, _)
     ),

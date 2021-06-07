@@ -459,9 +459,10 @@ object TestData {
       B3Kielet = Seq("kieli_ES#1"),
       aidinkielet = Seq("kieli_FI#1"),
       muutKielet = Seq("kieli_ET#1"))),
+    yleislinja = true,
     painotukset = List(LukiolinjaTieto(koodiUri = "lukiopainotukset_1#1", Map(Fi -> "painotus 1 kuvaus", Sv -> "painotus 1 kuvaus sv"))),
     erityisetKoulutustehtavat = List(LukiolinjaTieto(koodiUri = "lukiolinjaterityinenkoulutustehtava_1#1", Map(Fi -> "erityinen koulutustehtava 1 kuvaus", Sv -> "erityinen koulutustehtava 1 kuvaus sv"))),
-    diplomit = List(LukiodiplomiTieto(koodiUri = "moduulikoodistolops2021_kald3#1", linkki = Map(Fi -> "http://linkki.fi", Sv -> "http://link.se"), linkinAltTeksti = Map(Fi -> "Suomeksi", Sv -> "På svenska"))),
+    diplomit = List(LukiodiplomiTieto(koodiUri = "moduulikoodistolops2021_kald3#1", linkki = Map(Fi -> "http://linkki.fi", Sv -> "http://link.se"), linkinAltTeksti = Map(Fi -> "Suomeksi", Sv -> "På svenska")))
   )
 
   val YoToteutuksenMetatieto: YliopistoToteutusMetadata = YliopistoToteutusMetadata(

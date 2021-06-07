@@ -125,11 +125,20 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     passesValidation(lukioTo)
   }
 
-  it should "pass with empty painotukset and erityiset koulutustehtävät" in {
+  it should "pass with empty painotukset and erityiset koulutustehtävät when yleislinja=true" in {
     passesValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
       painotukset = Seq(),
-      erityisetKoulutustehtavat = Seq()
+      erityisetKoulutustehtavat = Seq(),
+      yleislinja = true
     ))))
+  }
+
+  it should "fail with empty painotukset and erityiset koulutustehtävät when yleislinja=false" in {
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(
+      painotukset = Seq(),
+      erityisetKoulutustehtavat = Seq(),
+      yleislinja = false
+    ))), "metadata.yleislinja", withoutLukiolinja)
   }
 
   it should "fail when julkaistu if only one kuvaus given for any lukiolinja painotus" in {
