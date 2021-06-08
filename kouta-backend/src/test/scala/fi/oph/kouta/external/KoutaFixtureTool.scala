@@ -187,7 +187,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val ammOsaamisalaKoulutusMetadata: String = write(TestData.AmmOsaamisalaKoulutus.metadata)
   val ammTutkinnonOsaToteutusMetadata: String = write(TestData.AmmTutkinnonOsaToteutus.metadata)
   val ammOsaamisalaToteutusMetadata: String = write(TestData.AmmOsaamisalaToteutus.metadata)
-  val lukioToteutusMedatada: String = write(TestData.LukioToteutus.metadata)
+  val lukioToteutusMetadata: String = write(TestData.LukioToteutus.metadata)
 
   val DefaultKoulutusScala: Map[String, String] = Map[String, String](
     JohtaaTutkintoonKey -> "true",
