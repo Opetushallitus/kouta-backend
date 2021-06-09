@@ -311,7 +311,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ModifiedKey -> formatModified(LocalDateTime.now()),
     HakutapaKoodiUriKey -> "hakutapa_01#1",
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_11#1",
-    KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#1",
     JulkinenKey -> "false",
     MetadataKey -> write(TestData.AmmValintaperuste.metadata),
     ValintakokeetKey -> write(List(TestData.Valintakoe1.copy(
@@ -514,7 +513,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       Some(params(HakutapaKoodiUriKey)),
       Some(params(KohdejoukkoKoodiUriKey)),
-      Some(params(KohdejoukonTarkenneKoodiUriKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       params(JulkinenKey).toBoolean,
       None,

@@ -98,7 +98,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      koulutustyyppi,
                      hakutapa_koodi_uri,
                      kohdejoukko_koodi_uri,
-                     kohdejoukon_tarkenne_koodi_uri,
                      nimi,
                      julkinen,
                      esikatselu,
@@ -111,7 +110,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
                      ${valintaperuste.hakutapaKoodiUri},
                      ${valintaperuste.kohdejoukkoKoodiUri},
-                     ${valintaperuste.kohdejoukonTarkenneKoodiUri},
                      ${toJsonParam(valintaperuste.nimi)}::jsonb,
                      ${valintaperuste.julkinen},
                      ${valintaperuste.esikatselu},
@@ -144,7 +142,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  koulutustyyppi,
                  hakutapa_koodi_uri,
                  kohdejoukko_koodi_uri,
-                 kohdejoukon_tarkenne_koodi_uri,
                  nimi,
                  julkinen,
                  esikatselu,
@@ -168,7 +165,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      koulutustyyppi = ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
                      hakutapa_koodi_uri = ${valintaperuste.hakutapaKoodiUri},
                      kohdejoukko_koodi_uri = ${valintaperuste.kohdejoukkoKoodiUri},
-                     kohdejoukon_tarkenne_koodi_uri = ${valintaperuste.kohdejoukonTarkenneKoodiUri},
                      nimi = ${toJsonParam(valintaperuste.nimi)}::jsonb,
                      julkinen = ${valintaperuste.julkinen},
                      esikatselu = ${valintaperuste.esikatselu},
@@ -181,7 +177,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
              or tila is distinct from ${valintaperuste.tila.toString}::julkaisutila
              or hakutapa_koodi_uri is distinct from ${valintaperuste.hakutapaKoodiUri}
              or kohdejoukko_koodi_uri is distinct from ${valintaperuste.kohdejoukkoKoodiUri}
-             or kohdejoukon_tarkenne_koodi_uri is distinct from ${valintaperuste.kohdejoukonTarkenneKoodiUri}
              or nimi is distinct from ${toJsonParam(valintaperuste.nimi)}::jsonb
              or julkinen is distinct from ${valintaperuste.julkinen}
              or esikatselu is distinct from ${valintaperuste.esikatselu}
@@ -268,7 +263,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def selectByCreatorOrJulkinenForHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
-          inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri and v.kohdejoukon_tarkenne_koodi_uri is not distinct from h.kohdejoukon_tarkenne_koodi_uri
+          inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
           where h.oid = $hakuOid
           and v.koulutustyyppi = ${koulutustyyppi.toString}::koulutustyyppi
           and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or v.julkinen = ${true})

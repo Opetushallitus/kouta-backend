@@ -46,10 +46,6 @@ package object valintaperuste {
       |          type: string
       |          description: Valintaperustekuvaukseen liittyvä kohdejoukko. Valintaperusteen ja siihen hakukohteen kautta liittyvän haun kohdejoukon tulee olla sama. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukko/1)
       |          example: haunkohdejoukko_17#1
-      |        kohdejoukonTarkenneKoodiUri:
-      |          type: string
-      |          description: Valintaperustekuvaukseen liittyvä kohdejoukon tarkenne. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukontarkenne/1)
-      |          example: haunkohdejoukontarkenne_1#1
       |        sorakuvausId:
       |          type: string
       |          deprecated: true
@@ -178,7 +174,6 @@ case class Valintaperuste(id: Option[UUID] = None,
                           koulutustyyppi: Koulutustyyppi,
                           hakutapaKoodiUri: Option[String] = None,
                           kohdejoukkoKoodiUri: Option[String] = None,
-                          kohdejoukonTarkenneKoodiUri: Option[String] = None,
                           nimi: Kielistetty = Map(),
                           julkinen: Boolean = false,
                           @deprecated("Kenttä siirretty koulutukselle") sorakuvausId: Option[UUID] = None,
@@ -194,7 +189,6 @@ case class Valintaperuste(id: Option[UUID] = None,
     super.validate(),
     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
-    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
     validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[ValintaperusteMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)),

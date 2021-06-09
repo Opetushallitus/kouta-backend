@@ -166,7 +166,6 @@ trait ValintaperusteExtractors extends ExtractorBase {
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     hakutapaKoodiUri = r.nextStringOption(),
     kohdejoukkoKoodiUri = r.nextStringOption(),
-    kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
     julkinen = r.nextBoolean(),
     esikatselu = r.nextBoolean(),

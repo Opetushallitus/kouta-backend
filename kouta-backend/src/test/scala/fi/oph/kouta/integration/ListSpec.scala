@@ -56,7 +56,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     s4 = addToList(yoSorakuvaus.copy(tila = Julkaistu, organisaatioOid = OphOid))
     v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(julkinen = false))
     v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(julkinen = true))
-    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None, julkinen = false))
+    v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), julkinen = false))
     v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(julkinen = false))
     hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
     hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid).copy(tila = Tallennettu))
