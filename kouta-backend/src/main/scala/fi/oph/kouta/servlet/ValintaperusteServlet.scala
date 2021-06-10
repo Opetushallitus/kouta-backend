@@ -1,12 +1,12 @@
 package fi.oph.kouta.servlet
 
-import java.util.UUID
-
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.Valintaperuste
+import fi.oph.kouta.domain.{Koulutustyyppi, Valintaperuste}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.{NotFound, Ok}
+
+import java.util.UUID
 
 class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extends KoutaServlet {
 
@@ -134,6 +134,13 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |          description: Haku-oid
       |          example: 1.2.246.562.29.00000000000000000009
       |        - in: query
+      |          name: koulutustyyppi
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Koulutustyyppi
+      |          example: amm
+      |        - in: query
       |          name: myosArkistoidut
       |          schema:
       |            type: boolean
@@ -154,10 +161,10 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     implicit val authenticated: Authenticated = authenticate()
 
-    (params.get("organisaatioOid"), params.get("hakuOid"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
-      case (None, _, _) => NotFound()
-      case (Some(oid), None, myosArkistoidut) => Ok(valintaperusteService.list(OrganisaatioOid(oid), myosArkistoidut))
-      case (Some(oid), Some(hakuOid), myosArkistoidut) => Ok(valintaperusteService.listByHaunKohdejoukko(OrganisaatioOid(oid), HakuOid(hakuOid), myosArkistoidut))
+    (params.get("organisaatioOid"), params.get("hakuOid"), params.get("koulutustyyppi"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
+      case (None, _, _, _) => NotFound()
+      case (Some(oid), None, None, myosArkistoidut) => Ok(valintaperusteService.list(OrganisaatioOid(oid), myosArkistoidut))
+      case (Some(oid), Some(hakuOid), Some(koulutustyyppi), myosArkistoidut) => Ok(valintaperusteService.listByHakuAndKoulutustyyppi(OrganisaatioOid(oid), HakuOid(hakuOid), Koulutustyyppi.withName(koulutustyyppi), myosArkistoidut))
     }
   }
 }

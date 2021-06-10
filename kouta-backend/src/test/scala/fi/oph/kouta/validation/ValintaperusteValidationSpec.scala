@@ -23,7 +23,6 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
   it should "fail if any valintaperuste is invalid" in {
     failsValidation(min.copy(hakutapaKoodiUri = Some("korppi")), "hakutapaKoodiUri", validationMsg("korppi"))
     failsValidation(min.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
-    failsValidation(min.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), "kohdejoukonTarkenneKoodiUri", validationMsg("tonttu"))
   }
 
   it should "validate valintakokeet" in {

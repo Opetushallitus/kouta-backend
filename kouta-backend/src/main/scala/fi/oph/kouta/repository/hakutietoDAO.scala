@@ -51,7 +51,7 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
         )
       })
 
-    haut.map(_._1).map { toteutusOid => {
+    haut.map(_._1).distinct.map { toteutusOid => {
       Hakutieto(
         toteutusOid,
         hakuMap.getOrElse(toteutusOid, Seq()))
