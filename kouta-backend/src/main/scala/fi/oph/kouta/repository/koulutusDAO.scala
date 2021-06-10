@@ -325,8 +325,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean) = {
     sql"""#$selectKoulutusListSql
           where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
-                  (organisaatio_oid <> ${RootOrganisaatioOid} or
-                   tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+                   tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
               or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
               #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]

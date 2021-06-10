@@ -102,6 +102,11 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
       KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
+  def listByKoulutustyyppi(organisaatioOid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid, readRules) { oids =>
+      KoulutusDAO.listAllowedByOrganisaatiot(oids, Seq(koulutustyyppi), myosArkistoidut)
+    }
+
   def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] =
     withRootAccess(indexerRoles) {
       KoulutusDAO.getJulkaistutByTarjoajaOids(organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true))
