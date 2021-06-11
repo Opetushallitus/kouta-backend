@@ -5,7 +5,7 @@ sealed trait Koulutustyyppi extends EnumType
 object Koulutustyyppi extends Enum[Koulutustyyppi] {
   override def name: String = "koulutustyyppi"
 
-  def values = List(Amm, Lk, Muu, Yo, Amk, AmmTutkinnonOsa, AmmOsaamisala)
+  def values = List(Amm, Lk, Muu, Yo, Amk, Tuva, AmmTutkinnonOsa, AmmOsaamisala)
 
   def ammatilliset = List(Amm, AmmTutkinnonOsa, AmmOsaamisala)
   def korkeakoulu = List(Amk, Yo)
@@ -70,6 +70,7 @@ case object Amm extends Koulutustyyppi { val name = "amm" }
 case object Lk extends Koulutustyyppi { val name = "lk" }
 case object Yo extends Koulutustyyppi { val name = "yo" }
 case object Amk extends Koulutustyyppi { val name = "amk" }
+case object Tuva extends Koulutustyyppi { val name = "tuva" }
 case object Muu extends Koulutustyyppi {val name = "muu"}
 case object AmmTutkinnonOsa extends Koulutustyyppi {val name = "amm-tutkinnon-osa"}
 case object AmmOsaamisala extends Koulutustyyppi {val name = "amm-osaamisala"}
