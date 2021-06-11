@@ -18,6 +18,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 
   def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem]
+  def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
   def listBySorakuvausId(sorakuvausId: UUID): Seq[String]
@@ -92,6 +93,12 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       case (Nil, _) => Seq()
       case (_, Nil) => listWithTarjoajat { selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut) } //OPH:lla pitäisi olla aina kaikki koulutustyypit
       case _        => listWithTarjoajat { selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut) }
+    }
+
+  override def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[KoulutusListItem] =
+    (organisaatioOids, koulutustyyppi) match {
+      case (Nil, _) => Seq()
+      case _        => listWithTarjoajat { selectByCreatorOrJulkinenForSpecificKoulutustyyppi(organisaatioOids, koulutustyyppi, myosArkistoidut) }
     }
 
   override def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem] =
@@ -325,8 +332,17 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean) = {
     sql"""#$selectKoulutusListSql
           where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
-                   tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
+                  (organisaatio_oid <> ${RootOrganisaatioOid} or
+                   tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
               or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
+      """.as[KoulutusListItem]
+  }
+
+  def selectByCreatorOrJulkinenForSpecificKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean) = {
+    sql"""#$selectKoulutusListSql
+          where tyyppi = ${koulutustyyppi.toString}::koulutustyyppi and
+              (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or julkinen = ${true})
               #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]
   }

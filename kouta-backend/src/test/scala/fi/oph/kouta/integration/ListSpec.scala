@@ -81,7 +81,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus))
   }
   it should "list all koulutukset for authorized organizations 2" in {
-    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, ophKoulutus))
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, k7, k8, ophKoulutus))
   }
   it should "return forbidden if oid is unknown" in {
     list(KoulutusPath, Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -108,7 +108,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
   it should "allow access to any koulutus with the indexer role" in {
-    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, ophKoulutus), indexerSession)
+    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, k7, k8, ophKoulutus), indexerSession)
   }
   it should "list public koulutus with the same koulutustyyppi" in {
     list(KoulutusPath, Map("organisaatioOid" -> YoOid.s), List(k6), readSessions(YoOid))
@@ -123,6 +123,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(k1, k3, k5, ophKoulutus))
   }
   it should "filter with koulutustyyppi if instructed" in {
+    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "koulutustyyppi" -> Amm.toString), List(k1, k2, k3, k5, ophKoulutus))
+  }
+  it should "filter all with non-existing koulutustyyppi in organization" in {
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "koulutustyyppi" -> Yo.toString), List(k6))
   }
 
