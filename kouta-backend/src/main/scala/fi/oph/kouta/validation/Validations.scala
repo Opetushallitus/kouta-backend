@@ -49,7 +49,7 @@ object Validations {
   val KohdejoukkoKoodiPattern: Pattern = Pattern.compile("""haunkohdejoukko_\d+#\d{1,2}""")
   val KohdejoukonTarkenneKoodiPattern: Pattern = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
   val PohjakoulutusvaatimusKoodiPattern: Pattern = Pattern.compile("""pohjakoulutusvaatimuskouta_\w+#\d{1,2}""")
-  val ValintatapajonoKoodiPattern: Pattern = Pattern.compile("""valintatapajono_\w{2}#\d{1,2}""")
+  val ValintatapajonoKoodiPattern: Pattern = Pattern.compile("""valintatapajono_\w{1,2}#\d{1,2}""")
   val KoulutuksenLisatiedotOtsikkoKoodiPattern: Pattern = Pattern.compile("""koulutuksenlisatiedot_\d+#\d{1,2}""")
   val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
   val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso[12]_\d+#\d{1,2}""")
