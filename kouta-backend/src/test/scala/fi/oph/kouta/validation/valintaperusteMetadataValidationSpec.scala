@@ -25,4 +25,9 @@ class ValintaperusteMetadataValidationSpec extends SubEntityValidationSpec[Valin
     passesValidation(Tallennettu, AmmValintaperusteMetadata.copy(lisatiedot = Map(Fi -> "lisatiedot")))
     failsValidation(Julkaistu, AmmValintaperusteMetadata.copy(lisatiedot = Map(Fi -> "lisatiedot")), "lisatiedot", invalidKielistetty(Seq(Sv)))
   }
+
+  it should "should allow muu valintatapa" in {
+    val muuValintatapa = Valintatapa1.copy(valintatapaKoodiUri = Some("valintatapajono_m#1"))
+    passesValidation(Tallennettu, YoValintaperusteMetadata.copy(valintatavat = Seq(muuValintatapa)))
+  }
 }
