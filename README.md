@@ -32,6 +32,9 @@ Kouta-backendin käyttämät tietolähteet:
 | ohjausparametritpalvelu                                      | Asetetaan hakujen ohjausparametrit |
 | organisaatiopalvelu                                          | Koulutustoimijoiden, oppilaitosten ja toimipisteiden organisaatiohierarkia |
 
+Kouta-backendin external-rajapinta on tarkoitettu [kouta-external](https://github.com/Opetushallitus/kouta-external) palvelulle, jonka rajapintojen avulla koulutuksenjärjestäjät voivat 
+päivittää koulutustarjontaansa rajapinnan kautta.
+
 ## 3. Kehitysympäristö
 
 ### 3.1. Esivaatimukset
@@ -122,7 +125,53 @@ Gitin kanssa on pyritty noudattamaan seuraavia käytänteitä:
 - Tekeminen on pyritty pilkkomaan mahdollisimman pieneksi, jotta haarat olisivat lyhytikäisiä (jos mahdollista, alle 
   2 työpäivää)
 
-TODO ympäristöt, lokit, travis, asennus, riippuvuudet
+## 4. Ympäristöt
+
+### 4.1. Testiympäristöt
+
+Testiympäristöjen swaggerit löytyvät seuraavista osoitteista:
+
+- [untuva](https://virkailija.untuvaopintopolku.fi/kouta-backend/swagger)
+- [hahtuva](https://virkailija.hahtuvaopintopolku.fi/kouta-backend/swagger)
+- [QA eli pallero](https://virkailija.testiopintopolku.fi/kouta-backend/swagger)
+
+### 4.2. Asennus
+
+Asennus hoituu samoilla työkaluilla kuin muidenkin OPH:n palvelujen.
+[Cloud-basen dokumentaatiosta](https://github.com/Opetushallitus/cloud-base/tree/master/docs) ja ylläpidolta löytyy apuja.
+
+### 4.3. Buildaus haarasta
+
+Travis tekee buildin jokaisesta pushista ja siirtää luodut paketit opetushallituksen [artifactoryyn](https://artifactory.opintopolku.fi/artifactory/#browse/search/maven).
+Paketti luodaan aina master-haarasta. Mikäli tulee tarve sadaa paketointi kehityshaarasta, täytyy muuttaa 
+`./.travis.yml` -tiedostoa. Tällainen tilanne voi olla esimerkiksi jos tekee muutoksia kouta-backendin tietomalliin 
+eikä vielä halua mergetä muutoksia masteriin, mutta tarvitsisi uutta tietomallia kuitenkin esimerkiksi kouta-indeksoijan ja
+konfo-backendin kehityshaaroissa. 
+ 
+Tarvittava muutos `travis.yml` tiedostoon on tällainen:
+
+(myös tiedoston git historiasta voi katsoa mallia)
+
+```
+...
+  - provider: script
+    script: lein deploy
+    skip_cleanup: true
+    on:
+      branch: <branchin-nimi>
+...
+```
+
+### 4.3. Lokit
+
+Kouta-backendin lokit löytyvät AWS:n cloudwatchista log groupista <testiympäristön nimi>-app-kouta-backend (esim. hahtuva-app-kouta-backend). 
+Lisäohjeita näihin ylläpidolta.
+
+### 4.4. Continuous integration
+
+https://travis-ci.com/github/Opetushallitus/kouta-backend
+
+
 
 -----------------------VANHAN READMEN TIEDOT-----------------------
 
