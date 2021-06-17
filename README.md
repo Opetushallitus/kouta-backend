@@ -35,6 +35,8 @@ Kouta-backendin käyttämät tietolähteet:
 Kouta-backendin external-rajapinta on tarkoitettu [kouta-external](https://github.com/Opetushallitus/kouta-external) palvelulle, jonka rajapintojen avulla koulutuksenjärjestäjät voivat 
 päivittää koulutustarjontaansa rajapinnan kautta.
 
+Kuva koutan arkkitehtuurista löytyy [OPH:n wikistä.](https://wiki.eduuni.fi/display/OPHSS/Koutan+arkkitehtuuri)
+
 ## 3. Kehitysympäristö
 
 ### 3.1. Esivaatimukset
@@ -113,6 +115,24 @@ Localstack Docker instanssin komennolla `tools/start_localstack` ja sammutettua
 Localstackin käynnistysskripti kirjoittaa `~/.kouta_localstack` -tiedostoon käynnistämänsä dockerin id:n.
 Pysäytysskripti poistaa tuon tiedoston. Jos docker pysähtyy muulla tavalla, on mahdollista, että tuo tiedosto
 jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/stop_localstack`, joka poistaa "haamutiedoston".
+
+### 3.4.1 Kikkoja lokaaliin kehitykseen
+
+Mikäli tulee tarve tutkia testiympäristön kantaa tai ajaa kouta-backendia jonkin testiympäristön kantaa vasten, yksi keino tähän on
+SSH-porttiohjaus joka onnistuu seuraavilla komennoilla:
+
+- ssh -N -L 5432:kouta.db.untuvaopintopolku.fi:5432 testityy@bastion.untuvaopintopolku.fi
+- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 testityy>@bastion.hahtuvaopintopolku.fi
+- ssh -N -L 5432:kouta.db.testiopintopolku.fi:5432 testityy@bastion.testiopintopolku.fi
+
+Missä bastionin edessä oleva käyttäjätunnus muodostuu AWS IAM-tunnuksesi kahdeksasta ensimmäisestä kirjaimesta.
+Esim. `testi.tyyppi@firma.com`: `testityy`
+
+Tämän lisäksi pitää vaihtaa `dev-vars.yml` tai `EmbeddedJettyLauncher.scala` tiedostoon postgresin salasana
+vastaamaan testiympäristön kannan salasanaa. Salasanat löytyvät samasta paikasta kuin muutkin OPH:n palvelujen 
+salaisuudet. Lisätietoja ylläpidolta.
+Toinen muutettava asia on kovakoodata `TempDockerDb.scala` tiedostoon `port`-muuttujaan ssh komennon alussa oleva
+portti, sillä oletuksena postgres-kontti käynnistyy random porttiin.
 
 ### 3.5. Versiohallinta
 
