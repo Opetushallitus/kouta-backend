@@ -92,9 +92,62 @@ package object valintaperusteMetadata {
       |            - amk
       |""".stripMargin
 
+  val AmmatillinenTutkinnonOsaValintaperusteMetadataModel =
+    """    AmmatillinenTutkinnonOsaValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: amm-tutkinnon-osa
+      |          enum:
+      |            - amm-tutkinnon-osa
+      |""".stripMargin
+
+  val AmmatillinenOsaamisalaValintaperusteMetadataModel =
+    """    AmmatillinenOsaamisalaValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: amm-osaamisala
+      |          enum:
+      |            - amm-osaamisala
+      |""".stripMargin
+
+  val TutkintokoulutukseenValmentavaValintaperusteMetadataModel =
+    """    TutkintokoulutukseenValmentavaValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: tuva
+      |          enum:
+      |            - tuva
+      |""".stripMargin
+
+  val MuuValintaperusteMetadataModel =
+    """    MuuValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: muu
+      |          enum:
+      |            - muu
+      |""".stripMargin
 
   def models = List(ValintaperusteMetadataModel, AmmatillinenValintaperusteMetadataModel,
-    AmmattikorkeakouluValintaperusteMetadataModel, YliopistoValintaperusteMetadataModel, LukioValintaperusteMetadataModel)
+    AmmattikorkeakouluValintaperusteMetadataModel, YliopistoValintaperusteMetadataModel, LukioValintaperusteMetadataModel,
+    AmmatillinenTutkinnonOsaValintaperusteMetadataModel, AmmatillinenOsaamisalaValintaperusteMetadataModel,
+    TutkintokoulutukseenValmentavaValintaperusteMetadataModel, MuuValintaperusteMetadataModel)
 }
 
 sealed trait ValintaperusteMetadata extends ValidatableSubEntity {
@@ -153,3 +206,40 @@ case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk
                                                     sisalto: Seq[Sisalto] = Seq(),
                                                     valintakokeidenYleiskuvaus: Kielistetty = Map())
     extends ValintaperusteMetadata
+
+case class AmmatillinenTutkinnonOsaValintaperusteMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+                                                          valintatavat: Seq[Valintatapa],
+                                                          kuvaus: Kielistetty = Map(),
+                                                          hakukelpoisuus: Kielistetty = Map(),
+                                                          lisatiedot: Kielistetty = Map(),
+                                                          sisalto: Seq[Sisalto] = Seq(),
+                                                          valintakokeidenYleiskuvaus: Kielistetty = Map())
+  extends ValintaperusteMetadata
+
+case class AmmatillinenOsaamisalaValintaperusteMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
+                                                        valintatavat: Seq[Valintatapa],
+                                                        kuvaus: Kielistetty = Map(),
+                                                        hakukelpoisuus: Kielistetty = Map(),
+                                                        lisatiedot: Kielistetty = Map(),
+                                                        sisalto: Seq[Sisalto] = Seq(),
+                                                        valintakokeidenYleiskuvaus: Kielistetty = Map())
+  extends ValintaperusteMetadata
+
+case class TutkintokoulutukseenValmentavaValintaperusteMetadata(tyyppi: Koulutustyyppi = Tuva,
+                                                                valintatavat: Seq[Valintatapa],
+                                                                kuvaus: Kielistetty = Map(),
+                                                                hakukelpoisuus: Kielistetty = Map(),
+                                                                lisatiedot: Kielistetty = Map(),
+                                                                sisalto: Seq[Sisalto] = Seq(),
+                                                                valintakokeidenYleiskuvaus: Kielistetty = Map())
+  extends ValintaperusteMetadata
+
+case class MuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Muu,
+                                     valintatavat: Seq[Valintatapa],
+                                     kuvaus: Kielistetty = Map(),
+                                     hakukelpoisuus: Kielistetty = Map(),
+                                     lisatiedot: Kielistetty = Map(),
+                                     sisalto: Seq[Sisalto] = Seq(),
+                                     valintakokeidenYleiskuvaus: Kielistetty = Map())
+  extends ValintaperusteMetadata
+
