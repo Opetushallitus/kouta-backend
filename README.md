@@ -18,12 +18,18 @@ vaan muihin palveluihin viittaavasta datasta tallennetaan ainoastaan id (esim. e
 [Kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) huolehtii näiden id-arvojen avulla tietojen 
 rikastamisesta esim. oppijan käyttäliittymää ([konfo-ui](https://github.com/Opetushallitus/konfo-ui)) varten.
 
+Kuva koutan arkkitehtuurista löytyy [OPH:n wikistä.](https://wiki.eduuni.fi/display/OPHSS/Koutan+arkkitehtuuri)
+
+### Tietokanta
 Kouta-backendin data tallennetaan PostgreSQL-kantaan. Tietokantarakenteessa on ilmeisesti haluttu välttää vanhan tarjonnan
 monimutkaisuus ja siksi skeema on haluttu pitää mahdollisimman flattina. Tästä johtuen skeema on sekoitus relaatiotietokantaa ja
 dokumenttitietokantaa. Tämä on totetettu niin että entiteetin tärkeimmät kentät on taulun päätasolla ja loput kentät metadata nimisessä
 kentässä jsonb-formaatissa olevassa tietorakenteessa.
 
-Kouta-backendin käyttämät tietolähteet:
+Tietokantaan on määritelty jokaiselle taululle trigger funktio, joka laukeaa kun tauluun tulee uusi rivi tai olemassa olevaa päivitetään.
+Funktio tallentaa vanhan arvon history tauluun (esim. koulutukset_history), jolloin entiteetin koko muutoshistoria on tallessa.
+
+### Kouta-backendin käyttämät tietolähteet
 
 | Tietolähde                                                   | Haettavat tiedot |
 |--------------------------------------------------------------|------------------|
@@ -32,10 +38,10 @@ Kouta-backendin käyttämät tietolähteet:
 | ohjausparametritpalvelu                                      | Asetetaan hakujen ohjausparametrit |
 | organisaatiopalvelu                                          | Koulutustoimijoiden, oppilaitosten ja toimipisteiden organisaatiohierarkia |
 
+### Rajapinta ulkoisille palveluille
+
 Kouta-backendin external-rajapinta on tarkoitettu [kouta-external](https://github.com/Opetushallitus/kouta-external) palvelulle, jonka rajapintojen avulla koulutuksenjärjestäjät voivat 
 päivittää koulutustarjontaansa rajapinnan kautta.
-
-Kuva koutan arkkitehtuurista löytyy [OPH:n wikistä.](https://wiki.eduuni.fi/display/OPHSS/Koutan+arkkitehtuuri)
 
 ## 3. Kehitysympäristö
 
