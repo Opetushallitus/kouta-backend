@@ -78,6 +78,10 @@ package object valintaperuste {
       |            - $ref: '#/components/schemas/LukioValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/TutkintokoulutukseenValmentavaValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/MuuValintaperusteMetadata'
       |          example:
       |            tyyppi: amm
       |            valintatavat:
