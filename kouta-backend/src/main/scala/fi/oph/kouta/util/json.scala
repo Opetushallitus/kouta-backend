@@ -33,7 +33,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
         case AmmOsaamisala => s.extract[AmmatillinenOsaamisalaKoulutusMetadata]
         case Amk => s.extract[AmmattikorkeakouluKoulutusMetadata]
         case Lk => s.extract[LukioKoulutusMetadata]
-        case Tuva => s.extract[AmmatillinenKoulutusMetadata]
+        case Tuva => s.extract[TuvaKoulutusMetadata]
         case kt => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
       }
     }, {

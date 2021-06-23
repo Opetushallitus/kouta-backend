@@ -241,3 +241,19 @@ case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _))
   )
 }
+
+case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
+                                kuvaus: Kielistetty = Map(),
+                                lisatiedot: Seq[Lisatieto] = Seq(),
+                                linkkiEPerusteisiin: Option[String],
+                                opintojenLaajuusKoodiUri: String ) extends KoulutusMetadata {
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    // Tuva does not have Lisatiedot field
+    assertEmpty(lisatiedot, path),
+    // OpintojenLaajuusKoodiUri is a required field for Tuva
+    assertMatch(opintojenLaajuusKoodiUri, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri"),
+    validateIfDefined(linkkiEPerusteisiin, assertValidUrl(_, path))
+  )
+}
