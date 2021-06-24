@@ -253,7 +253,8 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
     // Tuva does not have Lisatiedot field
     assertEmpty(lisatiedot, path),
     // OpintojenLaajuusKoodiUri is a required field for Tuva
-    assertMatch(opintojenLaajuusKoodiUri, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri"),
-    validateIfDefined(linkkiEPerusteisiin, assertValidUrl(_, path))
+    validateIfJulkaistu(tila, assertMatch(opintojenLaajuusKoodiUri, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
+    validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
   )
 }
