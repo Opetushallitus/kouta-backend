@@ -125,6 +125,13 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |          description: Organisaatio-oid
       |          example: 1.2.246.562.10.00101010101
       |        - in: query
+      |          name: koulutustyyppi
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Koulutustyyppi
+      |          example: amm
+      |        - in: query
       |          name: myosArkistoidut
       |          schema:
       |            type: boolean
@@ -145,9 +152,10 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    (params.get("organisaatioOid").map(OrganisaatioOid), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
-      case (None, _) => NotFound()
-      case (Some(oid), myosArkistoidut) => Ok(koulutusService.list(oid, myosArkistoidut))
+    (params.get("organisaatioOid").map(OrganisaatioOid), params.get("koulutustyyppi"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
+      case (None, _, _) => NotFound()
+      case (Some(oid), None, myosArkistoidut) => Ok(koulutusService.list(oid, myosArkistoidut))
+      case (Some(oid), Some(koulutustyyppi), myosArkistoidut) => Ok(koulutusService.listByKoulutustyyppi(oid, Koulutustyyppi.withName(koulutustyyppi), myosArkistoidut))
     }
   }
 

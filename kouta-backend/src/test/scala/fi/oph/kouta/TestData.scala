@@ -357,6 +357,39 @@ object TestData {
     hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
 
+  val AmmTutkinnonOsaValintaperusteMetadata: AmmatillinenTutkinnonOsaValintaperusteMetadata = AmmatillinenTutkinnonOsaValintaperusteMetadata(
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+
+  val AmmOsaamisalaValintaperusteMetadata: AmmatillinenOsaamisalaValintaperusteMetadata = AmmatillinenOsaamisalaValintaperusteMetadata(
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+
+
+  val TuvaValintaperusteMetadata: TutkintokoulutukseenValmentavaValintaperusteMetadata = TutkintokoulutukseenValmentavaValintaperusteMetadata(
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+
+  val MuuTyyppiValintaperusteMetadata: MuuValintaperusteMetadata = MuuValintaperusteMetadata(
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+
   val AmmValintaperuste: Valintaperuste = Valintaperuste(
     koulutustyyppi = Amm,
     id = None,

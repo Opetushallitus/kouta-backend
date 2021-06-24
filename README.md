@@ -18,12 +18,18 @@ vaan muihin palveluihin viittaavasta datasta tallennetaan ainoastaan id (esim. e
 [Kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) huolehtii näiden id-arvojen avulla tietojen 
 rikastamisesta esim. oppijan käyttäliittymää ([konfo-ui](https://github.com/Opetushallitus/konfo-ui)) varten.
 
+Kuva koutan arkkitehtuurista löytyy [OPH:n wikistä.](https://wiki.eduuni.fi/display/OPHSS/Koutan+arkkitehtuuri)
+
+### Tietokanta
 Kouta-backendin data tallennetaan PostgreSQL-kantaan. Tietokantarakenteessa on ilmeisesti haluttu välttää vanhan tarjonnan
 monimutkaisuus ja siksi skeema on haluttu pitää mahdollisimman flattina. Tästä johtuen skeema on sekoitus relaatiotietokantaa ja
 dokumenttitietokantaa. Tämä on totetettu niin että entiteetin tärkeimmät kentät on taulun päätasolla ja loput kentät metadata nimisessä
 kentässä jsonb-formaatissa olevassa tietorakenteessa.
 
-Kouta-backendin käyttämät tietolähteet:
+Tietokantaan on määritelty jokaiselle taululle trigger funktio, joka laukeaa kun tauluun tulee uusi rivi tai olemassa olevaa päivitetään.
+Funktio tallentaa vanhan arvon history tauluun (esim. koulutukset_history), jolloin entiteetin koko muutoshistoria on tallessa.
+
+### Kouta-backendin käyttämät tietolähteet
 
 | Tietolähde                                                   | Haettavat tiedot |
 |--------------------------------------------------------------|------------------|
@@ -31,6 +37,11 @@ Kouta-backendin käyttämät tietolähteet:
 | käyttöoikeuspalvelu                                          | Tarkastetaan käyttäjän käyttöoikeudet |
 | ohjausparametritpalvelu                                      | Asetetaan hakujen ohjausparametrit |
 | organisaatiopalvelu                                          | Koulutustoimijoiden, oppilaitosten ja toimipisteiden organisaatiohierarkia |
+
+### Rajapinta ulkoisille palveluille
+
+Kouta-backendin external-rajapinta on tarkoitettu [kouta-external](https://github.com/Opetushallitus/kouta-external) palvelulle, jonka rajapintojen avulla koulutuksenjärjestäjät voivat 
+päivittää koulutustarjontaansa rajapinnan kautta.
 
 ## 3. Kehitysympäristö
 
@@ -111,6 +122,24 @@ Localstackin käynnistysskripti kirjoittaa `~/.kouta_localstack` -tiedostoon kä
 Pysäytysskripti poistaa tuon tiedoston. Jos docker pysähtyy muulla tavalla, on mahdollista, että tuo tiedosto
 jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/stop_localstack`, joka poistaa "haamutiedoston".
 
+### 3.4.1 Kikkoja lokaaliin kehitykseen
+
+Mikäli tulee tarve tutkia testiympäristön kantaa tai ajaa kouta-backendia jonkin testiympäristön kantaa vasten, yksi keino tähän on
+SSH-porttiohjaus joka onnistuu seuraavilla komennoilla:
+
+- ssh -N -L 5432:kouta.db.untuvaopintopolku.fi:5432 testityy@bastion.untuvaopintopolku.fi
+- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 testityy>@bastion.hahtuvaopintopolku.fi
+- ssh -N -L 5432:kouta.db.testiopintopolku.fi:5432 testityy@bastion.testiopintopolku.fi
+
+Missä bastionin edessä oleva käyttäjätunnus muodostuu AWS IAM-tunnuksesi kahdeksasta ensimmäisestä kirjaimesta.
+Esim. `testi.tyyppi@firma.com`: `testityy`
+
+Tämän lisäksi pitää vaihtaa `dev-vars.yml` tai `EmbeddedJettyLauncher.scala` tiedostoon postgresin salasana
+vastaamaan testiympäristön kannan salasanaa. Salasanat löytyvät samasta paikasta kuin muutkin OPH:n palvelujen 
+salaisuudet. Lisätietoja ylläpidolta.
+Toinen muutettava asia on kovakoodata `TempDockerDb.scala` tiedostoon `port`-muuttujaan ssh komennon alussa oleva
+portti, sillä oletuksena postgres-kontti käynnistyy random porttiin.
+
 ### 3.5. Versiohallinta
 
 Gitin kanssa on pyritty noudattamaan seuraavia käytänteitä:
@@ -122,7 +151,53 @@ Gitin kanssa on pyritty noudattamaan seuraavia käytänteitä:
 - Tekeminen on pyritty pilkkomaan mahdollisimman pieneksi, jotta haarat olisivat lyhytikäisiä (jos mahdollista, alle 
   2 työpäivää)
 
-TODO ympäristöt, lokit, travis, asennus, riippuvuudet
+## 4. Ympäristöt
+
+### 4.1. Testiympäristöt
+
+Testiympäristöjen swaggerit löytyvät seuraavista osoitteista:
+
+- [untuva](https://virkailija.untuvaopintopolku.fi/kouta-backend/swagger)
+- [hahtuva](https://virkailija.hahtuvaopintopolku.fi/kouta-backend/swagger)
+- [QA eli pallero](https://virkailija.testiopintopolku.fi/kouta-backend/swagger)
+
+### 4.2. Asennus
+
+Asennus hoituu samoilla työkaluilla kuin muidenkin OPH:n palvelujen.
+[Cloud-basen dokumentaatiosta](https://github.com/Opetushallitus/cloud-base/tree/master/docs) ja ylläpidolta löytyy apuja.
+
+### 4.3. Buildaus haarasta
+
+Travis tekee buildin jokaisesta pushista ja siirtää luodut paketit opetushallituksen [artifactoryyn](https://artifactory.opintopolku.fi/artifactory/#browse/search/maven).
+Paketti luodaan aina master-haarasta. Mikäli tulee tarve sadaa paketointi kehityshaarasta, täytyy muuttaa 
+`./.travis.yml` -tiedostoa. Tällainen tilanne voi olla esimerkiksi jos tekee muutoksia kouta-backendin tietomalliin 
+eikä vielä halua mergetä muutoksia masteriin, mutta tarvitsisi uutta tietomallia kuitenkin esimerkiksi kouta-indeksoijan ja
+konfo-backendin kehityshaaroissa. 
+ 
+Tarvittava muutos `travis.yml` tiedostoon on tällainen:
+
+(myös tiedoston git historiasta voi katsoa mallia)
+
+```
+...
+  - provider: script
+    script: lein deploy
+    skip_cleanup: true
+    on:
+      branch: <branchin-nimi>
+...
+```
+
+### 4.3. Lokit
+
+Kouta-backendin lokit löytyvät AWS:n cloudwatchista log groupista <testiympäristön nimi>-app-kouta-backend (esim. hahtuva-app-kouta-backend). 
+Lisäohjeita näihin ylläpidolta.
+
+### 4.4. Continuous integration
+
+https://travis-ci.com/github/Opetushallitus/kouta-backend
+
+
 
 -----------------------VANHAN READMEN TIEDOT-----------------------
 
