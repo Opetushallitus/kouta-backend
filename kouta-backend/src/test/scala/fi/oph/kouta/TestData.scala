@@ -183,7 +183,7 @@ object TestData {
     metadata = Some(TuvaKoulutusMetadata(
       opintojenLaajuusKoodiUri = "opintojenlaajuus_v53#1",
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      linkkiEPerusteisiin = Some("http://testilinkki.fi")
+      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv")
     )),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = OphUserOid,

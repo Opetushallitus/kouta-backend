@@ -245,8 +245,8 @@ case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
 case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 kuvaus: Kielistetty = Map(),
                                 lisatiedot: Seq[Lisatieto] = Seq(),
-                                linkkiEPerusteisiin: Option[String],
-                                opintojenLaajuusKoodiUri: String ) extends KoulutusMetadata {
+                                linkkiEPerusteisiin: Kielistetty = Map(),
+                                opintojenLaajuusKoodiUri: String) extends KoulutusMetadata {
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
