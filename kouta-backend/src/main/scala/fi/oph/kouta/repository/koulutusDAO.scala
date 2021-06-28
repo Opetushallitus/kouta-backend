@@ -159,6 +159,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def insertKoulutus(koulutus: Koulutus): DBIO[KoulutusOid] = {
     sql"""insert into koulutukset (
+            external_id,
             johtaa_tutkintoon,
             tyyppi,
             koulutukset_koodi_uri,
@@ -174,6 +175,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             teemakuva,
             eperuste_id)
           values (
+            ${koulutus.externalId},
             ${koulutus.johtaaTutkintoon},
             ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
             ${koulutus.koulutuksetKoodiUri},
@@ -199,6 +201,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def selectKoulutus(oid: KoulutusOid) = {
     sql"""select oid,
+                 external_id,
                  johtaa_tutkintoon,
                  tyyppi,
                  koulutukset_koodi_uri,
@@ -220,6 +223,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def findJulkaistutKoulutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
     sql"""select distinct k.oid,
+                          k.external_id,
                           k.johtaa_tutkintoon,
                           k.tyyppi,
                           k.koulutukset_koodi_uri,
@@ -262,6 +266,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
 
   def updateKoulutus(koulutus: Koulutus): DBIO[Int] = {
     sqlu"""update koulutukset set
+              external_id = ${koulutus.externalId},
               johtaa_tutkintoon = ${koulutus.johtaaTutkintoon},
               tyyppi = ${koulutus.koulutustyyppi.toString}::koulutustyyppi,
               koulutukset_koodi_uri = ${koulutus.koulutuksetKoodiUri},
@@ -278,6 +283,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               eperuste_id = ${koulutus.ePerusteId}
             where oid = ${koulutus.oid}
             and ( johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
+            or external_id is distinct from ${koulutus.externalId}
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
             or koulutukset_koodi_uri is distinct from ${koulutus.koulutuksetKoodiUri}
             or tila is distinct from ${koulutus.tila.toString}::julkaisutila

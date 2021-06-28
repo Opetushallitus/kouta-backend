@@ -69,6 +69,7 @@ trait MigrationExtractors extends ExtractorBase {
 trait KoulutusExtractors extends ExtractorBase {
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
     oid = r.nextStringOption().map(KoulutusOid),
+    externalId = r.nextStringOption(),
     johtaaTutkintoon = r.nextBoolean(),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
