@@ -101,6 +101,7 @@ trait KoulutusExtractors extends ExtractorBase {
 trait ToteutusExtractors extends ExtractorBase {
   implicit val getToteutusResult: GetResult[Toteutus] = GetResult(r => Toteutus(
     oid = r.nextStringOption().map(ToteutusOid),
+    externalId = r.nextStringOption(),
     koulutusOid = KoulutusOid(r.nextString()),
     tila = Julkaisutila.withName(r.nextString()),
     tarjoajat = List(),
