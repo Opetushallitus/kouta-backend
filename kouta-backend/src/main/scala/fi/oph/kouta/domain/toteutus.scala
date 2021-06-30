@@ -16,6 +16,13 @@ package object toteutus {
       |          type: string
       |          description: Toteutuksen yksilöivä tunniste. Järjestelmän generoima.
       |          example: "1.2.246.562.17.00000000000000000009"
+      |        externalId:
+      |          type: string
+      |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
+      |        koulutusOid:
+      |          type: string
+      |          description: Toteutukseen liittyvän koulutuksen yksilöivä tunniste.
+      |          example: "1.2.246.562.13.00000000000000000009"
       |        tila:
       |          type: string
       |          example: "julkaistu"
@@ -203,6 +210,7 @@ package object toteutus {
 }
 
 case class Toteutus(oid: Option[ToteutusOid] = None,
+                    externalId: Option[String] = None,
                     koulutusOid: KoulutusOid,
                     tila: Julkaisutila = Tallennettu,
                     esikatselu: Boolean = false,

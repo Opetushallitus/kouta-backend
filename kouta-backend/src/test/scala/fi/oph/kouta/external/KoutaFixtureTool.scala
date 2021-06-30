@@ -112,6 +112,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val ToteutusOidKey = "toteutusOid"
   val HakuOidKey = "hakuOid"
   val HakukohdeOidKey = "hakukohdeOid"
+  val ExternalIdKey = "externalId"
   val JohtaaTutkintoonKey = "johtaaTutkintoon"
   val KoulutustyyppiKey = "koulutustyyppi"
   val KoulutusKoodiUriKey = "koulutusKoodiUri"
@@ -190,6 +191,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val lukioToteutusMetadata: String = write(TestData.LukioToteutus.metadata)
 
   val DefaultKoulutusScala: Map[String, String] = Map[String, String](
+    ExternalIdKey -> "987654321",
     JohtaaTutkintoonKey -> "true",
     KoulutustyyppiKey -> Amm.name,
     KoulutuksetKoodiUriKey -> "koulutus_371101#1",
@@ -211,6 +213,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultKoulutus: java.util.Map[String, String] = mapAsJavaMap(DefaultKoulutusScala)
 
   val DefaultToteutusScala: Map[String, String] = Map[String, String](
+    ExternalIdKey -> "1122334455",
     TilaKey -> Julkaistu.name,
     TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
@@ -378,6 +381,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val kielivalinta = toKielivalinta(params)
     Koulutus(
       Some(KoulutusOid(oid)),
+      Some("987654321"),
       params(JohtaaTutkintoonKey).toBoolean,
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
       params.get(KoulutuksetKoodiUriKey) match {
@@ -416,6 +420,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val kielivalinta = toKielivalinta(params)
     Toteutus(
       Some(ToteutusOid(oid)),
+      Some("1122334455"),
       KoulutusOid(params(KoulutusOidKey)),
       Julkaisutila.withName(params(TilaKey)),
       params.get(EsikatseluKey) match {

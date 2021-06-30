@@ -17,6 +17,9 @@ package object koulutus {
       |          type: string
       |          description: Koulutuksen yksilöivä tunniste. Järjestelmän generoima.
       |          example: "1.2.246.562.13.00000000000000000009"
+      |        externalId:
+      |          type: string
+      |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
       |        johtaaTutkintoon:
       |          type: boolean
       |          description: Onko koulutus tutkintoon johtavaa
@@ -170,6 +173,7 @@ package object koulutus {
 }
 
 case class Koulutus(oid: Option[KoulutusOid] = None,
+                    externalId: Option[String] = None,
                     johtaaTutkintoon: Boolean,
                     koulutustyyppi: Koulutustyyppi,
                     koulutuksetKoodiUri: Seq[String] = Seq(),

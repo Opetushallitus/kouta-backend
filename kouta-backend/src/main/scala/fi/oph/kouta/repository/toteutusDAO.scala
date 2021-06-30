@@ -163,6 +163,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
 
   val selectToteutusSql =
     """select t.oid,
+              t.external_id,
               t.koulutus_oid,
               t.tila,
               t.nimi,
@@ -210,6 +211,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
 
   def insertToteutus(toteutus: Toteutus): DBIO[ToteutusOid] = {
     sql"""insert into toteutukset (
+            external_id,
             koulutus_oid,
             tila,
             nimi,
@@ -221,6 +223,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             teemakuva,
             sorakuvaus_id
           ) values (
+            ${toteutus.externalId},
             ${toteutus.koulutusOid},
             ${toteutus.tila.toString}::julkaisutila,
             ${toJsonParam(toteutus.nimi)}::jsonb,
@@ -243,6 +246,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
 
   def updateToteutus(toteutus: Toteutus): DBIO[Int] = {
     sqlu"""update toteutukset set
+              external_id = ${toteutus.externalId},
               koulutus_oid = ${toteutus.koulutusOid},
               tila = ${toteutus.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(toteutus.nimi)}::jsonb,
@@ -255,6 +259,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               sorakuvaus_id = ${toteutus.sorakuvausId.map(_.toString)}::uuid
             where oid = ${toteutus.oid}
             and ( koulutus_oid is distinct from ${toteutus.koulutusOid}
+            or external_id is distinct from ${toteutus.externalId}
             or tila is distinct from ${toteutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(toteutus.nimi)}::jsonb
             or metadata is distinct from ${toJsonParam(toteutus.metadata)}::jsonb
