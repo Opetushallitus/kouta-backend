@@ -250,9 +250,9 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    // Tuva does not have Lisatiedot field
+    // Tuvalla ei ole lisätiedot-kenttää lomakkeessa
     assertEmpty(lisatiedot, path),
-    // OpintojenLaajuusKoodiUri is a required field for Tuva
+    // OpintojenLaajuusKoodiUri on pakollinen kenttä Tuvalle
     validateIfJulkaistu(tila, assertMatch(opintojenLaajuusKoodiUri, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
     validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
