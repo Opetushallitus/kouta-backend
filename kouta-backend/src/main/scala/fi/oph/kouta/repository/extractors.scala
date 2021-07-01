@@ -131,6 +131,7 @@ trait ToteutusExtractors extends ExtractorBase {
 trait HakuExtractors extends ExtractorBase {
   implicit val getHakuResult: GetResult[Haku] = GetResult(r => Haku(
     oid = r.nextStringOption().map(HakuOid),
+    externalId = r.nextStringOption(),
     tila = Julkaisutila.withName(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     hakutapaKoodiUri = r.nextStringOption(),
@@ -219,6 +220,7 @@ trait SorakuvausExtractors extends ExtractorBase {
 trait HakukohdeExctractors extends ExtractorBase {
   implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
     oid = r.nextStringOption().map(HakukohdeOid),
+    externalId = r.nextStringOption(),
     toteutusOid = ToteutusOid(r.nextString()),
     hakuOid = HakuOid(r.nextString()),
     tila = Julkaisutila.withName(r.nextString()),

@@ -174,6 +174,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (
+            external_id,
             toteutus_oid,
             haku_oid,
             tila,
@@ -201,6 +202,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             organisaatio_oid,
             kielivalinta
           ) values (
+            ${hakukohde.externalId},
             ${hakukohde.toteutusOid},
             ${hakukohde.hakuOid},
             ${hakukohde.tila.toString}::julkaisutila,
@@ -232,6 +234,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def updateHakukohde(hakukohde: Hakukohde): DBIO[Int] = {
     sqlu"""update hakukohteet set
+              external_id = ${hakukohde.externalId},
               toteutus_oid = ${hakukohde.toteutusOid},
               haku_oid = ${hakukohde.hakuOid},
               tila = ${hakukohde.tila.toString}::julkaisutila,
@@ -259,7 +262,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               organisaatio_oid = ${hakukohde.organisaatioOid},
               kielivalinta = ${toJsonParam(hakukohde.kielivalinta)}::jsonb
           where oid = ${hakukohde.oid}
-            and ( toteutus_oid is distinct from ${hakukohde.toteutusOid}
+            and ( external_id is distinct from ${hakukohde.externalId}
+            or toteutus_oid is distinct from ${hakukohde.toteutusOid}
             or haku_oid is distinct from ${hakukohde.hakuOid}
             or tila is distinct from ${hakukohde.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(hakukohde.nimi)}::jsonb
@@ -288,6 +292,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def selectHakukohde(oid: HakukohdeOid): DBIO[Option[Hakukohde]] = {
     sql"""select oid,
+             external_id,
              toteutus_oid,
              haku_oid,
              tila,
