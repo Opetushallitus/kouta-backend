@@ -25,7 +25,7 @@ package object koulutus {
       |          description: Onko koulutus tutkintoon johtavaa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala'"
+      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'tuva' (tutkintokoulutukseen valmentava koulutus)"
       |          enum:
       |            - amm
       |            - yo
@@ -33,6 +33,7 @@ package object koulutus {
       |            - lk
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
+      |            - tuva
       |          example: amm
       |        koulutuksetKoodiUri:
       |          type: array

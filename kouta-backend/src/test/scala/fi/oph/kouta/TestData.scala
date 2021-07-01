@@ -172,6 +172,27 @@ object TestData {
     ePerusteId = Some(12L),
     modified = None)
 
+  val TuvaKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = Tuva,
+    koulutuksetKoodiUri = Seq("koulutus_301101#1"),
+    esikatselu = false,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(TuvaKoulutusMetadata(
+      opintojenLaajuusKoodiUri = "opintojenlaajuus_v53#1",
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv")
+    )),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/lkkuva"),
+    ePerusteId = None,
+    modified = None)
+
   val MinKoulutus: Koulutus = Koulutus(
     koulutustyyppi = Amm,
     johtaaTutkintoon = false,

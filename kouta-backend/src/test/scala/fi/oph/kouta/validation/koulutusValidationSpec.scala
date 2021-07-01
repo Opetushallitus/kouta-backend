@@ -119,6 +119,7 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
   val ammOa: AmmatillinenOsaamisalaKoulutusMetadata = AmmOsaamisalaKoulutus.metadata.get.asInstanceOf[AmmatillinenOsaamisalaKoulutusMetadata]
   val ammTo: AmmatillinenTutkinnonOsaKoulutusMetadata = AmmTutkinnonOsaKoulutus.metadata.get.asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
   val lukio: LukioKoulutusMetadata = LukioKoulutus.metadata.get.asInstanceOf[LukioKoulutusMetadata]
+  val tuva: TuvaKoulutusMetadata = TuvaKoulutus.metadata.get.asInstanceOf[TuvaKoulutusMetadata]
 
   "Koulutus metadata validator" should "pass a valid metadata" in {
     passesValidation(Julkaistu, amm)
@@ -189,5 +190,18 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
 
   it should "fail if any koulutusalaKoodiUrit are invalid" in {
     failsValidation(Tallennettu, lukio.copy(koulutusalaKoodiUrit = Seq("mummo")), "koulutusalaKoodiUrit[0]", validationMsg("mummo"))
+  }
+
+  "Tuva metadata validation" should "pass valid metadata" in {
+    passesValidation(Tallennettu, tuva)
+  }
+
+  it should "fail if linkkiEPerusteisiin is invalid" in {
+    failsValidation(Julkaistu, tuva.copy(linkkiEPerusteisiin = Map(Fi -> "linkki", Sv -> "http://example.com")), "linkkiEPerusteisiin.fi", invalidUrl("linkki"))
+  }
+
+  it should "fail if kuvaus has missing languages in a julkaistu tuva koulutus" in {
+    passesValidation(Tallennettu, tuva.copy(kuvaus = Map(Fi -> "kuvaus")))
+    failsValidation(Julkaistu, tuva.copy(kuvaus = Map(Fi -> "kuvaus")), "kuvaus", invalidKielistetty(Seq(Sv)))
   }
 }
