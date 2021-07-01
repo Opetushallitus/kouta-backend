@@ -17,6 +17,9 @@ package object haku {
       |          type: string
       |          description: Haun yksilöivä tunniste. Järjestelmän generoima.
       |          example: "1.2.246.562.29.00000000000000000009"
+      |        externalId:
+      |          type: string
+      |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
       |        tila:
       |          type: string
       |          example: "julkaistu"
@@ -171,6 +174,7 @@ package object haku {
 }
 
 case class Haku(oid: Option[HakuOid] = None,
+                externalId: Option[String] = None,
                 tila: Julkaisutila = Tallennettu,
                 nimi: Kielistetty = Map(),
                 hakutapaKoodiUri: Option[String] = None,
