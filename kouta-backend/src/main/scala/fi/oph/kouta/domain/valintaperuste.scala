@@ -17,6 +17,9 @@ package object valintaperuste {
       |          type: string
       |          description: Valintaperustekuvauksen yksilöivä tunniste. Järjestelmän generoima.
       |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
+      |        externalId:
+      |          type: string
+      |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
       |        tila:
       |          type: string
       |          example: "julkaistu"
@@ -173,6 +176,7 @@ package object valintaperuste {
 }
 
 case class Valintaperuste(id: Option[UUID] = None,
+                          externalId: Option[String] = None,
                           tila: Julkaisutila = Tallennettu,
                           esikatselu: Boolean = false,
                           koulutustyyppi: Koulutustyyppi,
