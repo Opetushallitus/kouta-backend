@@ -165,6 +165,7 @@ trait HakuExtractors extends ExtractorBase {
 trait ValintaperusteExtractors extends ExtractorBase {
   implicit val getValintaperusteResult: GetResult[Valintaperuste] = GetResult(r => Valintaperuste(
     id = r.nextStringOption().map(UUID.fromString),
+    externalId = r.nextStringOption(),
     tila = Julkaisutila.withName(r.nextString()),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     hakutapaKoodiUri = r.nextStringOption(),
@@ -192,6 +193,7 @@ trait ValintaperusteExtractors extends ExtractorBase {
 trait SorakuvausExtractors extends ExtractorBase {
   implicit val getSorakuvausResult: GetResult[Sorakuvaus] = GetResult(r => Sorakuvaus(
     id = r.nextStringOption().map(UUID.fromString),
+    externalId = r.nextStringOption(),
     tila = Julkaisutila.withName(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),

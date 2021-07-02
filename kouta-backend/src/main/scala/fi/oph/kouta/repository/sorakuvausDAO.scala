@@ -80,6 +80,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
   def insertSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Int] = {
     sqlu"""insert into sorakuvaukset (
                      id,
+                     external_id,
                      tila,
                      nimi,
                      koulutustyyppi,
@@ -88,6 +89,7 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      organisaatio_oid,
                      muokkaaja
          ) values (  ${sorakuvaus.id.map(_.toString)}::uuid,
+                     ${sorakuvaus.externalId},
                      ${sorakuvaus.tila.toString}::julkaisutila,
                      ${toJsonParam(sorakuvaus.nimi)}::jsonb,
                      ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi,
@@ -98,12 +100,13 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
   }
 
   def selectSorakuvaus(id: UUID): DBIO[Option[Sorakuvaus]] =
-    sql"""select id, tila, nimi, koulutustyyppi, kielivalinta,
+    sql"""select id, external_id, tila, nimi, koulutustyyppi, kielivalinta,
                  metadata, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset where id = ${id.toString}::uuid""".as[Sorakuvaus].headOption
 
   def updateSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Int] = {
     sqlu"""update sorakuvaukset set
+                     external_id = ${sorakuvaus.externalId},
                      tila = ${sorakuvaus.tila.toString}::julkaisutila,
                      nimi = ${toJsonParam(sorakuvaus.nimi)}::jsonb,
                      koulutustyyppi = ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi,
@@ -112,7 +115,8 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      organisaatio_oid = ${sorakuvaus.organisaatioOid},
                      muokkaaja = ${sorakuvaus.muokkaaja}
            where id = ${sorakuvaus.id.map(_.toString)}::uuid
-           and (koulutustyyppi is distinct from ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi
+           and (external_id is distinct from ${sorakuvaus.externalId}
+             or koulutustyyppi is distinct from ${sorakuvaus.koulutustyyppi.toString}::koulutustyyppi
              or tila is distinct from ${sorakuvaus.tila.toString}::julkaisutila
              or nimi is distinct from ${toJsonParam(sorakuvaus.nimi)}::jsonb
              or metadata is distinct from ${toJsonParam(sorakuvaus.metadata)}::jsonb

@@ -17,6 +17,9 @@ package object sorakuvaus {
       |          type: string
       |          description: SORA-kuvauksen yksilöivä tunniste. Järjestelmän generoima.
       |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
+      |        externalId:
+      |          type: string
+      |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
       |        koulutustyyppi:
       |          type: string
       |          description: "Minkä tyyppisiin koulutuksiin SORA-kuvaus liittyy. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'muu' (muu koulutus)"
@@ -120,6 +123,7 @@ package object sorakuvaus {
 }
 
 case class Sorakuvaus(id: Option[UUID] = None,
+                      externalId: Option[String] = None,
                       tila: Julkaisutila = Tallennettu,
                       nimi: Kielistetty = Map(),
                       koulutustyyppi: Koulutustyyppi,
