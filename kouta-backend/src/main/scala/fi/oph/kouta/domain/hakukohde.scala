@@ -17,6 +17,9 @@ package object hakukohde {
       |          type: string
       |          description: Hakukohteen yksilöivä tunniste. Järjestelmän generoima.
       |          example: "1.2.246.562.20.00000000000000000009"
+      |        externalId:
+      |          type: string
+      |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
       |        toteutusOid:
       |          type: string
       |          description: Hakukohteeseen liitetyn toteutuksen yksilöivä tunniste.
@@ -324,6 +327,7 @@ package object hakukohde {
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,
+                     externalId: Option[String] = None,
                      toteutusOid: ToteutusOid,
                      hakuOid: HakuOid,
                      tila: Julkaisutila = Tallennettu,

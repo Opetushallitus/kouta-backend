@@ -505,7 +505,8 @@ object TestData {
     ammattinimikkeet = List(),
     yhteyshenkilot = Seq(Yhteystieto1),
     kielivalikoima = Some(Kielivalikoima(
-      A1JaA2Kielet = Seq("kieli_EN#1"),
+      A1Kielet = Seq("kieli_EN#1"),
+      A2Kielet = Seq("kieli_DE#1"),
       B1Kielet = Seq("kieli_SV#1"),
       B2Kielet = Seq("kieli_FR#1"),
       B3Kielet = Seq("kieli_ES#1"),

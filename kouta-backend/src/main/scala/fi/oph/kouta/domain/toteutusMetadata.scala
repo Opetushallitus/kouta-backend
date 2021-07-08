@@ -403,9 +403,17 @@ package object toteutusMetadata {
     """    Kielivalikoima:
       |      type: object
       |      properties:
-      |        A1JaA2Kielet:
+      |        A1Kielet:
       |          type: array
-      |          description: Lista koulutuksen toteutuksen A1 ja A2 kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          description: Lista koulutuksen toteutuksen A1 kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
+      |          items:
+      |            type: string
+      |            example:
+      |              - kieli_EN#1
+      |              - kieli_FI#1
+      |        A2Kielet:
+      |          type: array
+      |          description: Lista koulutuksen toteutuksen A2 kielistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kieli/1)
       |          items:
       |            type: string
       |            example:
@@ -710,14 +718,16 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
   )
 }
 
-case class Kielivalikoima(A1JaA2Kielet: Seq[String] = Seq(),
+case class Kielivalikoima(A1Kielet: Seq[String] = Seq(),
+                          A2Kielet: Seq[String] = Seq(),
                           B1Kielet: Seq[String] = Seq(),
                           B2Kielet: Seq[String] = Seq(),
                           B3Kielet: Seq[String] = Seq(),
                           aidinkielet: Seq[String] = Seq(),
                           muutKielet: Seq[String] = Seq()) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfNonEmpty[String](A1JaA2Kielet, s"$path.A1JaA2Kielet", assertMatch(_, KieliKoodiPattern, _)),
+    validateIfNonEmpty[String](A1Kielet, s"$path.A1Kielet", assertMatch(_, KieliKoodiPattern, _)),
+    validateIfNonEmpty[String](A2Kielet, s"$path.A2Kielet", assertMatch(_, KieliKoodiPattern, _)),
     validateIfNonEmpty[String](B1Kielet, s"$path.B1Kielet", assertMatch(_, KieliKoodiPattern, _)),
     validateIfNonEmpty[String](B2Kielet, s"$path.B2Kielet", assertMatch(_, KieliKoodiPattern, _)),
     validateIfNonEmpty[String](B3Kielet, s"$path.B3Kielet", assertMatch(_, KieliKoodiPattern, _)),

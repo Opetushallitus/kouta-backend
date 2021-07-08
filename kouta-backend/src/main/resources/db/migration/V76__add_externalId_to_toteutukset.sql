@@ -4,7 +4,7 @@ alter table toteutukset
 alter table toteutukset_history
     add column external_id varchar;
 
-comment on column koulutukset.external_id is 'Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa';
+comment on column toteutukset.external_id is 'Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa';
 
 create or replace function update_toteutukset_history() returns trigger
     language plpgsql

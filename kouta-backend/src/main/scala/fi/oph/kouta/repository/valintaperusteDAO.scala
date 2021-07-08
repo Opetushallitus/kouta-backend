@@ -94,6 +94,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   def insertValintaperuste(valintaperuste: Valintaperuste): DBIO[Int] = {
     sqlu"""insert into valintaperusteet (
                      id,
+                     external_id,
                      tila,
                      koulutustyyppi,
                      hakutapa_koodi_uri,
@@ -106,6 +107,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      muokkaaja,
                      kielivalinta
          ) values (  ${valintaperuste.id.map(_.toString)}::uuid,
+                     ${valintaperuste.externalId},
                      ${valintaperuste.tila.toString}::julkaisutila,
                      ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
                      ${valintaperuste.hakutapaKoodiUri},
@@ -138,6 +140,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def selectValintaperuste(id: UUID) =
     sql"""select id,
+                 external_id,
                  tila,
                  koulutustyyppi,
                  hakutapa_koodi_uri,
@@ -161,6 +164,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def updateValintaperuste(valintaperuste: Valintaperuste): DBIO[Int] = {
     sqlu"""update valintaperusteet set
+                     external_id = ${valintaperuste.externalId},
                      tila = ${valintaperuste.tila.toString}::julkaisutila,
                      koulutustyyppi = ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi,
                      hakutapa_koodi_uri = ${valintaperuste.hakutapaKoodiUri},
@@ -173,7 +177,8 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                      muokkaaja = ${valintaperuste.muokkaaja},
                      kielivalinta = ${toJsonParam(valintaperuste.kielivalinta)}::jsonb
            where id = ${valintaperuste.id.map(_.toString)}::uuid
-           and (koulutustyyppi is distinct from ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi
+           and (external_id is distinct from ${valintaperuste.externalId}
+             or koulutustyyppi is distinct from ${valintaperuste.koulutustyyppi.toString}::koulutustyyppi
              or tila is distinct from ${valintaperuste.tila.toString}::julkaisutila
              or hakutapa_koodi_uri is distinct from ${valintaperuste.hakutapaKoodiUri}
              or kohdejoukko_koodi_uri is distinct from ${valintaperuste.kohdejoukkoKoodiUri}

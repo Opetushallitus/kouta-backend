@@ -184,7 +184,8 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   }
 
   it should "fail if kielivalikoima is invalid" in {
-    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(A1JaA2Kielet = Seq("mummo")))))), "metadata.kielivalikoima.A1JaA2Kielet[0]", validationMsg("mummo"))
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(A1Kielet = Seq("mummo")))))), "metadata.kielivalikoima.A1Kielet[0]", validationMsg("mummo"))
+    failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(A2Kielet = Seq("mummo")))))), "metadata.kielivalikoima.A2Kielet[0]", validationMsg("mummo"))
     failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(B1Kielet = Seq("mummo")))))), "metadata.kielivalikoima.B1Kielet[0]", validationMsg("mummo"))
     failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(B2Kielet = Seq("mummo")))))), "metadata.kielivalikoima.B2Kielet[0]", validationMsg("mummo"))
     failsValidation(lukioTo.copy(metadata = Some(lukioMetadata.copy(kielivalikoima = Some(Kielivalikoima(B3Kielet = Seq("mummo")))))), "metadata.kielivalikoima.B3Kielet[0]", validationMsg("mummo"))

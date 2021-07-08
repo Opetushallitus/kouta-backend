@@ -229,6 +229,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultToteutus: java.util.Map[String, String] = mapAsJavaMap(DefaultToteutusScala)
 
   val DefaultHakuScala: Map[String, String] = Map[String, String](
+    ExternalIdKey -> "2233445566",
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     MuokkaajaKey -> TestUserOid.s,
@@ -261,6 +262,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultHaku: java.util.Map[String, String] = mapAsJavaMap(DefaultHakuScala)
 
   val DefaultHakukohdeScala: Map[String, String] = Map[String, String](
+    ExternalIdKey -> "3344556677",
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     MuokkaajaKey -> TestUserOid.s,
@@ -304,6 +306,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultHakukohde: java.util.Map[String, String] = mapAsJavaMap(DefaultHakukohdeScala)
 
   val DefaultValintaperusteScala: Map[String, String] = Map[String, String](
+    ExternalIdKey -> "4455667788",
     KoulutustyyppiKey -> Amm.name,
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
@@ -325,6 +328,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val DefaultValintaperuste: java.util.Map[String, String] = mapAsJavaMap(DefaultValintaperusteScala)
 
   val DefaultSorakuvausScala: Map[String, String] = Map[String, String](
+    ExternalIdKey -> "5566778899",
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
     KoulutustyyppiKey -> Amm.name,
@@ -443,6 +447,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Haku(
       Some(HakuOid(oid)),
+      Some("2233445566"),
       Julkaisutila.withName(params(TilaKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       Some(params(HakutapaKoodiUriKey)),
@@ -468,6 +473,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Hakukohde(
       Some(HakukohdeOid(oid)),
+      Some("3344556677"),
       ToteutusOid(params(ToteutusOidKey)),
       HakuOid(params(HakuOidKey)),
       Julkaisutila.withName(params(TilaKey)),
@@ -510,6 +516,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Valintaperuste(
       Some(UUID.fromString(id)),
+      Some("4455667788"),
       Julkaisutila.withName(params(TilaKey)),
       params.get(EsikatseluKey) match {
         case None => false
@@ -535,6 +542,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val kielivalinta = toKielivalinta(params)
     toJsonIfValid( Sorakuvaus(
       Some(UUID.fromString(id)),
+      Some("5566778899"),
       Julkaisutila.withName(params(TilaKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       Koulutustyyppi.withName(params(KoulutustyyppiKey)),
