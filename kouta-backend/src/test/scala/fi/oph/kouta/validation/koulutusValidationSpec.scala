@@ -204,4 +204,8 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
     passesValidation(Tallennettu, tuva.copy(kuvaus = Map(Fi -> "kuvaus")))
     failsValidation(Julkaistu, tuva.copy(kuvaus = Map(Fi -> "kuvaus")), "kuvaus", invalidKielistetty(Seq(Sv)))
   }
+
+  it should "fail if kuvaus is missing from julkaistu tuva" in {
+    failsValidation(Julkaistu, tuva.copy(kuvaus = Map()), "kuvaus", invalidKielistetty(Seq(Fi, Sv)))
+  }
 }

@@ -254,6 +254,8 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
     assertEmpty(lisatiedot, path),
     // OpintojenLaajuusKoodiUri on pakollinen kenttä Tuvalle
     validateIfJulkaistu(tila, assertMatch(opintojenLaajuusKoodiUri, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
+    // Kuvaus on pakollinen kenttä Tuvalle
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
     validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
   )
