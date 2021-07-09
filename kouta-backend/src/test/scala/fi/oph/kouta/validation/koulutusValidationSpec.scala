@@ -196,7 +196,7 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
     passesValidation(Tallennettu, tuva)
   }
 
-  it should "fail if linkkiEPerusteisiin is invalid" in {
+  it should "fail if linkkiEPerusteisiin is invalid in tuva" in {
     failsValidation(Julkaistu, tuva.copy(linkkiEPerusteisiin = Map(Fi -> "linkki", Sv -> "http://example.com")), "linkkiEPerusteisiin.fi", invalidUrl("linkki"))
   }
 
@@ -207,5 +207,9 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
 
   it should "fail if kuvaus is missing from julkaistu tuva" in {
     failsValidation(Julkaistu, tuva.copy(kuvaus = Map()), "kuvaus", invalidKielistetty(Seq(Fi, Sv)))
+  }
+
+  it should "fail if opintojenLaajuusKoodiUri is missing from julkaistu tuva" in {
+    failsValidation(Julkaistu, tuva.copy(opintojenLaajuusKoodiUri = None), "opintojenLaajuusKoodiUri", missingMsg)
   }
 }
