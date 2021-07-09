@@ -181,7 +181,7 @@ object TestData {
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(TuvaKoulutusMetadata(
-      opintojenLaajuusKoodiUri = "opintojenlaajuus_v53#1",
+      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv")
     )),
