@@ -488,8 +488,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
       toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
       Some(params(KaytetaanHaunHakulomakettaKey).toBoolean),
-      None,
-      None,
       params(PohjakoulutusvaatimusKoodiUritKey).split(",").map(_.trim).toSeq,
       toKielistetty(kielivalinta, params(PohjakoulutusvaatimusTarkenneKey)),
       params.get(MuuPohjakoulutusvaatimusKey).map(toKielistetty(kielivalinta, _)).getOrElse(Map()),
