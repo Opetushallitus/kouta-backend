@@ -71,16 +71,6 @@ package object hakukohde {
       |        kaytetaanHaunHakulomaketta:
       |          type: boolean
       |          description: Käytetäänkö haun hakulomaketta vai onko hakukohteelle määritelty oma hakulomake?
-      |        aloituspaikat:
-      |          type: integer
-      |          deprecated: true
-      |          description: Hakukohteen aloituspaikkojen lukumäärä
-      |          example: 100
-      |        ensikertalaisenAloituspaikat:
-      |          type: integer
-      |          deprecated: true
-      |          description: Hakukohteen ensikertalaisen aloituspaikkojen lukumäärä
-      |          example: 50
       |        pohjakoulutusvaatimusKoodiUrit:
       |          type: array
       |          description: Lista hakukohteen pohjakoulutusvaatimuksista. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/pohjakoulutusvaatimuskouta/1)

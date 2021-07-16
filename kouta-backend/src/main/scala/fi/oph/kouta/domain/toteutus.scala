@@ -140,14 +140,18 @@ package object toteutus {
       |                wwwSivu:
       |                  fi: http://opintopolku.fi
       |                  sv: http://studieinfo.fi
+      |        sorakuvausId:
+      |          type: string
+      |          description: Toteutukseen liittyvän SORA-kuvauksen yksilöivä tunniste
+      |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
       |        muokkaaja:
       |          type: string
       |          description: Toteutusta viimeksi muokanneen virkailijan henkilö-oid
       |          example: 1.2.246.562.10.00101010101
       |        organisaatioOid:
-      |           type: string
-      |           description: Toteutuksen luoneen organisaation oid
-      |           example: 1.2.246.562.10.00101010101
+      |          type: string
+      |          description: Toteutuksen luoneen organisaation oid
+      |          example: 1.2.246.562.10.00101010101
       |        teemakuva:
       |          type: string
       |          description: Toteutuksen Opintopolussa näytettävän teemakuvan URL.

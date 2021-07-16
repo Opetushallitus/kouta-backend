@@ -22,12 +22,13 @@ package object sorakuvaus {
       |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Minkä tyyppisiin koulutuksiin SORA-kuvaus liittyy. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'muu' (muu koulutus)"
+      |          description: "Minkä tyyppisiin koulutuksiin SORA-kuvaus liittyy. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'tuva' (tutkintokoulutukseen valmentava koulutus), 'muu' (muu koulutus)"
       |          enum:
       |            - amm
       |            - yo
       |            - amk
       |            - lk
+      |            - tuva
       |            - muu
       |          example: amm
       |        tila:

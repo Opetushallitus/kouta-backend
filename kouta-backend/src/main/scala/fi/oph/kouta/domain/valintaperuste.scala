@@ -33,12 +33,15 @@ package object valintaperuste {
       |          description: Onko valintaperuste nähtävissä esikatselussa
       |        koulutustyyppi:
       |          type: string
-      |          description: Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi?
+      |          description: Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi?  Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'tuva' (tutkintokoulutukseen valmentava koulutus), 'muu' (muu koulutus)
       |          enum:
       |            - amm
       |            - yo
-      |            - amk
       |            - lk
+      |            - amk
+      |            - amm-tutkinnon-osa
+      |            - amm-osaamisala
+      |            - tuva
       |            - muu
       |          example: amm
       |        hakutapaKoodiUri:

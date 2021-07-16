@@ -260,11 +260,6 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
-      |            osaamisalat:
-      |              type: array
-      |              items:
-      |                $ref: '#/components/schemas/Osaamisala'
-      |              description: Lista tutkintoon johtamattoman koulutuksen osaamisalojen kuvauksia
       |            hakutermi:
       |              type: object
       |              $ref: '#/components/schemas/Hakutermi'
