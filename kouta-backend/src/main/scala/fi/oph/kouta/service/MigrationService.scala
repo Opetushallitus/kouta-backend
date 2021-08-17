@@ -261,7 +261,8 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     julkinen = false,
     esikatselu = false,
     muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
-    organisaatioOid = resolveOrganisationOidForKoulutus(OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String])),
+    //organisaatioOid = resolveOrganisationOidForKoulutus(OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String])),
+    organisaatioOid = OrganisaatioOid((result \ "organisaatio" \ "oid").extract[String]),
     teemakuva = None,
     ePerusteId = None,
     modified = (result \ "modified").extractOpt[Long].map(toModified))
