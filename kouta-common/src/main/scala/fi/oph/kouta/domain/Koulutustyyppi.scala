@@ -41,7 +41,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_12#1" -> Seq(Muu), //Peruskouluasteen erityiskoulut
     "oppilaitostyyppi_15#1" -> Seq(Lk), //Lukiot
     "oppilaitostyyppi_19#1" -> Seq(Lk), //Perus- ja lukioasteen koulut
-    "oppilaitostyyppi_21#1" -> Seq(Amm), //Ammatilliset oppilaitokset
+    "oppilaitostyyppi_21#1" -> Seq(Amm, Tuva), //Ammatilliset oppilaitokset
     "oppilaitostyyppi_22#1" -> Seq(Amm), //Ammatilliset erityisoppilaitokset
     "oppilaitostyyppi_23#1" -> Seq(Amm), //Ammatilliset erikoisoppilaitokset
     "oppilaitostyyppi_24#1" -> Seq(Amm), //Ammatilliset aikuiskoulutuskeskukset
