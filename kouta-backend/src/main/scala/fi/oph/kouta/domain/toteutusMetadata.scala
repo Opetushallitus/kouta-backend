@@ -480,7 +480,7 @@ package object toteutusMetadata {
 
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel, KorkeakouluToteutusMetadataModel,
     AmmattikorkeaToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
-    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel, LukiodiplomiTietoModel)
+    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel, LukiodiplomiTietoModel)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
@@ -636,7 +636,7 @@ case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
   )
 }
 
-case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
+case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 kuvaus: Kielistetty = Map(),
                                 opetus: Option[Opetus] = None,
                                 asiasanat: List[Keyword] = List(),
@@ -649,7 +649,14 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
                                 lisatietoaValintaperusteista: Kielistetty = Map(),
                                 hakuaika: Option[Ajanjakso] = None,
                                 aloituspaikat: Option[Int] = None,
-                                tuvaErityisopetuksena: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata
+                                tuvaErityisopetuksena: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ))
+  )
+}
 
 trait Osaamisala extends ValidatableSubEntity {
   val linkki: Kielistetty
