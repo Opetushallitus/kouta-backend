@@ -19,6 +19,8 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val ammOa: Toteutus = AmmOsaamisalaToteutus
   val ammTo: Toteutus = AmmTutkinnonOsaToteutus
   val lukioTo: Toteutus = LukioToteutus
+  val tuvaTo: Toteutus = TuvaToteutus
+  val tuvaMetadata: TuvaToteutusMetadata = TuvaToteutuksenMetatieto
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -245,6 +247,16 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
         )
       )
     ))), "metadata.diplomit[0].linkinAltTeksti", invalidKielistetty(Seq(Sv)))
+  }
+
+  "Tuva validation" should "pass valid tuva toteutus" in {
+    passesValidation(tuvaTo)
+  }
+
+  it should "fail if kuvaus is missing from tuva" in {
+    failsValidation(tuvaTo.copy(metadata = Some(tuvaMetadata.copy(
+      kuvaus = Map()
+    ))), "metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
   }
 }
 

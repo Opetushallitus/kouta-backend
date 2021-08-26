@@ -550,6 +550,22 @@ object TestData {
 
   val JulkaistuYoToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto))
 
+  val TuvaToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
+    tyyppi = Tuva,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    tuvaErityisopetuksena = true,
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = Some(23))
+
+  val TuvaToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(TuvaToteutuksenMetatieto))
+
   val MinToteutus: Toteutus = Toteutus(
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
