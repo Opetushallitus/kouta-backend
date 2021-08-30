@@ -3,8 +3,8 @@ package fi.oph.kouta.external
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.util.UUID
-
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestDataGenerator.hakukohde
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -650,6 +650,17 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case (_, params) => !params(TarjoajatKey).split(',').intersect(oids).isEmpty && params(TilaKey) == Julkaistu.name
       }.map {
         case (oid, _) => koulutus(oid)
+      }
+    )
+  }
+
+  def getHakukohdeOidsByJarjestyspaikat(jarjestyspaikkaOids: String): String = {
+    val oids = jarjestyspaikkaOids.split(',')
+    toJson(
+      hakukohteet.filter {
+        case (_, params) => !params(JarjestyspaikkaOidKey).split(',').intersect(oids).isEmpty && params(TilaKey) == Julkaistu.name
+      }.map {
+        case (oid, _) => oid
       }
     )
   }

@@ -2,10 +2,9 @@ package fi.oph.kouta.servlet
 
 import java.net.URLDecoder
 import java.util.UUID
-
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.service.{HakuService, KoulutusService, ModificationService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
+import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
 import fi.oph.kouta.util.TimeUtils.parseHttpDate
 import org.scalatra.Ok
@@ -469,5 +468,37 @@ class IndexerServlet(koulutusService: KoulutusService,
     implicit val authenticated: Authenticated = authenticate()
 
     Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
+  }
+
+  registerPath( "/indexer/jarjestyspaikka/{jarjestyspaikkaOid}/hakukohde-oids",
+    """    get:
+      |      summary: Hakee julkaistut hakukohteet, joissa oppilaitoksen osa on järjestyspaikkana
+      |      operationId: Järjestyspaikan hakukohteet
+      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa oppilaitoksen osa
+      |        on järjestyspaikkana ja jotka on julkaistu. Tämä rajapinta on indeksointia varten
+      |      tags:
+      |        - Indexer
+      |      parameters:
+      |        - in: path
+      |          name: jarjestyspaikkaOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Järjestyspaikka-oid
+      |          example: 1.2.246.562.10.00101010101
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items: string
+      |                  
+      |""".stripMargin)
+  get("/jarjestyspaikka/:jarjestyspaikkaOid/hakukohde-oids") {
+
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(HakukohdeService.getOidsByJarjestyspaikka(OrganisaatioOid(params("jarjestyspaikkaOid"))))
   }
 }
