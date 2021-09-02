@@ -231,6 +231,63 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     passesValidation(Tallennettu, metadataWithoutAllTranslations)
     failsValidation(Julkaistu, metadataWithoutAllTranslations, "hakukohteenLinja.lisatietoa", invalidKielistetty(Seq(Sv)))
   }
+
+  it should "fail validation for painotetutArvosanat when one oppiaineKoodiUri is invalid" in {
+    val hakukohdeMetadata = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(true),
+      koulutuksenAlkamiskausi = None,
+      hakukohteenLinja = Some(HakukohteenLinja(
+        linja = None,
+        alinHyvaksyttyKeskiarvo = Some(7.5),
+        lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
+        painotetutArvosanat = Seq(
+          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = "oppiaineetyleissivistava", kieli = None), painokerroin = 1.5)))))
+
+    failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit.oppiaine", validationMsg("oppiaineetyleissivistava"))
+  }
+
+  it should "fail validation for painotetutArvosanat when one kieli koodiUri is invalid" in {
+    val hakukohdeMetadata = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(true),
+      koulutuksenAlkamiskausi = None,
+      hakukohteenLinja = Some(HakukohteenLinja(
+        linja = None,
+        alinHyvaksyttyKeskiarvo = Some(7.5),
+        lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
+        painotetutArvosanat = Seq(
+          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = "oppiaineetyleissivistava_a1", kieli = Some("kieli_")), painokerroin = 1.5)))))
+
+    failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit.kieli", validationMsg("kieli_"))
+  }
+
+  it should "fail validation for painotetutArvosanat when painokerroin is negative" in {
+    val hakukohdeMetadata = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(true),
+      koulutuksenAlkamiskausi = None,
+      hakukohteenLinja = Some(HakukohteenLinja(
+        linja = None,
+        alinHyvaksyttyKeskiarvo = Some(7.5),
+        lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
+        painotetutArvosanat = Seq(
+          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = "oppiaineetyleissivistava_ai", kieli = None), painokerroin = -1.5)))))
+
+    failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].painokerroin", notNegativeMsg)
+  }
+
+  it should "pass validation for hakukohdemetadata with painotetutArvosanat" in {
+     val hakukohdeMetadata = HakukohdeMetadata(
+       kaytetaanHaunAlkamiskautta = Some(true),
+       koulutuksenAlkamiskausi = None,
+       hakukohteenLinja = Some(HakukohteenLinja(
+         linja = None,
+         alinHyvaksyttyKeskiarvo = Some(7.5),
+         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
+         painotetutArvosanat = Seq(
+           PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = "oppiaineetyleissivistava_a1", kieli = Some("kieli_en")), painokerroin = 1.5),
+           PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = "oppiaineetyleissivistava_mu", kieli = None), painokerroin = 1.7)))))
+
+     passesValidation(Julkaistu, hakukohdeMetadata)
+  }
 }
 
 class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
