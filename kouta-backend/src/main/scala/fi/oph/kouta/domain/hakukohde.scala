@@ -462,19 +462,21 @@ case class LiitteenToimitusosoite(osoite: Osoite,
   )
 }
 
-case class OppiaineKoodiUrit(oppiaine: String, kieli: Option[String]) extends ValidatableSubEntity {
+case class OppiaineKoodiUrit(oppiaine: Option[String], kieli: Option[String]) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfJulkaistu(tila, assertMatch(oppiaine, OppiaineKoodiPattern, s"$path.oppiaine")),
-    validateIfJulkaistu(tila,
-      validateIfDefined(kieli, assertMatch(_, KieliKoodiPattern, s"$path.kieli"))
-    ),
+    assertNotOptional(oppiaine, s"$path.oppiaine"),
+    validateIfDefined(oppiaine, assertMatch(_, OppiaineKoodiPattern, s"$path.oppiaine")),
+    validateIfDefined(kieli, assertMatch(_, KieliKoodiPattern, s"$path.kieli"))
   )
 }
 
-case class PainotettuOppiaine(koodiUrit: OppiaineKoodiUrit, painokerroin: Double) extends ValidatableSubEntity{
+case class PainotettuOppiaine(koodiUrit: OppiaineKoodiUrit, painokerroin: Option[Double]) extends ValidatableSubEntity{
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     koodiUrit.validate(tila, kielivalinta, s"$path.koodiUrit"),
-    validateIfJulkaistu(tila, assertNotNegative(painokerroin, s"$path.painokerroin")),
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(painokerroin, s"$path.painokerroin"),
+      validateIfDefined[Double](painokerroin, assertNotNegative(_, s"$path.painokerroin")))
+    ),
   )
 }
 
