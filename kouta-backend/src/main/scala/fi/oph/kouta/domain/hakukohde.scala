@@ -470,10 +470,11 @@ case class OppiaineKoodiUrit(oppiaine: Option[String], kieli: Option[String]) ex
   )
 }
 
-case class PainotettuOppiaine(koodiUrit: OppiaineKoodiUrit, painokerroin: Option[Double]) extends ValidatableSubEntity{
+case class PainotettuOppiaine(koodiUrit: Option[OppiaineKoodiUrit] = None, painokerroin: Option[Double]) extends ValidatableSubEntity{
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    koodiUrit.validate(tila, kielivalinta, s"$path.koodiUrit"),
     validateIfJulkaistu(tila, and(
+      assertNotOptional(koodiUrit, s"$path.koodiUrit"),
+      validateIfDefined[OppiaineKoodiUrit](koodiUrit, _.validate(tila, kielivalinta, s"$path.koodiUrit")),
       assertNotOptional(painokerroin, s"$path.painokerroin"),
       validateIfDefined[Double](painokerroin, assertNotNegative(_, s"$path.painokerroin")))
     ),

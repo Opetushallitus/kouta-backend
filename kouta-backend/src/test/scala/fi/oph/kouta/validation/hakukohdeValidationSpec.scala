@@ -241,7 +241,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava"), kieli = None), painokerroin = Some(1.5))))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava"), kieli = None)), painokerroin = Some(1.5))))))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit.oppiaine", validationMsg("oppiaineetyleissivistava"))
   }
@@ -255,9 +255,23 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = None, kieli = None), painokerroin = Some(1.5))))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = None, kieli = None)), painokerroin = Some(1.5))))))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit.oppiaine", missingMsg)
+  }
+
+  it should "fail validation for painotetutArvosanat when koodiUrit is missing" in {
+    val hakukohdeMetadata = HakukohdeMetadata(
+      kaytetaanHaunAlkamiskautta = Some(true),
+      koulutuksenAlkamiskausi = None,
+      hakukohteenLinja = Some(HakukohteenLinja(
+        linja = None,
+        alinHyvaksyttyKeskiarvo = Some(7.5),
+        lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
+        painotetutArvosanat = Seq(
+          PainotettuOppiaine(koodiUrit = None, painokerroin = Some(1.5))))))
+
+    failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit", missingMsg)
   }
 
   it should "fail validation for painotetutArvosanat when painokerroin is missing" in {
@@ -269,7 +283,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_a1"), kieli = Some("kieli_en#1")), painokerroin = None)))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_a1"), kieli = Some("kieli_en#1"))), painokerroin = None)))))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].painokerroin", missingMsg)
   }
@@ -283,7 +297,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_a1"), kieli = Some("kieli_")), painokerroin = Some(1.5))))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_a1"), kieli = Some("kieli_"))), painokerroin = Some(1.5))))))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit.kieli", validationMsg("kieli_"))
   }
@@ -297,7 +311,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_ai"), kieli = None), painokerroin = Some(-1.5))))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_ai"), kieli = None)), painokerroin = Some(-1.5))))))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].painokerroin", notNegativeMsg)
   }
@@ -311,8 +325,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
          alinHyvaksyttyKeskiarvo = Some(7.5),
          lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
          painotetutArvosanat = Seq(
-           PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_a1"), kieli = Some("kieli_en")), painokerroin = Some(1.5)),
-           PainotettuOppiaine(koodiUrit = OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_mu"), kieli = None), painokerroin = Some(1.7))))))
+           PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_a1"), kieli = Some("kieli_en"))), painokerroin = Some(1.5)),
+           PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("oppiaineetyleissivistava_mu"), kieli = None)), painokerroin = Some(1.7))))))
 
      passesValidation(Julkaistu, hakukohdeMetadata)
   }
