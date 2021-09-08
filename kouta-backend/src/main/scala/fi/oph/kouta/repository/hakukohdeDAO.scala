@@ -125,6 +125,10 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     KoutaDatabase.runBlocking(selectDependencyInformation(hakukohde)).map { case (name, tila, tyyppi, toteutusMetadata) =>
       name -> (tila, tyyppi, toteutusMetadata)
     }.toMap
+
+  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid): Seq[String] = {
+    KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(List(jarjestyspaikkaOid)))
+  }
 }
 
 sealed trait HakukohdeModificationSQL extends SQLHelpers {
@@ -515,6 +519,12 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     sql"""#$selectHakukohdeListSql
           inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))""".as[HakukohdeListItem]
+  }
+
+  def selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids: Seq[OrganisaatioOid]) = {
+    sql"""select oid
+          from hakukohteet
+          where jarjestyspaikka_oid in (#${createOidInParams(jarjestyspaikkaOids)})""".as[String]
   }
 
   def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]] =

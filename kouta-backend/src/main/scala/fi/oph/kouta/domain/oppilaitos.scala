@@ -197,6 +197,9 @@ package object oppilaitos {
       |          type: string
       |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
       |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
+      |        jarjestaaUrheilijanAmmKoulutusta: 
+      |          type: boolean
+      |          description: Järjestääkö oppilaitoksen osa urheilijan ammatillista koulutusta?
       |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -364,7 +367,8 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
                               kampuksia: Option[Int] = None,
                               yksikoita: Option[Int] = None,
                               toimipisteita: Option[Int] = None,
-                              akatemioita: Option[Int] = None) extends ValidatableSubEntity {
+                              akatemioita: Option[Int] = None,
+                              ) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[TietoaOpiskelusta](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Yhteystieto](yhteystiedot, s"$path.yhteystiedot", _.validate(tila, kielivalinta, _)),
@@ -392,7 +396,8 @@ case class OppilaitoksenOsaMetadata(yhteystiedot: Seq[Yhteystieto] = Seq(),
                                     wwwSivu: Option[NimettyLinkki] = None,
                                     opiskelijoita: Option[Int] = None,
                                     kampus: Kielistetty = Map(),
-                                    esittely: Kielistetty = Map()) extends ValidatableSubEntity {
+                                    esittely: Kielistetty = Map(),
+                                    jarjestaaUrheilijanAmmKoulutusta: Boolean = false) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Yhteystieto](yhteystiedot, s"$path.yhteystiedot", _.validate(tila, kielivalinta, _)),
     validateIfDefined[NimettyLinkki](wwwSivu, _.validate(tila, kielivalinta, s"$path.wwwSivu")),

@@ -55,6 +55,11 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
+  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid)(implicit authenticated: Authenticated) =
+    withRootAccess(indexerRoles) {
+      HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOid);
+    }
+
   private def validateDependenciesIntegrity(hakukohde: Hakukohde): Unit = {
     import Validations._
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
@@ -105,4 +110,5 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
+
 }
