@@ -472,10 +472,10 @@ class IndexerServlet(koulutusService: KoulutusService,
 
   registerPath( "/indexer/jarjestyspaikka/{jarjestyspaikkaOid}/hakukohde-oids",
     """    get:
-      |      summary: Hakee julkaistut hakukohteet, joissa oppilaitoksen osa on järjestyspaikkana
+      |      summary: Hakee hakukohteet, joissa oppilaitoksen osa on järjestyspaikkana
       |      operationId: Järjestyspaikan hakukohteet
-      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa oppilaitoksen osa
-      |        on järjestyspaikkana ja jotka on julkaistu. Tämä rajapinta on indeksointia varten
+      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa annettu oppilaitoksen osa
+      |        on järjestyspaikkana. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      parameters:
