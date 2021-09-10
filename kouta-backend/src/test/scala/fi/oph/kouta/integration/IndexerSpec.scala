@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.oid.KoulutusOid
+import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.{Hakutieto, Koulutus, OppilaitoksenOsa, Toteutus}
 import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
@@ -9,6 +9,22 @@ import org.json4s.jackson.Serialization.read
 class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec {
 
   override val roleEntities: Seq[RoleEntity] = RoleEntity.all
+
+  "List hakukohteet by järjestyspaikka oids" should "List hakukohteet by järjestyspaikka oids" in {
+    val oppilaitosOid = put(oppilaitos, ophSession)
+    val jarjestyspaikkaOid = put(oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid)), ophSession)
+
+    val koulutusOid = put(koulutus, ophSession)
+    val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid)), ophSession)
+    val hakuOid = put(haku, ophSession)
+    val hakukohdeOid = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
+      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid))), ophSession)
+
+    get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid))
+    }
+  }
 
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
     val oid = put(koulutus, ophSession)
@@ -119,4 +135,5 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val oid = ChildOid
     get(s"$IndexerPath/oppilaitos/$oid/osat", fakeIndexerSession, 403)
   }
+
 }
