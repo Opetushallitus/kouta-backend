@@ -304,6 +304,34 @@ package object hakukohde {
       |          $ref: '#/components/schemas/LiitteenToimitusosoite'
       |""".stripMargin
 
+  val PainotettuOppiaine: String =
+    """    PainotettuOppiaine:
+      |      type: object
+      |      properties:
+      |        koodiUrit:
+      |          type: object
+      |          description: Oppiaineen (ja mahdollisesti kielen) koodistokoodiURI
+      |          $ref: '#/components/schemas/OppiaineKoodiUrit'
+      |        painokerroin:
+      |          type: number
+      |          description: Oppiaineelle määritty opiskelijavalinnassa käytettävä painokerroin
+      |          example: 1.2
+      |""".stripMargin
+
+  val OppiaineKoodiUrit: String =
+    """    OppiaineKoodiUrit:
+      |      type: object
+      |      properties:
+      |        oppiaine:
+      |          type: string
+      |          description: Oppiaineen koodiURI koodistossa
+      |          example: "oppiaineetyleissivistava_b2"
+      |        kieli:
+      |          type: string
+      |          description: Kielen koodiURI koodistossa
+      |          example: "kieli_en"
+      |""".stripMargin
+
   val HakukohteenLinjaModel: String =
     """    HakukohteenLinja:
       |      type: object
@@ -320,10 +348,15 @@ package object hakukohde {
       |          type: object
       |          description: Lisätietoa keskiarvosta
       |          $ref: '#/components/schemas/Kuvaus'
+      |        painotetutArvosanat:
+      |          type: array
+      |          description: Opiskelijavalinnassa käytettävät oppiaineet, joita painotetaan valintaa tehdessä
+      |          items:
+      |            $ref: '#/components/schemas/PainotettuOppiaine'
       |""".stripMargin
 
   def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
-                    HakukohteenLinjaModel)
+    PainotettuOppiaine, OppiaineKoodiUrit, HakukohteenLinjaModel)
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,
@@ -429,12 +462,33 @@ case class LiitteenToimitusosoite(osoite: Osoite,
   )
 }
 
+case class OppiaineKoodiUrit(oppiaine: Option[String], kieli: Option[String]) extends ValidatableSubEntity {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    assertNotOptional(oppiaine, s"$path.oppiaine"),
+    validateIfDefined(oppiaine, assertMatch(_, OppiaineKoodiPattern, s"$path.oppiaine")),
+    validateIfDefined(kieli, assertMatch(_, KieliKoodiPattern, s"$path.kieli"))
+  )
+}
+
+case class PainotettuOppiaine(koodiUrit: Option[OppiaineKoodiUrit] = None, painokerroin: Option[Double]) extends ValidatableSubEntity{
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(koodiUrit, s"$path.koodiUrit"),
+      validateIfDefined[OppiaineKoodiUrit](koodiUrit, _.validate(tila, kielivalinta, s"$path.koodiUrit")),
+      assertNotOptional(painokerroin, s"$path.painokerroin"),
+      validateIfDefined[Double](painokerroin, assertNotNegative(_, s"$path.painokerroin")))
+    ),
+  )
+}
+
 case class HakukohteenLinja(linja: Option[String] = None, // NOTE: None tarkoittaa Yleislinjaa
                             alinHyvaksyttyKeskiarvo: Option[Double] = None,
-                            lisatietoa: Kielistetty = Map()) extends ValidatableSubEntity{
+                            lisatietoa: Kielistetty = Map(),
+                            painotetutArvosanat: Seq[PainotettuOppiaine] = Seq()) extends ValidatableSubEntity{
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[Double](alinHyvaksyttyKeskiarvo, assertNotNegative(_, s"$path.alinHyvaksyttyKeskiarvo")),
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatietoa, s"$path.lisatietoa"))
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatietoa, s"$path.lisatietoa")),
+    validateIfNonEmpty[PainotettuOppiaine](painotetutArvosanat, s"$path.painotetutArvosanat", _.validate(tila, kielivalinta, _))
   )
 }
 
