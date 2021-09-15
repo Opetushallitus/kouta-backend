@@ -812,8 +812,12 @@ case class LukiodiplomiTieto(koodiUri: String, linkki: Kielistetty = Map(), link
   )
 }
 
-
-trait VapaaSivistystyoToteutusMetadata extends ToteutusMetadata {
+case class VapaaSivistystyoOpistovuosiToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
+                                                       kuvaus: Kielistetty = Map(),
+                                                       opetus: Option[Opetus] = None,
+                                                       asiasanat: List[Keyword] = List(),
+                                                       ammattinimikkeet: List[Keyword] = List(),
+                                                       yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
@@ -821,20 +825,6 @@ trait VapaaSivistystyoToteutusMetadata extends ToteutusMetadata {
     ))
   )
 }
-
-case class VapaaSivistystyoOpistovuosiToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
-                                                       kuvaus: Kielistetty = Map(),
-                                                       opetus: Option[Opetus] = None,
-                                                       asiasanat: List[Keyword] = List(),
-                                                       ammattinimikkeet: List[Keyword] = List(),
-                                                       yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                       hakutermi: Option[Hakutermi] = None,
-                                                       hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                                       hakulomakeLinkki: Kielistetty = Map(),
-                                                       lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                                       lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                       hakuaika: Option[Ajanjakso] = None,
-                                                       aloituspaikat: Option[Int] = None) extends VapaaSivistystyoToteutusMetadata
 
 case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
                                                kuvaus: Kielistetty = Map(),
@@ -848,4 +838,13 @@ case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                lisatietoaValintaperusteista: Kielistetty = Map(),
                                                hakuaika: Option[Ajanjakso] = None,
-                                               aloituspaikat: Option[Int] = None) extends VapaaSivistystyoToteutusMetadata
+                                               aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ))
+  )
+
+  override def allowSorakuvaus: Boolean = false
+}
