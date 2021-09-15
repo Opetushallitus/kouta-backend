@@ -157,8 +157,35 @@ package object koulutusMetadata {
       |              example: opintojenlaajuus_40#1
       |""".stripMargin
 
+  val VapaaSivistystyoKoulutusMetadataModel: String =
+    """    VapaaSivistystyoKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: vapaa-sivistystyo-opistovuosi
+      |              enum:
+      |                - vapaa-sivistystyo-opistovuosi
+      |                - vapaa-sivistystyo-muu
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
+      |            opintojenLaajuusKoodiUri:
+      |              type: string
+      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
+      |              example: opintojenlaajuus_40#1
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, LukioKoulutusMetadataModel)
+    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, LukioKoulutusMetadataModel,
+    VapaaSivistystyoKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
@@ -260,3 +287,36 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
     validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
   )
 }
+
+trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata {
+  val kuvaus: Kielistetty
+  val linkkiEPerusteisiin: Kielistetty
+  val opintojenLaajuusKoodiUri: Option[String]
+  val koulutusalaKoodiUrit: Seq[String]
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
+    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
+    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
+    validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
+  )
+}
+
+case class VapaaSivistystyoOpistovuosiKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
+                                                       lisatiedot: Seq[Lisatieto] = Seq(),
+                                                       kuvaus: Kielistetty = Map(),
+                                                       linkkiEPerusteisiin: Kielistetty = Map(),
+                                                       koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                                       opintojenLaajuusKoodiUri: Option[String] = None
+                                                      ) extends VapaaSivistystyoKoulutusMetadata
+
+case class VapaaSivistystyoMuuKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
+                                                       lisatiedot: Seq[Lisatieto] = Seq(),
+                                                       kuvaus: Kielistetty = Map(),
+                                                       linkkiEPerusteisiin: Kielistetty = Map(),
+                                                       koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                                       opintojenLaajuusKoodiUri: Option[String] = None
+                                                      ) extends VapaaSivistystyoKoulutusMetadata

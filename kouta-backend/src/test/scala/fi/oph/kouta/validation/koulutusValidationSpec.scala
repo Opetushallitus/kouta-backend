@@ -120,6 +120,8 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
   val ammTo: AmmatillinenTutkinnonOsaKoulutusMetadata = AmmTutkinnonOsaKoulutus.metadata.get.asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
   val lukio: LukioKoulutusMetadata = LukioKoulutus.metadata.get.asInstanceOf[LukioKoulutusMetadata]
   val tuva: TuvaKoulutusMetadata = TuvaKoulutus.metadata.get.asInstanceOf[TuvaKoulutusMetadata]
+  val vapaaSivistystyoOpistovuosi: VapaaSivistystyoOpistovuosiKoulutusMetadata = VapaaSivistystyoOpistovuosiKoulutus.metadata.get.asInstanceOf[VapaaSivistystyoOpistovuosiKoulutusMetadata]
+  val vapaaSivistystyoMuu: VapaaSivistystyoMuuKoulutusMetadata = VapaaSivistystyoMuuKoulutus.metadata.get.asInstanceOf[VapaaSivistystyoMuuKoulutusMetadata]
 
   "Koulutus metadata validator" should "pass a valid metadata" in {
     passesValidation(Julkaistu, amm)
@@ -212,4 +214,26 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
   it should "fail if opintojenLaajuusKoodiUri is missing from julkaistu tuva" in {
     failsValidation(Julkaistu, tuva.copy(opintojenLaajuusKoodiUri = None), "opintojenLaajuusKoodiUri", missingMsg)
   }
+
+  "Vapaa sivistystyo metadata validation" should "pass valid metadata" in {
+    passesValidation(Tallennettu, vapaaSivistystyoOpistovuosi)
+  }
+
+  it should "fail if linkkiEPerusteisiin is invalid in tuva" in {
+    failsValidation(Julkaistu, vapaaSivistystyoOpistovuosi.copy(linkkiEPerusteisiin = Map(Fi -> "linkki", Sv -> "http://example.com")), "linkkiEPerusteisiin.fi", invalidUrl("linkki"))
+  }
+
+  it should "fail if kuvaus has missing languages in a julkaistu vapaa sivistystyo opistovuosi koulutus" in {
+    passesValidation(Tallennettu, vapaaSivistystyoOpistovuosi.copy(kuvaus = Map(Fi -> "kuvaus")))
+    failsValidation(Julkaistu, vapaaSivistystyoOpistovuosi.copy(kuvaus = Map(Fi -> "kuvaus")), "kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if kuvaus is missing from julkaistu vapaa sivistystyo opistovuosi" in {
+    failsValidation(Julkaistu, vapaaSivistystyoOpistovuosi.copy(kuvaus = Map()), "kuvaus", invalidKielistetty(Seq(Fi, Sv)))
+  }
+
+  it should "fail if opintojenLaajuusKoodiUri is missing from julkaistu vapaa sivistystyo opistovuosi" in {
+    failsValidation(Julkaistu, tuva.copy(opintojenLaajuusKoodiUri = None), "opintojenLaajuusKoodiUri", missingMsg)
+  }
+
 }

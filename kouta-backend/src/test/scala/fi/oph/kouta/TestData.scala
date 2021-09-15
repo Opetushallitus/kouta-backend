@@ -193,6 +193,48 @@ object TestData {
     ePerusteId = None,
     modified = None)
 
+  val VapaaSivistystyoOpistovuosiKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = Tuva,
+    esikatselu = false,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(VapaaSivistystyoOpistovuosiKoulutusMetadata(
+      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+    )),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/lkkuva"),
+    ePerusteId = None,
+    modified = None)
+
+  val VapaaSivistystyoMuuKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = Tuva,
+    esikatselu = false,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(VapaaSivistystyoMuuKoulutusMetadata(
+      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+    )),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/lkkuva"),
+    ePerusteId = None,
+    modified = None)
+
   val MinKoulutus: Koulutus = Koulutus(
     koulutustyyppi = Amm,
     johtaaTutkintoon = false,
@@ -565,6 +607,36 @@ object TestData {
     aloituspaikat = Some(23))
 
   val TuvaToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(TuvaToteutuksenMetatieto))
+
+  val VapaaSivistystyoOpistovuosiToteutuksenMetatieto: VapaaSivistystyoOpistovuosiToteutusMetadata = VapaaSivistystyoOpistovuosiToteutusMetadata(
+    tyyppi = Tuva,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = Some(23))
+
+  val VapaaSivistystyoOpistovuosiToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(VapaaSivistystyoOpistovuosiToteutuksenMetatieto))
+
+  val VapaaSivistystyoMuuToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
+    tyyppi = Tuva,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    tuvaErityisopetuksena = true,
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = Some(23))
+
+  val VapaaSivistystyoMuuToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(VapaaSivistystyoMuuToteutuksenMetatieto))
 
   val MinToteutus: Toteutus = Toteutus(
     muokkaaja = TestUserOid,

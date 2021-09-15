@@ -34,6 +34,8 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
         case Amk => s.extract[AmmattikorkeakouluKoulutusMetadata]
         case Lk => s.extract[LukioKoulutusMetadata]
         case Tuva => s.extract[TuvaKoulutusMetadata]
+        case VapaaSivistystyoOpistovuosi => s.extract[VapaaSivistystyoOpistovuosiKoulutusMetadata]
+        case VapaaSivistystyoMuu => s.extract[VapaaSivistystyoMuuKoulutusMetadata]
         case kt => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
       }
     }, {
@@ -57,6 +59,8 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
         case Amk => s.extract[AmmattikorkeakouluToteutusMetadata]
         case Lk => s.extract[LukioToteutusMetadata]
         case Tuva => s.extract[TuvaToteutusMetadata]
+        case VapaaSivistystyoOpistovuosi => s.extract[VapaaSivistystyoOpistovuosiToteutusMetadata]
+        case VapaaSivistystyoMuu => s.extract[VapaaSivistystyoMuuToteutusMetadata]
         case kt => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
       }
   }, {
