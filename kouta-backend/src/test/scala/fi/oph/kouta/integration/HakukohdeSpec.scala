@@ -137,7 +137,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "metadata.hakukohteenLinja", missingMsg)
   }
 
-  it should "store tutkintoon johtamaton hakukohde if toteutus uses hakemuspalvelu" in {
+  it should "store ammatillinen tutkinnon osa hakukohde if toteutus uses hakemuspalvelu" in {
     val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
     val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(
       koulutusOid = KoulutusOid(koulutusOid),
@@ -146,10 +146,26 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(hakukohde(toteutusOid, hakuOid))
   }
 
-  it should "fail to store tutkintoon johtamaton hakukohde if toteutus does not use hakemuspalvelu" in {
+  it should "fail to store ammatillinen tutkinnon osa hakukohde if toteutus does not use hakemuspalvelu" in {
     val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
     val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
     val toteutusOid = put(ammToToteutus)
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid), 400, "toteutusOid", cannotLinkToHakukohde(toteutusOid))
+  }
+
+  it should "store vapaa sivistystyo muu hakukohde if toteutus uses hakemuspalvelu" in {
+    val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus)
+    val vsToToteutus = TestData.VapaaSivistystyoMuuToteutus.copy(
+      koulutusOid = KoulutusOid(koulutusOid),
+      metadata = Some(TestData.VapaaSivistystyoMuuToteutusHakemuspalveluMetatieto))
+    val toteutusOid = put(vsToToteutus)
+    put(hakukohde(toteutusOid, hakuOid))
+  }
+
+  it should "fail to store vapaa sivistystyo muu hakukohde if toteutus does not use hakemuspalvelu" in {
+    val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus)
+    val vsToToteutus = TestData.VapaaSivistystyoMuuToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
+    val toteutusOid = put(vsToToteutus)
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid), 400, "toteutusOid", cannotLinkToHakukohde(toteutusOid))
   }
 

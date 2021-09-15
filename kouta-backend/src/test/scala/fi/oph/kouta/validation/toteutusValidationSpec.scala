@@ -21,8 +21,8 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val lukioTo: Toteutus = LukioToteutus
   val tuvaTo: Toteutus = TuvaToteutus
   val tuvaMetadata: TuvaToteutusMetadata = TuvaToteutuksenMetatieto
-  val vapaaSivistystyoOpistovuosiToteutusMetadata = VapaaSivistystyoOpistovuosiToteutuksenMetatieto
-  val vapaaSivistystyoMuuMetadata = VapaaSivistystyoMuuToteutuksenMetatieto
+  val vapaaSivistystyoOpistovuosiToteutusMetadata = VapaaSivistystyoOpistovuosiToteutusMetatieto
+  val vapaaSivistystyoMuuMetadata = VapaaSivistystyoMuuToteutusMetatieto
   val vapaaSivistystyoOpistovuosiTo = VapaaSivistystyoOpistovuosiToteutus
   val vapaaSivistystyoMuuTo = VapaaSivistystyoMuuToteutus
 
