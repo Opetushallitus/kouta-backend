@@ -320,6 +320,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.softwaremill.diffx</groupId>
+            <artifactId>diffx-scalatest_2.12</artifactId>
+            <version>0.5.6</version>
+        </dependency>
+        <dependency>
             <groupId>org.scalacheck</groupId>
             <artifactId>scalacheck_2.12</artifactId>
             <scope>test</scope>
