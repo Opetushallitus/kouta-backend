@@ -41,7 +41,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_12#1" -> Seq(Muu, Tuva), //Peruskouluasteen erityiskoulut
     "oppilaitostyyppi_15#1" -> Seq(Lk, Tuva), //Lukiot
     "oppilaitostyyppi_19#1" -> Seq(Lk, Tuva), //Perus- ja lukioasteen koulut
-    "oppilaitostyyppi_21#1" -> Seq(Amm, Tuva), //Ammatilliset oppilaitokset
+    "oppilaitostyyppi_21#1" -> Seq(Amm, Tuva, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Ammatilliset oppilaitokset
     "oppilaitostyyppi_22#1" -> Seq(Amm, Tuva), //Ammatilliset erityisoppilaitokset
     "oppilaitostyyppi_23#1" -> Seq(Amm, Tuva), //Ammatilliset erikoisoppilaitokset
     "oppilaitostyyppi_24#1" -> Seq(Amm, Tuva), //Ammatilliset aikuiskoulutuskeskukset
@@ -53,15 +53,15 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_45#1" -> Seq(Yo), //Lastentarhanopettajaopistot
     "oppilaitostyyppi_46#1" -> Seq(Amk), //Väliaikaiset ammattikorkeakoulut
     "oppilaitostyyppi_61#1" -> Seq(Muu), //Musiikkioppilaitokset
-    "oppilaitostyyppi_62#1" -> Seq(Muu), //Liikunnan koulutuskeskukset
-    "oppilaitostyyppi_63#1" -> Seq(Amm, Muu, Tuva), //Kansanopistot
-    "oppilaitostyyppi_64#1" -> Seq(Muu, Tuva), //Kansalaisopistot
+    "oppilaitostyyppi_62#1" -> Seq(Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Liikunnan koulutuskeskukset
+    "oppilaitostyyppi_63#1" -> Seq(Amm, Muu, Tuva, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansanopistot
+    "oppilaitostyyppi_64#1" -> Seq(Muu, Tuva, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansalaisopistot
     "oppilaitostyyppi_65#1" -> Seq(Muu), //Opintokeskukset
-    "oppilaitostyyppi_66#1" -> Seq(Muu), //Kesäyliopistot
+    "oppilaitostyyppi_66#1" -> Seq(Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kesäyliopistot
     "oppilaitostyyppi_91#1" -> Seq(Muu), //Kirjeoppilaitokset
     "oppilaitostyyppi_92#1" -> Seq(Muu), //Neuvontajärjestöt
     "oppilaitostyyppi_93#1" -> Seq(Muu), //Muut koulutuksen järjestäjät
-    "oppilaitostyyppi_99#1" -> Seq(Muu), //Muut oppilaitokset
+    "oppilaitostyyppi_99#1" -> Seq(Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Muut oppilaitokset
     "oppilaitostyyppi_XX#1" -> Seq(Muu), //Ei tiedossa (oppilaitostyyppi)
   )
 }
