@@ -120,6 +120,7 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
   val ammTo: AmmatillinenTutkinnonOsaKoulutusMetadata = AmmTutkinnonOsaKoulutus.metadata.get.asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
   val lukio: LukioKoulutusMetadata = LukioKoulutus.metadata.get.asInstanceOf[LukioKoulutusMetadata]
   val tuva: TuvaKoulutusMetadata = TuvaKoulutus.metadata.get.asInstanceOf[TuvaKoulutusMetadata]
+  val telma: TelmaKoulutusMetadata = TelmaKoulutus.metadata.get.asInstanceOf[TelmaKoulutusMetadata]
 
   "Koulutus metadata validator" should "pass a valid metadata" in {
     passesValidation(Julkaistu, amm)
@@ -211,5 +212,26 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
 
   it should "fail if opintojenLaajuusKoodiUri is missing from julkaistu tuva" in {
     failsValidation(Julkaistu, tuva.copy(opintojenLaajuusKoodiUri = None), "opintojenLaajuusKoodiUri", missingMsg)
+  }
+
+  "Telma metadata validation" should "pass valid metadata" in {
+    passesValidation(Tallennettu, telma)
+  }
+
+  it should "fail if linkkiEPerusteisiin is invalid in telma" in {
+    failsValidation(Julkaistu, telma.copy(linkkiEPerusteisiin = Map(Fi -> "linkki", Sv -> "http://example.com")), "linkkiEPerusteisiin.fi", invalidUrl("linkki"))
+  }
+
+  it should "fail if kuvaus has missing languages in a julkaistu telma koulutus" in {
+    passesValidation(Tallennettu, telma.copy(kuvaus = Map(Fi -> "kuvaus")))
+    failsValidation(Julkaistu, telma.copy(kuvaus = Map(Fi -> "kuvaus")), "kuvaus", invalidKielistetty(Seq(Sv)))
+  }
+
+  it should "fail if kuvaus is missing from julkaistu telma" in {
+    failsValidation(Julkaistu, telma.copy(kuvaus = Map()), "kuvaus", invalidKielistetty(Seq(Fi, Sv)))
+  }
+
+  it should "fail if opintojenLaajuusKoodiUri is missing from julkaistu tuva" in {
+    failsValidation(Julkaistu, telma.copy(opintojenLaajuusKoodiUri = None), "opintojenLaajuusKoodiUri", missingMsg)
   }
 }

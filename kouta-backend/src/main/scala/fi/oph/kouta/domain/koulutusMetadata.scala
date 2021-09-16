@@ -260,3 +260,22 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
     validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
   )
 }
+
+case class TelmaKoulutusMetadata(tyyppi: Koulutustyyppi = Telma,
+                                kuvaus: Kielistetty = Map(),
+                                lisatiedot: Seq[Lisatieto] = Seq(),
+                                linkkiEPerusteisiin: Kielistetty = Map(),
+                                opintojenLaajuusKoodiUri: Option[String] = None) extends KoulutusMetadata {
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    // Telmalla ei ole lisätiedot-kenttää lomakkeessa
+    assertEmpty(lisatiedot, path),
+    // OpintojenLaajuusKoodiUri on pakollinen kenttä Telmalle
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
+    // Kuvaus on pakollinen kenttä Telmalle
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
+    validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
+  )
+}
