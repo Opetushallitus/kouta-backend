@@ -658,6 +658,28 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
   )
 }
 
+case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
+                                kuvaus: Kielistetty = Map(),
+                                opetus: Option[Opetus] = None,
+                                asiasanat: List[Keyword] = List(),
+                                ammattinimikkeet: List[Keyword] = List(),
+                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                hakutermi: Option[Hakutermi] = None,
+                                hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                hakulomakeLinkki: Kielistetty = Map(),
+                                lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                lisatietoaValintaperusteista: Kielistetty = Map(),
+                                hakuaika: Option[Ajanjakso] = None,
+                                aloituspaikat: Option[Int] = None,
+                                tuvaErityisopetuksena: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ))
+  )
+}
+
 trait Osaamisala extends ValidatableSubEntity {
   val linkki: Kielistetty
   val otsikko: Kielistetty

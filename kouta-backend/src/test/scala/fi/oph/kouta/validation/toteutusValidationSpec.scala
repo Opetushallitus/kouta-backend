@@ -21,6 +21,8 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val lukioTo: Toteutus = LukioToteutus
   val tuvaTo: Toteutus = TuvaToteutus
   val tuvaMetadata: TuvaToteutusMetadata = TuvaToteutuksenMetatieto
+  val telmaTo: Toteutus = TelmaToteutus
+  val telmaMetadata: TelmaToteutusMetadata = TelmaToteutuksenMetatieto
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -255,6 +257,16 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail if kuvaus is missing from tuva" in {
     failsValidation(tuvaTo.copy(metadata = Some(tuvaMetadata.copy(
+      kuvaus = Map()
+    ))), "metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
+  }
+
+  "Telma validation" should "pass valid telma toteutus" in {
+    passesValidation(telmaTo)
+  }
+
+  it should "fail if kuvaus is missing from telma" in {
+    failsValidation(telmaTo.copy(metadata = Some(telmaMetadata.copy(
       kuvaus = Map()
     ))), "metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
   }
