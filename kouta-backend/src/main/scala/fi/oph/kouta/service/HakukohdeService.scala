@@ -83,6 +83,8 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
           assertTrue(metadata.asInstanceOf[AmmatillinenTutkinnonOsaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
         validateIfTrue(metadata.tyyppi == AmmOsaamisala,
           assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
+        validateIfTrue(metadata.tyyppi == VapaaSivistystyoMuu,
+          assertTrue(metadata.asInstanceOf[VapaaSivistystyoMuuToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
         validateIfTrue(metadata.tyyppi == Lk,
           assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
       ))

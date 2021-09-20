@@ -345,6 +345,34 @@ package object toteutusMetadata {
       |              description: Tieto siitä järjestetäänkö toteutus erityisopetuksena
       |""".stripMargin
 
+  val VapaaSivistystyoOpistovuosiToteutusMetadataModel: String =
+    """    VapaaSivistystyoOpistovuosiToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: vapaa-sivistystyo-opistovuosi
+      |              enum:
+      |                - vapaa-sivistystyo-opistovuosi
+      |""".stripMargin
+
+  val VapaaSivistystyoMuuToteutusMetadataModel: String =
+    """    VapaaSivistystyoMuuToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: vapaa-sivistystyo-muu
+      |              enum:
+      |                - vapaa-sivistystyo-muu
+      |""".stripMargin
+
   val LukiolinjaTietoModel: String =
     """    LukiolinjaTieto:
       |      type: object
@@ -480,7 +508,8 @@ package object toteutusMetadata {
 
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel, KorkeakouluToteutusMetadataModel,
     AmmattikorkeaToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
-    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel, LukiodiplomiTietoModel)
+    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel, LukiodiplomiTietoModel,
+    VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
@@ -658,6 +687,8 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
   )
 }
 
+
+
 trait Osaamisala extends ValidatableSubEntity {
   val linkki: Kielistetty
   val otsikko: Kielistetty
@@ -792,4 +823,41 @@ case class LukiodiplomiTieto(koodiUri: String, linkki: Kielistetty = Map(), link
       validateOptionalKielistetty(kielivalinta, linkinAltTeksti, s"$path.linkinAltTeksti"),
     ))
   )
+}
+
+case class VapaaSivistystyoOpistovuosiToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
+                                                       kuvaus: Kielistetty = Map(),
+                                                       opetus: Option[Opetus] = None,
+                                                       asiasanat: List[Keyword] = List(),
+                                                       ammattinimikkeet: List[Keyword] = List(),
+                                                       yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ))
+  )
+}
+
+case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
+                                               kuvaus: Kielistetty = Map(),
+                                               opetus: Option[Opetus] = None,
+                                               asiasanat: List[Keyword] = List(),
+                                               ammattinimikkeet: List[Keyword] = List(),
+                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                               hakutermi: Option[Hakutermi] = None,
+                                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                               hakulomakeLinkki: Kielistetty = Map(),
+                                               lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                               lisatietoaValintaperusteista: Kielistetty = Map(),
+                                               hakuaika: Option[Ajanjakso] = None,
+                                               aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ))
+  )
+
+  override def allowSorakuvaus: Boolean = false
 }

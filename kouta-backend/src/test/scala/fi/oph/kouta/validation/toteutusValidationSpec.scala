@@ -21,6 +21,10 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val lukioTo: Toteutus = LukioToteutus
   val tuvaTo: Toteutus = TuvaToteutus
   val tuvaMetadata: TuvaToteutusMetadata = TuvaToteutuksenMetatieto
+  val vapaaSivistystyoOpistovuosiToteutusMetadata = VapaaSivistystyoOpistovuosiToteutusMetatieto
+  val vapaaSivistystyoMuuMetadata = VapaaSivistystyoMuuToteutusMetatieto
+  val vapaaSivistystyoOpistovuosiTo = VapaaSivistystyoOpistovuosiToteutus
+  val vapaaSivistystyoMuuTo = VapaaSivistystyoMuuToteutus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -257,6 +261,14 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     failsValidation(tuvaTo.copy(metadata = Some(tuvaMetadata.copy(
       kuvaus = Map()
     ))), "metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
+  }
+
+  "Vapaa sivistystyö opistovuosi validation" should "pass valid vapaa sivistystyö opistovuosi toteutus" in {
+    passesValidation(vapaaSivistystyoOpistovuosiTo)
+  }
+
+    "Vapaa sivistystyö muu validation" should "pass valid vapaa sivistystyö muu toteutus" in {
+    passesValidation(vapaaSivistystyoOpistovuosiTo)
   }
 }
 

@@ -34,6 +34,8 @@ package object koulutus {
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
       |            - tuva
+      |            - vapaa-sivistystyo-opistovuosi
+      |            - vapaa-sivistystyo-muu
       |          example: amm
       |        koulutuksetKoodiUri:
       |          type: array
@@ -90,6 +92,8 @@ package object koulutus {
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
       |            - $ref: '#/components/schemas/LukioKoulutusMetadata'
+      |            - $ref: '#/components/schemas/TuvaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/VapaaSivistystyoKoulutusMetadata'
       |          example:
       |            koulutustyyppi: amm
       |            koulutusalaKoodiUrit:

@@ -40,6 +40,8 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   val ammOsaamisalaToteutus: Toteutus = TestData.AmmOsaamisalaToteutus
   val ammTutkinnonOsaToteutusAtaru: Toteutus = TestData.AmmTutkinnonOsaToteutus.copy(metadata = Some(TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu))
   val ammOsaamisalaToteutusAtaru: Toteutus = TestData.AmmOsaamisalaToteutus.copy(metadata = Some(TestData.AmmOsaamisalaToteutusMetadataHakemuspalvelu))
+  val vapaaSivistystyoMuuToteutus: Toteutus = TestData.VapaaSivistystyoMuuToteutus
+  val vapaaSivistystyoMuuToteutusAtaru: Toteutus = TestData.VapaaSivistystyoMuuToteutus.copy(metadata = Some(TestData.VapaaSivistystyoMuuToteutusHakemuspalveluMetatieto))
 
   def toteutus(koulutusOid:String): Toteutus = toteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
   def toteutus(oid:String, koulutusOid:String): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid))

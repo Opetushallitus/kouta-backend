@@ -1,9 +1,8 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Hakulomaketyyppi, Toteutus, ToteutusListItem}
+import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Hakulomaketyyppi, Toteutus, ToteutusListItem, VapaaSivistystyoMuu}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
@@ -314,7 +313,8 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
                  or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
                 and (((t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmTutkinnonOsa.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi )
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${VapaaSivistystyoMuu.toString}::koulutustyyppi )
                      or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )
                     #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[ToteutusListItem]
   }
