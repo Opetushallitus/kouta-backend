@@ -345,10 +345,10 @@ package object toteutusMetadata {
       |              description: Tieto siitä järjestetäänkö toteutus erityisopetuksena
       |""".stripMargin
 
-  val VapaaSivistystyoToteutusMetadataModel: String =
-    """    VapaaSivistystyoToteutusMetadata:
+  val VapaaSivistystyoOpistovuosiToteutusMetadataModel: String =
+    """    VapaaSivistystyoOpistovuosiToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -357,6 +357,19 @@ package object toteutusMetadata {
       |              example: vapaa-sivistystyo-opistovuosi
       |              enum:
       |                - vapaa-sivistystyo-opistovuosi
+      |""".stripMargin
+
+  val VapaaSivistystyoMuuToteutusMetadataModel: String =
+    """    VapaaSivistystyoMuuToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: vapaa-sivistystyo-muu
+      |              enum:
       |                - vapaa-sivistystyo-muu
       |""".stripMargin
 
@@ -496,7 +509,7 @@ package object toteutusMetadata {
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel, KorkeakouluToteutusMetadataModel,
     AmmattikorkeaToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel, LukiodiplomiTietoModel,
-    VapaaSivistystyoToteutusMetadataModel)
+    VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
