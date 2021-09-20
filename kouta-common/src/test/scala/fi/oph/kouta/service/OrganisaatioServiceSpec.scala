@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Lk, Yo, Tuva}
+import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Lk, Yo, Tuva, Telma}
 
 class OrganisaatioServiceSpec extends OrganisaatioFixture {
 
@@ -24,18 +24,18 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.3"))._1 should contain theSameElementsAs List()
   }
   it should "return a flat list of oppilaitostyyppi present in parents and children" in {
-    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)._2 should contain theSameElementsAs List(Amm, Tuva)
+    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)._2 should contain theSameElementsAs List(Amm, Tuva, Telma)
   }
   it should "return a flat list of oppilaitostyyppi present in parents and children 2" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo)
   }
   it should "return a flat list of oppilaitostyyppi present in parents and children 3" in {
-    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(GrandChildOid)._2 should contain theSameElementsAs List(Amm, Tuva)
+    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(GrandChildOid)._2 should contain theSameElementsAs List(Amm, Tuva, Telma)
   }
   it should "return correct oppilaitostyypit for koulutustoimija when requesting only children" in {
-    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva)
+    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva, Telma)
   }
   it should "return correct oppilaitostyypit for koulutustoimija when requesting both parents and children" in {
-    organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva)
+    organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva, Telma)
   }
 }

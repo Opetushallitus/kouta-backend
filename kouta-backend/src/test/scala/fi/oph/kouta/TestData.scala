@@ -596,7 +596,7 @@ object TestData {
     hakulomaketyyppi = Some(MuuHakulomake),
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
     hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
-    tuvaErityisopetuksena = true,
+    jarjestetaanErityisopetuksena = true,
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = Some(23))
