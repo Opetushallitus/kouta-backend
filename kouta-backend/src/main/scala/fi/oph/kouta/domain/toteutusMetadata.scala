@@ -658,7 +658,7 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
   )
 }
 
-case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
+case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
                                 kuvaus: Kielistetty = Map(),
                                 opetus: Option[Opetus] = None,
                                 asiasanat: List[Keyword] = List(),
@@ -671,7 +671,7 @@ case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 lisatietoaValintaperusteista: Kielistetty = Map(),
                                 hakuaika: Option[Ajanjakso] = None,
                                 aloituspaikat: Option[Int] = None,
-                                tuvaErityisopetuksena: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
+                                jarjestetaanErityisopetuksena: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
