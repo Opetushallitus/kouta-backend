@@ -157,8 +157,52 @@ package object koulutusMetadata {
       |              example: opintojenlaajuus_40#1
       |""".stripMargin
 
+  val TuvaKoulutusMetadataModel: String =
+    """    TelmaKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: tuva
+      |              enum:
+      |                - tuva
+      |            linkkiEPerusteisiin:
+      |              type: string
+      |              description: Linkki koulutuksen eperusteisiin
+      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |            opintojenLaajuusKoodiUri:
+      |              type: string
+      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
+      |              example: opintojenlaajuus_38#1
+      |""".stripMargin
+
+  val TelmaKoulutusMetadataModel: String =
+    """    TelmaKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: telma
+      |              enum:
+      |                - telma
+      |            linkkiEPerusteisiin:
+      |              type: string
+      |              description: Linkki koulutuksen eperusteisiin
+      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |            opintojenLaajuusKoodiUri:
+      |              type: string
+      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
+      |              example: opintojenlaajuus_60#1
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, LukioKoulutusMetadataModel)
+    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, LukioKoulutusMetadataModel, TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {

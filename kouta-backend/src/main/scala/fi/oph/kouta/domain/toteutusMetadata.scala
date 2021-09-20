@@ -345,6 +345,23 @@ package object toteutusMetadata {
       |              description: Tieto siitä järjestetäänkö toteutus erityisopetuksena
       |""".stripMargin
 
+  val TelmaToteutusMetadataModel: String =
+    """    TelmaToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: telma
+      |              enum:
+      |                - telma
+      |            jarjestetaanErityisopetuksena:
+      |              type: boolean
+      |              description: Tieto siitä järjestetäänkö toteutus erityisopetuksena
+      |""".stripMargin
+
   val LukiolinjaTietoModel: String =
     """    LukiolinjaTieto:
       |      type: object
