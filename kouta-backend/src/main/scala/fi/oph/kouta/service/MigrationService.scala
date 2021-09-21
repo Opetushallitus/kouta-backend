@@ -146,11 +146,7 @@ trait MigrationHelpers extends Logging {
     val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
 
     val lisatiedot: List[Lisatieto] =
-      koulutustyyppi match {
-        case Yo => List()
-        case Amk if isYAMKKoulutus(koulutusasteUri) => List()
-        case _ => parseLisatiedot(result).toList
-      }
+      parseLisatiedot(result).toList
 
     val apuraha: Option[Apuraha] = None
     val onkoApuraha: Boolean = false
@@ -222,24 +218,19 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val koulutusalaKoodiUrit =
       koulutuskoodi2koulutusala((result \ "koulutuskoodi" \ "uri").extract[String],
         (result \ "koulutuskoodi" \ "versio").extract[Int])
-    val lisatiedot: Seq[Lisatieto] =
-      koulutustyyppi match {
-        case Yo => parseLisatiedot(result)
-        case Amk if isYAMKKoulutus(koulutusasteUri) => parseLisatiedot(result)
-        case _ => Seq()
-      }
+    val lisatiedot: Seq[Lisatieto] = Seq()
     val kuvaus: Map[Kieli, String] = parseKuvaus(result)
     val metadata: KoulutusMetadata =
       koulutustyyppi match {
         case Amk => AmmattikorkeakouluKoulutusMetadata(
-          kuvaus = if(isYAMKKoulutus(koulutusasteUri)) kuvaus else Map(),
+          kuvaus = Map(),
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
           opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}"),
           kuvauksenNimi = opetuskielet.flatten.map(k => k -> "").toMap)
         case Yo => YliopistoKoulutusMetadata(
-          kuvaus = kuvaus,
+          kuvaus = Map(),
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
@@ -282,7 +273,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val metadata: Option[ToteutusMetadata] =
       Some(koulutustyyppi match {
         case Amk => AmmattikorkeakouluToteutusMetadata(
-          kuvaus = if(isYAMKKoulutus(koulutusasteUri)) Map() else kuvaus,
+          kuvaus = kuvaus,
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = List(),
           ammattinimikkeet = List(),
@@ -291,7 +282,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           ylemmanKorkeakoulututkinnonOsaamisalat = Seq()
         )
         case Yo => YliopistoToteutusMetadata(
-          kuvaus = Map(),
+          kuvaus = kuvaus,
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = List(),
           ammattinimikkeet = List(),

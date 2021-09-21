@@ -15,6 +15,8 @@ import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
+import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.generic.auto._
 
 import java.util.UUID
 import scala.collection.mutable
@@ -292,7 +294,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
         status should equal(200)
       }
       val result = read[List[R]](body)
-      result should contain theSameElementsAs expected
+      // theSameElementsAs-matcherin diffi on todella hankalaa luettavaa vähänkään isomman tai monimutkaisia elementtejä
+      // sisältävän listan kanssa. Tällä tavalla vertailemalla saadaan huomattavasti parempi diffi.
+      result.sortBy(_.hashCode).toString should matchTo(expected.sortBy(_.hashCode).toString)
       result
     }
   }
