@@ -331,7 +331,7 @@ package object toteutusMetadata {
   val TuvaToteutusMetadataModel: String =
     """    TuvaToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -671,14 +671,8 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 asiasanat: List[Keyword] = List(),
                                 ammattinimikkeet: List[Keyword] = List(),
                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                hakutermi: Option[Hakutermi] = None,
-                                hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                hakulomakeLinkki: Kielistetty = Map(),
-                                lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                lisatietoaValintaperusteista: Kielistetty = Map(),
-                                hakuaika: Option[Ajanjakso] = None,
                                 aloituspaikat: Option[Int] = None,
-                                tuvaErityisopetuksena: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
+                                tuvaErityisopetuksena: Boolean = false) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
