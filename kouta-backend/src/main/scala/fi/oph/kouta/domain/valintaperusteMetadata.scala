@@ -234,6 +234,15 @@ case class TutkintokoulutukseenValmentavaValintaperusteMetadata(tyyppi: Koulutus
                                                                 valintakokeidenYleiskuvaus: Kielistetty = Map())
   extends ValintaperusteMetadata
 
+case class TelmaValintaperusteMetadata(tyyppi: Koulutustyyppi = Telma,
+                                       valintatavat: Seq[Valintatapa],
+                                       kuvaus: Kielistetty = Map(),
+                                       hakukelpoisuus: Kielistetty = Map(),
+                                       lisatiedot: Kielistetty = Map(),
+                                       sisalto: Seq[Sisalto] = Seq(),
+                                       valintakokeidenYleiskuvaus: Kielistetty = Map())
+  extends ValintaperusteMetadata
+
 case class MuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Muu,
                                      valintatavat: Seq[Valintatapa],
                                      kuvaus: Kielistetty = Map(),
