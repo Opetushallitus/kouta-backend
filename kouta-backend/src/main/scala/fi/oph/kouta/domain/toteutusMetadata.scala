@@ -357,9 +357,6 @@ package object toteutusMetadata {
       |              example: telma
       |              enum:
       |                - telma
-      |            jarjestetaanErityisopetuksena:
-      |              type: boolean
-      |              description: Tieto siitä järjestetäänkö toteutus erityisopetuksena
       |""".stripMargin
 
   val VapaaSivistystyoOpistovuosiToteutusMetadataModel: String =
@@ -710,14 +707,7 @@ case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
                                 asiasanat: List[Keyword] = List(),
                                 ammattinimikkeet: List[Keyword] = List(),
                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                hakutermi: Option[Hakutermi] = None,
-                                hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                hakulomakeLinkki: Kielistetty = Map(),
-                                lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                lisatietoaValintaperusteista: Kielistetty = Map(),
-                                hakuaika: Option[Ajanjakso] = None,
-                                aloituspaikat: Option[Int] = None,
-                                jarjestetaanErityisopetuksena: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
+                                aloituspaikat: Option[Int] = None) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
