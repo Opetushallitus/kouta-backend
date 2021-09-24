@@ -5,11 +5,13 @@ sealed trait Koulutustyyppi extends EnumType
 object Koulutustyyppi extends Enum[Koulutustyyppi] {
   override def name: String = "koulutustyyppi"
 
-  def values = List(Amm, Lk, Muu, Yo, Amk, Tuva, AmmTutkinnonOsa, AmmOsaamisala, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu)
+  def values =
+    List(Amm, Lk, Muu, Yo, Amk, Tuva, AmmTutkinnonOsa, AmmOsaamisala, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu)
 
-  def ammatilliset = List(Amm, AmmTutkinnonOsa, AmmOsaamisala)
-  def korkeakoulu = List(Amk, Yo)
-  def tutkintoonJohtavat = List(Amm, Lk, Yo, Amk)
+  def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala)
+  def korkeakoulu            = List(Amk, Yo)
+  def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
+  def onlyOphCanSaveKoulutus = List(Amm, Lk, Tuva) // TODO: Lisää telma
 
   def fromOppilaitostyyppi(oppilaitostyyppi: String): Seq[Koulutustyyppi] =
     oppilaitostyyppi2koulutustyyppi(oppilaitostyyppi)
@@ -17,11 +19,14 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
   def isAmmatillinen(koulutustyyppi: Koulutustyyppi): Boolean =
     ammatilliset.contains(koulutustyyppi)
 
-  def isKorkeakoulu(koulutustyyppi: Koulutustyyppi) : Boolean =
+  def isKorkeakoulu(koulutustyyppi: Koulutustyyppi): Boolean =
     korkeakoulu.contains(koulutustyyppi)
 
   def isTutkintoonJohtava(koulutustyyppi: Koulutustyyppi): Boolean =
     tutkintoonJohtavat.contains(koulutustyyppi)
+
+  def isKoulutusSaveAllowedOnlyForOph(koulutustyyppi: Koulutustyyppi): Boolean =
+    onlyOphCanSaveKoulutus.contains(koulutustyyppi)
 
   val koulutusaste2koulutustyyppi: Map[String, Koulutustyyppi] = Map(
     "koulutusasteoph2002_62" -> Amk,
@@ -31,7 +36,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "koulutusasteoph2002_72" -> Yo,
     "koulutusasteoph2002_73" -> Yo,
     "koulutusasteoph2002_81" -> Yo,
-    "koulutusasteoph2002_82" -> Yo,
+    "koulutusasteoph2002_82" -> Yo
     //
   )
 
@@ -66,14 +71,13 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
   )
 }
 
-case object Amm extends Koulutustyyppi { val name = "amm" }
-case object Lk extends Koulutustyyppi { val name = "lk" }
-case object Yo extends Koulutustyyppi { val name = "yo" }
-case object Amk extends Koulutustyyppi { val name = "amk" }
-case object Tuva extends Koulutustyyppi { val name = "tuva" }
-case object Muu extends Koulutustyyppi {val name = "muu"}
-case object AmmTutkinnonOsa extends Koulutustyyppi {val name = "amm-tutkinnon-osa"}
-case object AmmOsaamisala extends Koulutustyyppi {val name = "amm-osaamisala"}
-case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi {val name = "vapaa-sivistystyo-opistovuosi"}
-case object VapaaSivistystyoMuu extends Koulutustyyppi {val name = "vapaa-sivistystyo-muu"}
-
+case object Amm                         extends Koulutustyyppi { val name = "amm"                           }
+case object Lk                          extends Koulutustyyppi { val name = "lk"                            }
+case object Yo                          extends Koulutustyyppi { val name = "yo"                            }
+case object Amk                         extends Koulutustyyppi { val name = "amk"                           }
+case object Tuva                        extends Koulutustyyppi { val name = "tuva"                          }
+case object Muu                         extends Koulutustyyppi { val name = "muu"                           }
+case object AmmTutkinnonOsa             extends Koulutustyyppi { val name = "amm-tutkinnon-osa"             }
+case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm-osaamisala"                }
+case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
+case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }

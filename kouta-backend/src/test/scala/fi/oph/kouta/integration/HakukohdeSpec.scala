@@ -154,7 +154,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "store vapaa sivistystyo muu hakukohde if toteutus uses hakemuspalvelu" in {
-    val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus)
+    val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus, ophSession)
     val vsToToteutus = TestData.VapaaSivistystyoMuuToteutus.copy(
       koulutusOid = KoulutusOid(koulutusOid),
       metadata = Some(TestData.VapaaSivistystyoMuuToteutusHakemuspalveluMetatieto))
@@ -163,7 +163,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   }
 
   it should "fail to store vapaa sivistystyo muu hakukohde if toteutus does not use hakemuspalvelu" in {
-    val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus)
+    val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus, ophSession)
     val vsToToteutus = TestData.VapaaSivistystyoMuuToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
     val toteutusOid = put(vsToToteutus)
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid), 400, "toteutusOid", cannotLinkToHakukohde(toteutusOid))

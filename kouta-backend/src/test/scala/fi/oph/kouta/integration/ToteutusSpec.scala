@@ -575,7 +575,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "create, get and update lukio toteutus" in {
-    val lukioToKoulutusOid = put(TestData.LukioKoulutus.copy(tila = Julkaistu))
+    val lukioToKoulutusOid = put(TestData.LukioKoulutus.copy(tila = Julkaistu), ophSession)
     val lukioToToteutus = TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioToKoulutusOid), tila = Tallennettu)
     val oid = put(lukioToToteutus)
     val lastModified = get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid))))
@@ -584,7 +584,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "create, get and update tuva toteutus" in {
-    val tuvaToKoulutusOid = put(TestData.TuvaKoulutus.copy(tila = Julkaistu))
+    val tuvaToKoulutusOid = put(TestData.TuvaKoulutus.copy(tila = Julkaistu), ophSession)
     val tuvaToToteutus = TestData.TuvaToteutus.copy(koulutusOid = KoulutusOid(tuvaToKoulutusOid), tila = Tallennettu)
     val oid = put(tuvaToToteutus)
     val lastModified = get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid))))
