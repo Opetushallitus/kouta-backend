@@ -158,7 +158,7 @@ package object koulutusMetadata {
       |""".stripMargin
 
   val TuvaKoulutusMetadataModel: String =
-    """    TelmaKoulutusMetadata:
+    """    TuvaKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
