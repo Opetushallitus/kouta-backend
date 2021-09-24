@@ -348,7 +348,7 @@ package object toteutusMetadata {
   val TelmaToteutusMetadataModel: String =
     """    TelmaToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
