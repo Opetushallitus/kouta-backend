@@ -33,9 +33,9 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(GrandChildOid)._2 should contain theSameElementsAs List(Amm, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu)
   }
   it should "return correct oppilaitostyypit for koulutustoimija when requesting only children" in {
-    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva, Telma)
+    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva)
   }
   it should "return correct oppilaitostyypit for koulutustoimija when requesting both parents and children" in {
-    organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva, Telma)
+    organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should contain theSameElementsAs List(Yo, Lk, Tuva)
   }
 }

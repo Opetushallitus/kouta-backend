@@ -37,14 +37,14 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
 
   val oppilaitostyyppi2koulutustyyppi: Map[String, Seq[Koulutustyyppi]] = Map(
     "oppilaitostyyppi_01#1" -> Seq(Muu), //Taiteen perusopetuksen oppilaitokset (ei musiikki)
-    "oppilaitostyyppi_11#1" -> Seq(Muu, Tuva, Telma), //Peruskoulut
-    "oppilaitostyyppi_12#1" -> Seq(Muu, Tuva, Telma), //Peruskouluasteen erityiskoulut
-    "oppilaitostyyppi_15#1" -> Seq(Lk, Tuva, Telma), //Lukiot
-    "oppilaitostyyppi_19#1" -> Seq(Lk, Tuva, Telma), //Perus- ja lukioasteen koulut
+    "oppilaitostyyppi_11#1" -> Seq(Muu, Tuva), //Peruskoulut
+    "oppilaitostyyppi_12#1" -> Seq(Muu, Tuva), //Peruskouluasteen erityiskoulut
+    "oppilaitostyyppi_15#1" -> Seq(Lk, Tuva), //Lukiot
+    "oppilaitostyyppi_19#1" -> Seq(Lk, Tuva), //Perus- ja lukioasteen koulut
     "oppilaitostyyppi_21#1" -> Seq(Amm, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Ammatilliset oppilaitokset
     "oppilaitostyyppi_22#1" -> Seq(Amm, Tuva, Telma), //Ammatilliset erityisoppilaitokset
-    "oppilaitostyyppi_23#1" -> Seq(Amm, Tuva, Telma), //Ammatilliset erikoisoppilaitokset
-    "oppilaitostyyppi_24#1" -> Seq(Amm, Tuva, Telma), //Ammatilliset aikuiskoulutuskeskukset
+    "oppilaitostyyppi_23#1" -> Seq(Amm, Tuva), //Ammatilliset erikoisoppilaitokset
+    "oppilaitostyyppi_24#1" -> Seq(Amm, Tuva), //Ammatilliset aikuiskoulutuskeskukset
     "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
     "oppilaitostyyppi_29#1" -> Seq(Amm), //Sotilasalan ammatilliset oppilaitokset
     "oppilaitostyyppi_41#1" -> Seq(Amk), //Ammattikorkeakoulut
@@ -55,7 +55,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_61#1" -> Seq(Muu), //Musiikkioppilaitokset
     "oppilaitostyyppi_62#1" -> Seq(Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Liikunnan koulutuskeskukset
     "oppilaitostyyppi_63#1" -> Seq(Amm, Muu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansanopistot
-    "oppilaitostyyppi_64#1" -> Seq(Muu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansalaisopistot
+    "oppilaitostyyppi_64#1" -> Seq(Muu, Tuva, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansalaisopistot
     "oppilaitostyyppi_65#1" -> Seq(Muu), //Opintokeskukset
     "oppilaitostyyppi_66#1" -> Seq(Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kesäyliopistot
     "oppilaitostyyppi_91#1" -> Seq(Muu), //Kirjeoppilaitokset
