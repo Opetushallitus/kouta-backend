@@ -17,41 +17,64 @@ import slick.dbio.DBIO
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object KoulutusService extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl)
+object KoulutusService
+    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl)
 
-class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, val organisaatioService: OrganisaatioService)
-  extends ValidatingService[Koulutus] with RoleEntityAuthorizationService[Koulutus] with TeemakuvaService[KoulutusOid, Koulutus] with Logging {
+class KoulutusService(
+    sqsInTransactionService: SqsInTransactionService,
+    val s3ImageService: S3ImageService,
+    auditLog: AuditLog,
+    val organisaatioService: OrganisaatioService
+) extends ValidatingService[Koulutus]
+    with RoleEntityAuthorizationService[Koulutus]
+    with TeemakuvaService[KoulutusOid, Koulutus]
+    with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
-  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
+  protected val readRules: AuthorizationRules =
+    AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   val teemakuvaPrefix = "koulutus-teemakuva"
 
-  private def authorizedForTarjoajaOids(oids: Set[OrganisaatioOid], roles: Seq[Role] = roleEntity.updateRoles): Option[AuthorizationRules] =
+  private def authorizedForTarjoajaOids(
+      oids: Set[OrganisaatioOid],
+      roles: Seq[Role] = roleEntity.updateRoles
+  ): Option[AuthorizationRules] =
     if (oids.nonEmpty) {
-      Some( AuthorizationRules(
-        requiredRoles = roles,
-        allowAccessToParentOrganizations = true,
-        overridingAuthorizationRules = Seq(AuthorizationRuleForJulkinen),
-        additionalAuthorizedOrganisaatioOids = oids.toSeq))
+      Some(
+        AuthorizationRules(
+          requiredRoles = roles,
+          allowAccessToParentOrganizations = true,
+          overridingAuthorizationRules = Seq(AuthorizationRuleForJulkinen),
+          additionalAuthorizedOrganisaatioOids = oids.toSeq
+        )
+      )
     } else { None }
 
   def get(oid: KoulutusOid)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid)
-    authorizeGet(koulutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen), getTarjoajat(koulutusWithTime)))
+    authorizeGet(
+      koulutusWithTime,
+      AuthorizationRules(
+        roleEntity.readRoles,
+        allowAccessToParentOrganizations = true,
+        Seq(AuthorizationRuleForJulkinen),
+        getTarjoajat(koulutusWithTime)
+      )
+    )
   }
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
-    val rules = koulutus.koulutustyyppi match {
-      case Amm =>
-        AuthorizationRules(Seq(Role.Paakayttaja))
-      case _ =>
-        AuthorizationRules(roleEntity.createRoles)
+    val rules = if (Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(koulutus.koulutustyyppi)) {
+      AuthorizationRules(Seq(Role.Paakayttaja))
+    } else {
+      AuthorizationRules(roleEntity.createRoles)
     }
     authorizePut(koulutus, rules) { k =>
-      withValidation(k, None){k =>
+      withValidation(k, None) { k =>
         validateSorakuvausIntegrity(koulutus)
-        doPut(k)}
+        doPut(k)
+      }
     }.oid.get
   }
 
@@ -60,13 +83,13 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     oldKoulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
         val rules: List[AuthorizationRules] = oldKoulutus.koulutustyyppi match {
-          case Amm =>
+          case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
             List(AuthorizationRules(Seq(Role.Paakayttaja)))
           case _ =>
             val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
-            val newTarjoajat = newKoulutus.tarjoajat.toSet
-            val oldTarjoajat = oldKoulutus.tarjoajat.toSet
-            val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+            val newTarjoajat             = newKoulutus.tarjoajat.toSet
+            val oldTarjoajat             = oldKoulutus.tarjoajat.toSet
+            val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
             val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
             (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
         }
@@ -84,32 +107,66 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     import fi.oph.kouta.validation.Validations._
 
     throwValidationErrors(
-      validateIfDefined[UUID](koulutus.sorakuvausId, sorakuvausId => {
-        val (sorakuvausTila, sorakuvausTyyppi, koulutuskoodiUrit) = SorakuvausDAO.getTilaTyyppiAndKoulutusKoodit(sorakuvausId)
-        and(
-          validateDependency(koulutus.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
-          validateIfDefined[Koulutustyyppi](sorakuvausTyyppi, sorakuvausTyyppi =>
-            // "Tutkinnon osa" ja Osaamisala koulutuksiin saa liittää myös SORA-kuvauksen, jonka koulutustyyppi on "ammatillinen"
-            assertTrue(sorakuvausTyyppi == koulutus.koulutustyyppi || (sorakuvausTyyppi == Amm && Seq(AmmOsaamisala, AmmTutkinnonOsa).contains(koulutus.koulutustyyppi)), "koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))),
-          validateIfDefined[Seq[String]](koulutuskoodiUrit, koulutuskoodiUrit => {
-            validateIfTrue(koulutuskoodiUrit.nonEmpty, assertTrue(koulutuskoodiUrit.intersect(koulutus.koulutuksetKoodiUri).nonEmpty, "koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")))
-          }))
-      }))
+      validateIfDefined[UUID](
+        koulutus.sorakuvausId,
+        sorakuvausId => {
+          val (sorakuvausTila, sorakuvausTyyppi, koulutuskoodiUrit) =
+            SorakuvausDAO.getTilaTyyppiAndKoulutusKoodit(sorakuvausId)
+          and(
+            validateDependency(koulutus.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
+            validateIfDefined[Koulutustyyppi](
+              sorakuvausTyyppi,
+              sorakuvausTyyppi =>
+                // "Tutkinnon osa" ja Osaamisala koulutuksiin saa liittää myös SORA-kuvauksen, jonka koulutustyyppi on "ammatillinen"
+                assertTrue(
+                  sorakuvausTyyppi == koulutus.koulutustyyppi || (sorakuvausTyyppi == Amm && Seq(
+                    AmmOsaamisala,
+                    AmmTutkinnonOsa
+                  ).contains(koulutus.koulutustyyppi)),
+                  "koulutustyyppi",
+                  tyyppiMismatch("sorakuvauksen", sorakuvausId)
+                )
+            ),
+            validateIfDefined[Seq[String]](
+              koulutuskoodiUrit,
+              koulutuskoodiUrit => {
+                validateIfTrue(
+                  koulutuskoodiUrit.nonEmpty,
+                  assertTrue(
+                    koulutuskoodiUrit.intersect(koulutus.koulutuksetKoodiUri).nonEmpty,
+                    "koulutuksetKoodiUri",
+                    valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")
+                  )
+                )
+              }
+            )
+          )
+        }
+      )
+    )
   }
 
-  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit
+      authenticated: Authenticated
+  ): Seq[KoulutusListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
       KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
 
-  def listByKoulutustyyppi(organisaatioOid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
+  def listByKoulutustyyppi(organisaatioOid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean)(
+      implicit authenticated: Authenticated
+  ): Seq[KoulutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules) { oids =>
       KoulutusDAO.listAllowedByOrganisaatiotAndKoulutustyyppi(oids, koulutustyyppi, myosArkistoidut)
     }
 
-  def getTarjoajanJulkaistutKoulutukset(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[Koulutus] =
+  def getTarjoajanJulkaistutKoulutukset(
+      organisaatioOid: OrganisaatioOid
+  )(implicit authenticated: Authenticated): Seq[Koulutus] =
     withRootAccess(indexerRoles) {
-      KoulutusDAO.getJulkaistutByTarjoajaOids(organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true))
+      KoulutusDAO.getJulkaistutByTarjoajaOids(
+        organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true)
+      )
     }
 
   def toteutukset(oid: KoulutusOid, vainJulkaistut: Boolean)(implicit authenticated: Authenticated): Seq[Toteutus] =
@@ -129,13 +186,20 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   def listToteutukset(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid))
 
-  def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
+  def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit
+      authenticated: Authenticated
+  ): Seq[ToteutusListItem] =
+    withAuthorizedOrganizationOids(
+      organisaatioOid,
+      AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
+    ) {
       case Seq(RootOrganisaatioOid) => ToteutusDAO.listByKoulutusOid(oid)
-      case x => ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
+      case x                        => ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
     }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): KoulutusSearchResult = {
+  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit
+      authenticated: Authenticated
+  ): KoulutusSearchResult = {
     def getCount(k: KoulutusSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
       organisaatioOids match {
         case Seq(RootOrganisaatioOid) => k.toteutukset.length
@@ -146,25 +210,26 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
 
     def assocToteutusCounts(r: KoulutusSearchResultFromIndex): KoulutusSearchResult =
-      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true))(
-        organisaatioOids => {
-          KoulutusSearchResult(
-            totalCount = r.totalCount,
-            result = r.result.map {
-              k =>
-                KoulutusSearchItem(
-                  oid = k.oid,
-                  nimi = k.nimi,
-                  organisaatio = k.organisaatio,
-                  muokkaaja = k.muokkaaja,
-                  modified = k.modified,
-                  tila = k.tila,
-                  eperuste = k.eperuste,
-                  toteutusCount = getCount(k, organisaatioOids))
-            }
-          )
-        }
-      )
+      withAuthorizedOrganizationOids(
+        organisaatioOid,
+        AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
+      )(organisaatioOids => {
+        KoulutusSearchResult(
+          totalCount = r.totalCount,
+          result = r.result.map { k =>
+            KoulutusSearchItem(
+              oid = k.oid,
+              nimi = k.nimi,
+              organisaatio = k.organisaatio,
+              muokkaaja = k.muokkaaja,
+              modified = k.modified,
+              tila = k.tila,
+              eperuste = k.eperuste,
+              toteutusCount = getCount(k, organisaatioOids)
+            )
+          }
+        )
+      })
 
     list(organisaatioOid, myosArkistoidut = true).map(_.oid) match {
       case Nil          => KoulutusSearchResult()
@@ -172,14 +237,23 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, koulutusOid: KoulutusOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[KoulutusSearchItemFromIndex] = {
+  def search(organisaatioOid: OrganisaatioOid, koulutusOid: KoulutusOid, params: Map[String, String])(implicit
+      authenticated: Authenticated
+  ): Option[KoulutusSearchItemFromIndex] = {
     def filterToteutukset(koulutus: Option[KoulutusSearchItemFromIndex]): Option[KoulutusSearchItemFromIndex] =
-      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
+      withAuthorizedOrganizationOids(
+        organisaatioOid,
+        AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
+      ) {
         case Seq(RootOrganisaatioOid) => koulutus
         case organisaatioOids => {
           koulutus.flatMap(koulutusItem => {
             val oidStrings = organisaatioOids.map(_.toString())
-            Some(koulutusItem.copy(toteutukset = koulutusItem.toteutukset.filter(toteutus => toteutus.organisaatiot.exists(o => oidStrings.contains(o)))))
+            Some(
+              koulutusItem.copy(toteutukset =
+                koulutusItem.toteutukset.filter(toteutus => toteutus.organisaatiot.exists(o => oidStrings.contains(o)))
+              )
+            )
           })
         }
       }
@@ -187,10 +261,12 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
     filterToteutukset(KoutaIndexClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption)
   }
 
-  def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
+  def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit
+      authenticated: Authenticated
+  ): DBIO[(Koulutus, Option[Koulutus])] = {
     val koulutusWithLastModified = get(koulutusOid)
 
-    if(koulutusWithLastModified.isEmpty) {
+    if (koulutusWithLastModified.isEmpty) {
       throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
     }
 
@@ -198,11 +274,15 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
 
     val newTarjoajat = tarjoajaOids diff koulutus.tarjoajat.toSet
 
-    if(newTarjoajat.isEmpty) {
+    if (newTarjoajat.isEmpty) {
       DBIO.successful((koulutus, None))
     } else {
       val newKoulutus: Koulutus = koulutus.copy(tarjoajat = koulutus.tarjoajat ++ newTarjoajat)
-      authorizeUpdate(koulutusWithLastModified, newKoulutus, List(authorizedForTarjoajaOids(tarjoajaOids, roleEntity.readRoles).get)) { (_, k) =>
+      authorizeUpdate(
+        koulutusWithLastModified,
+        newKoulutus,
+        List(authorizedForTarjoajaOids(tarjoajaOids, roleEntity.readRoles).get)
+      ) { (_, k) =>
         withValidation(newKoulutus, Some(k)) {
           DBIO.successful(koulutus) zip getUpdateTarjoajatActions(_, lastModified)
         }
@@ -213,10 +293,12 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
   private def getTarjoajat(maybeKoulutusWithTime: Option[(Koulutus, Instant)]): Seq[OrganisaatioOid] =
     maybeKoulutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def getUpdateTarjoajatActions(koulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): DBIO[Option[Koulutus]] = {
+  private def getUpdateTarjoajatActions(koulutus: Koulutus, notModifiedSince: Instant)(implicit
+      authenticated: Authenticated
+  ): DBIO[Option[Koulutus]] = {
     for {
-      _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
-      k          <- KoulutusDAO.getUpdateTarjoajatActions(koulutus)
+      _ <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+      k <- KoulutusDAO.getUpdateTarjoajatActions(koulutus)
     } yield Some(k)
   }
 
@@ -235,7 +317,9 @@ class KoulutusService(sqsInTransactionService: SqsInTransactionService, val s3Im
       k
     }.get
 
-  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit authenticated: Authenticated): Option[Koulutus] =
+  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
+      authenticated: Authenticated
+  ): Option[Koulutus] =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)

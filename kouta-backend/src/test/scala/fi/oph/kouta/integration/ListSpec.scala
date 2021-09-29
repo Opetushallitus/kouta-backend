@@ -38,7 +38,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
     k4 = addToList(koulutus.copy(julkinen = false, organisaatioOid = LonelyOid, tila = Julkaistu, sorakuvausId =  Some(s3.id)))
     k5 = addToList(koulutus(julkinen = true, LonelyOid, Julkaistu))
-    k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu))
+    k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu, muokkaaja = TestUserOid))
     k7 = addToList(ammTutkinnonOsaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
     k8 = addToList(ammOsaamisalaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
     k9 = addToList(vapaaSivistystyoMuuKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
