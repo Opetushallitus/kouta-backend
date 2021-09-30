@@ -22,7 +22,12 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
 
   def koulutusService: KoulutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new KoulutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService)
+    new KoulutusService(
+      SqsInTransactionServiceIgnoringIndexing,
+      MockS3ImageService,
+      new AuditLog(MockAuditLogger),
+      organisaatioService
+    )
   }
 
   override def beforeAll(): Unit = {
@@ -30,31 +35,41 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
     addServlet(new KoulutusServlet(koulutusService), KoulutusPath)
   }
 
-  val koulutus: Koulutus = TestData.AmmKoulutus
-  val yoKoulutus: Koulutus = TestData.YoKoulutus
-  val ammOsaamisalaKoulutus: Koulutus = TestData.AmmOsaamisalaKoulutus
-  val ammTutkinnonOsaKoulutus: Koulutus = TestData.AmmTutkinnonOsaKoulutus
+  val koulutus: Koulutus                    = TestData.AmmKoulutus
+  val yoKoulutus: Koulutus                  = TestData.YoKoulutus
+  val ammOsaamisalaKoulutus: Koulutus       = TestData.AmmOsaamisalaKoulutus
+  val ammTutkinnonOsaKoulutus: Koulutus     = TestData.AmmTutkinnonOsaKoulutus
   val vapaaSivistystyoMuuKoulutus: Koulutus = TestData.VapaaSivistystyoMuuKoulutus
 
-  def koulutus(oid:String): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
-  def muokkaus(k: Koulutus): Koulutus = k.copy(nimi = k.nimi.map{case (k, v) => k -> (v + v) })
-  def koulutus(oid:String, tila:Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
-  def koulutus(julkinen:Boolean, organisaatioOid: OrganisaatioOid, tila:Julkaisutila, sorakuvausId: Option[UUID] = None):Koulutus =
+  def koulutus(oid: String): Koulutus                     = koulutus.copy(oid = Some(KoulutusOid(oid)))
+  def muokkaus(k: Koulutus): Koulutus                     = k.copy(nimi = k.nimi.map { case (k, v) => k -> (v + v) })
+  def koulutus(oid: String, tila: Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
+  def koulutus(
+      julkinen: Boolean,
+      organisaatioOid: OrganisaatioOid,
+      tila: Julkaisutila,
+      sorakuvausId: Option[UUID] = None
+  ): Koulutus =
     koulutus.copy(julkinen = julkinen, organisaatioOid = organisaatioOid, tila = tila, sorakuvausId = sorakuvausId)
 
-  def put(koulutus:Koulutus):String = put(KoulutusPath, koulutus, oid(_))
+  def put(koulutus: Koulutus): String = put(KoulutusPath, koulutus, oid(_))
 
   def put(koulutus: Koulutus, sessionId: UUID): String = put(KoulutusPath, koulutus, sessionId, oid(_))
 
-  def put(koulutus: Koulutus, errors: List[ValidationError]): Unit = put(KoulutusPath, koulutus, ophSession, 400, errors)
+  def put(koulutus: Koulutus, errors: List[ValidationError]): Unit =
+    put(KoulutusPath, koulutus, ophSession, 400, errors)
 
-  implicit val koulutusEquality: Equality[Koulutus] = (a: Koulutus, b: Any) => b match {
-    case _:Koulutus => Equality.default[Koulutus].areEqual(
-      a.copy(tarjoajat = a.tarjoajat.sorted),
-      b.asInstanceOf[Koulutus].copy(tarjoajat = b.asInstanceOf[Koulutus].tarjoajat.sorted)
-    )
-    case _ => false
-  }
+  implicit val koulutusEquality: Equality[Koulutus] = (a: Koulutus, b: Any) =>
+    b match {
+      case _: Koulutus =>
+        Equality
+          .default[Koulutus]
+          .areEqual(
+            a.copy(tarjoajat = a.tarjoajat.sorted),
+            b.asInstanceOf[Koulutus].copy(tarjoajat = b.asInstanceOf[Koulutus].tarjoajat.sorted)
+          )
+      case _ => false
+    }
 
   def get(oid: String, expected: Koulutus): String =
     get(KoulutusPath, oid, expected.copy(modified = Some(readKoulutusModified(oid))))
@@ -74,15 +89,23 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
   def update(koulutus: Koulutus, lastModified: String): Unit =
     update(koulutus, lastModified, expectUpdate = true)
 
-  def addToList(koulutus:Koulutus): KoulutusListItem = {
-    val oid = if (koulutus.johtaaTutkintoon) {
+  def addToList(koulutus: Koulutus): KoulutusListItem = {
+    val oid = if (Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(koulutus.koulutustyyppi)) {
       put(koulutus, ophSession)
     } else {
       put(koulutus)
     }
 
     val modified = readKoulutusModified(oid)
-    KoulutusListItem(KoulutusOid(oid), koulutus.nimi, koulutus.tila, koulutus.tarjoajat, koulutus.organisaatioOid, koulutus.muokkaaja, modified)
+    KoulutusListItem(
+      KoulutusOid(oid),
+      koulutus.nimi,
+      koulutus.tila,
+      koulutus.tarjoajat,
+      koulutus.organisaatioOid,
+      koulutus.muokkaaja,
+      modified
+    )
   }
 
   def readKoulutusModified(oid: String): Modified = readKoulutusModified(KoulutusOid(oid))
@@ -107,7 +130,7 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers { this: Kouta
         sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER koulutukset_history""",
         sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER set_temporal_columns_on_koulutukset_on_update""",
         sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER koulutusten_tarjoajat_history""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update""",
+        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update"""
       )
     )
   }

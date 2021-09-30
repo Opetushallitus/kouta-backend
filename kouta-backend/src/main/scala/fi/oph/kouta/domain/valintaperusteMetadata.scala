@@ -243,6 +243,24 @@ case class TelmaValintaperusteMetadata(tyyppi: Koulutustyyppi = Telma,
                                        valintakokeidenYleiskuvaus: Kielistetty = Map())
   extends ValintaperusteMetadata
 
+case class VapaaSivistystyoOpistovuosiValintaperusteMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
+                                                                valintatavat: Seq[Valintatapa],
+                                                                kuvaus: Kielistetty = Map(),
+                                                                hakukelpoisuus: Kielistetty = Map(),
+                                                                lisatiedot: Kielistetty = Map(),
+                                                                sisalto: Seq[Sisalto] = Seq(),
+                                                                valintakokeidenYleiskuvaus: Kielistetty = Map())
+  extends ValintaperusteMetadata
+
+case class VapaaSivistystyoMuuValintaperusteMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
+                                                  valintatavat: Seq[Valintatapa],
+                                                  kuvaus: Kielistetty = Map(),
+                                                  hakukelpoisuus: Kielistetty = Map(),
+                                                  lisatiedot: Kielistetty = Map(),
+                                                  sisalto: Seq[Sisalto] = Seq(),
+                                                  valintakokeidenYleiskuvaus: Kielistetty = Map())
+  extends ValintaperusteMetadata
+
 case class MuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Muu,
                                      valintatavat: Seq[Valintatapa],
                                      kuvaus: Kielistetty = Map(),
