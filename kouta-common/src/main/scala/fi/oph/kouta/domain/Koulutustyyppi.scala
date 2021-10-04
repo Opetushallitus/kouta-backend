@@ -23,7 +23,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
   def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala)
   def korkeakoulu            = List(Amk, Yo)
   def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
-  def onlyOphCanSaveKoulutus = List(Amm, Lk, Tuva, VapaaSivistystyoOpistovuosi) // TODO: Lisää telma
+  def onlyOphCanSaveKoulutus = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
 
   def fromOppilaitostyyppi(oppilaitostyyppi: String): Seq[Koulutustyyppi] =
     oppilaitostyyppi2koulutustyyppi(oppilaitostyyppi)
