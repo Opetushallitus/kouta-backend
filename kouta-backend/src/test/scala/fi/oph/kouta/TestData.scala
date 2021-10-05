@@ -606,7 +606,7 @@ object TestData {
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-    tuvaErityisopetuksena = true,
+    jarjestetaanErityisopetuksena = true,
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = Some(23))
 
