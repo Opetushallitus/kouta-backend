@@ -233,7 +233,7 @@ class KoulutusMetadataValidationSpec extends SubEntityValidationSpec[KoulutusMet
     failsValidation(Julkaistu, telma.copy(kuvaus = Map()), "kuvaus", invalidKielistetty(Seq(Fi, Sv)))
   }
 
-  it should "fail if opintojenLaajuusKoodiUri is missing from julkaistu tuva" in {
+  it should "fail if opintojenLaajuusKoodiUri is missing from julkaistu telma" in {
     failsValidation(Julkaistu, telma.copy(opintojenLaajuusKoodiUri = None), "opintojenLaajuusKoodiUri", missingMsg)
   }
 
