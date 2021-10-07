@@ -6,12 +6,24 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
   override def name: String = "koulutustyyppi"
 
   def values =
-    List(Amm, Lk, Muu, Yo, Amk, Tuva, AmmTutkinnonOsa, AmmOsaamisala, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu)
+    List(
+      Amm,
+      Lk,
+      Muu,
+      Yo,
+      Amk,
+      Tuva,
+      Telma,
+      AmmTutkinnonOsa,
+      AmmOsaamisala,
+      VapaaSivistystyoOpistovuosi,
+      VapaaSivistystyoMuu
+    )
 
   def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala)
   def korkeakoulu            = List(Amk, Yo)
   def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
-  def onlyOphCanSaveKoulutus = List(Amm, Lk, Tuva, VapaaSivistystyoOpistovuosi) // TODO: Lisää telma
+  def onlyOphCanSaveKoulutus = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
 
   def fromOppilaitostyyppi(oppilaitostyyppi: String): Seq[Koulutustyyppi] =
     oppilaitostyyppi2koulutustyyppi(oppilaitostyyppi)
@@ -46,8 +58,16 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_12#1" -> Seq(Muu, Tuva), //Peruskouluasteen erityiskoulut
     "oppilaitostyyppi_15#1" -> Seq(Lk, Muu, Tuva), //Lukiot
     "oppilaitostyyppi_19#1" -> Seq(Lk, Muu, Tuva), //Perus- ja lukioasteen koulut
-    "oppilaitostyyppi_21#1" -> Seq(Amm, Lk, Muu, Tuva, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Ammatilliset oppilaitokset
-    "oppilaitostyyppi_22#1" -> Seq(Amm, Tuva), //Ammatilliset erityisoppilaitokset
+    "oppilaitostyyppi_21#1" -> Seq(
+      Amm,
+      Lk,
+      Muu,
+      Tuva,
+      Telma,
+      VapaaSivistystyoOpistovuosi,
+      VapaaSivistystyoMuu
+    ), //Ammatilliset oppilaitokset
+    "oppilaitostyyppi_22#1" -> Seq(Amm, Telma, Tuva), //Ammatilliset erityisoppilaitokset
     "oppilaitostyyppi_23#1" -> Seq(Amm), //Ammatilliset erikoisoppilaitokset
     "oppilaitostyyppi_24#1" -> Seq(Amm), //Ammatilliset aikuiskoulutuskeskukset
     "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
@@ -58,8 +78,22 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_45#1" -> Seq(Yo), //Lastentarhanopettajaopistot
     "oppilaitostyyppi_46#1" -> Seq(Amk), //Väliaikaiset ammattikorkeakoulut
     "oppilaitostyyppi_61#1" -> Seq(Amm, Muu), //Musiikkioppilaitokset
-    "oppilaitostyyppi_62#1" -> Seq(Amm, Muu, Tuva, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Liikunnan koulutuskeskukset
-    "oppilaitostyyppi_63#1" -> Seq(Amm, Lk, Muu, Tuva, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansanopistot
+    "oppilaitostyyppi_62#1" -> Seq(
+      Amm,
+      Muu,
+      Tuva,
+      VapaaSivistystyoOpistovuosi,
+      VapaaSivistystyoMuu
+    ), //Liikunnan koulutuskeskukset
+    "oppilaitostyyppi_63#1" -> Seq(
+      Amm,
+      Lk,
+      Muu,
+      Tuva,
+      Telma,
+      VapaaSivistystyoOpistovuosi,
+      VapaaSivistystyoMuu
+    ), //Kansanopistot
     "oppilaitostyyppi_64#1" -> Seq(Amm, Lk, Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansalaisopistot
     "oppilaitostyyppi_65#1" -> Seq(Amm, Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Opintokeskukset
     "oppilaitostyyppi_66#1" -> Seq(Amm, Lk, Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kesäyliopistot
@@ -67,7 +101,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_92#1" -> Seq(Muu), //Neuvontajärjestöt
     "oppilaitostyyppi_93#1" -> Seq(Amm, Muu), //Muut koulutuksen järjestäjät
     "oppilaitostyyppi_99#1" -> Seq(Amm, Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Muut oppilaitokset
-    "oppilaitostyyppi_XX#1" -> Seq(Muu), //Ei tiedossa (oppilaitostyyppi)
+    "oppilaitostyyppi_XX#1" -> Seq(Muu) //Ei tiedossa (oppilaitostyyppi)
   )
 }
 
@@ -76,6 +110,7 @@ case object Lk                          extends Koulutustyyppi { val name = "lk"
 case object Yo                          extends Koulutustyyppi { val name = "yo"                            }
 case object Amk                         extends Koulutustyyppi { val name = "amk"                           }
 case object Tuva                        extends Koulutustyyppi { val name = "tuva"                          }
+case object Telma                       extends Koulutustyyppi { val name = "telma"                         }
 case object Muu                         extends Koulutustyyppi { val name = "muu"                           }
 case object AmmTutkinnonOsa             extends Koulutustyyppi { val name = "amm-tutkinnon-osa"             }
 case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm-osaamisala"                }

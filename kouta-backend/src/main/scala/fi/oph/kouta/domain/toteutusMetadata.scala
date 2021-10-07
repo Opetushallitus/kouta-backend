@@ -340,9 +340,23 @@ package object toteutusMetadata {
       |              example: tuva
       |              enum:
       |                - tuva
-      |            tuvaErityisopetuksena:
+      |            jarjestetaanErityisopetuksena:
       |              type: boolean
       |              description: Tieto siitä järjestetäänkö toteutus erityisopetuksena
+      |""".stripMargin
+
+  val TelmaToteutusMetadataModel: String =
+    """    TelmaToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: telma
+      |              enum:
+      |                - telma
       |""".stripMargin
 
   val VapaaSivistystyoOpistovuosiToteutusMetadataModel: String =
@@ -672,7 +686,7 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 ammattinimikkeet: List[Keyword] = List(),
                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                 aloituspaikat: Option[Int] = None,
-                                tuvaErityisopetuksena: Boolean = false) extends ToteutusMetadata {
+                                jarjestetaanErityisopetuksena: Boolean = false) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
@@ -681,7 +695,20 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
   )
 }
 
-
+case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
+                                kuvaus: Kielistetty = Map(),
+                                opetus: Option[Opetus] = None,
+                                asiasanat: List[Keyword] = List(),
+                                ammattinimikkeet: List[Keyword] = List(),
+                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                aloituspaikat: Option[Int] = None) extends ToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ))
+  )
+}
 
 trait Osaamisala extends ValidatableSubEntity {
   val linkki: Kielistetty
