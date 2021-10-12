@@ -327,7 +327,7 @@ object TestData {
         koulutuksenAlkamispaivamaara = Some(inFuture(20000)),
         koulutuksenPaattymispaivamaara = Some(inFuture(30000)))),
       aloituspaikat = Some(Aloituspaikat(
-        lukumaara = Some(100), ensikertalaisille = Some(50), kuvaus = Map(Fi -> "aloituspaikkojen kuvaus fi", Sv -> "aloituspaikkojen kuvaus sv"))))),
+        lukumaara = 100, ensikertalaisille = Some(50), kuvaus = Map(Fi -> "aloituspaikkojen kuvaus fi", Sv -> "aloituspaikkojen kuvaus sv"))))),
     valintakokeet = List(Valintakoe1),
     hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     muokkaaja = TestUserOid,
