@@ -203,6 +203,7 @@ case class HakutietoHaku(hakuOid: HakuOid,
 
 case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               nimi: Kielistetty = Map(),
+                              hakukohdeKoodiUri: Option[String] = None,
                               tila: Julkaisutila = Tallennettu,
                               esikatselu: Boolean = false,
                               valintaperusteId: Option[UUID] = None,
