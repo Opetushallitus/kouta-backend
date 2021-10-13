@@ -396,13 +396,15 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     super.validate(),
     assertValid(toteutusOid, "toteutusOid"),
     assertValid(hakuOid, "hakuOid"),
-    // TODO: Jos toisen asteen yhteishaku, silloin hakukohdeKoodiUri pakollinen, muulloin nimi pakollinen
-    validateIfTrue(
-      nimi.isEmpty,
-      assertNotOptional(hakukohdeKoodiUri, "hakukohdeKoodiUri")
+    // Joko hakukohdeKoodiUri tai nimi täytyy olla, mutta ei molempia!
+    assertTrue(hakukohdeKoodiUri.nonEmpty != nimi.nonEmpty, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri")),
+    assertTrue(hakukohdeKoodiUri.nonEmpty != nimi.nonEmpty, "hakukohdeKoodiUri", oneNotBoth("nimi", "hakukohdeKoodiUri")),
+    validateIfDefined[String](
+      hakukohdeKoodiUri,
+      assertMatch(_, HakukohdeKoodiPattern, "hakukohdeKoodiUri")
     ),
     validateIfTrue(
-      hakukohdeKoodiUri.isEmpty,
+      nimi.nonEmpty,
       validateKielistetty(kielivalinta, nimi, "nimi")
     ),
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
