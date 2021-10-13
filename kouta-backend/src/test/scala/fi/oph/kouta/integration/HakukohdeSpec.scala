@@ -173,7 +173,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val koulutusOid = put(TestData.AmmKoulutus, ophSession)
     val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
     val toteutusOid = put(ammToToteutus)
-    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteet_01#5"))
+    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_101#1"))
     put(ammHakukohde)
   }
 
@@ -181,7 +181,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val koulutusOid = put(TestData.AmmKoulutus, ophSession)
     val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
     val toteutusOid = put(ammToToteutus)
-    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(nimi = Map( Fi -> "Hakukohteen nimi fi", Sv -> "Hakukohteen nimi sv"), hakukohdeKoodiUri = Some("hakukohteet_01#5"))
+    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(nimi = Map( Fi -> "Hakukohteen nimi fi", Sv -> "Hakukohteen nimi sv"), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_101#1"))
 
     put(HakukohdePath, ammHakukohde, 400, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri"))
   }
