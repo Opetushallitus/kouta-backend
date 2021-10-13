@@ -398,7 +398,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     assertValid(hakuOid, "hakuOid"),
     // Joko hakukohdeKoodiUri tai nimi täytyy olla, mutta ei molempia!
     assertTrue(hakukohdeKoodiUri.nonEmpty != nimi.nonEmpty, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri")),
-    assertTrue(hakukohdeKoodiUri.nonEmpty != nimi.nonEmpty, "hakukohdeKoodiUri", oneNotBoth("nimi", "hakukohdeKoodiUri")),
     validateIfDefined[String](
       hakukohdeKoodiUri,
       assertMatch(_, HakukohdeKoodiPattern, "hakukohdeKoodiUri")
