@@ -483,7 +483,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case Some(x) => x.toBoolean
       },
       toKielistetty(kielivalinta, params(NimiKey)),
-      Some(params(HakukohdeKoodiUriKey)),
+      params.get(HakukohdeKoodiUriKey),
       Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
