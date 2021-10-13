@@ -4,7 +4,7 @@ alter table hakukohteet
 alter table hakukohteet_history
     add column hakukohde_koodi_uri varchar;
 
-comment on column hakukohteet.hakukohde_koodi_uri is 'Hakukohteen koodiUri. Käytetään tietyn tyyppisten hakukohteiden nimen muodostamiseen. Viittaa koodistoon.';
+comment on column hakukohteet.hakukohde_koodi_uri is 'Hakukohteen koodiUri. Käytetään toisen asteen yhteishaun hakukohteiden nimen muodostamiseen. Viittaa koodistoon "hakukohteet" tai "hakukohteeterammatillinenerityisopetus.';
 
 create or replace function update_hakukohteet_history() returns trigger
     language plpgsql
