@@ -227,6 +227,7 @@ trait HakukohdeExctractors extends ExtractorBase {
     hakuOid = HakuOid(r.nextString()),
     tila = Julkaisutila.withName(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
+    hakukohdeKoodiUri = r.nextStringOption(),
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
     hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
     hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),

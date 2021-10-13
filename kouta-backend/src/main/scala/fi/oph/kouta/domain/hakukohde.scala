@@ -2,7 +2,6 @@ package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
@@ -366,6 +365,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      tila: Julkaisutila = Tallennettu,
                      esikatselu: Boolean = false,
                      nimi: Kielistetty = Map(),
+                     hakukohdeKoodiUri: Option[String] = None,
                      jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
                      hakulomakeAtaruId: Option[UUID] = None,
@@ -390,12 +390,21 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[Modified]) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
+                     modified: Option[Modified]) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
     super.validate(),
     assertValid(toteutusOid, "toteutusOid"),
     assertValid(hakuOid, "hakuOid"),
+    // TODO: Jos toisen asteen yhteishaku, silloin hakukohdeKoodiUri pakollinen, muulloin nimi pakollinen
+    validateIfTrue(
+      nimi.isEmpty,
+      assertNotOptional(hakukohdeKoodiUri, "hakukohdeKoodiUri")
+    ),
+    validateIfTrue(
+      hakukohdeKoodiUri.isEmpty,
+      validateKielistetty(kielivalinta, nimi, "nimi")
+    ),
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit", assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)),
     validateIfDefined[LiitteenToimitusosoite](liitteidenToimitusosoite, _.validate(tila, kielivalinta, "liitteidenToimitusosoite")),

@@ -183,6 +183,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             haku_oid,
             tila,
             nimi,
+            hakukohde_koodi_uri,
             hakulomaketyyppi,
             hakulomake_ataru_id,
             hakulomake_kuvaus,
@@ -211,6 +212,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             ${hakukohde.hakuOid},
             ${hakukohde.tila.toString}::julkaisutila,
             ${toJsonParam(hakukohde.nimi)}::jsonb,
+            ${hakukohde.hakukohdeKoodiUri},
             ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
             ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid,
             ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb,
@@ -243,6 +245,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
               haku_oid = ${hakukohde.hakuOid},
               tila = ${hakukohde.tila.toString}::julkaisutila,
               nimi = ${toJsonParam(hakukohde.nimi)}::jsonb,
+              hakukohde_koodi_uri = ${hakukohde.hakukohdeKoodiUri},
               hakulomaketyyppi = ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
               hakulomake_ataru_id = ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid,
               hakulomake_kuvaus = ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb,
@@ -271,6 +274,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or haku_oid is distinct from ${hakukohde.hakuOid}
             or tila is distinct from ${hakukohde.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(hakukohde.nimi)}::jsonb
+            or hakukohde_koodi_uri is distinct from ${hakukohde.hakukohdeKoodiUri}
             or hakulomaketyyppi is distinct from ${hakukohde.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi
             or hakulomake_ataru_id is distinct from ${hakukohde.hakulomakeAtaruId.map(_.toString)}::uuid
             or hakulomake_kuvaus is distinct from ${toJsonParam(hakukohde.hakulomakeKuvaus)}::jsonb
@@ -286,7 +290,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or liitteet_onko_sama_toimitusaika is distinct from ${hakukohde.liitteetOnkoSamaToimitusaika}
             or liitteet_onko_sama_toimitusosoite is distinct from ${hakukohde.liitteetOnkoSamaToimitusosoite}
             or liitteiden_toimitusaika is distinct from ${formatTimestampParam(hakukohde.liitteidenToimitusaika)}::timestamp
-            or liitteiden_toimitustapa is distinct from ${hakukohde.liitteidenToimitustapa.map(_.toString)}::liitteen_toimitustapa
+            or liitteiden_toimitustapa is distinct from ${hakukohde.liitteidenToimitustapa
+      .map(_.toString)}::liitteen_toimitustapa
             or liitteiden_toimitusosoite is distinct from ${toJsonParam(hakukohde.liitteidenToimitusosoite)}::jsonb
             or esikatselu is distinct from ${hakukohde.esikatselu}
             or metadata is distinct from ${toJsonParam(hakukohde.metadata)}::jsonb
@@ -301,6 +306,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              haku_oid,
              tila,
              nimi,
+             hakukohde_koodi_uri,
              hakulomaketyyppi,
              hakulomake_ataru_id,
              hakulomake_kuvaus,
