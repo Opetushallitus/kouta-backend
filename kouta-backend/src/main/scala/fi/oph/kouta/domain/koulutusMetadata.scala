@@ -157,6 +157,50 @@ package object koulutusMetadata {
       |              example: opintojenlaajuus_40#1
       |""".stripMargin
 
+  val TuvaKoulutusMetadataModel: String =
+    """    TuvaKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: tuva
+      |              enum:
+      |                - tuva
+      |            linkkiEPerusteisiin:
+      |              type: string
+      |              description: Linkki koulutuksen eperusteisiin
+      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |            opintojenLaajuusKoodiUri:
+      |              type: string
+      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
+      |              example: opintojenlaajuus_38#1
+      |""".stripMargin
+
+  val TelmaKoulutusMetadataModel: String =
+    """    TelmaKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: telma
+      |              enum:
+      |                - telma
+      |            linkkiEPerusteisiin:
+      |              type: string
+      |              description: Linkki koulutuksen eperusteisiin
+      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |            opintojenLaajuusKoodiUri:
+      |              type: string
+      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
+      |              example: opintojenlaajuus_60#1
+      |""".stripMargin
+
   val VapaaSivistystyoKoulutusMetadataModel: String =
     """    VapaaSivistystyoKoulutusMetadata:
       |      allOf:
@@ -185,7 +229,7 @@ package object koulutusMetadata {
 
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
     YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, LukioKoulutusMetadataModel,
-    VapaaSivistystyoKoulutusMetadataModel)
+    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
@@ -282,6 +326,25 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
     // OpintojenLaajuusKoodiUri on pakollinen kenttä Tuvalle
     validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
     // Kuvaus on pakollinen kenttä Tuvalle
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
+    validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
+  )
+}
+
+case class TelmaKoulutusMetadata(tyyppi: Koulutustyyppi = Telma,
+                                kuvaus: Kielistetty = Map(),
+                                lisatiedot: Seq[Lisatieto] = Seq(),
+                                linkkiEPerusteisiin: Kielistetty = Map(),
+                                opintojenLaajuusKoodiUri: Option[String] = None) extends KoulutusMetadata {
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    // Telmalla ei ole lisätiedot-kenttää lomakkeessa
+    assertEmpty(lisatiedot, path),
+    // OpintojenLaajuusKoodiUri on pakollinen kenttä Telmalle
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
+    // Kuvaus on pakollinen kenttä Telmalle
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
     validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),

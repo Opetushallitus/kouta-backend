@@ -193,6 +193,27 @@ object TestData {
     ePerusteId = None,
     modified = None)
 
+  val TelmaKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = Telma,
+    koulutuksetKoodiUri = Seq("koulutus_301101#1"),
+    esikatselu = false,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(TelmaKoulutusMetadata(
+      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60#1"),
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv")
+    )),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/lkkuva"),
+    ePerusteId = None,
+    modified = None)
+
   val VapaaSivistystyoOpistovuosiKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = false,
@@ -585,11 +606,21 @@ object TestData {
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-    tuvaErityisopetuksena = true,
+    jarjestetaanErityisopetuksena = true,
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = Some(23))
 
   val TuvaToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(TuvaToteutuksenMetatieto))
+
+  val TelmaToteutuksenMetatieto: TelmaToteutusMetadata = TelmaToteutusMetadata(
+    tyyppi = Telma,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = Some(23))
+
+  val TelmaToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(TelmaToteutuksenMetatieto))
 
   val VapaaSivistystyoOpistovuosiToteutusMetatieto: VapaaSivistystyoOpistovuosiToteutusMetadata = VapaaSivistystyoOpistovuosiToteutusMetadata(
     tyyppi = VapaaSivistystyoOpistovuosi,

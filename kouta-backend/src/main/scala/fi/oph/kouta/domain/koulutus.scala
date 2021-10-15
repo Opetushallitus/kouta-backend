@@ -25,7 +25,7 @@ package object koulutus {
       |          description: Onko koulutus tutkintoon johtavaa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'tuva' (tutkintokoulutukseen valmentava koulutus)"
+      |          description: Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'tuva' (tutkintokoulutukseen valmentava koulutus)", 'telma' (työhön ja itsenäiseen elämään valmentava koulutus)
       |          enum:
       |            - amm
       |            - yo
@@ -34,6 +34,7 @@ package object koulutus {
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
       |            - tuva
+      |            - telma
       |            - vapaa-sivistystyo-opistovuosi
       |            - vapaa-sivistystyo-muu
       |          example: amm
@@ -93,7 +94,8 @@ package object koulutus {
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
       |            - $ref: '#/components/schemas/LukioKoulutusMetadata'
       |            - $ref: '#/components/schemas/TuvaKoulutusMetadata'
-      |            - $ref: '#/components/schemas/VapaaSivistystyoKoulutusMetadata'
+      |            - $ref: '#/components/schemas/TelmaKoulutusMetadata'
+      |      |     - $ref: '#/components/schemas/VapaaSivistystyoKoulutusMetadata'
       |          example:
       |            koulutustyyppi: amm
       |            koulutusalaKoodiUrit:
