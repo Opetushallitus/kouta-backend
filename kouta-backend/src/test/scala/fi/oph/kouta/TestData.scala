@@ -295,6 +295,7 @@ object TestData {
     hakuOid = HakuOid("1.2.246.562.29.123"),
     tila = Julkaistu,
     nimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
+    hakukohdeKoodiUri = None,
     esikatselu = true,
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomakeAtaruId = Some(UUID.randomUUID()),
@@ -338,6 +339,7 @@ object TestData {
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     nimi = kieliMap("Minimi hakukohde"),
+    hakukohdeKoodiUri = None,
     toteutusOid = ToteutusOid("1.2.246.562.17.123"),
     hakuOid = HakuOid("1.2.246.562.29.123"),
     modified = None)

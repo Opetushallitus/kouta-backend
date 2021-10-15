@@ -93,6 +93,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  h.oid,
                  hk.oid,
                  hk.nimi,
+                 hk.hakukohde_koodi_uri,
                  hk.tila,
                  hk.esikatselu,
                  hk.valintaperuste_id,
