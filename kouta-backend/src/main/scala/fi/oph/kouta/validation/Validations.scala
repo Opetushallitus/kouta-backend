@@ -39,6 +39,7 @@ object Validations {
   def tyyppiMismatch(field1: String, id1: Any, field2: String, id2: Any): ErrorMessage = ErrorMessage(msg = s"$field1 ($id1) tyyppi ei vastaa $field2 ($id2) tyyppiä", id = "tyyppiMismatch")
   def cannotLinkToHakukohde(oid: String): ErrorMessage = ErrorMessage(msg = s"Toteutusta ($oid) ei voi liittää hakukohteeseen", id = "cannotLinkToHakukohde")
   def valuesDontMatch(relatedEntity: String, field: String): ErrorMessage = ErrorMessage(msg = s"$relatedEntity kenttä $field ei sisällä samoja arvoja", id = "valuesDontMatch")
+  def oneNotBoth(field1: String, field2: String): ErrorMessage = ErrorMessage(msg = s"Tarvitaan joko $field1 tai $field2, mutta ei molempia.", id="oneNotBoth")
 
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen", id = "InvalidKoulutuspaivamaarat")
   val InvalidMetadataTyyppi: ErrorMessage = ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
@@ -67,6 +68,8 @@ object Validations {
   val LukioErityinenKoulutustehtavaKoodiPattern: Pattern = Pattern.compile("""lukiolinjaterityinenkoulutustehtava_\d+(#\d{1,2})?""")
   val LukioDiplomiKoodiPattern: Pattern = Pattern.compile("""moduulikoodistolops2021_\w+(#\d{1,2})?""")
   val OppiaineKoodiPattern: Pattern = Pattern.compile("""oppiaineetyleissivistava_\w+(#\d{1,2})?""")
+  val HakukohdeKoodiPattern: Pattern =
+    Pattern.compile("""hakukohteet(perusopetuksenjalkeinenyhteishaku|erammatillinenerityisopetus)_\w+(#\d{1,2})?$""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 

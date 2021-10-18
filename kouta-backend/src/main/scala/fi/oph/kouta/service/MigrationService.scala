@@ -383,6 +383,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       hakuOid = HakuOid((result \ "hakuOid").extract[String]),
       tila = toJulkaisutila((result \ "tila").extract[String]),
       nimi = nimi,
+      hakukohdeKoodiUri = None,
       jarjestyspaikkaOid = Some(OrganisaatioOid(tarjoajaOids.head)),
       hakulomaketyyppi = hakulomakeAtaruId match {
         case Some(_) => Some(Ataru)

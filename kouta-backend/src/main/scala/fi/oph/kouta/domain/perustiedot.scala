@@ -7,7 +7,12 @@ import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
-sealed trait Perustiedot[ID, T] extends Validatable with AuthorizableEntity[T] with HasPrimaryId[ID, T] with HasModified[T] with HasMuokkaaja[T] {
+sealed trait Perustiedot[ID, T]
+    extends Validatable
+    with AuthorizableEntity[T]
+    with HasPrimaryId[ID, T]
+    with HasModified[T]
+    with HasMuokkaaja[T] {
   val tila: Julkaisutila
   val nimi: Kielistetty
   val muokkaaja: UserOid
@@ -34,6 +39,14 @@ abstract class PerustiedotWithOid[ID <: Oid, T] extends Perustiedot[ID, T] {
   override def primaryId: Option[ID] = oid
 
   override def withPrimaryID(oid: ID): T = withOid(oid)
+}
+
+abstract class PerustiedotWithOidAndOptionalNimi[ID <: Oid, T] extends PerustiedotWithOid[ID, T] {
+  override def validate(): IsValid = and(
+    validateIfDefined[Oid](oid, assertValid(_, "oid")),
+    assertValid(organisaatioOid, "organisaatioOid"),
+    assertNotEmpty(kielivalinta, "kielivalinta")
+  )
 }
 
 abstract class PerustiedotWithId[T] extends Perustiedot[UUID, T] {
