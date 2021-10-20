@@ -42,7 +42,7 @@ package object haku {
       |          description: Viimeinen ajanhetki, jolloin hakuun saa liittää hakukohteen.
       |            Hakukohteita ei saa lisätä enää sen jälkeen, kun haku on käynnissä.
       |          example: 2019-08-23T09:55
-      |        hakukohteenMuokkaamiseenTakaraja:
+      |        hakukohteenMuokkaamisenTakaraja:
       |          type: string
       |          format: date-time
       |          description: Viimeinen ajanhetki, jolloin hakuun liitettyä hakukohdetta on sallittua muokata.

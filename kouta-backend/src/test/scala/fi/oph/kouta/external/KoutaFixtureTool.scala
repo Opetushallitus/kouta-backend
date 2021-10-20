@@ -371,7 +371,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
   val DefaultOppilaitoksenOsa: java.util.Map[String, String] = mapAsJavaMap(DefaultOppilaitoksenOsaScala)
 
-  private def toKielistetty(kielivalinta: Seq[Kieli], nimi: String): Kielistetty = kielivalinta.map { k => (k, nimi + " " + k.toString) }.toMap
+  private def toKielistetty(kielivalinta: Seq[Kieli], nimi: String): Kielistetty =
+    if (nimi == null || nimi.isEmpty()) Map() else
+      kielivalinta.map { k => (k, nimi + " " + k.toString) }.toMap
   private def toKielivalinta(params:Map[String, String]) = params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName)
 
   private def toJsonIfValid[T <: Validatable](v :T): String = v.validate() match {
@@ -472,6 +474,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   def getHakukohde(oid:String): String = {
     val params = hakukohteet(oid)
     val kielivalinta = toKielivalinta(params)
+    val nimi = if ("{}".equals(params(NimiKey))) "" else params(NimiKey)
     toJsonIfValid( Hakukohde(
       Some(HakukohdeOid(oid)),
       Some("3344556677"),
@@ -482,7 +485,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case None => false
         case Some(x) => x.toBoolean
       },
-      toKielistetty(kielivalinta, params(NimiKey)),
+      toKielistetty(kielivalinta, nimi),
       params.get(HakukohdeKoodiUriKey),
       Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
@@ -751,6 +754,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       HakuOid(params(HakuOidKey)),
       Some(UUID.fromString(params(ValintaperusteIdKey))),
       toKielistetty(kielivalinta, params(NimiKey)),
+      params.get(HakukohdeKoodiUriKey),
       Julkaisutila.withName(params(TilaKey)),
       Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       OrganisaatioOid(params(OrganisaatioKey)),
