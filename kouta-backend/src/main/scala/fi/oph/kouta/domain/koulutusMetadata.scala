@@ -36,7 +36,7 @@ package object koulutusMetadata {
       |              - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
       |        kuvauksenNimi:
       |          type: object
-      |          description: Koulutuksen kuvaukseni nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          description: Koulutuksen kuvauksen nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
       |        tutkintonimikeKoodiUrit:
       |          type: array

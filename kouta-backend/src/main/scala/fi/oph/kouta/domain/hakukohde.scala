@@ -198,9 +198,6 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
-      |        metadata:
-      |          type: object
-      |          $ref: '#/components/schemas/HakukohdeMetadata'
       |        muokkaaja:
       |          type: string
       |          description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
@@ -535,6 +532,7 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              hakuOid: HakuOid,
                              valintaperusteId: Option[UUID],
                              nimi: Kielistetty,
+                             hakukohdeKoodiUri: Option[String] = None,
                              tila: Julkaisutila,
                              jarjestyspaikkaOid: Option[OrganisaatioOid],
                              organisaatioOid: OrganisaatioOid,

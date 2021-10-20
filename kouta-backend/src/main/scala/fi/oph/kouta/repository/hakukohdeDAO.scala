@@ -470,7 +470,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   val selectHakukohdeListSql =
-    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, m.modified
+    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.hakukohde_koodi_uri, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, m.modified
          from hakukohteet ha
          inner join (
            select ha.oid oid, greatest(
