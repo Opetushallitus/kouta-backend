@@ -100,6 +100,10 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
   }
 
+  it should "fail to store hakukohde without jarjestyspaikkaOid" in {
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(jarjestyspaikkaOid = None), 400, "jarjestyspaikkaOid", missingMsg)
+  }
+
   it should "fail to store hakukohde if the haku does not exist" in {
     val hakuOid = TestOids.randomHakuOid.s
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "hakuOid", nonExistent("Hakua", hakuOid))

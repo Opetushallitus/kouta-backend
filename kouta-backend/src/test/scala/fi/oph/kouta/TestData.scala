@@ -296,6 +296,7 @@ object TestData {
     tila = Julkaistu,
     nimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
     hakukohdeKoodiUri = None,
+    jarjestyspaikkaOid = Some(OtherOid),
     esikatselu = true,
     hakulomaketyyppi = Some(EiSähköistä),
     hakulomakeAtaruId = Some(UUID.randomUUID()),
