@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.LokalisointiClient
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
@@ -53,6 +54,7 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
 
   override def hakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService)
+    val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
+    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient)
   }
 }

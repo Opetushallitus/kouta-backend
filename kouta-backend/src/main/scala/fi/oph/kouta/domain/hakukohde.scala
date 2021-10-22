@@ -42,6 +42,10 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
+      |        esitysNimi:
+      |          type: object
+      |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Nimi'
       |        jarjestyspaikkaOid:
       |          type: string
       |          description: Hakukohteen järjestyspaikan organisaatio
@@ -198,6 +202,9 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
+      |        esitysNimi:
+      |          type: object
+      |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |        muokkaaja:
       |          type: string
       |          description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
@@ -362,6 +369,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      tila: Julkaisutila = Tallennettu,
                      esikatselu: Boolean = false,
                      nimi: Kielistetty = Map(),
+                     esitysNimi: Kielistetty = Map(),
                      hakukohdeKoodiUri: Option[String] = None,
                      jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
@@ -532,6 +540,7 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              hakuOid: HakuOid,
                              valintaperusteId: Option[UUID],
                              nimi: Kielistetty,
+                             esitysNimi: Kielistetty,
                              hakukohdeKoodiUri: Option[String] = None,
                              tila: Julkaisutila,
                              jarjestyspaikkaOid: Option[OrganisaatioOid],

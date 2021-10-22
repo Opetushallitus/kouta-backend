@@ -486,6 +486,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case Some(x) => x.toBoolean
       },
       toKielistetty(kielivalinta, nimi),
+      toKielistetty(kielivalinta, nimi),
       params.get(HakukohdeKoodiUriKey),
       Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
@@ -754,6 +755,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       HakuOid(params(HakuOidKey)),
       Some(UUID.fromString(params(ValintaperusteIdKey))),
       toKielistetty(kielivalinta, params(NimiKey)),
+      toKielistetty(kielivalinta, params(NimiKey)),
       params.get(HakukohdeKoodiUriKey),
       Julkaisutila.withName(params(TilaKey)),
       Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
@@ -867,6 +869,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
 
     HakutietoHakukohde(
       HakukohdeOid(oid),
+      toKielistetty(kielivalinta, params(NimiKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       params.get(HakukohdeKoodiUriKey),
       Julkaisutila.withName(params(TilaKey)),
