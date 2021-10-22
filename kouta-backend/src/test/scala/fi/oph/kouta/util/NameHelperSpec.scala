@@ -15,7 +15,7 @@ class NameHelperSpec extends UnitSpec {
   "generateHakukohdeDisplayName" should "return Hakukohteen nimi as it is for TELMA" in {
     val telmaToteutus: Toteutus = TelmaToteutus
     assert(
-      NameHelper.generateHakukohdeDisplayName(
+      NameHelper.generateHakukohdeDisplayNameForTuva(
         hakukohde.copy(nimi =
           Map(
             Fi -> "Työhön ja itsenäiseen elämään valmentava koulutus (TELMA)",
@@ -35,7 +35,7 @@ class NameHelperSpec extends UnitSpec {
     val tuvaToMetadata                   = tuvaToteutuksenMetadata.copy(jarjestetaanErityisopetuksena = false)
     val tuvaToteutusWithoutErityisopetus = tuvaToteutus.copy(metadata = Some(tuvaToMetadata))
     assert(
-      NameHelper.generateHakukohdeDisplayName(
+      NameHelper.generateHakukohdeDisplayNameForTuva(
         hakukohde.copy(nimi =
           Map(
             Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA)",
@@ -53,7 +53,7 @@ class NameHelperSpec extends UnitSpec {
 
   it should "return TUVA hakukohteen nimi with erityisopetus" in {
     assert(
-      NameHelper.generateHakukohdeDisplayName(
+      NameHelper.generateHakukohdeDisplayNameForTuva(
         hakukohde.copy(nimi =
           Map(
             Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA)",

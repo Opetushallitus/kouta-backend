@@ -3,7 +3,11 @@ package fi.oph.kouta.util
 import fi.oph.kouta.domain.{Hakukohde, Kielistetty, Toteutus}
 
 object NameHelper {
-  def generateHakukohdeDisplayName(hakukohde: Hakukohde, toteutus: Toteutus, kaannokset: Kielistetty): Kielistetty = {
+  def generateHakukohdeDisplayNameForTuva(
+      hakukohde: Hakukohde,
+      toteutus: Toteutus,
+      kaannokset: Kielistetty
+  ): Kielistetty = {
     val jarjestetaanErityisopetuksena = HakukohdeServiceUtil.getJarjestetaanErityisopetuksena(toteutus)
 
     if (jarjestetaanErityisopetuksena.getOrElse(false)) {
