@@ -35,13 +35,10 @@ class HakukohdeService(
   def get(oid: HakukohdeOid)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] = {
     val hakukohde = HakukohdeDAO.get(oid)
 
-    val toteutusOid = hakukohde match {
-      case Some((hakukohde, _)) => hakukohde.toteutusOid
-    }
-
-    val displayName = hakukohde match {
-      case Some((hakukohde, _)) =>
+    val enrichedHakukohde = hakukohde match {
+      case Some((h, i)) =>
         var kaannokset: Kielistetty = Map()
+        val toteutusOid             = h.toteutusOid
         val toteutus                = ToteutusDAO.get(toteutusOid)
         toteutus match {
           case Some((toteutus, _)) =>
@@ -49,17 +46,17 @@ class HakukohdeService(
               case Some(toteutusMetadata) =>
                 if (toteutusMetadata.tyyppi == Tuva) {
                   kaannokset = lokalisointiClient.getKaannoksetWithKey("yleiset.vaativanaErityisenaTukena")
-                  NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde, toteutus, kaannokset)
+                  val displayName = NameHelper.generateHakukohdeDisplayNameForTuva(h, toteutus, kaannokset)
+                  Some(h.copy(esitysNimi = displayName), i)
                 } else {
-                  Map(): Kielistetty
+                  hakukohde
                 }
+              case None => hakukohde
             }
+          case None => hakukohde
         }
-    }
-
-    val enrichedHakukohde = hakukohde match {
-      case Some((h, i)) => Some(h.copy(esitysNimi = displayName), i)
-    }
+      case None => None
+     }
 
     authorizeGet(
       enrichedHakukohde,
@@ -110,12 +107,8 @@ class HakukohdeService(
   private def validateDependenciesIntegrity(hakukohde: Hakukohde): Unit = {
     import Validations._
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
-    // println(deps)
     val hakuOid     = hakukohde.hakuOid.s
     val toteutusOid = hakukohde.toteutusOid.s
-    val haku        = deps.get(hakuOid)
-    // println("haku:")
-    // println(haku)
     throwValidationErrors(
       and(
         validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
