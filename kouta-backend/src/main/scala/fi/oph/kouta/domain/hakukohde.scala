@@ -42,7 +42,7 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
-      |        esitysNimi:
+      |        esitysnimi:
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
@@ -202,9 +202,6 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
-      |        esitysNimi:
-      |          type: object
-      |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |        muokkaaja:
       |          type: string
       |          description: Hakukohdetta viimeksi muokanneen virkailijan henkilö-oid
@@ -369,7 +366,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      tila: Julkaisutila = Tallennettu,
                      esikatselu: Boolean = false,
                      nimi: Kielistetty = Map(),
-                     esitysNimi: Kielistetty = Map(),
+                     esitysnimi: Kielistetty = Map(),
                      hakukohdeKoodiUri: Option[String] = None,
                      jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,

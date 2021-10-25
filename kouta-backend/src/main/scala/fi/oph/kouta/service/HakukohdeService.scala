@@ -37,24 +37,8 @@ class HakukohdeService(
 
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
-        var kaannokset: Kielistetty = Map()
-        val toteutusOid             = h.toteutusOid
-        val toteutus                = ToteutusDAO.get(toteutusOid)
-        toteutus match {
-          case Some((toteutus, _)) =>
-            toteutus.metadata match {
-              case Some(toteutusMetadata) =>
-                if (toteutusMetadata.tyyppi == Tuva) {
-                  kaannokset = lokalisointiClient.getKaannoksetWithKey("yleiset.vaativanaErityisenaTukena")
-                  val displayName = NameHelper.generateHakukohdeDisplayNameForTuva(h, toteutus, kaannokset)
-                  Some(h.copy(esitysNimi = displayName), i)
-                } else {
-                  hakukohde
-                }
-              case None => hakukohde
-            }
-          case None => hakukohde
-        }
+        val esitysnimi = generateHakukohdeEsitysnimi(h)
+        Some(h.copy(esitysnimi = esitysnimi), i)
       case None => None
      }
 
@@ -66,6 +50,27 @@ class HakukohdeService(
       )
     )
   }
+
+  private def generateHakukohdeEsitysnimi(hakukohde: Hakukohde): Kielistetty = {
+    val toteutusOid             = hakukohde.toteutusOid
+    val toteutus                = ToteutusDAO.get(toteutusOid)
+    toteutus match {
+      case Some((toteutus, _)) =>
+        toteutus.metadata match {
+          case Some(toteutusMetadata) =>
+            toteutusMetadata match {
+              case tuva: TuvaToteutusMetadata =>
+                val kaannokset = lokalisointiClient.getKaannoksetWithKey("yleiset.vaativanaErityisenaTukena")
+                NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde, toteutus, kaannokset)
+              case _ =>
+                hakukohde.nimi
+            }
+          case None => hakukohde.nimi
+        }
+      case None => hakukohde.nimi
+    }
+  }
+
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
     authorizePut(hakukohde) { h =>

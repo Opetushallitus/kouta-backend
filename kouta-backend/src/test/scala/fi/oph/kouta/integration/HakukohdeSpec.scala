@@ -417,6 +417,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake", Sv -> "http://ataru/kivahakulomake/sv", En -> "http://ataru/kivahakulomake/en"),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))))
@@ -435,7 +436,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   it should "store and update unfinished hakukohde" in {
     val unfinishedHakukohde = Hakukohde(muokkaaja = TestUserOid, toteutusOid = ToteutusOid(toteutusOid),
-      hakuOid = HakuOid(hakuOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "hakukohde"))
+      hakuOid = HakuOid(hakuOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "hakukohde"), esitysnimi = Map(Fi -> "hakukohde"))
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid))))
     val newToteutusOid = put(toteutus(koulutusOid))
