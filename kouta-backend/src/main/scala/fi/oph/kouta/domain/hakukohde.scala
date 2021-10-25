@@ -508,7 +508,8 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
       validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto"),
-      and(assertNotOptional(aloituspaikat, s"$path.aloituspaikat"), validateIfTrue(aloituspaikat.isDefined, aloituspaikat.get.validate(tila, kielivalinta, s"$path.aloituspaikat"))),
+      assertNotOptional(aloituspaikat, s"$path.aloituspaikat"),
+      validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
       // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
       validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
     ))
