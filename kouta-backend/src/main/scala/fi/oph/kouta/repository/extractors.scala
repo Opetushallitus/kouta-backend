@@ -259,7 +259,6 @@ trait HakukohdeExctractors extends ExtractorBase {
     hakuOid = HakuOid(r.nextString()),
     valintaperusteId = r.nextStringOption().map(UUID.fromString),
     nimi = extractKielistetty(r.nextStringOption()),
-    esitysNimi = extractKielistetty(r.nextStringOption()),
     hakukohdeKoodiUri = r.nextStringOption(),
     tila = Julkaisutila.withName(r.nextString()),
     jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
@@ -340,7 +339,6 @@ trait HakutietoExtractors extends ExtractorBase {
     ( ToteutusOid(r.nextString()), HakuOid(r.nextString()), HakutietoHakukohde(
       hakukohdeOid = HakukohdeOid(r.nextString()),
       nimi = extractKielistetty(r.nextStringOption()),
-      esitysNimi = extractKielistetty(r.nextStringOption()),
       hakukohdeKoodiUri = r.nextStringOption(),
       tila = Julkaisutila.withName(r.nextString()),
       esikatselu = r.nextBoolean(),

@@ -92,7 +92,6 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       hakukohde.hakuOid,
       hakukohde.valintaperusteId,
       hakukohde.nimi,
-      hakukohde.esitysNimi,
       hakukohde.hakukohdeKoodiUri,
       hakukohde.tila,
       hakukohde.jarjestyspaikkaOid,
