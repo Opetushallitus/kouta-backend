@@ -92,6 +92,9 @@ object Validations {
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
+  def assertDependencyExists(exists: Boolean, dependencyId: Any, dependencyName: String, dependencyIdPath: String): IsValid =
+    if (exists) NoErrors else error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId))
+
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
