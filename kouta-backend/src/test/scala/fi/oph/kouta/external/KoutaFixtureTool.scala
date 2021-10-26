@@ -120,6 +120,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val TilaKey = "tila"
   val TarjoajatKey = "tarjoajat"
   val NimiKey = "nimi"
+  val EsitysNimiKey = "esitysnimi"
   val HakukohdeKoodiUriKey = "hakukohdeKoodiUri"
   val JulkinenKey = "julkinen"
   val EsikatseluKey = "esikatselu"
@@ -266,6 +267,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     ExternalIdKey -> "3344556677",
     TilaKey -> Julkaistu.name,
     NimiKey -> "nimi",
+    EsitysNimiKey -> "esitysnimi",
     MuokkaajaKey -> TestUserOid.s,
     OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
@@ -475,6 +477,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     val params = hakukohteet(oid)
     val kielivalinta = toKielivalinta(params)
     val nimi = if ("{}".equals(params(NimiKey))) "" else params(NimiKey)
+    val esitysnimi = if ("{}".equals(params(EsitysNimiKey))) "" else params(EsitysNimiKey)
     toJsonIfValid( Hakukohde(
       Some(HakukohdeOid(oid)),
       Some("3344556677"),
@@ -486,7 +489,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case Some(x) => x.toBoolean
       },
       toKielistetty(kielivalinta, nimi),
-      toKielistetty(kielivalinta, nimi),
+      toKielistetty(kielivalinta, esitysnimi),
       params.get(HakukohdeKoodiUriKey),
       Some(OrganisaatioOid(params(JarjestyspaikkaOidKey))),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
