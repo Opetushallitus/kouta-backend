@@ -73,7 +73,7 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
 
     throwValidationErrors(and(
       validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
-      validateDependency(hakukohde.tila, deps.get(hakuOid).map(_._1), hakuOid, "Hakua", "hakuOid"),
+      Validations.assertDependencyExists(deps.contains(hakuOid), hakuOid, "Hakua", "hakuOid"),
       validateIfDefined[UUID](hakukohde.valintaperusteId, valintaperusteId => and(
         validateDependency(hakukohde.tila, deps.get(valintaperusteId.toString).map(_._1), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
         validateIfDefined[Koulutustyyppi](deps.get(valintaperusteId.toString).flatMap(_._2), valintaperusteTyyppi =>
