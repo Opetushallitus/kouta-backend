@@ -10,6 +10,7 @@ import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.MiscUtils
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -31,7 +32,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     authorizeGet(HakuDAO.get(oid), readRules)
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
-    val rules = if (haku.hakutapaKoodiUri.nonEmpty && haku.hakutapaKoodiUri.get.startsWith("hakutapa_01")) {
+    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
@@ -42,7 +43,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val rules = if (haku.hakutapaKoodiUri.nonEmpty && haku.hakutapaKoodiUri.get.startsWith("hakutapa_01")) {
+    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
