@@ -6,6 +6,8 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
+import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.generic.auto._
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
@@ -599,6 +601,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
           hakukohteet = Seq(HakutietoHakukohde(
             hakukohdeOid = hk1.oid,
             nimi = hk1.nimi,
+            jarjestyspaikkaOid = Some(OtherOid),
             tila = hk1.tila,
             esikatselu = true,
             valintaperusteId = hk1.valintaperusteId,
@@ -635,6 +638,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             hakukohteet = Seq(HakutietoHakukohde(
               hakukohdeOid = hk6.oid,
               nimi = hk6.nimi,
+              jarjestyspaikkaOid = Some(OtherOid),
               tila = hk6.tila,
               esikatselu = true,
               valintaperusteId = hk6.valintaperusteId,
@@ -655,7 +659,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
               modified = Some(hk6.modified)))))))
 
-      read[List[Hakutieto]](body) should equal(expected)
+      read[List[Hakutieto]](body) should matchTo(expected)
     }
   }
 }
