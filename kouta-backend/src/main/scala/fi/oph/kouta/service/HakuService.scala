@@ -31,7 +31,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     authorizeGet(HakuDAO.get(oid), readRules)
 
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
-    val rules = if (haku.hakutapaKoodiUri.contains("hakutapa_01")) {
+    val rules = if (haku.hakutapaKoodiUri.nonEmpty && haku.hakutapaKoodiUri.get.startsWith("hakutapa_01")) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
@@ -42,7 +42,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val rules = if (haku.hakutapaKoodiUri.contains("hakutapa_01")) {
+    val rules = if (haku.hakutapaKoodiUri.nonEmpty && haku.hakutapaKoodiUri.get.startsWith("hakutapa_01")) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)

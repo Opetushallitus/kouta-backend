@@ -154,12 +154,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "validate alkamiskausi is given for yhteishaku" in {
-    put(HakuPath, bytes(yhteishakuWithoutAlkamiskausi), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(missingMsg, "metadata.koulutuksenAlkamiskausi"))
-    }
+    put(HakuPath, yhteishakuWithoutAlkamiskausi, ophSession, 400)
   }
 
   it should "not validate alkamiskausi is given if not yhteishaku" in {
