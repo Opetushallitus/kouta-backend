@@ -956,23 +956,6 @@ object TestData {
       ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
       yhteyshenkilot = Seq(Yhteystieto1),
       hakutermi = Some(Hakeutuminen),
-      hakulomaketyyppi = Some(Ataru),
-      hakulomakeLinkki = Map(),
-      lisatietoaHakeutumisesta = Map(),
-      lisatietoaValintaperusteista = Map(),
-      hakuaika = None,
-      aloituspaikat = Some(23)
-    )
-
-  val AmmTutkinnonOsaToteutusMetadataEiSahkoista: AmmatillinenTutkinnonOsaToteutusMetadata =
-    AmmatillinenTutkinnonOsaToteutusMetadata(
-      tyyppi = AmmTutkinnonOsa,
-      kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-      opetus = Some(ToteutuksenOpetus),
-      asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-      ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-      yhteyshenkilot = Seq(Yhteystieto1),
-      hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(EiSähköistä),
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
