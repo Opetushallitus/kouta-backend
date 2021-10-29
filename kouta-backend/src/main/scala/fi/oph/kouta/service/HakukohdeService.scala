@@ -64,12 +64,12 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
   private def validateDependenciesIntegrity(hakukohde: Hakukohde): Unit = {
     import Validations._
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
-    val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1).get
 
     val hakuOid = hakukohde.hakuOid.s
     val toteutusOid = hakukohde.toteutusOid.s
 
-    val koulutustyyppi = deps.get(toteutusOid).map(_._2).get.get
+    val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1)
+    val koulutustyyppi = deps.get(toteutusOid).flatMap(_._2)
 
     throwValidationErrors(and(
       validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
@@ -95,7 +95,7 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
       validateIfJulkaistu(
         hakukohde.tila,
         validateIfTrue(isToisenAsteenYhteishaku(
-          koulutustyyppi, haku
+          koulutustyyppi, haku.flatMap(_.hakutapaKoodiUri)
         ), assertNotOptional(hakukohde.valintaperusteId, "valintaperusteId")))
     ))
   }
