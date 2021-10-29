@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Haku, Koulutustyyppi}
+import fi.oph.kouta.domain.Koulutustyyppi
 
 object MiscUtils {
   def optionWhen[T](cond: Boolean)(result: => T): Option[T] = if(cond) Some(result) else None
@@ -10,6 +10,6 @@ object MiscUtils {
     koulutustyyppi.isDefined && hakutapaKoodiUri.isDefined && Koulutustyyppi.isToisenAsteenYhteishakuKoulutustyyppi(
       koulutustyyppi.get
     ) && isYhteishakuHakutapa(
-      haku.hakutapaKoodiUri.get
+      hakutapaKoodiUri.get
     );
 }
