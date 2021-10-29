@@ -351,43 +351,54 @@ package object hakukohde {
       |            $ref: '#/components/schemas/PainotettuOppiaine'
       |""".stripMargin
 
-  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
-    PainotettuOppiaine, OppiaineKoodiUrit, HakukohteenLinjaModel)
+  def models = List(
+    HakukohdeListItemModel,
+    HakukohdeModel,
+    HakukohdeMetadataModel,
+    LiiteModel,
+    LiitteenToimitusosoiteModel,
+    PainotettuOppiaine,
+    OppiaineKoodiUrit,
+    HakukohteenLinjaModel
+  )
 }
 
-case class Hakukohde(oid: Option[HakukohdeOid] = None,
-                     externalId: Option[String] = None,
-                     toteutusOid: ToteutusOid,
-                     hakuOid: HakuOid,
-                     tila: Julkaisutila = Tallennettu,
-                     esikatselu: Boolean = false,
-                     nimi: Kielistetty = Map(),
-                     hakukohdeKoodiUri: Option[String] = None,
-                     jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
-                     hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                     hakulomakeAtaruId: Option[UUID] = None,
-                     hakulomakeKuvaus: Kielistetty = Map(),
-                     hakulomakeLinkki: Kielistetty = Map(),
-                     kaytetaanHaunHakulomaketta: Option[Boolean] = None,
-                     pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
-                     pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
-                     muuPohjakoulutusvaatimus: Kielistetty = Map(),
-                     toinenAsteOnkoKaksoistutkinto: Option[Boolean] = None,
-                     kaytetaanHaunAikataulua: Option[Boolean] = None,
-                     valintaperusteId: Option[UUID] = None,
-                     liitteetOnkoSamaToimitusaika: Option[Boolean] = None,
-                     liitteetOnkoSamaToimitusosoite: Option[Boolean] = None,
-                     liitteidenToimitusaika: Option[LocalDateTime] = None,
-                     liitteidenToimitustapa: Option[LiitteenToimitustapa] = None,
-                     liitteidenToimitusosoite: Option[LiitteenToimitusosoite] = None,
-                     liitteet: Seq[Liite] = Seq(),
-                     valintakokeet: Seq[Valintakoe] = Seq(),
-                     hakuajat: Seq[Ajanjakso] = Seq(),
-                     metadata: Option[HakukohdeMetadata] = None, //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
-                     muokkaaja: UserOid,
-                     organisaatioOid: OrganisaatioOid,
-                     kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[Modified]) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
+case class Hakukohde(
+    oid: Option[HakukohdeOid] = None,
+    externalId: Option[String] = None,
+    toteutusOid: ToteutusOid,
+    hakuOid: HakuOid,
+    tila: Julkaisutila = Tallennettu,
+    esikatselu: Boolean = false,
+    nimi: Kielistetty = Map(),
+    hakukohdeKoodiUri: Option[String] = None,
+    jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeAtaruId: Option[UUID] = None,
+    hakulomakeKuvaus: Kielistetty = Map(),
+    hakulomakeLinkki: Kielistetty = Map(),
+    kaytetaanHaunHakulomaketta: Option[Boolean] = None,
+    pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
+    pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
+    muuPohjakoulutusvaatimus: Kielistetty = Map(),
+    toinenAsteOnkoKaksoistutkinto: Option[Boolean] = None,
+    kaytetaanHaunAikataulua: Option[Boolean] = None,
+    valintaperusteId: Option[UUID] = None,
+    liitteetOnkoSamaToimitusaika: Option[Boolean] = None,
+    liitteetOnkoSamaToimitusosoite: Option[Boolean] = None,
+    liitteidenToimitusaika: Option[LocalDateTime] = None,
+    liitteidenToimitustapa: Option[LiitteenToimitustapa] = None,
+    liitteidenToimitusosoite: Option[LiitteenToimitusosoite] = None,
+    liitteet: Seq[Liite] = Seq(),
+    valintakokeet: Seq[Valintakoe] = Seq(),
+    hakuajat: Seq[Ajanjakso] = Seq(),
+    metadata: Option[HakukohdeMetadata] =
+      None, //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
+    muokkaaja: UserOid,
+    organisaatioOid: OrganisaatioOid,
+    kielivalinta: Seq[Kieli] = Seq(),
+    modified: Option[Modified]
+) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -404,25 +415,47 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
       validateKielistetty(kielivalinta, nimi, "nimi")
     ),
     validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
-    validateIfNonEmpty[String](pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit", assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)),
-    validateIfDefined[LiitteenToimitusosoite](liitteidenToimitusosoite, _.validate(tila, kielivalinta, "liitteidenToimitusosoite")),
+    validateIfNonEmpty[String](
+      pohjakoulutusvaatimusKoodiUrit,
+      "pohjakoulutusvaatimusKoodiUrit",
+      assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)
+    ),
+    validateIfDefined[LiitteenToimitusosoite](
+      liitteidenToimitusosoite,
+      _.validate(tila, kielivalinta, "liitteidenToimitusosoite")
+    ),
     validateIfNonEmpty[Liite](liitteet, "liitteet", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
     validateIfDefined[HakukohdeMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
-    validateIfJulkaistu(tila, and(
-      assertNotOptional(jarjestyspaikkaOid, "jarjestyspaikkaOid"),
-      validateIfTrue(liitteetOnkoSamaToimitusaika.contains(true), assertNotOptional(liitteidenToimitusaika, "liitteidenToimitusaika")),
-      validateIfTrue(liitteetOnkoSamaToimitusosoite.contains(true), assertNotOptional(liitteidenToimitustapa, "liitteidenToimitustapa")),
-      validateIfTrue(liitteetOnkoSamaToimitusosoite.contains(true) && liitteidenToimitustapa.contains(MuuOsoite), assertNotOptional(liitteidenToimitusosoite, "liitteidenToimitusosoite")),
-      validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
-      assertNotEmpty(pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
-      validateOptionalKielistetty(kielivalinta, pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
-      validateOptionalKielistetty(kielivalinta, muuPohjakoulutusvaatimus, "muuPohjakoulutusvaatimus"),
-      assertNotOptional(kaytetaanHaunAikataulua, "kaytetaanHaunAikataulua"),
-      assertNotOptional(kaytetaanHaunHakulomaketta, "kaytetaanHaunHakulomaketta"),
-      validateIfTrue(kaytetaanHaunAikataulua.contains(false), assertNotEmpty(hakuajat, "hakuajat")),
-      validateIfTrue(kaytetaanHaunHakulomaketta.contains(false), assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")),
-    ))
+    validateIfJulkaistu(
+      tila,
+      and(
+        assertNotOptional(jarjestyspaikkaOid, "jarjestyspaikkaOid"),
+        validateIfTrue(
+          liitteetOnkoSamaToimitusaika.contains(true),
+          assertNotOptional(liitteidenToimitusaika, "liitteidenToimitusaika")
+        ),
+        validateIfTrue(
+          liitteetOnkoSamaToimitusosoite.contains(true),
+          assertNotOptional(liitteidenToimitustapa, "liitteidenToimitustapa")
+        ),
+        validateIfTrue(
+          liitteetOnkoSamaToimitusosoite.contains(true) && liitteidenToimitustapa.contains(MuuOsoite),
+          assertNotOptional(liitteidenToimitusosoite, "liitteidenToimitusosoite")
+        ),
+        validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
+        assertNotEmpty(pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
+        validateOptionalKielistetty(kielivalinta, pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
+        validateOptionalKielistetty(kielivalinta, muuPohjakoulutusvaatimus, "muuPohjakoulutusvaatimus"),
+        assertNotOptional(kaytetaanHaunAikataulua, "kaytetaanHaunAikataulua"),
+        assertNotOptional(kaytetaanHaunHakulomaketta, "kaytetaanHaunHakulomaketta"),
+        validateIfTrue(kaytetaanHaunAikataulua.contains(false), assertNotEmpty(hakuajat, "hakuajat")),
+        validateIfTrue(
+          kaytetaanHaunHakulomaketta.contains(false),
+          assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi")
+        )
+      )
+    )
   )
 
   override def validateOnJulkaisu(): IsValid = and(
@@ -439,22 +472,30 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
 }
 
-case class Liite(id: Option[UUID] = None,
-                 tyyppiKoodiUri: Option[String],
-                 nimi: Kielistetty = Map(),
-                 kuvaus: Kielistetty = Map(),
-                 toimitusaika: Option[LocalDateTime] = None,
-                 toimitustapa: Option[LiitteenToimitustapa] = None,
-                 toimitusosoite: Option[LiitteenToimitusosoite] = None) extends ValidatableSubEntity {
+case class Liite(
+    id: Option[UUID] = None,
+    tyyppiKoodiUri: Option[String],
+    nimi: Kielistetty = Map(),
+    kuvaus: Kielistetty = Map(),
+    toimitusaika: Option[LocalDateTime] = None,
+    toimitustapa: Option[LiitteenToimitustapa] = None,
+    toimitusosoite: Option[LiitteenToimitusosoite] = None
+) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = {
     and(
-      validateIfDefined[LiitteenToimitusosoite](toimitusosoite, _.validate(tila, kielivalinta, s"$path.toimitusosoite")),
+      validateIfDefined[LiitteenToimitusosoite](
+        toimitusosoite,
+        _.validate(tila, kielivalinta, s"$path.toimitusosoite")
+      ),
       validateIfDefined[String](tyyppiKoodiUri, assertMatch(_, LiiteTyyppiKoodiPattern, s"$path.tyyppiKoodiUri")),
-      validateIfJulkaistu(tila, and(
-        validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi"),
-        validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
-        validateIfTrue(toimitustapa.contains(MuuOsoite), assertNotOptional(toimitusosoite, s"$path.toimitusosoite"))
-      ))
+      validateIfJulkaistu(
+        tila,
+        and(
+          validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi"),
+          validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
+          validateIfTrue(toimitustapa.contains(MuuOsoite), assertNotOptional(toimitusosoite, s"$path.toimitusosoite"))
+        )
+      )
     )
   }
 
@@ -462,8 +503,7 @@ case class Liite(id: Option[UUID] = None,
     validateIfDefined[LocalDateTime](toimitusaika, assertInFuture(_, s"$path.toimitusaika"))
 }
 
-case class LiitteenToimitusosoite(osoite: Osoite,
-                                  sahkoposti: Option[String] = None) extends ValidatableSubEntity {
+case class LiitteenToimitusosoite(osoite: Osoite, sahkoposti: Option[String] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     osoite.validate(tila, kielivalinta, s"$path.osoite"),
     validateIfDefined[String](sahkoposti, assertValidEmail(_, s"$path.sahkoposti"))
@@ -478,65 +518,99 @@ case class OppiaineKoodiUrit(oppiaine: Option[String], kieli: Option[String]) ex
   )
 }
 
-case class PainotettuOppiaine(koodiUrit: Option[OppiaineKoodiUrit] = None, painokerroin: Option[Double]) extends ValidatableSubEntity{
+case class PainotettuOppiaine(koodiUrit: Option[OppiaineKoodiUrit] = None, painokerroin: Option[Double])
+    extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfJulkaistu(tila, and(
-      assertNotOptional(koodiUrit, s"$path.koodiUrit"),
-      validateIfDefined[OppiaineKoodiUrit](koodiUrit, _.validate(tila, kielivalinta, s"$path.koodiUrit")),
-      assertNotOptional(painokerroin, s"$path.painokerroin"),
-      validateIfDefined[Double](painokerroin, assertNotNegative(_, s"$path.painokerroin")))
-    ),
+    validateIfJulkaistu(
+      tila,
+      and(
+        assertNotOptional(koodiUrit, s"$path.koodiUrit"),
+        validateIfDefined[OppiaineKoodiUrit](koodiUrit, _.validate(tila, kielivalinta, s"$path.koodiUrit")),
+        assertNotOptional(painokerroin, s"$path.painokerroin"),
+        validateIfDefined[Double](painokerroin, assertNotNegative(_, s"$path.painokerroin"))
+      )
+    )
   )
 }
 
-case class HakukohteenLinja(linja: Option[String] = None, // NOTE: None tarkoittaa Yleislinjaa
-                            alinHyvaksyttyKeskiarvo: Option[Double] = None,
-                            lisatietoa: Kielistetty = Map(),
-                            painotetutArvosanat: Seq[PainotettuOppiaine] = Seq()) extends ValidatableSubEntity{
+case class HakukohteenLinja(
+    linja: Option[String] = None, // NOTE: None tarkoittaa Yleislinjaa
+    alinHyvaksyttyKeskiarvo: Option[Double] = None,
+    lisatietoa: Kielistetty = Map(),
+    painotetutArvosanat: Seq[PainotettuOppiaine] = Seq()
+) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[Double](alinHyvaksyttyKeskiarvo, assertNotNegative(_, s"$path.alinHyvaksyttyKeskiarvo")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, lisatietoa, s"$path.lisatietoa")),
-    validateIfNonEmpty[PainotettuOppiaine](painotetutArvosanat, s"$path.painotetutArvosanat", _.validate(tila, kielivalinta, _))
+    validateIfNonEmpty[PainotettuOppiaine](
+      painotetutArvosanat,
+      s"$path.painotetutArvosanat",
+      _.validate(tila, kielivalinta, _)
+    )
   )
 }
 
-case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
-                             valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
-                             kynnysehto: Kielistetty = Map(),
-                             koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
-                             kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
-                             aloituspaikat: Option[Aloituspaikat] = None,
-                             // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
-                             hakukohteenLinja: Option[HakukohteenLinja] = None) extends ValidatableSubEntity {
+case class HakukohdeMetadata(
+    valintakokeidenYleiskuvaus: Kielistetty = Map(),
+    valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
+    kynnysehto: Kielistetty = Map(),
+    koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
+    kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
+    aloituspaikat: Option[Aloituspaikat] = None,
+    // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
+    hakukohteenLinja: Option[HakukohteenLinja] = None
+) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
+    validateIfDefined[KoulutuksenAlkamiskausi](
+      koulutuksenAlkamiskausi,
+      _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")
+    ),
     assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
-    validateIfTrue(kaytetaanHaunAlkamiskautta.contains(false), assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")),
-    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validate(tila, kielivalinta, _)),
-    validateIfJulkaistu(tila, and(
-      validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
-      validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto"),
-      assertNotOptional(aloituspaikat, s"$path.aloituspaikat"),
-      validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
-      // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
-      validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
-    ))
+    validateIfTrue(
+      kaytetaanHaunAlkamiskautta.contains(false),
+      assertNotOptional(koulutuksenAlkamiskausi, s"$path.koulutuksenAlkamiskausi")
+    ),
+    validateIfNonEmpty[ValintakokeenLisatilaisuudet](
+      valintaperusteenValintakokeidenLisatilaisuudet,
+      s"$path.valintaperusteenValintakokeidenLisatilaisuudet",
+      _.validate(tila, kielivalinta, _)
+    ),
+    validateIfJulkaistu(
+      tila,
+      and(
+        validateOptionalKielistetty(kielivalinta, valintakokeidenYleiskuvaus, s"$path.valintakokeidenYleiskuvaus"),
+        validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto"),
+        assertNotOptional(aloituspaikat, s"$path.aloituspaikat"),
+        validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
+        // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
+        validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
+      )
+    )
   )
 
   override def validateOnJulkaisu(path: String): IsValid = and(
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")),
-    validateIfNonEmpty[ValintakokeenLisatilaisuudet](valintaperusteenValintakokeidenLisatilaisuudet, s"$path.valintaperusteenValintakokeidenLisatilaisuudet", _.validateOnJulkaisu(_))
+    validateIfDefined[KoulutuksenAlkamiskausi](
+      koulutuksenAlkamiskausi,
+      _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")
+    ),
+    validateIfNonEmpty[ValintakokeenLisatilaisuudet](
+      valintaperusteenValintakokeidenLisatilaisuudet,
+      s"$path.valintaperusteenValintakokeidenLisatilaisuudet",
+      _.validateOnJulkaisu(_)
+    )
   )
 }
 
-case class HakukohdeListItem(oid: HakukohdeOid,
-                             toteutusOid: ToteutusOid,
-                             hakuOid: HakuOid,
-                             valintaperusteId: Option[UUID],
-                             nimi: Kielistetty,
-                             hakukohdeKoodiUri: Option[String] = None,
-                             tila: Julkaisutila,
-                             jarjestyspaikkaOid: Option[OrganisaatioOid],
-                             organisaatioOid: OrganisaatioOid,
-                             muokkaaja: UserOid,
-                             modified: Modified) extends OidListItem
+case class HakukohdeListItem(
+    oid: HakukohdeOid,
+    toteutusOid: ToteutusOid,
+    hakuOid: HakuOid,
+    valintaperusteId: Option[UUID],
+    nimi: Kielistetty,
+    hakukohdeKoodiUri: Option[String] = None,
+    tila: Julkaisutila,
+    jarjestyspaikkaOid: Option[OrganisaatioOid],
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified
+) extends OidListItem

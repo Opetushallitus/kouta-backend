@@ -24,29 +24,40 @@ import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
 class UrlToResourceClient extends HttpClient with CallerId {
-  override def get[T](url: String, errorHandler: (String, Int, String) => Nothing, followRedirects: Boolean)(parse: String => T): T = {
+  override def get[T](url: String, errorHandler: (String, Int, String) => Nothing, followRedirects: Boolean)(
+      parse: String => T
+  ): T = {
     val source = Source.fromInputStream(UrlToResourceClient.this.getClass.getClassLoader.getResourceAsStream(url))
-    Try(try source.mkString finally source.close()) match {
+    Try(
+      try source.mkString
+      finally source.close()
+    ) match {
       case Success(text) => parse(text)
-      case Failure(x) => throw new RuntimeException(s"Resource $url not found!")
+      case Failure(x)    => throw new RuntimeException(s"Resource $url not found!")
     }
   }
 }
 class TrailingZeroesLookupDb extends LookupDb {
   override def findMappedOid(oldOid: String): Option[String] =
-    if(StringUtils.isNumeric(oldOid)) {
+    if (StringUtils.isNumeric(oldOid)) {
       None
     } else {
       Some(oldOid + "0000")
     }
 
-  override def insertOidMapping(oldOld: String, newOid: String): Unit = {
-
-  }
+  override def insertOidMapping(oldOld: String, newOid: String): Unit = {}
 
   override def updateAllowed(oldOid: String): Option[Boolean] = None
 }
-class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAndAfterEach with ScalatraSuite with ScalatraFlatSpec with MatcherWords with MockitoSugar with ArgumentMatchersSugar {
+class MigrationSpec
+    extends KoutaIntegrationSpec
+    with AuthFixture
+    with BeforeAndAfterEach
+    with ScalatraSuite
+    with ScalatraFlatSpec
+    with MatcherWords
+    with MockitoSugar
+    with ArgumentMatchersSugar {
 
   private def properties = new OphProperties()
     .addOverride("tarjonta-service.haku.oid", "tarjonta/$1.json")
@@ -56,10 +67,10 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
     .addOverride("tarjonta-service.komo.oid", "tarjonta/$1.json")
     .addOverride("koodisto-service.codeelement", "tarjonta/$1#$2.json")
 
-  val koulutusService: KoulutusService = mock[KoulutusService]
-  val toteutusService: ToteutusService = mock[ToteutusService]
-  val hakuService: HakuService = mock[HakuService]
-  val hakukohdeService: HakukohdeService = mock[HakukohdeService]
+  val koulutusService: KoulutusService                 = mock[KoulutusService]
+  val toteutusService: ToteutusService                 = mock[ToteutusService]
+  val hakuService: HakuService                         = mock[HakuService]
+  val hakukohdeService: HakukohdeService               = mock[HakukohdeService]
   val organisaatioServiceImpl: OrganisaatioServiceImpl = mock[OrganisaatioServiceImpl]
 
   addServlet(
@@ -71,7 +82,10 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       organisaatioServiceImpl = organisaatioServiceImpl,
       urlProperties = properties,
       client = new UrlToResourceClient,
-      db = new TrailingZeroesLookupDb), "/*")
+      db = new TrailingZeroesLookupDb
+    ),
+    "/*"
+  )
 
   "Migrate haku by oid" should "return 200" in {
 
@@ -97,17 +111,23 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       oppilaitostyyppi = None,
       status = "AKTIIVINEN",
       organisaatiotyypit = List("organisaatiotyyppi_02")
-
     )
-    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(Some(oidAndChildren))
+    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608")))
+      .thenReturn(Some(oidAndChildren))
 
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
 
     when(hakukohdeService.get(any[HakukohdeOid])(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
-      Some(hakukohdeCaptor.value
-      .copy(valintakokeet = hakukohdeCaptor.value.valintakokeet
-        .map(vk => vk.copy(id = Some(UUID.randomUUID())))), Instant.now()): Option[(Hakukohde, Instant)])
+      Some(
+        hakukohdeCaptor.value
+          .copy(valintakokeet =
+            hakukohdeCaptor.value.valintakokeet
+              .map(vk => vk.copy(id = Some(UUID.randomUUID())))
+          ),
+        Instant.now()
+      ): Option[(Hakukohde, Instant)]
+    )
 
     val koulutusCaptor = ArgCaptor[Koulutus]
     when(koulutusService.update(koulutusCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
@@ -145,17 +165,24 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       oppilaitostyyppi = None,
       status = "AKTIIVINEN",
       organisaatiotyypit = List("organisaatiotyyppi_02")
-
     )
-    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(Some(oidAndChildren))
+    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608")))
+      .thenReturn(Some(oidAndChildren))
 
     reset(koulutusService, toteutusService, hakukohdeService)
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
 
-    when(hakukohdeService.get(any[HakukohdeOid])(any[Authenticated])).thenAnswer((_: HakukohdeOid) => Some(hakukohdeCaptor.value
-      .copy(valintakokeet = hakukohdeCaptor.value.valintakokeet
-        .map(vk => vk.copy(id = Some(UUID.randomUUID())))), Instant.now()): Option[(Hakukohde, Instant)])
+    when(hakukohdeService.get(any[HakukohdeOid])(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
+      Some(
+        hakukohdeCaptor.value
+          .copy(valintakokeet =
+            hakukohdeCaptor.value.valintakokeet
+              .map(vk => vk.copy(id = Some(UUID.randomUUID())))
+          ),
+        Instant.now()
+      ): Option[(Hakukohde, Instant)]
+    )
 
     when(koulutusService.update(any[Koulutus], any[Instant])(any[Authenticated])).thenReturn(true)
     when(toteutusService.update(any[Toteutus], any[Instant])(any[Authenticated])).thenReturn(true)
