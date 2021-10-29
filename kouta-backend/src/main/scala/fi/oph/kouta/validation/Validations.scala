@@ -93,7 +93,7 @@ object Validations {
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
   def assertDependencyExists(exists: Boolean, dependencyId: Any, dependencyName: String, dependencyIdPath: String): IsValid =
-    if (exists) NoErrors else error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId))
+    assertTrue(exists, dependencyIdPath, nonExistent(dependencyName, dependencyId))
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
