@@ -6,6 +6,7 @@ import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
+import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -67,6 +68,9 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     val hakuOid = hakukohde.hakuOid.s
     val toteutusOid = hakukohde.toteutusOid.s
 
+    val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1)
+    val koulutustyyppi = deps.get(toteutusOid).flatMap(_._2)
+
     throwValidationErrors(and(
       validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
       validateDependency(hakukohde.tila, deps.get(hakuOid).map(_._1), hakuOid, "Hakua", "hakuOid"),
@@ -87,7 +91,12 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
           assertTrue(metadata.asInstanceOf[VapaaSivistystyoMuuToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
         validateIfTrue(metadata.tyyppi == Lk,
           assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
-      ))
+      )),
+      validateIfJulkaistu(
+        hakukohde.tila,
+        validateIfTrue(isToisenAsteenYhteishaku(
+          koulutustyyppi, haku.flatMap(_.hakutapaKoodiUri)
+        ), assertNotOptional(hakukohde.valintaperusteId, "valintaperusteId")))
     ))
   }
 
