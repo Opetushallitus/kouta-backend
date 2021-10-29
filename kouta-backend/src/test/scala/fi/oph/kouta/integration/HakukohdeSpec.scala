@@ -190,6 +190,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(HakukohdePath, ammHakukohde, 400, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri"))
   }
 
+  it should "fail to store julkaistu toisen asteen yhteishaku hakukohde without valintaperuste" in {
+    val koulutusOid = put(TestData.AmmKoulutus, ophSession)
+    val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
+    val toteutusOid = put(ammToToteutus)
+    val hakuOid = put(TestData.JulkaistuHaku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")))
+    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(tila = Julkaistu)
+
+    put(HakukohdePath, ammHakukohde, 400, "valintaperusteId", missingMsg)
+  }
+
   it should "write create hakukohde to audit log" in {
     MockAuditLogger.clean()
     val oid = put(uusiHakukohde.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
