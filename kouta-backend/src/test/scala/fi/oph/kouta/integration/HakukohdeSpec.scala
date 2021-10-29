@@ -194,7 +194,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val koulutusOid = put(TestData.AmmKoulutus, ophSession)
     val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
     val toteutusOid = put(ammToToteutus)
-    val hakuOid = put(TestData.JulkaistuHaku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")))
+    val hakuOid = put(TestData.JulkaistuHaku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ophSession)
     val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(tila = Julkaistu)
 
     put(HakukohdePath, ammHakukohde, 400, "valintaperusteId", missingMsg)
