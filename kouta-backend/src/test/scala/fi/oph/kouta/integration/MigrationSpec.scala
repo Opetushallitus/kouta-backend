@@ -104,7 +104,8 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
 
-    when(hakukohdeService.get(any[HakukohdeOid])(any[Authenticated])).thenAnswer((_: HakukohdeOid) => Some(hakukohdeCaptor.value
+    when(hakukohdeService.get(any[HakukohdeOid])(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
+      Some(hakukohdeCaptor.value
       .copy(valintakokeet = hakukohdeCaptor.value.valintakokeet
         .map(vk => vk.copy(id = Some(UUID.randomUUID())))), Instant.now()): Option[(Hakukohde, Instant)])
 
@@ -131,6 +132,42 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       val toteutus = toteutusCaptor.value
       toteutus.validate() should equal(NoErrors)
       toteutus.oid should equal(Some(ToteutusOid("1.2.246.562.17.433105724580000")))
+    }
+
+  }
+
+  "Migrate hakukohde without aloituspaikat" should "return 200" in {
+
+    val oidAndChildren = OidAndChildren(
+      oid = OrganisaatioOid("1.2.246.562.10.24790222608"),
+      children = List(),
+      parentOidPath = "",
+      oppilaitostyyppi = None,
+      status = "AKTIIVINEN",
+      organisaatiotyypit = List("organisaatiotyyppi_02")
+
+    )
+    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(Some(oidAndChildren))
+
+    reset(koulutusService, toteutusService, hakukohdeService)
+    val hakukohdeCaptor = ArgCaptor[Hakukohde]
+    when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
+
+    when(hakukohdeService.get(any[HakukohdeOid])(any[Authenticated])).thenAnswer((_: HakukohdeOid) => Some(hakukohdeCaptor.value
+      .copy(valintakokeet = hakukohdeCaptor.value.valintakokeet
+        .map(vk => vk.copy(id = Some(UUID.randomUUID())))), Instant.now()): Option[(Hakukohde, Instant)])
+
+    when(koulutusService.update(any[Koulutus], any[Instant])(any[Authenticated])).thenReturn(true)
+    when(toteutusService.update(any[Toteutus], any[Instant])(any[Authenticated])).thenReturn(true)
+
+    post("/hakukohde/1.2.246.562.20.20804704699", headers = defaultHeaders) {
+      verify(hakukohdeService).update(hakukohdeCaptor, any[Instant])(any[Authenticated])
+      status should equal(200)
+
+      val hakukohde = hakukohdeCaptor.value
+      hakukohde.validate() should equal(NoErrors)
+      hakukohde.oid should equal(Some(HakukohdeOid("1.2.246.562.20.208047046990000")))
+      hakukohde.metadata.get.aloituspaikat.get.lukumaara should equal(0)
     }
 
   }
