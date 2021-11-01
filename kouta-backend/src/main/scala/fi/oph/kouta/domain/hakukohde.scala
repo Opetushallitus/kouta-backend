@@ -507,7 +507,8 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
                              aloituspaikat: Option[Aloituspaikat] = None,
                              // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
-                             hakukohteenLinja: Option[HakukohteenLinja] = None) extends ValidatableSubEntity {
+                             hakukohteenLinja: Option[HakukohteenLinja] = None,
+                             uudenOpiskelijanUrl: Option[String] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
