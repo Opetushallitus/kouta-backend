@@ -1,8 +1,7 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain._
@@ -82,6 +81,8 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
           )
         )
       )),
+      validateIfDefined[LocalDateTime](haku.flatMap(_.hakukohteenLiittamisenTakaraja), assertInFuture(_, "hakukohteenLiittamisenTakaraja")),
+      validateIfDefined[LocalDateTime](haku.flatMap(_.hakukohteenMuokkaamisenTakaraja), assertInFuture(_, "hakukohteenMuokkaamisenTakaraja")),
       validateIfDefined[ToteutusMetadata](deps.get(toteutusOid).flatMap(_._3), metadata => and(
         validateIfTrue(metadata.tyyppi == AmmTutkinnonOsa,
           assertTrue(metadata.asInstanceOf[AmmatillinenTutkinnonOsaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),

@@ -501,4 +501,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde)
   }
+
+  it should "fail to post julkaistu hakukohde if hakukohteen liittamisen takaraja has expired" in {
+    val pastDate = TestData.inPast(100)
+    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenLiittamisenTakaraja = Some(pastDate)))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "hakukohteenLiittamisenTakaraja", pastDateMsg(pastDate))
+  }
+
+  it should "fail to update julkaistu hakukohde if hakukohteen muokkaamisen takaraja has expired" in {
+    val pastDate = TestData.inPast(100)
+    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "hakukohteenMuokkaamisenTakaraja", pastDateMsg(pastDate))
+  }
 }
