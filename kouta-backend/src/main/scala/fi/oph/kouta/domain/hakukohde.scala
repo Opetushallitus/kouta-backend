@@ -398,7 +398,7 @@ case class Hakukohde(
     organisaatioOid: OrganisaatioOid,
     kielivalinta: Seq[Kieli] = Seq(),
     modified: Option[Modified]
-) extends PerustiedotWithOid[HakukohdeOid, Hakukohde] {
+) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
     super.validate(),
