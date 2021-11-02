@@ -42,10 +42,6 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
-      |        esitysnimi:
-      |          type: object
-      |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          $ref: '#/components/schemas/Nimi'
       |        jarjestyspaikkaOid:
       |          type: string
       |          description: Hakukohteen järjestyspaikan organisaatio
@@ -168,6 +164,9 @@ package object hakukohde {
       |           format: date-time
       |           description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/EnrichedData'
       |""".stripMargin
 
   val HakukohdeListItemModel: String =
@@ -355,8 +354,17 @@ package object hakukohde {
       |            $ref: '#/components/schemas/PainotettuOppiaine'
       |""".stripMargin
 
+  val EnrichedDataModel: String =
+    """    EnrichedData:
+      |      type: object
+      |      properties:
+      |        esitysnimi:
+      |          description: Koulutustyyppikohtainen esittämistä varten muodostettu nimi käytettäväksi kouta-uin puolella
+      |          $ref: '#/components/schemas/Nimi'
+      |""".stripMargin
+
   def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
-    PainotettuOppiaine, OppiaineKoodiUrit, HakukohteenLinjaModel)
+    PainotettuOppiaine, OppiaineKoodiUrit, HakukohteenLinjaModel, EnrichedDataModel)
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,
@@ -366,7 +374,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      tila: Julkaisutila = Tallennettu,
                      esikatselu: Boolean = false,
                      nimi: Kielistetty = Map(),
-                     esitysnimi: Kielistetty = Map(),
                      hakukohdeKoodiUri: Option[String] = None,
                      jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
                      hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
@@ -392,7 +399,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[Modified]) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
+                     modified: Option[Modified],
+                     _enrichedData: Option[EnrichedData] = None) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -543,3 +551,5 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              organisaatioOid: OrganisaatioOid,
                              muokkaaja: UserOid,
                              modified: Modified) extends OidListItem
+
+case class EnrichedData(esitysnimi: Kielistetty = Map())

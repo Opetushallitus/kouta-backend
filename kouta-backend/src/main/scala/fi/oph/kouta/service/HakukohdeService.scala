@@ -38,7 +38,7 @@ class HakukohdeService(
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
         val esitysnimi = generateHakukohdeEsitysnimi(h)
-        Some(h.copy(esitysnimi = esitysnimi), i)
+        Some(h.copy(_enrichedData = Some(EnrichedData(esitysnimi = esitysnimi))), i)
       case None => None
      }
 
