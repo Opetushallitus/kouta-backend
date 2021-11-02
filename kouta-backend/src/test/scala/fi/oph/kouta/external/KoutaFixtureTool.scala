@@ -514,7 +514,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       UserOid(params(MuokkaajaKey)),
       OrganisaatioOid(params(OrganisaatioKey)),
       params(KielivalintaKey).split(",").map(_.trim).map(Kieli.withName),
-      Some(parseModified(params(ModifiedKey)))))
+      Some(parseModified(params(ModifiedKey))),
+      Some(EnrichedData(toKielistetty(kielivalinta, esitysnimi)))))
   }
 
   def getValintaperuste(id:String): String = {
