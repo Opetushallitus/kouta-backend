@@ -375,8 +375,12 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
     val pohjakoulutusvaatimus = (result \ "hakukelpoisuusvaatimusUris").extract[List[String]]
       .map(_.split("_").last).map(versio => s"pohjakoulutusvaatimuskouta_$versio#1")
+    val aloituspaikatLkm = (result \ "aloituspaikatLkm").extractOpt[Int] match {
+      case Some(lkm) => Some(lkm)
+      case None => Some(0)
+    }
 
-    val aloituspaikat = Aloituspaikat(lukumaara = (result \ "aloituspaikatLkm").extractOrElse[Int](0), ensikertalaisille = (result \ "ensikertalaistenAloituspaikat").extractOpt[Int])
+    val aloituspaikat = Aloituspaikat(aloituspaikatLkm, ensikertalaisille = (result \ "ensikertalaistenAloituspaikat").extractOpt[Int])
 
     Hakukohde(oid = Some(HakukohdeOid((result \ "oid").extract[String])),
       toteutusOid = toteutusOid,
