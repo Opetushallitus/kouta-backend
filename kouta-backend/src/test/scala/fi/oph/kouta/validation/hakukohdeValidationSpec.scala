@@ -141,7 +141,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("200007"),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
-          aloituspaikat = Some(Aloituspaikat(0, None)))
+          aloituspaikat = Some(Aloituspaikat(None, None)))
 
     failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
   }
@@ -157,7 +157,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
           alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
           koulutuksenAlkamisvuosi = Some(now().getYear.toString()),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
-          aloituspaikat = Some(Aloituspaikat(0, None)),
+          aloituspaikat = Some(Aloituspaikat(Some(0), None)),
     valintaperusteenValintakokeidenLisatilaisuudet = List(ValintakokeenLisatilaisuudet(id = None, tilaisuudet = List(tilaisuus)))
     )
 
@@ -172,7 +172,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
           alkamiskausityyppi = None,
           koulutuksenAlkamisvuosi = Some("2007"),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
-          aloituspaikat = Some(Aloituspaikat(0, None)))
+          aloituspaikat = Some(Aloituspaikat(Some(0), None)))
 
     failsValidation(Julkaistu, metadataWithoutAlkamiskausityyppi, "koulutuksenAlkamiskausi.alkamiskausityyppi", missingMsg)
   }
@@ -209,12 +209,13 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "koulutuksenAlkamiskausi", missingMsg)
   }
 
-  it should "validate aloituspaikat is mandatory" in {
+  it should "validate aloituspaikat is mandatory when Julkaistu" in {
     val invalidAloituspaikatMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
       aloituspaikat = None)
 
+    passesValidation(Tallennettu, invalidAloituspaikatMetadata)
     failsValidation(
       Julkaistu,
       invalidAloituspaikatMetadata,
@@ -225,7 +226,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val invalidAloituspaikatMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(lukumaara = -10, ensikertalaisille = Some(-5), kuvaus = Map(Fi -> "kuvaus", Sv -> ""))))
+      aloituspaikat = Some(Aloituspaikat(lukumaara = Some(-10), ensikertalaisille = Some(-5), kuvaus = Map(Fi -> "kuvaus", Sv -> ""))))
 
     failsValidation(
       Julkaistu,
@@ -239,7 +240,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val metadataWithoutAllTranslations = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(0, None)),
+      aloituspaikat = Some(Aloituspaikat(Some(0), None)),
       hakukohteenLinja = Some(HakukohteenLinja(linja = None, alinHyvaksyttyKeskiarvo = Some(7.5), lisatietoa = Map(Fi -> "lisatietoa", Sv -> ""))))
 
     passesValidation(Tallennettu, metadataWithoutAllTranslations)
@@ -250,7 +251,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val hakukohdeMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(0, None)),
+      aloituspaikat = Some(Aloituspaikat(Some(0), None)),
       hakukohteenLinja = Some(HakukohteenLinja(
         linja = None,
         alinHyvaksyttyKeskiarvo = Some(7.5),
@@ -265,7 +266,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val hakukohdeMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(0, None)),
+      aloituspaikat = Some(Aloituspaikat(Some(0), None)),
       hakukohteenLinja = Some(HakukohteenLinja(
         linja = None,
         alinHyvaksyttyKeskiarvo = Some(7.5),
@@ -280,7 +281,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val hakukohdeMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(0, None)),
+      aloituspaikat = Some(Aloituspaikat(Some(0), None)),
       hakukohteenLinja = Some(HakukohteenLinja(
         linja = None,
         alinHyvaksyttyKeskiarvo = Some(7.5),
@@ -295,7 +296,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val hakukohdeMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(0, None)),
+      aloituspaikat = Some(Aloituspaikat(Some(0), None)),
       hakukohteenLinja = Some(HakukohteenLinja(
         linja = None,
         alinHyvaksyttyKeskiarvo = Some(7.5),
@@ -310,7 +311,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val hakukohdeMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(0, None)),
+      aloituspaikat = Some(Aloituspaikat(Some(0), None)),
       hakukohteenLinja = Some(HakukohteenLinja(
         linja = None,
         alinHyvaksyttyKeskiarvo = Some(7.5),
@@ -325,7 +326,7 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
      val hakukohdeMetadata = HakukohdeMetadata(
        kaytetaanHaunAlkamiskautta = Some(true),
        koulutuksenAlkamiskausi = None,
-       aloituspaikat = Some(Aloituspaikat(0, None)),
+       aloituspaikat = Some(Aloituspaikat(Some(0), None)),
        hakukohteenLinja = Some(HakukohteenLinja(
          linja = None,
          alinHyvaksyttyKeskiarvo = Some(7.5),

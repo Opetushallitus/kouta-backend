@@ -167,7 +167,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       val hakukohde = hakukohdeCaptor.value
       hakukohde.validate() should equal(NoErrors)
       hakukohde.oid should equal(Some(HakukohdeOid("1.2.246.562.20.208047046990000")))
-      hakukohde.metadata.get.aloituspaikat.get.lukumaara should equal(0)
+      hakukohde.metadata.get.aloituspaikat.get.lukumaara should equal(Some(0))
     }
 
   }
