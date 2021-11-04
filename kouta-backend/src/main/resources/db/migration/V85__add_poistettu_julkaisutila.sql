@@ -1,0 +1,1 @@
+alter type julkaisutila add value 'poistettu';
