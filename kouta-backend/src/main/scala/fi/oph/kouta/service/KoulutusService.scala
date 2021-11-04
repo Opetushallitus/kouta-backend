@@ -11,6 +11,8 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.validation.{IsValid, NoErrors}
+import fi.oph.kouta.validation.Validations._
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
@@ -95,7 +97,9 @@ class KoulutusService(
         }
         rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           withValidation(k, Some(oldKoulutus)) {
+            throwValidationErrors(validateStateChange("koulutukselle", oldKoulutus.tila, newKoulutus.tila))
             validateSorakuvausIntegrity(k)
+            validateToteutusIntegrityIfDeletingKoulutus(oldKoulutus.tila, newKoulutus.tila, newKoulutus.oid.get)
             doUpdate(_, notModifiedSince, oldKoulutus)
           }
         }.nonEmpty
@@ -104,8 +108,6 @@ class KoulutusService(
   }
 
   private def validateSorakuvausIntegrity(koulutus: Koulutus): Unit = {
-    import fi.oph.kouta.validation.Validations._
-
     throwValidationErrors(
       validateIfDefined[UUID](
         koulutus.sorakuvausId,
@@ -143,6 +145,15 @@ class KoulutusService(
           )
         }
       )
+    )
+  }
+
+  private def validateToteutusIntegrityIfDeletingKoulutus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, koulutusOid: KoulutusOid) = {
+    throwValidationErrors(
+      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
+        ToteutusDAO.getByKoulutusOid(koulutusOid).find(toteutus => toteutus.tila != Poistettu).isEmpty,
+          "tila",
+          integrityViolationMsg("Koulutusta", "toteutuksia")))
     )
   }
 

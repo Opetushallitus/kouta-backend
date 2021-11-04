@@ -68,7 +68,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     timestampAfterAllModifications = renderHttpDate(now())
   }
 
-  def updateInKoulutusTable(i: Int): Unit = update(koulutus(koulutusOids(i), Arkistoitu), timestampAfterInserts, ophSession, 200)
+  def updateInKoulutusTable(i: Int): Unit = update(koulutus(koulutusOids(i), Julkaistu), timestampAfterInserts, ophSession, 200)
   def updateInKoulutuksenTarjoajatTable(i: Int): Unit = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List(LonelyOid)), timestampAfterInserts, ophSession, 200)
   def deleteInKoulutuksenTarjoajatTable(i: Int): Unit = update(koulutus(koulutusOids(i), Tallennettu).copy(tarjoajat = List()), timestampAfterInserts, ophSession, 200)
   def updateInToteutusTable(i: Int): Unit = update(toteutus(toteutusOids(i), koulutusOids(i), Arkistoitu), timestampAfterInserts)
