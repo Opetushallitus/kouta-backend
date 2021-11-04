@@ -470,4 +470,41 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val incorrectKoulutuksetSorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
     update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(incorrectKoulutuksetSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit"))))
   }
+
+  it should "pass legal state changes" in {
+    val oid = put(koulutus.copy(tila = Tallennettu), ophSession)
+    var lastModified = get(oid, koulutus(oid).copy(tila = Tallennettu))
+    update(koulutus(oid).copy(tila = Julkaistu), lastModified, true, ophSession)
+    lastModified = get(oid, koulutus(oid).copy(tila = Julkaistu))
+    update(koulutus(oid).copy(tila = Arkistoitu), lastModified, true, ophSession)
+    lastModified = get(oid, koulutus(oid).copy(tila = Arkistoitu))
+    update(koulutus(oid).copy(tila = Julkaistu), lastModified, true, ophSession)
+    lastModified = get(oid, koulutus(oid).copy(tila = Julkaistu))
+    update(koulutus(oid).copy(tila = Tallennettu), lastModified, true, ophSession)
+    lastModified = get(oid, koulutus(oid).copy(tila = Tallennettu))
+    update(koulutus(oid).copy(tila = Poistettu), lastModified, true, ophSession)
+    get(oid, koulutus(oid).copy(tila = Poistettu))
+
+    val arkistoituOid = put(koulutus.copy(tila = Arkistoitu), ophSession)
+    lastModified = get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Arkistoitu))
+    update(koulutus(arkistoituOid).copy(tila = Julkaistu), lastModified, true, ophSession)
+    get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Julkaistu))
+
+  }
+
+  it should "fail illegal state changes" in {
+    val poistettuOid = put(koulutus.copy(tila = Poistettu), ophSession)
+    val tallennettuOid = put(koulutus.copy(tila = Tallennettu), ophSession)
+    val julkaistuOid = put(koulutus.copy(tila = Julkaistu), ophSession)
+    val arkistoituOid = put(koulutus.copy(tila = Arkistoitu), ophSession)
+
+    var lastModified = get(poistettuOid, koulutus(poistettuOid).copy(tila = Poistettu))
+    update(KoulutusPath, koulutus(poistettuOid).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Poistettu, Tallennettu))))
+    lastModified = get(tallennettuOid, koulutus(tallennettuOid).copy(tila = Tallennettu))
+    update(KoulutusPath, koulutus(tallennettuOid).copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Tallennettu, Arkistoitu))))
+    lastModified = get(julkaistuOid, koulutus(julkaistuOid).copy(tila = Julkaistu))
+    update(KoulutusPath, koulutus(julkaistuOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Julkaistu, Poistettu))))
+    lastModified = get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Arkistoitu))
+    update(KoulutusPath, koulutus(arkistoituOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Arkistoitu, Poistettu))))
+  }
 }
