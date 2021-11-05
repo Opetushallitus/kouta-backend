@@ -9,7 +9,7 @@ import java.util.UUID
 
 object HakukohdeServiceValidation {
 
-  def validate(hakukohde: Hakukohde, haku: Option[Haku], isOphPaakayttaja: Boolean, deps: Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], String, String)]) = {
+  def validate(hakukohde: Hakukohde, haku: Option[Haku], isOphPaakayttaja: Boolean, deps: Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]) = {
     val hakuOid = hakukohde.hakuOid.s
     val toteutusOid = hakukohde.toteutusOid.s
 

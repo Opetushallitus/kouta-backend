@@ -17,20 +17,16 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec {
   val anyDep = (
     Julkaistu,
     None,
-    None,
-    "",
-    ""
+    None
   )
 
-  it should "math" in {
+  it should "pass validation for Oph-virkailija even though hakukohteen muokkaamisen takaraja has expired" in {
     val hakukohde = anyHakukohde.copy(
       toteutusOid = ToteutusOid("1.2.246.562.17.1111111111"),
       hakuOid = HakuOid("1.2.246.562.29.2222222222"),
     )
-
     val haku = anyHaku
     val isOphPaakayttaja = true
-
     val deps = Map(
       "1.2.246.562.17.1111111111" -> anyDep,
       "1.2.246.562.29.2222222222" -> anyDep
