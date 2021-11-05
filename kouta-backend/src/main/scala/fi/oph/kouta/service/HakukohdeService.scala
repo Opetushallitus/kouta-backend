@@ -28,19 +28,21 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
   def get(oid: HakukohdeOid)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] =
     authorizeGet(HakukohdeDAO.get(oid), AuthorizationRules(roleEntity.readRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(oid)))
 
-  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid =
-    authorizePut(hakukohde) { h =>
+  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
+    val rules = AuthorizationRules(roleEntity.createRoles)
+    authorizePut(hakukohde, rules) { h =>
       withValidation(h, None) { h =>
-        validateDependenciesIntegrity(h)
+        validateDependenciesIntegrity(h, rules)
         doPut(h)
       }
     }.oid.get
+  }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
       withValidation(h, Some(oldHakukohde)) { h =>
-        validateDependenciesIntegrity(h)
+        validateDependenciesIntegrity(h, rules)
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
@@ -60,45 +62,12 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOid);
     }
 
-  private def validateDependenciesIntegrity(hakukohde: Hakukohde): Unit = {
-    import Validations._
+  private def validateDependenciesIntegrity(hakukohde: Hakukohde, rules: AuthorizationRules): Unit = {
+    val isOphPaakayttaja = rules.requiredRoles.contains(Role.Paakayttaja)
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
-
-    val hakuOid = hakukohde.hakuOid.s
-    val toteutusOid = hakukohde.toteutusOid.s
-
     val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1)
-    val koulutustyyppi = deps.get(toteutusOid).flatMap(_._2)
 
-    throwValidationErrors(and(
-      validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
-      validateDependency(hakukohde.tila, deps.get(hakuOid).map(_._1), hakuOid, "Hakua", "hakuOid"),
-      validateIfDefined[UUID](hakukohde.valintaperusteId, valintaperusteId => and(
-        validateDependency(hakukohde.tila, deps.get(valintaperusteId.toString).map(_._1), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
-        validateIfDefined[Koulutustyyppi](deps.get(valintaperusteId.toString).flatMap(_._2), valintaperusteTyyppi =>
-          validateIfDefined[Koulutustyyppi](deps.get(toteutusOid).flatMap(_._2), toteutusTyyppi =>
-            assertTrue(toteutusTyyppi == valintaperusteTyyppi, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
-          )
-        )
-      )),
-      validateIfDefined[LocalDateTime](haku.flatMap(_.hakukohteenLiittamisenTakaraja), assertInFuture(_, "hakukohteenLiittamisenTakaraja")),
-      validateIfDefined[LocalDateTime](haku.flatMap(_.hakukohteenMuokkaamisenTakaraja), assertInFuture(_, "hakukohteenMuokkaamisenTakaraja")),
-      validateIfDefined[ToteutusMetadata](deps.get(toteutusOid).flatMap(_._3), metadata => and(
-        validateIfTrue(metadata.tyyppi == AmmTutkinnonOsa,
-          assertTrue(metadata.asInstanceOf[AmmatillinenTutkinnonOsaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
-        validateIfTrue(metadata.tyyppi == AmmOsaamisala,
-          assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
-        validateIfTrue(metadata.tyyppi == VapaaSivistystyoMuu,
-          assertTrue(metadata.asInstanceOf[VapaaSivistystyoMuuToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
-        validateIfTrue(metadata.tyyppi == Lk,
-          assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
-      )),
-      validateIfJulkaistu(
-        hakukohde.tila,
-        validateIfTrue(isToisenAsteenYhteishaku(
-          koulutustyyppi, haku.flatMap(_.hakutapaKoodiUri)
-        ), assertNotOptional(hakukohde.valintaperusteId, "valintaperusteId")))
-    ))
+    throwValidationErrors(HakukohdeServiceValidation.validate(hakukohde, haku, isOphPaakayttaja, deps))
   }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
