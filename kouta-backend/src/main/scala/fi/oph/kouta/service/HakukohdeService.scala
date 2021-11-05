@@ -5,6 +5,7 @@ import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoutaIndexClient, LokalisointiClient}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -114,72 +115,37 @@ class HakukohdeService(
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
     val hakuOid     = hakukohde.hakuOid.s
     val toteutusOid = hakukohde.toteutusOid.s
-    throwValidationErrors(
-      and(
-        validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
-        validateDependency(hakukohde.tila, deps.get(hakuOid).map(_._1), hakuOid, "Hakua", "hakuOid"),
-        validateIfDefined[UUID](
-          hakukohde.valintaperusteId,
-          valintaperusteId =>
-            and(
-              validateDependency(
-                hakukohde.tila,
-                deps.get(valintaperusteId.toString).map(_._1),
-                valintaperusteId,
-                "Valintaperustetta",
-                "valintaperusteId"
-              ),
-              validateIfDefined[Koulutustyyppi](
-                deps.get(valintaperusteId.toString).flatMap(_._2),
-                valintaperusteTyyppi =>
-                  validateIfDefined[Koulutustyyppi](
-                    deps.get(toteutusOid).flatMap(_._2),
-                    toteutusTyyppi =>
-                      assertTrue(
-                        toteutusTyyppi == valintaperusteTyyppi,
-                        "valintaperusteId",
-                        tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId)
-                      )
-                  )
-              )
-            )
-        ),
-        validateIfDefined[ToteutusMetadata](
-          deps.get(toteutusOid).flatMap(_._3),
-          metadata =>
-            and(
-              validateIfTrue(
-                metadata.tyyppi == AmmTutkinnonOsa,
-                assertTrue(
-                  metadata.asInstanceOf[AmmatillinenTutkinnonOsaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru),
-                  "toteutusOid",
-                  cannotLinkToHakukohde(toteutusOid)
-                )
-              ),
-              validateIfTrue(
-                metadata.tyyppi == AmmOsaamisala,
-                assertTrue(
-                  metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru),
-                  "toteutusOid",
-                  cannotLinkToHakukohde(toteutusOid)
-                )
-              ),
-              validateIfTrue(
-                metadata.tyyppi == VapaaSivistystyoMuu,
-                assertTrue(
-                  metadata.asInstanceOf[VapaaSivistystyoMuuToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru),
-                  "toteutusOid",
-                  cannotLinkToHakukohde(toteutusOid)
-                )
-              ),
-              validateIfTrue(
-                metadata.tyyppi == Lk,
-                assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja")
-              )
-            )
+
+    val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1)
+    val koulutustyyppi = deps.get(toteutusOid).flatMap(_._2)
+
+    throwValidationErrors(and(
+      validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
+      assertDependencyExists(deps.contains(hakuOid), hakuOid, "Hakua", "hakuOid"),
+      validateIfDefined[UUID](hakukohde.valintaperusteId, valintaperusteId => and(
+        validateDependency(hakukohde.tila, deps.get(valintaperusteId.toString).map(_._1), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
+        validateIfDefined[Koulutustyyppi](deps.get(valintaperusteId.toString).flatMap(_._2), valintaperusteTyyppi =>
+          validateIfDefined[Koulutustyyppi](deps.get(toteutusOid).flatMap(_._2), toteutusTyyppi =>
+            assertTrue(toteutusTyyppi == valintaperusteTyyppi, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
+          )
         )
-      )
-    )
+      )),
+      validateIfDefined[ToteutusMetadata](deps.get(toteutusOid).flatMap(_._3), metadata => and(
+        validateIfTrue(metadata.tyyppi == AmmTutkinnonOsa,
+          assertTrue(metadata.asInstanceOf[AmmatillinenTutkinnonOsaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
+        validateIfTrue(metadata.tyyppi == AmmOsaamisala,
+          assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
+        validateIfTrue(metadata.tyyppi == VapaaSivistystyoMuu,
+          assertTrue(metadata.asInstanceOf[VapaaSivistystyoMuuToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
+        validateIfTrue(metadata.tyyppi == Lk,
+          assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
+      )),
+      validateIfJulkaistu(
+        hakukohde.tila,
+        validateIfTrue(isToisenAsteenYhteishaku(
+          koulutustyyppi, haku.flatMap(_.hakutapaKoodiUri)
+        ), assertNotOptional(hakukohde.valintaperusteId, "valintaperusteId")))
+    ))
   }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =

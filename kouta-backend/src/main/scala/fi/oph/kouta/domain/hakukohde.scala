@@ -423,6 +423,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
     validateIfDefined[HakukohdeMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
+      assertNotOptional(jarjestyspaikkaOid, "jarjestyspaikkaOid"),
       validateIfTrue(liitteetOnkoSamaToimitusaika.contains(true), assertNotOptional(liitteidenToimitusaika, "liitteidenToimitusaika")),
       validateIfTrue(liitteetOnkoSamaToimitusosoite.contains(true), assertNotOptional(liitteidenToimitustapa, "liitteidenToimitustapa")),
       validateIfTrue(liitteetOnkoSamaToimitusosoite.contains(true) && liitteidenToimitustapa.contains(MuuOsoite), assertNotOptional(liitteidenToimitusosoite, "liitteidenToimitusosoite")),

@@ -1,7 +1,5 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
@@ -12,8 +10,10 @@ import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.MiscUtils
 import slick.dbio.DBIO
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
@@ -31,17 +31,29 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   def get(oid: HakuOid)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
     authorizeGet(HakuDAO.get(oid), readRules)
 
-  def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid =
-    authorizePut(haku) { h =>
+  def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
+    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
+      AuthorizationRules(Seq(Role.Paakayttaja))
+    } else {
+      AuthorizationRules(roleEntity.createRoles)
+    }
+    authorizePut(haku, rules) { h =>
       withValidation(h, None)(haku => doPut(haku))
     }.oid.get
+  }
 
-  def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(HakuDAO.get(haku.oid.get), haku) { (oldHaku, h) =>
+  def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
+      AuthorizationRules(Seq(Role.Paakayttaja))
+    } else {
+      AuthorizationRules(roleEntity.createRoles)
+    }
+    authorizeUpdate(HakuDAO.get(haku.oid.get), haku, rules) { (oldHaku, h) =>
       withValidation(h, Some(oldHaku)) {
         doUpdate(_, notModifiedSince, oldHaku)
       }
     }.nonEmpty
+  }
 
   def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules)(oids => HakuDAO.listByAllowedOrganisaatiot(oids, myosArkistoidut))

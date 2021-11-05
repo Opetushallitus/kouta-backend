@@ -18,6 +18,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   override val roleEntities = Seq(Role.Haku)
 
   val ophHaku: Haku = haku.copy(organisaatioOid = OphOid)
+  val yhteisHaku: Haku = haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1"))
 
   "Get haku by oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(defaultSessionHeader)) {
@@ -56,6 +57,10 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   it should "deny a user with the wrong role" in {
     val oid = put(haku)
     get(s"$HakuPath/$oid", otherRoleSession, 403)
+  }
+
+  it should "not allow a non-OPH-pääkäyttäjä user to create yhteishaku" in {
+    put(HakuPath, yhteishakuWithoutAlkamiskausi, crudSessions(haku.organisaatioOid), 403)
   }
 
   it should "allow the user of proper koulutustyyppi to read julkinen haku created by oph" in {
@@ -154,12 +159,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   }
 
   it should "validate alkamiskausi is given for yhteishaku" in {
-    put(HakuPath, bytes(yhteishakuWithoutAlkamiskausi), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(missingMsg, "metadata.koulutuksenAlkamiskausi"))
-    }
+    put(HakuPath, yhteishakuWithoutAlkamiskausi, ophSession, 400)
   }
 
   it should "not validate alkamiskausi is given if not yhteishaku" in {

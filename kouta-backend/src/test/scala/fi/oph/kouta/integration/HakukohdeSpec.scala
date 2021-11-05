@@ -100,6 +100,10 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
   }
 
+  it should "fail to store hakukohde without jarjestyspaikkaOid" in {
+    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(jarjestyspaikkaOid = None), 400, "jarjestyspaikkaOid", missingMsg)
+  }
+
   it should "fail to store hakukohde if the haku does not exist" in {
     val hakuOid = TestOids.randomHakuOid.s
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "hakuOid", nonExistent("Hakua", hakuOid))
@@ -115,9 +119,9 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
   }
 
-  it should "fail to store julkaistu hakukohde if the haku is not yet julkaistu" in {
+  it should "store julkaistu hakukohde while haku is not yet julkaistu" in {
     val hakuOid = put(haku.copy(tila = Tallennettu))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Hakua", hakuOid))
+    put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
   }
 
   it should "fail to store julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
@@ -184,6 +188,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(nimi = Map( Fi -> "Hakukohteen nimi fi", Sv -> "Hakukohteen nimi sv"), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_101#1"))
 
     put(HakukohdePath, ammHakukohde, 400, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri"))
+  }
+
+  it should "fail to store julkaistu toisen asteen yhteishaku hakukohde without valintaperuste" in {
+    val koulutusOid = put(TestData.AmmKoulutus, ophSession)
+    val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
+    val toteutusOid = put(ammToToteutus)
+    val hakuOid = put(TestData.JulkaistuHaku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ophSession)
+    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(tila = Julkaistu)
+
+    put(HakukohdePath, ammHakukohde, 400, "valintaperusteId", missingMsg)
   }
 
   it should "write create hakukohde to audit log" in {
@@ -286,13 +300,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
   }
 
-  it should "fail to update julkaistu hakukohde if the haku is not yet julkaistu" in {
+  it should "update julkaistu hakukohde while haku is not yet julkaistu" in {
     val hakuOid = put(haku.copy(tila = Tallennettu))
     val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
     val savedHakukohde = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), tila = Tallennettu)
     val lastModified = get(oid, savedHakukohde)
     val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Hakua", hakuOid))
+    update(updatedHakukohde, lastModified)
   }
 
   it should "fail to update julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {

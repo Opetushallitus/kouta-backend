@@ -66,6 +66,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                           h.oid,
                           h.nimi,
                           h.hakutapa_koodi_uri,
+                          h.tila,
                           h.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
                           h.hakulomaketyyppi,
                           h.hakulomake_ataru_id,
