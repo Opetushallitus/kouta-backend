@@ -9,7 +9,7 @@ import java.util.UUID
 
 object HakukohdeServiceValidation {
 
-  def validate(hakukohde: Hakukohde, haku: Option[Haku], isOphPaakayttaja: Boolean, deps: Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]) = {
+  def validate(hakukohde: Hakukohde, haku: Option[Haku], isOphPaakayttaja: Boolean, deps: Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])], method: String) = {
     val hakuOid = hakukohde.hakuOid.s
     val toteutusOid = hakukohde.toteutusOid.s
 
@@ -27,11 +27,11 @@ object HakukohdeServiceValidation {
         )
       )),
       validateIfTrue(
-        !isOphPaakayttaja,
+        !isOphPaakayttaja && method == "put",
         validateIfDefined[LocalDateTime](haku.flatMap(_.hakukohteenLiittamisenTakaraja), assertInFuture(_, "hakukohteenLiittamisenTakaraja")),
       ),
       validateIfTrue(
-        !isOphPaakayttaja,
+        !isOphPaakayttaja && method == "update",
         validateIfDefined[LocalDateTime](haku.flatMap(_.hakukohteenMuokkaamisenTakaraja), assertInFuture(_, "hakukohteenMuokkaamisenTakaraja"))
       ),
       validateIfDefined[ToteutusMetadata](deps.get(toteutusOid).flatMap(_._3), metadata => and(

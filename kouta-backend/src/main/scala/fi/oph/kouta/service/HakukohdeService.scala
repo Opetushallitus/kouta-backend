@@ -26,7 +26,7 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
     authorizePut(hakukohde) { h =>
       withValidation(h, None) { h =>
-        validateDependenciesIntegrity(h, authenticated)
+        validateDependenciesIntegrity(h, authenticated, "put")
         doPut(h)
       }
     }.oid.get
@@ -36,7 +36,7 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
     val rules = AuthorizationRules(roleEntity.updateRoles, additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get))
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
       withValidation(h, Some(oldHakukohde)) { h =>
-        validateDependenciesIntegrity(h, authenticated)
+        validateDependenciesIntegrity(h, authenticated, "update")
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
@@ -56,13 +56,12 @@ class HakukohdeService(sqsInTransactionService: SqsInTransactionService, auditLo
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOid);
     }
 
-  private def validateDependenciesIntegrity(hakukohde: Hakukohde, authenticated: Authenticated): Unit = {
-    val userRoles = authenticated.session.roles
-    val isOphPaakayttaja = userRoles.contains(Role.Paakayttaja)
+  private def validateDependenciesIntegrity(hakukohde: Hakukohde, authenticated: Authenticated, method: String): Unit = {
+    val isOphPaakayttaja = authenticated.session.roles.contains(Role.Paakayttaja)
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
     val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1)
 
-    throwValidationErrors(HakukohdeServiceValidation.validate(hakukohde, haku, isOphPaakayttaja, deps))
+    throwValidationErrors(HakukohdeServiceValidation.validate(hakukohde, haku, isOphPaakayttaja, deps, method))
   }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
