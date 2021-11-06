@@ -501,4 +501,32 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde)
   }
+
+  it should "fail to post julkaistu hakukohde as an oppilaitos user if hakukohteen liittamisen takaraja has expired" in {
+    val pastDate = TestData.inPast(100)
+    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenLiittamisenTakaraja = Some(pastDate)))
+    val newHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
+    val session = addTestSession(Seq(Role.Hakukohde.Crud.asInstanceOf[Role]), newHakukohde.organisaatioOid)
+    put(HakukohdePath, newHakukohde, session, 400)
+  }
+
+  it should "fail to update julkaistu hakukohde as an oppilaitos user if hakukohteen muokkaamisen takaraja has expired" in {
+    val pastDate = TestData.inPast(100)
+    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
+    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
+    val tallennettu = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
+    val muokattu = tallennettu.copy(tila = Tallennettu, muokkaaja = TestUserOid)
+    val lastModified = get(oid, tallennettu)
+    update(HakukohdePath, muokattu, lastModified, 400, "hakukohteenMuokkaamisenTakaraja", pastDateMsg(pastDate))
+  }
+
+  it should "change hakukohteen tila from julkaistu to tallennettu as an Oph-virkailija when hakukohteen muokkaamisen takaraja has expired" in {
+    val pastDate = TestData.inPast(100)
+    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
+    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
+    val tallennettu = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
+    val muokattu = tallennettu.copy(tila = Tallennettu)
+    val lastModified = get(oid, tallennettu)
+    update(muokattu, lastModified, expectUpdate = true, ophSession)
+  }
 }
