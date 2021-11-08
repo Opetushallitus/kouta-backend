@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
@@ -12,7 +12,7 @@ import fi.oph.kouta.{TestData, TestOids}
 import java.time.LocalDateTime
 import java.util.UUID
 
-class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
+class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with LokalisointiServiceMock {
 
   override val roleEntities = Seq(Role.Hakukohde)
 
@@ -83,6 +83,23 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   it should "allow indexer access" in {
     val oid = put(uusiHakukohde)
     get(oid, indexerSession, tallennettuHakukohde(oid))
+  }
+
+  it should "use lokalisointiclient for fetching nimi postfix for tuva vaativana erityisenä tukena" in {
+    mockLokalisointiResponse("yleiset.vaativanaErityisenaTukena")
+    val tuvaKoulutusOid = put(tuvaKoulutus, ophSession)
+    val tuvaToteutusOid = put(tuvaToteutus(tuvaKoulutusOid))
+    val tuvaValintaperusteId = put(tuvaValintaperuste)
+    val tuvaHakukohde: Hakukohde = hakukohde(tuvaToteutusOid, hakuOid, tuvaValintaperusteId)
+    val oid = put(tuvaHakukohde)
+
+    get(oid, tallennettuHakukohde(oid).copy(
+      toteutusOid = ToteutusOid(tuvaToteutusOid),
+      valintaperusteId = Some(tuvaValintaperusteId),
+      _enrichedData = Some(EnrichedData(esitysnimi = Map(
+        Fi -> s"""Hakukohde fi (yleiset.vaativanaErityisenaTukena fi)""".stripMargin,
+        Sv -> s"""Hakukohde sv (yleiset.vaativanaErityisenaTukena sv)""".stripMargin)
+    ))))
   }
 
   "Create hakukohde" should "store hakukohde" in {

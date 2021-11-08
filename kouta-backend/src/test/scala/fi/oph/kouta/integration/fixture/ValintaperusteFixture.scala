@@ -30,6 +30,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   }
 
   val valintaperuste: Valintaperuste = TestData.AmmValintaperuste
+  val tuvaValintaperuste: Valintaperuste = TestData.AmmValintaperuste.copy(koulutustyyppi = Tuva, metadata = Some(TestData.TuvaValintaperusteMetadata))
 
   def getIds(valintaperuste: Valintaperuste): Valintaperuste = {
     import slick.jdbc.PostgresProfile.api._
