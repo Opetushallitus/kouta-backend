@@ -52,7 +52,7 @@ class HakukohdeService(
     )
   }
 
-  private def generateHakukohdeEsitysnimi(hakukohde: Hakukohde): Kielistetty = {
+  def generateHakukohdeEsitysnimi(hakukohde: Hakukohde): Kielistetty = {
     val toteutusOid             = hakukohde.toteutusOid
     val toteutus                = ToteutusDAO.get(toteutusOid)
     toteutus match {

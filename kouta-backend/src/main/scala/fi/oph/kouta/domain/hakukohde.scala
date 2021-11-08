@@ -3,6 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.service.HakukohdeService
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
@@ -552,5 +553,24 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              organisaatioOid: OrganisaatioOid,
                              muokkaaja: UserOid,
                              modified: Modified) extends OidListItem
+
+object HakukohdeListItem {
+  def apply(
+    oid: HakukohdeOid,
+    toteutusOid: ToteutusOid,
+    hakuOid: HakuOid,
+    valintaperusteId: Option[UUID],
+    nimi: Kielistetty,
+    hakukohdeKoodiUri: Option[String] = None,
+    tila: Julkaisutila,
+    jarjestyspaikkaOid: Option[OrganisaatioOid],
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified,
+  ): HakukohdeListItem = {
+    val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(Hakukohde(oid = Some(oid), toteutusOid = toteutusOid, hakuOid = hakuOid, nimi = nimi, muokkaaja = muokkaaja, organisaatioOid = organisaatioOid, modified = Some(modified)))
+    new HakukohdeListItem(oid, toteutusOid, hakuOid, valintaperusteId, esitysnimi, hakukohdeKoodiUri, tila, jarjestyspaikkaOid, organisaatioOid, muokkaaja, modified)
+  }
+}
 
 case class EnrichedData(esitysnimi: Kielistetty = Map())
