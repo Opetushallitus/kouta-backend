@@ -523,7 +523,8 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
       validateOptionalKielistetty(kielivalinta, kynnysehto, s"$path.kynnysehto"),
       // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
       validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
-    ))
+    )),
+    validateIfDefined[String](uudenOpiskelijanUrl, assertValidUrl(_, s"$path.uudenOpiskelijanUrl"))
   )
 
   override def validateOnJulkaisu(path: String): IsValid = and(
