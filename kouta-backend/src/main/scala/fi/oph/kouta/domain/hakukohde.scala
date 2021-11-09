@@ -245,6 +245,9 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen aloituspaikkojen tiedot
       |          $ref: '#/components/schemas/Aloituspaikat'
+      |        uudenOpiskelijanUrl:
+      |          type: string
+      |          description: Uuden opiskelijan ohjeita sisältävän verkkosivun URL
       |""".stripMargin
 
   val LiitteenToimitusosoiteModel: String =
