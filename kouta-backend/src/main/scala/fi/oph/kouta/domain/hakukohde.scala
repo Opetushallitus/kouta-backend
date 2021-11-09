@@ -553,8 +553,28 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              organisaatioOid: OrganisaatioOid,
                              muokkaaja: UserOid,
                              modified: Modified) extends OidListItem
-
 object HakukohdeListItem {
+  def apply(e: HakukohdeListItemEnriched): HakukohdeListItem = {
+    new HakukohdeListItem(e.oid, e.toteutusOid, e.hakuOid, e.valintaperusteId, e.nimi, e.hakukohdeKoodiUri, e.tila, e.jarjestyspaikkaOid, e.organisaatioOid, e.muokkaaja, e.modified)
+  }
+}
+
+case class HakukohdeListItemEnriched(
+  oid: HakukohdeOid,
+  toteutusOid: ToteutusOid,
+  hakuOid: HakuOid,
+  valintaperusteId: Option[UUID],
+  nimi: Kielistetty,
+  hakukohdeKoodiUri: Option[String] = None,
+  tila: Julkaisutila,
+  jarjestyspaikkaOid: Option[OrganisaatioOid],
+  organisaatioOid: OrganisaatioOid,
+  muokkaaja: UserOid,
+  modified: Modified,
+  metadata: Option[ToteutusMetadata]
+)
+
+object HakukohdeListItemEnriched {
   def apply(
     oid: HakukohdeOid,
     toteutusOid: ToteutusOid,
@@ -567,9 +587,10 @@ object HakukohdeListItem {
     organisaatioOid: OrganisaatioOid,
     muokkaaja: UserOid,
     modified: Modified,
-  ): HakukohdeListItem = {
+    metadata: Option[ToteutusMetadata]
+  ): HakukohdeListItemEnriched = {
     val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(Hakukohde(oid = Some(oid), toteutusOid = toteutusOid, hakuOid = hakuOid, nimi = nimi, muokkaaja = muokkaaja, organisaatioOid = organisaatioOid, modified = Some(modified)))
-    new HakukohdeListItem(oid, toteutusOid, hakuOid, valintaperusteId, esitysnimi, hakukohdeKoodiUri, tila, jarjestyspaikkaOid, organisaatioOid, muokkaaja, modified)
+    new HakukohdeListItemEnriched(oid, toteutusOid, hakuOid, valintaperusteId, esitysnimi, hakukohdeKoodiUri, tila, jarjestyspaikkaOid, organisaatioOid, muokkaaja, modified, metadata)
   }
 }
 

@@ -1,8 +1,9 @@
 package fi.oph.kouta.repository
 
+import fi.oph.kouta.domain
+
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
@@ -253,19 +254,25 @@ trait HakukohdeExctractors extends ExtractorBase {
     modified = Some(timeStampToModified(r.nextTimestamp()))
   ))
 
-  implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] = GetResult(r => HakukohdeListItem(
-    oid = HakukohdeOid(r.nextString()),
-    toteutusOid = ToteutusOid(r.nextString()),
-    hakuOid = HakuOid(r.nextString()),
-    valintaperusteId = r.nextStringOption().map(UUID.fromString),
-    nimi = extractKielistetty(r.nextStringOption()),
-    hakukohdeKoodiUri = r.nextStringOption(),
-    tila = Julkaisutila.withName(r.nextString()),
-    jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
-    organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
-    modified = timeStampToModified(r.nextTimestamp())
-  ))
+  implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] =
+    GetResult(r => {
+      val enriched = HakukohdeListItemEnriched(
+        oid = HakukohdeOid(r.nextString()),
+        toteutusOid = ToteutusOid(r.nextString()),
+        hakuOid = HakuOid(r.nextString()),
+        valintaperusteId = r.nextStringOption().map(UUID.fromString),
+        nimi = extractKielistetty(r.nextStringOption()),
+        hakukohdeKoodiUri = r.nextStringOption(),
+        tila = Julkaisutila.withName(r.nextString()),
+        jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
+        organisaatioOid = OrganisaatioOid(r.nextString()),
+        muokkaaja = UserOid(r.nextString()),
+        modified = timeStampToModified(r.nextTimestamp()),
+        metadata = r.nextStringOption().map(read[ToteutusMetadata])
+      )
+      HakukohdeListItem(enriched)
+    }
+  )
 
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
     id = r.nextStringOption().map(UUID.fromString),
