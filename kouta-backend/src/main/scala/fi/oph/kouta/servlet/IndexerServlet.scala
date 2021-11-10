@@ -198,7 +198,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
+    Ok(koulutusService.hakutiedotInclPoistetut(KoulutusOid(params("oid"))))
   }
 
   registerPath( "/indexer/toteutus/{oid}/haut/list",
@@ -348,7 +348,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
+    Ok(hakuService.listKoulutuksetInclPoistetut(HakuOid(params("oid"))))
   }
 
   registerPath("/indexer/haku/{oid}/toteutukset/list",
@@ -380,7 +380,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
+    Ok(hakuService.listToteutuksetInclPoistetut(HakuOid(params("oid"))))
   }
 
   registerPath( "/indexer/valintaperuste/{id}/hakukohteet/list",

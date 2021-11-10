@@ -82,10 +82,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       case x => HakukohdeDAO.listByHakuOidAndAllowedOrganisaatiot(hakuOid, x)
     }
 
-  def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
+  def listKoulutuksetInclPoistetut(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
     withRootAccess(indexerRoles)(KoulutusDAO.listByHakuOid(hakuOid))
 
-  def listToteutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+  def listToteutuksetInclPoistetut(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakuSearchResult = {
