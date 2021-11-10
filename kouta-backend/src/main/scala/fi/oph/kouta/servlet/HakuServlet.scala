@@ -25,6 +25,13 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |          required: true
       |          description: Haku-oid
       |          example: 1.2.246.562.29.00000000000000000009
+      |        - in: query
+      |          name: myosPoistetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: false
+      |          description: Palautetaanko myös mahdollisesti poistettu haku
       |      responses:
       |        '200':
       |          description: Ok
@@ -37,7 +44,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    hakuService.get(HakuOid(params("oid"))) match {
+    hakuService.get(HakuOid(params("oid")), params.getOrElse("myosPoistetut", "false").toBoolean) match {
       case None => NotFound("error" -> "Unknown haku oid")
       case Some((h, l)) => Ok(h, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }

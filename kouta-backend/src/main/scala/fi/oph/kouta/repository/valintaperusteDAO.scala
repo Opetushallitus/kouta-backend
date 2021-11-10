@@ -16,8 +16,8 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def getPutActions(valintaperuste: Valintaperuste): DBIO[Valintaperuste]
   def getUpdateActions(valintaperuste: Valintaperuste): DBIO[Option[Valintaperuste]]
 
-  def get(id: UUID): Option[(Valintaperuste, Instant)]
-  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
+  def get(id: UUID, myosPoistetut: Boolean = false): Option[(Valintaperuste, Instant)]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[ValintaperusteListItem]
   def listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
 }
 
@@ -39,10 +39,10 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       m <- selectLastModified(valintaperuste.id.get)
     } yield optionWhen(v + k > 0)(valintaperuste.withModified(m.get))
 
-  override def get(id: UUID): Option[(Valintaperuste, Instant)] = {
+  override def get(id: UUID, myosPoistetut: Boolean = false): Option[(Valintaperuste, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        v <- selectValintaperuste(id).as[Valintaperuste].headOption
+        v <- selectValintaperuste(id, myosPoistetut).as[Valintaperuste].headOption
         k <- selectValintakokeet(id)
         l <- selectLastModified(id)
       } yield (v, k, l)
@@ -52,11 +52,11 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }.get
   }
 
-  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[ValintaperusteListItem] =
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[ValintaperusteListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
-      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut))
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut, myosPoistetut)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut, myosPoistetut))
     }
 
   override def listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[ValintaperusteListItem] =
@@ -138,7 +138,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                    ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
                    $muokkaaja)"""
 
-  def selectValintaperuste(id: UUID) =
+  def selectValintaperuste(id: UUID, myosPoistetut: Boolean = false) =
     sql"""select id,
                  external_id,
                  tila,
@@ -154,7 +154,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  kielivalinta,
                  lower(system_time)
           from valintaperusteet
-          where id = ${id.toString}::uuid"""
+          where id = ${id.toString}::uuid #${andTilaMaybeNotPoistettu(myosPoistetut)}"""
 
   def selectValintakokeet(id: UUID): DBIO[Vector[Valintakoe]] = {
     sql"""select id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
@@ -245,20 +245,23 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
            group by vp.id) m on v.id = m.id"""
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
-          where (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid <> ${RootOrganisaatioOid}) #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
+          where (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid != ${RootOrganisaatioOid})
+          #${andTilaMaybeNotPoistettu(myosPoistetut, "v.tila")}
+          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           where ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
                   (v.organisaatio_oid <> ${RootOrganisaatioOid} or
                    v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
               or (v.julkinen  = ${true} and
                   v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
+              #${andTilaMaybeNotPoistettu(myosPoistetut, "v.tila")}
+              #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
 
@@ -272,6 +275,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
           where h.oid = $hakuOid
           and v.koulutustyyppi = ${koulutustyyppi.toString}::koulutustyyppi
           and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or v.julkinen = ${true})
+          and v.tila != 'poistettu'::julkaisutila
           #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
       """.as[ValintaperusteListItem]
   }
