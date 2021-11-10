@@ -3,9 +3,8 @@ package fi.oph.kouta.repository
 import java.sql.JDBCType
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Koulutustyyppi}
+import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Koulutustyyppi, Poistettu}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
@@ -35,7 +34,11 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]): String = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
 
   def andTilaMaybeNotArkistoitu(myosArkistoidut: Boolean): String = {
-    if (myosArkistoidut) "" else s"and tila <> '$Arkistoitu'"
+    if (myosArkistoidut) "" else s"and tila != '$Arkistoitu'"
+  }
+
+  def andTilaMaybeNotPoistettu(myosPoistetut: Boolean, columnDesc: String = "tila"): String = {
+    if (myosPoistetut) "" else s"and $columnDesc != '$Poistettu'"
   }
 
   private def toIso(l: Option[LocalDateTime]): String = l match {
