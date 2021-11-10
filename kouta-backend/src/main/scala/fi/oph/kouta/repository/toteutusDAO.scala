@@ -186,6 +186,12 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""#$selectToteutusSql
           where t.oid = $oid #${andTilaMaybeNotPoistettu(myosPoistetut, "t.tila")}"""
 
+  def selectToteutuksetByKoulutusOid(oid: KoulutusOid, myosPoistetut: Boolean = false) =
+    sql"""#$selectToteutusSql
+          where t.koulutus_oid = $oid
+          #${andTilaMaybeNotPoistettu(myosPoistetut, "t.tila")}
+          """
+
   def selectToteutuksetByKoulutusOid(oid: KoulutusOid, vainOlemassaolevat: Boolean, vainJulkaistut: Boolean) =
     sql"""#$selectToteutusSql
           where t.koulutus_oid = $oid

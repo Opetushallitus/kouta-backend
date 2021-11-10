@@ -335,7 +335,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6))
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7))
   }
   it should "return 401 if session is not valid" in {
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 401, Map.empty)
@@ -344,7 +344,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 403, crudSessions(v1.organisaatioOid))
   }
   it should "allow access to the indexer" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6), indexerSession)
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7), indexerSession)
   }
   it should "include also poistetut if instructed" in {
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7), indexerSession)
@@ -385,7 +385,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Koulutuksen toteutukset for indexer list" should "return all toteutukset for indexer" in {
-    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), List(t1, t2, t3), indexerSession)
+    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), List(t1, t2, t3, t11), indexerSession)
   }
   it should "return also poistetut toteutukset if instructed" in {
     list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map("vainOlemassaolevat" -> "false"), List(t1, t2, t3, t11), indexerSession)
@@ -457,7 +457,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Toteutukseen liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given toteutus for indexer" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3, hk5, hk6), indexerSession)
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3, hk5, hk6, hk7), indexerSession)
   }
   it should "list also poistetut hakukohteet if instructed" in {
     list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk3, hk5, hk6, hk7), indexerSession)
@@ -522,7 +522,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Hakuun liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given haku for indexer" in {
-    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), List(hk1, hk2, hk4), indexerSession)
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), List(hk1, hk2, hk4, hk7), indexerSession)
   }
   it should "list also poistetut hakukohteet if instructed" in {
     list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk4, hk7), indexerSession)
@@ -652,7 +652,37 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
               muokkaaja = hk1.muokkaaja,
               organisaatioOid = hk1.organisaatioOid,
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
+<<<<<<< HEAD
               modified = Some(hk1.modified)))),
+=======
+              modified = Some(hk1.modified)),
+            HakutietoHakukohde(
+              hakukohdeOid = hk7.oid,
+              toteutusOid = t1.oid,
+              hakuOid = h1.oid,
+              nimi = hk7.nimi,
+              jarjestyspaikkaOid = Some(OtherOid),
+              tila = hk7.tila,
+              esikatselu = true,
+              valintaperusteId =  hk7.valintaperusteId,
+              koulutuksenAlkamiskausi = TestData.JulkaistuHakukohde.metadata.get.koulutuksenAlkamiskausi,
+              kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.metadata.get.kaytetaanHaunAlkamiskautta,
+              hakulomaketyyppi = TestData.JulkaistuHakukohde.hakulomaketyyppi,
+              hakulomakeAtaruId = TestData.JulkaistuHakukohde.hakulomakeAtaruId,
+              hakulomakeKuvaus = TestData.JulkaistuHakukohde.hakulomakeKuvaus,
+              hakulomakeLinkki = TestData.JulkaistuHakukohde.hakulomakeLinkki,
+              kaytetaanHaunHakulomaketta = TestData.JulkaistuHakukohde.kaytetaanHaunHakulomaketta,
+              aloituspaikat = TestData.JulkaistuHakukohde.metadata.get.aloituspaikat,
+              kaytetaanHaunAikataulua = TestData.JulkaistuHakukohde.kaytetaanHaunAikataulua,
+              hakuajat = TestData.JulkaistuHakukohde.hakuajat,
+              pohjakoulutusvaatimusKoodiUrit = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusKoodiUrit,
+              pohjakoulutusvaatimusTarkenne = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusTarkenne,
+              muokkaaja = hk7.muokkaaja,
+              organisaatioOid = hk7.organisaatioOid,
+              valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
+              modified = Some(hk7.modified)
+            ))),
+>>>>>>> f5f9bd17 (KTO-1361: Poistettu-tila otettu käyttöön)
 
           HakutietoHaku(
             hakuOid = h3.oid,
