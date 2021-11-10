@@ -1,6 +1,9 @@
 package fi.oph.kouta.util
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, TelmaToteutus, TuvaToteutuksenMetatieto, TuvaToteutus}
-import fi.oph.kouta.domain.{En, Fi, Hakukohde, Kielistetty, Sv, Toteutus, TuvaToteutusMetadata}
+import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
+import fi.oph.kouta.TestData.{JulkaistuHakukohde, JulkaistuYoToteutus, LukioKoulutus, LukioToteutuksenMetatieto, LukioToteutus, TelmaToteutuksenMetatieto, TelmaToteutus, TuvaToteutuksenMetatieto, TuvaToteutus, YoKoulutus}
+import fi.oph.kouta.domain.{En, Fi, Hakukohde, Kielistetty, Koulutus, LukioToteutusMetadata, Sv, TelmaToteutusMetadata, Toteutus, TuvaToteutusMetadata, toteutus}
+import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.generic.auto._
 
 class NameHelperSpec extends UnitSpec {
   val tuvaToteutus: Toteutus                        = TuvaToteutus
@@ -13,16 +16,15 @@ class NameHelperSpec extends UnitSpec {
   )
 
   "generateHakukohdeDisplayName" should "return Hakukohteen nimi as it is for TELMA" in {
-    val telmaToteutus: Toteutus = TelmaToteutus
+    val telmaToteutuksenMetadata: TelmaToteutusMetadata = TelmaToteutuksenMetatieto
     assert(
       NameHelper.generateHakukohdeDisplayNameForTuva(
-        hakukohde.copy(nimi =
+        hakukohdeNimi =
           Map(
             Fi -> "Työhön ja itsenäiseen elämään valmentava koulutus (TELMA)",
             Sv -> "Utbildning som handleder för arbete och ett självständigt liv (TELMA)"
-          )
-        ),
-        telmaToteutus,
+          ),
+        telmaToteutuksenMetadata,
         kaannokset
       ) === Map(
         Fi -> "Työhön ja itsenäiseen elämään valmentava koulutus (TELMA)",
@@ -32,17 +34,15 @@ class NameHelperSpec extends UnitSpec {
   }
 
   it should "return TUVA hakukohteen nimi without erityisopetus" in {
-    val tuvaToMetadata                   = tuvaToteutuksenMetadata.copy(jarjestetaanErityisopetuksena = false)
-    val tuvaToteutusWithoutErityisopetus = tuvaToteutus.copy(metadata = Some(tuvaToMetadata))
+    val tuvaToMetadataWithoutErityisopetus = tuvaToteutuksenMetadata.copy(jarjestetaanErityisopetuksena = false)
     assert(
       NameHelper.generateHakukohdeDisplayNameForTuva(
-        hakukohde.copy(nimi =
+        hakukohdeNimi =
           Map(
             Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA)",
             Sv -> "Utbildning som handleder för examensutbildning (Hux)"
-          )
-        ),
-        tuvaToteutusWithoutErityisopetus,
+          ),
+        tuvaToMetadataWithoutErityisopetus,
         kaannokset
       ) === Map(
         Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA)",
@@ -54,13 +54,12 @@ class NameHelperSpec extends UnitSpec {
   it should "return TUVA hakukohteen nimi with erityisopetus" in {
     assert(
       NameHelper.generateHakukohdeDisplayNameForTuva(
-        hakukohde.copy(nimi =
+        hakukohdeNimi =
           Map(
             Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA)",
             Sv -> "Utbildning som handleder för examensutbildning (Hux)"
-          )
-        ),
-        tuvaToteutus,
+          ),
+        tuvaToteutuksenMetadata,
         kaannokset
       ) === Map(
         Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA) (vaativana erityisenä tukena)",

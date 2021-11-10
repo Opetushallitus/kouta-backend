@@ -1,17 +1,17 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Hakukohde, Kielistetty, Toteutus}
+import fi.oph.kouta.domain.{Hakukohde, Kielistetty, Toteutus, ToteutusMetadata}
 
 object NameHelper {
   def generateHakukohdeDisplayNameForTuva(
-      hakukohde: Hakukohde,
-      toteutus: Toteutus,
-      kaannokset: Kielistetty
+    hakukohdeNimi: Kielistetty,
+    toteutusMetadata: ToteutusMetadata,
+    kaannokset: Kielistetty
   ): Kielistetty = {
-    val jarjestetaanErityisopetuksena = HakukohdeServiceUtil.getJarjestetaanErityisopetuksena(toteutus)
+    val jarjestetaanErityisopetuksena = HakukohdeServiceUtil.getJarjestetaanErityisopetuksena(toteutusMetadata)
 
     if (jarjestetaanErityisopetuksena.getOrElse(false)) {
-      hakukohde.nimi.map { case (key, value) =>
+      hakukohdeNimi.map { case (key, value) =>
         val kaannos = kaannokset.find(_._1 == key).get
         kaannos match {
           case (kieli, str) =>
@@ -19,7 +19,7 @@ object NameHelper {
         }
       }
     } else {
-      hakukohde.nimi
+      hakukohdeNimi
     }
   }
 }

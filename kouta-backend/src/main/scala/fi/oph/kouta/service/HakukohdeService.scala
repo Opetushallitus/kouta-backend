@@ -38,8 +38,14 @@ class HakukohdeService(
 
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
-        val esitysnimi = generateHakukohdeEsitysnimi(h)
-        Some(h.copy(_enrichedData = Some(EnrichedData(esitysnimi = esitysnimi))), i)
+        val toteutus = ToteutusDAO.get(h.toteutusOid)
+        toteutus match {
+          case Some((t, _)) =>
+            val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
+            Some(h.copy(_enrichedData = Some(EnrichedData(esitysnimi = esitysnimi))), i)
+          case None => hakukohde
+        }
+
       case None => None
      }
 
@@ -52,23 +58,16 @@ class HakukohdeService(
     )
   }
 
-  def generateHakukohdeEsitysnimi(hakukohde: Hakukohde): Kielistetty = {
-    val toteutusOid             = hakukohde.toteutusOid
-    val toteutus                = ToteutusDAO.get(toteutusOid)
-    toteutus match {
-      case Some((toteutus, _)) =>
-        toteutus.metadata match {
-          case Some(toteutusMetadata) =>
-            toteutusMetadata match {
-              case tuva: TuvaToteutusMetadata =>
-                val kaannokset = lokalisointiClient.getKaannoksetWithKey("yleiset.vaativanaErityisenaTukena")
-                NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde, toteutus, kaannokset)
-              case _ =>
-                hakukohde.nimi
-            }
-          case None => hakukohde.nimi
+  def generateHakukohdeEsitysnimi(hakukohde: Hakukohde, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty = {
+    toteutusMetadata match {
+      case Some(metadata) =>
+        metadata match {
+          case tuva: TuvaToteutusMetadata =>
+            val kaannokset = lokalisointiClient.getKaannoksetWithKey("yleiset.vaativanaErityisenaTukena")
+            NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde.nimi, metadata, kaannokset)
+          case _ => hakukohde.nimi
         }
-      case None => hakukohde.nimi
+      case _ => hakukohde.nimi
     }
   }
 

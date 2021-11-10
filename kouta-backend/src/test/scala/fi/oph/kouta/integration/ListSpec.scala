@@ -623,7 +623,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             muokkaaja = hk1.muokkaaja,
             organisaatioOid = hk1.organisaatioOid,
             valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
-            modified = Some(hk1.modified)))),
+            modified = Some(hk1.modified),
+            toteutusMetadata = Some(TestData.AmmToteutuksenMetatieto)
+          ))),
 
           HakutietoHaku(
             hakuOid = h3.oid,
@@ -662,7 +664,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
               muokkaaja = hk6.muokkaaja,
               organisaatioOid = hk6.organisaatioOid,
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
-              modified = Some(hk6.modified)))))))
+              modified = Some(hk6.modified),
+              toteutusMetadata = Some(TestData.AmmToteutuksenMetatieto)
+            ))))))
 
       read[List[Hakutieto]](body) should matchTo(expected)
     }

@@ -1,16 +1,13 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Toteutus, TuvaToteutusMetadata}
+import fi.oph.kouta.domain.{ToteutusMetadata, TuvaToteutusMetadata}
 
 object HakukohdeServiceUtil {
-  def getJarjestetaanErityisopetuksena(toteutus: Toteutus): Option[Boolean] = {
-    toteutus.metadata match {
-      case Some(toteutusMetadata) =>
-        toteutusMetadata match {
-          case tuva: TuvaToteutusMetadata =>
-            Some(tuva.jarjestetaanErityisopetuksena)
-          case _ => None
-        }
+  def getJarjestetaanErityisopetuksena(toteutuksenMetadata: ToteutusMetadata): Option[Boolean] = {
+    toteutuksenMetadata match {
+      case tuva: TuvaToteutusMetadata =>
+        Some(tuva.jarjestetaanErityisopetuksena)
+      case _ => None
     }
   }
 }

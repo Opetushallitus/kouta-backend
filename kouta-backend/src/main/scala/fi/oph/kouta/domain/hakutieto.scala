@@ -227,7 +227,8 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               muokkaaja: UserOid,
                               organisaatioOid: OrganisaatioOid,
                               valintatapaKoodiUrit: Seq[String] = Seq(),
-                              modified: Option[Modified])
+                              modified: Option[Modified],
+                              toteutusMetadata: Option[ToteutusMetadata] = None)
 
 object HakutietoHakukohde {
   def apply(e: HakutietoHakukohdeEnriched): HakutietoHakukohde = {
@@ -286,7 +287,8 @@ case class HakutietoHakukohdeEnriched(
   muokkaaja: UserOid,
   organisaatioOid: OrganisaatioOid,
   valintatapaKoodiUrit: Seq[String] = Seq(),
-  modified: Option[Modified])
+  modified: Option[Modified],
+  toteutusMetadata: Option[ToteutusMetadata])
 
 object HakutietoHakukohdeEnriched {
   def apply(
@@ -315,8 +317,13 @@ object HakutietoHakukohdeEnriched {
     muokkaaja: UserOid,
     organisaatioOid: OrganisaatioOid,
     valintatapaKoodiUrit: Seq[String] = Seq(),
-    modified: Option[Modified]): HakutietoHakukohdeEnriched = {
-      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(Hakukohde(oid = Some(hakukohdeOid), toteutusOid = toteutusOid, hakuOid = hakuOid, nimi = nimi, muokkaaja = muokkaaja, organisaatioOid = organisaatioOid, modified = modified))
+    modified: Option[Modified],
+    toteutusMetadata: Option[ToteutusMetadata]
+  ): HakutietoHakukohdeEnriched = {
+      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
+        Hakukohde(oid = Some(hakukohdeOid), toteutusOid = toteutusOid, hakuOid = hakuOid, nimi = nimi, muokkaaja = muokkaaja, organisaatioOid = organisaatioOid, modified = modified),
+        toteutusMetadata
+      )
       new HakutietoHakukohdeEnriched(
         hakukohdeOid,
         toteutusOid,
@@ -342,6 +349,7 @@ object HakutietoHakukohdeEnriched {
         muokkaaja,
         organisaatioOid,
         valintatapaKoodiUrit,
-        modified)
+        modified,
+        toteutusMetadata)
       }
     }

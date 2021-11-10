@@ -906,7 +906,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
         case None => List[String]()
         case Some(x) => x.valintatavat.flatMap(_.valintatapaKoodiUri).toList
       },
-      Some(parseModified(params(ModifiedKey)))
+      Some(parseModified(params(ModifiedKey))),
+      params.get(MetadataKey).map(read[ToteutusMetadata]),
     )
   }
 }
