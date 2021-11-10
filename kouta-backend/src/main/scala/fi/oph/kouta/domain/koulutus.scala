@@ -53,6 +53,7 @@ package object koulutus {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -147,6 +148,7 @@ package object koulutus {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        tarjoajat:
       |          type: array

@@ -2,12 +2,13 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausListItem}
+import fi.oph.kouta.domain.{Julkaisutila, Poistettu, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
 import fi.oph.kouta.repository.{KoulutusDAO, KoutaDatabase, SorakuvausDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -23,8 +24,10 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
   protected val createRules: AuthorizationRules = AuthorizationRules(Seq(Role.Paakayttaja))
   protected val updateRules: AuthorizationRules = AuthorizationRules(Seq(Role.Paakayttaja))
 
-  def get(id: UUID)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
-    authorizeGet(SorakuvausDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(authorizationRuleByKoulutustyyppi)))
+  def get(id: UUID, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
+    authorizeGet(
+      SorakuvausDAO.get(id, myosPoistetut),
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(authorizationRuleByKoulutustyyppi)))
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
     authorizePut(sorakuvaus, createRules) { s =>
@@ -34,18 +37,29 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get), sorakuvaus, updateRules) { (oldSorakuvaus, s) =>
       withValidation(s, Some(oldSorakuvaus)) {
+        throwValidationErrors(validateStateChange("sorakuvaukselle", oldSorakuvaus.tila, sorakuvaus.tila))
+        validateKoulutusIntegrityIfDeletingSorakuvus(oldSorakuvaus.tila, sorakuvaus.tila, sorakuvaus.id.get)
         doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
     }.nonEmpty
 
-  def listKoulutusOids(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[String] =
+
+  private def validateKoulutusIntegrityIfDeletingSorakuvus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, sorakuvausId: UUID) =
+    throwValidationErrors(
+      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
+        KoulutusDAO.listBySorakuvausId(sorakuvausId, false).isEmpty,
+        "tila",
+        integrityViolationMsg("Sorakuvausta", "koulutuksia")))
+    )
+
+  def listKoulutusOidsInclPoistetut(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
-      KoulutusDAO.listBySorakuvausId(sorakuvausId)
+      KoulutusDAO.listBySorakuvausId(sorakuvausId, true)
     }
 
-  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (_, koulutustyypit) =>
-      SorakuvausDAO.listByKoulutustyypit(koulutustyypit, myosArkistoidut)
+      SorakuvausDAO.listByKoulutustyypit(koulutustyypit, myosArkistoidut, myosPoistetut)
     }
 
   private def doPut(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): Sorakuvaus =

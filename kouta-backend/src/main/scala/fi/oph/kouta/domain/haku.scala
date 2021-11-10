@@ -27,6 +27,7 @@ package object haku {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Haun julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object
@@ -150,6 +151,7 @@ package object haku {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Haun julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object

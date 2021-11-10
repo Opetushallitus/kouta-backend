@@ -25,6 +25,13 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |          required: true
       |          description: Koulutus-oid
       |          example: 1.2.246.562.13.00000000000000000009
+      |        - in: query
+      |          name: myosPoistetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: false
+      |          description: Palautetaanko myös mahdollisesti poistettu koulutus
       |      responses:
       |        '200':
       |          description: Ok
@@ -37,7 +44,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    koulutusService.get(KoulutusOid(params("oid"))) match {
+    koulutusService.get(KoulutusOid(params("oid")), params.getOrElse("myosPoistetut", "false").toBoolean) match {
       case None => NotFound("error" -> "Unknown koulutus oid")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
