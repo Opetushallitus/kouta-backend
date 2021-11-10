@@ -117,7 +117,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
+    Ok(koulutusService.toteutuksetInclPoistetut(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
   }
 
   registerPath( "/indexer/koulutus/{oid}/toteutukset/list",
@@ -149,7 +149,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.listToteutukset(KoulutusOid(params("oid"))))
+    Ok(koulutusService.listToteutuksetInclPoistetut(KoulutusOid(params("oid"))))
   }
 
   registerPath( "/indexer/koulutus/{oid}/hakutiedot",
@@ -181,7 +181,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
+    Ok(koulutusService.hakutiedotInclPoistetut(KoulutusOid(params("oid"))))
   }
 
   registerPath( "/indexer/toteutus/{oid}/haut/list",
@@ -213,7 +213,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(toteutusService.listHaut(ToteutusOid(params("oid"))))
+    Ok(toteutusService.listHautInclPoistetut(ToteutusOid(params("oid"))))
   }
 
   registerPath( "/indexer/toteutus/{oid}/hakukohteet/list",
@@ -244,7 +244,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/toteutus/:oid/hakukohteet/list") {
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid"))))
+    Ok(toteutusService.listHakukohteetInclPoistetut(ToteutusOid(params("oid"))))
   }
 
   registerPath( "/indexer/haku/{oid}/hakukohteet/list",
@@ -275,7 +275,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/haku/:oid/hakukohteet/list") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(hakuService.listHakukohteet(HakuOid(params("oid"))))
+    Ok(hakuService.listHakukohteetInclPoistetut(HakuOid(params("oid"))))
   }
 
   registerPath("/indexer/haku/{oid}/koulutukset/list",
@@ -307,7 +307,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
+    Ok(hakuService.listKoulutuksetInclPoistetut(HakuOid(params("oid"))))
   }
 
   registerPath("/indexer/haku/{oid}/toteutukset/list",
@@ -339,7 +339,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
+    Ok(hakuService.listToteutuksetInclPoistetut(HakuOid(params("oid"))))
   }
 
   registerPath( "/indexer/valintaperuste/{id}/hakukohteet/list",
@@ -371,7 +371,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id"))))
+    Ok(valintaperusteService.listHakukohteetInclPoistetut(UUID.fromString(params("id"))))
   }
 
   registerPath( "/indexer/sorakuvaus/{id}/koulutukset/list",
@@ -403,7 +403,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(sorakuvausService.listKoulutusOids(UUID.fromString(params("id"))))
+    Ok(sorakuvausService.listKoulutusOidsInclPoistetut(UUID.fromString(params("id"))))
   }
 
   registerPath( "/indexer/oppilaitos/{oid}/osat/list",
@@ -499,6 +499,6 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/jarjestyspaikka/:jarjestyspaikkaOid/hakukohde-oids") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(HakukohdeService.getOidsByJarjestyspaikka(OrganisaatioOid(params("jarjestyspaikkaOid"))))
+    Ok(HakukohdeService.getOidsByJarjestyspaikkaInclPoistetut(OrganisaatioOid(params("jarjestyspaikkaOid"))))
   }
 }

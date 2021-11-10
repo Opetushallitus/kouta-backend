@@ -16,12 +16,12 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]]
   def getUpdateTarjoajatActions(koulutus: Koulutus): DBIO[Koulutus]
 
-  def get(oid: KoulutusOid): Option[(Koulutus, Instant)]
-  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem]
+  def get(oid: KoulutusOid, myosPoistetut: Boolean = false): Option[(Koulutus, Instant)]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[KoulutusListItem]
   def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
-  def listBySorakuvausId(sorakuvausId: UUID): Seq[String]
+  def listBySorakuvausId(sorakuvausId: UUID, myosPoistetut: Boolean = false): Seq[String]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -33,10 +33,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       m   <- selectLastModified(oid)
     } yield koulutus.withOid(oid).withModified(m.get)
 
-  override def get(oid: KoulutusOid): Option[(Koulutus, Instant)] = {
+  override def get(oid: KoulutusOid, myosPoistetut: Boolean = false): Option[(Koulutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        k <- selectKoulutus(oid).as[Koulutus].headOption
+        k <- selectKoulutus(oid, myosPoistetut).as[Koulutus].headOption
         t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
         l <- selectLastModified(oid)
       } yield (k, t, l)
@@ -88,11 +88,11 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       }
     }.get
 
-  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[KoulutusListItem] =
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[KoulutusListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) => listWithTarjoajat { selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut) } //OPH:lla pitäisi olla aina kaikki koulutustyypit
-      case _        => listWithTarjoajat { selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut) }
+      case (_, Nil) => listWithTarjoajat { selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut, myosPoistetut) } //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case _        => listWithTarjoajat { selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut, myosPoistetut) }
     }
 
   override def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[KoulutusListItem] =
@@ -123,8 +123,8 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
     }
 
-  override def listBySorakuvausId(sorakuvausId: UUID): Seq[String] = {
-    KoutaDatabase.runBlocking(selectOidBySorakuvausId(sorakuvausId))
+  override def listBySorakuvausId(sorakuvausId: UUID, myosPoistetut: Boolean = false): Seq[String] = {
+    KoutaDatabase.runBlocking(selectOidBySorakuvausId(sorakuvausId, myosPoistetut))
   }
 }
 
@@ -199,7 +199,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     DBIOHelpers.sumIntDBIOs(inserts)
   }
 
-  def selectKoulutus(oid: KoulutusOid) = {
+  def selectKoulutus(oid: KoulutusOid, myosPoistetut: Boolean = false) = {
     sql"""select oid,
                  external_id,
                  johtaa_tutkintoon,
@@ -218,7 +218,9 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  eperuste_id,
                  lower(system_time)
           from koulutukset
-          where oid = $oid"""
+          where oid = $oid
+            #${andTilaMaybeNotPoistettu(myosPoistetut)}
+          """
   }
 
   def findJulkaistutKoulutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
@@ -328,19 +330,21 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
            group by k.oid) m on k.oid = m.oid"""
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean) = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean, myosPoistetut: Boolean = false) = {
     sql"""#$selectKoulutusListSql
           where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})
+              #${andTilaMaybeNotPoistettu(myosPoistetut)}
               #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean) = {
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false) = {
     sql"""#$selectKoulutusListSql
           where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
                   (organisaatio_oid <> ${RootOrganisaatioOid} or
                    tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
               or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              #${andTilaMaybeNotPoistettu(myosPoistetut)}
               #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
@@ -349,6 +353,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""#$selectKoulutusListSql
           where tyyppi = ${koulutustyyppi.toString}::koulutustyyppi and
               (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or julkinen = ${true})
+              and tila != 'poistettu'::julkaisutila
               #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
@@ -363,11 +368,14 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   def selectTilaAndTyyppi(koulutusOid: KoulutusOid): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =
     sql"""select tila, tyyppi from koulutukset
             where oid = $koulutusOid
+            and tila != 'poistettu'::julkaisutila
     """.as[(Julkaisutila, Koulutustyyppi)].headOption
 
-  def selectOidBySorakuvausId(sorakuvausId: UUID) = {
+  def selectOidBySorakuvausId(sorakuvausId: UUID, myosPoistetut: Boolean = false) = {
     sql"""select oid
           from koulutukset
-          where sorakuvaus_id = ${sorakuvausId.toString}::uuid""".as[String]
+          where sorakuvaus_id = ${sorakuvausId.toString}::uuid
+          #${andTilaMaybeNotPoistettu(myosPoistetut)}
+      """.as[String]
   }
 }

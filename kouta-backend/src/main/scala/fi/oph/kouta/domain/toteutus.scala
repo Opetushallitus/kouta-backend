@@ -30,6 +30,7 @@ package object toteutus {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -182,6 +183,7 @@ package object toteutus {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Koulutuksen toteutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        tarjoajat:
       |          type: array
