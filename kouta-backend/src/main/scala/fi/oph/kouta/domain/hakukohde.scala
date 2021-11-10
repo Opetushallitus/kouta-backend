@@ -245,6 +245,9 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen aloituspaikkojen tiedot
       |          $ref: '#/components/schemas/Aloituspaikat'
+      |        uudenOpiskelijanUrl:
+      |          type: string
+      |          description: Uuden opiskelijan ohjeita sisältävän verkkosivun URL
       |""".stripMargin
 
   val LiitteenToimitusosoiteModel: String =
@@ -507,7 +510,8 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
                              aloituspaikat: Option[Aloituspaikat] = None,
                              // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
-                             hakukohteenLinja: Option[HakukohteenLinja] = None) extends ValidatableSubEntity {
+                             hakukohteenLinja: Option[HakukohteenLinja] = None,
+                             uudenOpiskelijanUrl: Option[String] = None) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
@@ -520,7 +524,8 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
       validateIfDefined[Aloituspaikat](aloituspaikat, _.validate(tila, kielivalinta, s"$path.aloituspaikat")),
       // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
       validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
-    ))
+    )),
+    validateIfDefined[String](uudenOpiskelijanUrl, assertValidUrl(_, s"$path.uudenOpiskelijanUrl"))
   )
 
   override def validateOnJulkaisu(path: String): IsValid = and(
