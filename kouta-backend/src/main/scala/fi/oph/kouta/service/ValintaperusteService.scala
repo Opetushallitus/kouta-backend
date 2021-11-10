@@ -3,12 +3,13 @@ package fi.oph.kouta.service
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoutaIndexClient
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{HakukohdeListItem, Koulutustyyppi, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
+import fi.oph.kouta.domain.{HakukohdeListItem, Julkaisutila, Koulutustyyppi, Poistettu, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -23,8 +24,10 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
-  def get(id: UUID)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
-    authorizeGet(ValintaperusteDAO.get(id), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
+  def get(id: UUID, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
+    authorizeGet(
+      ValintaperusteDAO.get(id, myosPoistetut),
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) { v =>
@@ -37,11 +40,21 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
             (implicit authenticated: Authenticated): Boolean =
     authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get), valintaperuste) { (oldValintaperuste, v) =>
       withValidation(v, Some(oldValintaperuste)) { v =>
+        throwValidationErrors(validateStateChange("valintaperusteelle", oldValintaperuste.tila, valintaperuste.tila))
+        validateHakukohdeIntegrityIfDeletingValintaperuste(oldValintaperuste.tila, valintaperuste.tila, valintaperuste.id.get)
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
     }.nonEmpty
 
-  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+  private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID) =
+    throwValidationErrors(
+      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
+        HakukohdeDAO.listByValintaperusteId(valintaperusteId).isEmpty,
+        "tila",
+        integrityViolationMsg("Valintaperustetta", "hakukohteita")))
+    )
+
+  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
       ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
     }
@@ -51,13 +64,13 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       ValintaperusteDAO.listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(oids, hakuOid, koulutustyyppi, myosArkistoidut)
     }
 
-  def listHakukohteet(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+  def listHakukohteetInclPoistetut(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(Role.Hakukohde.readRoles) {
-      HakukohdeDAO.listByValintaperusteId(valintaperusteId)
+      HakukohdeDAO.listByValintaperusteId(valintaperusteId, true)
     }
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ValintaperusteSearchResult =
-    list(organisaatioOid, myosArkistoidut = true).map(_.id) match {
+    list(organisaatioOid, myosArkistoidut = true, myosPoistetut = true).map(_.id) match {
       case Nil               => ValintaperusteSearchResult()
       case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
     }

@@ -92,6 +92,16 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(s"$KoulutusPath/$oid", readSessions(YoOid), 403)
   }
 
+  it should "return error when trying to get deleted koulutus" in {
+    val oid = put(koulutus.copy(tila = Poistettu), ophSession)
+    get(s"$KoulutusPath/$oid", ophSession, 404)
+  }
+
+  it should "return ok when getting deleted koulutus with myosPoistetut = true" in {
+    val oid = put(koulutus.copy(tila = Poistettu), ophSession)
+    get(s"$KoulutusPath/$oid?myosPoistetut=true", ophSession, 200)
+  }
+
   "Create koulutus" should "store koulutus" in {
     val oid = put(koulutus, ophSession)
     get(oid, koulutus(oid))
@@ -483,28 +493,41 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     update(koulutus(oid).copy(tila = Tallennettu), lastModified, true, ophSession)
     lastModified = get(oid, koulutus(oid).copy(tila = Tallennettu))
     update(koulutus(oid).copy(tila = Poistettu), lastModified, true, ophSession)
-    get(oid, koulutus(oid).copy(tila = Poistettu))
 
     val arkistoituOid = put(koulutus.copy(tila = Arkistoitu), ophSession)
     lastModified = get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Arkistoitu))
     update(koulutus(arkistoituOid).copy(tila = Julkaistu), lastModified, true, ophSession)
     get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Julkaistu))
-
   }
 
   it should "fail illegal state changes" in {
-    val poistettuOid = put(koulutus.copy(tila = Poistettu), ophSession)
     val tallennettuOid = put(koulutus.copy(tila = Tallennettu), ophSession)
     val julkaistuOid = put(koulutus.copy(tila = Julkaistu), ophSession)
     val arkistoituOid = put(koulutus.copy(tila = Arkistoitu), ophSession)
 
-    var lastModified = get(poistettuOid, koulutus(poistettuOid).copy(tila = Poistettu))
-    update(KoulutusPath, koulutus(poistettuOid).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Poistettu, Tallennettu))))
-    lastModified = get(tallennettuOid, koulutus(tallennettuOid).copy(tila = Tallennettu))
+    var lastModified = get(tallennettuOid, koulutus(tallennettuOid).copy(tila = Tallennettu))
     update(KoulutusPath, koulutus(tallennettuOid).copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Tallennettu, Arkistoitu))))
     lastModified = get(julkaistuOid, koulutus(julkaistuOid).copy(tila = Julkaistu))
     update(KoulutusPath, koulutus(julkaistuOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Julkaistu, Poistettu))))
     lastModified = get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Arkistoitu))
     update(KoulutusPath, koulutus(arkistoituOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Arkistoitu, Poistettu))))
+  }
+
+  private def createKoulutusWithToteutukset(markAllToteutuksetDeleted: Boolean) = {
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
+    put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), tila = Poistettu), ophSession)
+    put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), tila = if (markAllToteutuksetDeleted) Poistettu else Tallennettu), ophSession)
+    val koulutusLastModified = get(koulutusOid, koulutus(koulutusOid).copy(tila = Tallennettu))
+    (koulutusOid, koulutusLastModified)
+  }
+
+  it should "pass deletion when related toteutukset deleted" in {
+    val (koulutusOid: String, lastModified: String) = createKoulutusWithToteutukset(true)
+    update(koulutus(koulutusOid).copy(tila = Poistettu), lastModified, true, ophSession)
+  }
+
+  it should "fail deletion when all related toteutukset not deleted" in {
+    val (koulutusOid: String, lastModified: String) = createKoulutusWithToteutukset(false)
+    update(KoulutusPath, koulutus(koulutusOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Koulutusta", "toteutuksia"))))
   }
 }

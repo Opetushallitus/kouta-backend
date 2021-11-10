@@ -27,6 +27,7 @@ package object valintaperuste {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Valintaperustekuvauksen julkaisutila. Jos kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -152,6 +153,7 @@ package object valintaperuste {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: Valintaperustekuvauksen julkaisutila. Jos kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object
@@ -184,7 +186,6 @@ case class Valintaperuste(id: Option[UUID] = None,
                           kohdejoukkoKoodiUri: Option[String] = None,
                           nimi: Kielistetty = Map(),
                           julkinen: Boolean = false,
-                          @deprecated("Kenttä siirretty koulutukselle") sorakuvausId: Option[UUID] = None,
                           valintakokeet: Seq[Valintakoe] = Seq(),
                           metadata: Option[ValintaperusteMetadata] = None,
                           organisaatioOid: OrganisaatioOid,

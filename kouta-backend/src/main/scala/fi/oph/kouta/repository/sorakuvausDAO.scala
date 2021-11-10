@@ -13,8 +13,8 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus]
   def getUpdateActions(sorakuvaus: Sorakuvaus): DBIO[Option[Sorakuvaus]]
 
-  def get(id: UUID): Option[(Sorakuvaus, Instant)]
-  def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem]
+  def get(id: UUID, myosPoistetut: Boolean = false): Option[(Sorakuvaus, Instant)]
+  def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[SorakuvausListItem]
 }
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
@@ -33,9 +33,9 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
       m <- selectLastModified(sorakuvaus.id.get)
     } yield optionWhen(v > 0)(sorakuvaus.withModified(m.get))
 
-  override def get(id: UUID): Option[(Sorakuvaus, Instant)] = {
+  override def get(id: UUID, myosPoistetut: Boolean = false): Option[(Sorakuvaus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(for {
-      v <- selectSorakuvaus(id)
+      v <- selectSorakuvaus(id, myosPoistetut)
       l <- selectLastModified(id)
     } yield (v, l) match {
       case (Some(sorakuvaus), Some(lastModified)) => Some((sorakuvaus, lastModified))
@@ -43,10 +43,10 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     }).get
   }
 
-  override def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): Seq[SorakuvausListItem] =
+  override def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[SorakuvausListItem] =
     koulutustyypit match {
       case Nil => Seq()
-      case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit, myosArkistoidut))
+      case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit, myosArkistoidut, myosPoistetut))
     }
 
   def getTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi], Option[Seq[String]]) =
@@ -99,10 +99,10 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      ${sorakuvaus.muokkaaja} )"""
   }
 
-  def selectSorakuvaus(id: UUID): DBIO[Option[Sorakuvaus]] =
+  def selectSorakuvaus(id: UUID, myosPoistetut: Boolean = false): DBIO[Option[Sorakuvaus]] =
     sql"""select id, external_id, tila, nimi, koulutustyyppi, kielivalinta,
                  metadata, organisaatio_oid, muokkaaja, lower(system_time)
-          from sorakuvaukset where id = ${id.toString}::uuid""".as[Sorakuvaus].headOption
+          from sorakuvaukset where id = ${id.toString}::uuid #${andTilaMaybeNotPoistettu(myosPoistetut)}""".as[Sorakuvaus].headOption
 
   def updateSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Int] = {
     sqlu"""update sorakuvaukset set
@@ -124,10 +124,11 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
              or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb)"""
   }
 
-  def selectByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean): DBIO[Vector[SorakuvausListItem]] = {
+  def selectByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
           where koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})
+          #${andTilaMaybeNotPoistettu(myosPoistetut)}
           #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
   }
 
@@ -137,5 +138,6 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                  array_remove(array(select jsonb_array_elements_text(metadata -> 'koulutusKoodiUrit')), NULL) as koulutus_koodi_urit
           from sorakuvaukset
           where id = ${sorakuvausId.toString}::uuid
+            and tila != 'poistettu'::julkaisutila
     """.as[(Julkaisutila, Koulutustyyppi, Seq[String])].headOption
 }
