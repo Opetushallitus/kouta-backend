@@ -1,8 +1,8 @@
 package fi.oph.kouta.domain
 
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.service.HakukohdeService
 
 package object hakutieto {
   val HakutietoModel: String =
@@ -203,6 +203,8 @@ case class HakutietoHaku(hakuOid: HakuOid,
                          hakukohteet: Seq[HakutietoHakukohde])
 
 case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
+                              toteutusOid: ToteutusOid,
+                              hakuOid: HakuOid,
                               nimi: Kielistetty = Map(),
                               hakukohdeKoodiUri: Option[String] = None,
                               tila: Julkaisutila = Tallennettu,
@@ -226,3 +228,120 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               organisaatioOid: OrganisaatioOid,
                               valintatapaKoodiUrit: Seq[String] = Seq(),
                               modified: Option[Modified])
+
+object HakutietoHakukohde {
+  def apply(e: HakutietoHakukohdeEnriched): HakutietoHakukohde = {
+    new HakutietoHakukohde(
+      e.hakukohdeOid,
+      e.toteutusOid,
+      e.hakuOid,
+      e.nimi,
+      e.hakukohdeKoodiUri,
+      e.tila, e.esikatselu,
+      e.valintaperusteId,
+      e.koulutuksenAlkamiskausi,
+      e.kaytetaanHaunAlkamiskautta,
+      e.jarjestyspaikkaOid,
+      e.hakulomaketyyppi,
+      e.hakulomakeAtaruId,
+      e.hakulomakeKuvaus,
+      e.hakulomakeLinkki,
+      e.kaytetaanHaunHakulomaketta,
+      e.aloituspaikat,
+      e.hakukohteenLinja,
+      e.kaytetaanHaunAikataulua,
+      e.hakuajat,
+      e.pohjakoulutusvaatimusKoodiUrit,
+      e.pohjakoulutusvaatimusTarkenne,
+      e.muokkaaja,
+      e.organisaatioOid,
+      e.valintatapaKoodiUrit,
+      e.modified)
+    }
+  }
+
+case class HakutietoHakukohdeEnriched(
+  hakukohdeOid: HakukohdeOid,
+  toteutusOid: ToteutusOid,
+  hakuOid: HakuOid,
+  nimi: Kielistetty = Map(),
+  hakukohdeKoodiUri: Option[String] = None,
+  tila: Julkaisutila = Tallennettu,
+  esikatselu: Boolean = false,
+  valintaperusteId: Option[UUID] = None,
+  koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+  kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
+  jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
+  hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+  hakulomakeAtaruId: Option[UUID] = None,
+  hakulomakeKuvaus: Kielistetty = Map(),
+  hakulomakeLinkki: Kielistetty = Map(),
+  kaytetaanHaunHakulomaketta: Option[Boolean] = None,
+  aloituspaikat: Option[Aloituspaikat] = None,
+  hakukohteenLinja: Option[HakukohteenLinja] = None,
+  kaytetaanHaunAikataulua: Option[Boolean] = None,
+  hakuajat: Seq[Ajanjakso] = Seq(),
+  pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
+  pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
+  muokkaaja: UserOid,
+  organisaatioOid: OrganisaatioOid,
+  valintatapaKoodiUrit: Seq[String] = Seq(),
+  modified: Option[Modified])
+
+object HakutietoHakukohdeEnriched {
+  def apply(
+    hakukohdeOid: HakukohdeOid,
+    toteutusOid: ToteutusOid,
+    hakuOid: HakuOid,
+    nimi: Kielistetty,
+    hakukohdeKoodiUri: Option[String],
+    tila: Julkaisutila,
+    esikatselu: Boolean,
+    valintaperusteId: Option[UUID] = None,
+    koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+    kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
+    jarjestyspaikkaOid: Option[OrganisaatioOid] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeAtaruId: Option[UUID] = None,
+    hakulomakeKuvaus: Kielistetty = Map(),
+    hakulomakeLinkki: Kielistetty = Map(),
+    kaytetaanHaunHakulomaketta: Option[Boolean] = None,
+    aloituspaikat: Option[Aloituspaikat] = None,
+    hakukohteenLinja: Option[HakukohteenLinja] = None,
+    kaytetaanHaunAikataulua: Option[Boolean] = None,
+    hakuajat: Seq[Ajanjakso] = Seq(),
+    pohjakoulutusvaatimusKoodiUrit: Seq[String] = Seq(),
+    pohjakoulutusvaatimusTarkenne: Kielistetty = Map(),
+    muokkaaja: UserOid,
+    organisaatioOid: OrganisaatioOid,
+    valintatapaKoodiUrit: Seq[String] = Seq(),
+    modified: Option[Modified]): HakutietoHakukohdeEnriched = {
+      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(Hakukohde(oid = Some(hakukohdeOid), toteutusOid = toteutusOid, hakuOid = hakuOid, nimi = nimi, muokkaaja = muokkaaja, organisaatioOid = organisaatioOid, modified = modified))
+      new HakutietoHakukohdeEnriched(
+        hakukohdeOid,
+        toteutusOid,
+        hakuOid,
+        esitysnimi,
+        hakukohdeKoodiUri,
+        tila,
+        esikatselu,
+        valintaperusteId,
+        koulutuksenAlkamiskausi,
+        kaytetaanHaunAlkamiskautta,
+        jarjestyspaikkaOid,
+        hakulomaketyyppi,
+        hakulomakeAtaruId, hakulomakeKuvaus,
+        hakulomakeLinkki,
+        kaytetaanHaunHakulomaketta,
+        aloituspaikat,
+        hakukohteenLinja,
+        kaytetaanHaunAikataulua,
+        hakuajat,
+        pohjakoulutusvaatimusKoodiUrit,
+        pohjakoulutusvaatimusTarkenne,
+        muokkaaja,
+        organisaatioOid,
+        valintatapaKoodiUrit,
+        modified)
+      }
+    }

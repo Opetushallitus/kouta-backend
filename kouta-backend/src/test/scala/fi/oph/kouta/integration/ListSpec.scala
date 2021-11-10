@@ -601,6 +601,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
           modified = Some(h1.modified),
           hakukohteet = Seq(HakutietoHakukohde(
             hakukohdeOid = hk1.oid,
+            toteutusOid = t1.oid,
+            hakuOid = h1.oid,
             nimi = hk1.nimi,
             jarjestyspaikkaOid = Some(OtherOid),
             tila = hk1.tila,
@@ -638,6 +640,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             modified = Some(h3.modified),
             hakukohteet = Seq(HakutietoHakukohde(
               hakukohdeOid = hk6.oid,
+              toteutusOid = t1.oid,
+              hakuOid = h3.oid,
               nimi = hk6.nimi,
               jarjestyspaikkaOid = Some(OtherOid),
               tila = hk6.tila,
