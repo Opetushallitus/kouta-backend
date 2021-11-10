@@ -27,6 +27,13 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |          required: true
       |          description: Valintaperuste-id
       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+      |        - in: query
+      |          name: myosPoistetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: false
+      |          description: Palautetaanko myös mahdollisesti poistettu valintaperuste
       |      responses:
       |        '200':
       |          description: Ok
@@ -39,7 +46,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     implicit val authenticated: Authenticated = authenticate()
 
-    valintaperusteService.get(UUID.fromString(params("id"))) match {
+    valintaperusteService.get(UUID.fromString(params("id")), params.getOrElse("myosPoistetut", "false").toBoolean) match {
       case None => NotFound("error" -> "Unknown valintaperuste id")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }

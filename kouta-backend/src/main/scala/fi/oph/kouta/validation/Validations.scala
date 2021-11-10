@@ -97,9 +97,6 @@ object Validations {
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
-  def assertDependencyExists(exists: Boolean, dependencyId: Any, dependencyName: String, dependencyIdPath: String): IsValid =
-    assertTrue(exists, dependencyIdPath, nonExistent(dependencyName, dependencyId))
-
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
@@ -162,9 +159,16 @@ object Validations {
                          dependencyId: Any,
                          dependencyName: String,
                          dependencyIdPath: String): IsValid = {
-    dependencyTila.map { tila =>
-      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId)))
+    dependencyTila.map { tila => and(
+      assertTrue(tila != Poistettu, path="tila", nonExistent(dependencyName, dependencyId)),
+      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId))))
     }.getOrElse(error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId)))
+  }
+
+  def validateDependencyExistence(dependencyTila: Option[Julkaisutila], dependencyId: Any, dependencyName: String, dependencyIdPath: String): IsValid = {
+    dependencyTila.map { tila =>
+      assertTrue(tila != Poistettu, path="tila", nonExistent(dependencyName, dependencyId))
+    }.getOrElse(error(dependencyIdPath, nonExistent(dependencyName, dependencyId)))
   }
 
   def validateStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): IsValid = {

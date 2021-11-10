@@ -48,6 +48,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   def toteutus(oid:String, koulutusOid:String, tila:Julkaisutila): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), tila = tila)
   def toteutus(koulutusOid: String, tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Toteutus =
     toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = organisaatioOid, tila = tila)
+  def toteutus(oid:String, koulutusOid:String, externalId: String): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), tila = Tallennettu, externalId = Some(externalId))
 
   implicit val toteutusEquality: Equality[Toteutus] = (a: Toteutus, b: Any) => b match {
     case _:Toteutus => Equality.default[Toteutus].areEqual(

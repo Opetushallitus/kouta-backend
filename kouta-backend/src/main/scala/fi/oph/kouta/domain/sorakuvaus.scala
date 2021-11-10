@@ -37,6 +37,7 @@ package object sorakuvaus {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: SORA-kuvauksen julkaisutila. Jos SORA-kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        kielivalinta:
       |          type: array
@@ -99,6 +100,7 @@ package object sorakuvaus {
       |            - julkaistu
       |            - arkistoitu
       |            - tallennettu
+      |            - poistettu
       |          description: SORA-kuvauksen julkaisutila. Jos SORA-kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object

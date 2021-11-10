@@ -6,6 +6,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
+import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.{TestData, TestOids}
 
@@ -83,6 +84,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
   it should "allow indexer access" in {
     val oid = put(uusiHakukohde)
     get(oid, indexerSession, tallennettuHakukohde(oid))
+  }
+
+  it should "return error when trying to get deleted hakukohde" in {
+    val oid = put(uusiHakukohde.copy(tila = Poistettu), ophSession)
+    get(s"$HakukohdePath/$oid", ophSession, 404)
+  }
+
+  it should "return ok when getting deleted hakukohde with myosPoistetut = true" in {
+    val oid = put(uusiHakukohde.copy(tila = Poistettu), ophSession)
+    get(s"$HakukohdePath/$oid?myosPoistetut=true", ophSession, 200)
   }
 
   "Create hakukohde" should "store hakukohde" in {
@@ -501,4 +512,42 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde)
   }
+
+  it should "pass legal state changes" in {
+    val id = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
+    val theHakukohde = tallennettuHakukohde(id).copy(muokkaaja = OphUserOid)
+    var lastModified = get(id, theHakukohde.copy(tila = Tallennettu))
+    update(theHakukohde.copy(tila = Julkaistu), lastModified, true, ophSession)
+    lastModified = get(id, theHakukohde.copy(tila = Julkaistu))
+    update(theHakukohde.copy(tila = Arkistoitu), lastModified, true, ophSession)
+    lastModified = get(id, theHakukohde.copy(tila = Arkistoitu))
+    update(theHakukohde.copy(tila = Julkaistu), lastModified, true, ophSession)
+    lastModified = get(id, theHakukohde.copy(tila = Julkaistu))
+    update(theHakukohde.copy(tila = Tallennettu), lastModified, true, ophSession)
+    lastModified = get(id, theHakukohde.copy(tila = Tallennettu))
+    update(theHakukohde.copy(tila = Poistettu), lastModified, true, ophSession)
+
+    val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
+    val tallennettu = tallennettuHakukohde(arkistoituId).copy(muokkaaja = OphUserOid)
+    lastModified = get(arkistoituId, tallennettu.copy(tila = Arkistoitu))
+    update(tallennettu.copy(tila = Julkaistu), lastModified, true, ophSession)
+    get(arkistoituId, tallennettu.copy(tila = Julkaistu))
+  }
+
+  it should "fail illegal state changes" in {
+    val tallennettuId = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
+    val tallennettu = tallennettuHakukohde(tallennettuId).copy(tila = Tallennettu, muokkaaja = OphUserOid)
+    val julkaistuId = put(uusiHakukohde.copy(tila = Julkaistu), ophSession)
+    val julkaistu = tallennettuHakukohde(julkaistuId).copy(tila = Julkaistu, muokkaaja = OphUserOid)
+    val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
+    val arkistoitu = tallennettuHakukohde(arkistoituId).copy(tila = Arkistoitu, muokkaaja = OphUserOid)
+
+    var lastModified = get(tallennettuId, tallennettu)
+    update(HakukohdePath, tallennettu.copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Tallennettu, Arkistoitu))))
+    lastModified = get(julkaistuId, julkaistu)
+    update(HakukohdePath, julkaistu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Julkaistu, Poistettu))))
+    lastModified = get(arkistoituId, arkistoitu)
+    update(HakukohdePath, arkistoitu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Poistettu))))
+  }
+
 }
