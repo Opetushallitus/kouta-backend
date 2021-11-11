@@ -24,7 +24,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
 
     get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid))
+      read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid, hakukohdeOid2))
     }
   }
 
@@ -176,13 +176,14 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val hkOid1 = put(julkaistuHakukohde(totetusOid, hakuOid))
     val hkOid2 = put(julkaistuHakukohde(totetusOid, hakuOid))
     val hkOid3 = put(julkaistuHakukohde(totetusOid, hakuOid))
+    val hkOid4 = put(hakukohde(totetusOid, hakuOid).copy(tila = Poistettu))
 
     get(s"$IndexerPath/koulutus/$koulutusOid/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       val result = read[List[Hakutieto]](body)
       result.size should equal (1)
       result.head.haut.size should equal (1)
-      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3)
+      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3, hkOid4)
     }
   }
 
