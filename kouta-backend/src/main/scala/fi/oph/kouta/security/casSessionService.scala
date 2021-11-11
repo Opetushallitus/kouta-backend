@@ -42,7 +42,7 @@ abstract class CasSessionService(val securityContext: SecurityContext,
       case NonFatal(t) =>
         logger.debug("Ticket validation error", t)
         Task.fail(new AuthenticationFailedException(s"Failed to validate service ticket $s", t))
-    }.unsafePerformSyncAttemptFor(Duration(2, TimeUnit.SECONDS)).toEither
+    }.unsafePerformSyncAttemptFor(Duration(15, TimeUnit.SECONDS)).toEither
   }
 
   private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): (UUID, CasSession) = {

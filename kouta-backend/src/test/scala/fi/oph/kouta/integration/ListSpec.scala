@@ -589,6 +589,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
           hakuOid = h1.oid,
           nimi = h1.nimi,
           hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
+          tila = Julkaistu,
           koulutuksenAlkamiskausi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi,
           hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
           hakulomakeAtaruId = TestData.JulkaistuHaku.hakulomakeAtaruId,
