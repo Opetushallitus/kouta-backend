@@ -153,7 +153,8 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
 
-    when(hakukohdeService.get(any[HakukohdeOid])(any[Authenticated])).thenAnswer((_: HakukohdeOid) => Some(hakukohdeCaptor.value
+    when(hakukohdeService.get(any[HakukohdeOid], anyBoolean)(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
+      Some(hakukohdeCaptor.value
       .copy(valintakokeet = hakukohdeCaptor.value.valintakokeet
         .map(vk => vk.copy(id = Some(UUID.randomUUID())))), Instant.now()): Option[(Hakukohde, Instant)])
 
