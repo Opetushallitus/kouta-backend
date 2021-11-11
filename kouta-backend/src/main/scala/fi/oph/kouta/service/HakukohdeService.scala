@@ -67,7 +67,7 @@ class HakukohdeService(
             NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde.nimi, metadata, kaannokset)
           case _ => hakukohde.nimi
         }
-      case _ => hakukohde.nimi
+      case None => hakukohde.nimi
     }
   }
 
