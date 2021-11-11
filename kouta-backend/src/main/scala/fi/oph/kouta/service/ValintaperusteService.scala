@@ -56,7 +56,7 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
 
   def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut)
+      ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut, myosPoistetut)
     }
 
   def listByHakuAndKoulutustyyppi(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =

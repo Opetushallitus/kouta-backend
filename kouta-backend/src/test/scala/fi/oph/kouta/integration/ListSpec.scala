@@ -16,14 +16,14 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   var k1, k2, k3, k4, k5, k6, k7, k8, k9, k10       :KoulutusListItem = _
   var t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11  :ToteutusListItem = _
   var h1, h2, h3, h4, h5                            :HakuListItem = _
-  var v1, v2, v3, v4, v5                                :ValintaperusteListItem = _
+  var v1, v2, v3, v4, v5                            :ValintaperusteListItem = _
   var s1, s2, s3, s4, s5                            :SorakuvausListItem = _
   var hk1, hk2, hk3, hk4, hk5, hk6, hk7             :HakukohdeListItem = _
   var o1, o2                                        :OrganisaatioOid = _
   var oo1, oo2, oo3                                 :OppilaitoksenOsaListItem = _
 
-  var ophKoulutus:  KoulutusListItem = _
-  var ophT1, ophT2: ToteutusListItem = _
+  var ophKoulutus        :  KoulutusListItem = _
+  var ophT1, ophT2, ophT3: ToteutusListItem = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -35,6 +35,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     s1 = addToList(sorakuvaus(Julkaistu, OphOid))
     s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
     s3 = addToList(sorakuvaus(Julkaistu, OphOid))
+    s4 = addToList(yoSorakuvaus.copy(tila = Julkaistu, organisaatioOid = OphOid))
+    s5 = addToList(sorakuvaus.copy(tila = Poistettu))
     k1 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ParentOid, tila = Julkaistu, sorakuvausId = Some(s1.id)))
     k2 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ChildOid, tila = Arkistoitu, sorakuvausId = Some(s1.id)))
     k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
@@ -60,9 +62,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
-    h5 = addToList(haku(Poistettu, LonelyOid))
-    s4 = addToList(yoSorakuvaus.copy(tila = Julkaistu, organisaatioOid = OphOid))
-    s5 = addToList(sorakuvaus.copy(tila = Poistettu))
+    h5 = addToList(haku(Poistettu, ParentOid))
     v1 = addToList(valintaperuste(Julkaistu, ParentOid).copy(julkinen = false))
     v2 = addToList(valintaperuste(Arkistoitu, ChildOid).copy(julkinen = true))
     v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), julkinen = false))
@@ -86,6 +86,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     ophKoulutus = addToList(koulutus(julkinen = true, OphOid, Julkaistu))
     ophT1 = addToList(toteutus(ophKoulutus.oid.toString, Julkaistu, LonelyOid))
     ophT2 = addToList(toteutus(ophKoulutus.oid.toString, Julkaistu, GrandChildOid))
+    ophT3 = addToList(toteutus(ophKoulutus.oid.toString, Poistettu, GrandChildOid))
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
