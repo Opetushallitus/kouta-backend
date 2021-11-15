@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{Hakutieto, Koulutus, OppilaitoksenOsa, Poistettu, Toteutus}
+import fi.oph.kouta.domain.{Hakutieto, Koulutus, OppilaitoksenOsa, Poistettu, Tallennettu, Toteutus}
 import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
 
@@ -19,12 +19,31 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val hakuOid = put(haku, ophSession)
     val hakukohdeOid = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
       jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid))), ophSession)
-    val hakukohdeOid2 = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
+    put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
       jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid)), tila = Poistettu), ophSession)
 
     get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid, hakukohdeOid2))
+      read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid))
+    }
+  }
+
+  "List hakukohteet by järjestyspaikka oids" should "List also poistetut hakukohteet if instructed" in {
+    val oppilaitosOid = put(oppilaitos, ophSession)
+    val jarjestyspaikkaOid = put(oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid)), ophSession)
+
+    val koulutusOid = put(koulutus, ophSession)
+    val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid)), ophSession)
+    val hakuOid = put(haku, ophSession)
+    val hakukohdeOid = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
+      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid))), ophSession)
+    val hakukohdeOid2 = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
+      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid)), tila = Poistettu), ophSession)
+
+    get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids?vainOlemassaolevat=false",
+      headers = Seq(sessionHeader(indexerSession))) {
+        status should equal (200)
+        read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid, hakukohdeOid2))
     }
   }
 
@@ -39,8 +58,7 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
       read[List[Toteutus]](body) should contain theSameElementsAs List(
         toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
         toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
-        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)))
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)))
       )
     }
   }
@@ -57,6 +75,23 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
         toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
         toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
         toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
+      )
+    }
+  }
+
+  "List also poistetut toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
+    val oid = put(koulutus, ophSession)
+    val t1 = put(toteutus(oid))
+    val t2 = put(toteutus(oid))
+    val t3 = put(toteutus(oid))
+    val t4 = put(toteutus(oid).copy(tila = Poistettu))
+    get(s"$IndexerPath/koulutus/$oid/toteutukset?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[Toteutus]](body) should contain theSameElementsAs List(
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
+        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)))
       )
     }
   }
@@ -104,14 +139,13 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val hkOid1 = put(julkaistuHakukohde(totetusOid, hakuOid))
     val hkOid2 = put(julkaistuHakukohde(totetusOid, hakuOid))
     val hkOid3 = put(julkaistuHakukohde(totetusOid, hakuOid))
-    val hkOid4 = put(hakukohde(totetusOid, hakuOid).copy(tila = Poistettu))
 
     get(s"$IndexerPath/koulutus/$koulutusOid/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       val result = read[List[Hakutieto]](body)
       result.size should equal (1)
       result.head.haut.size should equal (1)
-      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3, hkOid4)
+      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3)
     }
   }
 
@@ -157,4 +191,55 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/oppilaitos/$oid/osat", fakeIndexerSession, 403)
   }
 
+  "List koulutukset by sorakuvausId" should "list all koulutukset distinct" in {
+    val sorakuvausId = put(sorakuvaus, ophSession)
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu, sorakuvausId = Some(sorakuvausId)), ophSession)
+    val koulutusOid2 = put(koulutus.copy(tila = Tallennettu, sorakuvausId = Some(sorakuvausId)), ophSession)
+    val koulutusOid3 = put(koulutus.copy(tila = Poistettu, sorakuvausId = Some(sorakuvausId)), ophSession)
+
+    get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[String]](body) should contain theSameElementsAs(List(koulutusOid, koulutusOid2))
+    }
+  }
+
+  "List koulutukset by sorakuvausId" should "list also poistetut koulutukset if instructed" in {
+    val sorakuvausId = put(sorakuvaus, ophSession)
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu, sorakuvausId = Some(sorakuvausId)), ophSession)
+    val koulutusOid2 = put(koulutus.copy(tila = Tallennettu, sorakuvausId = Some(sorakuvausId)), ophSession)
+    val koulutusOid3 = put(koulutus.copy(tila = Poistettu, sorakuvausId = Some(sorakuvausId)), ophSession)
+
+    get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[String]](body) should contain theSameElementsAs(List(koulutusOid, koulutusOid2, koulutusOid3))
+    }
+  }
+
+  it should "return empty list if no koulutukset related to sorakuvaus" in {
+    val sorakuvausId = put(sorakuvaus, ophSession)
+
+    get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[String]](body) should contain theSameElementsAs(List())
+    }
+  }
+
+  it should "deny access without a valid session" in {
+    val sorakuvausId = put(sorakuvaus, ophSession)
+    get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", headers = Seq()) {
+      withClue(body) {
+        status should equal (401)
+      }
+    }
+  }
+
+  it should "deny access without the indexer role" in {
+    val sorakuvausId = put(sorakuvaus, ophSession)
+    get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", defaultSessionId, 403)
+  }
+
+  it should "deny access without root organization access to the indexer role" in {
+    val sorakuvausId = put(sorakuvaus, ophSession)
+    get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", fakeIndexerSession, 403)
+  }
 }

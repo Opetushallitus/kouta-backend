@@ -333,7 +333,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def selectByHakuOid(hakuOid: HakuOid): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           inner join hakukohteet h on h.toteutus_oid = t.oid
-          where h.haku_oid = $hakuOid""".as[ToteutusListItem]
+          where h.haku_oid = $hakuOid and t.tila != 'poistettu'::julkaisutila""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOidAndCreatorOrTarjoaja(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ToteutusListItem]] = {
