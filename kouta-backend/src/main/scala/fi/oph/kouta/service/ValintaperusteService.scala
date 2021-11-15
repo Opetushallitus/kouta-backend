@@ -64,9 +64,9 @@ class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, au
       ValintaperusteDAO.listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(oids, hakuOid, koulutustyyppi, myosArkistoidut)
     }
 
-  def listHakukohteetInclPoistetut(valintaperusteId: UUID)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+  def listHakukohteet(valintaperusteId: UUID, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(Role.Hakukohde.readRoles) {
-      HakukohdeDAO.listByValintaperusteId(valintaperusteId, true)
+      HakukohdeDAO.listByValintaperusteId(valintaperusteId, !vainOlemassaolevat)
     }
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ValintaperusteSearchResult =
