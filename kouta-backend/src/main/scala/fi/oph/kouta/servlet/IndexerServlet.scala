@@ -198,7 +198,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.hakutiedotInclPoistetut(KoulutusOid(params("oid"))))
+    Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
 
   registerPath( "/indexer/toteutus/{oid}/haut/list",
@@ -284,7 +284,11 @@ class IndexerServlet(koulutusService: KoulutusService,
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun
       |      operationId: Listaa haun hakukohteet
+<<<<<<< HEAD
       |      description: Listaa hakuun liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
+=======
+      |      description: Listaa hakuun liitetyt olemassaolevat (=ei poistetut) hakukohteet. Tämä rajapinta on indeksointia varten
+>>>>>>> c559e053 (KTO-1361: Lisätty 'vainOlemassaolevat' vipuja endpointteihin)
       |      tags:
       |        - Indexer
       |      parameters:
@@ -348,7 +352,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(hakuService.listKoulutuksetInclPoistetut(HakuOid(params("oid"))))
+    Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
   }
 
   registerPath("/indexer/haku/{oid}/toteutukset/list",
@@ -380,7 +384,7 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(hakuService.listToteutuksetInclPoistetut(HakuOid(params("oid"))))
+    Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
   }
 
   registerPath( "/indexer/valintaperuste/{id}/hakukohteet/list",

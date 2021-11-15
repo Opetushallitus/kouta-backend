@@ -185,7 +185,7 @@ class KoulutusService(
       ToteutusDAO.getByKoulutusOid(oid, false, vainJulkaistut)
     }
 
-  def hakutiedotInclPoistetut(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =
+  def hakutiedot(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =
     withRootAccess(indexerRoles) {
       HakutietoDAO.getByKoulutusOid(oid)
     }
