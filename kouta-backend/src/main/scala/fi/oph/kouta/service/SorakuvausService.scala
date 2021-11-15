@@ -52,9 +52,9 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
         integrityViolationMsg("Sorakuvausta", "koulutuksia")))
     )
 
-  def listKoulutusOidsInclPoistetut(sorakuvausId: UUID)(implicit authenticated: Authenticated): Seq[String] =
+  def listKoulutusOids(sorakuvausId: UUID, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
-      KoulutusDAO.listBySorakuvausId(sorakuvausId, true)
+      KoulutusDAO.listBySorakuvausId(sorakuvausId, !vainOlemassaolevat)
     }
 
   def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Seq[SorakuvausListItem] =

@@ -18,7 +18,7 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
 
   def get(oid: HakuOid, myosPoistetut: Boolean = false): Option[(Haku, Instant)]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[HakuListItem]
-  def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem]
+  def listByToteutusOid(toteutusOid: ToteutusOid, myosPoistetut: Boolean = false): Seq[HakuListItem]
 }
 
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -57,8 +57,8 @@ object HakuDAO extends HakuDAO with HakuSQL {
   }
 
 
-  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakuListItem] =
-    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
+  override def listByToteutusOid(toteutusOid: ToteutusOid, myosPoistetut: Boolean = false): Seq[HakuListItem] =
+    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid, myosPoistetut))
 }
 
 trait HakuModificationSQL extends SQLHelpers {
@@ -234,10 +234,11 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
           #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[HakuListItem]
   }
 
-  def selectByToteutusOid(toteutusOid: ToteutusOid): DBIO[Vector[HakuListItem]] = {
+  def selectByToteutusOid(toteutusOid: ToteutusOid, myosPoistetut: Boolean = false): DBIO[Vector[HakuListItem]] = {
     sql"""#$selectHakuListSql
           inner join hakukohteet on hakukohteet.haku_oid = ha.oid
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
-          where toteutukset.oid = $toteutusOid""".as[HakuListItem]
+          where toteutukset.oid = $toteutusOid
+          #${andTilaMaybeNotPoistettu(myosPoistetut, "ha.tila")}""".as[HakuListItem]
   }
 }
