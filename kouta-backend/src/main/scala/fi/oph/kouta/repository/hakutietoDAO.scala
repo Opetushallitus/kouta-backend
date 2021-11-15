@@ -76,11 +76,15 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                           h.muokkaaja,
                           lower(h.system_time)
           from haut h
-                   inner join hakukohteet k on k.haku_oid = h.oid and k.tila != 'arkistoitu'::julkaisutila
-                   inner join toteutukset t on t.oid = k.toteutus_oid and t.tila != 'arkistoitu'::julkaisutila
-                   inner join koulutukset o on o.oid = t.koulutus_oid and o.tila != 'arkistoitu'::julkaisutila
+                   inner join hakukohteet k on k.haku_oid = h.oid and
+                        k.tila != 'poistettu'::julkaisutila and k.tila != 'arkistoitu'::julkaisutila
+                   inner join toteutukset t on t.oid = k.toteutus_oid and
+                        t.tila != 'poistettu'::julkaisutila and t.tila != 'arkistoitu'::julkaisutila
+                   inner join koulutukset o on o.oid = t.koulutus_oid and
+                        o.tila != 'poistettu'::julkaisutila and o.tila != 'arkistoitu'::julkaisutila
           where o.oid = ${koulutusOid.toString}
-            and h.tila != 'arkistoitu'::julkaisutila""".as[(ToteutusOid, HakutietoHaku)]
+            and h.tila != 'poistettu'::julkaisutila and h.tila != 'arkistoitu'::julkaisutila
+            """.as[(ToteutusOid, HakutietoHaku)]
   }
 
   def selectHakujenHakuajat(hakutiedot: Seq[(ToteutusOid, HakutietoHaku)]): DBIO[Vector[Hakuaika]] = {
@@ -116,12 +120,17 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  array(select jsonb_array_elements(v.metadata -> 'valintatavat') ->> 'valintatapaKoodiUri') as valintatapa_koodi_urit,
                  lower(hk.system_time)
           from hakukohteet hk
-                   inner join haut h on hk.haku_oid = h.oid and hk.tila != 'arkistoitu'::julkaisutila
-                   inner join toteutukset t on t.oid = hk.toteutus_oid and t.tila != 'arkistoitu'::julkaisutila
-                   inner join koulutukset k on k.oid = t.koulutus_oid and k.tila != 'arkistoitu'::julkaisutila
-                   left join valintaperusteet v on v.id = hk.valintaperuste_id and v.tila != 'arkistoitu'::julkaisutila
+                   inner join haut h on hk.haku_oid = h.oid and
+                       hk.tila != 'poistettu'::julkaisutila and hk.tila != 'arkistoitu'::julkaisutila
+                   inner join toteutukset t on t.oid = hk.toteutus_oid and
+                       t.tila != 'poistettu'::julkaisutila and t.tila != 'arkistoitu'::julkaisutila
+                   inner join koulutukset k on k.oid = t.koulutus_oid and
+                       k.tila != 'poistettu'::julkaisutila and k.tila != 'arkistoitu'::julkaisutila
+                   left join valintaperusteet v on v.id = hk.valintaperuste_id and
+                       v.tila != 'poistettu'::julkaisutila and v.tila != 'arkistoitu'::julkaisutila
           where k.oid = ${koulutusOid.toString}
-            and hk.tila != 'arkistoitu'::julkaisutila""".as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
+            and hk.tila != 'poistettu'::julkaisutila and hk.tila != 'arkistoitu'::julkaisutila
+            """.as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }
 
   def selectHakukohteidenHakuajat(hakutiedot: Seq[(ToteutusOid, HakuOid, HakutietoHakukohde)]): DBIO[Vector[Hakuaika]] = {
