@@ -35,7 +35,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context.mount(new IndexerServlet(), "/indexer", "indexer")
     context.mount(new ExternalServlet(), "/external", "external")
     context.mount(new SwaggerServlet, "/swagger")
-    context.mount(new MigrationServlet(), "/migration", "migration")
+    //context.mount(new MigrationServlet(), "/migration", "migration")
   }
 
   override def destroy(context: ServletContext): Unit = {

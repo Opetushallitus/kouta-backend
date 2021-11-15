@@ -87,9 +87,16 @@ abstract class SqsInTransactionService extends Logging {
     toSQSQueue(priority, Map(index -> values))
 
   def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): DBIO[_] = {
+    logger.info(s"Sending a message to Kouta-indeksoija SQS queue: $values with priority $priority")
     SqsService.addToQueue(priority, values) match {
-      case Left(t) => DBIO.failed(t)
-      case Right(s) => DBIO.successful(s)
+      case Left(t) => {
+        logger.error(s"SQS queue message to Kouta-indeksoija with values: $values and priority $priority failed: ${t.getStackTrace}")
+        DBIO.failed(t)
+      }
+      case Right(s) => {
+        logger.info(s"SQS queue message to Kouta-indeksoija with values: $values and priority $priority success.")
+        DBIO.successful(s)
+      }
     }
   }
 }
