@@ -322,7 +322,14 @@ object HakutietoHakukohdeEnriched {
     toteutusMetadata: Option[ToteutusMetadata]
   ): HakutietoHakukohdeEnriched = {
       val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
-        Hakukohde(oid = Some(hakukohdeOid), toteutusOid = toteutusOid, hakuOid = hakuOid, nimi = nimi, muokkaaja = muokkaaja, organisaatioOid = organisaatioOid, modified = modified),
+        Hakukohde(
+          oid = Some(hakukohdeOid),
+          toteutusOid = toteutusOid,
+          hakuOid = hakuOid,
+          nimi = nimi,
+          muokkaaja = muokkaaja,
+          organisaatioOid = organisaatioOid,
+          modified = modified),
         toteutusMetadata
       )
       new HakutietoHakukohdeEnriched(

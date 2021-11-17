@@ -596,9 +596,28 @@ object HakukohdeListItemEnriched {
     metadata: Option[ToteutusMetadata]
   ): HakukohdeListItemEnriched = {
     val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
-      Hakukohde(oid = Some(oid), toteutusOid = toteutusOid, hakuOid = hakuOid, nimi = nimi, muokkaaja = muokkaaja, organisaatioOid = organisaatioOid, modified = Some(modified)),
+      Hakukohde(
+        oid = Some(oid),
+        toteutusOid = toteutusOid,
+        hakuOid = hakuOid,
+        nimi = nimi,
+        muokkaaja = muokkaaja,
+        organisaatioOid = organisaatioOid,
+        modified = Some(modified)),
       metadata)
-    new HakukohdeListItemEnriched(oid, toteutusOid, hakuOid, valintaperusteId, esitysnimi, hakukohdeKoodiUri, tila, jarjestyspaikkaOid, organisaatioOid, muokkaaja, modified, metadata)
+    new HakukohdeListItemEnriched(
+      oid,
+      toteutusOid,
+      hakuOid,
+      valintaperusteId,
+      esitysnimi,
+      hakukohdeKoodiUri,
+      tila,
+      jarjestyspaikkaOid,
+      organisaatioOid,
+      muokkaaja,
+      modified,
+      metadata)
   }
 }
 
