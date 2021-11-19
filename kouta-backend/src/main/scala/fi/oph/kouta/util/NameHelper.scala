@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Hakukohde, Kielistetty, Toteutus, ToteutusMetadata}
+import fi.oph.kouta.domain.{Fi, Hakukohde, Kielistetty, Toteutus, ToteutusMetadata}
 
 object NameHelper {
   def generateHakukohdeDisplayNameForTuva(
@@ -11,11 +11,16 @@ object NameHelper {
     val jarjestetaanErityisopetuksena = HakukohdeServiceUtil.getJarjestetaanErityisopetuksena(toteutusMetadata)
 
     if (jarjestetaanErityisopetuksena) {
+      val defaultKaannos = kaannokset.get(Fi).getOrElse("")
       hakukohdeNimi.map { case (key, value) =>
-        val kaannos = kaannokset.find(_._1 == key).get
+        val kaannos = kaannokset.get(key)
         kaannos match {
-          case (kieli, str) =>
-            kieli -> (value + s" ($str)")
+          case Some(str) => key -> (value + s" ($str)")
+          case None => if (defaultKaannos.isEmpty) {
+            key -> value
+          } else {
+            key -> (value + s" ($defaultKaannos)")
+          }
         }
       }
     } else {

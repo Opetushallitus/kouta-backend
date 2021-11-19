@@ -51,7 +51,10 @@ class NameHelperSpec extends UnitSpec {
     )
   }
 
-  it should "return TUVA hakukohteen nimi with erityisopetus" in {
+  it should "default to Finnish translation if a translation is missing" in {
+    val kaannokset: Kielistetty = Map(
+      Fi -> "vaativana erityisenä tukena",
+    )
     assert(
       NameHelper.generateHakukohdeDisplayNameForTuva(
         hakukohdeNimi =
@@ -63,7 +66,25 @@ class NameHelperSpec extends UnitSpec {
         kaannokset
       ) === Map(
         Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA) (vaativana erityisenä tukena)",
-        Sv -> "Utbildning som handleder för examensutbildning (Hux) (krävande särskilt stöd)"
+        Sv -> "Utbildning som handleder för examensutbildning (Hux) (vaativana erityisenä tukena)"
+      )
+    )
+  }
+
+  it should "leave erityisopetus postfix out if there are no translations for it" in {
+    val kaannokset: Kielistetty = Map()
+    assert(
+      NameHelper.generateHakukohdeDisplayNameForTuva(
+        hakukohdeNimi =
+          Map(
+            Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA)",
+            Sv -> "Utbildning som handleder för examensutbildning (Hux)"
+          ),
+        tuvaToteutuksenMetadata,
+        kaannokset
+      ) === Map(
+        Fi -> "Tutkintokoulutukseen valmentava koulutus (TUVA)",
+        Sv -> "Utbildning som handleder för examensutbildning (Hux)"
       )
     )
   }
