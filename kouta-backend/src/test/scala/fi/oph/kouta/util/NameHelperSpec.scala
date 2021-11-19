@@ -1,9 +1,6 @@
 package fi.oph.kouta.util
-import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, JulkaistuYoToteutus, LukioKoulutus, LukioToteutuksenMetatieto, LukioToteutus, TelmaToteutuksenMetatieto, TelmaToteutus, TuvaToteutuksenMetatieto, TuvaToteutus, YoKoulutus}
-import fi.oph.kouta.domain.{En, Fi, Hakukohde, Kielistetty, Koulutus, LukioToteutusMetadata, Sv, TelmaToteutusMetadata, Toteutus, TuvaToteutusMetadata, toteutus}
-import com.softwaremill.diffx.scalatest.DiffMatcher._
-import com.softwaremill.diffx.generic.auto._
+import fi.oph.kouta.TestData.{JulkaistuHakukohde, TelmaToteutuksenMetatieto, TuvaToteutuksenMetatieto, TuvaToteutus}
+import fi.oph.kouta.domain._
 
 class NameHelperSpec extends UnitSpec {
   val tuvaToteutus: Toteutus                        = TuvaToteutus

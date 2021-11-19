@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Fi, Hakukohde, Kielistetty, Toteutus, ToteutusMetadata}
+import fi.oph.kouta.domain.{Fi, Kielistetty, ToteutusMetadata}
 
 object NameHelper {
   def generateHakukohdeDisplayNameForTuva(
