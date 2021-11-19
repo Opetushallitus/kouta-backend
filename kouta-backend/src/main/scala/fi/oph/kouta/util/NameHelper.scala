@@ -10,7 +10,7 @@ object NameHelper {
   ): Kielistetty = {
     val jarjestetaanErityisopetuksena = HakukohdeServiceUtil.getJarjestetaanErityisopetuksena(toteutusMetadata)
 
-    if (jarjestetaanErityisopetuksena.getOrElse(false)) {
+    if (jarjestetaanErityisopetuksena) {
       hakukohdeNimi.map { case (key, value) =>
         val kaannos = kaannokset.find(_._1 == key).get
         kaannos match {
