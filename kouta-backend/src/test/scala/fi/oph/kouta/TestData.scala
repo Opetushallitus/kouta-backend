@@ -333,7 +333,13 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      EnrichedData(
+        esitysnimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv")
+      )
+    )
+  )
 
   val MinHakukohde: Hakukohde = Hakukohde(
     muokkaaja = TestUserOid,

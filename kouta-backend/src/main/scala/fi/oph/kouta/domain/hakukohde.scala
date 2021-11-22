@@ -3,6 +3,7 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.service.HakukohdeService
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
@@ -164,6 +165,9 @@ package object hakukohde {
       |           format: date-time
       |           description: Hakukohteen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/EnrichedData'
       |""".stripMargin
 
   val HakukohdeListItemModel: String =
@@ -354,8 +358,17 @@ package object hakukohde {
       |            $ref: '#/components/schemas/PainotettuOppiaine'
       |""".stripMargin
 
+  val EnrichedDataModel: String =
+    """    EnrichedData:
+      |      type: object
+      |      properties:
+      |        esitysnimi:
+      |          description: Koulutustyyppikohtainen esittämistä varten muodostettu nimi käytettäväksi kouta-uin puolella
+      |          $ref: '#/components/schemas/Nimi'
+      |""".stripMargin
+
   def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
-    PainotettuOppiaine, OppiaineKoodiUrit, HakukohteenLinjaModel)
+    PainotettuOppiaine, OppiaineKoodiUrit, HakukohteenLinjaModel, EnrichedDataModel)
 }
 
 case class Hakukohde(oid: Option[HakukohdeOid] = None,
@@ -390,7 +403,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[Modified]) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
+                     modified: Option[Modified],
+                     _enrichedData: Option[EnrichedData] = None) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -545,3 +559,66 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              organisaatioOid: OrganisaatioOid,
                              muokkaaja: UserOid,
                              modified: Modified) extends OidListItem
+object HakukohdeListItem {
+  def apply(e: HakukohdeListItemEnriched): HakukohdeListItem = {
+    new HakukohdeListItem(e.oid, e.toteutusOid, e.hakuOid, e.valintaperusteId, e.nimi, e.hakukohdeKoodiUri, e.tila, e.jarjestyspaikkaOid, e.organisaatioOid, e.muokkaaja, e.modified)
+  }
+}
+
+case class HakukohdeListItemEnriched(
+  oid: HakukohdeOid,
+  toteutusOid: ToteutusOid,
+  hakuOid: HakuOid,
+  valintaperusteId: Option[UUID],
+  nimi: Kielistetty,
+  hakukohdeKoodiUri: Option[String] = None,
+  tila: Julkaisutila,
+  jarjestyspaikkaOid: Option[OrganisaatioOid],
+  organisaatioOid: OrganisaatioOid,
+  muokkaaja: UserOid,
+  modified: Modified,
+  metadata: Option[ToteutusMetadata]
+)
+
+object HakukohdeListItemEnriched {
+  def apply(
+    oid: HakukohdeOid,
+    toteutusOid: ToteutusOid,
+    hakuOid: HakuOid,
+    valintaperusteId: Option[UUID],
+    nimi: Kielistetty,
+    hakukohdeKoodiUri: Option[String] = None,
+    tila: Julkaisutila,
+    jarjestyspaikkaOid: Option[OrganisaatioOid],
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified,
+    metadata: Option[ToteutusMetadata]
+  ): HakukohdeListItemEnriched = {
+    val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
+      Hakukohde(
+        oid = Some(oid),
+        toteutusOid = toteutusOid,
+        hakuOid = hakuOid,
+        nimi = nimi,
+        muokkaaja = muokkaaja,
+        organisaatioOid = organisaatioOid,
+        modified = Some(modified)),
+      metadata)
+    new HakukohdeListItemEnriched(
+      oid,
+      toteutusOid,
+      hakuOid,
+      valintaperusteId,
+      esitysnimi,
+      hakukohdeKoodiUri,
+      tila,
+      jarjestyspaikkaOid,
+      organisaatioOid,
+      muokkaaja,
+      modified,
+      metadata)
+  }
+}
+
+case class EnrichedData(esitysnimi: Kielistetty = Map())

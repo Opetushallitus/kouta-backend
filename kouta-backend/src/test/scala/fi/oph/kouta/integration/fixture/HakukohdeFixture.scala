@@ -5,6 +5,7 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHakukohde
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.LokalisointiClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -21,7 +22,13 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
 
   def hakukohdeService: HakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new HakukohdeService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService)
+    val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
+    new HakukohdeService(
+      SqsInTransactionServiceIgnoringIndexing,
+      new AuditLog(MockAuditLogger),
+      organisaatioService,
+      lokalisointiClient
+    )
   }
 
   override def beforeAll(): Unit = {
@@ -79,8 +86,19 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
   def addToList(hakukohde: Hakukohde): HakukohdeListItem = {
     val oid = put(hakukohde)
     val modified = readHakukohdeModified(oid)
-    HakukohdeListItem(HakukohdeOid(oid), hakukohde.toteutusOid, hakukohde.hakuOid, hakukohde.valintaperusteId,
-      hakukohde.nimi, hakukohde.hakukohdeKoodiUri, hakukohde.tila, hakukohde.jarjestyspaikkaOid, hakukohde.organisaatioOid, hakukohde.muokkaaja, modified)
+    HakukohdeListItem(
+      HakukohdeOid(oid),
+      hakukohde.toteutusOid,
+      hakukohde.hakuOid,
+      hakukohde.valintaperusteId,
+      hakukohde.nimi,
+      hakukohde.hakukohdeKoodiUri,
+      hakukohde.tila,
+      hakukohde.jarjestyspaikkaOid,
+      hakukohde.organisaatioOid,
+      hakukohde.muokkaaja,
+      modified
+    )
   }
 
   def readHakukohdeModified(oid: String): Modified = readHakukohdeModified(HakukohdeOid(oid))
