@@ -43,6 +43,9 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
+      |        hakukohdeKoodiUri:
+      |          type: string
+      |          description: KoodiUri, josta hakukohteen nimi muodostetaan. Hakukohteella täytyy olla joko hakukohdeKoodiUri tai nimi. Jos koodiUri löytyy, muodostetaan nimi sen avulla.
       |        jarjestyspaikkaOid:
       |          type: string
       |          description: Hakukohteen järjestyspaikan organisaatio
