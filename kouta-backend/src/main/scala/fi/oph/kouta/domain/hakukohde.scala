@@ -269,6 +269,11 @@ package object hakukohde {
       |          type: object
       |          description: Sähköpostiosoite, johon liite voidaan toimittaa
       |          $ref: '#/components/schemas/Teksti'
+      |        verkkosivu:
+      |          type: object
+      |          description: Verkkosivu, jonka kautta liitteet voidaan toimittaa
+      |          $ref: '#/components/schemas/Teksti'
+      |        sahkoinen
       |""".stripMargin
 
   val LiiteModel: String =
@@ -483,10 +488,13 @@ case class Liite(id: Option[UUID] = None,
 }
 
 case class LiitteenToimitusosoite(osoite: Osoite,
-                                  sahkoposti: Option[String] = None) extends ValidatableSubEntity {
+                                  sahkoposti: Option[String] = None,
+                                  verkkosivu: Option[String] = None
+                                 ) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     osoite.validate(tila, kielivalinta, s"$path.osoite"),
-    validateIfDefined[String](sahkoposti, assertValidEmail(_, s"$path.sahkoposti"))
+    validateIfDefined[String](sahkoposti, assertValidEmail(_, s"$path.sahkoposti")),
+    validateIfDefined[String](verkkosivu, assertValidUrl(_, s"$path.verkkosivu")),
   )
 }
 
