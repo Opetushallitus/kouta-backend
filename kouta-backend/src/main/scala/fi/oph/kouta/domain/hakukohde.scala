@@ -43,6 +43,9 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Nimi'
+      |        hakukohdeKoodiUri:
+      |          type: string
+      |          description: KoodiUri, josta hakukohteen nimi muodostetaan. Hakukohteella täytyy olla joko hakukohdeKoodiUri tai nimi. Jos koodiUri löytyy, muodostetaan nimi sen avulla.
       |        jarjestyspaikkaOid:
       |          type: string
       |          description: Hakukohteen järjestyspaikan organisaatio
@@ -266,6 +269,10 @@ package object hakukohde {
       |          type: object
       |          description: Sähköpostiosoite, johon liite voidaan toimittaa
       |          $ref: '#/components/schemas/Teksti'
+      |        verkkosivu:
+      |          type: object
+      |          description: Verkkosivu, jonka kautta liitteet voidaan toimittaa
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val LiiteModel: String =
@@ -480,10 +487,13 @@ case class Liite(id: Option[UUID] = None,
 }
 
 case class LiitteenToimitusosoite(osoite: Osoite,
-                                  sahkoposti: Option[String] = None) extends ValidatableSubEntity {
+                                  sahkoposti: Option[String] = None,
+                                  verkkosivu: Option[String] = None
+                                 ) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     osoite.validate(tila, kielivalinta, s"$path.osoite"),
-    validateIfDefined[String](sahkoposti, assertValidEmail(_, s"$path.sahkoposti"))
+    validateIfDefined[String](sahkoposti, assertValidEmail(_, s"$path.sahkoposti")),
+    validateIfDefined[String](verkkosivu, assertValidUrl(_, s"$path.verkkosivu")),
   )
 }
 
