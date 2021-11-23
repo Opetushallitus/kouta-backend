@@ -273,7 +273,6 @@ package object hakukohde {
       |          type: object
       |          description: Verkkosivu, jonka kautta liitteet voidaan toimittaa
       |          $ref: '#/components/schemas/Teksti'
-      |        sahkoinen
       |""".stripMargin
 
   val LiiteModel: String =
