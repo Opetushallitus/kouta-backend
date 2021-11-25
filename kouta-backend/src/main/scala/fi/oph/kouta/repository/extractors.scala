@@ -1,8 +1,9 @@
 package fi.oph.kouta.repository
 
+import fi.oph.kouta.domain
+
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
@@ -253,19 +254,25 @@ trait HakukohdeExctractors extends ExtractorBase {
     modified = Some(timeStampToModified(r.nextTimestamp()))
   ))
 
-  implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] = GetResult(r => HakukohdeListItem(
-    oid = HakukohdeOid(r.nextString()),
-    toteutusOid = ToteutusOid(r.nextString()),
-    hakuOid = HakuOid(r.nextString()),
-    valintaperusteId = r.nextStringOption().map(UUID.fromString),
-    nimi = extractKielistetty(r.nextStringOption()),
-    hakukohdeKoodiUri = r.nextStringOption(),
-    tila = Julkaisutila.withName(r.nextString()),
-    jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
-    organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
-    modified = timeStampToModified(r.nextTimestamp())
-  ))
+  implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] =
+    GetResult(r => {
+      val enriched = HakukohdeListItemEnriched(
+        oid = HakukohdeOid(r.nextString()),
+        toteutusOid = ToteutusOid(r.nextString()),
+        hakuOid = HakuOid(r.nextString()),
+        valintaperusteId = r.nextStringOption().map(UUID.fromString),
+        nimi = extractKielistetty(r.nextStringOption()),
+        hakukohdeKoodiUri = r.nextStringOption(),
+        tila = Julkaisutila.withName(r.nextString()),
+        jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
+        organisaatioOid = OrganisaatioOid(r.nextString()),
+        muokkaaja = UserOid(r.nextString()),
+        modified = timeStampToModified(r.nextTimestamp()),
+        metadata = r.nextStringOption().map(read[ToteutusMetadata])
+      )
+      HakukohdeListItem(enriched)
+    }
+  )
 
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
     id = r.nextStringOption().map(UUID.fromString),
@@ -336,32 +343,41 @@ trait HakutietoExtractors extends ExtractorBase {
       modified = Some(timeStampToModified(r.nextTimestamp())),
       hakukohteet = Seq())))
 
-  implicit val getHakutietoHakukohdeResult: GetResult[(ToteutusOid, HakuOid, HakutietoHakukohde)] = GetResult(r =>
-    ( ToteutusOid(r.nextString()), HakuOid(r.nextString()), HakutietoHakukohde(
-      hakukohdeOid = HakukohdeOid(r.nextString()),
-      nimi = extractKielistetty(r.nextStringOption()),
-      hakukohdeKoodiUri = r.nextStringOption(),
-      tila = Julkaisutila.withName(r.nextString()),
-      esikatselu = r.nextBoolean(),
-      valintaperusteId = r.nextStringOption().map(UUID.fromString),
-      koulutuksenAlkamiskausi = r.nextStringOption().map(read[KoulutuksenAlkamiskausi]),
-      kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
-      jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
-      hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
-      hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
-      hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
-      hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
-      kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
-      aloituspaikat = r.nextStringOption().map(read[Aloituspaikat]),
-      hakukohteenLinja = r.nextStringOption().map(read[HakukohteenLinja]),
-      kaytetaanHaunAikataulua = r.nextBooleanOption(),
-      pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
-      pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
-      organisaatioOid = OrganisaatioOid(r.nextString()),
-      hakuajat = List(),
-      muokkaaja = UserOid(r.nextString()),
-      valintatapaKoodiUrit = extractArray[String](r.nextObjectOption()),
-      modified = Some(timeStampToModified(r.nextTimestamp())))))
+  implicit val getHakutietoHakukohdeResult: GetResult[(ToteutusOid, HakuOid, HakutietoHakukohde)] =
+    GetResult(r => {
+      val toteutusOid = ToteutusOid(r.nextString())
+      val hakuOid = HakuOid(r.nextString())
+      val enriched =
+        HakutietoHakukohdeEnriched(
+          hakukohdeOid = HakukohdeOid(r.nextString()),
+          toteutusOid = toteutusOid,
+          hakuOid = hakuOid,
+          nimi = extractKielistetty(r.nextStringOption()),
+          hakukohdeKoodiUri = r.nextStringOption(),
+          tila = Julkaisutila.withName(r.nextString()),
+          esikatselu = r.nextBoolean(),
+          valintaperusteId = r.nextStringOption().map(UUID.fromString),
+          koulutuksenAlkamiskausi = r.nextStringOption().map(read[KoulutuksenAlkamiskausi]),
+          kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
+          jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
+          hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
+          hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
+          hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
+          hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
+          kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
+          aloituspaikat = r.nextStringOption().map(read[Aloituspaikat]),
+          hakukohteenLinja = r.nextStringOption().map(read[HakukohteenLinja]),
+          kaytetaanHaunAikataulua = r.nextBooleanOption(),
+          pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
+          pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
+          organisaatioOid = OrganisaatioOid(r.nextString()),
+          hakuajat = List(),
+          muokkaaja = UserOid(r.nextString()),
+          valintatapaKoodiUrit = extractArray[String](r.nextObjectOption()),
+          modified = Some(timeStampToModified(r.nextTimestamp())),
+          toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata]))
+        (toteutusOid, hakuOid, HakutietoHakukohde(enriched))
+    })
 }
 
 trait KeywordExtractors extends ExtractorBase

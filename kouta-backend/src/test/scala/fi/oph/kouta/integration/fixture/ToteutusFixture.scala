@@ -42,12 +42,14 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   val ammOsaamisalaToteutusAtaru: Toteutus = TestData.AmmOsaamisalaToteutus.copy(metadata = Some(TestData.AmmOsaamisalaToteutusMetadataHakemuspalvelu))
   val vapaaSivistystyoMuuToteutus: Toteutus = TestData.VapaaSivistystyoMuuToteutus
   val vapaaSivistystyoMuuToteutusAtaru: Toteutus = TestData.VapaaSivistystyoMuuToteutus.copy(metadata = Some(TestData.VapaaSivistystyoMuuToteutusHakemuspalveluMetatieto))
+  val tuvaToteutus: Toteutus = TestData.TuvaToteutus
 
   def toteutus(koulutusOid:String): Toteutus = toteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
   def toteutus(oid:String, koulutusOid:String): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid))
   def toteutus(oid:String, koulutusOid:String, tila:Julkaisutila): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), tila = tila)
   def toteutus(koulutusOid: String, tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Toteutus =
     toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = organisaatioOid, tila = tila)
+  def tuvaToteutus(koulutusOid: String): Toteutus = tuvaToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
 
   implicit val toteutusEquality: Equality[Toteutus] = (a: Toteutus, b: Any) => b match {
     case _:Toteutus => Equality.default[Toteutus].areEqual(

@@ -114,7 +114,8 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  hk.organisaatio_oid,
                  hk.muokkaaja,
                  array(select jsonb_array_elements(v.metadata -> 'valintatavat') ->> 'valintatapaKoodiUri') as valintatapa_koodi_urit,
-                 lower(hk.system_time)
+                 lower(hk.system_time),
+                 t.metadata
           from hakukohteet hk
                    inner join haut h on hk.haku_oid = h.oid and hk.tila != 'arkistoitu'::julkaisutila
                    inner join toteutukset t on t.oid = hk.toteutus_oid and t.tila != 'arkistoitu'::julkaisutila

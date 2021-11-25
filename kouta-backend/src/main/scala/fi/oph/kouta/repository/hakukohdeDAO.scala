@@ -470,7 +470,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   val selectHakukohdeListSql =
-    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.hakukohde_koodi_uri, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, m.modified
+    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.hakukohde_koodi_uri, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, m.modified, t.metadata
          from hakukohteet ha
          inner join (
            select ha.oid oid, greatest(
@@ -490,7 +490,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
            left join hakukohteiden_valintakokeet_history hvh on ha.oid = hvh.hakukohde_oid
            left join hakukohteiden_liitteet hl on ha.oid = hl.hakukohde_oid
            left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
-           group by ha.oid) m on m.oid = ha.oid"""
+           group by ha.oid) m on m.oid = ha.oid
+         inner join toteutukset t on t.oid = ha.toteutus_oid"""
 
   def selectByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
