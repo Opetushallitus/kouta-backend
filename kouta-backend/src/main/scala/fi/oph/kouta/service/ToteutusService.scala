@@ -1,40 +1,72 @@
 package fi.oph.kouta.service
 
 import java.time.Instant
-
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.{KoodistoClient, KoutaIndexClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.util.NameHelper
 import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient)
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val s3ImageService: S3ImageService,
                       auditLog: AuditLog,
                       keywordService: KeywordService,
                       val organisaatioService: OrganisaatioService,
-                      koulutusService: KoulutusService)
+                      koulutusService: KoulutusService,
+                      lokalisointiClient: LokalisointiClient,
+                      koodistoClient: KoodistoClient
+                     )
   extends ValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
+  private def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
+      val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map {
+        case (k, _) => k
+      }
+      toteutus.metadata match {
+        case Some(toteutusMetadata) =>
+          toteutusMetadata match {
+            case _: LukioToteutusMetadata =>
+              val kaannokset = Map(
+                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
+                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey("toteutuslomake.lukionYleislinjaNimiOsa")
+              )
+              val painotuksetKaannokset = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
+              val koulutustehtavatKaannokset = koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
+              val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
+              NameHelper.generateLukioToteutusDisplayName(toteutus, koulutus.get, kaannokset, koodistoKaannokset)
+            case _ =>
+              toteutus.nimi
+          }
+        case None => toteutus.nimi
+      }
+  }
+
   def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
     val toteutusWithTime = ToteutusDAO.get(oid)
-    authorizeGet(toteutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
+    val enrichedToteutus = toteutusWithTime match {
+      case Some((t, i)) =>
+        val esitysnimi = generateToteutusEsitysnimi(t)
+        Some(t.copy(_enrichedData = Some(ToteutusEnrichedData(esitysnimi = esitysnimi))), i)
+      case None => None
+    }
+    authorizeGet(enrichedToteutus, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
   }
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {

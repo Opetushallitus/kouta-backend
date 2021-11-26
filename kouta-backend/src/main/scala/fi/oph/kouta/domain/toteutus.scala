@@ -226,8 +226,10 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
-                    modified: Option[Modified])
-  extends PerustiedotWithOid[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
+                    modified: Option[Modified],
+                    _enrichedData: Option[ToteutusEnrichedData] = None
+                   )
+  extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -236,7 +238,8 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
     validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
     validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata")),
-    validateIfTrue(!metadata.exists(_.allowSorakuvaus), assertNotDefined(sorakuvausId, "sorakuvausId"))
+    validateIfTrue(!metadata.exists(_.allowSorakuvaus), assertNotDefined(sorakuvausId, "sorakuvausId")),
+    validateIfTrue(metadata.get.tyyppi != Lk, validateKielistetty(kielivalinta, nimi, "nimi"))
   )
 
   override def validateOnJulkaisu(): IsValid =
@@ -259,3 +262,5 @@ case class ToteutusListItem(oid: ToteutusOid,
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             modified: Modified) extends OidListItem
+
+case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map())
