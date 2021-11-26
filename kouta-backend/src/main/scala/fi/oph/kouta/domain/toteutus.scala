@@ -238,8 +238,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
     validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
     validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata")),
-    validateIfTrue(!metadata.exists(_.allowSorakuvaus), assertNotDefined(sorakuvausId, "sorakuvausId")),
-    validateIfTrue(metadata.get.tyyppi != Lk, validateKielistetty(kielivalinta, nimi, "nimi"))
+    validateIfTrue(!metadata.exists(_.allowSorakuvaus), assertNotDefined(sorakuvausId, "sorakuvausId"))
   )
 
   override def validateOnJulkaisu(): IsValid =

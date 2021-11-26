@@ -72,7 +72,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
     authorizePut(toteutus) { t =>
       withValidation(t, None) { t =>
-        validateKoulutusIntegrity(t)
+        validateIntegrity(t)
         doPut(t, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
       }
     }.oid.get
@@ -83,7 +83,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       withValidation(t, Some(oldToteutus)) { t =>
-        validateKoulutusIntegrity(t)
+        validateIntegrity(t)
         doUpdate(t, notModifiedSince, oldToteutus, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
       }
     }
@@ -163,16 +163,18 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def validateKoulutusIntegrity(toteutus: Toteutus): Unit = {
+  private def validateIntegrity(toteutus: Toteutus): Unit = {
     import Validations._
     val (koulutusTila, koulutusTyyppi) = KoulutusDAO.getTilaAndTyyppi(toteutus.koulutusOid)
 
     throwValidationErrors(and(
       validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
-      validateIfDefined[Koulutustyyppi](koulutusTyyppi, koulutusTyyppi =>
+      validateIfDefined[Koulutustyyppi](koulutusTyyppi, koulutusTyyppi => and(
+        validateIfTrue(koulutusTyyppi != Lk, validateKielistetty(toteutus.kielivalinta, toteutus.nimi, "nimi")),
         validateIfDefined[ToteutusMetadata](toteutus.metadata, toteutusMetadata =>
           assertTrue(koulutusTyyppi == toteutusMetadata.tyyppi, "metadata.tyyppi", tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
         ))
+      )
     ))
   }
 
