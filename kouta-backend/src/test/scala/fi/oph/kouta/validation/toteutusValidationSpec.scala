@@ -31,8 +31,6 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
     failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
-    failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
-    failsValidation(amm.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
   }
 
   it should "pass incomplete toteutus if not julkaistu" in {

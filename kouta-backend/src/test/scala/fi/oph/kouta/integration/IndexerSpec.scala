@@ -34,9 +34,9 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs List(
-        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
-        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)))
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1)), _enrichedData = None),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2)), _enrichedData = None),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)), _enrichedData = None)
       )
     }
   }
