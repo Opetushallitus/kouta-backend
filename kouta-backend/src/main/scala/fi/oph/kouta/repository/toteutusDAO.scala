@@ -2,7 +2,7 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Hakulomaketyyppi, Toteutus, ToteutusListItem, VapaaSivistystyoMuu}
+import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Toteutus, ToteutusListItem, VapaaSivistystyoMuu}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
@@ -15,10 +15,9 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
   def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
-  def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
+  def getByKoulutusOid(koulutusOid: KoulutusOid, vainJulkaistut: Boolean = false): Seq[Toteutus]
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
-  def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false, myosArkistoidut: Boolean): Seq[ToteutusListItem]
   def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
   def listByKoulutusOidAndAllowedOrganisaatiot(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
@@ -71,29 +70,17 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid] =
     KoutaDatabase.runBlocking(selectTarjoajatByHakukohdeOid(hakukohdeOid))
 
-  override def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
+  override def getByKoulutusOid(koulutusOid: KoulutusOid, vainJulkaistut: Boolean = false): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
+        toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid, vainJulkaistut).as[Toteutus]
         tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
       } yield (toteutukset, tarjoajat)
     ).map {
       case (toteutukset, tarjoajat) =>
         toteutukset.map(t =>
-          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
-    }.get
-  }
-
-  override def getJulkaistutByKoulutusOid(koulutusOid: KoulutusOid): Seq[Toteutus] = {
-    KoutaDatabase.runBlockingTransactionally(
-      for {
-        toteutukset <- selectJulkaistutToteutuksetByKoulutusOid(koulutusOid).as[Toteutus]
-        tarjoajat <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
-      } yield (toteutukset, tarjoajat)
-    ).map {
-      case (toteutukset, tarjoajat) =>
-        toteutukset.map(t =>
-          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
+          t.copy(
+            tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
     }.get
   }
 
@@ -192,12 +179,10 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""#$selectToteutusSql
           where t.oid = $oid"""
 
-  def selectToteutuksetByKoulutusOid(oid: KoulutusOid) =
-    sql"""#$selectToteutusSql
+  def selectToteutuksetByKoulutusOid(oid: KoulutusOid, vainJulkaistut: Boolean) =
+    if (vainJulkaistut) sql"""#$selectToteutusSql
           where t.koulutus_oid = $oid"""
-
-  def selectJulkaistutToteutuksetByKoulutusOid(oid: KoulutusOid) =
-    sql"""#$selectToteutusSql
+    else sql"""#$selectToteutusSql
           where t.koulutus_oid = $oid
           and t.tila = 'julkaistu'::julkaisutila"""
 
