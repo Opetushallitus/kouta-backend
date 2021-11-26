@@ -37,7 +37,9 @@ object NameHelper {
       case Some(toteutusMetadata) =>
         toteutusMetadata match {
           case lukio: LukioToteutusMetadata => Some(lukio.painotukset ++ lukio.erityisetKoulutustehtavat)
+          case _ => None
         }
+      case _ => None
     }
   }
   def generateLukioToteutusDisplayName(
