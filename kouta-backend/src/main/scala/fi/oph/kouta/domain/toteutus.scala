@@ -278,7 +278,7 @@ object ToteutusListItem {
              metadata: Option[ToteutusMetadata]
            ): ToteutusListItem = {
     val esitysnimi = ToteutusService.generateToteutusEsitysnimi(Toteutus(oid = Some(oid),
-      koulutusOid = koulutusOid, tila = tila, tarjoajat = tarjoajat, organisaatioOid = organisaatioOid,
+      koulutusOid = koulutusOid, nimi = nimi, tila = tila, tarjoajat = tarjoajat, organisaatioOid = organisaatioOid,
       muokkaaja = muokkaaja, modified = Some(modified), metadata = metadata ))
     new ToteutusListItem(oid, koulutusOid, esitysnimi, tila, tarjoajat, organisaatioOid, muokkaaja, modified)
   }
