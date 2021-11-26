@@ -117,17 +117,21 @@ trait ToteutusExtractors extends ExtractorBase {
     modified = Some(timeStampToModified(r.nextTimestamp()))
   ))
 
-  implicit val getToteutusListItemResult: GetResult[ToteutusListItem] = GetResult(r => ToteutusListItem(
-    oid = ToteutusOid(r.nextString()),
-    koulutusOid = KoulutusOid(r.nextString()),
-    nimi = extractKielistetty(r.nextStringOption()),
-    tila = Julkaisutila.withName(r.nextString()),
-    tarjoajat = List(),
-    organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
-    modified = timeStampToModified(r.nextTimestamp()),
-    metadata = r.nextStringOption().map(read[ToteutusMetadata]),
-  ))
+  implicit val getToteutusListItemResult: GetResult[ToteutusListItem] =
+      GetResult(r => {
+        val enriched = ToteutusListItemEnriched(
+          oid = ToteutusOid(r.nextString()),
+          koulutusOid = KoulutusOid(r.nextString()),
+          nimi = extractKielistetty(r.nextStringOption()),
+          tila = Julkaisutila.withName(r.nextString()),
+          tarjoajat = List(),
+          organisaatioOid = OrganisaatioOid(r.nextString()),
+          muokkaaja = UserOid(r.nextString()),
+          modified = timeStampToModified(r.nextTimestamp()),
+          metadata = r.nextStringOption().map(read[ToteutusMetadata])
+        )
+        ToteutusListItem(enriched)
+      })
 }
 
 trait HakuExtractors extends ExtractorBase {

@@ -262,10 +262,26 @@ case class ToteutusListItem(oid: ToteutusOid,
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             modified: Modified,
-                            metadata: Option[ToteutusMetadata] = None
                            ) extends OidListItem
 
 object ToteutusListItem {
+  def apply(e: ToteutusListItemEnriched): ToteutusListItem = {
+    new ToteutusListItem(e.oid, e.koulutusOid, e.nimi, e.tila, e.tarjoajat, e.organisaatioOid, e.muokkaaja, e.modified)
+  }
+}
+
+case class ToteutusListItemEnriched(oid: ToteutusOid,
+                                      koulutusOid: KoulutusOid,
+                                      nimi: Kielistetty,
+                                      tila: Julkaisutila,
+                                      tarjoajat: List[OrganisaatioOid],
+                                      organisaatioOid: OrganisaatioOid,
+                                      muokkaaja: UserOid,
+                                      modified: Modified,
+                                      metadata: Option[ToteutusMetadata] = None
+                                     ) extends OidListItem
+
+object ToteutusListItemEnriched {
   def apply(
              oid: ToteutusOid,
              koulutusOid: KoulutusOid,
@@ -275,12 +291,12 @@ object ToteutusListItem {
              organisaatioOid: OrganisaatioOid,
              muokkaaja: UserOid,
              modified: Modified,
-             metadata: Option[ToteutusMetadata]
-           ): ToteutusListItem = {
+             metadata: Option[ToteutusMetadata],
+           ): ToteutusListItemEnriched = {
     val esitysnimi = ToteutusService.generateToteutusEsitysnimi(Toteutus(oid = Some(oid),
       koulutusOid = koulutusOid, nimi = nimi, tila = tila, tarjoajat = tarjoajat, organisaatioOid = organisaatioOid,
       muokkaaja = muokkaaja, modified = Some(modified), metadata = metadata ))
-    new ToteutusListItem(oid, koulutusOid, esitysnimi, tila, tarjoajat, organisaatioOid, muokkaaja, modified)
+    new ToteutusListItemEnriched(oid, koulutusOid, esitysnimi, tila, tarjoajat, organisaatioOid, muokkaaja, modified)
   }
 }
 
