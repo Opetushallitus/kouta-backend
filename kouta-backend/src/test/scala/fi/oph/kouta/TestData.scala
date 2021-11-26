@@ -606,7 +606,13 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      ToteutusEnrichedData(
+        esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv")
+      )
+    )
+  )
 
   val JulkaistuYoToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto))
 
@@ -670,7 +676,13 @@ object TestData {
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     kielivalinta = Seq(Fi, Sv),
     nimi = kieliMap("Minimi toteutus"),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      ToteutusEnrichedData(
+        esitysnimi = kieliMap("Minimi toteutus")
+      )
+    )
+  )
 
   val AmmOsaamisalaToteutus: Toteutus = JulkaistuAmmToteutus.copy(
     metadata = Some(AmmatillinenOsaamisalaToteutusMetadata(
@@ -699,7 +711,13 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      ToteutusEnrichedData(
+        esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv")
+      )
+    )
+  )
 
   val AmmOsaamisalaToteutusMetadataHakemuspalvelu: AmmatillinenOsaamisalaToteutusMetadata = AmmatillinenOsaamisalaToteutusMetadata(
     tyyppi = AmmOsaamisala,

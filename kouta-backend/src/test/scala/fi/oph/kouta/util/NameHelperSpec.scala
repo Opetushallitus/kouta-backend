@@ -89,13 +89,13 @@ class NameHelperSpec extends UnitSpec {
     )
   }
   val toteutusKaannokset = Map(
-    "toteutuslomake.lukionYleislinjaNimiOsa" -> Map(Fi -> "Lukio", Sv -> "Gymnasium"),
+    "toteutuslomake.lukionYleislinjaNimiOsa" -> Map(Fi -> "Lukio", Sv -> "Gymnasium", En -> "High school"),
     "yleiset.opintopistetta" -> Map(Fi -> "opintopistettä", Sv -> "studiepoäng", En -> "credits")
   )
 
   val koodiKaannokset = Map(
-    "lukiopainotukset_1#1" -> Map(Fi -> "lukion painotus 1 fi", Sv -> "lukion painotus 1 sv"),
-    "lukiolinjaterityinenkoulutustehtava_1#1" -> Map(Fi -> "lukio erityinen koulutustehtävä 1 fi", Sv -> "lukio erityinen koulutustehtävä 1 sv"),
+    "lukiopainotukset_1" -> Map(Fi -> "lukion painotus 1 fi", Sv -> "lukion painotus 1 sv"),
+    "lukiolinjaterityinenkoulutustehtava_1" -> Map(Fi -> "lukio erityinen koulutustehtävä 1 fi", Sv -> "lukio erityinen koulutustehtävä 1 sv"),
     "opintojenlaajuus_40#1" -> Map(Fi -> "40", Sv -> "40"),
   )
 
@@ -126,6 +126,7 @@ class NameHelperSpec extends UnitSpec {
     esitysnimi should matchTo(Map(
       Fi -> "Lukio, 40 opintopistettä",
       Sv -> "Gymnasium, 40 studiepoäng",
+      En -> "High school, 40 credits"
     ))
   }
 
