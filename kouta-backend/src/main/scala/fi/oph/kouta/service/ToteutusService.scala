@@ -35,14 +35,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
-  private def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
-      val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map {
-        case (k, _) => k
-      }
+  def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
       toteutus.metadata match {
         case Some(toteutusMetadata) =>
           toteutusMetadata match {
             case _: LukioToteutusMetadata =>
+              val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map {
+                case (k, _) => k
+              }
               val kaannokset = Map(
                 "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
                 "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey("toteutuslomake.lukionYleislinjaNimiOsa")
