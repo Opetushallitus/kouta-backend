@@ -2,7 +2,8 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Toteutus, ToteutusListItem, VapaaSivistystyoMuu}
+import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Toteutus, ToteutusEnrichedData, ToteutusListItem, VapaaSivistystyoMuu}
+import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
@@ -80,6 +81,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case (toteutukset, tarjoajat) =>
         toteutukset.map(t =>
           t.copy(
+            _enrichedData = Some(ToteutusEnrichedData(esitysnimi = ToteutusService.generateToteutusEsitysnimi(t))),
             tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
     }.get
   }
