@@ -25,9 +25,9 @@ object NameHelper {
   }
   def isEmptyKielistetty(kielistetty: Option[Kielistetty]): Boolean =
     kielistetty.isDefined && kielistetty.get.forall { case (lng, translation) => translation.isEmpty }
-  def generateLaajuus(laajuus: Option[Kielistetty], opintopistetta: Option[Kielistetty], lng: Kieli): String = {
-    if (!isEmptyKielistetty(laajuus) && !isEmptyKielistetty(opintopistetta)) {
-      localizedKielistetty(laajuus, lng) + " " + localizedKielistetty(opintopistetta, lng)
+  def generateLaajuus(laajuus: Option[String], opintopistetta: Option[Kielistetty], lng: Kieli): String = {
+    if (laajuus.nonEmpty && !isEmptyKielistetty(opintopistetta)) {
+      laajuus.get + " " + localizedKielistetty(opintopistetta, lng)
     } else {
       ""
     }
@@ -48,33 +48,38 @@ object NameHelper {
   ): Kielistetty = {
     val yleislinjaNimiOsa = kaannokset.get("toteutuslomake.lukionYleislinjaNimiOsa")
     val opintopistetta    = kaannokset.get("yleiset.opintopistetta")
-    val lukiolinjat       = getLukiolinjat(toteutus)
+    val lukiolinjat       = (for {
+      m <- toteutus.metadata.asInstanceOf[Option[LukioToteutusMetadata]]
+    } yield m.painotukset ++ m.erityisetKoulutustehtavat).getOrElse(Seq())
+
     val hasYleislinja = (for {
       m <- toteutus.metadata.asInstanceOf[Option[LukioToteutusMetadata]]
     } yield m.yleislinja).getOrElse(false)
 
-    val lukiolinjaKaannokset = (if (hasYleislinja) Seq(yleislinjaNimiOsa) else Seq()) ++
-      lukiolinjat.get.map(l => koodiKaannokset.get(l.koodiUri)).filter(!isEmptyKielistetty(_))
+    val lukiolinjaKaannokset = (if (hasYleislinja && yleislinjaNimiOsa.nonEmpty) Seq(yleislinjaNimiOsa) else Seq()) ++
+      lukiolinjat.map(l => koodiKaannokset.get(l.koodiUri.split("#").head))
 
-    val laajuusKaannos = for {
+    val laajuusNumero = for {
       m <- koulutus.metadata
       l <- m.asInstanceOf[LukioKoulutusMetadata].opintojenLaajuusKoodiUri
-      k <- koodiKaannokset.get(l)
-    } yield k
+    } yield l.split("#").head.split('_').last
 
     List(Fi, Sv, En)
       .map(lng =>
         (
           lng,
-          lukiolinjaKaannokset
-            .map(linjaKaannos => {
-              val linjaTranslation = localizedKielistetty(linjaKaannos, lng)
-              if (linjaTranslation.nonEmpty)
-                linjaTranslation + ", " + generateLaajuus(laajuusKaannos, opintopistetta, lng)
-              else ""
-            })
-            .mkString("\n")
-            .trim
+          if (lukiolinjaKaannokset.forall(kaannos => kaannos.getOrElse(Map()).get(lng).nonEmpty)) {
+            lukiolinjaKaannokset
+              .map(linjaKaannos => {
+                val linjaTranslation = localizedKielistetty(linjaKaannos, lng)
+                if (linjaTranslation.nonEmpty)
+                  linjaTranslation + ", " + generateLaajuus(laajuusNumero, opintopistetta, lng)
+                else ""
+              })
+              .mkString("\n")
+              .trim
+          }
+          else ""
         )
       )
       .filter { case (_, kaannos) => kaannos.nonEmpty }
