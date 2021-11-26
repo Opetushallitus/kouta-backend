@@ -183,10 +183,10 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
 
   def selectToteutuksetByKoulutusOid(oid: KoulutusOid, vainJulkaistut: Boolean) =
     if (vainJulkaistut) sql"""#$selectToteutusSql
-          where t.koulutus_oid = $oid"""
-    else sql"""#$selectToteutusSql
           where t.koulutus_oid = $oid
           and t.tila = 'julkaistu'::julkaisutila"""
+    else sql"""#$selectToteutusSql
+          where t.koulutus_oid = $oid"""
 
   def selectToteutuksenTarjoajat(oid: ToteutusOid) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
