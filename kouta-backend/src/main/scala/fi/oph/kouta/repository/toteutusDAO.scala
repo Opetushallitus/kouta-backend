@@ -285,7 +285,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
            where toteutus_oid = $oid"""
 
   val selectToteutusListSql =
-    """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, m.modified
+    """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, m.modified, t.metadata
          from toteutukset t
          inner join (
            select t.oid oid, greatest(

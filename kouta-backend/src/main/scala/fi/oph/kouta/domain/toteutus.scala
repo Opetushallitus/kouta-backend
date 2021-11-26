@@ -1,8 +1,8 @@
 package fi.oph.kouta.domain
 
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
 
@@ -251,6 +251,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
   override def withModified(modified: Modified): Toteutus = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = oid)
+
 }
 
 case class ToteutusListItem(oid: ToteutusOid,
@@ -260,6 +261,27 @@ case class ToteutusListItem(oid: ToteutusOid,
                             tarjoajat: List[OrganisaatioOid],
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
-                            modified: Modified) extends OidListItem
+                            modified: Modified,
+                            metadata: Option[ToteutusMetadata] = None
+                           ) extends OidListItem
+
+object ToteutusListItem {
+  def apply(
+             oid: ToteutusOid,
+             koulutusOid: KoulutusOid,
+             nimi: Kielistetty,
+             tila: Julkaisutila,
+             tarjoajat: List[OrganisaatioOid],
+             organisaatioOid: OrganisaatioOid,
+             muokkaaja: UserOid,
+             modified: Modified,
+             metadata: Option[ToteutusMetadata]
+           ): ToteutusListItem = {
+    val esitysnimi = ToteutusService.generateToteutusEsitysnimi(Toteutus(oid = Some(oid),
+      koulutusOid = koulutusOid, tila = tila, tarjoajat = tarjoajat, organisaatioOid = organisaatioOid,
+      muokkaaja = muokkaaja, modified = Some(modified), metadata = metadata ))
+    new ToteutusListItem(oid, koulutusOid, esitysnimi, tila, tarjoajat, organisaatioOid, muokkaaja, modified)
+  }
+}
 
 case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map())
