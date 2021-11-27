@@ -278,7 +278,8 @@ case class ToteutusListItemEnriched(oid: ToteutusOid,
                                       organisaatioOid: OrganisaatioOid,
                                       muokkaaja: UserOid,
                                       modified: Modified,
-                                      metadata: Option[ToteutusMetadata] = None
+                                      metadata: Option[ToteutusMetadata] = None,
+                                      koulutusMetadata: Option[KoulutusMetadata] = None
                                      ) extends OidListItem
 
 object ToteutusListItemEnriched {
@@ -292,11 +293,10 @@ object ToteutusListItemEnriched {
              muokkaaja: UserOid,
              modified: Modified,
              metadata: Option[ToteutusMetadata],
+             koulutusMetadata: Option[KoulutusMetadata]
            ): ToteutusListItemEnriched = {
-    val esitysnimi = ToteutusService.generateToteutusEsitysnimi(Toteutus(oid = Some(oid),
-      koulutusOid = koulutusOid, nimi = nimi, tila = tila, tarjoajat = tarjoajat, organisaatioOid = organisaatioOid,
-      muokkaaja = muokkaaja, modified = Some(modified), metadata = metadata ))
-    new ToteutusListItemEnriched(oid, koulutusOid, esitysnimi, tila, tarjoajat, organisaatioOid, muokkaaja, modified)
+    val esitysnimi = ToteutusService.generateToteutusEsitysnimiWithMetadatas(metadata, koulutusMetadata)
+    new ToteutusListItemEnriched(oid, koulutusOid, esitysnimi.getOrElse(nimi), tila, tarjoajat, organisaatioOid, muokkaaja, modified)
   }
 }
 

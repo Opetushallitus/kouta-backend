@@ -5,7 +5,7 @@ import fi.oph.kouta.domain.{
   Fi,
   Kieli,
   Kielistetty,
-  Koulutus,
+  KoulutusMetadata,
   LukioKoulutusMetadata,
   LukioToteutusMetadata,
   LukiolinjaTieto,
@@ -37,34 +37,46 @@ object NameHelper {
       case Some(toteutusMetadata) =>
         toteutusMetadata match {
           case lukio: LukioToteutusMetadata => Some(lukio.painotukset ++ lukio.erityisetKoulutustehtavat)
+          case _                            => None
+        }
+      case _ => None
+    }
+  }
+  def getLaajuusKoodiUri(koulutusMetadata: Option[KoulutusMetadata]): Option[String] = {
+    koulutusMetadata match {
+      case Some(metadata) =>
+        metadata match {
+          case lukio: LukioKoulutusMetadata => {
+            lukio.opintojenLaajuusKoodiUri match {
+              case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
+              case _             => None
+            }
+          }
           case _ => None
         }
       case _ => None
     }
   }
   def generateLukioToteutusDisplayName(
-      toteutus: Toteutus,
-      koulutus: Koulutus,
+      toteutusMetadata: Option[ToteutusMetadata],
+      koulutusMetadata: Option[KoulutusMetadata],
       kaannokset: Map[String, Kielistetty],
       koodiKaannokset: Map[String, Kielistetty]
   ): Kielistetty = {
     val yleislinjaNimiOsa = kaannokset.get("toteutuslomake.lukionYleislinjaNimiOsa")
     val opintopistetta    = kaannokset.get("yleiset.opintopistetta")
-    val lukiolinjat       = (for {
-      m <- toteutus.metadata.asInstanceOf[Option[LukioToteutusMetadata]]
+    val lukiolinjat = (for {
+      m <- toteutusMetadata.asInstanceOf[Option[LukioToteutusMetadata]]
     } yield m.painotukset ++ m.erityisetKoulutustehtavat).getOrElse(Seq())
 
     val hasYleislinja = (for {
-      m <- toteutus.metadata.asInstanceOf[Option[LukioToteutusMetadata]]
+      m <- toteutusMetadata.asInstanceOf[Option[LukioToteutusMetadata]]
     } yield m.yleislinja).getOrElse(false)
 
     val lukiolinjaKaannokset = (if (hasYleislinja && yleislinjaNimiOsa.nonEmpty) Seq(yleislinjaNimiOsa) else Seq()) ++
       lukiolinjat.map(l => koodiKaannokset.get(l.koodiUri.split("#").head))
 
-    val laajuusNumero = for {
-      m <- koulutus.metadata
-      l <- m.asInstanceOf[LukioKoulutusMetadata].opintojenLaajuusKoodiUri
-    } yield l.split("#").head.split('_').last
+    val laajuusNumero = getLaajuusKoodiUri(koulutusMetadata)
 
     List(Fi, Sv, En)
       .map(lng =>
@@ -80,17 +92,16 @@ object NameHelper {
               })
               .mkString("\n")
               .trim
-          }
-          else ""
+          } else ""
         )
       )
       .filter { case (_, kaannos) => kaannos.nonEmpty }
       .toMap
   }
   def generateHakukohdeDisplayNameForTuva(
-    hakukohdeNimi: Kielistetty,
-    toteutusMetadata: ToteutusMetadata,
-    kaannokset: Kielistetty
+      hakukohdeNimi: Kielistetty,
+      toteutusMetadata: ToteutusMetadata,
+      kaannokset: Kielistetty
   ): Kielistetty = {
     val jarjestetaanErityisopetuksena = HakukohdeServiceUtil.getJarjestetaanErityisopetuksena(toteutusMetadata)
 
@@ -100,11 +111,12 @@ object NameHelper {
         val kaannos = kaannokset.get(key)
         kaannos match {
           case Some(str) => key -> (value + s" ($str)")
-          case None => if (defaultKaannos.isEmpty) {
-            key -> value
-          } else {
-            key -> (value + s" ($defaultKaannos)")
-          }
+          case None =>
+            if (defaultKaannos.isEmpty) {
+              key -> value
+            } else {
+              key -> (value + s" ($defaultKaannos)")
+            }
         }
       }
     } else {

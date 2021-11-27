@@ -128,7 +128,8 @@ trait ToteutusExtractors extends ExtractorBase {
           organisaatioOid = OrganisaatioOid(r.nextString()),
           muokkaaja = UserOid(r.nextString()),
           modified = timeStampToModified(r.nextTimestamp()),
-          metadata = r.nextStringOption().map(read[ToteutusMetadata])
+          metadata = r.nextStringOption().map(read[ToteutusMetadata]),
+          koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata])
         )
         ToteutusListItem(enriched)
       })

@@ -35,14 +35,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
-  def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
-      toteutus.metadata match {
-        case Some(toteutusMetadata) =>
-          toteutusMetadata match {
-            case _: LukioToteutusMetadata =>
-              val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map {
-                case (k, _) => k
-              }
+  def generateToteutusEsitysnimiWithMetadatas(toteutusMetadata: Option[ToteutusMetadata], koulutusMetadata: Option[KoulutusMetadata]): Option[Kielistetty] = {
+      toteutusMetadata match {
+        case Some(metadata) => {
+          metadata.tyyppi match {
+            case Lk => {
               val kaannokset = Map(
                 "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
                 "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey("toteutuslomake.lukionYleislinjaNimiOsa")
@@ -50,20 +47,45 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
               val painotuksetKaannokset = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
               val koulutustehtavatKaannokset = koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
               val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
-              NameHelper.generateLukioToteutusDisplayName(toteutus, koulutus.get, kaannokset, koodistoKaannokset)
-            case _ =>
-              toteutus.nimi
+              Some(NameHelper.generateLukioToteutusDisplayName(toteutusMetadata, koulutusMetadata, kaannokset, koodistoKaannokset))
+            }
+            case _ => None
           }
-        case None => toteutus.nimi
+        }
+        case _ => None
       }
+  }
+
+  def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
+
+    val toteutusTyyppi = toteutus.metadata match {
+      case Some(metadata) => metadata.tyyppi
+      case _ => None
+    }
+
+    toteutusTyyppi match {
+      case Lk => {
+        val koulutus = KoulutusDAO.get(toteutus.koulutusOid).map {
+          case (k, _) => k
+        }
+
+        val koulutusMetadata = koulutus match {
+          case Some(k) => k.metadata
+          case _ => None
+        }
+        generateToteutusEsitysnimiWithMetadatas(toteutus.metadata, koulutusMetadata).getOrElse(toteutus.nimi)
+      }
+      case _ => toteutus.nimi
+    }
   }
 
   def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
     val toteutusWithTime = ToteutusDAO.get(oid)
     val enrichedToteutus = toteutusWithTime match {
-      case Some((t, i)) =>
-        val esitysnimi = generateToteutusEsitysnimi(t)
-        Some(t.copy(_enrichedData = Some(ToteutusEnrichedData(esitysnimi = esitysnimi))), i)
+      case Some((t, i)) => {
+          val esitysnimi = generateToteutusEsitysnimi(t)
+          Some(t.copy(_enrichedData = Some(ToteutusEnrichedData(esitysnimi = esitysnimi))), i)
+      }
       case None => None
     }
     authorizeGet(enrichedToteutus, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
