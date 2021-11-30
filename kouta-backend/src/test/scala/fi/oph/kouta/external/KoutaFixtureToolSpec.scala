@@ -1,9 +1,11 @@
 package fi.oph.kouta.external
 
-import java.util.UUID
+import fi.oph.kouta.domain.{Hakutieto, Poistettu}
 
+import java.util.UUID
 import fi.oph.kouta.external.{KoutaFixtureTool => KFT}
 import fi.oph.kouta.integration.{AccessControlSpec, EverythingFixture, KoutaIntegrationSpec}
+import org.json4s.jackson.Serialization.read
 import org.scalatest.BeforeAndAfterEach
 
 class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture with BeforeAndAfterEach with AccessControlSpec {
@@ -124,4 +126,85 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
     doPut(OppilaitoksenOsaPath, oppilaitoksenOsa)
   }
 
+
+  it should "be able to get hakutieto" in {
+    val sorakuvausId = UUID.randomUUID().toString
+    KFT.addSorakuvaus(sorakuvausId, KFT.DefaultSorakuvausScala)
+    KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutusScala + (KFT.SorakuvausIdKey -> sorakuvausId))
+    val toteutusMap = KFT.DefaultToteutusScala + (KFT.KoulutusOidKey -> "1.2.246.562.13.00000000000000000009")
+    KFT.addToteutus("1.2.246.562.17.00000000000000000009", toteutusMap)
+    KFT.addHaku("1.2.246.562.29.00000000000000000008", KFT.DefaultHakuScala)
+    KFT.addHaku("1.2.246.562.29.00000000000000000009", KFT.DefaultHakuScala)
+    val valintaperusteId = UUID.randomUUID().toString
+    KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala)
+    val hakukohdeMap = KFT.DefaultHakukohdeScala ++
+      Map(KFT.ToteutusOidKey -> "1.2.246.562.17.00000000000000000009", KFT.HakuOidKey -> "1.2.246.562.29.00000000000000000008", KFT.ValintaperusteIdKey -> valintaperusteId)
+    KFT.addHakukohde("1.2.246.562.20.00000000000000000008", hakukohdeMap)
+    val hakukohdeMap2 = KFT.DefaultHakukohdeScala ++
+      Map(KFT.ToteutusOidKey -> "1.2.246.562.17.00000000000000000009", KFT.HakuOidKey -> "1.2.246.562.29.00000000000000000009", KFT.ValintaperusteIdKey -> valintaperusteId)
+    KFT.addHakukohde("1.2.246.562.20.00000000000000000009", hakukohdeMap2)
+
+    val hakutieto = read[List[Hakutieto]](KFT.getHakutiedotByKoulutus("1.2.246.562.13.00000000000000000009")).toArray
+
+    hakutieto.size should equal (1)
+    hakutieto(0).toteutusOid.toString() should equal ("1.2.246.562.17.00000000000000000009")
+    val haut = hakutieto(0).haut.toArray
+    haut.size should equal (2)
+    haut(0).hakuOid.toString() should equal("1.2.246.562.29.00000000000000000009")
+    haut(1).hakuOid.toString() should equal("1.2.246.562.29.00000000000000000008")
+    var hakukohteet = haut(0).hakukohteet.toArray
+    hakukohteet.size should equal(1)
+    hakukohteet(0).hakukohdeOid.toString() should equal("1.2.246.562.20.00000000000000000009")
+    hakukohteet = haut(1).hakukohteet.toArray
+    hakukohteet.size should equal(1)
+    hakukohteet(0).hakukohdeOid.toString() should equal("1.2.246.562.20.00000000000000000008")
+  }
+
+  it should "should filter out poistetut hakukohteet from hakutiedot" in {
+    val sorakuvausId = UUID.randomUUID().toString
+    KFT.addSorakuvaus(sorakuvausId, KFT.DefaultSorakuvausScala)
+    KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutusScala + (KFT.SorakuvausIdKey -> sorakuvausId))
+    val toteutusMap = KFT.DefaultToteutusScala + (KFT.KoulutusOidKey -> "1.2.246.562.13.00000000000000000009")
+    KFT.addToteutus("1.2.246.562.17.00000000000000000009", toteutusMap)
+    KFT.addHaku("1.2.246.562.29.00000000000000000008", KFT.DefaultHakuScala)
+    val valintaperusteId = UUID.randomUUID().toString
+    KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala)
+    val hakukohdeMap = KFT.DefaultHakukohdeScala ++
+      Map(KFT.ToteutusOidKey -> "1.2.246.562.17.00000000000000000009", KFT.HakuOidKey -> "1.2.246.562.29.00000000000000000008", KFT.ValintaperusteIdKey -> valintaperusteId)
+    KFT.addHakukohde("1.2.246.562.20.00000000000000000008", hakukohdeMap)
+    val hakukohdeMap2 = KFT.DefaultHakukohdeScala ++
+      Map(KFT.ToteutusOidKey -> "1.2.246.562.17.00000000000000000009", KFT.HakuOidKey -> "1.2.246.562.29.00000000000000000008",
+        KFT.ValintaperusteIdKey -> valintaperusteId, KFT.TilaKey -> Poistettu.name)
+    KFT.addHakukohde("1.2.246.562.20.00000000000000000009", hakukohdeMap2)
+
+    val hakutieto = read[List[Hakutieto]](KFT.getHakutiedotByKoulutus("1.2.246.562.13.00000000000000000009")).toArray
+
+    hakutieto.size should equal (1)
+    hakutieto(0).toteutusOid.toString() should equal ("1.2.246.562.17.00000000000000000009")
+    val haut = hakutieto(0).haut.toArray
+    haut.size should equal (1)
+    haut(0).hakuOid.toString() should equal("1.2.246.562.29.00000000000000000008")
+    val hakukohteet = haut(0).hakukohteet.toArray
+    hakukohteet.size should equal(1)
+    hakukohteet(0).hakukohdeOid.toString() should equal("1.2.246.562.20.00000000000000000008")
+  }
+
+  it should "should ignore poistetut toteutukset in hakutiedot" in {
+    val sorakuvausId = UUID.randomUUID().toString
+    KFT.addSorakuvaus(sorakuvausId, KFT.DefaultSorakuvausScala)
+    KFT.addKoulutus("1.2.246.562.13.00000000000000000009", KFT.DefaultKoulutusScala + (KFT.SorakuvausIdKey -> sorakuvausId))
+    val toteutusMap = KFT.DefaultToteutusScala + (KFT.KoulutusOidKey -> "1.2.246.562.13.00000000000000000009, KFT.TilaKey -> Poistettu.name")
+    KFT.addToteutus("1.2.246.562.17.00000000000000000009", toteutusMap)
+    KFT.addHaku("1.2.246.562.29.00000000000000000008", KFT.DefaultHakuScala + (KFT.TilaKey -> Poistettu.name))
+    val valintaperusteId = UUID.randomUUID().toString
+    KFT.addValintaperuste(valintaperusteId, KFT.DefaultValintaperusteScala)
+    val hakukohdeMap = KFT.DefaultHakukohdeScala ++
+      Map(KFT.ToteutusOidKey -> "1.2.246.562.17.00000000000000000009", KFT.HakuOidKey -> "1.2.246.562.29.00000000000000000008",
+        KFT.ValintaperusteIdKey -> valintaperusteId, KFT.TilaKey -> Poistettu.name)
+    KFT.addHakukohde("1.2.246.562.20.00000000000000000008", hakukohdeMap)
+
+    val hakutieto = read[List[Hakutieto]](KFT.getHakutiedotByKoulutus("1.2.246.562.13.00000000000000000009")).toArray
+
+    hakutieto.size should equal (0)
+  }
 }
