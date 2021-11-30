@@ -284,7 +284,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun
       |      operationId: Listaa haun hakukohteet
-      |      description: Listaa hakuun liitetyt olemassaolevat (=ei poistetut) hakukohteet. Tämä rajapinta on indeksointia varten
+      |      description: Listaa hakuun liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      parameters:
@@ -295,6 +295,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: Haku-oid
       |          example: 1.2.246.562.29.00000000000000000009
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
       |          description: Ok
@@ -308,7 +315,8 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/haku/:oid/hakukohteet/list") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(hakuService.listHakukohteet(HakuOid(params("oid"))))
+    Ok(hakuService.listHakukohteet(HakuOid(params("oid")),
+      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
   }
 
   registerPath("/indexer/haku/{oid}/koulutukset/list",

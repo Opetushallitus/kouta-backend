@@ -515,6 +515,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   "Hakuun liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given haku for indexer" in {
     list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), List(hk1, hk2, hk4), indexerSession)
   }
+  it should "list also poistetut hakukohteet if instructed" in {
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk4, hk7), indexerSession)
+  }
   it should "deny access to root user without indexer role" in {
     list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), 403)
   }
