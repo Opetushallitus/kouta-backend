@@ -284,11 +284,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun
       |      operationId: Listaa haun hakukohteet
-<<<<<<< HEAD
       |      description: Listaa hakuun liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
-=======
-      |      description: Listaa hakuun liitetyt olemassaolevat (=ei poistetut) hakukohteet. Tämä rajapinta on indeksointia varten
->>>>>>> c559e053 (KTO-1361: Lisätty 'vainOlemassaolevat' vipuja endpointteihin)
       |      tags:
       |        - Indexer
       |      parameters:
