@@ -227,6 +227,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
                     modified: Option[Modified],
+                    koulutusMetadata: Option[KoulutusMetadata] = None,
                     _enrichedData: Option[ToteutusEnrichedData] = None
                    )
   extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
@@ -265,38 +266,8 @@ case class ToteutusListItem(oid: ToteutusOid,
                            ) extends OidListItem
 
 object ToteutusListItem {
-  def apply(e: ToteutusListItemEnriched): ToteutusListItem = {
-    new ToteutusListItem(e.oid, e.koulutusOid, e.nimi, e.tila, e.tarjoajat, e.organisaatioOid, e.muokkaaja, e.modified)
-  }
-}
-
-case class ToteutusListItemEnriched(oid: ToteutusOid,
-                                      koulutusOid: KoulutusOid,
-                                      nimi: Kielistetty,
-                                      tila: Julkaisutila,
-                                      tarjoajat: List[OrganisaatioOid],
-                                      organisaatioOid: OrganisaatioOid,
-                                      muokkaaja: UserOid,
-                                      modified: Modified,
-                                      metadata: Option[ToteutusMetadata] = None,
-                                      koulutusMetadata: Option[KoulutusMetadata] = None
-                                     ) extends OidListItem
-
-object ToteutusListItemEnriched {
-  def apply(
-             oid: ToteutusOid,
-             koulutusOid: KoulutusOid,
-             nimi: Kielistetty,
-             tila: Julkaisutila,
-             tarjoajat: List[OrganisaatioOid],
-             organisaatioOid: OrganisaatioOid,
-             muokkaaja: UserOid,
-             modified: Modified,
-             metadata: Option[ToteutusMetadata],
-             koulutusMetadata: Option[KoulutusMetadata]
-           ): ToteutusListItemEnriched = {
-    val esitysnimi = ToteutusService.generateToteutusEsitysnimiWithMetadatas(metadata, koulutusMetadata)
-    new ToteutusListItemEnriched(oid, koulutusOid, esitysnimi.getOrElse(nimi), tila, tarjoajat, organisaatioOid, muokkaaja, modified)
+  def apply(t: Toteutus): ToteutusListItem = {
+    new ToteutusListItem(t.oid.get, t.koulutusOid, t.nimi, t.tila, t.tarjoajat, t.organisaatioOid, t.muokkaaja, t.modified.get)
   }
 }
 

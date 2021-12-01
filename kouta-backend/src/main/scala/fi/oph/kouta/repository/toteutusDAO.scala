@@ -82,6 +82,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
         toteutukset.map(t =>
           t.copy(
             _enrichedData = Some(ToteutusEnrichedData(esitysnimi = ToteutusService.generateToteutusEsitysnimi(t))),
+            koulutusMetadata = None,
             tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
     }.get
   }
@@ -181,11 +182,41 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""#$selectToteutusSql
           where t.oid = $oid"""
 
+  val selectToteutusWithKoulutusMetadataSql =
+    """select t.oid,
+              t.external_id,
+              t.koulutus_oid,
+              t.tila,
+              t.nimi,
+              t.metadata,
+              t.muokkaaja,
+              t.esikatselu,
+              t.organisaatio_oid,
+              t.kielivalinta,
+              t.teemakuva,
+              t.sorakuvaus_id,
+              m.modified,
+              k.metadata
+       from toteutukset t
+         inner join (select oid, metadata from koulutukset) k on k.oid = t.koulutus_oid
+                inner join (
+           select t.oid oid,
+                  greatest(
+                          max(lower(t.system_time)),
+                          max(lower(ta.system_time)),
+                          max(upper(th.system_time)),
+                          max(upper(tah.system_time))) modified
+           from toteutukset t
+                    left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
+                    left join toteutukset_history th on t.oid = th.oid
+                    left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
+           group by t.oid) m on t.oid = m.oid"""
+
   def selectToteutuksetByKoulutusOid(oid: KoulutusOid, vainJulkaistut: Boolean) =
-    if (vainJulkaistut) sql"""#$selectToteutusSql
+    if (vainJulkaistut) sql"""#$selectToteutusWithKoulutusMetadataSql
           where t.koulutus_oid = $oid
           and t.tila = 'julkaistu'::julkaisutila"""
-    else sql"""#$selectToteutusSql
+    else sql"""#$selectToteutusWithKoulutusMetadataSql
           where t.koulutus_oid = $oid"""
 
   def selectToteutuksenTarjoajat(oid: ToteutusOid) =
