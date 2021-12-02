@@ -805,7 +805,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       params(TarjoajatKey).split(",").map(_.trim).map(OrganisaatioOid).toList,
       OrganisaatioOid(params(OrganisaatioKey)),
       UserOid(params(MuokkaajaKey)),
-      parseModified(params(ModifiedKey))
+      parseModified(params(ModifiedKey)),
     )
   }
 

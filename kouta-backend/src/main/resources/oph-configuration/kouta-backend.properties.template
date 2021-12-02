@@ -33,6 +33,7 @@ kouta-index.valintaperuste.filtered-list=https://{{host_virkailija}}/kouta-index
 kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kayttooikeus-service/userDetails/$1
 organisaatio-service.organisaatio.oid.jalkelaiset=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/$1/jalkelaiset
 lokalisointi-service.localisation=https://{{host_virkailija}}/lokalisointi/cxf/rest/v1/localisation?category=kouta
+koodisto-service.koodisto-koodit=https://{{host_virkailija}}/koodisto-service/rest/json/$1/koodi?onlyValidKoodis=true
 
 ohjausparametrit-service.service=https://{{host_virkailija}}/ohjausparametrit-service
 ohjausparametrit-service.parametri=https://{{host_virkailija}}/ohjausparametrit-service/api/v1/rest/parametri/$1
@@ -44,3 +45,4 @@ tarjonta-service.komo.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/k
 tarjonta-service.komoto.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/komoto/$1
 tarjonta-service.koulutus.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/koulutus/$1
 koodisto-service.codeelement=https://{{host_virkailija}}/koodisto-service/rest/codeelement/$1/$2
+

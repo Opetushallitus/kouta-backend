@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain
 
-sealed trait Kieli extends EnumType
+sealed trait Kieli extends EnumType with Product with Serializable
 
 object Kieli extends Enum[Kieli] {
   override def name: String = "kieli"

@@ -7,6 +7,7 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.timeStampToModified
 import org.json4s.jackson.Serialization.read
@@ -114,19 +115,27 @@ trait ToteutusExtractors extends ExtractorBase {
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
     sorakuvausId = r.nextStringOption().map(UUID.fromString),
-    modified = Some(timeStampToModified(r.nextTimestamp()))
+    modified = Some(timeStampToModified(r.nextTimestamp())),
+    koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata])
   ))
 
-  implicit val getToteutusListItemResult: GetResult[ToteutusListItem] = GetResult(r => ToteutusListItem(
-    oid = ToteutusOid(r.nextString()),
-    koulutusOid = KoulutusOid(r.nextString()),
-    nimi = extractKielistetty(r.nextStringOption()),
-    tila = Julkaisutila.withName(r.nextString()),
-    tarjoajat = List(),
-    organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
-    modified = timeStampToModified(r.nextTimestamp())
-  ))
+  implicit val getToteutusListItemResult: GetResult[ToteutusListItem] =
+      GetResult(r => {
+        val t = Toteutus(
+          oid = r.nextStringOption().map(ToteutusOid),
+          koulutusOid = KoulutusOid(r.nextString()),
+          nimi = extractKielistetty(r.nextStringOption()),
+          tila = Julkaisutila.withName(r.nextString()),
+          tarjoajat = List(),
+          organisaatioOid = OrganisaatioOid(r.nextString()),
+          muokkaaja = UserOid(r.nextString()),
+          modified = Some(timeStampToModified(r.nextTimestamp())),
+          metadata = r.nextStringOption().map(read[ToteutusMetadata]),
+          koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
+        )
+        val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
+        ToteutusListItem(t.copy(nimi = esitysnimi))
+      })
 }
 
 trait HakuExtractors extends ExtractorBase {

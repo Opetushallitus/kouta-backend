@@ -1,8 +1,8 @@
 package fi.oph.kouta.domain
 
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
 
@@ -226,8 +226,11 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
-                    modified: Option[Modified])
-  extends PerustiedotWithOid[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
+                    modified: Option[Modified],
+                    koulutusMetadata: Option[KoulutusMetadata] = None,
+                    _enrichedData: Option[ToteutusEnrichedData] = None
+                   )
+  extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -249,6 +252,9 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
   override def withModified(modified: Modified): Toteutus = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = oid)
+
+  def withEnrichedData(enrichedData: ToteutusEnrichedData): Toteutus = this.copy(_enrichedData = Some(enrichedData))
+  def withoutRelatedData(): Toteutus = this.copy(koulutusMetadata = None)
 }
 
 case class ToteutusListItem(oid: ToteutusOid,
@@ -258,4 +264,13 @@ case class ToteutusListItem(oid: ToteutusOid,
                             tarjoajat: List[OrganisaatioOid],
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
-                            modified: Modified) extends OidListItem
+                            modified: Modified,
+                           ) extends OidListItem
+
+object ToteutusListItem {
+  def apply(t: Toteutus): ToteutusListItem = {
+    new ToteutusListItem(t.oid.get, t.koulutusOid, t.nimi, t.tila, t.tarjoajat, t.organisaatioOid, t.muokkaaja, t.modified.get)
+  }
+}
+
+case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map())

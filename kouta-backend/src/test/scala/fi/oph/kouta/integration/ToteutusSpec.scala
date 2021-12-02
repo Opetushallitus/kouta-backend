@@ -1,12 +1,11 @@
 package fi.oph.kouta.integration
 
 import java.time.LocalDateTime
-
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
-import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.mocks.{KoodistoServiceMock, LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.ValidationError
@@ -16,8 +15,7 @@ import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
-  with KeywordFixture with UploadFixture {
-
+  with KeywordFixture with UploadFixture with KoodistoServiceMock with LokalisointiServiceMock {
 
   override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
 
@@ -25,6 +23,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    mockKoodistoResponse("lukiopainotukset", List("lukiopainotukset_1"))
+    mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", List("lukiolinjaterityinenkoulutustehtava_1"))
+    mockLokalisointiResponse("yleiset.opintopistetta")
+    mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
     koulutusOid = put(koulutus, ophSession)
   }
 
@@ -197,6 +199,17 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
   }
 
+  it should "deny sorakuvaus id when not allowed" in {
+    val sorakuvausId = put(sorakuvaus)
+    val thisToteutus = toteutus(koulutusOid).copy(sorakuvausId = Some(sorakuvausId))
+    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validationErrorBody(notMissingMsg(Some(sorakuvausId)), "sorakuvausId"))
+    }
+  }
+
   "Update toteutus" should "update toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
@@ -352,7 +365,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val uusiToteutus = thisToteutus.copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "description"))),
-      tarjoajat = List(LonelyOid, OtherOid, AmmOid))
+      tarjoajat = List(LonelyOid, OtherOid, AmmOid),
+      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name")))
+    )
     update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus)
   }
@@ -368,11 +383,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "store and update unfinished toteutus" in {
-    val unfinishedToteutus = Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
+    val unfinishedToteutus = Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid),
+      organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
-    val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)),
+      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus")))))
     val newKoulutusOid = put(koulutus, ophSession)
-    val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(newKoulutusOid))
+    val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(newKoulutusOid),
+      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus"))))
     update(newUnfinishedToteutus, lastModified)
     get(oid, newUnfinishedToteutus)
   }
@@ -563,24 +581,23 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
   }
 
-  it should "deny sorakuvaus id when not allowed" in {
-    val sorakuvausId = put(sorakuvaus)
-    val thisToteutus = toteutus(koulutusOid).copy(sorakuvausId = Some(sorakuvausId))
-    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validationErrorBody(notMissingMsg(Some(sorakuvausId)), "sorakuvausId"))
-    }
-  }
-
   it should "create, get and update lukio toteutus" in {
+    val _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(
+      Fi -> s"""toteutuslomake.lukionYleislinjaNimiOsa fi, 40 yleiset.opintopistetta fi
+        |lukiopainotukset_1 fi, 40 yleiset.opintopistetta fi
+        |lukiolinjaterityinenkoulutustehtava_1 fi, 40 yleiset.opintopistetta fi""".stripMargin,
+      Sv -> s"""toteutuslomake.lukionYleislinjaNimiOsa sv, 40 yleiset.opintopistetta sv
+        |lukiopainotukset_1 sv, 40 yleiset.opintopistetta sv
+        |lukiolinjaterityinenkoulutustehtava_1 sv, 40 yleiset.opintopistetta sv""".stripMargin,
+      )))
     val lukioToKoulutusOid = put(TestData.LukioKoulutus.copy(tila = Julkaistu), ophSession)
-    val lukioToToteutus = TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioToKoulutusOid), tila = Tallennettu)
+    val lukioToToteutus = TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioToKoulutusOid), tila = Tallennettu, _enrichedData = _enrichedData)
     val oid = put(lukioToToteutus)
     val lastModified = get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid))))
     update(lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu,
+      _enrichedData = _enrichedData
+      ))
   }
 
   it should "create, get and update tuva toteutus" in {

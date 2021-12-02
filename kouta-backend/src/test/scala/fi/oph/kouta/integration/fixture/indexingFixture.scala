@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.LokalisointiClient
+import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
@@ -35,8 +35,10 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
 
   override def toteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
+    val koodistoClient = new KoodistoClient(urlProperties.get)
     new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
-      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService)
+      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient)
   }
 }
 

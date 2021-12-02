@@ -1,46 +1,83 @@
 package fi.oph.kouta.service
 
 import java.time.Instant
-
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.{KoodistoClient, KoutaIndexClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.util.NameHelper
 import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient)
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val s3ImageService: S3ImageService,
                       auditLog: AuditLog,
                       keywordService: KeywordService,
                       val organisaatioService: OrganisaatioService,
-                      koulutusService: KoulutusService)
+                      koulutusService: KoulutusService,
+                      lokalisointiClient: LokalisointiClient,
+                      koodistoClient: KoodistoClient
+                     )
   extends ValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
+  def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
+    (toteutus.metadata, toteutus.koulutusMetadata) match {
+      case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
+        (toteutusMetadata, koulutusMetadata) match {
+          case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
+            val kaannokset = Map(
+              "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
+              "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
+                "toteutuslomake.lukionYleislinjaNimiOsa"
+              )
+            )
+            val painotuksetKaannokset      = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
+            val koulutustehtavatKaannokset = koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
+            val koodistoKaannokset         = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
+            NameHelper.generateLukioToteutusDisplayName(
+              lukioToteutusMetadata,
+              lukioKoulutusMetadata,
+              kaannokset,
+              koodistoKaannokset
+            )
+          }
+          case _ => toteutus.nimi
+        }
+      case _ => toteutus.nimi
+    }
+  }
+
   def get(oid: ToteutusOid)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
     val toteutusWithTime = ToteutusDAO.get(oid)
-    authorizeGet(toteutusWithTime, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
+    val enrichedToteutus = toteutusWithTime match {
+      case Some((t, i)) => {
+        val esitysnimi = generateToteutusEsitysnimi(t)
+        Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi)).withoutRelatedData(), i)
+      }
+      case None => None
+    }
+    authorizeGet(enrichedToteutus, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
   }
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
     authorizePut(toteutus) { t =>
       withValidation(t, None) { t =>
-        validateKoulutusIntegrity(t)
+        validateIntegrity(t)
         doPut(t, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
       }
     }.oid.get
@@ -51,7 +88,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       withValidation(t, Some(oldToteutus)) { t =>
-        validateKoulutusIntegrity(t)
+        validateIntegrity(t)
         doUpdate(t, notModifiedSince, oldToteutus, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
       }
     }
@@ -131,16 +168,18 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def validateKoulutusIntegrity(toteutus: Toteutus): Unit = {
+  private def validateIntegrity(toteutus: Toteutus): Unit = {
     import Validations._
     val (koulutusTila, koulutusTyyppi) = KoulutusDAO.getTilaAndTyyppi(toteutus.koulutusOid)
 
     throwValidationErrors(and(
       validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
-      validateIfDefined[Koulutustyyppi](koulutusTyyppi, koulutusTyyppi =>
+      validateIfDefined[Koulutustyyppi](koulutusTyyppi, koulutusTyyppi => and(
+        validateIfTrue(koulutusTyyppi != Lk, validateKielistetty(toteutus.kielivalinta, toteutus.nimi, "nimi")),
         validateIfDefined[ToteutusMetadata](toteutus.metadata, toteutusMetadata =>
           assertTrue(koulutusTyyppi == toteutusMetadata.tyyppi, "metadata.tyyppi", tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
         ))
+      )
     ))
   }
 
