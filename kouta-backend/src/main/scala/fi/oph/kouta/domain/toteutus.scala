@@ -253,6 +253,8 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = oid)
 
+  def withEnrichedData(enrichedData: ToteutusEnrichedData): Toteutus = this.copy(_enrichedData = Some(enrichedData))
+  def withoutRelatedData(): Toteutus = this.copy(koulutusMetadata = None)
 }
 
 case class ToteutusListItem(oid: ToteutusOid,

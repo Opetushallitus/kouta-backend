@@ -42,47 +42,34 @@ object NameHelper {
       case _ => None
     }
   }
-  def getLaajuusKoodiUri(koulutusMetadata: Option[KoulutusMetadata]): Option[String] = {
-    koulutusMetadata match {
-      case Some(metadata) =>
-        metadata match {
-          case lukio: LukioKoulutusMetadata => {
-            lukio.opintojenLaajuusKoodiUri match {
-              case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
-              case _             => None
-            }
-          }
-          case _ => None
-        }
-      case _ => None
-    }
+  def getLukioKoulutusLaajuusNumero(lukioKoulutusMetadata: LukioKoulutusMetadata): Option[String] = {
+      lukioKoulutusMetadata.opintojenLaajuusKoodiUri match {
+        case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
+        case _             => None
+      }
   }
   def generateLukioToteutusDisplayName(
-      toteutusMetadata: Option[ToteutusMetadata],
-      koulutusMetadata: Option[KoulutusMetadata],
+      toteutusMetadata: LukioToteutusMetadata,
+      koulutusMetadata: LukioKoulutusMetadata,
       kaannokset: Map[String, Kielistetty],
       koodiKaannokset: Map[String, Kielistetty]
   ): Kielistetty = {
     val yleislinjaNimiOsa = kaannokset.get("toteutuslomake.lukionYleislinjaNimiOsa")
     val opintopistetta    = kaannokset.get("yleiset.opintopistetta")
-    val lukiolinjat = (for {
-      m <- toteutusMetadata.asInstanceOf[Option[LukioToteutusMetadata]]
-    } yield m.painotukset ++ m.erityisetKoulutustehtavat).getOrElse(Seq())
+    val lukiolinjat = toteutusMetadata.painotukset ++ toteutusMetadata.erityisetKoulutustehtavat
 
-    val hasYleislinja = (for {
-      m <- toteutusMetadata.asInstanceOf[Option[LukioToteutusMetadata]]
-    } yield m.yleislinja).getOrElse(false)
+    val hasYleislinja = toteutusMetadata.yleislinja
 
     val lukiolinjaKaannokset = (if (hasYleislinja && yleislinjaNimiOsa.nonEmpty) Seq(yleislinjaNimiOsa) else Seq()) ++
       lukiolinjat.map(l => koodiKaannokset.get(l.koodiUri.split("#").head))
 
-    val laajuusNumero = getLaajuusKoodiUri(koulutusMetadata)
+    val laajuusNumero = getLukioKoulutusLaajuusNumero(koulutusMetadata)
 
     List(Fi, Sv, En)
       .map(lng =>
         (
           lng,
-          if (lukiolinjaKaannokset.forall(kaannos => kaannos.getOrElse(Map()).get(lng).nonEmpty)) {
+          if (lukiolinjaKaannokset.forall(_.exists(k => k.contains(lng)))) {
             lukiolinjaKaannokset
               .map(linjaKaannos => {
                 val linjaTranslation = localizedKielistetty(linjaKaannos, lng)
