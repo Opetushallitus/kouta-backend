@@ -39,6 +39,7 @@ trait GenericKoutaFormats {
       stringSerializer(LiitteenToimitustapa.withName),
       stringSerializer(HakuOid),
       stringSerializer(HakukohdeOid),
+      stringSerializer(HakukohderyhmaOid),
       stringSerializer(KoulutusOid),
       stringSerializer(ToteutusOid),
       stringSerializer(OrganisaatioOid),
