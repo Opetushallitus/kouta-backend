@@ -47,25 +47,6 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     }
   }
 
-  "List hakukohteet by järjestyspaikka oids" should "List also poistetut hakukohteet if instructed" in {
-    val oppilaitosOid = put(oppilaitos, ophSession)
-    val jarjestyspaikkaOid = put(oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid)), ophSession)
-
-    val koulutusOid = put(koulutus, ophSession)
-    val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid)), ophSession)
-    val hakuOid = put(haku, ophSession)
-    val hakukohdeOid = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
-      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid))), ophSession)
-    val hakukohdeOid2 = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
-      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid)), tila = Poistettu), ophSession)
-
-    get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids?vainOlemassaolevat=false",
-      headers = Seq(sessionHeader(indexerSession))) {
-        status should equal (200)
-        read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid, hakukohdeOid2))
-    }
-  }
-
   "List toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
     val oid = put(koulutus, ophSession)
     val t1 = put(toteutus(oid))
@@ -78,57 +59,6 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
         toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
         toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
         toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
-        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi)))
-      )
-    }
-  }
-
-  "List only julkaistut toteutukset related to koulutus" should "return julkaistut toteutukset related to koulutus" in {
-    val oid = put(koulutus, ophSession)
-    val t1 = put(toteutus(oid))
-    val t2 = put(toteutus(oid))
-    val t3 = put(toteutus(oid))
-    val t4 = put(toteutus(oid).copy(tila = Poistettu))
-    get(s"$IndexerPath/koulutus/$oid/toteutukset?vainJulkaistut=true", headers = Seq(sessionHeader(indexerSession))) {
-      status should equal (200)
-      read[List[Toteutus]](body) should contain theSameElementsAs List(
-        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
-        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
-      )
-    }
-  }
-
-  "List also poistetut toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
-    val oid = put(koulutus, ophSession)
-    val t1 = put(toteutus(oid))
-    val t2 = put(toteutus(oid))
-    val t3 = put(toteutus(oid))
-    val t4 = put(toteutus(oid).copy(tila = Poistettu))
-    get(s"$IndexerPath/koulutus/$oid/toteutukset?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
-      status should equal (200)
-      read[List[Toteutus]](body) should contain theSameElementsAs List(
-        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
-        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
-        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)))
-      )
-    }
-  }
-
-  "List also poistetut toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
-    val oid = put(koulutus, ophSession)
-    val t1 = put(toteutus(oid))
-    val t2 = put(toteutus(oid))
-    val t3 = put(toteutus(oid))
-    val t4 = put(toteutus(oid).copy(tila = Poistettu))
-    get(s"$IndexerPath/koulutus/$oid/toteutukset?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
-      status should equal (200)
-      read[List[Toteutus]](body) should contain theSameElementsAs List(
-        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
-        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
-        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)))
       )
     }
   }
