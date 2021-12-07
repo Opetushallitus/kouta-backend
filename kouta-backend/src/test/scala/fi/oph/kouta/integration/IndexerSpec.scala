@@ -133,6 +133,39 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     }
   }
 
+  "List only julkaistut toteutukset related to koulutus" should "return julkaistut toteutukset related to koulutus" in {
+    val oid = put(koulutus, ophSession)
+    val t1 = put(toteutus(oid))
+    val t2 = put(toteutus(oid))
+    val t3 = put(toteutus(oid))
+    val t4 = put(toteutus(oid).copy(tila = Poistettu))
+    get(s"$IndexerPath/koulutus/$oid/toteutukset?vainJulkaistut=true", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[Toteutus]](body) should contain theSameElementsAs List(
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
+      )
+    }
+  }
+
+  "List also poistetut toteutukset related to koulutus" should "return all toteutukset related to koulutus" in {
+    val oid = put(koulutus, ophSession)
+    val t1 = put(toteutus(oid))
+    val t2 = put(toteutus(oid))
+    val t3 = put(toteutus(oid))
+    val t4 = put(toteutus(oid).copy(tila = Poistettu))
+    get(s"$IndexerPath/koulutus/$oid/toteutukset?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[Toteutus]](body) should contain theSameElementsAs List(
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
+        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)))
+      )
+    }
+  }
+
   it should "return empty result if koulutus has no toteutukset" in {
     val oid = put(koulutus, ophSession)
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
