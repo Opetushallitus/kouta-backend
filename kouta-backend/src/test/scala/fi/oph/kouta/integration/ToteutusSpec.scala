@@ -16,7 +16,7 @@ import org.json4s.jackson.JsonMethods
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
   with KeywordFixture with UploadFixture with KoodistoServiceMock with LokalisointiServiceMock
-  with HakukohdeFixture {
+  with HakuFixture with HakukohdeFixture {
 
   override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
 

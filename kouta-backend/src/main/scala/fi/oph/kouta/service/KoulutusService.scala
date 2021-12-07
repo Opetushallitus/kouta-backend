@@ -182,7 +182,7 @@ class KoulutusService(
   def toteutukset(oid: KoulutusOid, vainJulkaistut: Boolean, vainOlemassaolevat: Boolean = true)
                  (implicit authenticated: Authenticated): Seq[Toteutus] =
     withRootAccess(indexerRoles) {
-      ToteutusDAO.getByKoulutusOid(oid, false, vainJulkaistut)
+      ToteutusDAO.getByKoulutusOid(oid, vainOlemassaolevat, vainJulkaistut)
     }
 
   def hakutiedot(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =

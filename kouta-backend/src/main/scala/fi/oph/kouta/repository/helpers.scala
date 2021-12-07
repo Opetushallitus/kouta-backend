@@ -4,7 +4,7 @@ import java.sql.JDBCType
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Koulutustyyppi, Poistettu}
+import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Julkaistu, Koulutustyyppi, Poistettu}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
@@ -39,6 +39,10 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def andTilaMaybeNotPoistettu(myosPoistetut: Boolean, columnDesc: String = "tila"): String = {
     if (myosPoistetut) "" else s"and $columnDesc != '$Poistettu'"
+  }
+
+  def andTilaMaybeJulkaistu(vainJulkaistut: Boolean, columnDesc: String = "tila"): String = {
+    if (vainJulkaistut) s"and $columnDesc = '$Julkaistu'" else ""
   }
 
   private def toIso(l: Option[LocalDateTime]): String = l match {
