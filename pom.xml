@@ -30,7 +30,7 @@
         <auditlogger.version>8.3.1-SNAPSHOT</auditlogger.version>
         <json4s.version>3.6.7</json4s.version>
         <jackson.version>2.10.2</jackson.version>
-        <log4j.version>2.13.2</log4j.version>
+        <log4j.version>2.15.0</log4j.version>
         <logback-access.version>1.2.3</logback-access.version>
 
         <!-- Cas properties -->
