@@ -101,7 +101,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     ohjausparametrit.paikanVastaanottoPaattyy should equal(Some(Instant.ofEpochMilli(46800000L)))
     ohjausparametrit.hakijakohtainenPaikanVastaanottoaika should equal(Some(14))
     ohjausparametrit.sijoittelu should equal(Some(false))
-    ohjausparametrit.useitaHakemuksia should equal(Some(false))
+    ohjausparametrit.useitaHakemuksia should equal(Some(true))
     ohjausparametrit.jarjestetytHakutoiveet should equal(Some(false))
     ohjausparametrit.hakutoiveidenMaaraRajoitettu should equal(Some(false))
   }
