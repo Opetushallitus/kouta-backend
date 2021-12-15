@@ -13,7 +13,9 @@ import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.MiscUtils
 import slick.dbio.DBIO
 
-import java.time.Instant
+import java.time.{Duration, Instant, LocalDate, LocalDateTime, ZoneOffset}
+import java.time.temporal.{ChronoUnit, TemporalUnit}
+import java.util.Calendar
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
@@ -147,11 +149,16 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
 
-  private def setHaunOhjausparametrit(haku: Haku): DBIO[Unit] =
+  private def setHaunOhjausparametrit(haku: Haku): DBIO[Unit] = {
     Try(ohjausparametritClient.postHaunOhjausparametrit(HaunOhjausparametrit(
       hakuOid = haku.oid.get,
       paikanVastaanottoPaattyy = Some(Instant.ofEpochMilli(46800000L)), // 1970-01-01T15:00+02
       hakijakohtainenPaikanVastaanottoaika = Some(14),
-      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1640987999000L)))) // 2021-12-31T23:59:59+02
+      hakukierrosPaattyy = Some(Instant.now().plus(365, ChronoUnit.DAYS)),
+      sijoittelu = Some(false),
+      useitaHakemuksia = Some(false),
+      jarjestetytHakutoiveet = Some(false),
+      hakutoiveidenMaaraRajoitettu = Some(false)))
     ).toDBIO
+  }
 }

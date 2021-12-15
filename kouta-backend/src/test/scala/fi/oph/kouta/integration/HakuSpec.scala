@@ -1,10 +1,7 @@
 package fi.oph.kouta.integration
 
-import java.time.{Instant, LocalDateTime}
-
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.HaunOhjausparametrit
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture.HakuFixture
@@ -12,6 +9,8 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+
+import java.time.{Instant, LocalDateTime}
 
 class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture {
 
@@ -97,11 +96,14 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
 
   it should "set haun ohjausparametrit" in {
     val oid = HakuOid(put(haku))
-    ohjausparametritClient.mockedValues(oid) should equal(HaunOhjausparametrit(
-      hakuOid = oid,
-      paikanVastaanottoPaattyy = Some(Instant.ofEpochMilli(46800000L)),
-      hakijakohtainenPaikanVastaanottoaika = Some(14),
-      hakukierrosPaattyy = Some(Instant.ofEpochMilli(1640987999000L))))
+    val ohjausparametrit = ohjausparametritClient.mockedValues(oid)
+    ohjausparametrit.hakuOid should equal(oid)
+    ohjausparametrit.paikanVastaanottoPaattyy should equal(Some(Instant.ofEpochMilli(46800000L)))
+    ohjausparametrit.hakijakohtainenPaikanVastaanottoaika should equal(Some(14))
+    ohjausparametrit.sijoittelu should equal(Some(false))
+    ohjausparametrit.useitaHakemuksia should equal(Some(false))
+    ohjausparametrit.jarjestetytHakutoiveet should equal(Some(false))
+    ohjausparametrit.hakutoiveidenMaaraRajoitettu should equal(Some(false))
   }
 
   it should "return 401 without a valid session" in {
