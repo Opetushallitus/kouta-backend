@@ -156,6 +156,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       hakijakohtainenPaikanVastaanottoaika = Some(14),
       hakukierrosPaattyy = Some(Instant.now().plus(365, ChronoUnit.DAYS)),
       sijoittelu = Some(false),
+      // Tämä on true, koska käyttöliittymässä parametri on päin vastoin eli "Vain yksi hakemus -rajoitus"
       useitaHakemuksia = Some(true),
       jarjestetytHakutoiveet = Some(false),
       hakutoiveidenMaaraRajoitettu = Some(false)))
