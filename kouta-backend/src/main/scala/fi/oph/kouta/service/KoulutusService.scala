@@ -52,8 +52,8 @@ class KoulutusService(
       )
     } else { None }
 
-  def get(oid: KoulutusOid, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
-    val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, myosPoistetut)
+  def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
+    val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
     authorizeGet(
       koulutusWithTime,
       AuthorizationRules(
@@ -80,7 +80,7 @@ class KoulutusService(
   }
 
   def update(newKoulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val oldKoulutusWithInstant: Option[(Koulutus, Instant)] = KoulutusDAO.get(newKoulutus.oid.get)
+    val oldKoulutusWithInstant: Option[(Koulutus, Instant)] = KoulutusDAO.get(newKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())
     oldKoulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
         val rules: List[AuthorizationRules] = oldKoulutus.koulutustyyppi match {
@@ -150,24 +150,24 @@ class KoulutusService(
   private def validateToteutusIntegrityIfDeletingKoulutus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, koulutusOid: KoulutusOid) = {
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
-        ToteutusDAO.getByKoulutusOid(koulutusOid).isEmpty,
+        ToteutusDAO.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
           "tila",
           integrityViolationMsg("Koulutusta", "toteutuksia")))
     )
   }
 
-  def list(organisaatioOid: OrganisaatioOid, myosArkistoidut: Boolean, myosPoistetut: Boolean = false)(implicit
+  def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Seq[KoulutusListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
-      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, myosArkistoidut, myosPoistetut)
+      KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, tilaFilter)
     }
 
-  def listByKoulutustyyppi(organisaatioOid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean)(
+  def listByKoulutustyyppi(organisaatioOid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter)(
       implicit authenticated: Authenticated
   ): Seq[KoulutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules) { oids =>
-      KoulutusDAO.listAllowedByOrganisaatiotAndKoulutustyyppi(oids, koulutustyyppi, myosArkistoidut)
+      KoulutusDAO.listAllowedByOrganisaatiotAndKoulutustyyppi(oids, koulutustyyppi, tilaFilter)
     }
 
   def getTarjoajanJulkaistutKoulutukset(
@@ -179,10 +179,10 @@ class KoulutusService(
       )
     }
 
-  def toteutukset(oid: KoulutusOid, vainJulkaistut: Boolean, vainOlemassaolevat: Boolean = true)
+  def toteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)
                  (implicit authenticated: Authenticated): Seq[Toteutus] =
     withRootAccess(indexerRoles) {
-      ToteutusDAO.getByKoulutusOid(oid, vainOlemassaolevat, vainJulkaistut)
+      ToteutusDAO.getByKoulutusOid(oid, tilaFilter)
     }
 
   def hakutiedot(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =
@@ -190,8 +190,8 @@ class KoulutusService(
       HakutietoDAO.getByKoulutusOid(oid)
     }
 
-  def listToteutukset(oid: KoulutusOid, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid, !vainOlemassaolevat))
+  def listToteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid, tilaFilter))
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit
       authenticated: Authenticated
@@ -200,7 +200,7 @@ class KoulutusService(
       organisaatioOid,
       AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
     ) {
-      case Seq(RootOrganisaatioOid) => ToteutusDAO.listByKoulutusOid(oid)
+      case Seq(RootOrganisaatioOid) => ToteutusDAO.listByKoulutusOid(oid, TilaFilter.onlyOlemassaolevat())
       case x                        => ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
     }
 
@@ -212,7 +212,7 @@ class KoulutusService(
         case Seq(RootOrganisaatioOid) => k.toteutukset.length
         case _ =>
           val oidStrings = organisaatioOids.map(_.toString())
-          k.toteutukset.count(t => t.tila != Arkistoitu && t.organisaatiot.exists(o => oidStrings.contains(o)))
+          k.toteutukset.count(t => t.tila != Arkistoitu && t.tila != Poistettu && t.organisaatiot.exists(o => oidStrings.contains(o)))
       }
     }
 
@@ -238,7 +238,7 @@ class KoulutusService(
         )
       })
 
-    list(organisaatioOid, myosArkistoidut = true, myosPoistetut = true).map(_.oid) match {
+    list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
       case Nil          => KoulutusSearchResult()
       case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
     }
@@ -271,7 +271,7 @@ class KoulutusService(
   def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit
       authenticated: Authenticated
   ): DBIO[(Koulutus, Option[Koulutus])] = {
-    val koulutusWithLastModified = get(koulutusOid)
+    val koulutusWithLastModified = get(koulutusOid, TilaFilter.onlyOlemassaolevat())
 
     if (koulutusWithLastModified.isEmpty) {
       throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")

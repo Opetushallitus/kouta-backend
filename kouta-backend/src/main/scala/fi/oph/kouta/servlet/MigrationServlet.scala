@@ -3,7 +3,7 @@ package fi.oph.kouta.servlet
 import fi.oph.kouta.client.{CallerId, HttpClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, PerustiedotWithOid, Toteutus}
+import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, PerustiedotWithOid, TilaFilter, Toteutus}
 import fi.oph.kouta.repository.{KoutaDatabase, MigrationDAO}
 import fi.oph.kouta.service._
 import fi.vm.sade.properties.OphProperties
@@ -11,10 +11,10 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.JsonDSL._
 import org.json4s._
 import org.scalatra.{BadRequest, Ok}
+
 import java.time.Instant
 import java.util.UUID
 import java.util.regex.Pattern
-
 import fi.oph.kouta.domain
 
 import scala.util.{Failure, Success, Try}
@@ -257,7 +257,7 @@ class MigrationServlet(koulutusService: KoulutusService,
               hakukohdeService.put, hakukohdeService.update)
 
             if(valintakokeet.nonEmpty) {
-              val saved: (Hakukohde, Instant) = hakukohdeService.get(HakukohdeOid(newOid)).get
+              val saved: (Hakukohde, Instant) = hakukohdeService.get(HakukohdeOid(newOid), TilaFilter.onlyOlemassaolevat()).get
 
               for(vk <- saved._1.valintakokeet;
                   (id, old) <- valintakokeet) {
