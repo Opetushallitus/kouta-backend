@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.Hakukohde
+import fi.oph.kouta.domain.{Hakukohde, TilaFilter}
 import fi.oph.kouta.domain.oid.HakukohdeOid
 import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
@@ -44,7 +44,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    hakukohdeService.get(HakukohdeOid(params("oid")), params.getOrElse("myosPoistetut", "false").toBoolean) match {
+    val myosPoistetut = params.getOrElse("myosPoistetut", "false").toBoolean
+    hakukohdeService.get(HakukohdeOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)) match {
       case None => NotFound("error" -> "Unknown hakukohde oid")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }

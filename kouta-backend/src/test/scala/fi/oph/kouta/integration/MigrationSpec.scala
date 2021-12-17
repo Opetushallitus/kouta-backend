@@ -2,9 +2,8 @@ package fi.oph.kouta.integration
 
 import java.time.Instant
 import java.util.UUID
-
 import fi.oph.kouta.client.{CallerId, HttpClient, OidAndChildren}
-import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, Toteutus}
+import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, TilaFilter, Toteutus}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.integration.fixture.AuthFixture
 import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, OrganisaatioServiceImpl, ToteutusService}
@@ -104,7 +103,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
 
-    when(hakukohdeService.get(any[HakukohdeOid], anyBoolean)(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
+    when(hakukohdeService.get(any[HakukohdeOid], any[TilaFilter])(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
       Some(hakukohdeCaptor.value
       .copy(valintakokeet = hakukohdeCaptor.value.valintakokeet
         .map(vk => vk.copy(id = Some(UUID.randomUUID())))), Instant.now()): Option[(Hakukohde, Instant)])
@@ -153,7 +152,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
 
-    when(hakukohdeService.get(any[HakukohdeOid], anyBoolean)(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
+    when(hakukohdeService.get(any[HakukohdeOid], any[TilaFilter])(any[Authenticated])).thenAnswer((_: HakukohdeOid) =>
       Some(hakukohdeCaptor.value
       .copy(valintakokeet = hakukohdeCaptor.value.valintakokeet
         .map(vk => vk.copy(id = Some(UUID.randomUUID())))), Instant.now()): Option[(Hakukohde, Instant)])

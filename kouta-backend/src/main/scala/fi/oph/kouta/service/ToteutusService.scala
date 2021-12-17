@@ -1,5 +1,7 @@
 package fi.oph.kouta.service
 
+import com.hubspot.jinjava.lib.filter.ListFilter
+
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoodistoClient, KoutaIndexClient, LokalisointiClient}
@@ -14,7 +16,7 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.NameHelper
 import fi.oph.kouta.validation.Validations
-import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
+import fi.oph.kouta.validation.Validations.{TutkintonimikeKoodiPattern, assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -63,8 +65,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  def get(oid: ToteutusOid, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
-    val toteutusWithTime = ToteutusDAO.get(oid, myosPoistetut)
+  def get(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
+    val toteutusWithTime = ToteutusDAO.get(oid, tilaFilter)
     val enrichedToteutus = toteutusWithTime match {
       case Some((t, i)) => {
         val esitysnimi = generateToteutusEsitysnimi(t)
@@ -85,7 +87,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get)
+    val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       withValidation(t, Some(oldToteutus)) { t =>
@@ -97,21 +99,21 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }.nonEmpty
 
-  def list(organisaatioOid: OrganisaatioOid, vainHakukohteeseenLiitettavat: Boolean = false, myosArkistoidut: Boolean, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+  def list(organisaatioOid: OrganisaatioOid, vainHakukohteeseenLiitettavat: Boolean = false, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid,
       AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(
-      ToteutusDAO.listByAllowedOrganisaatiot(_, vainHakukohteeseenLiitettavat, myosArkistoidut, myosPoistetut))
+      ToteutusDAO.listByAllowedOrganisaatiot(_, vainHakukohteeseenLiitettavat, tilaFilter))
 
-  def listHaut(oid: ToteutusOid, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid, !vainOlemassaolevat))
+  def listHaut(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakuListItem] =
+    withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid, tilaFilter))
 
-  def listHakukohteet(oid: ToteutusOid, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
-    withRootAccess(indexerRoles)(HakukohdeDAO.listByToteutusOid(oid, !vainOlemassaolevat))
+  def listHakukohteet(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
+    withRootAccess(indexerRoles)(HakukohdeDAO.listByToteutusOid(oid, tilaFilter))
   }
 
   def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByToteutusOid(oid)
+      case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByToteutusOid(oid, TilaFilter.onlyOlemassaolevat())
       case organisaatioOids => HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, organisaatioOids)
     }
   }
@@ -123,7 +125,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         case Seq(RootOrganisaatioOid) => t.hakukohteet.length
         case _ =>
           val oidStrings = organisaatioOids.map(_.toString())
-          t.hakukohteet.count(x => x.tila != Arkistoitu && oidStrings.contains(x.organisaatio.oid.toString()))
+          t.hakukohteet.count(x => x.tila != Arkistoitu && x.tila != Poistettu && oidStrings.contains(x.organisaatio.oid.toString()))
       }
     }
 
@@ -147,7 +149,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         }
       )
 
-    list(organisaatioOid, myosArkistoidut = true, myosPoistetut = true).map(_.oid) match {
+    list(organisaatioOid, false, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
       case Nil          => ToteutusSearchResult()
       case toteutusOids => assocHakukohdeCounts(KoutaIndexClient.searchToteutukset(toteutusOids, params))
     }
@@ -192,7 +194,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   private def validateHakukohdeIntegrityIfDeletingToteutus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, toteutusOid: ToteutusOid) = {
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
-        HakukohdeDAO.listByToteutusOid(toteutusOid).isEmpty,
+        HakukohdeDAO.listByToteutusOid(toteutusOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
         "tila",
         integrityViolationMsg("Toteutusta", "hakukohteita")))
     )

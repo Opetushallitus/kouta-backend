@@ -3,6 +3,7 @@ package fi.oph.kouta.servlet
 import java.net.URLDecoder
 import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.TilaFilter
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
@@ -124,9 +125,10 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
+    val vainJulkaistut = params.getOrElse("vainJulkaistut", "false").toBoolean
+    val vainOlemassaolevat = params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(koulutusService.toteutukset(KoulutusOid(params("oid")),
-      params.getOrElse("vainJulkaistut", "false").toBoolean,
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.vainJulkaisutOrVainOlemassaolevat(vainJulkaistut, vainOlemassaolevat)))
   }
 
   registerPath( "/indexer/koulutus/{oid}/toteutukset/list",
@@ -165,8 +167,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")),
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/koulutus/{oid}/hakutiedot",
@@ -237,8 +240,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(toteutusService.listHaut(ToteutusOid(params("oid")),
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/toteutus/{oid}/hakukohteet/list",
@@ -276,8 +280,9 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/toteutus/:oid/hakukohteet/list") {
     implicit val authenticated: Authenticated = authenticate()
 
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid")),
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/haku/{oid}/hakukohteet/list",
@@ -315,8 +320,9 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/haku/:oid/hakukohteet/list") {
 
     implicit val authenticated: Authenticated = authenticate()
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(hakuService.listHakukohteet(HakuOid(params("oid")),
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath("/indexer/haku/{oid}/koulutukset/list",
@@ -419,8 +425,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id")),
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/sorakuvaus/{id}/koulutukset/list",
@@ -459,8 +466,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(sorakuvausService.listKoulutusOids(UUID.fromString(params("id")),
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/oppilaitos/{oid}/osat/list",
@@ -563,7 +571,8 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/jarjestyspaikka/:jarjestyspaikkaOid/hakukohde-oids") {
 
     implicit val authenticated: Authenticated = authenticate()
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(HakukohdeService.getOidsByJarjestyspaikka(OrganisaatioOid(params("jarjestyspaikkaOid")),
-      params.getOrElse("vainOlemassaolevat", "true").toBoolean))
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 }

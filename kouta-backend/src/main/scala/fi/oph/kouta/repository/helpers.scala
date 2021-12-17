@@ -4,7 +4,7 @@ import java.sql.JDBCType
 import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Julkaistu, Koulutustyyppi, Poistettu}
+import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Julkaistu, Koulutustyyppi, Poistettu, TilaFilter}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
@@ -33,16 +33,18 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]): String = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
 
-  def andTilaMaybeNotArkistoitu(myosArkistoidut: Boolean): String = {
-    if (myosArkistoidut) "" else s"and tila != '$Arkistoitu'"
-  }
-
-  def andTilaMaybeNotPoistettu(myosPoistetut: Boolean, columnDesc: String = "tila"): String = {
-    if (myosPoistetut) "" else s"and $columnDesc != '$Poistettu'"
-  }
-
-  def andTilaMaybeJulkaistu(vainJulkaistut: Boolean, columnDesc: String = "tila"): String = {
-    if (vainJulkaistut) s"and $columnDesc = '$Julkaistu'" else ""
+  def tilaConditions(tilaFilter: TilaFilter, columnDesc: String = "tila"): String = {
+    if (tilaFilter.isDefined()) {
+      tilaFilter.included().size match {
+        case 1 => s"and $columnDesc = '${tilaFilter.included().head}'"
+        case 3 => s"and $columnDesc != '${tilaFilter.excluded().head}'"
+        case _ => {
+          val tilat = tilaFilter.included().map(tila => s"'$tila'").mkString(",")
+          s"and $columnDesc in (${tilat})"
+        }
+      }
+    }
+    else ""
   }
 
   private def toIso(l: Option[LocalDateTime]): String = l match {
