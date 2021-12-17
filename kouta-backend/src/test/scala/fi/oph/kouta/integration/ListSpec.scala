@@ -349,15 +349,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "include also poistetut if instructed" in {
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7), indexerSession)
   }
-  it should "include also poistetut if instructed" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7), indexerSession)
-  }
-  it should "include also poistetut if instructed" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7), indexerSession)
-  }
-  it should "include also poistetut if instructed" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7), indexerSession)
-  }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
     list(s"$KoulutusPath/${k1.oid}/toteutukset", Map("organisaatioOid" -> ParentOid.s), List(t1, t2, t3))
@@ -392,15 +383,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   "Koulutuksen toteutukset for indexer list" should "return all toteutukset for indexer" in {
     list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map[String, String](), List(t1, t2, t3), indexerSession)
-  }
-  it should "return also poistetut toteutukset if instructed" in {
-    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map("vainOlemassaolevat" -> "false"), List(t1, t2, t3, t11), indexerSession)
-  }
-  it should "return also poistetut toteutukset if instructed" in {
-    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map("vainOlemassaolevat" -> "false"), List(t1, t2, t3, t11), indexerSession)
-  }
-  it should "return also poistetut toteutukset if instructed" in {
-    list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map("vainOlemassaolevat" -> "false"), List(t1, t2, t3, t11), indexerSession)
   }
   it should "return also poistetut toteutukset if instructed" in {
     list(s"$IndexerPath$KoulutusPath/${k1.oid}/toteutukset", Map("vainOlemassaolevat" -> "false"), List(t1, t2, t3, t11), indexerSession)
@@ -470,15 +452,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   "Toteutukseen liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given toteutus for indexer" in {
     list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3, hk5, hk6), indexerSession)
-  }
-  it should "list also poistetut hakukohteet if instructed" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk3, hk5, hk6, hk7), indexerSession)
-  }
-  it should "list also poistetut hakukohteet if instructed" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk3, hk5, hk6, hk7), indexerSession)
-  }
-  it should "list also poistetut hakukohteet if instructed" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk3, hk5, hk6, hk7), indexerSession)
   }
   it should "list also poistetut hakukohteet if instructed" in {
     list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk3, hk5, hk6, hk7), indexerSession)
