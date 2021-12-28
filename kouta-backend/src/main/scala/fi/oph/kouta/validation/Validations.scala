@@ -40,6 +40,9 @@ object Validations {
   def cannotLinkToHakukohde(oid: String): ErrorMessage = ErrorMessage(msg = s"Toteutusta ($oid) ei voi liittää hakukohteeseen", id = "cannotLinkToHakukohde")
   def valuesDontMatch(relatedEntity: String, field: String): ErrorMessage = ErrorMessage(msg = s"$relatedEntity kenttä $field ei sisällä samoja arvoja", id = "valuesDontMatch")
   def oneNotBoth(field1: String, field2: String): ErrorMessage = ErrorMessage(msg = s"Tarvitaan joko $field1 tai $field2, mutta ei molempia.", id="oneNotBoth")
+  def illegalStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): ErrorMessage =
+    ErrorMessage(msg = s"Siirtyminen tilasta $oldState tilaan $newState ei ole sallittu $entityDesc", id="illegalStateChange")
+  def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage = ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id="integrityViolation")
 
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen", id = "InvalidKoulutuspaivamaarat")
   val InvalidMetadataTyyppi: ErrorMessage = ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
@@ -73,6 +76,8 @@ object Validations {
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
+  val validStateChanges: Map[Julkaisutila, Seq[Julkaisutila]] =
+    Map(Poistettu -> Seq(), Tallennettu -> Seq(Julkaistu, Poistettu), Julkaistu -> Seq(Tallennettu, Arkistoitu), Arkistoitu -> Seq(Tallennettu, Julkaistu))
   def assertTrue(b: Boolean, path: String, msg: ErrorMessage): IsValid = if (b) NoErrors else error(path, msg)
   def assertNotNegative(i: Long, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertNotNegative(i: Double, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
@@ -91,9 +96,6 @@ object Validations {
 
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
-
-  def assertDependencyExists(exists: Boolean, dependencyId: Any, dependencyName: String, dependencyIdPath: String): IsValid =
-    assertTrue(exists, dependencyIdPath, nonExistent(dependencyName, dependencyId))
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
@@ -157,8 +159,23 @@ object Validations {
                          dependencyId: Any,
                          dependencyName: String,
                          dependencyIdPath: String): IsValid = {
-    dependencyTila.map { tila =>
-      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId)))
+    dependencyTila.map { tila => and(
+      assertTrue(tila != Poistettu, path="tila", nonExistent(dependencyName, dependencyId)),
+      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId))))
     }.getOrElse(error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId)))
+  }
+
+  def validateDependencyExistence(dependencyTila: Option[Julkaisutila], dependencyId: Any, dependencyName: String, dependencyIdPath: String): IsValid = {
+    dependencyTila.map { tila =>
+      assertTrue(tila != Poistettu, path="tila", nonExistent(dependencyName, dependencyId))
+    }.getOrElse(error(dependencyIdPath, nonExistent(dependencyName, dependencyId)))
+  }
+
+  def validateStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): IsValid = {
+    validateIfTrue(oldState != newState,
+      validateIfDefined[Seq[Julkaisutila]](validStateChanges.get(oldState),
+        validStates =>
+          assertTrue(validStates.contains(newState), "tila",
+          illegalStateChange(entityDesc, oldState, newState))))
   }
 }

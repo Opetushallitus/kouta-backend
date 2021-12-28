@@ -1,0 +1,1 @@
+alter type julkaisutila add value if not exists 'poistettu';

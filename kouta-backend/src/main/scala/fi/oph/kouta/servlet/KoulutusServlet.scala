@@ -25,6 +25,13 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |          required: true
       |          description: Koulutus-oid
       |          example: 1.2.246.562.13.00000000000000000009
+      |        - in: query
+      |          name: myosPoistetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: false
+      |          description: Palautetaanko myös mahdollisesti poistettu koulutus
       |      responses:
       |        '200':
       |          description: Ok
@@ -37,7 +44,8 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    koulutusService.get(KoulutusOid(params("oid"))) match {
+    val myosPoistetut = params.getOrElse("myosPoistetut", "false").toBoolean
+    koulutusService.get(KoulutusOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)) match {
       case None => NotFound("error" -> "Unknown koulutus oid")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
@@ -154,8 +162,9 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     (params.get("organisaatioOid").map(OrganisaatioOid), params.get("koulutustyyppi"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
       case (None, _, _) => NotFound()
-      case (Some(oid), None, myosArkistoidut) => Ok(koulutusService.list(oid, myosArkistoidut))
-      case (Some(oid), Some(koulutustyyppi), myosArkistoidut) => Ok(koulutusService.listByKoulutustyyppi(oid, Koulutustyyppi.withName(koulutustyyppi), myosArkistoidut))
+      case (Some(oid), None, myosArkistoidut) => Ok(koulutusService.list(oid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
+      case (Some(oid), Some(koulutustyyppi), myosArkistoidut) =>
+        Ok(koulutusService.listByKoulutustyyppi(oid, Koulutustyyppi.withName(koulutustyyppi), TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
     }
   }
 

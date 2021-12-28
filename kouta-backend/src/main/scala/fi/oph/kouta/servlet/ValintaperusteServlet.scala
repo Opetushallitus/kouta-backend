@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{Koulutustyyppi, Valintaperuste}
+import fi.oph.kouta.domain.{Koulutustyyppi, TilaFilter, Valintaperuste}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.{NotFound, Ok}
@@ -27,6 +27,13 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |          required: true
       |          description: Valintaperuste-id
       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+      |        - in: query
+      |          name: myosPoistetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: false
+      |          description: Palautetaanko myös mahdollisesti poistettu valintaperuste
       |      responses:
       |        '200':
       |          description: Ok
@@ -39,7 +46,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     implicit val authenticated: Authenticated = authenticate()
 
-    valintaperusteService.get(UUID.fromString(params("id"))) match {
+    val myosPoistetut = params.getOrElse("myosPoistetut", "false").toBoolean
+    valintaperusteService.get(UUID.fromString(params("id")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)) match {
       case None => NotFound("error" -> "Unknown valintaperuste id")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
@@ -163,8 +171,11 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     (params.get("organisaatioOid"), params.get("hakuOid"), params.get("koulutustyyppi"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
       case (None, _, _, _) => NotFound()
-      case (Some(oid), None, None, myosArkistoidut) => Ok(valintaperusteService.list(OrganisaatioOid(oid), myosArkistoidut))
-      case (Some(oid), Some(hakuOid), Some(koulutustyyppi), myosArkistoidut) => Ok(valintaperusteService.listByHakuAndKoulutustyyppi(OrganisaatioOid(oid), HakuOid(hakuOid), Koulutustyyppi.withName(koulutustyyppi), myosArkistoidut))
+      case (Some(oid), None, None, myosArkistoidut) => Ok(valintaperusteService.list(OrganisaatioOid(oid),
+        TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
+      case (Some(oid), Some(hakuOid), Some(koulutustyyppi), myosArkistoidut) =>
+        Ok(valintaperusteService.listByHakuAndKoulutustyyppi(OrganisaatioOid(oid), HakuOid(hakuOid), Koulutustyyppi.withName(koulutustyyppi),
+          TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
     }
   }
 }
