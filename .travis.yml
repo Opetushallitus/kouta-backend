@@ -65,7 +65,7 @@ deploy:
       mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
     skip_cleanup: true
     on:
-      branch: KTO-1361-uusi-poistettu-tila
+      branch: KTO-1361-uusi-poistettu-tila-2
   - provider: script
     script:
       ./ci-tools/build/upload-image.sh $ARTIFACT_NAME

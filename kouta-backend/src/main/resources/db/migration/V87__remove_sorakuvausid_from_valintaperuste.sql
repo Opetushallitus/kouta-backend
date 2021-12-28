@@ -1,5 +1,5 @@
-alter table valintaperusteet drop column sorakuvaus_id;
-alter table valintaperusteet_history drop column sorakuvaus_id;
+alter table valintaperusteet drop column if exists sorakuvaus_id;
+alter table valintaperusteet_history drop column if exists sorakuvaus_id;
 
 create or replace function update_valintaperusteet_history() returns trigger
     language plpgsql
