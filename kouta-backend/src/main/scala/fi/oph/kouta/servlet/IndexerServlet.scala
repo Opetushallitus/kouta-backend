@@ -128,7 +128,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     val vainJulkaistut = params.getOrElse("vainJulkaistut", "false").toBoolean
     val vainOlemassaolevat = params.getOrElse("vainOlemassaolevat", "true").toBoolean
     Ok(koulutusService.toteutukset(KoulutusOid(params("oid")),
-      TilaFilter.vainJulkaisutOrVainOlemassaolevat(vainJulkaistut, vainOlemassaolevat)))
+      TilaFilter.vainJulkaistutOrVainOlemassaolevat(vainJulkaistut, vainOlemassaolevat)))
   }
 
   registerPath( "/indexer/koulutus/{oid}/toteutukset/list",

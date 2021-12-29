@@ -26,7 +26,7 @@ object TilaFilter {
     TilaFilter(Set(Tallennettu, Julkaistu))
   }
 
-  def vainJulkaisutOrVainOlemassaolevat(vainJulkaistut: Boolean, vainOlemassaolevat: Boolean): TilaFilter = {
+  def vainJulkaistutOrVainOlemassaolevat(vainJulkaistut: Boolean, vainOlemassaolevat: Boolean): TilaFilter = {
     (vainJulkaistut, vainOlemassaolevat) match {
       case (true, _) => onlyJulkaistut
       case (false, true) => onlyOlemassaolevat
