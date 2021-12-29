@@ -75,8 +75,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     withAuthorizedOrganizationOids(organisaatioOid, readRules)(
       oids => HakuDAO.listByAllowedOrganisaatiot(oids, myosArkistoidut, myosPoistetut))
 
-  def listHakukohteet(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
-    withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid))
+  def listHakukohteet(hakuOid: HakuOid, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+    withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid, !vainOlemassaolevat))
 
   def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
