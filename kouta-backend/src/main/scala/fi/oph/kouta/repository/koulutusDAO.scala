@@ -353,7 +353,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""#$selectKoulutusListSql
           where tyyppi = ${koulutustyyppi.toString}::koulutustyyppi and
               (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or julkinen = ${true})
-              and tila != 'poistettu'::julkaisutila
+              and k.tila != 'poistettu'::julkaisutila
               #${andTilaMaybeNotArkistoitu(myosArkistoidut)}
       """.as[KoulutusListItem]
   }
@@ -362,7 +362,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""#$selectKoulutusListSql
           inner join toteutukset t on k.oid = t.koulutus_oid
           inner join hakukohteet h on t.oid = h.toteutus_oid
-          where h.haku_oid = ${hakuOid.toString}""".as[KoulutusListItem]
+          where h.haku_oid = ${hakuOid.toString} and k.tila != 'poistettu'::julkaisutila""".as[KoulutusListItem]
   }
 
   def selectTilaAndTyyppi(koulutusOid: KoulutusOid): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =

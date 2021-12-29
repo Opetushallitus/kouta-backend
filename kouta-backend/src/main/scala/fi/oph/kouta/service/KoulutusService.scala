@@ -179,18 +179,19 @@ class KoulutusService(
       )
     }
 
-  def toteutuksetInclPoistetut(oid: KoulutusOid, vainJulkaistut: Boolean)(implicit authenticated: Authenticated): Seq[Toteutus] =
+  def toteutukset(oid: KoulutusOid, vainJulkaistut: Boolean, vainOlemassaolevat: Boolean = true)
+                 (implicit authenticated: Authenticated): Seq[Toteutus] =
     withRootAccess(indexerRoles) {
       ToteutusDAO.getByKoulutusOid(oid, false, vainJulkaistut)
     }
 
-  def hakutiedotInclPoistetut(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =
+  def hakutiedot(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =
     withRootAccess(indexerRoles) {
       HakutietoDAO.getByKoulutusOid(oid)
     }
 
-  def listToteutuksetInclPoistetut(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid, true))
+  def listToteutukset(oid: KoulutusOid, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid, !vainOlemassaolevat))
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit
       authenticated: Authenticated

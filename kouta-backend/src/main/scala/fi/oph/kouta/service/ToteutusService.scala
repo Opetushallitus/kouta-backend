@@ -102,11 +102,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
       AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(
       ToteutusDAO.listByAllowedOrganisaatiot(_, vainHakukohteeseenLiitettavat, myosArkistoidut, myosPoistetut))
 
-  def listHautInclPoistetut(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid))
+  def listHaut(oid: ToteutusOid, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[HakuListItem] =
+    withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid, !vainOlemassaolevat))
 
-  def listHakukohteetInclPoistetut(oid: ToteutusOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
-    withRootAccess(indexerRoles)(HakukohdeDAO.listByToteutusOid(oid, true))
+  def listHakukohteet(oid: ToteutusOid, vainOlemassaolevat: Boolean = true)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
+    withRootAccess(indexerRoles)(HakukohdeDAO.listByToteutusOid(oid, !vainOlemassaolevat))
   }
 
   def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
