@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{Hakutieto, Koulutus, OppilaitoksenOsa, Toteutus, ToteutusEnrichedData}
+import fi.oph.kouta.domain.{Hakutieto, Koulutus, OppilaitoksenOsa, Toteutus, Poistettu, ToteutusEnrichedData}
 import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
 
@@ -19,10 +19,12 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val hakuOid = put(haku, ophSession)
     val hakukohdeOid = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
       jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid))), ophSession)
+    val hakukohdeOid2 = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
+      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid)), tila = Poistettu), ophSession)
 
     get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid))
+      read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid, hakukohdeOid2))
     }
   }
 
@@ -31,12 +33,30 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val t1 = put(toteutus(oid))
     val t2 = put(toteutus(oid))
     val t3 = put(toteutus(oid))
+    val t4 = put(toteutus(oid).copy(tila = Poistettu))
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs List(
         toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
         toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
         toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
+        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi)))
+      )
+    }
+  }
+
+  "List only julkaistut toteutukset related to koulutus" should "return julkaistut toteutukset related to koulutus" in {
+    val oid = put(koulutus, ophSession)
+    val t1 = put(toteutus(oid))
+    val t2 = put(toteutus(oid))
+    val t3 = put(toteutus(oid))
+    val t4 = put(toteutus(oid).copy(tila = Poistettu))
+    get(s"$IndexerPath/koulutus/$oid/toteutukset?vainJulkaistut=true", headers = Seq(sessionHeader(indexerSession))) {
+      status should equal (200)
+      read[List[Toteutus]](body) should contain theSameElementsAs List(
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
       )
     }
   }
@@ -84,13 +104,14 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val hkOid1 = put(julkaistuHakukohde(totetusOid, hakuOid))
     val hkOid2 = put(julkaistuHakukohde(totetusOid, hakuOid))
     val hkOid3 = put(julkaistuHakukohde(totetusOid, hakuOid))
+    val hkOid4 = put(hakukohde(totetusOid, hakuOid).copy(tila = Poistettu))
 
     get(s"$IndexerPath/koulutus/$koulutusOid/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       val result = read[List[Hakutieto]](body)
       result.size should equal (1)
       result.head.haut.size should equal (1)
-      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3)
+      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3, hkOid4)
     }
   }
 
