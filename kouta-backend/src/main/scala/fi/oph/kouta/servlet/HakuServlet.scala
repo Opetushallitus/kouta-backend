@@ -44,7 +44,8 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    hakuService.get(HakuOid(params("oid")), params.getOrElse("myosPoistetut", "false").toBoolean) match {
+    val myosPoistetut = params.getOrElse("myosPoistetut", "false").toBoolean
+    hakuService.get(HakuOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)) match {
       case None => NotFound("error" -> "Unknown haku oid")
       case Some((h, l)) => Ok(h, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
@@ -153,7 +154,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     (params.get("organisaatioOid").map(OrganisaatioOid), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
       case (None, _) => NotFound()
-      case (Some(oid), myosArkistoidut) => Ok(hakuService.list(oid, myosArkistoidut))
+      case (Some(oid), myosArkistoidut) => Ok(hakuService.list(oid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
     }
   }
 

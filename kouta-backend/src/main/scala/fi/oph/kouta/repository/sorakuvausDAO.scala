@@ -1,6 +1,6 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.domain.{Julkaisutila, Koulutustyyppi, Sorakuvaus, SorakuvausListItem}
+import fi.oph.kouta.domain.{Julkaisutila, Koulutustyyppi, Sorakuvaus, SorakuvausListItem, TilaFilter}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -13,8 +13,8 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
   def getPutActions(sorakuvaus: Sorakuvaus): DBIO[Sorakuvaus]
   def getUpdateActions(sorakuvaus: Sorakuvaus): DBIO[Option[Sorakuvaus]]
 
-  def get(id: UUID, myosPoistetut: Boolean = false): Option[(Sorakuvaus, Instant)]
-  def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[SorakuvausListItem]
+  def get(id: UUID, tilaFilter: TilaFilter): Option[(Sorakuvaus, Instant)]
+  def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[SorakuvausListItem]
 }
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
@@ -33,9 +33,9 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
       m <- selectLastModified(sorakuvaus.id.get)
     } yield optionWhen(v > 0)(sorakuvaus.withModified(m.get))
 
-  override def get(id: UUID, myosPoistetut: Boolean = false): Option[(Sorakuvaus, Instant)] = {
+  override def get(id: UUID, tilaFilter: TilaFilter): Option[(Sorakuvaus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(for {
-      v <- selectSorakuvaus(id, myosPoistetut)
+      v <- selectSorakuvaus(id, tilaFilter)
       l <- selectLastModified(id)
     } yield (v, l) match {
       case (Some(sorakuvaus), Some(lastModified)) => Some((sorakuvaus, lastModified))
@@ -43,10 +43,10 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     }).get
   }
 
-  override def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[SorakuvausListItem] =
+  override def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[SorakuvausListItem] =
     koulutustyypit match {
       case Nil => Seq()
-      case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit, myosArkistoidut, myosPoistetut))
+      case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit, tilaFilter))
     }
 
   def getTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi], Option[Seq[String]]) =
@@ -99,10 +99,10 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
                      ${sorakuvaus.muokkaaja} )"""
   }
 
-  def selectSorakuvaus(id: UUID, myosPoistetut: Boolean = false): DBIO[Option[Sorakuvaus]] =
+  def selectSorakuvaus(id: UUID, tilaFilter: TilaFilter): DBIO[Option[Sorakuvaus]] =
     sql"""select id, external_id, tila, nimi, koulutustyyppi, kielivalinta,
                  metadata, organisaatio_oid, muokkaaja, lower(system_time)
-          from sorakuvaukset where id = ${id.toString}::uuid #${andTilaMaybeNotPoistettu(myosPoistetut)}""".as[Sorakuvaus].headOption
+          from sorakuvaukset where id = ${id.toString}::uuid #${tilaConditions(tilaFilter)}""".as[Sorakuvaus].headOption
 
   def updateSorakuvaus(sorakuvaus: Sorakuvaus): DBIO[Int] = {
     sqlu"""update sorakuvaukset set
@@ -124,12 +124,11 @@ sealed trait SorakuvausSQL extends SorakuvausExtractors with SorakuvausModificat
              or kielivalinta is distinct from ${toJsonParam(sorakuvaus.kielivalinta)}::jsonb)"""
   }
 
-  def selectByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): DBIO[Vector[SorakuvausListItem]] = {
+  def selectByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): DBIO[Vector[SorakuvausListItem]] = {
     sql"""select id, nimi, tila, organisaatio_oid, muokkaaja, lower(system_time)
           from sorakuvaukset
           where koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})
-          #${andTilaMaybeNotPoistettu(myosPoistetut)}
-          #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[SorakuvausListItem]
+          #${tilaConditions(tilaFilter)}""".as[SorakuvausListItem]
   }
 
   def selectTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): DBIO[Option[(Julkaisutila, Koulutustyyppi, Seq[String])]] =

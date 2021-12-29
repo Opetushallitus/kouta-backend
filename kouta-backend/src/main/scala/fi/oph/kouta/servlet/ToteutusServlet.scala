@@ -44,7 +44,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    toteutusService.get(ToteutusOid(params("oid")), params.getOrElse("myosPoistetut", "false").toBoolean) match {
+    val myosPoistetut = params.getOrElse("myosPoistetut", "false").toBoolean
+    toteutusService.get(ToteutusOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)) match {
       case None => NotFound("error" -> "Unknown toteutus oid")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
@@ -163,7 +164,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
      params.getOrElse("myosArkistoidut", "true").toBoolean)
     match {
       case (None, _, _) => NotFound()
-      case (Some(oid), vainHakukohteeseenLiitettavat, myosArkistoidut) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut))
+      case (Some(oid), vainHakukohteeseenLiitettavat, myosArkistoidut) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
     }
   }
 

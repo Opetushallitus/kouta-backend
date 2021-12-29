@@ -2,9 +2,8 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Arkistoitu, Koulutustyyppi, Valintakoe, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain.{Arkistoitu, Koulutustyyppi, TilaFilter, Valintakoe, Valintaperuste, ValintaperusteListItem}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
@@ -16,9 +15,9 @@ trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
   def getPutActions(valintaperuste: Valintaperuste): DBIO[Valintaperuste]
   def getUpdateActions(valintaperuste: Valintaperuste): DBIO[Option[Valintaperuste]]
 
-  def get(id: UUID, myosPoistetut: Boolean = false): Option[(Valintaperuste, Instant)]
-  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[ValintaperusteListItem]
-  def listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[ValintaperusteListItem]
+  def get(id: UUID, tilaFilter: TilaFilter): Option[(Valintaperuste, Instant)]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[ValintaperusteListItem]
+  def listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter): Seq[ValintaperusteListItem]
 }
 
 object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
@@ -39,10 +38,10 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       m <- selectLastModified(valintaperuste.id.get)
     } yield optionWhen(v + k > 0)(valintaperuste.withModified(m.get))
 
-  override def get(id: UUID, myosPoistetut: Boolean = false): Option[(Valintaperuste, Instant)] = {
+  override def get(id: UUID, tilaFilter: TilaFilter): Option[(Valintaperuste, Instant)] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        v <- selectValintaperuste(id, myosPoistetut).as[Valintaperuste].headOption
+        v <- selectValintaperuste(id, tilaFilter).as[Valintaperuste].headOption
         k <- selectValintakokeet(id)
         l <- selectLastModified(id)
       } yield (v, k, l)
@@ -52,17 +51,17 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     }.get
   }
 
-  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): Seq[ValintaperusteListItem] =
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[ValintaperusteListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids, myosArkistoidut, myosPoistetut)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
-      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, myosArkistoidut, myosPoistetut))
+      case (_, Nil) => KoutaDatabase.runBlocking(selectByCreatorAndNotOph(organisaatioOids, tilaFilter)) //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case (_, _)   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, tilaFilter))
     }
 
-  override def listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): Seq[ValintaperusteListItem] =
+  override def listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter): Seq[ValintaperusteListItem] =
     organisaatioOids match {
       case Nil => Seq()
-      case _   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForHakuAndKoulutustyyppi(organisaatioOids, hakuOid, koulutustyyppi, myosArkistoidut))
+      case _   => KoutaDatabase.runBlocking(selectByCreatorOrJulkinenForHakuAndKoulutustyyppi(organisaatioOids, hakuOid, koulutustyyppi, tilaFilter))
     }
 }
 
@@ -138,7 +137,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                    ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
                    $muokkaaja)"""
 
-  def selectValintaperuste(id: UUID, myosPoistetut: Boolean = false) =
+  def selectValintaperuste(id: UUID, tilaFilter: TilaFilter) =
     sql"""select id,
                  external_id,
                  tila,
@@ -154,7 +153,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  kielivalinta,
                  lower(system_time)
           from valintaperusteet
-          where id = ${id.toString}::uuid #${andTilaMaybeNotPoistettu(myosPoistetut)}"""
+          where id = ${id.toString}::uuid #${tilaConditions(tilaFilter)}"""
 
   def selectValintakokeet(id: UUID): DBIO[Vector[Valintakoe]] = {
     sql"""select id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
@@ -245,38 +244,32 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
            left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
            group by vp.id) m on v.id = m.id"""
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           where (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and v.organisaatio_oid != ${RootOrganisaatioOid})
-          #${andTilaMaybeNotPoistettu(myosPoistetut, "v.tila")}
-          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
+          #${tilaConditions(tilaFilter, "v.tila")}
       """.as[ValintaperusteListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], myosArkistoidut: Boolean, myosPoistetut: Boolean = false): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           where ((v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
                   (v.organisaatio_oid <> ${RootOrganisaatioOid} or
                    v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
               or (v.julkinen  = ${true} and
                   v.koulutustyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-              #${andTilaMaybeNotPoistettu(myosPoistetut, "v.tila")}
-              #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
+              #${tilaConditions(tilaFilter, "v.tila")}
       """.as[ValintaperusteListItem]
   }
 
-  def andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut: Boolean): String = {
-    if (myosArkistoidut) "" else s"and v.tila <> '$Arkistoitu'"
-  }
-
-  def selectByCreatorOrJulkinenForHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, myosArkistoidut: Boolean): DBIO[Vector[ValintaperusteListItem]] = {
+  def selectByCreatorOrJulkinenForHakuAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql
           inner join haut h on v.kohdejoukko_koodi_uri is not distinct from h.kohdejoukko_koodi_uri
           where h.oid = $hakuOid
           and v.koulutustyyppi = ${koulutustyyppi.toString}::koulutustyyppi
           and (v.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or v.julkinen = ${true})
           and v.tila != 'poistettu'::julkaisutila
-          #${andTilaMaybeNotArkistoituForValintaperuste(myosArkistoidut)}
+          #${tilaConditions(tilaFilter, "v.tila")}
       """.as[ValintaperusteListItem]
   }
 }
