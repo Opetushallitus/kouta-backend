@@ -17,12 +17,12 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def getPutActions(hakukohde: Hakukohde): DBIO[Hakukohde]
   def getUpdateActions(hakukohde: Hakukohde): DBIO[Option[Hakukohde]]
 
-  def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)]
-  def listByToteutusOid(oid: ToteutusOid): Seq[HakukohdeListItem]
+  def get(oid: HakukohdeOid, myosPoistetut: Boolean = false): Option[(Hakukohde, Instant)]
+  def listByToteutusOid(oid: ToteutusOid, myosPoistetut: Boolean = false): Seq[HakukohdeListItem]
   def listByToteutusOidAndAllowedOrganisaatiot(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
-  def listByHakuOid(hakuOid: HakuOid): Seq[HakukohdeListItem]
+  def listByHakuOid(hakuOid: HakuOid, myosPoistetut: Boolean = false): Seq[HakukohdeListItem]
   def listByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
-  def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem]
+  def listByValintaperusteId(valintaperusteId: UUID, myosPoistetut: Boolean = false): Seq[HakukohdeListItem]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
 
   def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]
@@ -48,9 +48,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       m  <- selectLastModified(hakukohde.oid.get)
     } yield optionWhen(hk + ha + vk + l > 0)(hakukohde.withModified(m.get))
 
-  override def get(oid: HakukohdeOid): Option[(Hakukohde, Instant)] = {
+  override def get(oid: HakukohdeOid, myosPoistetut: Boolean = false): Option[(Hakukohde, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
-      h <- selectHakukohde(oid)
+      h <- selectHakukohde(oid, myosPoistetut)
       a <- selectHakuajat(oid)
       k <- selectValintakokeet(oid)
       i <- selectLiitteet(oid)
@@ -102,19 +102,19 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     case _   => KoutaDatabase.runBlocking(selectByHakuOidAndAllowedOrganisaatiot(hakuOid, organisaatioOids))
   }
 
-  override def listByHakuOid(hakuOid: HakuOid): Seq[HakukohdeListItem] =
-    KoutaDatabase.runBlocking(selectByHakuOid(hakuOid))
+  override def listByHakuOid(hakuOid: HakuOid, myosPoistetut: Boolean = false): Seq[HakukohdeListItem] =
+    KoutaDatabase.runBlocking(selectByHakuOid(hakuOid, myosPoistetut))
 
-  override def listByToteutusOid(toteutusOid: ToteutusOid): Seq[HakukohdeListItem] =
-    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid))
+  override def listByToteutusOid(toteutusOid: ToteutusOid, myosPoistetut: Boolean = false): Seq[HakukohdeListItem] =
+    KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid, myosPoistetut))
 
   override def listByToteutusOidAndAllowedOrganisaatiot(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] = organisaatioOids match {
     case Nil => Seq()
     case _   => KoutaDatabase.runBlocking(selectByToteutusOidAndAllowedOrganisaatiot(toteutusOid, organisaatioOids))
   }
 
-  override def listByValintaperusteId(valintaperusteId: UUID): Seq[HakukohdeListItem] =
-    KoutaDatabase.runBlocking(selectByValintaperusteId(valintaperusteId))
+  override def listByValintaperusteId(valintaperusteId: UUID, myosPoistetut: Boolean = false): Seq[HakukohdeListItem] =
+    KoutaDatabase.runBlocking(selectByValintaperusteId(valintaperusteId, myosPoistetut))
 
   override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] = organisaatioOids match {
     case Nil => Seq()
@@ -299,7 +299,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or organisaatio_oid is distinct from ${hakukohde.organisaatioOid})"""
   }
 
-  def selectHakukohde(oid: HakukohdeOid): DBIO[Option[Hakukohde]] = {
+  def selectHakukohde(oid: HakukohdeOid, myosPoistetut: Boolean = false): DBIO[Option[Hakukohde]] = {
     sql"""select oid,
              external_id,
              toteutus_oid,
@@ -329,7 +329,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              muokkaaja,
              organisaatio_oid,
              kielivalinta,
-             lower(system_time) from hakukohteet where oid = $oid""".as[Hakukohde].headOption
+             lower(system_time) from hakukohteet where oid = $oid #${andTilaMaybeNotPoistettu(myosPoistetut)}""".as[Hakukohde].headOption
   }
 
   def insertHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
@@ -497,29 +497,30 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     sql"""#$selectHakukohdeListSql
           left join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-          and ha.haku_oid = $hakuOid""".as[HakukohdeListItem]
+          and ha.haku_oid = $hakuOid and ha.tila != 'poistettu'::julkaisutila""".as[HakukohdeListItem]
   }
 
-  def selectByHakuOid(hakuOid: HakuOid): DBIO[Vector[HakukohdeListItem]] = {
+  def selectByHakuOid(hakuOid: HakuOid, myosPoistetut: Boolean = false): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
-          where ha.haku_oid = $hakuOid""".as[HakukohdeListItem]
+          where ha.haku_oid = $hakuOid #${andTilaMaybeNotPoistettu(myosPoistetut, "ha.tila")}""".as[HakukohdeListItem]
   }
 
-  def selectByToteutusOid(toteutusOid: ToteutusOid): DBIO[Vector[HakukohdeListItem]] = {
+  def selectByToteutusOid(toteutusOid: ToteutusOid, myosPoistetut: Boolean = false): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
-          where ha.toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
+          where ha.toteutus_oid = $toteutusOid #${andTilaMaybeNotPoistettu(myosPoistetut, "ha.tila")}""".as[HakukohdeListItem]
   }
 
   def selectByToteutusOidAndAllowedOrganisaatiot(toteutusOid: ToteutusOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           left join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
           where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-          and ha.toteutus_oid = $toteutusOid""".as[HakukohdeListItem]
+          and ha.toteutus_oid = $toteutusOid and ha.tila != 'poistettu'::julkaisutila""".as[HakukohdeListItem]
   }
 
-  def selectByValintaperusteId(valintaperusteId: UUID): DBIO[Vector[HakukohdeListItem]] = {
+  def selectByValintaperusteId(valintaperusteId: UUID, myosPoistetut: Boolean = false): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
-          where ha.valintaperuste_id = ${valintaperusteId.toString}::uuid""".as[HakukohdeListItem]
+          where ha.valintaperuste_id = ${valintaperusteId.toString}::uuid
+          #${andTilaMaybeNotPoistettu(myosPoistetut, "ha.tila")}""".as[HakukohdeListItem]
   }
 
   def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
@@ -537,15 +538,15 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]] =
     sql"""select t.oid, t.tila, k.tyyppi, t.metadata
           from toteutukset t
-          inner join koulutukset k on t.koulutus_oid = k.oid
-          where t.oid = ${hakukohde.toteutusOid}
+          inner join koulutukset k on t.koulutus_oid = k.oid and k.tila != 'poistettu'::julkaisutila
+          where t.oid = ${hakukohde.toteutusOid} and t.tila != 'poistettu'::julkaisutila
           union all
           select oid, tila, null, null
           from haut
-          where oid = ${hakukohde.hakuOid}
+          where oid = ${hakukohde.hakuOid} and tila != 'poistettu'::julkaisutila
           union all
           select id::text, tila, koulutustyyppi, null
           from valintaperusteet
-          where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid
+          where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
     """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]
 }

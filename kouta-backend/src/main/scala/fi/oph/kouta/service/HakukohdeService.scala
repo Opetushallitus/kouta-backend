@@ -15,6 +15,7 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper}
 import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations.validateStateChange
 import org.checkerframework.checker.units.qual.m
 import slick.dbio.DBIO
 
@@ -34,8 +35,8 @@ class HakukohdeService(
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
 
-  def get(oid: HakukohdeOid)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] = {
-    val hakukohde = HakukohdeDAO.get(oid)
+  def get(oid: HakukohdeOid, myosPoistetut: Boolean = false)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] = {
+    val hakukohde = HakukohdeDAO.get(oid, myosPoistetut)
 
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
@@ -72,7 +73,6 @@ class HakukohdeService(
     }
   }
 
-
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
     authorizePut(hakukohde) { h =>
       withValidation(h, None) { h =>
@@ -89,24 +89,25 @@ class HakukohdeService(
     )
     authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
       withValidation(h, Some(oldHakukohde)) { h =>
+        throwValidationErrors(validateStateChange("hakukohteelle", oldHakukohde.tila, hakukohde.tila))
         validateDependenciesIntegrity(h, authenticated, "update")
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
   }
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+  def listInclPoistetut(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit
       authenticated: Authenticated
   ): HakukohdeSearchResult =
-    list(organisaatioOid).map(_.oid) match {
+    listInclPoistetut(organisaatioOid).map(_.oid) match {
       case Nil           => HakukohdeSearchResult()
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid)(implicit authenticated: Authenticated) =
+  def getOidsByJarjestyspaikkaInclPoistetut(jarjestyspaikkaOid: OrganisaatioOid)(implicit authenticated: Authenticated) =
     withRootAccess(indexerRoles) {
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOid);
     }
