@@ -38,7 +38,7 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
     authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat()), sorakuvaus, updateRules) { (oldSorakuvaus, s) =>
       withValidation(s, Some(oldSorakuvaus)) {
         throwValidationErrors(validateStateChange("sorakuvaukselle", oldSorakuvaus.tila, sorakuvaus.tila))
-        validateKoulutusIntegrityIfDeletingSorakuvus(oldSorakuvaus.tila, sorakuvaus.tila, sorakuvaus.id.get)
+        validateKoulutusIntegrityIfDeletingSorakuvaus(oldSorakuvaus.tila, sorakuvaus.tila, sorakuvaus.id.get)
         doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
     }.nonEmpty
