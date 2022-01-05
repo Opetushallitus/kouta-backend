@@ -1,6 +1,6 @@
 package fi.oph.kouta.external
 
-import java.time.temporal.ChronoUnit
+import java.time.temporal.{ChronoUnit, TemporalField}
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.util.UUID
 import fi.oph.kouta.TestData
@@ -184,7 +184,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val startTime1: LocalDateTime = testDate("09:49", 1)
   val endTime1: LocalDateTime = testDate("09:58", 1)
   val time3: LocalDateTime = testDate("09:58", 3)
-  val thisYear = "2021"
+  val thisYear = LocalDate.now().getYear().toString
 
   val ammTutkinnonOsaKoulutusMetadata: String = write(TestData.AmmTutkinnonOsaKoulutus.metadata)
   val ammOsaamisalaKoulutusMetadata: String = write(TestData.AmmOsaamisalaKoulutus.metadata)
