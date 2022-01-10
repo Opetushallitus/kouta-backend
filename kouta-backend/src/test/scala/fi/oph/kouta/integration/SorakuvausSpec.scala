@@ -301,6 +301,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     lastModified = get(julkaistuId, sorakuvaus(julkaistuId).copy(tila = Julkaistu))
     update(SorakuvausPath, sorakuvaus(julkaistuId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("sorakuvaukselle", Julkaistu, Poistettu))))
     lastModified = get(arkistoituId, sorakuvaus(arkistoituId).copy(tila = Arkistoitu))
+    update(SorakuvausPath, sorakuvaus(arkistoituId).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("sorakuvaukselle", Arkistoitu, Tallennettu))))
     update(SorakuvausPath, sorakuvaus(arkistoituId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("sorakuvaukselle", Arkistoitu, Poistettu))))
   }
 

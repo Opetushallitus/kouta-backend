@@ -44,7 +44,7 @@ class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditL
     }.nonEmpty
 
 
-  private def validateKoulutusIntegrityIfDeletingSorakuvus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, sorakuvausId: UUID) =
+  private def validateKoulutusIntegrityIfDeletingSorakuvaus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, sorakuvausId: UUID) =
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
         KoulutusDAO.listBySorakuvausId(sorakuvausId, TilaFilter.onlyOlemassaolevat()).isEmpty,

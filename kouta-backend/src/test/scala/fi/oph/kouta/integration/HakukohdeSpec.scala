@@ -601,6 +601,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     lastModified = get(julkaistuId, julkaistu)
     update(HakukohdePath, julkaistu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Julkaistu, Poistettu))))
     lastModified = get(arkistoituId, arkistoitu)
+    update(HakukohdePath, arkistoitu.copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Tallennettu))))
     update(HakukohdePath, arkistoitu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Poistettu))))
   }
 }

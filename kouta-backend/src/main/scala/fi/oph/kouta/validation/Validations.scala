@@ -77,7 +77,7 @@ object Validations {
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
   val validStateChanges: Map[Julkaisutila, Seq[Julkaisutila]] =
-    Map(Poistettu -> Seq(), Tallennettu -> Seq(Julkaistu, Poistettu), Julkaistu -> Seq(Tallennettu, Arkistoitu), Arkistoitu -> Seq(Tallennettu, Julkaistu))
+    Map(Poistettu -> Seq(), Tallennettu -> Seq(Julkaistu, Poistettu), Julkaistu -> Seq(Tallennettu, Arkistoitu), Arkistoitu -> Seq(Julkaistu))
   def assertTrue(b: Boolean, path: String, msg: ErrorMessage): IsValid = if (b) NoErrors else error(path, msg)
   def assertNotNegative(i: Long, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertNotNegative(i: Double, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)

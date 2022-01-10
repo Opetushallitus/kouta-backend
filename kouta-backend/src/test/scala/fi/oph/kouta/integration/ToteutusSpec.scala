@@ -654,6 +654,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     lastModified = get(julkaistuOid.get.s, toteutusBase.copy(oid = julkaistuOid, tila = Julkaistu))
     update(ToteutusPath, toteutusBase.copy(oid = julkaistuOid, tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Julkaistu, Poistettu))))
     lastModified = get(arkistoituOid.get.s, toteutusBase.copy(oid = arkistoituOid, tila = Arkistoitu))
+    update(ToteutusPath, toteutusBase.copy(oid = arkistoituOid, tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Arkistoitu, Tallennettu))))
     update(ToteutusPath, toteutusBase.copy(oid = arkistoituOid, tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Arkistoitu, Poistettu))))
   }
 

@@ -372,6 +372,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     lastModified = get(julkaistuId, valintaperuste(julkaistuId).copy(tila = Julkaistu))
     update(ValintaperustePath, valintaperuste(julkaistuId).copy(tila = Poistettu), lastModified, 400, List(ValidationError("tila", illegalStateChange("valintaperusteelle", Julkaistu, Poistettu))))
     lastModified = get(arkistoituId, valintaperuste(arkistoituId).copy(tila = Arkistoitu))
+    update(ValintaperustePath, valintaperuste(arkistoituId).copy(tila = Tallennettu), lastModified, 400, List(ValidationError("tila", illegalStateChange("valintaperusteelle", Arkistoitu, Tallennettu))))
     update(ValintaperustePath, valintaperuste(arkistoituId).copy(tila = Poistettu), lastModified, 400, List(ValidationError("tila", illegalStateChange("valintaperusteelle", Arkistoitu, Poistettu))))
   }
 

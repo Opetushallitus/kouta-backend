@@ -401,6 +401,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     lastModified = get(julkaistuId, haku(julkaistuId).copy(tila = Julkaistu))
     update(HakuPath, haku(julkaistuId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Julkaistu, Poistettu))))
     lastModified = get(arkistoituId, haku(arkistoituId).copy(tila = Arkistoitu))
+    update(HakuPath, haku(arkistoituId).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Arkistoitu, Tallennettu))))
     update(HakuPath, haku(arkistoituId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Arkistoitu, Poistettu))))
   }
 

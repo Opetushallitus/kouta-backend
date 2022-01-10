@@ -510,6 +510,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     lastModified = get(julkaistuOid, koulutus(julkaistuOid).copy(tila = Julkaistu))
     update(KoulutusPath, koulutus(julkaistuOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Julkaistu, Poistettu))))
     lastModified = get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Arkistoitu))
+    update(KoulutusPath, koulutus(arkistoituOid).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Arkistoitu, Tallennettu))))
     update(KoulutusPath, koulutus(arkistoituOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Arkistoitu, Poistettu))))
   }
 
