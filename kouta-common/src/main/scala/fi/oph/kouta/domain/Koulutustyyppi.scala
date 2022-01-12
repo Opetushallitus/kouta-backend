@@ -16,11 +16,12 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Telma,
       AmmTutkinnonOsa,
       AmmOsaamisala,
+      AmmMuu,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu
     )
 
-  def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala)
+  def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu)
   def korkeakoulu            = List(Amk, Yo)
   def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
   def onlyOphCanSaveKoulutus = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
@@ -118,5 +119,6 @@ case object Telma                       extends Koulutustyyppi { val name = "tel
 case object Muu                         extends Koulutustyyppi { val name = "muu"                           }
 case object AmmTutkinnonOsa             extends Koulutustyyppi { val name = "amm-tutkinnon-osa"             }
 case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm-osaamisala"                }
+case object AmmMuu                      extends Koulutustyyppi { val name = "amm-muu"                       }
 case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
 case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }

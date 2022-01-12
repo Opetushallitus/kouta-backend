@@ -118,6 +118,19 @@ package object valintaperusteMetadata {
       |            - amm-osaamisala
       |""".stripMargin
 
+  val AmmatillinenMuuValintaperusteMetadataModel =
+    """    AmmatillinenMuuValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: amm-muu
+      |          enum:
+      |            - amm-muu
+      |""".stripMargin
+
   val TutkintokoulutukseenValmentavaValintaperusteMetadataModel =
     """    TutkintokoulutukseenValmentavaValintaperusteMetadata:
       |      type: object
@@ -129,6 +142,45 @@ package object valintaperusteMetadata {
       |          example: tuva
       |          enum:
       |            - tuva
+      |""".stripMargin
+
+  val TelmaValintaperusteMetadataModel =
+    """    TelmaValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: telma
+      |          enum:
+      |            - telma
+      |""".stripMargin
+
+  val VapaaSivistystyoOpistovuosiValintaperusteMetadataModel =
+    """    VapaaSivistystyoOpistovuosiValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: vapaa-sivistystyo-opistovuosi
+      |          enum:
+      |            - vapaa-sivistystyo-opistovuosi
+      |""".stripMargin
+
+  val VapaaSivistystyoMuuValintaperusteMetadataModel =
+    """    VapaaSivistystyoMuuValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: vapaa-sivistystyo-muu
+      |          enum:
+      |            - vapaa-sivistystyo-muu
       |""".stripMargin
 
   val MuuValintaperusteMetadataModel =
@@ -146,8 +198,9 @@ package object valintaperusteMetadata {
 
   def models = List(ValintaperusteMetadataModel, AmmatillinenValintaperusteMetadataModel,
     AmmattikorkeakouluValintaperusteMetadataModel, YliopistoValintaperusteMetadataModel, LukioValintaperusteMetadataModel,
-    AmmatillinenTutkinnonOsaValintaperusteMetadataModel, AmmatillinenOsaamisalaValintaperusteMetadataModel,
-    TutkintokoulutukseenValmentavaValintaperusteMetadataModel, MuuValintaperusteMetadataModel)
+    AmmatillinenTutkinnonOsaValintaperusteMetadataModel, AmmatillinenOsaamisalaValintaperusteMetadataModel, AmmatillinenMuuValintaperusteMetadataModel,
+    TutkintokoulutukseenValmentavaValintaperusteMetadataModel, TelmaValintaperusteMetadataModel, VapaaSivistystyoOpistovuosiValintaperusteMetadataModel,
+    VapaaSivistystyoMuuValintaperusteMetadataModel, MuuValintaperusteMetadataModel)
 }
 
 sealed trait ValintaperusteMetadata extends ValidatableSubEntity {
@@ -230,6 +283,15 @@ case class AmmatillinenOsaamisalaValintaperusteMetadata(tyyppi: Koulutustyyppi =
                                                         sisalto: Seq[Sisalto] = Seq(),
                                                         valintakokeidenYleiskuvaus: Kielistetty = Map(),
                                                         isMuokkaajaOphVirkailija: Option[Boolean] = None)
+  extends ValintaperusteMetadata
+
+case class AmmatillinenMuuValintaperusteMetadata(tyyppi: Koulutustyyppi = AmmMuu,
+                                                 valintatavat: Seq[Valintatapa],
+                                                 kuvaus: Kielistetty = Map(),
+                                                 hakukelpoisuus: Kielistetty = Map(),
+                                                 lisatiedot: Kielistetty = Map(),
+                                                 sisalto: Seq[Sisalto] = Seq(),
+                                                 valintakokeidenYleiskuvaus: Kielistetty = Map())
   extends ValintaperusteMetadata
 
 case class TutkintokoulutukseenValmentavaValintaperusteMetadata(tyyppi: Koulutustyyppi = Tuva,

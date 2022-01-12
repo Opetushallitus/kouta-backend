@@ -328,6 +328,20 @@ package object toteutusMetadata {
       |                - amm-osaamisala
       |""".stripMargin
 
+  val AmmatillinenMuuToteutusMetadataModel: String =
+    """    AmmatillinenMuuToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: amm-muu
+      |              enum:
+      |                - amm-muu
+      |""".stripMargin
+
   val TuvaToteutusMetadataModel: String =
     """    TuvaToteutusMetadata:
       |      allOf:
@@ -522,8 +536,8 @@ package object toteutusMetadata {
 
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel, KorkeakouluToteutusMetadataModel,
     AmmattikorkeaToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
-    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel, LukiodiplomiTietoModel,
-    VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel)
+    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
+    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata extends ValidatableSubEntity {
@@ -636,6 +650,29 @@ case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOs
                                                   hakuaika: Option[Ajanjakso] = None,
                                                   aloituspaikat: Option[Int] = None,
                                                   isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
+
+case class AmmatillinenMuuToteutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
+                                           kuvaus: Kielistetty = Map(),
+                                           opetus: Option[Opetus] = None,
+                                           asiasanat: List[Keyword] = List(),
+                                           ammattinimikkeet: List[Keyword] = List(),
+                                           yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                           hakutermi: Option[Hakutermi] = None,
+                                           hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                           hakulomakeLinkki: Kielistetty = Map(),
+                                           lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                           lisatietoaValintaperusteista: Kielistetty = Map(),
+                                           hakuaika: Option[Ajanjakso] = None,
+                                           aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    ))
+  )
+
+  override def allowSorakuvaus: Boolean = false
+}
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),

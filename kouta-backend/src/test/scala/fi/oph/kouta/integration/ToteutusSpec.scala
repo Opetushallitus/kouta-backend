@@ -657,6 +657,15 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
   }
 
+  it should "create, get and update muu ammatillinen toteutus" in {
+    val ammMuuKoulutusOid = put(TestData.AmmMuuKoulutus.copy(tila = Julkaistu), ophSession)
+    val ammMuuToteutus = TestData.AmmMuuToteutus.copy(koulutusOid = KoulutusOid(ammMuuKoulutusOid), tila = Tallennettu)
+    val oid = put(ammMuuToteutus)
+    val lastModified = get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
   it should "create, get and update lukio toteutus" in {
     val _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(
       Fi -> s"""toteutuslomake.lukionYleislinjaNimiOsa fi, 40 yleiset.opintopistetta fi

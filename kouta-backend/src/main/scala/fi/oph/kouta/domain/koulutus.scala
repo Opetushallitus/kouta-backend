@@ -25,7 +25,7 @@ package object koulutus {
       |          description: Onko koulutus tutkintoon johtavaa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'tuva' (tutkintokoulutukseen valmentava koulutus), 'telma' (työhön ja itsenäiseen elämään valmentava koulutus)"
+      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'amm-muu', 'tuva' (tutkintokoulutukseen valmentava koulutus), 'telma' (työhön ja itsenäiseen elämään valmentava koulutus)"
       |          enum:
       |            - amm
       |            - yo
@@ -33,6 +33,7 @@ package object koulutus {
       |            - lk
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
+      |            - amm-muu
       |            - tuva
       |            - telma
       |            - vapaa-sivistystyo-opistovuosi
@@ -93,6 +94,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/AmmattikorkeaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenMuuKoulutusMetadata'
       |            - $ref: '#/components/schemas/LukioKoulutusMetadata'
       |            - $ref: '#/components/schemas/TuvaKoulutusMetadata'
       |            - $ref: '#/components/schemas/TelmaKoulutusMetadata'
@@ -211,12 +213,12 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
       validateIfJulkaistu(tila, and(
         assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
-        validateIfTrue(koulutustyyppi != AmmTutkinnonOsa, and(
+        validateIfTrue((koulutustyyppi != AmmTutkinnonOsa && koulutustyyppi != AmmMuu), and(
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
           validateIfTrue(Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
           validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
         validateIfTrue(!Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertTrue(koulutuksetKoodiUri.size < 2, "koulutuksetKoodiUri", tooManyKoodiUris)),
-        validateIfTrue(koulutustyyppi == AmmTutkinnonOsa, and(
+        validateIfTrue((koulutustyyppi == AmmTutkinnonOsa || koulutustyyppi == AmmMuu), and(
           assertNotDefined(ePerusteId, "ePerusteId"),
           assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
         )),

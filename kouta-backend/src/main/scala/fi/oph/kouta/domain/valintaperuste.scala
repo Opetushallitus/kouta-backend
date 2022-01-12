@@ -40,8 +40,14 @@ package object valintaperuste {
       |            - yo
       |            - amk
       |            - lk
-      |            - muu
-      |          example: amm
+      |            - amm-tutkinnon-osa
+      |            - amm-osaamisala
+      |            - amm-muu
+      |            - tuva
+      |            - telma
+      |            - vapaa-sivistystyo-opistovuosi
+      |            - vapaa-sivistystyo-muu
+      |      |   example: amm
       |        hakutapaKoodiUri:
       |          type: string
       |          description: Valintaperustekuvaukseen liittyvä hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
@@ -80,11 +86,15 @@ package object valintaperuste {
       |          oneOf:
       |            - $ref: '#/components/schemas/YliopistoValintaperusteMetadata'
       |            - $ref: '#/components/schemas/LukioValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaValintaperusteMetadata'
+      |            - $ref: '#/components/schemes/AmmatillinenMuuValintaperusteMetadataModel'
       |            - $ref: '#/components/schemas/TutkintokoulutukseenValmentavaValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/TelmaValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/VapaaSivistystyoOpistovuosiValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/VapaaSivistystyoMuuValintaperusteMetadata'
       |            - $ref: '#/components/schemas/MuuValintaperusteMetadata'
       |          example:
       |            tyyppi: amm
