@@ -13,7 +13,7 @@ class SearchServlet(koulutusService: KoulutusService,
 
   def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
-  val SearchParams = Seq("nimi", "muokkaaja", "tila", "arkistoidut", "page", "size", "lng", "order-by", "order")
+  val SearchParams = Seq("nimi", "muokkaaja", "tila", "page", "size", "lng", "order-by", "order")
 
   val searchParams =
     """      parameters:
@@ -45,13 +45,6 @@ class SearchServlet(koulutusService: KoulutusService,
       |          required: false
       |          description: Suodata tilalla (julkaistu/tallennettu/arkistoitu)
       |          example: Julkaistu
-      |        - in: query
-      |          name: arkistoidut
-      |          schema:
-      |            type: boolean
-      |          required: false
-      |          description: Näytetäänkö arkistoidut
-      |          example: true
       |        - in: query
       |          name: page
       |          schema:
