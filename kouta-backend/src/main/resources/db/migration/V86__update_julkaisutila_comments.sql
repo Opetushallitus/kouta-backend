@@ -1,0 +1,6 @@
+COMMENT ON COLUMN koulutukset.tila IS 'Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu", "poistettu"';
+COMMENT ON COLUMN toteutukset.tila IS 'Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu", "poistettu"';
+COMMENT ON COLUMN hakukohteet.tila IS 'Haun julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu", "poistettu"';
+COMMENT ON COLUMN haut.tila IS 'Haun julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu", "poistettu"';
+COMMENT ON COLUMN valintaperusteet.tila IS 'Valintaperustekuvauksen julkaisutila. Jos kuvaus on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu", "poistettu"';
+COMMENT ON COLUMN sorakuvaukset.tila IS 'SORA-kuvauksen julkaisutila. Jos SORA-kuvaus on julkaistu, se näkyy oppijalle Opintopolussa. Sallitut arvot: "julkaistu", "arkistoitu", "tallennettu", "poistettu"';

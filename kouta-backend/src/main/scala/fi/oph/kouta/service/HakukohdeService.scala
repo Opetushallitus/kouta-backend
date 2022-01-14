@@ -15,6 +15,7 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper}
 import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.Validations.validateStateChange
 import org.checkerframework.checker.units.qual.m
 import slick.dbio.DBIO
 
@@ -34,12 +35,12 @@ class HakukohdeService(
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
 
-  def get(oid: HakukohdeOid)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] = {
-    val hakukohde = HakukohdeDAO.get(oid)
+  def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] = {
+    val hakukohde = HakukohdeDAO.get(oid, tilaFilter)
 
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
-        val toteutus = ToteutusDAO.get(h.toteutusOid)
+        val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
         toteutus match {
           case Some((t, _)) =>
             val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
@@ -72,7 +73,6 @@ class HakukohdeService(
     }
   }
 
-
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
     authorizePut(hakukohde) { h =>
       withValidation(h, None) { h =>
@@ -87,34 +87,35 @@ class HakukohdeService(
       roleEntity.updateRoles,
       additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
     )
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get), hakukohde, rules) { (oldHakukohde, h) =>
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), hakukohde, rules) { (oldHakukohde, h) =>
       withValidation(h, Some(oldHakukohde)) { h =>
+        throwValidationErrors(validateStateChange("hakukohteelle", oldHakukohde.tila, hakukohde.tila))
         validateDependenciesIntegrity(h, authenticated, "update")
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
   }
 
-  def list(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+  def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)
 
   def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit
       authenticated: Authenticated
   ): HakukohdeSearchResult =
-    list(organisaatioOid).map(_.oid) match {
+    listOlemassaolevat(organisaatioOid).map(_.oid) match {
       case Nil           => HakukohdeSearchResult()
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid)(implicit authenticated: Authenticated) =
+  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated) =
     withRootAccess(indexerRoles) {
-      HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOid);
+      HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOid, tilaFilter)
     }
 
   private def validateDependenciesIntegrity(hakukohde: Hakukohde, authenticated: Authenticated, method: String): Unit = {
     val isOphPaakayttaja = authenticated.session.roles.contains(Role.Paakayttaja)
     val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
-    val haku = HakuDAO.get(hakukohde.hakuOid).map(_._1)
+    val haku = HakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
 
     throwValidationErrors(HakukohdeServiceValidation.validate(hakukohde, haku, isOphPaakayttaja, deps, method))
   }

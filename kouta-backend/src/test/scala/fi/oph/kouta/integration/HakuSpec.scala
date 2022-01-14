@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import java.time.{Instant, LocalDateTime}
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -8,11 +9,10 @@ import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
+import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
-import java.time.{Instant, LocalDateTime}
-
-class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture {
+class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
   override val roleEntities = Seq(Role.Haku)
 
@@ -75,6 +75,16 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
   it should "allow indexer access" in {
     val oid = put(haku)
     get(oid, indexerSession, haku(oid))
+  }
+
+  it should "return error when trying to get deleted haku" in {
+    val oid = put(ophHaku.copy(tila = Poistettu))
+    get(s"$HakuPath/$oid", ophSession, 404)
+  }
+
+  it should "return ok when getting deleted haku with myosPoistetut = true" in {
+    val oid = put(ophHaku.copy(tila = Poistettu))
+    get(s"$HakuPath/$oid?myosPoistetut=true", ophSession, 200)
   }
 
   "Create haku" should "store haku" in {
@@ -327,7 +337,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
       body should equal(validationErrorBody(pastDateMsg("2017"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
     }
 
-    update(thisHakuWithOid.copy(tila = Arkistoitu), lastModified)
+    update(thisHakuWithOid.copy(tila = Poistettu), lastModified)
   }
 
   it should "not validate dates when updating a julkaistu haku" in {
@@ -361,4 +371,58 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixt
     update(thisHaku.copy(hakuajat = List()), lastModified)
     get(oid, thisHaku.copy(hakuajat = List()))
   }
+
+  it should "pass legal state changes" in {
+    val id = put(haku.copy(tila = Tallennettu))
+    var lastModified = get(id, haku(id).copy(tila = Tallennettu))
+    update(haku(id).copy(tila = Julkaistu), lastModified, true)
+    lastModified = get(id, haku(id).copy(tila = Julkaistu))
+    update(haku(id).copy(tila = Arkistoitu), lastModified, true)
+    lastModified = get(id, haku(id).copy(tila = Arkistoitu))
+    update(haku(id).copy(tila = Julkaistu), lastModified, true)
+    lastModified = get(id, haku(id).copy(tila = Julkaistu))
+    update(haku(id).copy(tila = Tallennettu), lastModified, true)
+    lastModified = get(id, haku(id).copy(tila = Tallennettu))
+    update(haku(id).copy(tila = Poistettu), lastModified, true)
+
+    val arkistoituId = put(haku.copy(tila = Arkistoitu))
+    lastModified = get(arkistoituId, haku(arkistoituId).copy(tila = Arkistoitu))
+    update(haku(arkistoituId).copy(tila = Julkaistu), lastModified, true)
+    get(arkistoituId, haku(arkistoituId).copy(tila = Julkaistu))
+  }
+
+  it should "fail illegal state changes" in {
+    val tallennettuId = put(haku.copy(tila = Tallennettu))
+    val julkaistuId = put(haku.copy(tila = Julkaistu))
+    val arkistoituId = put(haku.copy(tila = Arkistoitu))
+
+    var lastModified = get(tallennettuId, haku(tallennettuId).copy(tila = Tallennettu))
+    update(HakuPath, haku(tallennettuId).copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Tallennettu, Arkistoitu))))
+    lastModified = get(julkaistuId, haku(julkaistuId).copy(tila = Julkaistu))
+    update(HakuPath, haku(julkaistuId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Julkaistu, Poistettu))))
+    lastModified = get(arkistoituId, haku(arkistoituId).copy(tila = Arkistoitu))
+    update(HakuPath, haku(arkistoituId).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Arkistoitu, Tallennettu))))
+    update(HakuPath, haku(arkistoituId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Arkistoitu, Poistettu))))
+  }
+
+  private def createHakuWithHakukohteet(markAllHakukohteetDeleted: Boolean) = {
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
+    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
+    val hakuOid = put(haku.copy(tila = Tallennettu))
+    put(hakukohde(toteutusOid, hakuOid).copy(tila = Poistettu), ophSession)
+    put(hakukohde(toteutusOid, hakuOid).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu), ophSession)
+    val lastModified = get(hakuOid, haku(hakuOid).copy(tila = Tallennettu))
+    (hakuOid, lastModified)
+  }
+
+  it should "pass deletion when related hakukohteet deleted" in {
+    val (hakuOid: String, lastModified: String) = createHakuWithHakukohteet(true)
+    update(haku(hakuOid).copy(tila = Poistettu), lastModified, true)
+  }
+
+  it should "fail deletion when all related hakukohteet not deleted" in {
+    val (hakuOid: String, lastModified: String) = createHakuWithHakukohteet(false)
+    update(HakuPath, haku(hakuOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Hakua", "hakukohteita"))))
+  }
+
 }

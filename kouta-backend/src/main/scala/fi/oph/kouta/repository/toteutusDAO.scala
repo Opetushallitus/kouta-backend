@@ -2,7 +2,7 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, Toteutus, ToteutusEnrichedData, ToteutusListItem, VapaaSivistystyoMuu}
+import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, TilaFilter, Toteutus, ToteutusEnrichedData, ToteutusListItem, VapaaSivistystyoMuu}
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
@@ -15,12 +15,12 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getPutActions(toteutus: Toteutus): DBIO[Toteutus]
   def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
-  def get(oid: ToteutusOid): Option[(Toteutus, Instant)]
-  def getByKoulutusOid(koulutusOid: KoulutusOid, vainJulkaistut: Boolean = false): Seq[Toteutus]
+  def get(oid: ToteutusOid, tilaFilter: TilaFilter): Option[(Toteutus, Instant)]
+  def getByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[Toteutus]
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
-  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false, myosArkistoidut: Boolean): Seq[ToteutusListItem]
-  def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem]
+  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false, tilaFilter: TilaFilter): Seq[ToteutusListItem]
+  def listByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[ToteutusListItem]
   def listByKoulutusOidAndAllowedOrganisaatiot(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem]
 }
@@ -47,9 +47,9 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       m  <- selectLastModified(toteutus.oid.get)
     } yield toteutus.withModified(m.get)
 
-  override def get(oid: ToteutusOid): Option[(Toteutus, Instant)] = {
+  override def get(oid: ToteutusOid, tilaFilter: TilaFilter): Option[(Toteutus, Instant)] = {
     KoutaDatabase.runBlockingTransactionally( for {
-      t <- selectToteutus(oid).as[Toteutus].headOption
+      t <- selectToteutus(oid, tilaFilter).as[Toteutus].headOption
       tt <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
       l <- selectLastModified(oid)
     } yield (t, tt, l)).get match {
@@ -71,10 +71,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   override def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid] =
     KoutaDatabase.runBlocking(selectTarjoajatByHakukohdeOid(hakukohdeOid))
 
-  override def getByKoulutusOid(koulutusOid: KoulutusOid, vainJulkaistut: Boolean = false): Seq[Toteutus] = {
+  override def getByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid, vainJulkaistut).as[Toteutus]
+        toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid, tilaFilter).as[Toteutus]
         tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
       } yield (toteutukset, tarjoajat)
     ).map {
@@ -104,14 +104,14 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
           t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
     }.get
 
-  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false, myosArkistoidut: Boolean): Seq[ToteutusListItem] = (organisaatioOids, vainHakukohteeseenLiitettavat) match {
+  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], vainHakukohteeseenLiitettavat: Boolean = false, tilaFilter: TilaFilter): Seq[ToteutusListItem] = (organisaatioOids, vainHakukohteeseenLiitettavat) match {
     case (Nil, _)   => Seq()
-    case (_, false) => listWithTarjoajat(() => selectByCreatorOrTarjoaja(organisaatioOids, myosArkistoidut))
-    case (_, true)  => listWithTarjoajat(() => selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids, myosArkistoidut))
+    case (_, false) => listWithTarjoajat(() => selectByCreatorOrTarjoaja(organisaatioOids, tilaFilter))
+    case (_, true)  => listWithTarjoajat(() => selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids, tilaFilter))
   }
 
-  override def listByKoulutusOid(koulutusOid: KoulutusOid): Seq[ToteutusListItem] =
-    listWithTarjoajat(() => selectByKoulutusOid(koulutusOid))
+  override def listByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[ToteutusListItem] =
+    listWithTarjoajat(() => selectByKoulutusOid(koulutusOid, tilaFilter))
 
   override def listByKoulutusOidAndAllowedOrganisaatiot(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem] = organisaatioOids match {
     case Nil => Seq()
@@ -182,16 +182,15 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
                     left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
            group by t.oid) m on t.oid = m.oid"""
 
-  def selectToteutus(oid: ToteutusOid) =
+  def selectToteutus(oid: ToteutusOid, tilaFilter: TilaFilter) =
     sql"""#$selectToteutusSql
-          where t.oid = $oid"""
+          where t.oid = $oid #${tilaConditions(tilaFilter, "t.tila")}"""
 
-  def selectToteutuksetByKoulutusOid(oid: KoulutusOid, vainJulkaistut: Boolean) =
-    if (vainJulkaistut) sql"""#$selectToteutusSql
+  def selectToteutuksetByKoulutusOid(oid: KoulutusOid, tilaFilter: TilaFilter) =
+    sql"""#$selectToteutusSql
           where t.koulutus_oid = $oid
-          and t.tila = 'julkaistu'::julkaisutila"""
-    else sql"""#$selectToteutusSql
-          where t.koulutus_oid = $oid"""
+          #${tilaConditions(tilaFilter, "t.tila")}
+          """
 
   def selectToteutuksenTarjoajat(oid: ToteutusOid) =
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid = $oid"""
@@ -292,15 +291,15 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
            group by t.oid) m on t.oid = m.oid"""
 
-  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[ToteutusListItem]] = {
+  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
              or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-              #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[ToteutusListItem]
+              #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }
 
-  def selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], myosArkistoidut: Boolean): DBIO[Vector[ToteutusListItem]] = {
+  def selectHakukohteeseenLiitettavatByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
@@ -309,25 +308,27 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${VapaaSivistystyoMuu.toString}::koulutustyyppi )
                      or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )
-                    #${andTilaMaybeNotArkistoitu(myosArkistoidut)}""".as[ToteutusListItem]
+                    #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }
 
-  def selectByKoulutusOid(koulutusOid: KoulutusOid): DBIO[Vector[ToteutusListItem]] = {
+  def selectByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
-          where t.koulutus_oid = $koulutusOid""".as[ToteutusListItem]
+          where t.koulutus_oid = $koulutusOid
+          #${tilaConditions(tilaFilter, "t.tila")}
+          """.as[ToteutusListItem]
   }
 
   def selectByHakuOid(hakuOid: HakuOid): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           inner join hakukohteet h on h.toteutus_oid = t.oid
-          where h.haku_oid = $hakuOid""".as[ToteutusListItem]
+          where h.haku_oid = $hakuOid and t.tila != 'poistettu'::julkaisutila""".as[ToteutusListItem]
   }
 
   def selectByKoulutusOidAndCreatorOrTarjoaja(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
           left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-          and t.koulutus_oid = $koulutusOid""".as[ToteutusListItem]
+          and t.koulutus_oid = $koulutusOid and t.tila != 'poistettu'::julkaisutila""".as[ToteutusListItem]
   }
 
   def selectTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): DBIO[Vector[OrganisaatioOid]] = {

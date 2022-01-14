@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, Ataru, Haku, Hakukohde, Julkaisutila, Koulutustyyppi, Lk, ToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata}
 import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
-import fi.oph.kouta.validation.Validations.{and, assertDependencyExists, assertInFuture, assertNotOptional, assertTrue, cannotLinkToHakukohde, tyyppiMismatch, validateDependency, validateIfDefined, validateIfJulkaistu, validateIfTrue}
+import fi.oph.kouta.validation.Validations.{and, validateDependencyExistence, assertInFuture, assertNotOptional, assertTrue, cannotLinkToHakukohde, tyyppiMismatch, validateDependency, validateIfDefined, validateIfJulkaistu, validateIfTrue}
 
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
@@ -17,7 +17,7 @@ object HakukohdeServiceValidation {
 
     and(
       validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
-      assertDependencyExists(deps.contains(hakuOid), hakuOid, "Hakua", "hakuOid"),
+      validateDependencyExistence(deps.get(hakuOid).map(_._1), hakuOid, "Hakua", "hakuOid"),
       validateIfDefined[UUID](hakukohde.valintaperusteId, valintaperusteId => and(
         validateDependency(hakukohde.tila, deps.get(valintaperusteId.toString).map(_._1), valintaperusteId, "Valintaperustetta", "valintaperusteId"),
         validateIfDefined[Koulutustyyppi](deps.get(valintaperusteId.toString).flatMap(_._2), valintaperusteTyyppi =>

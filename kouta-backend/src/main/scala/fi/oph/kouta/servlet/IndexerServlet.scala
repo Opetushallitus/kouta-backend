@@ -3,6 +3,7 @@ package fi.oph.kouta.servlet
 import java.net.URLDecoder
 import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.TilaFilter
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
@@ -103,6 +104,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: false
       |          default: false
       |          description: Palautetaanko vain julkaistut, Opintopolussa näytettävät toteutukset
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) toteutukset
       |      responses:
       |        '200':
       |          description: Ok
@@ -117,7 +125,10 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")), params.get("vainJulkaistut").exists(_.toBoolean)))
+    val vainJulkaistut = params.getOrElse("vainJulkaistut", "false").toBoolean
+    val vainOlemassaolevat = params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")),
+      TilaFilter.vainJulkaistutOrVainOlemassaolevat(vainJulkaistut, vainOlemassaolevat)))
   }
 
   registerPath( "/indexer/koulutus/{oid}/toteutukset/list",
@@ -135,6 +146,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: Koulutus-oid
       |          example: 1.2.246.562.13.00000000000000000009
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) toteutukset
       |      responses:
       |        '200':
       |          description: Ok
@@ -149,14 +167,16 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.listToteutukset(KoulutusOid(params("oid"))))
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")),
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/koulutus/{oid}/hakutiedot",
     """    get:
       |      summary: Hae koulutukseen liittyvät hakutiedot
       |      operationId: Hae koulutuksen hakutiedot
-      |      description: Hakee koulutuksen kaikki hakutiedot. Tämä rajapinta on indeksointia varten
+      |      description: Hakee koulutuksen olemassaolevat (=ei poistetut) ja arkistoimattomat hakutiedot. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      parameters:
@@ -199,6 +219,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: Toteutus-oid
       |          example: 1.2.246.562.17.00000000000000000009
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) haut
       |      responses:
       |        '200':
       |          description: Ok
@@ -213,7 +240,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(toteutusService.listHaut(ToteutusOid(params("oid"))))
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(toteutusService.listHaut(ToteutusOid(params("oid")),
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/toteutus/{oid}/hakukohteet/list",
@@ -231,6 +260,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: Toteutus-oid
       |          example: 1.2.246.562.17.00000000000000000009
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
       |          description: Ok
@@ -244,14 +280,16 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/toteutus/:oid/hakukohteet/list") {
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid"))))
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid")),
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/haku/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun
       |      operationId: Listaa haun hakukohteet
-      |      description: Listaa ne hakuun liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
+      |      description: Listaa hakuun liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      parameters:
@@ -262,6 +300,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: Haku-oid
       |          example: 1.2.246.562.29.00000000000000000009
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
       |          description: Ok
@@ -275,14 +320,16 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/haku/:oid/hakukohteet/list") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(hakuService.listHakukohteet(HakuOid(params("oid"))))
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(hakuService.listHakukohteet(HakuOid(params("oid")),
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath("/indexer/haku/{oid}/koulutukset/list",
     """    get:
       |      summary: Listaa kaikki hakuun liitetyt koulutukset
       |      operationId: Listaa haun koulutukset
-      |      description: Listaa kaikki hakuun liitetyt koulutukset. Tämä rajapinta on indeksointia varten
+      |      description: Listaa kaikki hakuun liitetyt olemassaolevat (=ei poistetut) koulutukset. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      parameters:
@@ -314,7 +361,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     """    get:
       |      summary: Listaa kaikki hakuun liitetyt toteutukset
       |      operationId: Listaa haun toteutukset
-      |      description: Listaa kaikki hakuun liitetyt toteutukset. Tämä rajapinta on indeksointia varten
+      |      description: Listaa kaikki hakuun liitetyt olemassaolevat (=ei poistetut) toteutukset. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      parameters:
@@ -357,6 +404,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: Valintaperusteen id
       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
       |          description: Ok
@@ -371,7 +425,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id"))))
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id")),
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/sorakuvaus/{id}/koulutukset/list",
@@ -389,6 +445,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: SORA-kuvauksen id
       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) koulutukset
       |      responses:
       |        '200':
       |          description: Ok
@@ -403,7 +466,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(sorakuvausService.listKoulutusOids(UUID.fromString(params("id"))))
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(sorakuvausService.listKoulutusOids(UUID.fromString(params("id")),
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
   registerPath( "/indexer/oppilaitos/{oid}/osat/list",
@@ -486,6 +551,13 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          required: true
       |          description: Järjestyspaikka-oid
       |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: vainOlemassaolevat
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
       |          description: Ok
@@ -499,6 +571,8 @@ class IndexerServlet(koulutusService: KoulutusService,
   get("/jarjestyspaikka/:jarjestyspaikkaOid/hakukohde-oids") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(HakukohdeService.getOidsByJarjestyspaikka(OrganisaatioOid(params("jarjestyspaikkaOid"))))
+    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(HakukohdeService.getOidsByJarjestyspaikka(OrganisaatioOid(params("jarjestyspaikkaOid")),
+      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 }

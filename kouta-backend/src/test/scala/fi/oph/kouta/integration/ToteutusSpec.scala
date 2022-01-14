@@ -15,7 +15,8 @@ import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
-  with KeywordFixture with UploadFixture with KoodistoServiceMock with LokalisointiServiceMock {
+  with KeywordFixture with UploadFixture with KoodistoServiceMock with LokalisointiServiceMock
+  with HakukohdeFixture with HakuFixture {
 
   override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
 
@@ -76,6 +77,16 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "allow indexer access" in {
     val oid = put(toteutus(koulutusOid))
     get(oid, indexerSession, toteutus(oid, koulutusOid))
+  }
+
+  it should "return error when trying to get deleted toteutus" in {
+    val oid = put(toteutus(koulutusOid).copy(tila = Poistettu), ophSession)
+    get(s"$ToteutusPath/$oid", ophSession, 404)
+  }
+
+  it should "return ok when getting deleted toteutus with myosPoistetut = true" in {
+    val oid = put(toteutus(koulutusOid).copy(tila = Poistettu), ophSession)
+    get(s"$ToteutusPath/$oid?myosPoistetut=true", ophSession, 200)
   }
 
   "Create toteutus" should "store toteutus" in {
@@ -452,7 +463,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       )))
     }
 
-    update(thisToteutusWithOid.copy(tila = Arkistoitu), lastModified)
+    update(thisToteutusWithOid.copy(tila = Poistettu), lastModified)
   }
 
   it should "not validate koulutuksen alkamisen dates when updating a julkaistu toteutus" in {
@@ -607,5 +618,63 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid))))
     update(tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "pass legal state changes" in {
+    val koulutusOid = put(koulutus, ophSession)
+    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
+    val toteutusBase = toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), muokkaaja = OphUserOid)
+    var lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
+    update(toteutusBase.copy(tila = Julkaistu), lastModified, true, ophSession)
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
+    update(toteutusBase.copy(tila = Arkistoitu), lastModified, true, ophSession)
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Arkistoitu))
+    update(toteutusBase.copy(tila = Julkaistu), lastModified, true, ophSession)
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
+    update(toteutusBase.copy(tila = Tallennettu), lastModified, true, ophSession)
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
+    update(toteutusBase.copy(tila = Poistettu), lastModified, true, ophSession)
+
+    val arkistoituOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Arkistoitu), ophSession)))
+    lastModified = get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Arkistoitu, muokkaaja = OphUserOid))
+    update(toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu), lastModified, true, ophSession)
+    get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu, muokkaaja = OphUserOid))
+  }
+
+  it should "fail illegal state changes" in {
+    val koulutusOid = put(koulutus, ophSession)
+
+    val tallennettuOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)))
+    val julkaistuOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Julkaistu), ophSession)))
+    val arkistoituOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Arkistoitu), ophSession)))
+    val toteutusBase = toteutus(koulutusOid).copy(muokkaaja = OphUserOid)
+
+    var lastModified = get(tallennettuOid.get.s, toteutusBase.copy(oid = tallennettuOid, tila = Tallennettu))
+    update(ToteutusPath, toteutusBase.copy(oid = tallennettuOid, tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Tallennettu, Arkistoitu))))
+    lastModified = get(julkaistuOid.get.s, toteutusBase.copy(oid = julkaistuOid, tila = Julkaistu))
+    update(ToteutusPath, toteutusBase.copy(oid = julkaistuOid, tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Julkaistu, Poistettu))))
+    lastModified = get(arkistoituOid.get.s, toteutusBase.copy(oid = arkistoituOid, tila = Arkistoitu))
+    update(ToteutusPath, toteutusBase.copy(oid = arkistoituOid, tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Arkistoitu, Tallennettu))))
+    update(ToteutusPath, toteutusBase.copy(oid = arkistoituOid, tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Arkistoitu, Poistettu))))
+  }
+
+  private def createToteutusWithHakukohteet(markAllHakukohteetDeleted: Boolean) = {
+    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
+    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
+    val hakuOid = put(haku.copy(tila = Tallennettu), ophSession)
+    put(hakukohde(toteutusOid, hakuOid).copy(tila = Poistettu), ophSession)
+    put(hakukohde(toteutusOid, hakuOid).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu), ophSession)
+    val toteutusLastModified = get(toteutusOid, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Tallennettu, muokkaaja = OphUserOid))
+    (toteutusOid, koulutusOid, toteutusLastModified)
+  }
+
+  it should "pass deletion when related hakukohteet deleted" in {
+    val (toteutusOid: String, koulutusOid: String, lastModified: String) = createToteutusWithHakukohteet(true)
+    update(toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), lastModified, true, ophSession)
+  }
+
+  it should "fail deletion when all related hakukohteet not deleted" in {
+    val (toteutusOid: String, koulutusOid: String, lastModified: String) = createToteutusWithHakukohteet(false)
+    update(ToteutusPath, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Toteutusta", "hakukohteita"))))
   }
 }
