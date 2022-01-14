@@ -18,7 +18,8 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmOsaamisala,
       AmmMuu,
       VapaaSivistystyoOpistovuosi,
-      VapaaSivistystyoMuu
+      VapaaSivistystyoMuu,
+      AikuistenPerusopetus
     )
 
   def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu)
@@ -65,6 +66,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_19#1" -> Seq(Lk, Muu, Tuva), //Perus- ja lukioasteen koulut
     "oppilaitostyyppi_21#1" -> Seq(
       Amm,
+      AmmTutkinnonOsa,
+      AmmOsaamisala,
+      AmmMuu,
       Lk,
       Muu,
       Tuva,
@@ -72,7 +76,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu
     ), //Ammatilliset oppilaitokset
-    "oppilaitostyyppi_22#1" -> Seq(Amm, Telma, Tuva), //Ammatilliset erityisoppilaitokset
+    "oppilaitostyyppi_22#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Telma, Tuva), //Ammatilliset erityisoppilaitokset
     "oppilaitostyyppi_23#1" -> Seq(Amm), //Ammatilliset erikoisoppilaitokset
     "oppilaitostyyppi_24#1" -> Seq(Amm, Tuva), //Ammatilliset aikuiskoulutuskeskukset
     "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
@@ -92,6 +96,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     ), //Liikunnan koulutuskeskukset
     "oppilaitostyyppi_63#1" -> Seq(
       Amm,
+      AmmTutkinnonOsa,
+      AmmOsaamisala,
+      AmmMuu,
       Lk,
       Muu,
       Tuva,
@@ -122,3 +129,4 @@ case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm
 case object AmmMuu                      extends Koulutustyyppi { val name = "amm-muu"                       }
 case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
 case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }
+case object AikuistenPerusopetus        extends Koulutustyyppi { val name = "aikuisten-perusopetus"         }

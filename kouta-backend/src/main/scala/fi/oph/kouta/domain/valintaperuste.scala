@@ -47,7 +47,8 @@ package object valintaperuste {
       |            - telma
       |            - vapaa-sivistystyo-opistovuosi
       |            - vapaa-sivistystyo-muu
-      |      |   example: amm
+      |            - aikuisten-perusopetus
+      |          example: amm
       |        hakutapaKoodiUri:
       |          type: string
       |          description: Valintaperustekuvaukseen liittyvä hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
@@ -95,6 +96,7 @@ package object valintaperuste {
       |            - $ref: '#/components/schemas/TelmaValintaperusteMetadata'
       |            - $ref: '#/components/schemas/VapaaSivistystyoOpistovuosiValintaperusteMetadata'
       |            - $ref: '#/components/schemas/VapaaSivistystyoMuuValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/AikuistenPerusopetusValintaperusteMetadata'
       |            - $ref: '#/components/schemas/MuuValintaperusteMetadata'
       |          example:
       |            tyyppi: amm

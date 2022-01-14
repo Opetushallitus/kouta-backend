@@ -183,6 +183,20 @@ package object valintaperusteMetadata {
       |            - vapaa-sivistystyo-muu
       |""".stripMargin
 
+  // @TODO viimeistele speksien päivityksen jälkeen
+  val AikuistenPerusopetusValintaperusteMetadataModel =
+    """    AikuistenPerusopetusValintaperusteMetadata:
+      |      type: object
+      |      $ref: '#/components/schemas/ValintaperusteMetadata'
+      |      properties:
+      |        tyyppi:
+      |          type: string
+      |          description: Valintaperustekuvauksen metatiedon tyyppi
+      |          example: aikuisten-perusopetus
+      |          enum:
+      |            - aikuisten-perusopetus
+      |""".stripMargin
+
   val MuuValintaperusteMetadataModel =
     """    MuuValintaperusteMetadata:
       |      type: object
@@ -200,7 +214,7 @@ package object valintaperusteMetadata {
     AmmattikorkeakouluValintaperusteMetadataModel, YliopistoValintaperusteMetadataModel, LukioValintaperusteMetadataModel,
     AmmatillinenTutkinnonOsaValintaperusteMetadataModel, AmmatillinenOsaamisalaValintaperusteMetadataModel, AmmatillinenMuuValintaperusteMetadataModel,
     TutkintokoulutukseenValmentavaValintaperusteMetadataModel, TelmaValintaperusteMetadataModel, VapaaSivistystyoOpistovuosiValintaperusteMetadataModel,
-    VapaaSivistystyoMuuValintaperusteMetadataModel, MuuValintaperusteMetadataModel)
+    VapaaSivistystyoMuuValintaperusteMetadataModel, AikuistenPerusopetusValintaperusteMetadataModel, MuuValintaperusteMetadataModel)
 }
 
 sealed trait ValintaperusteMetadata extends ValidatableSubEntity {
@@ -332,6 +346,16 @@ case class VapaaSivistystyoMuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Va
                                                      sisalto: Seq[Sisalto] = Seq(),
                                                      valintakokeidenYleiskuvaus: Kielistetty = Map(),
                                                      isMuokkaajaOphVirkailija: Option[Boolean] = None)
+  extends ValintaperusteMetadata
+
+// @TODO viimeistele speksien päivityksen jälkeen
+case class AikuistenPerusopetusValintaperusteMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
+                                                      valintatavat: Seq[Valintatapa],
+                                                      kuvaus: Kielistetty = Map(),
+                                                      hakukelpoisuus: Kielistetty = Map(),
+                                                      lisatiedot: Kielistetty = Map(),
+                                                      sisalto: Seq[Sisalto] = Seq(),
+                                                      valintakokeidenYleiskuvaus: Kielistetty = Map())
   extends ValintaperusteMetadata
 
 case class MuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Muu,

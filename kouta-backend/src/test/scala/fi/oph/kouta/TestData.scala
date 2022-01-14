@@ -296,6 +296,22 @@ object TestData {
       isMuokkaajaOphVirkailija = Some(false)
     )))
 
+  val AikuistenPerusopetusKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = AikuistenPerusopetus,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(AikuistenPerusopetusKoulutusMetadata(
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    )),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/lkkuva"),
+    modified = None)
+
   val MinKoulutus: Koulutus = Koulutus(
     koulutustyyppi = Amm,
     johtaaTutkintoon = false,
@@ -304,6 +320,7 @@ object TestData {
     kielivalinta = Seq(Fi, Sv),
     nimi = kieliMap("Minimi koulutus"),
     modified = None)
+
 
   val JulkaistuHaku: Haku = Haku(
     nimi = Map(Fi -> "Haku fi", Sv -> "Haku sv"),
@@ -747,6 +764,16 @@ object TestData {
     hakuaika = None)
 
   val VapaaSivistystyoMuuToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(VapaaSivistystyoMuuToteutusMetatieto))
+
+  val AikuistenPerusopetusToteutusMetatieto: AikuistenPerusopetusToteutusMetadata = AikuistenPerusopetusToteutusMetadata(
+    tyyppi = AikuistenPerusopetus,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    yhteyshenkilot = Seq(Yhteystieto1)
+  )
+
+  val AikuistenPerusopetusToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(AikuistenPerusopetusToteutusMetatieto))
 
   val MinToteutus: Toteutus = Toteutus(
     muokkaaja = TestUserOid,

@@ -401,6 +401,21 @@ package object toteutusMetadata {
       |                - vapaa-sivistystyo-muu
       |""".stripMargin
 
+  // @TODO viimeistele speksien päivityksen jälkeen
+  val AikuistenPerusopetusToteutusMetadataModel: String =
+    """    AikuistenPerusopetusToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: aikuisten-perusopetus
+      |              enum:
+      |                - aikuisten-perusopetus
+      |""".stripMargin
+
   val LukiolinjaTietoModel: String =
     """    LukiolinjaTieto:
       |      type: object
@@ -931,3 +946,12 @@ case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
 
   override def allowSorakuvaus: Boolean = false
 }
+
+// @TODO viimeistele speksien päivityksen jälkeen
+case class AikuistenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
+                                                kuvaus: Kielistetty = Map(),
+                                                opetus: Option[Opetus] = None,
+                                                asiasanat: List[Keyword] = List(),
+                                                ammattinimikkeet: List[Keyword] = List(),
+                                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()
+                                               ) extends ToteutusMetadata

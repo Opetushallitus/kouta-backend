@@ -252,9 +252,24 @@ package object koulutusMetadata {
       |              example: opintojenlaajuus_40#1
       |""".stripMargin
 
+  // @TODO viimeistele speksien päivityksen jälkeen
+  val AikuistenPerusopetusKoulutusMetadataModel: String =
+    """    AikuistenPerusopetusKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: aikuisten-perusopetus
+      |              enum:
+      |                - aikuisten-perusopetus
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
     YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
-    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel)
+    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata extends ValidatableSubEntity {
@@ -434,3 +449,9 @@ case class VapaaSivistystyoMuuKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                        opintojenLaajuusKoodiUri: Option[String] = None,
                                                        isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                       ) extends VapaaSivistystyoKoulutusMetadata
+
+// @TODO Viimeistele toteutus speksin päivityksen jälkeen
+case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
+                                                kuvaus: Kielistetty = Map(),
+                                                lisatiedot: Seq[Lisatieto] = Seq()
+                                               ) extends KoulutusMetadata

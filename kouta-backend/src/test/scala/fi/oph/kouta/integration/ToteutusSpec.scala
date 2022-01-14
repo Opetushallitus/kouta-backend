@@ -779,4 +779,13 @@ class ToteutusSpec extends KoutaIntegrationSpec
       }
     }
   }
+
+  it should "create, get and update aikuisten perusopetus -toteutus" in {
+    val aiPeToKoulutusOid = put(TestData.AikuistenPerusopetusKoulutus.copy(tila = Julkaistu), ophSession)
+    val aiPeToToteutus = TestData.AikuistenPerusopetusToteutus.copy(koulutusOid = KoulutusOid(aiPeToKoulutusOid), tila = Tallennettu)
+    val oid = put(aiPeToToteutus)
+    val lastModified = get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
 }
