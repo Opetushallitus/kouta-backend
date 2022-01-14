@@ -21,12 +21,20 @@ case class DateParametriDTO(date: Long)
 case class IntParametriDTO(value: Int)
 case class HaunOhjausparametritDTO(PH_OPVP: Option[DateParametriDTO],
                                    PH_HPVOA: Option[IntParametriDTO],
-                                   PH_HKP: Option[DateParametriDTO])
+                                   PH_HKP: Option[DateParametriDTO],
+                                   sijoittelu: Option[Boolean],
+                                   useitaHakemuksia: Option[Boolean],
+                                   jarjestetytHakutoiveet: Option[Boolean],
+                                   hakutoiveidenMaaraRajoitettu: Option[Boolean])
 
 case class HaunOhjausparametrit(hakuOid: HakuOid,
                                 paikanVastaanottoPaattyy: Option[Instant],
                                 hakijakohtainenPaikanVastaanottoaika: Option[Int],
-                                hakukierrosPaattyy: Option[Instant])
+                                hakukierrosPaattyy: Option[Instant],
+                                sijoittelu: Option[Boolean],
+                                useitaHakemuksia: Option[Boolean],
+                                jarjestetytHakutoiveet: Option[Boolean],
+                                hakutoiveidenMaaraRajoitettu: Option[Boolean])
 
 trait OhjausparametritClient {
   def postHaunOhjausparametrit(haunOhjausparametrit: HaunOhjausparametrit): Unit
@@ -54,7 +62,11 @@ object OhjausparametritClient extends OhjausparametritClient with CallerId with 
     val body = Extraction.decompose(HaunOhjausparametritDTO(
       PH_OPVP = haunOhjausparametrit.paikanVastaanottoPaattyy.map(i => DateParametriDTO(i.toEpochMilli)),
       PH_HPVOA = haunOhjausparametrit.hakijakohtainenPaikanVastaanottoaika.map(IntParametriDTO),
-      PH_HKP = haunOhjausparametrit.hakukierrosPaattyy.map(i => DateParametriDTO(i.toEpochMilli))
+      PH_HKP = haunOhjausparametrit.hakukierrosPaattyy.map(i => DateParametriDTO(i.toEpochMilli)),
+      sijoittelu = haunOhjausparametrit.sijoittelu,
+      useitaHakemuksia = haunOhjausparametrit.useitaHakemuksia,
+      jarjestetytHakutoiveet = haunOhjausparametrit.jarjestetytHakutoiveet,
+      hakutoiveidenMaaraRajoitettu = haunOhjausparametrit.hakutoiveidenMaaraRajoitettu
     ))
 
     Uri.fromString(url)

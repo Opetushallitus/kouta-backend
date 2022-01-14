@@ -1,9 +1,8 @@
 package fi.oph.kouta.servlet
 
 import java.util.UUID
-
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.Sorakuvaus
+import fi.oph.kouta.domain.{Sorakuvaus, TilaFilter}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.SorakuvausService
 import org.scalatra.{NotFound, Ok}
@@ -27,6 +26,13 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |          required: true
       |          description: Sorakuvaus-id
       |          example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+      |        - in: query
+      |          name: myosPoistetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: false
+      |          description: Palautetaanko myös mahdollisesti poistettu SORA-kuvaus
       |      responses:
       |        '200':
       |          description: Ok
@@ -39,7 +45,8 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
 
     implicit val authenticated: Authenticated = authenticate()
 
-    sorakuvausService.get(UUID.fromString(params("id"))) match {
+    val myosPoistetut = params.getOrElse("myosPoistetut", "false").toBoolean
+    sorakuvausService.get(UUID.fromString(params("id")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)) match {
       case None => NotFound("error" -> "Unknown SORA-kuvaus id")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
@@ -148,7 +155,8 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
 
     (params.get("organisaatioOid"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
       case (None, _) => NotFound()
-      case (Some(oid), myosArkistoidut) => Ok(sorakuvausService.list(OrganisaatioOid(oid), myosArkistoidut))
+      case (Some(oid), myosArkistoidut) => Ok(sorakuvausService.list(OrganisaatioOid(oid),
+        TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
     }
   }
 }

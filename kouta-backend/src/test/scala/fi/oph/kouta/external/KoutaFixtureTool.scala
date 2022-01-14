@@ -1,6 +1,6 @@
 package fi.oph.kouta.external
 
-import java.time.temporal.ChronoUnit
+import java.time.temporal.{ChronoUnit, TemporalField}
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.util.UUID
 import fi.oph.kouta.TestData
@@ -184,7 +184,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val startTime1: LocalDateTime = testDate("09:49", 1)
   val endTime1: LocalDateTime = testDate("09:58", 1)
   val time3: LocalDateTime = testDate("09:58", 3)
-  val thisYear = "2021"
+  val thisYear = LocalDate.now().getYear().toString
 
   val ammTutkinnonOsaKoulutusMetadata: String = write(TestData.AmmTutkinnonOsaKoulutus.metadata)
   val ammOsaamisalaKoulutusMetadata: String = write(TestData.AmmOsaamisalaKoulutus.metadata)
@@ -534,7 +534,6 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(params(KohdejoukkoKoodiUriKey)),
       toKielistetty(kielivalinta, params(NimiKey)),
       params(JulkinenKey).toBoolean,
-      None,
       params.get(ValintakokeetKey).map(read[List[Valintakoe]]).getOrElse(List()),
       params.get(MetadataKey).map(read[ValintaperusteMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
@@ -684,15 +683,24 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     )
   }
 
+  private def isHakuExistingAndNonArkistoitu(oid: String): Boolean = {
+    val tila = haut(oid).getOrElse(TilaKey, "")
+    tila != Poistettu.name && tila != Arkistoitu.name
+  }
+
   def getHakutiedotByKoulutus(koulutusOid: String): String = {
     toJson(
       toteutukset
-        .filter { case (_, params) => params(KoulutusOidKey) == koulutusOid }
+        .filter { case (_, params) => params(KoulutusOidKey) == koulutusOid &&
+          params(TilaKey) != Arkistoitu.name && params(TilaKey) != Poistettu.name }
         .map { case (oid, _) =>
           Hakutieto(
             ToteutusOid(oid),
             hakukohteet
-              .filter  { case (_, params) => params(ToteutusOidKey) == oid }
+              .filter  { case (_, params) => params(ToteutusOidKey) == oid &&
+                params(TilaKey) != Arkistoitu.name && params(TilaKey) != Poistettu.name &&
+                isHakuExistingAndNonArkistoitu(params(HakuOidKey))
+              }
               .groupBy { case (_, params) => params(HakuOidKey) }
               .map     { case (hakuOid, hakukohteet) =>
                 hakutietoHaku(hakuOid).copy(

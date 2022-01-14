@@ -25,6 +25,13 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |          required: true
       |          description: toteutus-oid
       |          example: 1.2.246.562.17.00000000000000000009
+      |        - in: query
+      |          name: myosPoistetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: false
+      |          description: Palautetaanko myös mahdollisesti poistettu toteutus
       |      responses:
       |        '200':
       |          description: Ok
@@ -37,7 +44,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    toteutusService.get(ToteutusOid(params("oid"))) match {
+    val myosPoistetut = params.getOrElse("myosPoistetut", "false").toBoolean
+    toteutusService.get(ToteutusOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)) match {
       case None => NotFound("error" -> "Unknown toteutus oid")
       case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
     }
@@ -156,7 +164,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
      params.getOrElse("myosArkistoidut", "true").toBoolean)
     match {
       case (None, _, _) => NotFound()
-      case (Some(oid), vainHakukohteeseenLiitettavat, myosArkistoidut) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, myosArkistoidut))
+      case (Some(oid), vainHakukohteeseenLiitettavat, myosArkistoidut) => Ok(toteutusService.list(oid, vainHakukohteeseenLiitettavat, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
     }
   }
 
