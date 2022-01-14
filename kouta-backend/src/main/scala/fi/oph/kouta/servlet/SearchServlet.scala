@@ -13,11 +13,10 @@ class SearchServlet(koulutusService: KoulutusService,
 
   def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
-  val SearchParams = Seq("nimi", "muokkaaja", "tila", "page", "size", "lng", "order-by", "order")
+  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "page", "size", "lng", "order-by", "order")
 
   val searchParams =
-    """      parameters:
-      |        - in: query
+    """        - in: query
       |          name: organisaatioOid
       |          schema:
       |            type: string
@@ -91,6 +90,14 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee organisaation koulutukset annetuilla parametreilla
        |      tags:
        |        - Search
+       |      parameters:
+       |        - in: query
+       |          name: koulutustyyppi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata koulutustyypillä
+       |          example: yo
        |$searchParams
        |      responses:
        |        '200':
@@ -119,6 +126,14 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee rikastetun koulutuksen annetulla oidilla
        |      tags:
        |        - Search
+       |      parameters:
+       |        - in: query
+       |          name: koulutustyyppi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata koulutustyypillä
+       |          example: yo
        |$searchParams
        |      responses:
        |        '200':
@@ -146,6 +161,14 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee organisaation toteutukset annetuilla parametreilla
        |      tags:
        |        - Search
+       |      parameters:
+       |        - in: query
+       |          name: koulutustyyppi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata koulutustyypillä
+       |          example: yo
        |$searchParams
        |      responses:
        |        '200':
@@ -174,6 +197,14 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee rikastetun toteutuksen annetulla oidilla
        |      tags:
        |        - Search
+       |      parameters:
+       |        - in: query
+       |          name: koulutustyyppi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata koulutustyypillä
+       |          example: yo
        |$searchParams
        |      responses:
        |        '200':
@@ -201,6 +232,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee organisaation haut annetuilla parametreilla
        |      tags:
        |        - Search
+       |      parameters:
        |$searchParams
        |      responses:
        |        '200':
@@ -229,6 +261,7 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee rikastetun haun annetulla oidilla
        |      tags:
        |        - Search
+       |      parameters:
        |$searchParams
        |      responses:
        |        '200':
@@ -256,6 +289,14 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee organisaation hakukohteet annetuilla parametreilla
        |      tags:
        |        - Search
+       |      parameters:
+       |        - in: query
+       |          name: koulutustyyppi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata koulutustyypillä
+       |          example: yo
        |$searchParams
        |      responses:
        |        '200':
@@ -284,6 +325,14 @@ class SearchServlet(koulutusService: KoulutusService,
        |      description: Hakee organisaation valintaperustekuvaukset annetuilla parametreilla
        |      tags:
        |        - Search
+       |      parameters:
+       |        - in: query
+       |          name: koulutustyyppi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata koulutustyypillä
+       |          example: yo
        |$searchParams
        |      responses:
        |        '200':
