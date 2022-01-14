@@ -35,6 +35,7 @@ trait KoutaIndexMock extends ServiceMocks with KoutaJsonFormats {
      "oid": "1.2.246.562.24.62301161440"
     },
     "modified": "2019-02-08T09:57:23",
+    "koulutustyyppi": "amm",
     "$idField": "$id",
     "tila": "julkaistu""""
 
