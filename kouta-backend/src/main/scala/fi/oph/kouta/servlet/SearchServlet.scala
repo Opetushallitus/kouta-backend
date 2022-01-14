@@ -41,9 +41,11 @@ class SearchServlet(koulutusService: KoulutusService,
       |        - in: query
       |          name: tila
       |          schema:
-      |            type: string
+      |            type: array
+      |            items:
+      |              type: string
       |          required: false
-      |          description: Suodata tilalla (julkaistu/tallennettu/arkistoitu)
+      |          description: Suodata pilkulla erotetuilla tiloilla (julkaistu/tallennettu/arkistoitu/poistettu)
       |          example: Julkaistu
       |        - in: query
       |          name: page
