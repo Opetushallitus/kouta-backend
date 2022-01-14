@@ -518,7 +518,7 @@ case class HakuSearchItemHakukohde(oid: HakukohdeOid,
                                    organisaatio: Organisaatio)
 
 case class HakukohdeSearchResult(totalCount: Int = 0,
-                                 result: Seq[HakuSearchItem] = Seq())
+                                 result: Seq[HakukohdeSearchItem] = Seq())
 
 case class HakukohdeSearchItem(oid: HakukohdeOid,
                                nimi: Kielistetty,
