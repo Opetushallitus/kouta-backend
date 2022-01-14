@@ -404,6 +404,7 @@ case class KoulutusSearchItem (oid: KoulutusOid,
                                modified: Modified,
                                tila: Julkaisutila,
                                koulutustyyppi: Koulutustyyppi,
+                               julkinen: Option[Boolean] = None,
                                eperuste: Option[EPeruste] = None,
                                toteutusCount: Int = 0) extends KoulutusItemCommon
 
@@ -414,6 +415,7 @@ case class KoulutusSearchItemFromIndex (oid: KoulutusOid,
                                         modified: Modified,
                                         tila: Julkaisutila,
                                         koulutustyyppi: Koulutustyyppi,
+                                        julkinen: Option[Boolean] = None,
                                         eperuste: Option[EPeruste] = None,
                                         toteutukset: Seq[KoulutusSearchItemToteutus] = Seq()) extends KoulutusItemCommon
 
@@ -535,7 +537,8 @@ case class ValintaperusteSearchItem(id: UUID,
                                     muokkaaja: Muokkaaja,
                                     modified: Modified,
                                     tila: Julkaisutila,
-                                    koulutustyyppi: Koulutustyyppi)
+                                    koulutustyyppi: Koulutustyyppi,
+                                    julkinen: Option[Boolean] = None)
 
 case class Organisaatio(oid: OrganisaatioOid,
                         nimi: Kielistetty,
