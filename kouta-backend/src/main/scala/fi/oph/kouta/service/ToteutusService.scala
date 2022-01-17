@@ -143,6 +143,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                   muokkaaja = t.muokkaaja,
                   modified = t.modified,
                   tila = t.tila,
+                  koulutustyyppi = t.koulutustyyppi,
                   hakukohdeCount = getCount(t, organisaatioOids))
             }
           )
