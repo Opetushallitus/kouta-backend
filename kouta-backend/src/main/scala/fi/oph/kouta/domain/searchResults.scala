@@ -403,6 +403,8 @@ case class KoulutusSearchItem (oid: KoulutusOid,
                                muokkaaja: Muokkaaja,
                                modified: Modified,
                                tila: Julkaisutila,
+                               koulutustyyppi: Koulutustyyppi,
+                               julkinen: Option[Boolean] = None,
                                eperuste: Option[EPeruste] = None,
                                toteutusCount: Int = 0) extends KoulutusItemCommon
 
@@ -412,6 +414,8 @@ case class KoulutusSearchItemFromIndex (oid: KoulutusOid,
                                         muokkaaja: Muokkaaja,
                                         modified: Modified,
                                         tila: Julkaisutila,
+                                        koulutustyyppi: Koulutustyyppi,
+                                        julkinen: Option[Boolean] = None,
                                         eperuste: Option[EPeruste] = None,
                                         toteutukset: Seq[KoulutusSearchItemToteutus] = Seq()) extends KoulutusItemCommon
 
@@ -448,6 +452,7 @@ case class ToteutusSearchItem(oid: ToteutusOid,
                               muokkaaja: Muokkaaja,
                               modified: Modified,
                               tila: Julkaisutila,
+                              koulutustyyppi: Option[Koulutustyyppi] = None,
                               hakukohdeCount: Int = 0) extends ToteutusItemCommon
 
 case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
@@ -456,6 +461,7 @@ case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
                                        muokkaaja: Muokkaaja,
                                        modified: Modified,
                                        tila: Julkaisutila,
+                                       koulutustyyppi: Option[Koulutustyyppi] = None,
                                        organisaatiot: Seq[String] = Seq(),
                                        hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq()) extends ToteutusItemCommon
 
@@ -512,14 +518,15 @@ case class HakuSearchItemHakukohde(oid: HakukohdeOid,
                                    organisaatio: Organisaatio)
 
 case class HakukohdeSearchResult(totalCount: Int = 0,
-                                 result: Seq[HakuSearchItem] = Seq())
+                                 result: Seq[HakukohdeSearchItem] = Seq())
 
 case class HakukohdeSearchItem(oid: HakukohdeOid,
                                nimi: Kielistetty,
                                organisaatio: Organisaatio,
                                muokkaaja: Muokkaaja,
                                modified: Modified,
-                               tila: Julkaisutila)
+                               tila: Julkaisutila,
+                               koulutustyyppi: Option[Koulutustyyppi] = None)
 
 case class ValintaperusteSearchResult(totalCount: Int = 0,
                                       result: Seq[ValintaperusteSearchItem] = Seq())
@@ -529,7 +536,9 @@ case class ValintaperusteSearchItem(id: UUID,
                                     organisaatio: Organisaatio,
                                     muokkaaja: Muokkaaja,
                                     modified: Modified,
-                                    tila: Julkaisutila)
+                                    tila: Julkaisutila,
+                                    koulutustyyppi: Koulutustyyppi,
+                                    julkinen: Option[Boolean] = None)
 
 case class Organisaatio(oid: OrganisaatioOid,
                         nimi: Kielistetty,

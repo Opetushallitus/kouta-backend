@@ -22,7 +22,7 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
   var hkoid1, hkoid2, hkoid3, hkoid4, hkoid5: String = _
   var vpid1, vpid2, vpid3, vpid4, vpid5: String = _
 
-  val params = Map("nimi" -> "Hassu", "page" -> "1")
+  val params = Map("nimi" -> "Hassu", "page" -> "1", "koulutustyyppi" -> "amm")
 
   def barams(organisaatioOid: OrganisaatioOid): Map[String, String] = params + ("organisaatioOid" -> organisaatioOid.s)
   def mockParams(oids: List[String]): Map[String, String] = params + ("oids" -> oids.map(_.toString).sorted.mkString(","))

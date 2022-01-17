@@ -232,6 +232,8 @@ class KoulutusService(
               modified = k.modified,
               tila = k.tila,
               eperuste = k.eperuste,
+              julkinen = k.julkinen,
+              koulutustyyppi = k.koulutustyyppi,
               toteutusCount = getCount(k, organisaatioOids)
             )
           }
