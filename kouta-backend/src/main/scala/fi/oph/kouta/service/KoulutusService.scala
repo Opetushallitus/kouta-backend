@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.{KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
@@ -19,13 +19,14 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object KoulutusService
-    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl)
+    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient)
 
 class KoulutusService(
     sqsInTransactionService: SqsInTransactionService,
     val s3ImageService: S3ImageService,
     auditLog: AuditLog,
-    val organisaatioService: OrganisaatioService
+    val organisaatioService: OrganisaatioService,
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient
 ) extends ValidatingService[Koulutus]
     with RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
@@ -54,6 +55,15 @@ class KoulutusService(
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
+
+    val enrichedKoulutus = koulutusWithTime match {
+      case Some((k, i)) => {
+        val muokkaaja = oppijanumerorekisteriClient.getMuokkaajaName(k.muokkaaja)
+        println(muokkaaja)
+      }
+      case None => None
+    }
+
     authorizeGet(
       koulutusWithTime,
       AuthorizationRules(
