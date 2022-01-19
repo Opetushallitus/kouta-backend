@@ -7,7 +7,7 @@
     <groupId>fi.oph.kouta</groupId>
     <artifactId>kouta-backend-parent</artifactId>
     <packaging>pom</packaging>
-    <version>6.21.1-SNAPSHOT</version>
+    <version>6.21.2-SNAPSHOT</version>
     <name>kouta-backend-parent</name>
 
     <modules>
