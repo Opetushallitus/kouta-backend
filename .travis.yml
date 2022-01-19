@@ -32,6 +32,12 @@ env:
     # ARTIFACTORY_PASSWORD
     - secure: "Kx+Pv/ZUwfZH2uNMOw7Cc0oqF/qhGjSgCFVEapC3A2YVs3APq+WgCf1z2kH2j92quliWq/jmNj0b0Ef2KSYi7FhCr22QGbxaUGu9seILpSB+5S5ddMwmNYgA7Dr0F6ABXn/luajbT3YlcgeMgMGkmU9zrns1Cak6dq//pgG/mmBMEUJ9uLvJWQzH5ZAe9dCJJRJfEOfHadud+9zkXQ/08q2S4b8Ri0004JS1LtlsIimv0ZoMspPpnsWIRpKgPEsSGNZ3Aptj4Jli83f0iAi5REZs+5ZLeJXXNDosPdfVgqs0UPkktD3XHLZJ1PeVawxL8H4tCHuMVTQvjBPhAL2TN0OOqDVlO0R1ef2UhtBEOSLRK7nzUa1TiTleDws64LO1nmCsAJu1geA+RXg6aSB4votW3ngp9BI19Z84LJUTRm5c6F0eThsDwxMysSTiu1dj7mvSvTl1UxwZcb+3Nl10f36pspcngyWW4Ogq78Nr0v3bw8gGsYNb+4Rjico/QJtWXsnnACnsGRfNA/RwqJJKptkC7DSil9Hj6hLK6XkRexApol9HO57FZwBfkOuanMJ87ZOzIvrvOlDtjsEOShHYz/5tzqRCmp84vSyUNCkSHVY3oWf3exC1u8bR3Hi3AfROOmgfLN1QIJW+VNMVYQu7d/I1vcIYDOISCTS+Q0v0Qd0="
 
+addons:
+  sonarcloud:
+    organization: "opetushallitus"
+    token:
+      secure: "BmohNcU9kKMmGFTpS17AfclwbbfiHBiJjDOVXzQ6scAcpBD1Ozq+XJEjZnHGOKW/bAy1rBKLHLnbhRa15NTGhgb7gPRbOG67VFB9wI9oSb0svcFkYlRnIkhkie67rBz3SlMYYDjw2XY5P2OJBga41kNBgJH8RQECmLOlpwJnl0u8NSxu8v+pMIRqiHnoSOjspteW4Hk1PciKi2zhnlRerPRnHlK4mTyxEUPUNE5+aZBiy34YPIVthCdXv0TqO/OoJKzrQsBmQiirOvAlemzlGZy3HB++6u704GpvaVSlQcidVLyhU3TuEuWUWJuHaGff1OFstVEshY8tDtGQjpOD2Fv5dgZenJeZEi7LPoCFvH48LZHYz0rgVLV10YAAKoQlkNqipk5li6NauM9klbnwGaigH8b0QILQaOvU8Iu9IVXC3+kEArxKqO+/W1B6M6M+wn3ejMNPhywU79Ebdm2SQBlIuagMY2bBiTxW/yGE5GtHyV24tvOTvmEBEe77BGl9a52M8pNJrHneIXT770Bgek2l2o7dIQmUlc8XEWxFjI92hYEM1LT0VqGcdXWmBSyqythIdvozHHi4bx/5EBXOa+lIEIks/YhW0gYaVGR2FYN3o+1DhHUfwk839rFrUinOc7zgIZWFO3pFMW/AVlkl+BySnYPlXwa9hpw19ON28R4="
+
 before_install:
   # https://github.com/travis-ci/travis-ci/issues/9624
   - sudo sed -i -e '/local.*peer/s/postgres/all/' -e 's/peer\|md5/trust/g' /etc/postgresql/*/main/pg_hba.conf
@@ -50,7 +56,7 @@ before_script:
   - docker pull localstack/localstack:0.10.2
 
 script:
-  - mvn clean package --batch-mode -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
+  - mvn clean package sonar:sonar -Dsonar.projectKey=Opetushallitus_kouta-backend --batch-mode -DargLine="-Dkouta-backend.test-postgres-port=${PGPORT}"
 
   - mv kouta-backend/target/kouta-backend-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
   - cp -vr kouta-backend/src/main/resources/* $DOCKER_BUILD_DIR/config/
