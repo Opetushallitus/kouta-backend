@@ -20,6 +20,7 @@ import fi.oph.kouta.domain.{
 }
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.generic.auto._
+import fi.oph.kouta.client.Henkilo
 
 class NameHelperSpec extends UnitSpec {
   val tuvaToteutus: Toteutus                        = TuvaToteutus
@@ -152,4 +153,23 @@ class NameHelperSpec extends UnitSpec {
     )
   }
 
+  "generateMuokkaajanNimi" should "create nimi for display from a person's kutsumanimi and sukunimi" in {
+    val henkilo = Henkilo(kutsumanimi = Some("Testi"), sukunimi = Some("Muokkaaja"), etunimet = Some("Testi Tyyppi"))
+    assert(NameHelper.generateMuokkaajanNimi(henkilo) === "Testi Muokkaaja")
+  }
+
+  it should "use etunimet if kutsumanimi is not specified" in {
+    val henkilo = Henkilo(kutsumanimi = None, sukunimi = Some("Muokkaaja"), etunimet = Some("Testi Tyyppi"))
+    assert(NameHelper.generateMuokkaajanNimi(henkilo) === "Testi Tyyppi Muokkaaja")
+  }
+
+  it should "use sukunimi only if kutsumanimi and etunimet are not specified" in {
+    val henkilo = Henkilo(kutsumanimi = None, sukunimi = Some("Muokkaaja"), etunimet = None)
+    assert(NameHelper.generateMuokkaajanNimi(henkilo) === "Muokkaaja")
+  }
+
+  it should "return empty string if kutsumanimi, etunimet and sukunimi are all unspecified" in {
+    val henkilo = Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+    assert(NameHelper.generateMuokkaajanNimi(henkilo) === "")
+  }
 }

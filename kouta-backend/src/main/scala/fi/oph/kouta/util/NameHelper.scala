@@ -13,6 +13,7 @@ import fi.oph.kouta.domain.{
   Toteutus,
   ToteutusMetadata
 }
+import fi.oph.kouta.client.Henkilo
 
 object NameHelper {
   val EmptyKielistetty: Kielistetty = Map(
@@ -109,5 +110,25 @@ object NameHelper {
     } else {
       hakukohdeNimi
     }
+  }
+
+  def nimiOrEmptyString(nimi: Option[String]): String = {
+    nimi match {
+      case Some(str) => str
+      case None => ""
+    }
+  }
+
+  def generateMuokkaajanNimi(henkilo: Henkilo): String = {
+    val kutsumanimi = nimiOrEmptyString(henkilo.kutsumanimi)
+    val etunimet = nimiOrEmptyString(henkilo.etunimet)
+    val lastname = nimiOrEmptyString(henkilo.sukunimi)
+
+    var firstname = kutsumanimi
+    if (firstname.isEmpty) {
+      firstname = etunimet
+    }
+
+    s"${firstname} ${lastname}".trim()
   }
 }
