@@ -16,6 +16,7 @@ object TestData {
   def inPast(s:Long = 500): LocalDateTime = LocalDateTime.now().minusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
   val startTime1: LocalDateTime = LocalDate.now().plusDays(1).atTime(LocalTime.parse("09:49")).truncatedTo(ChronoUnit.MINUTES)
   val endTime1: LocalDateTime = LocalDate.now().plusDays(1).atTime(LocalTime.parse("09:58")).truncatedTo(ChronoUnit.MINUTES)
+  val muokkaajanNimi: String = "Testi Muokkaaja"
 
   def kieliMap(text: String): Kielistetty = Map(Fi -> s"$text fi", Sv -> s"$text sv")
 
@@ -94,7 +95,12 @@ object TestData {
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/ammkuva"),
     ePerusteId = Some(11L),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = muokkaajanNimi
+      )
+    ))
 
   val Lisatieto1: Lisatieto = Lisatieto(otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
     teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv"))
@@ -119,7 +125,13 @@ object TestData {
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/yokuva"),
     ePerusteId = Some(12L),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = muokkaajanNimi
+      )
+    )
+  )
 
   val AmmTutkinnonOsaKoulutus: Koulutus = Koulutus(
     oid = None,
@@ -139,7 +151,13 @@ object TestData {
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/amm-kuva"),
     ePerusteId = None,
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = muokkaajanNimi
+      )
+    )
+  )
 
   val AmmOsaamisalaKoulutus: Koulutus = AmmTutkinnonOsaKoulutus.copy(
     koulutustyyppi = AmmOsaamisala,
@@ -170,7 +188,13 @@ object TestData {
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/lkkuva"),
     ePerusteId = Some(12L),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = muokkaajanNimi
+      )
+    )
+  )
 
   val TuvaKoulutus: Koulutus = Koulutus(
     oid = None,

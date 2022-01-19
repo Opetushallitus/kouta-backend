@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{Henkilo, KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
@@ -11,6 +11,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.util.NameHelper
 import fi.oph.kouta.validation.Validations._
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
@@ -58,14 +59,15 @@ class KoulutusService(
 
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) => {
-        val muokkaaja = oppijanumerorekisteriClient.getMuokkaajaName(k.muokkaaja)
-        println(muokkaaja)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(k.muokkaaja)
+        val nimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = nimi))), i)
       }
       case None => None
     }
 
     authorizeGet(
-      koulutusWithTime,
+      enrichedKoulutus,
       AuthorizationRules(
         roleEntity.readRoles,
         allowAccessToParentOrganizations = true,
