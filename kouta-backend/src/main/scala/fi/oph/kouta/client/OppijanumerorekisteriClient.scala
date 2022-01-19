@@ -8,13 +8,18 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.http4s.Method.GET
 import org.http4s.client.blaze.defaultClient
 import org.http4s.{Request, Uri}
+import org.json4s.jackson.JsonMethods._
 import scalaz.concurrent.Task
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 
+case class Henkilo(kutsumanimi: Option[String],
+                   sukunimi: Option[String],
+                   etunimet: Option[String])
+
 trait OppijanumerorekisteriClient {
-  def getMuokkaajaName(oid: UserOid): Unit
+  def getHenkilö(oid: UserOid): Henkilo
 }
 
 object OppijanumerorekisteriClient
@@ -26,7 +31,6 @@ object OppijanumerorekisteriClient
   private val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
   private val params = CasParams(
     urlProperties.url("oppijanumerorekisteri-service"),
-    "auth/cas",
     config.username,
     config.password
   )
@@ -39,19 +43,23 @@ object OppijanumerorekisteriClient
     sessionCookieName = "JSESSIONID"
   )
 
-  override def getMuokkaajaName(oid: UserOid) = {
+  override def getHenkilö(oid: UserOid): Henkilo = {
     val oppijanumerorekisteriUrl: String =
       urlProperties.url(
         "oppijanumerorekisteri-service.henkilo",
         oid
       )
-    println(oppijanumerorekisteriUrl)
 
     Uri.fromString(oppijanumerorekisteriUrl)
       .fold(Task.fail, url => {
         client.fetch(Request(method = GET, uri = url)) {
           case r if r.status.code == 200 =>
-            Task.now(())
+            r.bodyAsText
+              .runLog
+              .map(_.mkString)
+              .map(responseBody => {
+                parse(responseBody).extract[Henkilo]
+              })
           case r =>
             r.bodyAsText
               .runLog
