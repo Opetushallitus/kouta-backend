@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasParams}
+import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasParams, CasClientException}
 import fi.vm.sade.utils.slf4j.Logging
 import org.http4s.Method.GET
 import org.http4s.client.blaze.defaultClient
@@ -50,22 +50,28 @@ object OppijanumerorekisteriClient
         oid
       )
 
-    Uri.fromString(oppijanumerorekisteriUrl)
-      .fold(Task.fail, url => {
-        client.fetch(Request(method = GET, uri = url)) {
-          case r if r.status.code == 200 =>
-            r.bodyAsText
-              .runLog
-              .map(_.mkString)
-              .map(responseBody => {
-                parse(responseBody).extract[Henkilo]
-              })
-          case r =>
-            r.bodyAsText
-              .runLog
-              .map(_.mkString)
-              .flatMap(response => Task.fail(new RuntimeException(s"Url $url returned status code ${r.status} $response")))
-        }
-      }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
+    try {
+      Uri.fromString(oppijanumerorekisteriUrl)
+        .fold(Task.fail, url => {
+          client.fetch(Request(method = GET, uri = url)) {
+            case r if r.status.code == 200 =>
+              r.bodyAsText
+                .runLog
+                .map(_.mkString)
+                .map(responseBody => {
+                  parse(responseBody).extract[Henkilo]
+                })
+            case r =>
+              r.bodyAsText
+                .runLog
+                .map(_.mkString)
+                .flatMap(response => Task.fail(new RuntimeException(s"Failed to get henkilö $oid: ${r.toString()}")))
+          }
+        }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
+    } catch {
+      case error: CasClientException =>
+        logger.error(s"Authentication to CAS failed: ${error}")
+        Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+    }
   }
 }
