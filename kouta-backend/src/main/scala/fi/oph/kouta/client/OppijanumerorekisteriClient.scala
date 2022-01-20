@@ -3,16 +3,19 @@ package fi.oph.kouta.client
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasParams, CasClientException}
+import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
 import fi.vm.sade.utils.slf4j.Logging
 import org.http4s.Method.GET
 import org.http4s.client.blaze.defaultClient
 import org.http4s.{Request, Uri}
 import org.json4s.jackson.JsonMethods._
+import scalacache.caffeine.CaffeineCache
+import scalacache.memoization.memoizeSync
+import scalacache.modes.sync._
 import scalaz.concurrent.Task
+import scala.concurrent.duration._
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.Duration
 
 case class Henkilo(kutsumanimi: Option[String],
                    sukunimi: Option[String],
@@ -43,7 +46,9 @@ object OppijanumerorekisteriClient
     sessionCookieName = "JSESSIONID"
   )
 
-  override def getHenkilö(oid: UserOid): Henkilo = {
+  implicit val OppijanumeroCache = CaffeineCache[Henkilo]
+
+  override def getHenkilö(oid: UserOid): Henkilo = memoizeSync[Henkilo](Some(60.minutes)) {
     val oppijanumerorekisteriUrl: String =
       urlProperties.url(
         "oppijanumerorekisteri-service.henkilo",
@@ -65,7 +70,7 @@ object OppijanumerorekisteriClient
               r.bodyAsText
                 .runLog
                 .map(_.mkString)
-                .flatMap(response => Task.fail(new RuntimeException(s"Failed to get henkilö $oid: ${r.toString()}")))
+                .flatMap(_ => Task.fail(new RuntimeException(s"Failed to get henkilö $oid: ${r.toString()}")))
           }
         }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
     } catch {
