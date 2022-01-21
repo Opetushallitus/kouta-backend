@@ -1,6 +1,6 @@
 package fi.oph.kouta.security
 
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.oid.{HakukohderyhmaOid, OrganisaatioOid, RootOrganisaatioOid}
 
 import scala.util.matching.Regex
 
@@ -46,7 +46,7 @@ object Role {
 case class Authority(authority: String) {
   import Authority.OrganisaatioRegex
 
-  lazy val role: Role = Role(OrganisaatioRegex.replaceAllIn(authority, ""))
+  lazy val  role: Role = Role(OrganisaatioRegex.replaceAllIn(authority, ""))
 
   lazy val organisaatioId: Option[OrganisaatioOid] = OrganisaatioRegex.findFirstIn(authority)
     .map(_.filterNot(_ == '_'))
@@ -57,6 +57,7 @@ object Authority {
   val OrganisaatioRegex: Regex = RootOrganisaatioOid.OidPattern.pattern().replace("^", "_").r
 
   def apply(role: Role, organisaatioOid: OrganisaatioOid): Authority = this(s"${role.name}_$organisaatioOid")
+  def apply(role: Role, hakukohderyhmaOid: HakukohderyhmaOid): Authority = this(s"${role.name}_$hakukohderyhmaOid")
 }
 
 sealed trait Session {
