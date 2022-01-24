@@ -834,12 +834,6 @@ object TestData {
     tila = Julkaistu,
     esikatselu = true,
     metadata = Some(OppilaitosMetadata(
-      yhteystiedot = Seq(Yhteystieto(
-        nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-        postiosoite = Some(Osoite1),
-        kayntiosoite = Some(Osoite1),
-        puhelinnumero = Map(Fi -> "123", Sv -> "123"),
-        sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
       wwwSivu = Some(NimettyLinkki(
         url = Map(Fi -> "http://www.oppilaitos.fi", Sv -> "http://www.oppilaitos.sv"),
         nimi = Map(Fi -> "Linkki suomeksi", Sv -> "Linkki ruotsiksi"))),
@@ -877,11 +871,6 @@ object TestData {
     tila = Julkaistu,
     esikatselu = true,
     metadata = Some(OppilaitoksenOsaMetadata(
-      yhteystiedot = Seq(Yhteystieto(
-        nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-        postiosoite = Some(Osoite1),
-        puhelinnumero = Map(Fi -> "123", Sv -> "123"),
-        sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"))),
       wwwSivu = Some(NimettyLinkki(
         url = Map(Fi -> "http://www.oppilaitos.fi", Sv -> "http://www.oppilaitos.sv"),
         nimi = Map(Fi -> "Linkki suomeksi", Sv -> "Linkki ruotsiksi"))),

@@ -2,8 +2,8 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.domain.oid.{OrganisaatioOid}
-import fi.oph.kouta.domain.{Fi, Julkaistu, NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Sv, Tallennettu, Yhteystieto}
-import fi.oph.kouta.validation.Validations.{invalidKielistetty, invalidUrl, invalidEmail, missingMsg, notNegativeMsg, validationMsg}
+import fi.oph.kouta.domain.{Fi, Julkaistu, NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Sv, Tallennettu}
+import fi.oph.kouta.validation.Validations.{invalidKielistetty, invalidUrl, missingMsg, notNegativeMsg, validationMsg}
 
 class OppilaitoksenOsaValidationSpec extends BaseValidationSpec[OppilaitoksenOsa] {
 
@@ -46,11 +46,6 @@ class OppilaitoksenOsaMetadataValidationSpec extends SubEntityValidationSpec[Opp
   it should "validate wwwSivu" in {
     val metadata = min.copy(wwwSivu = Some(NimettyLinkki(url = Map(Fi -> "http://testi.fi", Sv -> "urli"))))
     failsValidation(Tallennettu, metadata, "wwwSivu.url.sv", invalidUrl("urli"))
-  }
-
-  it should "validate yhteystiedot" in {
-    val metadata = min.copy(yhteystiedot = Seq(Yhteystieto(sahkoposti = Map(Fi -> "validi@eemeli.fi", Sv -> "epavalidi@eemeli"))))
-    failsValidation(Tallennettu, metadata, "yhteystiedot[0].sahkoposti.sv", invalidEmail("epavalidi@eemeli"))
   }
 
   it should "fail if esittely is present only for some languages in a julkaistu oppilaitoksenOsa" in {

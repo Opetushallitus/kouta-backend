@@ -25,6 +25,10 @@ case class HakukohdeOid(s: String) extends Oid {
   override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.20\.\d+$""")
 }
 
+case class HakukohderyhmaOid(s: String) extends Oid {
+  override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.28\.\d+$""")
+}
+
 case class HakuOid(s: String) extends Oid {
   override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.29\.\d+$""")
 }
