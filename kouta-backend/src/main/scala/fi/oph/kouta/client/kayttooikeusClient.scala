@@ -67,7 +67,6 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
 
   def getOrganisaatiot(oid: UserOid): List[OrganisaatioHenkilo] = memoizeSync[List[OrganisaatioHenkilo]](Some(60.minutes)) {
     val url = urlProperties.url(s"kayttooikeus-service.organisaatiohenkilo", oid)
-    println(url)
 
     try {
       Uri.fromString(url)

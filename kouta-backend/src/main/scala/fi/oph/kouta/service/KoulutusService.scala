@@ -1,33 +1,34 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{Henkilo, KoutaIndexClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
-import fi.oph.kouta.repository.{HakutietoDAO, KoulutusDAO, KoutaDatabase, SorakuvausDAO, ToteutusDAO}
+import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
-import fi.oph.kouta.util.NameHelper
+import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations._
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
+import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object KoulutusService
-    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient)
+    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
 
 class KoulutusService(
     sqsInTransactionService: SqsInTransactionService,
     val s3ImageService: S3ImageService,
     auditLog: AuditLog,
     val organisaatioService: OrganisaatioService,
-    oppijanumerorekisteriClient: OppijanumerorekisteriClient
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+    kayttooikeusClient: KayttooikeusClient
 ) extends ValidatingService[Koulutus]
     with RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
@@ -53,6 +54,35 @@ class KoulutusService(
         )
       )
     } else { None }
+
+
+  private def enrichKoulutusMetadata(koulutus: Koulutus) : Option[KoulutusMetadata] = {
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(koulutus.muokkaaja)
+    val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
+
+    koulutus.metadata match {
+      case Some(metadata) =>
+        metadata match {
+          case kkMetadata: KorkeakoulutusKoulutusMetadata => kkMetadata match {
+            case yoMetadata: YliopistoKoulutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            case amkMetadata: AmmattikorkeakouluKoulutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          }
+          case ammMetadata: AmmatillinenKoulutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaKoulutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammOsaamisalaMetadata: AmmatillinenOsaamisalaKoulutusMetadata => Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case lukioMetadata: LukioKoulutusMetadata => Some(lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case tuvaMetadata: TuvaKoulutusMetadata => Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case telmaMetadata: TelmaKoulutusMetadata => Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case vapaaSivistystyoMetadata: VapaaSivistystyoKoulutusMetadata =>
+            vapaaSivistystyoMetadata match {
+              case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata => Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            }
+        }
+      case None => None
+    }
+  }
+
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
@@ -83,7 +113,11 @@ class KoulutusService(
     } else {
       AuthorizationRules(roleEntity.createRoles)
     }
-    authorizePut(koulutus, rules) { k =>
+
+    val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
+    val enrichedKoulutus = koulutus.copy(metadata = enrichedMetadata)
+
+    authorizePut(enrichedKoulutus, rules) { k =>
       withValidation(k, None) { k =>
         validateSorakuvausIntegrity(koulutus)
         doPut(k)
@@ -107,7 +141,9 @@ class KoulutusService(
             (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
         }
         rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
-          withValidation(k, Some(oldKoulutus)) {
+          val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(k)
+          val enrichedKoulutus = k.copy(metadata = enrichedMetadata)
+          withValidation(enrichedKoulutus, Some(oldKoulutus)) {
             throwValidationErrors(validateStateChange("koulutukselle", oldKoulutus.tila, newKoulutus.tila))
             validateSorakuvausIntegrity(k)
             validateToteutusIntegrityIfDeletingKoulutus(oldKoulutus.tila, newKoulutus.tila, newKoulutus.oid.get)
