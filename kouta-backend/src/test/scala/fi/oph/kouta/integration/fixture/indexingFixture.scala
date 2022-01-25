@@ -17,7 +17,7 @@ trait HakuFixtureWithIndexing extends HakuFixture {
 
   override def hakuService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService)
+    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService, oppijanumerorekisteriClient)
   }
 }
 
@@ -26,7 +26,7 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
 
   override def koulutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, MockOppijanumerorekisteriClient, MockKayttooikeusClient)
+    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, MockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 }
 
@@ -38,7 +38,7 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoClient(urlProperties.get)
     new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
-      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient, MockOppijanumerorekisteriClient, MockKayttooikeusClient)
+      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient, MockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 }
 

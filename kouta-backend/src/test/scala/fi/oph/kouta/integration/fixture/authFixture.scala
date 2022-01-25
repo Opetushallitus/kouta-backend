@@ -24,12 +24,11 @@ trait AuthFixture {
   val loginPath = s"$authPath/login"
   val sessionPath = s"$authPath/session"
 
-  val casUrl = "testCasUrl"
+  override val casUrl = "testCasUrl"
 
-  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
-  val kayttooikeusClient = new KayttooikeusClientMock(securityContext, defaultAuthorities)
+  override val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
 
-  object MockCasSessionService extends CasSessionService(securityContext, kayttooikeusClient, new AuditLog(MockAuditLogger))
+  object MockCasSessionService extends CasSessionService(securityContext, mockKayttooikeusClient, new AuditLog(MockAuditLogger))
 
   addServlet(new AuthServlet(MockCasSessionService), authPath)
 

@@ -10,7 +10,7 @@ import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils
+import fi.oph.kouta.util.{MiscUtils, NameHelper}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -20,22 +20,34 @@ import java.util.Calendar
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl)
+object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient)
 
 class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
                   ohjausparametritClient: OhjausparametritClient,
-                  val organisaatioService: OrganisaatioService)
+                  val organisaatioService: OrganisaatioService,
+                  oppijanumerorekisteriClient: OppijanumerorekisteriClient
+                 )
   extends ValidatingService[Haku] with RoleEntityAuthorizationService[Haku] {
 
   override val roleEntity: RoleEntity = Role.Haku
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
-  def get(oid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Haku, Instant)] =
-    authorizeGet(
-      HakuDAO.get(oid, tilaFilter),
-      readRules)
+  def get(oid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Haku, Instant)] = {
+    val hakuWithTime = HakuDAO.get(oid, tilaFilter)
+    val enrichedHaku = hakuWithTime match {
+      case Some((h, i)) => {
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(h.copy(_enrichedData = Some(HakuEnrichedData(muokkaajanNimi = muokkaajanNimi))), i)
+      }
+      case None => None
+    }
 
+    authorizeGet(
+      enrichedHaku,
+      readRules)
+  }
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
     val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
       AuthorizationRules(Seq(Role.Paakayttaja))

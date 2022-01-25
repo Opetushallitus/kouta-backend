@@ -194,7 +194,9 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakuajat: List[Ajanjakso] = List(),
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
-                modified: Option[Modified])
+                modified: Option[Modified],
+                _enrichedData: Option[HakuEnrichedData] = None
+               )
   extends PerustiedotWithOid[HakuOid, Haku] {
 
   override def validate(): IsValid = and(
@@ -252,3 +254,5 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_)),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")))
 }
+
+case class HakuEnrichedData(muokkaajanNimi: String)

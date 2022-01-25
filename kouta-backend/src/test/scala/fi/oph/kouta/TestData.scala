@@ -314,7 +314,13 @@ object TestData {
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     kielivalinta = Seq(Fi, Sv),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      HakuEnrichedData(
+        muokkaajanNimi = "Testi Muokkaaja"
+      )
+    )
+  )
 
   val MinHaku: Haku = Haku(
     muokkaaja = TestUserOid,

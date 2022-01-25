@@ -29,7 +29,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val koodistoClient = new KoodistoClient(urlProperties.get)
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
-      koodistoClient, MockOppijanumerorekisteriClient, MockKayttooikeusClient)
+      koodistoClient, MockOppijanumerorekisteriClient, mockKayttooikeusClient)
 }
 
   override def beforeAll(): Unit = {

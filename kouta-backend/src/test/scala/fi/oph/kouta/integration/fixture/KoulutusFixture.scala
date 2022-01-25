@@ -20,9 +20,6 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
 
   val KoulutusPath = "/koulutus"
 
-  val oppijanumerorekisteriClient: MockOppijanumerorekisteriClient.type = MockOppijanumerorekisteriClient
-  val kayttooikeusClient: MockKayttooikeusClient.type = MockKayttooikeusClient
-
   def koulutusService: KoulutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     new KoulutusService(
@@ -31,7 +28,7 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
       new AuditLog(MockAuditLogger),
       organisaatioService,
       oppijanumerorekisteriClient,
-      kayttooikeusClient
+      mockKayttooikeusClient
     )
   }
 
