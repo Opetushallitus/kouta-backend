@@ -377,7 +377,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "description"))),
       tarjoajat = List(LonelyOid, OtherOid, AmmOid),
-      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name")))
+      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"), muokkaajanNimi = Some("Testi Muokkaaja")))
     )
     update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus)
@@ -398,10 +398,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
       organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
     val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)),
-      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus")))))
+      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus"), muokkaajanNimi = Some("Testi Muokkaaja")))))
     val newKoulutusOid = put(koulutus, ophSession)
     val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(newKoulutusOid),
-      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus"))))
+      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus"), muokkaajanNimi = Some("Testi Muokkaaja"))))
     update(newUnfinishedToteutus, lastModified)
     get(oid, newUnfinishedToteutus)
   }
@@ -600,7 +600,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
       Sv -> s"""toteutuslomake.lukionYleislinjaNimiOsa sv, 40 yleiset.opintopistetta sv
         |lukiopainotukset_1 sv, 40 yleiset.opintopistetta sv
         |lukiolinjaterityinenkoulutustehtava_1 sv, 40 yleiset.opintopistetta sv""".stripMargin,
-      )))
+      ),
+      muokkaajanNimi = Some("Testi Muokkaaja")))
     val lukioToKoulutusOid = put(TestData.LukioKoulutus.copy(tila = Julkaistu), ophSession)
     val lukioToToteutus = TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioToKoulutusOid), tila = Tallennettu, _enrichedData = _enrichedData)
     val oid = put(lukioToToteutus)

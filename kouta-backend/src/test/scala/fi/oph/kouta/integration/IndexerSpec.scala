@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{Hakutieto, Koulutus, OppilaitoksenOsa, Toteutus, Poistettu, Tallennettu, ToteutusEnrichedData}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.security.RoleEntity
 import org.json4s.jackson.Serialization.read
 
@@ -56,9 +56,9 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/koulutus/$oid/toteutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs List(
-        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
-        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi)))
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None)))
       )
     }
   }
@@ -72,9 +72,9 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/koulutus/$oid/toteutukset?vainJulkaistut=true", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs List(
-        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
-        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None)))
       )
     }
   }
@@ -88,10 +88,10 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     get(s"$IndexerPath/koulutus/$oid/toteutukset?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Toteutus]](body) should contain theSameElementsAs List(
-        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1))),
-        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2))),
-        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3))),
-        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)))
+        toteutus(t1, oid).copy(modified = Some(readToteutusModified(t1)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
+        toteutus(t2, oid).copy(modified = Some(readToteutusModified(t2)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
+        toteutus(t3, oid).copy(modified = Some(readToteutusModified(t3)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
+        toteutus(t4, oid).copy(tila = Poistettu, modified = Some(readToteutusModified(t4)), _enrichedData = Some(ToteutusEnrichedData(esitysnimi = toteutus(oid).nimi, muokkaajanNimi = None))),
       )
     }
   }

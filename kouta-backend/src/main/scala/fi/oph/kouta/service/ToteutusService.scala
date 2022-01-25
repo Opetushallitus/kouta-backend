@@ -4,7 +4,7 @@ import com.hubspot.jinjava.lib.filter.ListFilter
 
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, KoutaIndexClient, LokalisointiClient}
+import fi.oph.kouta.client.{KoodistoClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
@@ -21,7 +21,7 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient, OppijanumerorekisteriClient)
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val s3ImageService: S3ImageService,
@@ -30,7 +30,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val organisaatioService: OrganisaatioService,
                       koulutusService: KoulutusService,
                       lokalisointiClient: LokalisointiClient,
-                      koodistoClient: KoodistoClient
+                      koodistoClient: KoodistoClient,
+                      oppijanumerorekisteriClient: OppijanumerorekisteriClient
                      )
   extends ValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
 
@@ -70,7 +71,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     val enrichedToteutus = toteutusWithTime match {
       case Some((t, i)) => {
         val esitysnimi = generateToteutusEsitysnimi(t)
-        Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi)).withoutRelatedData(), i)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData(), i)
       }
       case None => None
     }

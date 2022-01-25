@@ -643,7 +643,8 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       ToteutusEnrichedData(
-        esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv")
+        esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+        muokkaajanNimi = Some("Testi Muokkaaja")
       )
     )
   )
@@ -713,7 +714,8 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       ToteutusEnrichedData(
-        esitysnimi = kieliMap("Minimi toteutus")
+        esitysnimi = kieliMap("Minimi toteutus"),
+        muokkaajanNimi = Some("Testi Muokkaaja")
       )
     )
   )
@@ -748,7 +750,8 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       ToteutusEnrichedData(
-        esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv")
+        esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+        muokkaajanNimi = Some("Testi Muokkaaja")
       )
     )
   )

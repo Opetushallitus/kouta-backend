@@ -1,9 +1,8 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
-
 import fi.oph.kouta.TestOids.ParentOid
-import fi.oph.kouta.domain.Fi
+import fi.oph.kouta.domain.{En, Fi, Sv, ToteutusEnrichedData}
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.integration.fixture.{KeywordFixture, KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -117,10 +116,12 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   "Update toteutus" should "update ammattinimikkeet ja asiasanat in toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
-    val updatedToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(ammMetatieto.copy(
-      asiasanat = List(Keyword(Fi, "robotti")),
-      ammattinimikkeet = List(Keyword(Fi, "robotti-insinööri"))
-    )))
+    val updatedToteutus = toteutus(oid, koulutusOid).copy(
+      metadata = Some(ammMetatieto.copy(
+        asiasanat = List(Keyword(Fi, "robotti")),
+        ammattinimikkeet = List(Keyword(Fi, "robotti-insinööri")))),
+      _enrichedData = Some(toteutus._enrichedData.get.copy(muokkaajanNimi = Some("Testi Muokkaaja")))
+    )
     MockAuditLogger.clean()
     update(updatedToteutus, lastModified)
     MockAuditLogger.find("asiasana", "fi", "robotti", "asiasana_create") shouldBe defined
