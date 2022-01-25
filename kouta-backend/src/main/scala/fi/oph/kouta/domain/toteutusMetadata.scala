@@ -533,6 +533,7 @@ sealed trait ToteutusMetadata extends ValidatableSubEntity {
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
   val yhteyshenkilot: Seq[Yhteyshenkilo]
+  val isMuokkaajaOphVirkailija: Option[Boolean]
 
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[Opetus](opetus, _.validate(tila, kielivalinta, s"$path.opetus")),
@@ -567,7 +568,8 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                        ammatillinenPerustutkintoErityisopetuksena: Boolean = false) extends ToteutusMetadata {
+                                        ammatillinenPerustutkintoErityisopetuksena: Boolean = false,
+                                        isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfNonEmpty[AmmatillinenOsaamisala](osaamisalat, s"$path.osaamisalat", _.validate(tila, kielivalinta, _))
@@ -617,7 +619,8 @@ case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = Amm
                                                     lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                     lisatietoaValintaperusteista: Kielistetty = Map(),
                                                     hakuaika: Option[Ajanjakso] = None,
-                                                    aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                                    aloituspaikat: Option[Int] = None,
+                                                    isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
                                                   kuvaus: Kielistetty = Map(),
@@ -631,7 +634,8 @@ case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOs
                                                   lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                   lisatietoaValintaperusteista: Kielistetty = Map(),
                                                   hakuaika: Option[Ajanjakso] = None,
-                                                  aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                                  aloituspaikat: Option[Int] = None,
+                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      kuvaus: Kielistetty = Map(),
@@ -640,7 +644,8 @@ case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      ammattinimikkeet: List[Keyword] = List(),
                                      yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                      alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                     ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
+                                     ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
+                                     isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata
 
 case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Kielistetty = Map(),
@@ -649,7 +654,8 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               ammattinimikkeet: List[Keyword] = List(),
                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                               alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq()) extends KorkeakoulutusToteutusMetadata
+                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
+                                              isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata
 
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
@@ -661,7 +667,8 @@ case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  yleislinja: Boolean = false,
                                  painotukset: Seq[LukiolinjaTieto] = Seq(),
                                  erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq(),
-                                 diplomit: Seq[LukiodiplomiTieto] = Seq()
+                                 diplomit: Seq[LukiodiplomiTieto] = Seq(),
+                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                 ) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
@@ -686,7 +693,9 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 ammattinimikkeet: List[Keyword] = List(),
                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                 aloituspaikat: Option[Int] = None,
-                                jarjestetaanErityisopetuksena: Boolean = false) extends ToteutusMetadata {
+                                jarjestetaanErityisopetuksena: Boolean = false,
+                                isMuokkaajaOphVirkailija: Option[Boolean] = None
+                               ) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
@@ -696,12 +705,13 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
 }
 
 case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
-                                kuvaus: Kielistetty = Map(),
-                                opetus: Option[Opetus] = None,
-                                asiasanat: List[Keyword] = List(),
-                                ammattinimikkeet: List[Keyword] = List(),
-                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                aloituspaikat: Option[Int] = None) extends ToteutusMetadata {
+                                 kuvaus: Kielistetty = Map(),
+                                 opetus: Option[Opetus] = None,
+                                 asiasanat: List[Keyword] = List(),
+                                 ammattinimikkeet: List[Keyword] = List(),
+                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                 aloituspaikat: Option[Int] = None,
+                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
@@ -851,7 +861,8 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadata(tyyppi: Koulutustyyppi = 
                                                        opetus: Option[Opetus] = None,
                                                        asiasanat: List[Keyword] = List(),
                                                        ammattinimikkeet: List[Keyword] = List(),
-                                                       yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()) extends ToteutusMetadata {
+                                                       yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                       isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
@@ -872,7 +883,8 @@ case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                lisatietoaValintaperusteista: Kielistetty = Map(),
                                                hakuaika: Option[Ajanjakso] = None,
-                                               aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata {
+                                               aloituspaikat: Option[Int] = None,
+                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(

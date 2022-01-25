@@ -38,7 +38,7 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoClient(urlProperties.get)
     new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
-      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient, MockOppijanumerorekisteriClient)
+      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient, MockOppijanumerorekisteriClient, MockKayttooikeusClient)
   }
 }
 

@@ -6,7 +6,7 @@ import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
-import fi.oph.kouta.mocks.{MockAuditLogger, MockOppijanumerorekisteriClient, MockS3ImageService}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockS3ImageService}
 import fi.oph.kouta.repository.ToteutusDAO
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusService}
 import fi.oph.kouta.servlet.ToteutusServlet
@@ -29,7 +29,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val koodistoClient = new KoodistoClient(urlProperties.get)
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
-      koodistoClient, MockOppijanumerorekisteriClient)
+      koodistoClient, MockOppijanumerorekisteriClient, MockKayttooikeusClient)
 }
 
   override def beforeAll(): Unit = {
