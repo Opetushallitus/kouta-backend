@@ -377,7 +377,8 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       EnrichedData(
-        esitysnimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv")
+        esitysnimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
+        muokkaajanNimi = "Testi Muokkaaja"
       )
     )
   )

@@ -633,4 +633,4 @@ object HakukohdeListItemEnriched {
   }
 }
 
-case class EnrichedData(esitysnimi: Kielistetty = Map())
+case class EnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: String)

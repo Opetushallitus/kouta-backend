@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, LokalisointiClient}
+import fi.oph.kouta.client.{KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid, ToteutusOid}
@@ -23,13 +23,14 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object HakukohdeService
-    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient)
+    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient)
 
 class HakukohdeService(
     sqsInTransactionService: SqsInTransactionService,
     auditLog: AuditLog,
     val organisaatioService: OrganisaatioService,
-    val lokalisointiClient: LokalisointiClient
+    val lokalisointiClient: LokalisointiClient,
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient
 ) extends ValidatingService[Hakukohde]
     with RoleEntityAuthorizationService[Hakukohde] {
 
@@ -44,7 +45,9 @@ class HakukohdeService(
         toteutus match {
           case Some((t, _)) =>
             val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
-            Some(h.copy(_enrichedData = Some(EnrichedData(esitysnimi = esitysnimi))), i)
+            val muokkaaja = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
+            val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+            Some(h.copy(_enrichedData = Some(EnrichedData(esitysnimi = esitysnimi, muokkaajanNimi = muokkaajanNimi))), i)
           case None => hakukohde
         }
 
