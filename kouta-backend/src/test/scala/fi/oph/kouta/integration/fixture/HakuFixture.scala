@@ -21,7 +21,7 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
 
   def hakuService: HakuService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService, oppijanumerorekisteriClient)
+    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService, oppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 
   override def beforeAll(): Unit = {
@@ -32,8 +32,8 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
   val haku: Haku = JulkaistuHaku
   val yhteishakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(
     hakutapaKoodiUri = Some("hakutapa_01#1"),
-    metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
-  val jatkuvaHakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
+    metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None, isMuokkaajaOphVirkailija = Some(false))))
+  val jatkuvaHakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None, isMuokkaajaOphVirkailija = Some(false))))
 
   def hakuWithAlkamisvuosi(haku: Haku, alkamisvuosi: String): Haku = haku.copy(metadata = Some(
     haku.metadata.get.copy(koulutuksenAlkamiskausi = Some(

@@ -243,7 +243,8 @@ case class HakuListItem(oid: HakuOid,
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
-                        koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi]) extends ValidatableSubEntity {
+                        koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                        isMuokkaajaOphVirkailija: Option[Boolean]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),

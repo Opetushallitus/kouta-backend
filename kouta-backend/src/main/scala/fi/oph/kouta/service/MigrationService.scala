@@ -456,7 +456,9 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       metadata = Some(HakuMetadata(
         yhteyshenkilot = yhteyshenkilot,
         tulevaisuudenAikataulu = tulevaisuudenAikataulu,
-        koulutuksenAlkamiskausi = koulutuksenAlkamiskausi)),
+        koulutuksenAlkamiskausi = koulutuksenAlkamiskausi,
+        None
+      )),
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       hakuajat = hakuajat,
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),

@@ -17,7 +17,7 @@ trait HakuFixtureWithIndexing extends HakuFixture {
 
   override def hakuService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService, oppijanumerorekisteriClient)
+    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService, oppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 }
 
