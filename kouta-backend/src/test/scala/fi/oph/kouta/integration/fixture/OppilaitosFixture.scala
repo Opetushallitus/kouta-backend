@@ -19,7 +19,7 @@ trait OppilaitosFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   def oppilaitosService: OppilaitosService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient)
+    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 
   override def beforeAll(): Unit = {
