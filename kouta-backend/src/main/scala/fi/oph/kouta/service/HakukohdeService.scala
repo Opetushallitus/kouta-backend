@@ -52,14 +52,15 @@ class HakukohdeService(
 
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        val hakukohdeEnrichedDataWithMuokkaajanNimi = EnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
         val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
         toteutus match {
           case Some((t, _)) =>
             val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
-            val muokkaaja = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
-            val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-            Some(h.copy(_enrichedData = Some(EnrichedData(esitysnimi = esitysnimi, muokkaajanNimi = muokkaajanNimi))), i)
-          case None => hakukohde
+            Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi))), i)
+          case None => Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi)), i)
         }
 
       case None => None

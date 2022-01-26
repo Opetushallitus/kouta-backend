@@ -100,7 +100,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       _enrichedData = Some(EnrichedData(esitysnimi = Map(
         Fi -> s"""Hakukohde fi (yleiset.vaativanaErityisenaTukena fi)""".stripMargin,
         Sv -> s"""Hakukohde sv (yleiset.vaativanaErityisenaTukena sv)""".stripMargin),
-        muokkaajanNimi = "Testi Muokkaaja"
+        muokkaajanNimi = Some("Testi Muokkaaja")
       ))))
   }
 
@@ -475,7 +475,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       _enrichedData = Some(
       EnrichedData(
         esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-        muokkaajanNimi = "Testi Muokkaaja"
+        muokkaajanNimi = Some("Testi Muokkaaja")
       )
     ))
     update(muokattuHakukohde, lastModified, expectUpdate = true)
@@ -497,7 +497,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       _enrichedData = Some(
         EnrichedData(
           esitysnimi = Map(Fi -> "hakukohde"),
-          muokkaajanNimi = "Testi Muokkaaja"
+          muokkaajanNimi = Some("Testi Muokkaaja")
         )))
     val oid = put(unfinishedHakukohde)
     val lastModified = get(oid, unfinishedHakukohde.copy(oid = Some(HakukohdeOid(oid))))

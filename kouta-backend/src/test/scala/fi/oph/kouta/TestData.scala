@@ -379,7 +379,7 @@ object TestData {
     _enrichedData = Some(
       EnrichedData(
         esitysnimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
-        muokkaajanNimi = muokkaajanNimi
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
