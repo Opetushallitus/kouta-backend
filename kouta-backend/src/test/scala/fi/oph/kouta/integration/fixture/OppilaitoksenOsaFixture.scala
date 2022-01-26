@@ -20,7 +20,7 @@ trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec  with AccessControlSp
   override def beforeAll(): Unit = {
     super.beforeAll()
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val oppilaitoksenOsaService = new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService)
+    val oppilaitoksenOsaService = new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient)
     addServlet(new OppilaitoksenOsaServlet(oppilaitoksenOsaService), OppilaitoksenOsaPath)
   }
 

@@ -1,8 +1,8 @@
 package fi.oph.kouta.service
 
 import java.time.Instant
-
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.OppijanumerorekisteriClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -11,23 +11,40 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.NameHelper
 import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient)
 
-class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, val organisaatioService: OrganisaatioService)
-  extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService[Oppilaitos] with LogoService {
+class OppilaitosService(
+  sqsInTransactionService: SqsInTransactionService,
+  val s3ImageService: S3ImageService,
+  auditLog: AuditLog,
+  val organisaatioService: OrganisaatioService,
+  oppijanumerorekisteriClient: OppijanumerorekisteriClient
+) extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService[Oppilaitos] with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
 
   val teemakuvaPrefix = "oppilaitos-teemakuva"
   val logoPrefix = "oppilaitos-logo"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] =
-    authorizeGet(OppilaitosDAO.get(oid))
+  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] = {
+    val oppilaitosWithTime = OppilaitosDAO.get(oid)
+
+    val enrichedOppilaitos = oppilaitosWithTime match {
+      case Some((o, i)) => {
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(o.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
+      }
+      case None => None
+    }
+    authorizeGet(enrichedOppilaitos)
+  }
 
   def put(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): OrganisaatioOid = {
     authorizePut(oppilaitos) { o =>
@@ -91,10 +108,15 @@ class OppilaitosService(sqsInTransactionService: SqsInTransactionService, val s3
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
 }
 
-object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl)
+object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient)
 
-class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, val s3ImageService: S3ImageService, auditLog: AuditLog, val organisaatioService: OrganisaatioService)
-  extends ValidatingService[OppilaitoksenOsa]
+class OppilaitoksenOsaService(
+  sqsInTransactionService: SqsInTransactionService,
+  val s3ImageService: S3ImageService,
+  auditLog: AuditLog,
+  val organisaatioService: OrganisaatioService,
+  oppijanumerorekisteriClient: OppijanumerorekisteriClient
+) extends ValidatingService[OppilaitoksenOsa]
     with RoleEntityAuthorizationService[OppilaitoksenOsa]
     with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa] {
 
@@ -102,8 +124,19 @@ class OppilaitoksenOsaService(sqsInTransactionService: SqsInTransactionService, 
 
   val teemakuvaPrefix = "oppilaitoksen-osa-teemakuva"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitoksenOsa, Instant)] =
-    authorizeGet(OppilaitoksenOsaDAO.get(oid))
+  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitoksenOsa, Instant)] = {
+    val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
+
+    val enrichedOppilaitoksenOsa = oppilaitoksenOsaWithTime match {
+      case Some((o, i)) => {
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(o.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
+      }
+      case None => None
+    }
+    authorizeGet(enrichedOppilaitoksenOsa)
+  }
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid =
     authorizePut(oppilaitoksenOsa) { o =>

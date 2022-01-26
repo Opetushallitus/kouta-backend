@@ -279,7 +279,8 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       muokkaaja: UserOid,
                       teemakuva: Option[String] = None,
                       logo: Option[String] = None,
-                      modified: Option[Modified] = None)
+                      modified: Option[Modified] = None,
+                     _enrichedData: Option[OppilaitosEnrichedData] = None)
   extends Validatable
     with AuthorizableEntity[Oppilaitos]
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
@@ -316,7 +317,8 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             teemakuva: Option[String] = None,
-                            modified: Option[Modified] = None)
+                            modified: Option[Modified] = None,
+                           _enrichedData: Option[OppilaitosEnrichedData] = None)
   extends Validatable
     with AuthorizableEntity[OppilaitoksenOsa]
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
@@ -416,3 +418,5 @@ case class Yhteystieto(nimi: Kielistetty = Map(),
     ))
   )
 }
+
+case class OppilaitosEnrichedData(muokkaajanNimi: Option[String])

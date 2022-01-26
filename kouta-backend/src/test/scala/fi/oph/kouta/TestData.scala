@@ -885,7 +885,8 @@ object TestData {
     kielivalinta = Seq(Fi, Sv),
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
-    modified = None)
+    modified = None,
+    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))))
 
   val MinOppilaitos: Oppilaitos = Oppilaitos(
     oid = ChildOid,
@@ -910,7 +911,8 @@ object TestData {
     kielivalinta = Seq(Fi, Sv),
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
-    modified = None)
+    modified = None,
+    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))))
 
   val MinOppilaitoksenOsa: OppilaitoksenOsa = OppilaitoksenOsa(
     oid = GrandChildOid,
