@@ -1,6 +1,6 @@
 package fi.oph.kouta.mocks
 
-import fi.oph.kouta.TestOids.{EvilCousin, EvilGrandChildOid, GrandChildOid, OphOid, OphUserOid, TestUserOid}
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.{KayttooikeusClient, OrganisaatioHenkilo}
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails, SecurityContext}

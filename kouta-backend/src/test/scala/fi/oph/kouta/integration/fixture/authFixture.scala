@@ -8,15 +8,6 @@ import fi.oph.kouta.mocks.{MockAuditLogger, MockSecurityContext}
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.AuthServlet
 
-class KayttooikeusClientMock(securityContext: SecurityContext, defaultAuthorities: Set[Authority]) extends KayttooikeusClient {
-  override def getUserByUsername(username: String): KayttooikeusUserDetails = {
-    username match {
-      case "testuser" => KayttooikeusUserDetails(defaultAuthorities, TestUserOid.s)
-      case _ => throw new AuthenticationFailedException(s"User not found with username: $username")
-    }
-  }
-}
-
 trait AuthFixture {
   this: KoutaIntegrationSpec =>
 

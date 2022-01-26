@@ -4,7 +4,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
-import fi.oph.kouta.mocks.{MockAuditLogger, MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockS3ImageService}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers}
 import fi.oph.kouta.service.{KoulutusService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.KoulutusServlet
@@ -27,7 +27,7 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
       MockS3ImageService,
       new AuditLog(MockAuditLogger),
       organisaatioService,
-      oppijanumerorekisteriClient,
+      mockOppijanumerorekisteriClient,
       mockKayttooikeusClient
     )
   }

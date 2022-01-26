@@ -1,17 +1,18 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
-import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockOppijanumerorekisteriClient}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient}
 import fi.oph.kouta.repository.{HakuDAO, SQLHelpers}
 import fi.oph.kouta.service.{HakuService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.HakuServlet
 import fi.oph.kouta.util.TimeUtils
+
+import java.util.UUID
 
 trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessControlSpec {
 
@@ -21,7 +22,7 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
 
   def hakuService: HakuService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService, oppijanumerorekisteriClient, mockKayttooikeusClient)
+    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 
   override def beforeAll(): Unit = {
