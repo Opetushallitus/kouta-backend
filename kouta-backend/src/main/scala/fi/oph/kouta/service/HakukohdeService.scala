@@ -99,11 +99,13 @@ class HakukohdeService(
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hakukohde)
+    val enrichedHakukohde = hakukohde.copy(metadata = enrichedMetadata)
     val rules = AuthorizationRules(
       roleEntity.updateRoles,
       additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
     )
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), hakukohde, rules) { (oldHakukohde, h) =>
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), enrichedHakukohde, rules) { (oldHakukohde, h) =>
       withValidation(h, Some(oldHakukohde)) { h =>
         throwValidationErrors(validateStateChange("hakukohteelle", oldHakukohde.tila, hakukohde.tila))
         validateDependenciesIntegrity(h, authenticated, "update")

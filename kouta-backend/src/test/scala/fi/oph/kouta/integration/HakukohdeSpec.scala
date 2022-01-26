@@ -581,23 +581,25 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   it should "pass legal state changes" in {
     val id = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
-    val theHakukohde = tallennettuHakukohde(id).copy(muokkaaja = OphUserOid)
+    val tallennettuHk = tallennettuHakukohde(id)
+    val theHakukohde = tallennettuHk.copy(muokkaaja = OphUserOid)
     var lastModified = get(id, theHakukohde.copy(tila = Tallennettu))
-    update(theHakukohde.copy(tila = Julkaistu), lastModified, true, ophSession)
-    lastModified = get(id, theHakukohde.copy(tila = Julkaistu))
-    update(theHakukohde.copy(tila = Arkistoitu), lastModified, true, ophSession)
-    lastModified = get(id, theHakukohde.copy(tila = Arkistoitu))
-    update(theHakukohde.copy(tila = Julkaistu), lastModified, true, ophSession)
-    lastModified = get(id, theHakukohde.copy(tila = Julkaistu))
-    update(theHakukohde.copy(tila = Tallennettu), lastModified, true, ophSession)
-    lastModified = get(id, theHakukohde.copy(tila = Tallennettu))
-    update(theHakukohde.copy(tila = Poistettu), lastModified, true, ophSession)
+    val updatedHakukohde = theHakukohde.copy(tila = Julkaistu, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    update(updatedHakukohde, lastModified, true, ophSession)
+    lastModified = get(id, updatedHakukohde)
+    update(updatedHakukohde.copy(tila = Arkistoitu), lastModified, true, ophSession)
+    lastModified = get(id, updatedHakukohde.copy(tila = Arkistoitu))
+    update(updatedHakukohde.copy(tila = Julkaistu), lastModified, true, ophSession)
+    lastModified = get(id, updatedHakukohde.copy(tila = Julkaistu))
+    update(updatedHakukohde.copy(tila = Tallennettu), lastModified, true, ophSession)
+    lastModified = get(id, updatedHakukohde.copy(tila = Tallennettu))
+    update(updatedHakukohde.copy(tila = Poistettu), lastModified, true, ophSession)
 
     val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
     val tallennettu = tallennettuHakukohde(arkistoituId).copy(muokkaaja = OphUserOid)
     lastModified = get(arkistoituId, tallennettu.copy(tila = Arkistoitu))
-    update(tallennettu.copy(tila = Julkaistu), lastModified, true, ophSession)
-    get(arkistoituId, tallennettu.copy(tila = Julkaistu))
+    update(tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))), lastModified, true, ophSession)
+    get(arkistoituId, tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
   it should "fail illegal state changes" in {
