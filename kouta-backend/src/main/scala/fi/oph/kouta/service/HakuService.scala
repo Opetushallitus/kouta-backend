@@ -50,7 +50,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       case Some((h, i)) => {
         val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(h.copy(_enrichedData = Some(HakuEnrichedData(muokkaajanNimi = muokkaajanNimi))), i)
+        Some(h.copy(_enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }
       case None => None
     }
@@ -74,17 +74,15 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val hakuWithTime = HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat())
-    val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(haku)
-    val enrichedHaku = haku.copy(metadata = enrichedMetadata)
-
     val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
     }
 
-    authorizeUpdate(hakuWithTime, enrichedHaku, rules) { (oldHaku, h) =>
+    val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(haku)
+    val enrichedHaku = haku.copy(metadata = enrichedMetadata)
+    authorizeUpdate(HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat()), enrichedHaku, rules) { (oldHaku, h) =>
       withValidation(h, Some(oldHaku)) {
         throwValidationErrors(validateStateChange("haulle", oldHaku.tila, haku.tila))
         validateHakukohdeIntegrityIfDeletingHaku(oldHaku.tila, haku.tila, haku.oid.get)

@@ -244,4 +244,4 @@ case class KoulutusListItem(oid: KoulutusOid,
                             muokkaaja: UserOid,
                             modified: Modified) extends OidListItem
 
-case class KoulutusEnrichedData(muokkaajanNimi: String)
+case class KoulutusEnrichedData(muokkaajanNimi: Option[String] = None)

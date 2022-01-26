@@ -225,4 +225,4 @@ case class ValintaperusteListItem(id: UUID,
                                   muokkaaja: UserOid,
                                   modified: Modified) extends IdListItem
 
-case class ValintaperusteEnrichedData(muokkaajanNimi: String)
+case class ValintaperusteEnrichedData(muokkaajanNimi: Option[String] = None)

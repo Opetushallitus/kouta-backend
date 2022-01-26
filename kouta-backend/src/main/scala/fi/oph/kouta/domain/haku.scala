@@ -256,4 +256,4 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")))
 }
 
-case class HakuEnrichedData(muokkaajanNimi: String)
+case class HakuEnrichedData(muokkaajanNimi: Option[String] = None)

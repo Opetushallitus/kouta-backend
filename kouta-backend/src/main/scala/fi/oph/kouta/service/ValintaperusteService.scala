@@ -37,7 +37,7 @@ class ValintaperusteService(
       case Some((v, i)) =>
         val muokkaaja = oppijanumerorekisteriClient.getHenkilö(v.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(v.copy(_enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi))), i)
+        Some(v.copy(_enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       case None => None
     }
 

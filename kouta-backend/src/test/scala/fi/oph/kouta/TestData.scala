@@ -99,7 +99,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
-        muokkaajanNimi = muokkaajanNimi
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     ))
 
@@ -130,7 +130,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
-        muokkaajanNimi = muokkaajanNimi
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
@@ -158,7 +158,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
-        muokkaajanNimi = muokkaajanNimi
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
@@ -197,7 +197,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
-        muokkaajanNimi = muokkaajanNimi
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
@@ -318,7 +318,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       HakuEnrichedData(
-        muokkaajanNimi = muokkaajanNimi
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
@@ -510,7 +510,7 @@ object TestData {
     muokkaaja = TestUserOid,
     kielivalinta = List(Fi, Sv),
     modified = None,
-    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi))
+    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))
   )
 
   val YoValintaperuste: Valintaperuste = Valintaperuste(
@@ -528,7 +528,7 @@ object TestData {
     muokkaaja = TestUserOid,
     kielivalinta = List(Fi, Sv),
     modified = None,
-    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi)))
+    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))))
 
   val MinYoValintaperuste: Valintaperuste = Valintaperuste(
     koulutustyyppi = Yo,
@@ -537,7 +537,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     modified = None,
-    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi)))
+    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))))
 
   val YoSorakuvaus: Sorakuvaus = Sorakuvaus(
     id = None,

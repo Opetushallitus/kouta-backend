@@ -421,4 +421,4 @@ case class Yhteystieto(nimi: Kielistetty = Map(),
   )
 }
 
-case class OppilaitosEnrichedData(muokkaajanNimi: Option[String])
+case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None)

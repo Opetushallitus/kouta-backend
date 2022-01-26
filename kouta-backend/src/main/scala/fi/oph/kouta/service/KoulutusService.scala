@@ -90,8 +90,8 @@ class KoulutusService(
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) => {
         val muokkaaja = oppijanumerorekisteriClient.getHenkilö(k.muokkaaja)
-        val nimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = nimi))), i)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }
       case None => None
     }

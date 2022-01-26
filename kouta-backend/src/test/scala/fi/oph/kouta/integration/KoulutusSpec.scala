@@ -390,7 +390,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "store and update unfinished koulutus" in {
     val unfinishedKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = OphUserOid, organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "koulutus"), _enrichedData = Some(
       KoulutusEnrichedData(
-        muokkaajanNimi = "Testi Muokkaaja"
+        muokkaajanNimi = Some("Testi Muokkaaja")
       )
     ))
     val oid = put(unfinishedKoulutus, ophSession)
