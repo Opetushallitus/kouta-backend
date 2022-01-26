@@ -1,12 +1,11 @@
 package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
-import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.mocks.{MockAuditLogger, MockOppijanumerorekisteriClient}
 import fi.oph.kouta.repository.ValintaperusteDAO
 import fi.oph.kouta.service.{OrganisaatioServiceImpl, ValintaperusteService}
 import fi.oph.kouta.servlet.ValintaperusteServlet
@@ -21,7 +20,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
 
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService)
+    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, MockOppijanumerorekisteriClient)
   }
 
   override def beforeAll(): Unit = {

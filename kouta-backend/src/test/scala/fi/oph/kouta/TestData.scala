@@ -318,7 +318,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       HakuEnrichedData(
-        muokkaajanNimi = "Testi Muokkaaja"
+        muokkaajanNimi = muokkaajanNimi
       )
     )
   )
@@ -379,7 +379,7 @@ object TestData {
     _enrichedData = Some(
       EnrichedData(
         esitysnimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
-        muokkaajanNimi = "Testi Muokkaaja"
+        muokkaajanNimi = muokkaajanNimi
       )
     )
   )
@@ -507,7 +507,9 @@ object TestData {
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     kielivalinta = List(Fi, Sv),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi))
+  )
 
   val YoValintaperuste: Valintaperuste = Valintaperuste(
     koulutustyyppi = Yo,
@@ -523,7 +525,8 @@ object TestData {
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     kielivalinta = List(Fi, Sv),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi)))
 
   val MinYoValintaperuste: Valintaperuste = Valintaperuste(
     koulutustyyppi = Yo,
@@ -531,7 +534,8 @@ object TestData {
     nimi = kieliMap("Minimi valintaperuste"),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
-    modified = None)
+    modified = None,
+    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi)))
 
   val YoSorakuvaus: Sorakuvaus = Sorakuvaus(
     id = None,
@@ -656,7 +660,7 @@ object TestData {
     _enrichedData = Some(
       ToteutusEnrichedData(
         esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-        muokkaajanNimi = Some("Testi Muokkaaja")
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
@@ -731,7 +735,7 @@ object TestData {
     _enrichedData = Some(
       ToteutusEnrichedData(
         esitysnimi = kieliMap("Minimi toteutus"),
-        muokkaajanNimi = Some("Testi Muokkaaja")
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
@@ -769,7 +773,7 @@ object TestData {
     _enrichedData = Some(
       ToteutusEnrichedData(
         esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-        muokkaajanNimi = Some("Testi Muokkaaja")
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )

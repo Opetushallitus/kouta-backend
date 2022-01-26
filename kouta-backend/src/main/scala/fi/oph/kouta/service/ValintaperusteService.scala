@@ -1,14 +1,15 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoutaIndexClient
+import fi.oph.kouta.client.{KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{HakukohdeListItem, Julkaisutila, Koulutustyyppi, Poistettu, TilaFilter, Valintaperuste, ValintaperusteListItem, ValintaperusteSearchResult}
+import fi.oph.kouta.domain.{HakuEnrichedData, HakukohdeListItem, Julkaisutila, Koulutustyyppi, Poistettu, TilaFilter, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.NameHelper
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -16,18 +17,33 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl)
+object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient)
 
-class ValintaperusteService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog, val organisaatioService: OrganisaatioService)
-  extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService[Valintaperuste] {
+class ValintaperusteService(
+  sqsInTransactionService: SqsInTransactionService,
+  auditLog: AuditLog,
+  val organisaatioService: OrganisaatioService,
+  oppijanumerorekisteriClient: OppijanumerorekisteriClient
+) extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
-  def get(id: UUID, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] =
+  def get(id: UUID, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] = {
+    val valintaperusteWithTime = ValintaperusteDAO.get(id, tilaFilter)
+
+    val enrichedValintaperuste = valintaperusteWithTime match {
+      case Some((v, i)) =>
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(v.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(v.copy(_enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = muokkaajanNimi))), i)
+      case None => None
+    }
+
     authorizeGet(
-      ValintaperusteDAO.get(id, tilaFilter),
+      enrichedValintaperuste,
       AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
+  }
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID =
     authorizePut(valintaperuste) { v =>
