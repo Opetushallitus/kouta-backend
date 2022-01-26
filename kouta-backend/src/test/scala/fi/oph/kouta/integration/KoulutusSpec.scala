@@ -552,4 +552,12 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val (koulutusOid: String, lastModified: String) = createKoulutusWithToteutukset(false)
     update(KoulutusPath, koulutus(koulutusOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Koulutusta", "toteutuksia"))))
   }
+
+  it should "return koulutustyyppi2opistotyyppi mappings" in {
+    get(s"$KoulutusPath/listOppilaitostyyppiByKoulutustyyppi", headers = Seq(sessionHeader(ophSession))) {
+      withClue(body) {
+        status should equal(200)
+      }
+    }
+  }
 }

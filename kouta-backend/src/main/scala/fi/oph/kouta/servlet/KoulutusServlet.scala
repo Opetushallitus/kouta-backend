@@ -209,4 +209,10 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       case Some(organisaatioOid) => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")), organisaatioOid))
     }
   }
+
+  get("/listOppilaitostyypitByKoulutustyypit") {
+    implicit val authenticated: Authenticated = authenticate()
+
+    Ok(koulutusService.getOppilaitosTyypitByKoulutustyypit())
+  }
 }
