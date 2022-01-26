@@ -119,6 +119,15 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     get(oid, tallennettuHakukohde(oid))
   }
 
+  it should "store true as the value of isMuokkaajaOphVirkailija when muokkaaja is OPH virkailija" in {
+    val uusiHk = uusiHakukohde.copy(muokkaaja = OphUserOid)
+    val oid = put(uusiHk)
+    val tallennettuHk = tallennettuHakukohde(oid)
+    val tallennettuHkMetadata = tallennettuHk.metadata.get
+    val tallennettuHkCopy = tallennettuHk.copy(metadata = Some(tallennettuHkMetadata.copy(isMuokkaajaOphVirkailija = Some(true))))
+    get(oid, tallennettuHkCopy)
+  }
+
   it should "read muokkaaja from the session" in {
     val oid = put(uusiHakukohde.copy(muokkaaja = UserOid("random")))
     get(oid, tallennettuHakukohde(oid).copy(muokkaaja = testUser.oid))

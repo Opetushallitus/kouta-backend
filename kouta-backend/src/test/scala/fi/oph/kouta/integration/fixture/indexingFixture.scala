@@ -57,6 +57,6 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
   override def hakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, oppijanumerorekisteriClient)
+    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, oppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 }

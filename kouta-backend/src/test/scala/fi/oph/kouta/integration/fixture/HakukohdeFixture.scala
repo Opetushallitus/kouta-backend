@@ -28,7 +28,8 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       new AuditLog(MockAuditLogger),
       organisaatioService,
       lokalisointiClient,
-      oppijanumerorekisteriClient
+      oppijanumerorekisteriClient,
+      mockKayttooikeusClient
     )
   }
 
