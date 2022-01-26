@@ -20,7 +20,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
 
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, MockOppijanumerorekisteriClient)
+    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, MockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 
   override def beforeAll(): Unit = {

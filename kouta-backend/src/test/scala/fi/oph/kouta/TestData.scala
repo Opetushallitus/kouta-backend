@@ -450,7 +450,8 @@ object TestData {
     kuvaus = kieliMap("kuvaus"),
     lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
     hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
-    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
+    isMuokkaajaOphVirkailija = Some(false))
 
   val AmmValintaperusteMetadata: AmmatillinenValintaperusteMetadata = AmmatillinenValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
@@ -458,7 +459,8 @@ object TestData {
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
     lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
     hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
-    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
+    isMuokkaajaOphVirkailija = Some(false))
 
   val AmmTutkinnonOsaValintaperusteMetadata: AmmatillinenTutkinnonOsaValintaperusteMetadata = AmmatillinenTutkinnonOsaValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
