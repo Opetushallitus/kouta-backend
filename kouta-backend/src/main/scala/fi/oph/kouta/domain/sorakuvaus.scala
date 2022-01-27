@@ -151,7 +151,8 @@ case class Sorakuvaus(id: Option[UUID] = None,
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map(),
                               koulutusalaKoodiUri: Option[String] = None,
-                              koulutusKoodiUrit: Seq[String] = Seq()) extends ValidatableSubEntity {
+                              koulutusKoodiUrit: Seq[String] = Seq(),
+                              isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, and(
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),

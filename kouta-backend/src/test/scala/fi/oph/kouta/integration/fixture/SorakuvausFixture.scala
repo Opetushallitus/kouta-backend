@@ -19,7 +19,7 @@ trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   def sorakuvausService: SorakuvausService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new SorakuvausService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient)
+    new SorakuvausService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 
   override def beforeAll(): Unit = {

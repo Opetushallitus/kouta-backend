@@ -548,7 +548,9 @@ object TestData {
     metadata = Some(SorakuvausMetadata(
       kuvaus = kieliMap("kuvaus"),
       koulutusKoodiUrit = Seq("koulutus_371101#1"),
-      koulutusalaKoodiUri = Some("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))),
+      koulutusalaKoodiUri = Some("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"),
+      isMuokkaajaOphVirkailija = Some(true)
+    )),
     organisaatioOid = OphOid,
     muokkaaja = OphUserOid,
     modified = None,
