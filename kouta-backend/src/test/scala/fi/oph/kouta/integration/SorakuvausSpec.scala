@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, Poistettu, Tallennettu}
+import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, Poistettu, SorakuvausEnrichedData, Tallennettu}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, SorakuvausFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -255,8 +255,8 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   it should "store and update unfinished sorakuvaus" in {
     val unfinishedSorakuvaus = TestData.MinSorakuvaus
     val id = put(unfinishedSorakuvaus, ophSession)
-    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid))
-    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid, muokkaaja = OphUserOid)
+    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid, _enrichedData = Some(SorakuvausEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
+    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid, muokkaaja = OphUserOid, _enrichedData = Some(SorakuvausEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"))))
     update(newUnfinishedSorakuvaus, lastModified, ophSession)
     get(id, newUnfinishedSorakuvaus)
   }

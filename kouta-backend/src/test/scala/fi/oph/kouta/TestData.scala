@@ -551,7 +551,8 @@ object TestData {
       koulutusalaKoodiUri = Some("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))),
     organisaatioOid = OphOid,
     muokkaaja = OphUserOid,
-    modified = None)
+    modified = None,
+    _enrichedData = Some(SorakuvausEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))))
 
   val AmmSorakuvaus: Sorakuvaus = YoSorakuvaus.copy(koulutustyyppi = Amm)
 

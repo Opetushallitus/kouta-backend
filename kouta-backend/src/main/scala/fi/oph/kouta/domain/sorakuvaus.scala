@@ -133,7 +133,9 @@ case class Sorakuvaus(id: Option[UUID] = None,
                       metadata: Option[SorakuvausMetadata] = None,
                       organisaatioOid: OrganisaatioOid,
                       muokkaaja: UserOid,
-                      modified: Option[Modified]) extends PerustiedotWithId[Sorakuvaus] with AuthorizableByKoulutustyyppi[Sorakuvaus] {
+                      modified: Option[Modified],
+                     _enrichedData: Option[SorakuvausEnrichedData] = None
+                     ) extends PerustiedotWithId[Sorakuvaus] with AuthorizableByKoulutustyyppi[Sorakuvaus] {
   override def validate(): IsValid = and(
     super.validate(),
     validateIfDefined[SorakuvausMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
@@ -164,3 +166,5 @@ case class SorakuvausListItem(id: UUID,
                               organisaatioOid: OrganisaatioOid,
                               muokkaaja: UserOid,
                               modified: Modified) extends IdListItem
+
+case class SorakuvausEnrichedData(muokkaajanNimi: Option[String] = None)
