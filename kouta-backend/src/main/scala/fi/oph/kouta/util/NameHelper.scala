@@ -112,17 +112,10 @@ object NameHelper {
     }
   }
 
-  def nimiOrEmptyString(nimi: Option[String]): String = {
-    nimi match {
-      case Some(str) => str
-      case None => ""
-    }
-  }
-
   def generateMuokkaajanNimi(henkilo: Henkilo): String = {
-    val kutsumanimi = nimiOrEmptyString(henkilo.kutsumanimi)
-    val etunimet = nimiOrEmptyString(henkilo.etunimet)
-    val lastname = nimiOrEmptyString(henkilo.sukunimi)
+    val kutsumanimi = henkilo.kutsumanimi.getOrElse("")
+    val etunimet = henkilo.etunimet.getOrElse("")
+    val lastname = henkilo.sukunimi.getOrElse("")
 
     var firstname = kutsumanimi
     if (firstname.isEmpty) {
