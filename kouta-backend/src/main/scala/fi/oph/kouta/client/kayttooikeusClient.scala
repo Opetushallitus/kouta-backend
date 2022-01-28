@@ -28,7 +28,7 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
   private implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
-  private lazy val config = KoutaConfigurationFactory.configuration.oppijanumerorekisteriClientConfiguration
+  private lazy val config = KoutaConfigurationFactory.configuration.kayttooikeusClientConfiguration
   private lazy val params = CasParams(
     urlProperties.url("kayttooikeus-service"),
     config.username,
