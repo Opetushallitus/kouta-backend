@@ -252,7 +252,6 @@ package object koulutusMetadata {
       |              example: opintojenlaajuus_40#1
       |""".stripMargin
 
-  // @TODO viimeistele speksien päivityksen jälkeen
   val AikuistenPerusopetusKoulutusMetadataModel: String =
     """    AikuistenPerusopetusKoulutusMetadata:
       |      allOf:
@@ -265,6 +264,14 @@ package object koulutusMetadata {
       |              example: aikuisten-perusopetus
       |              enum:
       |                - aikuisten-perusopetus
+      |            linkkiEPerusteisiin:
+      |              type: string
+      |              description: Linkki koulutuksen eperusteisiin
+      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |            opintojenLaajuusKoodiUri:
+      |              type: string
+      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
+      |              example: opintojenlaajuus_38#1
       |""".stripMargin
 
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
@@ -450,8 +457,22 @@ case class VapaaSivistystyoMuuKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                        isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                       ) extends VapaaSivistystyoKoulutusMetadata
 
-// @TODO Viimeistele toteutus speksin päivityksen jälkeen
 case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
                                                 kuvaus: Kielistetty = Map(),
-                                                lisatiedot: Seq[Lisatieto] = Seq()
-                                               ) extends KoulutusMetadata
+                                                lisatiedot: Seq[Lisatieto] = Seq(),
+                                                linkkiEPerusteisiin: Kielistetty = Map(),
+                                                opintojenLaajuusKoodiUri: Option[String] = None
+                                               ) extends KoulutusMetadata {
+
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    // Aikuisten perusopetuksella ei ole lisätiedot-kenttää lomakkeessa
+    assertEmpty(lisatiedot, path),
+    // OpintojenLaajuusKoodiUri on pakollinen kenttä Aikuisten perusopetukselle
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
+    // Kuvaus on pakollinen kenttä Aikuisten perusopetukselle
+    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
+    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
+    validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
+  )
+}

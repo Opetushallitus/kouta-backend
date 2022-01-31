@@ -60,10 +60,10 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
 
   def oppilaitostyyppi2koulutustyyppi: Map[String, Seq[Koulutustyyppi]] = Map(
     "oppilaitostyyppi_01#1" -> Seq(Muu), //Taiteen perusopetuksen oppilaitokset (ei musiikki)
-    "oppilaitostyyppi_11#1" -> Seq(Muu, Tuva), //Peruskoulut
-    "oppilaitostyyppi_12#1" -> Seq(Muu, Tuva), //Peruskouluasteen erityiskoulut
-    "oppilaitostyyppi_15#1" -> Seq(Lk, Muu, Tuva), //Lukiot
-    "oppilaitostyyppi_19#1" -> Seq(Lk, Muu, Tuva), //Perus- ja lukioasteen koulut
+    "oppilaitostyyppi_11#1" -> Seq(Muu, Tuva, AikuistenPerusopetus), //Peruskoulut
+    "oppilaitostyyppi_12#1" -> Seq(Muu, Tuva, AikuistenPerusopetus), //Peruskouluasteen erityiskoulut
+    "oppilaitostyyppi_15#1" -> Seq(Lk, Muu, Tuva, AikuistenPerusopetus), //Lukiot
+    "oppilaitostyyppi_19#1" -> Seq(Lk, Muu, Tuva, AikuistenPerusopetus), //Perus- ja lukioasteen koulut
     "oppilaitostyyppi_21#1" -> Seq(
       Amm,
       AmmTutkinnonOsa,
@@ -74,9 +74,18 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Tuva,
       Telma,
       VapaaSivistystyoOpistovuosi,
-      VapaaSivistystyoMuu
+      VapaaSivistystyoMuu,
+      AikuistenPerusopetus
     ), //Ammatilliset oppilaitokset
-    "oppilaitostyyppi_22#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Telma, Tuva), //Ammatilliset erityisoppilaitokset
+    "oppilaitostyyppi_22#1" -> Seq(
+      Amm,
+      AmmTutkinnonOsa,
+      AmmOsaamisala,
+      AmmMuu,
+      Telma,
+      Tuva,
+      AikuistenPerusopetus
+    ), //Ammatilliset erityisoppilaitokset
     "oppilaitostyyppi_23#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu), //Ammatilliset erikoisoppilaitokset
     "oppilaitostyyppi_24#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva), //Ammatilliset aikuiskoulutuskeskukset
     "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
@@ -95,7 +104,8 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Muu,
       Tuva,
       VapaaSivistystyoOpistovuosi,
-      VapaaSivistystyoMuu
+      VapaaSivistystyoMuu,
+      AikuistenPerusopetus
     ), //Liikunnan koulutuskeskukset
     "oppilaitostyyppi_63#1" -> Seq(
       Amm,
@@ -107,9 +117,17 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Tuva,
       Telma,
       VapaaSivistystyoOpistovuosi,
-      VapaaSivistystyoMuu
+      VapaaSivistystyoMuu,
+      AikuistenPerusopetus
     ), //Kansanopistot
-    "oppilaitostyyppi_64#1" -> Seq(Amm, Lk, Muu, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu), //Kansalaisopistot
+    "oppilaitostyyppi_64#1" -> Seq(
+      Amm,
+      Lk,
+      Muu,
+      VapaaSivistystyoOpistovuosi,
+      VapaaSivistystyoMuu,
+      AikuistenPerusopetus
+    ), //Kansalaisopistot
     "oppilaitostyyppi_65#1" -> Seq(
       Amm,
       AmmTutkinnonOsa,

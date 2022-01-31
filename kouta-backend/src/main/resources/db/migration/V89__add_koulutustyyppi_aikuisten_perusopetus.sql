@@ -1,1 +1,1 @@
-alter type koulutustyyppi add value 'aikuisten-perusopetus';
+alter type koulutustyyppi add value if not exists 'aikuisten-perusopetus';

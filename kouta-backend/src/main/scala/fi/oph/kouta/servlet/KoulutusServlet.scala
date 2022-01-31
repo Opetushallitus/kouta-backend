@@ -210,6 +210,24 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     }
   }
 
+  registerPath( "/koulutus/listOppilaitostyypitByKoulutustyypit",
+    """    get:
+      |      summary: Listaa oppilaitostyypit koulutustyypeittäin
+      |      operationId: Listaa oppilaitostyypit
+      |      description: Listaa jokaisen koulutustyypin osalta oppilaitostyypit, jotka voivat tarjota ko. koulutusta,
+      |        ts. mäppäykset koulutustyypistä oppilaitostyyppeihin
+      |      tags:
+      |        - Koulutus
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/KoulutustyyppiToOppilaitostyyppiResult'
+      |""".stripMargin)
   get("/listOppilaitostyypitByKoulutustyypit") {
     implicit val authenticated: Authenticated = authenticate()
 

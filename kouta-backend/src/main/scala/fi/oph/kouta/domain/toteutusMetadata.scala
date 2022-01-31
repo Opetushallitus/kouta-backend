@@ -260,11 +260,6 @@ package object toteutusMetadata {
       |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
-      |            osaamisalat:
-      |              type: array
-      |              items:
-      |                $ref: '#/components/schemas/Osaamisala'
-      |              description: Lista tutkintoon johtamattoman koulutuksen osaamisalojen kuvauksia
       |            hakutermi:
       |              type: object
       |              $ref: '#/components/schemas/Hakutermi'
@@ -401,11 +396,10 @@ package object toteutusMetadata {
       |                - vapaa-sivistystyo-muu
       |""".stripMargin
 
-  // @TODO viimeistele speksien päivityksen jälkeen
   val AikuistenPerusopetusToteutusMetadataModel: String =
     """    AikuistenPerusopetusToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -947,11 +941,17 @@ case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
   override def allowSorakuvaus: Boolean = false
 }
 
-// @TODO viimeistele speksien päivityksen jälkeen
 case class AikuistenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
                                                 kuvaus: Kielistetty = Map(),
                                                 opetus: Option[Opetus] = None,
                                                 asiasanat: List[Keyword] = List(),
                                                 ammattinimikkeet: List[Keyword] = List(),
-                                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq()
-                                               ) extends ToteutusMetadata
+                                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                hakutermi: Option[Hakutermi] = None,
+                                                hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                                hakulomakeLinkki: Kielistetty = Map(),
+                                                lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                                lisatietoaValintaperusteista: Kielistetty = Map(),
+                                                hakuaika: Option[Ajanjakso] = None,
+                                                aloituspaikat: Option[Int] = None
+                                               ) extends TutkintoonJohtamatonToteutusMetadata

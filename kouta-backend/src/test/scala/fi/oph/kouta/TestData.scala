@@ -304,6 +304,8 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AikuistenPerusopetusKoulutusMetadata(
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
+      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv")
     )),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = TestUserOid,
@@ -770,7 +772,14 @@ object TestData {
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-    yhteyshenkilot = Seq(Yhteystieto1)
+    yhteyshenkilot = Seq(Yhteystieto1),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    aloituspaikat = Some(100)
   )
 
   val AikuistenPerusopetusToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(AikuistenPerusopetusToteutusMetatieto))

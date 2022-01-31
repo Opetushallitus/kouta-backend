@@ -554,7 +554,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "return koulutustyyppi2opistotyyppi mappings" in {
-    get(s"$KoulutusPath/listOppilaitostyyppiByKoulutustyyppi", headers = Seq(sessionHeader(ophSession))) {
+    get(s"$KoulutusPath/listOppilaitostyypitByKoulutustyypit", headers = Seq(sessionHeader(ophSession))) {
       withClue(body) {
         status should equal(200)
       }
