@@ -103,6 +103,7 @@ Avaa Ideassa ylhäältä Run Configurations valikko ja aseta EmbeddedJettyLaunch
 käynnistyy porttiin **8099** ja se käyttää valittua postgres kantaa (host tai kontti).
 Asetuksia voi muuttaa muokkaamalla
 ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
+HUOM! KayttooikeusClient ja OppijanumerorekisteriClient (joita käytetään muokkaajan nimen muodostamiseen) tarvitsevat toimiakseen testiympäristön CAS-salasanan, joka löytyy sieltä, mistä muutkin salasanat. Sovellus toimii kuitenkin ilman salasanan asettamista, mutta logeihin tulee siinä tapauksessa CasAuthenticationErroreita.
 
 EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
 
