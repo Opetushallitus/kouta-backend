@@ -117,11 +117,7 @@ object NameHelper {
     val etunimet = henkilo.etunimet.getOrElse("")
     val lastname = henkilo.sukunimi.getOrElse("")
 
-    var firstname = kutsumanimi
-    if (firstname.isEmpty) {
-      firstname = etunimet
-    }
-
+    val firstname = if (kutsumanimi.nonEmpty) kutsumanimi else etunimet
     s"${firstname} ${lastname}".trim()
   }
 }
