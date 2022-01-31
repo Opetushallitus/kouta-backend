@@ -210,4 +210,38 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       case Some(organisaatioOid) => Ok(toteutusService.listHakukohteet(toteutusOid, organisaatioOid))
     }
   }
+
+  registerPath( "/toteutus/copy",
+    """    put:
+      |      summary: Tallenna kopiot toteutuksista
+      |      operationId: Tallenna kopiot toteutuksista
+      |      description: Tallenna kopioitujen toteutusten tiedot.
+      |        Rajapinta palauttaa toteutuksille generoidut yksilöivät toteutus-oidit.
+      |      tags:
+      |        - Toteutus
+      |      requestBody:
+      |        description: Lista kopioitavien toteutusten id:itä
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema: array
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                description: Tallennettujen kopioiden yksilöivät oid:t
+      |                example: [1.2.246.562.17.00000000000000000009]
+      |""".stripMargin)
+  put("/copy") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    toteutusService.put(parsedBody.extract[List[ToteutusOid]])
+    //match {
+    //  case oid => Ok("oid" -> oid)
+    //}
+  }
 }
