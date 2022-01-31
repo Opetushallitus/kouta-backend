@@ -86,21 +86,12 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }.oid.get
   }
 
-  def put(toteutusOidit: List[ToteutusOid])(implicit authenticated: Authenticated): List[ToteutusOid] = {
-    toteutusOidit.map(oid => {
-      val toteutusWithTime = ToteutusDAO.get(oid, TilaFilter.all())
-      toteutusWithTime match {
-        case Some((t, _)) =>
-          println(t)
-          val toteutusCopyAsLuonnos = t.copy(tila = Tallennettu)
-          val oidOfTheCopy = put(toteutusCopyAsLuonnos)
-          println(oidOfTheCopy)
-          Some(oidOfTheCopy)
-        case None =>
-          println(s"No toteutus with the oid ${oid}")
-          None
-      }
-    }).flatten
+  def put(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusOid] = {
+    val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
+    toteutukset.map(toteutus => {
+      val toteutusCopyAsLuonnos = toteutus.copy(tila = Tallennettu)
+      put(toteutusCopyAsLuonnos)
+    })
   }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {

@@ -120,6 +120,19 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem] =
     listWithTarjoajat(() => selectByHakuOid(hakuOid))
+
+  def getToteutuksetByOids(toteutusOids: List[ToteutusOid]): Seq[Toteutus] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        toteutukset <- selectToteutuksetByOids(toteutusOids).as[Toteutus]
+        tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
+      } yield (toteutukset, tarjoajat)
+    ).map {
+      case (toteutukset, tarjoajat) =>
+        toteutukset.map(t =>
+            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
+    }.get
+  }
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
@@ -198,6 +211,10 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def selectToteutustenTarjoajat(oids: List[ToteutusOid]): DBIO[Vector[Tarjoaja]] = {
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createOidInParams(oids)})""".as[Tarjoaja]
   }
+
+  def selectToteutuksetByOids(toteutusOids: List[ToteutusOid]) =
+    sql"""#$selectToteutusSql
+          where t.oid in (#${createOidInParams(toteutusOids)})"""
 
   def insertToteutus(toteutus: Toteutus): DBIO[ToteutusOid] = {
     sql"""insert into toteutukset (
