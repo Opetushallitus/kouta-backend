@@ -239,8 +239,11 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    toteutusService.put(parsedBody.extract[List[ToteutusOid]]) match {
-      case oids => Ok("oids" -> oids)
+    val oids = toteutusService.put(parsedBody.extract[List[ToteutusOid]])
+    if (oids.isEmpty) {
+      NotFound("error" -> "Unknown toteutus oid")
+    } else {
+      Ok("oids" -> oids)
     }
   }
 }
