@@ -215,7 +215,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     """    put:
       |      summary: Tallenna kopiot toteutuksista
       |      operationId: Tallenna kopiot toteutuksista
-      |      description: Tallenna kopioitujen toteutusten tiedot.
+      |      description: Tallennetaan kopioitavien toteutusten tiedot tietokantaan.
+      |        Kopiototeutukset tallennetaan luonnostilaisina.
       |        Rajapinta palauttaa toteutuksille generoidut yksilöivät toteutus-oidit.
       |      tags:
       |        - Toteutus
@@ -224,7 +225,11 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |        required: true
       |        content:
       |          application/json:
-      |            schema: array
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |              example: ["1.2.246.562.17.00000000000000000004", "1.2.246.562.17.00000000000000000005"]
       |      responses:
       |        '200':
       |          description: Ok
