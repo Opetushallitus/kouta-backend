@@ -4,7 +4,7 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
+import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks.{MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
@@ -177,6 +177,10 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   def bytes(o: AnyRef): Array[Byte] = write(o).getBytes
 
   val oid: String => String = (body: String) => read[Oid](body).oid
+
+
+  val oids: String => List[String] = (body: String) => read[Oids](body).oids
+
 
   def id(body: String): UUID = read[Id](body).id
 

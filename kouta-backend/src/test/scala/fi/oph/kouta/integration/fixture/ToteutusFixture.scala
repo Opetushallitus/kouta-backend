@@ -19,6 +19,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   this: KoulutusFixture =>
 
   val ToteutusPath = "/toteutus"
+  val ToteutusCopyPath = "/toteutus/copy"
 
   protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
@@ -65,6 +66,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   def put(toteutus:Toteutus):String = put(ToteutusPath, toteutus, oid(_))
   def put(toteutus:Toteutus, sessionId: UUID):String = put(ToteutusPath, toteutus, sessionId, oid(_))
+  def put(toteutukset: List[String]):List[String] = put(ToteutusCopyPath, toteutukset, oids(_))
 
   def get(oid: String, expected: Toteutus): String =
     get(ToteutusPath, oid, expected.copy(modified = Some(readToteutusModified(oid))))
