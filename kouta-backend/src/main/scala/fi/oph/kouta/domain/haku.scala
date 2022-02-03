@@ -194,7 +194,9 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakuajat: List[Ajanjakso] = List(),
                 muokkaaja: UserOid,
                 kielivalinta: Seq[Kieli] = Seq(),
-                modified: Option[Modified])
+                modified: Option[Modified],
+                _enrichedData: Option[HakuEnrichedData] = None
+               )
   extends PerustiedotWithOid[HakuOid, Haku] {
 
   override def validate(): IsValid = and(
@@ -241,7 +243,8 @@ case class HakuListItem(oid: HakuOid,
 
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
-                        koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi]) extends ValidatableSubEntity {
+                        koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                        isMuokkaajaOphVirkailija: Option[Boolean]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
@@ -252,3 +255,5 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
     validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_)),
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")))
 }
+
+case class HakuEnrichedData(muokkaajanNimi: Option[String] = None)

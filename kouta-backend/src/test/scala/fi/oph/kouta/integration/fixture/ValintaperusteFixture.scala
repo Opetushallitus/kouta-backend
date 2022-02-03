@@ -1,7 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
@@ -15,13 +13,15 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 import slick.jdbc.GetResult
 
+import java.util.UUID
+
 trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec  {
 
   val ValintaperustePath = "/valintaperuste"
 
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService)
+    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 
   override def beforeAll(): Unit = {

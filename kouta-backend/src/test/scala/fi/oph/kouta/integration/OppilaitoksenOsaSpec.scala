@@ -2,10 +2,9 @@ package fi.oph.kouta.integration
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, Tallennettu}
+import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, OppilaitosEnrichedData, Tallennettu}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -281,10 +280,10 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "store and update unfinished oppilaitoksen osa" in {
     val unfinishedOppilaitoksenOsa = TestData.MinOppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid))
     val oid = put(unfinishedOppilaitoksenOsa)
-    val lastModified = get(oid, unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid)))
+    val lastModified = get(oid, unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
     val newUnfinishedOppilaitoksenOsa = unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), organisaatioOid = LonelyOid)
     update(newUnfinishedOppilaitoksenOsa, lastModified)
-    get(oid, newUnfinishedOppilaitoksenOsa)
+    get(oid, newUnfinishedOppilaitoksenOsa.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
   }
 
   it should "validate updated oppilaitoksen osa" in {

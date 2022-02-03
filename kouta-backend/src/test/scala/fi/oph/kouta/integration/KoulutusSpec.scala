@@ -1,11 +1,10 @@
 package fi.oph.kouta.integration
 
-import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.{KoulutusFixture, MockS3Client, SorakuvausFixture, ToteutusFixture, UploadFixture}
+import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
@@ -14,6 +13,7 @@ import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.Serialization.read
 
+import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 import scala.util.Success
 
@@ -109,7 +109,8 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "read muokkaaja from the session" in {
     val oid = put(koulutus.copy(muokkaaja = UserOid("random")), ophSession)
-    get(oid, koulutus(oid).copy(muokkaaja = OphUserOid))
+    val metadata = koulutus.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
+    get(oid, koulutus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.copy(isMuokkaajaOphVirkailija = Some(false)))))
   }
 
   it should "allow oph to create julkaistu koulutus without tarjoajat" in {
@@ -387,7 +388,11 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = OphUserOid, organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "koulutus"))
+    val unfinishedKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = OphUserOid, organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "koulutus"), _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some("Testi Muokkaaja")
+      )
+    ))
     val oid = put(unfinishedKoulutus, ophSession)
     val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
     val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid)), johtaaTutkintoon = false)

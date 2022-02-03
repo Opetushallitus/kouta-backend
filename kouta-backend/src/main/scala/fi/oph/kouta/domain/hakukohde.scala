@@ -537,7 +537,9 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              aloituspaikat: Option[Aloituspaikat] = None,
                              // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
                              hakukohteenLinja: Option[HakukohteenLinja] = None,
-                             uudenOpiskelijanUrl: Option[String] = None) extends ValidatableSubEntity {
+                             uudenOpiskelijanUrl: Option[String] = None,
+                             isMuokkaajaOphVirkailija: Option[Boolean]
+                            ) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
@@ -633,4 +635,4 @@ object HakukohdeListItemEnriched {
   }
 }
 
-case class EnrichedData(esitysnimi: Kielistetty = Map())
+case class EnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)

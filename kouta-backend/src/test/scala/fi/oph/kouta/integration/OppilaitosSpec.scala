@@ -2,10 +2,9 @@ package fi.oph.kouta.integration
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.Arkistoitu
+import fi.oph.kouta.domain.{Arkistoitu, OppilaitosEnrichedData, OppilaitosMetadata}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -254,10 +253,10 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   it should "store and update unfinished oppilaitos" in {
     val unfinishedOppilaitos = TestData.MinOppilaitos
     val oid = put(unfinishedOppilaitos)
-    val lastModified = get(oid, unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid)))
+    val lastModified = get(oid, unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
     val newUnfinishedOppilaitos = unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), organisaatioOid = LonelyOid)
     update(newUnfinishedOppilaitos, lastModified)
-    get(oid, newUnfinishedOppilaitos)
+    get(oid, newUnfinishedOppilaitos.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
   }
 
   it should "validate updated oppilaitos" in {

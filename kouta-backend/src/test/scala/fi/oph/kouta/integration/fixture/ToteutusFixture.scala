@@ -1,7 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient}
@@ -13,7 +11,10 @@ import fi.oph.kouta.repository.ToteutusDAO
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusService}
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
+
+import java.util.UUID
 
 trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   this: KoulutusFixture =>
@@ -29,7 +30,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val koodistoClient = new KoodistoClient(urlProperties.get)
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
-      koodistoClient)
+      koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
 }
 
   override def beforeAll(): Unit = {

@@ -40,6 +40,11 @@ case class S3Configuration(imageBucket: String, imageBucketPublicUrl: String, re
 
 case class OhjausparametritClientConfiguration(username: String, password: String)
 
+case class OppijanumerorekisteriClientConfiguration(username: String, password: String)
+
+case class KayttooikeusClientConfiguration(username: String, password: String)
+
+
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration: KoutaDatabaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
@@ -73,6 +78,16 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
   )
 
   val ohjausparametritClientConfiguration: OhjausparametritClientConfiguration = OhjausparametritClientConfiguration(
+    username = config.getString("kouta-backend.cas.username"),
+    password = config.getString("kouta-backend.cas.password")
+  )
+
+  val oppijanumerorekisteriClientConfiguration: OppijanumerorekisteriClientConfiguration = OppijanumerorekisteriClientConfiguration(
+    username = config.getString("kouta-backend.cas.username"),
+    password = config.getString("kouta-backend.cas.password")
+  )
+
+  val kayttooikeusClientConfiguration: KayttooikeusClientConfiguration = KayttooikeusClientConfiguration(
     username = config.getString("kouta-backend.cas.username"),
     password = config.getString("kouta-backend.cas.password")
   )

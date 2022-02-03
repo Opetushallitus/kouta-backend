@@ -158,6 +158,7 @@ sealed trait ValintaperusteMetadata extends ValidatableSubEntity {
   def lisatiedot: Kielistetty
   def valintakokeidenYleiskuvaus: Kielistetty
   def sisalto: Seq[Sisalto]
+  def isMuokkaajaOphVirkailija: Option[Boolean]
 
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[Valintatapa](valintatavat, s"$path.valintatavat", _.validate(tila, kielivalinta, _)),
@@ -177,7 +178,8 @@ case class AmmatillinenValintaperusteMetadata(tyyppi: Koulutustyyppi = Amm,
                                               hakukelpoisuus: Kielistetty = Map(),
                                               lisatiedot: Kielistetty = Map(),
                                               sisalto: Seq[Sisalto] = Seq(),
-                                              valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                              valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                              isMuokkaajaOphVirkailija: Option[Boolean] = None)
     extends ValintaperusteMetadata
 
 case class LukioValintaperusteMetadata(tyyppi: Koulutustyyppi = Lk,
@@ -186,7 +188,8 @@ case class LukioValintaperusteMetadata(tyyppi: Koulutustyyppi = Lk,
                                        hakukelpoisuus: Kielistetty = Map(),
                                        lisatiedot: Kielistetty = Map(),
                                        sisalto: Seq[Sisalto] = Seq(),
-                                       valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                       valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                       isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class YliopistoValintaperusteMetadata(tyyppi: Koulutustyyppi = Yo,
@@ -195,7 +198,8 @@ case class YliopistoValintaperusteMetadata(tyyppi: Koulutustyyppi = Yo,
                                            hakukelpoisuus: Kielistetty = Map(),
                                            lisatiedot: Kielistetty = Map(),
                                            sisalto: Seq[Sisalto] = Seq(),
-                                           valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                           valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                           isMuokkaajaOphVirkailija: Option[Boolean] = None)
     extends ValintaperusteMetadata
 
 case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk,
@@ -204,7 +208,8 @@ case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk
                                                     hakukelpoisuus: Kielistetty = Map(),
                                                     lisatiedot: Kielistetty = Map(),
                                                     sisalto: Seq[Sisalto] = Seq(),
-                                                    valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                    valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                    isMuokkaajaOphVirkailija: Option[Boolean] = None)
     extends ValintaperusteMetadata
 
 case class AmmatillinenTutkinnonOsaValintaperusteMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
@@ -213,7 +218,8 @@ case class AmmatillinenTutkinnonOsaValintaperusteMetadata(tyyppi: Koulutustyyppi
                                                           hakukelpoisuus: Kielistetty = Map(),
                                                           lisatiedot: Kielistetty = Map(),
                                                           sisalto: Seq[Sisalto] = Seq(),
-                                                          valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                          valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                          isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class AmmatillinenOsaamisalaValintaperusteMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
@@ -222,7 +228,8 @@ case class AmmatillinenOsaamisalaValintaperusteMetadata(tyyppi: Koulutustyyppi =
                                                         hakukelpoisuus: Kielistetty = Map(),
                                                         lisatiedot: Kielistetty = Map(),
                                                         sisalto: Seq[Sisalto] = Seq(),
-                                                        valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                        valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                        isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class TutkintokoulutukseenValmentavaValintaperusteMetadata(tyyppi: Koulutustyyppi = Tuva,
@@ -231,7 +238,8 @@ case class TutkintokoulutukseenValmentavaValintaperusteMetadata(tyyppi: Koulutus
                                                                 hakukelpoisuus: Kielistetty = Map(),
                                                                 lisatiedot: Kielistetty = Map(),
                                                                 sisalto: Seq[Sisalto] = Seq(),
-                                                                valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                                valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                                isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class TelmaValintaperusteMetadata(tyyppi: Koulutustyyppi = Telma,
@@ -240,25 +248,28 @@ case class TelmaValintaperusteMetadata(tyyppi: Koulutustyyppi = Telma,
                                        hakukelpoisuus: Kielistetty = Map(),
                                        lisatiedot: Kielistetty = Map(),
                                        sisalto: Seq[Sisalto] = Seq(),
-                                       valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                       valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                       isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class VapaaSivistystyoOpistovuosiValintaperusteMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
-                                                                valintatavat: Seq[Valintatapa],
-                                                                kuvaus: Kielistetty = Map(),
-                                                                hakukelpoisuus: Kielistetty = Map(),
-                                                                lisatiedot: Kielistetty = Map(),
-                                                                sisalto: Seq[Sisalto] = Seq(),
-                                                                valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                             valintatavat: Seq[Valintatapa],
+                                                             kuvaus: Kielistetty = Map(),
+                                                             hakukelpoisuus: Kielistetty = Map(),
+                                                             lisatiedot: Kielistetty = Map(),
+                                                             sisalto: Seq[Sisalto] = Seq(),
+                                                             valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                             isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class VapaaSivistystyoMuuValintaperusteMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
-                                                  valintatavat: Seq[Valintatapa],
-                                                  kuvaus: Kielistetty = Map(),
-                                                  hakukelpoisuus: Kielistetty = Map(),
-                                                  lisatiedot: Kielistetty = Map(),
-                                                  sisalto: Seq[Sisalto] = Seq(),
-                                                  valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                     valintatavat: Seq[Valintatapa],
+                                                     kuvaus: Kielistetty = Map(),
+                                                     hakukelpoisuus: Kielistetty = Map(),
+                                                     lisatiedot: Kielistetty = Map(),
+                                                     sisalto: Seq[Sisalto] = Seq(),
+                                                     valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                     isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class MuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Muu,
@@ -267,6 +278,7 @@ case class MuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Muu,
                                      hakukelpoisuus: Kielistetty = Map(),
                                      lisatiedot: Kielistetty = Map(),
                                      sisalto: Seq[Sisalto] = Seq(),
-                                     valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                     valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                     isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 

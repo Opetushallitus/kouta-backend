@@ -26,7 +26,9 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
       SqsInTransactionServiceIgnoringIndexing,
       MockS3ImageService,
       new AuditLog(MockAuditLogger),
-      organisaatioService
+      organisaatioService,
+      mockOppijanumerorekisteriClient,
+      mockKayttooikeusClient
     )
   }
 
