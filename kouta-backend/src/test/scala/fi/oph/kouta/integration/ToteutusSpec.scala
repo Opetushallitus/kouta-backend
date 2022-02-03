@@ -678,4 +678,29 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val (toteutusOid: String, koulutusOid: String, lastModified: String) = createToteutusWithHakukohteet(false)
     update(ToteutusPath, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Toteutusta", "hakukohteita"))))
   }
+
+  "Copy toteutukset" should "make a copy of a julkaistu toteutus and store the it as tallennettu" in {
+    val julkaistuToteutusOid = put(toteutus(koulutusOid))
+    val toteutukset = List(julkaistuToteutusOid)
+    val copyOids = put(toteutukset)
+    get(copyOids.head, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(copyOids.head)), tila = Tallennettu))
+  }
+
+  it should "copy two julkaistu toteutus and store them as tallennettu" in {
+    val julkaistuToteutusOid1 = put(toteutus(koulutusOid))
+    val julkaistuToteutusOid2 = put(toteutus(koulutusOid))
+    val toteutukset = List(julkaistuToteutusOid1, julkaistuToteutusOid2)
+    val copyOids = put(toteutukset)
+    for (oid <- copyOids) {
+      get(oid, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(oid)), tila = Tallennettu))
+    }
+  }
+
+  it should "return 404 Not Found error if trying to copy a toteutus that does not exist" in {
+    put(ToteutusCopyPath, bytes(List("1.2.246.562.17.123")), defaultHeaders) {
+      withClue(body) {
+        status should equal(404)
+      }
+    }
+  }
 }

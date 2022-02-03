@@ -116,6 +116,14 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }.oid.get
   }
 
+  def put(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusOid] = {
+    val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
+    toteutukset.map(toteutus => {
+      val toteutusCopyAsLuonnos = toteutus.copy(tila = Tallennettu)
+      put(toteutusCopyAsLuonnos)
+    })
+  }
+
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
     val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(toteutus)
