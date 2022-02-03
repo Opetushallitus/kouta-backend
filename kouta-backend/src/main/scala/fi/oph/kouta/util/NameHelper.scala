@@ -13,6 +13,7 @@ import fi.oph.kouta.domain.{
   Toteutus,
   ToteutusMetadata
 }
+import fi.oph.kouta.client.Henkilo
 
 object NameHelper {
   val EmptyKielistetty: Kielistetty = Map(
@@ -109,5 +110,14 @@ object NameHelper {
     } else {
       hakukohdeNimi
     }
+  }
+
+  def generateMuokkaajanNimi(henkilo: Henkilo): String = {
+    val kutsumanimi = henkilo.kutsumanimi.getOrElse("")
+    val etunimet = henkilo.etunimet.getOrElse("")
+    val lastname = henkilo.sukunimi.getOrElse("")
+
+    val firstname = if (kutsumanimi.nonEmpty) kutsumanimi else etunimet
+    s"${firstname} ${lastname}".trim()
   }
 }

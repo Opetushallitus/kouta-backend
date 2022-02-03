@@ -30,13 +30,20 @@ kouta-index.toteutus.filtered-list=https://{{host_virkailija}}/kouta-index/toteu
 kouta-index.haku.filtered-list=https://{{host_virkailija}}/kouta-index/haku/filtered-list
 kouta-index.hakukohde.filtered-list=https://{{host_virkailija}}/kouta-index/hakukohde/filtered-list
 kouta-index.valintaperuste.filtered-list=https://{{host_virkailija}}/kouta-index/valintaperuste/filtered-list
+
+kayttooikeus-service=https://{{host_virkailija}}/kayttooikeus-service
+kayttooikeus-service.organisaatiohenkilo=https://{{host_virkailija}}/kayttooikeus-service/henkilo/$1/organisaatiohenkilo
 kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kayttooikeus-service/userDetails/$1
+
 organisaatio-service.organisaatio.oid.jalkelaiset=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/$1/jalkelaiset
 lokalisointi-service.localisation=https://{{host_virkailija}}/lokalisointi/cxf/rest/v1/localisation?category=kouta
 koodisto-service.koodisto-koodit=https://{{host_virkailija}}/koodisto-service/rest/json/$1/koodi?onlyValidKoodis=true
 
 ohjausparametrit-service.service=https://{{host_virkailija}}/ohjausparametrit-service
 ohjausparametrit-service.parametri=https://{{host_virkailija}}/ohjausparametrit-service/api/v1/rest/parametri/$1
+
+oppijanumerorekisteri-service=https://{{host_virkailija}}/oppijanumerorekisteri-service
+oppijanumerorekisteri-service.henkilo=https://{{host_virkailija}}/oppijanumerorekisteri-service/henkilo/$1
 
 # Migration URLs
 tarjonta-service.haku.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1

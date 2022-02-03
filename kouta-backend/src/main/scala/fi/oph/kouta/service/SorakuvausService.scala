@@ -1,13 +1,15 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Julkaisutila, Poistettu, Sorakuvaus, SorakuvausListItem, TilaFilter}
+import fi.oph.kouta.domain.{Julkaisutila, Poistettu, Sorakuvaus, SorakuvausEnrichedData, SorakuvausListItem, SorakuvausMetadata, TilaFilter}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
 import fi.oph.kouta.repository.{KoulutusDAO, KoutaDatabase, SorakuvausDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -15,33 +17,67 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl)
+object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
 
-class SorakuvausService(sqsInTransactionService: SqsInTransactionService, auditLog: AuditLog, val organisaatioService: OrganisaatioService) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService[Sorakuvaus] {
+class SorakuvausService(
+  sqsInTransactionService: SqsInTransactionService,
+  auditLog: AuditLog,
+  val organisaatioService: OrganisaatioService,
+  oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+  kayttooikeusClient: KayttooikeusClient
+) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService[Sorakuvaus] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
   protected val createRules: AuthorizationRules = AuthorizationRules(Seq(Role.Paakayttaja))
   protected val updateRules: AuthorizationRules = AuthorizationRules(Seq(Role.Paakayttaja))
 
-  def get(id: UUID, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] =
-    authorizeGet(
-      SorakuvausDAO.get(id, tilaFilter),
-      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(authorizationRuleByKoulutustyyppi)))
+  def get(id: UUID, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Sorakuvaus, Instant)] = {
+    val sorakuvausWithTime = SorakuvausDAO.get(id, tilaFilter)
 
-  def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID =
-    authorizePut(sorakuvaus, createRules) { s =>
+    val enrichedSorakuvaus = sorakuvausWithTime match {
+      case Some((s, i)) => {
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(s.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(s.copy(_enrichedData = Some(SorakuvausEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
+      }
+      case None => None
+    }
+
+    authorizeGet(
+      enrichedSorakuvaus,
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(authorizationRuleByKoulutustyyppi)))
+  }
+
+  private def enrichSorakuvausMetadata(sorakuvaus: Sorakuvaus) : Option[SorakuvausMetadata] = {
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(sorakuvaus.muokkaaja)
+    val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
+
+    sorakuvaus.metadata match {
+      case Some(metadata) => Some(metadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+      case None => None
+    }
+  }
+
+  def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID = {
+    val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(sorakuvaus)
+    val enrichedSorakuvaus = sorakuvaus.copy(metadata = enrichedMetadata)
+    authorizePut(enrichedSorakuvaus, createRules) { s =>
       withValidation(s, None)(doPut)
     }.id.get
+  }
 
-  def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean =
-    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat()), sorakuvaus, updateRules) { (oldSorakuvaus, s) =>
+  def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(sorakuvaus)
+    val enrichedSorakuvaus = sorakuvaus.copy(metadata = enrichedMetadata)
+    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat()), enrichedSorakuvaus, updateRules) { (oldSorakuvaus, s) =>
       withValidation(s, Some(oldSorakuvaus)) {
         throwValidationErrors(validateStateChange("sorakuvaukselle", oldSorakuvaus.tila, sorakuvaus.tila))
         validateKoulutusIntegrityIfDeletingSorakuvaus(oldSorakuvaus.tila, sorakuvaus.tila, sorakuvaus.id.get)
         doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
     }.nonEmpty
+  }
 
 
   private def validateKoulutusIntegrityIfDeletingSorakuvaus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, sorakuvausId: UUID) =

@@ -1,7 +1,5 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
-
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.auditlog.AuditLog
@@ -14,6 +12,8 @@ import fi.oph.kouta.service.{HakuService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.HakuServlet
 import fi.oph.kouta.util.TimeUtils
 
+import java.util.UUID
+
 trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessControlSpec {
 
   val HakuPath = "/haku"
@@ -22,7 +22,7 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
 
   def hakuService: HakuService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService)
+    new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 
   override def beforeAll(): Unit = {
@@ -33,8 +33,8 @@ trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessContro
   val haku: Haku = JulkaistuHaku
   val yhteishakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(
     hakutapaKoodiUri = Some("hakutapa_01#1"),
-    metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
-  val jatkuvaHakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None)))
+    metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None, isMuokkaajaOphVirkailija = Some(false))))
+  val jatkuvaHakuWithoutAlkamiskausi: Haku = JulkaistuHaku.copy(metadata = Some(HakuMetadata(koulutuksenAlkamiskausi = None, isMuokkaajaOphVirkailija = Some(false))))
 
   def hakuWithAlkamisvuosi(haku: Haku, alkamisvuosi: String): Haku = haku.copy(metadata = Some(
     haku.metadata.get.copy(koulutuksenAlkamiskausi = Some(

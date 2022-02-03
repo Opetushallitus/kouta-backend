@@ -275,4 +275,4 @@ object ToteutusListItem {
   }
 }
 
-case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map())
+case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)

@@ -197,7 +197,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
                     ePerusteId: Option[Long] = None,
-                    modified: Option[Modified])
+                    modified: Option[Modified],
+                    _enrichedData: Option[KoulutusEnrichedData] = None)
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
   override def validate(): IsValid = {
@@ -242,3 +243,5 @@ case class KoulutusListItem(oid: KoulutusOid,
                             organisaatioOid: OrganisaatioOid,
                             muokkaaja: UserOid,
                             modified: Modified) extends OidListItem
+
+case class KoulutusEnrichedData(muokkaajanNimi: Option[String] = None)

@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import java.time.Instant
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoutaIndexClient, LokalisointiClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
 import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid, ToteutusOid}
@@ -13,7 +13,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper}
+import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations
 import fi.oph.kouta.validation.Validations.validateStateChange
 import org.checkerframework.checker.units.qual.m
@@ -23,29 +23,44 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object HakukohdeService
-    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient)
+    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient, KayttooikeusClient)
 
 class HakukohdeService(
     sqsInTransactionService: SqsInTransactionService,
     auditLog: AuditLog,
     val organisaatioService: OrganisaatioService,
-    val lokalisointiClient: LokalisointiClient
+    val lokalisointiClient: LokalisointiClient,
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+    kayttooikeusClient: KayttooikeusClient
 ) extends ValidatingService[Hakukohde]
     with RoleEntityAuthorizationService[Hakukohde] {
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
+
+  private def enrichHakukohdeMetadata(hakukohde: Hakukohde) : Option[HakukohdeMetadata] = {
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(hakukohde.muokkaaja)
+    val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
+
+    hakukohde.metadata match {
+      case Some(metadata) => Some(metadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+      case None => None
+    }
+  }
 
   def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] = {
     val hakukohde = HakukohdeDAO.get(oid, tilaFilter)
 
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        val hakukohdeEnrichedDataWithMuokkaajanNimi = EnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
         val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
         toteutus match {
           case Some((t, _)) =>
             val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
-            Some(h.copy(_enrichedData = Some(EnrichedData(esitysnimi = esitysnimi))), i)
-          case None => hakukohde
+            Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi))), i)
+          case None => Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi)), i)
         }
 
       case None => None
@@ -74,7 +89,9 @@ class HakukohdeService(
   }
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
-    authorizePut(hakukohde) { h =>
+    val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hakukohde)
+    val enrichedHakukohde = hakukohde.copy(metadata = enrichedMetadata)
+    authorizePut(enrichedHakukohde) { h =>
       withValidation(h, None) { h =>
         validateDependenciesIntegrity(h, authenticated, "put")
         doPut(h)
@@ -83,11 +100,13 @@ class HakukohdeService(
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hakukohde)
+    val enrichedHakukohde = hakukohde.copy(metadata = enrichedMetadata)
     val rules = AuthorizationRules(
       roleEntity.updateRoles,
       additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
     )
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), hakukohde, rules) { (oldHakukohde, h) =>
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), enrichedHakukohde, rules) { (oldHakukohde, h) =>
       withValidation(h, Some(oldHakukohde)) { h =>
         throwValidationErrors(validateStateChange("hakukohteelle", oldHakukohde.tila, hakukohde.tila))
         validateDependenciesIntegrity(h, authenticated, "update")

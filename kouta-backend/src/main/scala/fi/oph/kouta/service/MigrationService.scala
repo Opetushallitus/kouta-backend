@@ -401,7 +401,8 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       metadata = Some(HakukohdeMetadata( //TODO: Suurin osa hakukohteen kentistä pitäisi siirtää metadatan sisään!
         koulutuksenAlkamiskausi = None,
         kaytetaanHaunAlkamiskautta = Some(true),
-        aloituspaikat = Some(aloituspaikat))),
+        aloituspaikat = Some(aloituspaikat),
+        isMuokkaajaOphVirkailija = None)),
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       kielivalinta = opetuskielet.flatten,
@@ -456,7 +457,9 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       metadata = Some(HakuMetadata(
         yhteyshenkilot = yhteyshenkilot,
         tulevaisuudenAikataulu = tulevaisuudenAikataulu,
-        koulutuksenAlkamiskausi = koulutuksenAlkamiskausi)),
+        koulutuksenAlkamiskausi = koulutuksenAlkamiskausi,
+        None
+      )),
       organisaatioOid = OrganisaatioOid(tarjoajaOids.head),
       hakuajat = hakuajat,
       muokkaaja = UserOid((result \ "modifiedBy").extract[String]),

@@ -191,7 +191,8 @@ case class Valintaperuste(id: Option[UUID] = None,
                           organisaatioOid: OrganisaatioOid,
                           muokkaaja: UserOid,
                           kielivalinta: Seq[Kieli] = Seq(),
-                          modified: Option[Modified])
+                          modified: Option[Modified],
+                          _enrichedData: Option[ValintaperusteEnrichedData] = None)
   extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen[Valintaperuste] {
 
   override def validate(): IsValid = and(
@@ -223,3 +224,5 @@ case class ValintaperusteListItem(id: UUID,
                                   organisaatioOid: OrganisaatioOid,
                                   muokkaaja: UserOid,
                                   modified: Modified) extends IdListItem
+
+case class ValintaperusteEnrichedData(muokkaajanNimi: Option[String] = None)

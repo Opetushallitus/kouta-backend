@@ -141,7 +141,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("200007"),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
-          aloituspaikat = Some(Aloituspaikat(None, None)))
+          aloituspaikat = Some(Aloituspaikat(None, None)),
+      isMuokkaajaOphVirkailija = None)
 
     failsValidation(Tallennettu, metadataWithInvalidAlkamisvuosi, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("200007"))
   }
@@ -158,7 +159,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
           koulutuksenAlkamisvuosi = Some(now().getYear.toString()),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
           aloituspaikat = Some(Aloituspaikat(Some(0), None)),
-    valintaperusteenValintakokeidenLisatilaisuudet = List(ValintakokeenLisatilaisuudet(id = None, tilaisuudet = List(tilaisuus)))
+      valintaperusteenValintakokeidenLisatilaisuudet = List(ValintakokeenLisatilaisuudet(id = None, tilaisuudet = List(tilaisuus))),
+      isMuokkaajaOphVirkailija = None
     )
 
     failsOnJulkaisuValidation(metadataWithPastTilaisuus, "valintaperusteenValintakokeidenLisatilaisuudet[0].tilaisuudet[0].aika.paattyy", pastDateMsg(ajanjakso.paattyy.get))
@@ -172,7 +174,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
           alkamiskausityyppi = None,
           koulutuksenAlkamisvuosi = Some("2007"),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
-          aloituspaikat = Some(Aloituspaikat(Some(0), None)))
+          aloituspaikat = Some(Aloituspaikat(Some(0), None)),
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Julkaistu, metadataWithoutAlkamiskausityyppi, "koulutuksenAlkamiskausi.alkamiskausityyppi", missingMsg)
   }
@@ -184,7 +187,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("2007"),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
-          aloituspaikat = None)
+          aloituspaikat = None,
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsOnJulkaisuValidation(metadataWithAlkamisvuosiInThePast, "koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg("2007"))
   }
@@ -195,7 +199,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         Some(KoulutuksenAlkamiskausi(
           koulutuksenAlkamisvuosi = Some("2007"),
           koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"))),
-          aloituspaikat = None)
+          aloituspaikat = None,
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "kaytetaanHaunAlkamiskautta", missingMsg)
   }
@@ -204,7 +209,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val metadataWithoutKaytetaanHaunAlkamiskauttaFlag = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(false),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = None)
+      aloituspaikat = None,
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Tallennettu, metadataWithoutKaytetaanHaunAlkamiskauttaFlag, "koulutuksenAlkamiskausi", missingMsg)
   }
@@ -213,7 +219,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val invalidAloituspaikatMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = None)
+      aloituspaikat = None,
+      isMuokkaajaOphVirkailija = Some(false))
 
     passesValidation(Tallennettu, invalidAloituspaikatMetadata)
     failsValidation(
@@ -226,7 +233,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
     val invalidAloituspaikatMetadata = HakukohdeMetadata(
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
-      aloituspaikat = Some(Aloituspaikat(lukumaara = Some(-10), ensikertalaisille = Some(-5), kuvaus = Map(Fi -> "kuvaus", Sv -> ""))))
+      aloituspaikat = Some(Aloituspaikat(lukumaara = Some(-10), ensikertalaisille = Some(-5), kuvaus = Map(Fi -> "kuvaus", Sv -> ""))),
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(
       Julkaistu,
@@ -241,7 +249,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
       kaytetaanHaunAlkamiskautta = Some(true),
       koulutuksenAlkamiskausi = None,
       aloituspaikat = Some(Aloituspaikat(Some(0), None)),
-      hakukohteenLinja = Some(HakukohteenLinja(linja = None, alinHyvaksyttyKeskiarvo = Some(7.5), lisatietoa = Map(Fi -> "lisatietoa", Sv -> ""))))
+      hakukohteenLinja = Some(HakukohteenLinja(linja = None, alinHyvaksyttyKeskiarvo = Some(7.5), lisatietoa = Map(Fi -> "lisatietoa", Sv -> ""))),
+      isMuokkaajaOphVirkailija = Some(false))
 
     passesValidation(Tallennettu, metadataWithoutAllTranslations)
     failsValidation(Julkaistu, metadataWithoutAllTranslations, "hakukohteenLinja.lisatietoa", invalidKielistetty(Seq(Sv)))
@@ -257,7 +266,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa"), kieli = None)), painokerroin = Some(1.5))))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa"), kieli = None)), painokerroin = Some(1.5))))),
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit.oppiaine", validationMsg("painotettavatoppiaineetlukiossa"))
   }
@@ -272,7 +282,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = None, kieli = None)), painokerroin = Some(1.5))))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = None, kieli = None)), painokerroin = Some(1.5))))),
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit.oppiaine", missingMsg)
   }
@@ -287,7 +298,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = None, painokerroin = Some(1.5))))))
+          PainotettuOppiaine(koodiUrit = None, painokerroin = Some(1.5))))),
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].koodiUrit", missingMsg)
   }
@@ -302,7 +314,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_a1"), kieli = Some("kieli_en#1"))), painokerroin = None)))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_a1"), kieli = Some("kieli_en#1"))), painokerroin = None)))),
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].painokerroin", missingMsg)
   }
@@ -317,7 +330,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
         alinHyvaksyttyKeskiarvo = Some(7.5),
         lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
         painotetutArvosanat = Seq(
-          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_ai"), kieli = None)), painokerroin = Some(-1.5))))))
+          PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_ai"), kieli = None)), painokerroin = Some(-1.5))))),
+      isMuokkaajaOphVirkailija = Some(false))
 
     failsValidation(Julkaistu, hakukohdeMetadata, "hakukohteenLinja.painotetutArvosanat[0].painokerroin", notNegativeMsg)
   }
@@ -333,7 +347,8 @@ class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMet
          lisatietoa = Map(Fi -> "lisatietoa", Sv -> "lisatietoa sv"),
          painotetutArvosanat = Seq(
            PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_a1en"), kieli = None)), painokerroin = Some(1.5)),
-           PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_mu"), kieli = None)), painokerroin = Some(1.7))))))
+           PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_mu"), kieli = None)), painokerroin = Some(1.7))))),
+       isMuokkaajaOphVirkailija = Some(false))
 
      passesValidation(Julkaistu, hakukohdeMetadata)
   }

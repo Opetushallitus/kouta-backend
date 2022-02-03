@@ -236,6 +236,7 @@ sealed trait KoulutusMetadata extends ValidatableSubEntity {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val lisatiedot: Seq[Lisatieto]
+  val isMuokkaajaOphVirkailija: Option[Boolean]
 
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
@@ -260,12 +261,14 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
 
 case class AmmatillinenKoulutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         kuvaus: Kielistetty = Map(),
-                                        lisatiedot: Seq[Lisatieto] = Seq()) extends KoulutusMetadata
+                                        lisatiedot: Seq[Lisatieto] = Seq(),
+                                        isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class AmmatillinenTutkinnonOsaKoulutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
                                                     kuvaus: Kielistetty = Map(),
                                                     lisatiedot: Seq[Lisatieto] = Seq(),
-                                                    tutkinnonOsat: Seq[TutkinnonOsa] = Seq()) extends KoulutusMetadata {
+                                                    tutkinnonOsat: Seq[TutkinnonOsa] = Seq(),
+                                                    isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfNonEmpty[TutkinnonOsa](tutkinnonOsat, s"$path.tutkinnonOsat", _.validate(tila, kielivalinta, _)),
@@ -277,7 +280,8 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadata(tyyppi: Koulutustyyppi = Amm
 case class AmmatillinenOsaamisalaKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
                                                   kuvaus: Kielistetty = Map(),
                                                   lisatiedot: Seq[Lisatieto] = Seq(),
-                                                  osaamisalaKoodiUri: Option[String] = None) extends KoulutusMetadata {
+                                                  osaamisalaKoodiUri: Option[String] = None,
+                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](osaamisalaKoodiUri, assertMatch(_, OsaamisalaKoodiPattern, s"$path.osaamisalaKoodiUri")),
@@ -291,7 +295,8 @@ case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      koulutusalaKoodiUrit: Seq[String] = Seq(),
                                      tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                      opintojenLaajuusKoodiUri: Option[String] = None,
-                                     kuvauksenNimi: Kielistetty = Map()) extends KorkeakoulutusKoulutusMetadata
+                                     kuvauksenNimi: Kielistetty = Map(),
+                                     isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Kielistetty = Map(),
@@ -299,13 +304,15 @@ case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               koulutusalaKoodiUrit: Seq[String] = Seq(),
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                               opintojenLaajuusKoodiUri: Option[String] = None,
-                                              kuvauksenNimi: Kielistetty = Map()) extends KorkeakoulutusKoulutusMetadata
+                                              kuvauksenNimi: Kielistetty = Map(),
+                                              isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                  opintojenLaajuusKoodiUri: Option[String] = None,
-                                 koulutusalaKoodiUrit: Seq[String] = Seq()) extends KoulutusMetadata {
+                                 koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
@@ -317,7 +324,8 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 kuvaus: Kielistetty = Map(),
                                 lisatiedot: Seq[Lisatieto] = Seq(),
                                 linkkiEPerusteisiin: Kielistetty = Map(),
-                                opintojenLaajuusKoodiUri: Option[String] = None) extends KoulutusMetadata {
+                                opintojenLaajuusKoodiUri: Option[String] = None,
+                                isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
@@ -333,10 +341,11 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
 }
 
 case class TelmaKoulutusMetadata(tyyppi: Koulutustyyppi = Telma,
-                                kuvaus: Kielistetty = Map(),
-                                lisatiedot: Seq[Lisatieto] = Seq(),
-                                linkkiEPerusteisiin: Kielistetty = Map(),
-                                opintojenLaajuusKoodiUri: Option[String] = None) extends KoulutusMetadata {
+                                 kuvaus: Kielistetty = Map(),
+                                 lisatiedot: Seq[Lisatieto] = Seq(),
+                                 linkkiEPerusteisiin: Kielistetty = Map(),
+                                 opintojenLaajuusKoodiUri: Option[String] = None,
+                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
@@ -373,7 +382,8 @@ case class VapaaSivistystyoOpistovuosiKoulutusMetadata(tyyppi: Koulutustyyppi = 
                                                        kuvaus: Kielistetty = Map(),
                                                        linkkiEPerusteisiin: Kielistetty = Map(),
                                                        koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                                       opintojenLaajuusKoodiUri: Option[String] = None
+                                                       opintojenLaajuusKoodiUri: Option[String] = None,
+                                                       isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                       ) extends VapaaSivistystyoKoulutusMetadata
 
 case class VapaaSivistystyoMuuKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
@@ -381,5 +391,6 @@ case class VapaaSivistystyoMuuKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                        kuvaus: Kielistetty = Map(),
                                                        linkkiEPerusteisiin: Kielistetty = Map(),
                                                        koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                                       opintojenLaajuusKoodiUri: Option[String] = None
+                                                       opintojenLaajuusKoodiUri: Option[String] = None,
+                                                       isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                       ) extends VapaaSivistystyoKoulutusMetadata

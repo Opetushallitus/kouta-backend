@@ -1,11 +1,12 @@
 package fi.oph.kouta.integration
 
+import com.softwaremill.diffx.scalatest.DiffMatcher._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Updated}
-import fi.oph.kouta.mocks.{MockSecurityContext, OrganisaatioServiceMock}
+import fi.oph.kouta.mocks.{MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
@@ -15,8 +16,6 @@ import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
-import com.softwaremill.diffx.scalatest.DiffMatcher._
-import com.softwaremill.diffx.generic.auto._
 
 import java.util.UUID
 import scala.collection.mutable
@@ -37,6 +36,12 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val defaultAuthorities: Set[Authority] = KoutaIntegrationSpec.defaultAuthorities
 
   val testUser: TestUser = TestUser(TestUserOid, "testuser", defaultSessionId)
+
+  val mockOppijanumerorekisteriClient: MockOppijanumerorekisteriClient = new MockOppijanumerorekisteriClient()
+
+  val casUrl = "testCasUrl"
+  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
+  val mockKayttooikeusClient: MockKayttooikeusClient = new MockKayttooikeusClient(securityContext, defaultAuthorities)
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid.s, defaultAuthorities), testUser.sessionId)

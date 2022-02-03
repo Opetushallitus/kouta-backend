@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, Poistettu, Tallennettu}
+import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, Poistettu, SorakuvausEnrichedData, Tallennettu}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, SorakuvausFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -90,8 +90,9 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   }
 
   it should "read muokkaaja from the session" in {
+    val metadata = sorakuvaus.metadata
     val oid = put(sorakuvaus.copy(muokkaaja = UserOid("random")))
-    get(oid, sorakuvaus(oid).copy(muokkaaja = OphUserOid))
+    get(oid, sorakuvaus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.get.copy(isMuokkaajaOphVirkailija = Some(false)))))
   }
 
   it should "write create haku to audit log" in {
@@ -152,11 +153,12 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   }
 
   it should "read muokkaaja from the session" in {
+    val metadata = sorakuvaus.metadata
     val oid = put(sorakuvaus)
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
     val lastModified = get(oid, sorakuvaus(oid))
     update(sorakuvaus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, sorakuvaus(oid, Arkistoitu))
+    get(oid, sorakuvaus(oid, Arkistoitu).copy(metadata = Some(metadata.get.copy(isMuokkaajaOphVirkailija = Some(false)))))
   }
 
   it should "write sorakuvaus update to audit log" in {
@@ -255,8 +257,8 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   it should "store and update unfinished sorakuvaus" in {
     val unfinishedSorakuvaus = TestData.MinSorakuvaus
     val id = put(unfinishedSorakuvaus, ophSession)
-    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid))
-    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid, muokkaaja = OphUserOid)
+    val lastModified = get(id, unfinishedSorakuvaus.copy(id = Some(id), muokkaaja = OphUserOid, _enrichedData = Some(SorakuvausEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
+    val newUnfinishedSorakuvaus = unfinishedSorakuvaus.copy(id = Some(id), organisaatioOid = LonelyOid, muokkaaja = OphUserOid, _enrichedData = Some(SorakuvausEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"))))
     update(newUnfinishedSorakuvaus, lastModified, ophSession)
     get(id, newUnfinishedSorakuvaus)
   }

@@ -4,7 +4,7 @@ import com.hubspot.jinjava.lib.filter.ListFilter
 
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, KoutaIndexClient, LokalisointiClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
@@ -14,14 +14,14 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
-import fi.oph.kouta.util.NameHelper
+import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations
 import fi.oph.kouta.validation.Validations.{TutkintonimikeKoodiPattern, assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient, OppijanumerorekisteriClient, KayttooikeusClient)
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val s3ImageService: S3ImageService,
@@ -30,8 +30,10 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val organisaatioService: OrganisaatioService,
                       koulutusService: KoulutusService,
                       lokalisointiClient: LokalisointiClient,
-                      koodistoClient: KoodistoClient
-                     )
+                      koodistoClient: KoodistoClient,
+                      oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+                      kayttooikeusClient: KayttooikeusClient
+  )
   extends ValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
@@ -65,12 +67,38 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
+  private def enrichToteutusMetadata(toteutus: Toteutus) : Option[ToteutusMetadata] = {
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(toteutus.muokkaaja)
+    val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
+
+    toteutus.metadata match {
+      case Some(metadata) =>
+        metadata match {
+          case kkMetadata: KorkeakoulutusToteutusMetadata => kkMetadata match {
+            case yoMetadata: YliopistoToteutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            case amkMetadata: AmmattikorkeakouluToteutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          }
+          case ammMetadata: AmmatillinenToteutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaToteutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammOsaamisalaMetadata: AmmatillinenOsaamisalaToteutusMetadata => Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case lukioMetadata: LukioToteutusMetadata => Some(lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case tuvaMetadata: TuvaToteutusMetadata => Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case telmaMetadata: TelmaToteutusMetadata => Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiToteutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata => Some(vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+        }
+      case None => None
+    }
+  }
+
   def get(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
     val toteutusWithTime = ToteutusDAO.get(oid, tilaFilter)
     val enrichedToteutus = toteutusWithTime match {
       case Some((t, i)) => {
         val esitysnimi = generateToteutusEsitysnimi(t)
-        Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi)).withoutRelatedData(), i)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
+        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+        Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData(), i)
       }
       case None => None
     }
@@ -78,7 +106,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
-    authorizePut(toteutus) { t =>
+    val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(toteutus)
+    val enrichedToteutus = toteutus.copy(metadata = enrichedMetadata)
+    authorizePut(enrichedToteutus) { t =>
       withValidation(t, None) { t =>
         validateKoulutusIntegrity(t)
         doPut(t, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
@@ -88,8 +118,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
+    val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(toteutus)
+    val enrichedToteutus = toteutus.copy(metadata = enrichedMetadata)
+
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
-    authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
+    authorizeUpdate(toteutusWithTime, enrichedToteutus, rules) { (oldToteutus, t) =>
       withValidation(t, Some(oldToteutus)) { t =>
         throwValidationErrors(validateStateChange("toteutukselle", oldToteutus.tila, toteutus.tila))
         validateKoulutusIntegrity(t)
