@@ -91,6 +91,8 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
       case error: CasClientException =>
         logger.error(s"Authentication to CAS failed: ${error}")
         List()
+      case e: RuntimeException =>
+        List()
     }
   }
 }
