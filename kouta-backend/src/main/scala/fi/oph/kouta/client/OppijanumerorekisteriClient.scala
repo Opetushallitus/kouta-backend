@@ -77,8 +77,6 @@ object OppijanumerorekisteriClient
       case error: CasClientException =>
         logger.error(s"Authentication to CAS failed: ${error}")
         Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
-      case e: RuntimeException =>
-        Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
     }
   }
 }
