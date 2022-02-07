@@ -531,10 +531,11 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter) = {
-    // TODO: Jos järjestyspaikka on oppilaitoksen osa, haetaan myös hakukohteet, joilla sitä vastaava oppilaitos on järjestyspaikkana
-    sql"""select oid
-          from hakukohteet
-          where jarjestyspaikka_oid in (#${createOidInParams(jarjestyspaikkaOids)}) #${tilaConditions(tilaFilter)}""".as[String]
+    sql"""select distinct oid from hakukohteet
+          where (jarjestyspaikka_oid in (#${createOidInParams(jarjestyspaikkaOids)})
+          or jarjestyspaikka_oid in
+          (select oppilaitos_oid from oppilaitosten_osat where oid in (#${createOidInParams(jarjestyspaikkaOids)})))
+          #${tilaConditions(tilaFilter)}""".as[String]
   }
 
   def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]] =
