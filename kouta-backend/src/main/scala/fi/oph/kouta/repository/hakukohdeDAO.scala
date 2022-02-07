@@ -126,8 +126,8 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       name -> (tila, tyyppi, toteutusMetadata)
     }.toMap
 
-  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid, tilaFilter: TilaFilter): Seq[String] = {
-    KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(List(jarjestyspaikkaOid), tilaFilter))
+  def getOidsByJarjestyspaikka(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[String] = {
+    KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids, tilaFilter))
   }
 }
 
@@ -531,6 +531,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter) = {
+    // TODO: Jos järjestyspaikka on oppilaitoksen osa, haetaan myös hakukohteet, joilla sitä vastaava oppilaitos on järjestyspaikkana
     sql"""select oid
           from hakukohteet
           where jarjestyspaikka_oid in (#${createOidInParams(jarjestyspaikkaOids)}) #${tilaConditions(tilaFilter)}""".as[String]

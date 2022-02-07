@@ -536,45 +536,25 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
 
-  registerPath("/indexer/jarjestyspaikka/{jarjestyspaikkaOid}/hakukohde-oids",
-    """    get:
-      |      summary: Hakee hakukohteet, joissa oppilaitoksen osa on järjestyspaikkana
+  registerPath("/indexer/list-hakukohde-oids-by-jarjestyspaikat",
+    """    post:
+      |      summary: Hakee järjestyspaikkaa (oppilaitos tai toimipiste) vastaavat hakukohteet
       |      operationId: Järjestyspaikan hakukohteet
-      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa annettu oppilaitoksen osa
-      |        on järjestyspaikkana. Tämä rajapinta on indeksointia varten
+      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa annettu oppilaitos/toimipiste on sen järjestyspaikkana suoraan tai oppilaitoksen kautta (jos toimipiste). Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
-      |      parameters:
-      |        - in: path
-      |          name: jarjestyspaikkaOid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Järjestyspaikka-oid
-      |          example: 1.2.246.562.10.00101010101
-      |        - in: query
-      |          name: vainOlemassaolevat
-      |          schema:
-      |            type: boolean
-      |          required: false
-      |          default: true
-      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
+      |      requestBody:
+      |        description: Lista järjestyspaikkojen oideja
+      |        required: true
       |      responses:
       |        '200':
-      |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: array
-      |                items: string
-      |                  
+      |          description: O
       |""".stripMargin)
-  get("/jarjestyspaikka/:jarjestyspaikkaOid/hakukohde-oids") {
+  get("/list-hakukohde-oids-by-jarjestyspaikat") {
 
     implicit val authenticated: Authenticated = authenticate()
-    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(HakukohdeService.getOidsByJarjestyspaikka(OrganisaatioOid(params("jarjestyspaikkaOid")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    Ok(HakukohdeService.getOidsByJarjestyspaikat(parsedBody.extract[Seq[OrganisaatioOid]],
+      TilaFilter.onlyOlemassaolevat()))
   }
 
   registerPath("/indexer/oppilaitos-hierarkia/{organisaatioOid}",
