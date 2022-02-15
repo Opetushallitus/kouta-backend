@@ -99,6 +99,14 @@ class HakukohdeService(
     }.oid.get
   }
 
+  def put(hakukohdeOids: List[HakukohdeOid])(implicit authenticated: Authenticated): Seq[HakukohdeOid] = {
+    val hakukohteet = HakukohdeDAO.getHakukohteetByOids(hakukohdeOids)
+    hakukohteet.map(hakukohde => {
+      val hakukohdeCopyAsLuonnos = hakukohde.copy(tila = Tallennettu)
+      put(hakukohdeCopyAsLuonnos)
+    })
+  }
+
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hakukohde)
     val enrichedHakukohde = hakukohde.copy(metadata = enrichedMetadata)

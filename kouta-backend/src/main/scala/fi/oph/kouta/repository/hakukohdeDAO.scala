@@ -1,8 +1,5 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
-import java.util.UUID
-
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -11,6 +8,8 @@ import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
@@ -129,6 +128,19 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid, tilaFilter: TilaFilter): Seq[String] = {
     KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(List(jarjestyspaikkaOid), tilaFilter))
   }
+
+  def getHakukohteetByOids(hakukohdeOids: List[HakukohdeOid]): Seq[Hakukohde] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        hakukohteet <- selectHakukohteetByOids(hakukohdeOids).as[Hakukohde]
+      } yield (hakukohteet)
+    ).map {
+      case (hakukohteet) =>
+        hakukohteet.map(h => {
+          h
+        })
+    }.get
+  }
 }
 
 sealed trait HakukohdeModificationSQL extends SQLHelpers {
@@ -175,6 +187,38 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
 }
 
 sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
+
+  val selectHakukohdeSql =
+    """select oid,
+       external_id,
+       toteutus_oid,
+       haku_oid,
+       tila,
+       nimi,
+       hakukohde_koodi_uri,
+       hakulomaketyyppi,
+       hakulomake_ataru_id,
+       hakulomake_kuvaus,
+       hakulomake_linkki,
+       kaytetaan_haun_hakulomaketta,
+       jarjestyspaikka_oid,
+       pohjakoulutusvaatimus_koodi_urit,
+       pohjakoulutusvaatimus_tarkenne,
+       muu_pohjakoulutusvaatimus_kuvaus,
+       toinen_aste_onko_kaksoistutkinto,
+       kaytetaan_haun_aikataulua,
+       valintaperuste_id,
+       liitteet_onko_sama_toimitusaika,
+       liitteet_onko_sama_toimitusosoite,
+       liitteiden_toimitusaika,
+       liitteiden_toimitustapa,
+       liitteiden_toimitusosoite,
+       esikatselu,
+       metadata,
+       muokkaaja,
+       organisaatio_oid,
+       kielivalinta,
+       lower(system_time) from hakukohteet"""
 
   def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (
@@ -300,36 +344,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectHakukohde(oid: HakukohdeOid, tilaFilter: TilaFilter): DBIO[Option[Hakukohde]] = {
-    sql"""select oid,
-             external_id,
-             toteutus_oid,
-             haku_oid,
-             tila,
-             nimi,
-             hakukohde_koodi_uri,
-             hakulomaketyyppi,
-             hakulomake_ataru_id,
-             hakulomake_kuvaus,
-             hakulomake_linkki,
-             kaytetaan_haun_hakulomaketta,
-             jarjestyspaikka_oid,
-             pohjakoulutusvaatimus_koodi_urit,
-             pohjakoulutusvaatimus_tarkenne,
-             muu_pohjakoulutusvaatimus_kuvaus,
-             toinen_aste_onko_kaksoistutkinto,
-             kaytetaan_haun_aikataulua,
-             valintaperuste_id,
-             liitteet_onko_sama_toimitusaika,
-             liitteet_onko_sama_toimitusosoite,
-             liitteiden_toimitusaika,
-             liitteiden_toimitustapa,
-             liitteiden_toimitusosoite,
-             esikatselu,
-             metadata,
-             muokkaaja,
-             organisaatio_oid,
-             kielivalinta,
-             lower(system_time) from hakukohteet where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
+    sql"""#$selectHakukohdeSql
+          where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
   }
 
   def insertHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
@@ -550,4 +566,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           from valintaperusteet
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
     """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]
+
+  def selectHakukohteetByOids(hakukohdeOids: List[HakukohdeOid]) =
+    sql"""#$selectHakukohdeSql
+          where oid in (#${createOidInParams(hakukohdeOids)})"""
 }

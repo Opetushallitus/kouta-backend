@@ -87,6 +87,49 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       case oid => Ok("oid" -> oid)
     }
   }
+  registerPath( "/hakukohde/copy",
+    """    put:
+      |      summary: Tallenna kopiot hakukohteista
+      |      operationId: Tallenna kopiot hakukohteista
+      |      description: Tallennetaan kopioitavien hakukohteiden tiedot tietokantaan.
+      |        Kopiototeutukset tallennetaan luonnostilaisina.
+      |        Rajapinta palauttaa toteutuksille generoidut yksilöivät toteutus-oidit.
+      |      tags:
+      |        - Hakukohde
+      |      requestBody:
+      |        description: Lista kopioitavien hakukohteiden oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |              example: ["1.2.246.562.20.00000000000000011083", "1.2.246.562.20.00000000000000011084"]
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Tallennettujen kopioiden yksilöivät oid:t
+      |                    example: [11.2.246.562.20.00000000000000011084]
+      |""".stripMargin)
+  put("/copy") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    val oids = hakukohdeService.put(parsedBody.extract[List[HakukohdeOid]])
+    if (oids.isEmpty) {
+      NotFound("error" -> "Unknown hakukohde oid")
+    } else {
+      Ok("oids" -> oids)
+    }
+  }
 
   registerPath("/hakukohde/",
     """    post:
