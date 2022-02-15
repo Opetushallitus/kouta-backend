@@ -6,7 +6,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
-import fi.oph.kouta.domain.oid.{HakukohdeOid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
@@ -99,12 +99,32 @@ class HakukohdeService(
     }.oid.get
   }
 
-  def put(hakukohdeOids: List[HakukohdeOid])(implicit authenticated: Authenticated): Seq[HakukohdeOid] = {
+  def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): (List[HakukohdeOid], List[ToteutusOid]) = {
     val hakukohteet = HakukohdeDAO.getHakukohteetByOids(hakukohdeOids)
-    hakukohteet.map(hakukohde => {
-      val hakukohdeCopyAsLuonnos = hakukohde.copy(tila = Tallennettu)
-      put(hakukohdeCopyAsLuonnos)
-    })
+    val toteutusOids = hakukohteet.map(h => h.toteutusOid).toList
+    val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
+    val hakukohdeToteutusTuples = for {
+      hakukohde <- hakukohteet
+      toteutus <- toteutukset
+    } yield {
+      (hakukohde, toteutus)
+    }
+
+    val hakukohdeToteutusPairs = hakukohdeToteutusTuples.toList filter {
+      case (hakukohde, toteutus) => {
+        hakukohde.toteutusOid == toteutus.oid.get
+      }
+    } map {
+      case(hakukohde, toteutus ) => {
+        val newToteutus = toteutus.copy(tila = Tallennettu)
+        val newToteutusOid = ToteutusService.put(newToteutus)
+        val hakukohdeCopyAsLuonnos = hakukohde.copy(tila = Tallennettu, toteutusOid = newToteutusOid, hakuOid = hakuOid)
+        val newHakukohdeOid = put(hakukohdeCopyAsLuonnos)
+        (newHakukohdeOid, newToteutusOid)
+      }
+    }
+
+    (hakukohdeToteutusPairs.map(t => t._1), hakukohdeToteutusPairs.map(t => t._2))
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {

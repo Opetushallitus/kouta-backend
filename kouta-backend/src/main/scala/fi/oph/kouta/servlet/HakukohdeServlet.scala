@@ -2,7 +2,7 @@ package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.{Hakukohde, TilaFilter}
-import fi.oph.kouta.domain.oid.HakukohdeOid
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid}
 import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 
@@ -87,7 +87,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       case oid => Ok("oid" -> oid)
     }
   }
-  registerPath( "/hakukohde/copy",
+  registerPath( "/hakukohde/copy/{hakuOid}",
     """    put:
       |      summary: Tallenna kopiot hakukohteista
       |      operationId: Tallenna kopiot hakukohteista
@@ -96,6 +96,14 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |        Rajapinta palauttaa toteutuksille generoidut yksilöivät toteutus-oidit.
       |      tags:
       |        - Hakukohde
+      |      parameters:
+      |        - in: path
+      |          name: hakuOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Haku-oid
+      |          example: 1.2.246.562.29.00000000000000011030
       |      requestBody:
       |        description: Lista kopioitavien hakukohteiden oideja
       |        required: true
@@ -119,15 +127,15 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |                    description: Tallennettujen kopioiden yksilöivät oid:t
       |                    example: [11.2.246.562.20.00000000000000011084]
       |""".stripMargin)
-  put("/copy") {
+  put("/copy/:hakuOid") {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val oids = hakukohdeService.put(parsedBody.extract[List[HakukohdeOid]])
-    if (oids.isEmpty) {
+    val oids = hakukohdeService.put(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
+    if (oids._1.isEmpty) {
       NotFound("error" -> "Unknown hakukohde oid")
     } else {
-      Ok("oids" -> oids)
+      Ok(Map("hakukohdeOids" -> oids._1, "toteutusOids" -> oids._2))
     }
   }
 
