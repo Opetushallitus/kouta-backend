@@ -89,11 +89,12 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
   }
   registerPath( "/hakukohde/copy/{hakuOid}",
     """    put:
-      |      summary: Tallenna kopiot hakukohteista
+      |      summary: Tallenna kopiot hakukohteista ja niihin liitetyistä toteutuksista
       |      operationId: Tallenna kopiot hakukohteista
-      |      description: Tallennetaan kopioitavien hakukohteiden tiedot tietokantaan.
-      |        Kopiototeutukset tallennetaan luonnostilaisina.
-      |        Rajapinta palauttaa toteutuksille generoidut yksilöivät toteutus-oidit.
+      |      description: Luodaan kopiot pyynnössä listatuista hakukohteista sekä niihin liitetyistä toteutuksista.
+      |        Hakukohteesta tehtävä kopio liitetään hakuun, jonka oid annetaan parametrina.
+      |        Kopiot tallennetaan luonnostilaisina.
+      |        Rajapinta palauttaa tallennettujen hakukohteiden ja toteutusten yksilöivät oidit.
       |      tags:
       |        - Hakukohde
       |      parameters:
@@ -102,7 +103,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |          schema:
       |            type: string
       |          required: true
-      |          description: Haku-oid
+      |          description: Sen haun oid, johon kopioitavat hakukohteen liitetään
       |          example: 1.2.246.562.29.00000000000000011030
       |      requestBody:
       |        description: Lista kopioitavien hakukohteiden oideja
@@ -122,10 +123,12 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |              schema:
       |                type: object
       |                properties:
-      |                  oid:
-      |                    type: string
-      |                    description: Tallennettujen kopioiden yksilöivät oid:t
-      |                    example: [11.2.246.562.20.00000000000000011084]
+      |                  hakukohdeOids:
+      |                    type: array
+      |                    example: [1.2.246.562.20.00000000000000012883,1.2.246.562.20.00000000000000012884]
+      |                  toteutusOids:
+      |                    type: array
+      |                    example: [1.2.246.562.17.00000000000000007101,1.2.246.562.17.00000000000000007102]
       |""".stripMargin)
   put("/copy/:hakuOid") {
 
