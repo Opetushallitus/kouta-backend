@@ -285,6 +285,7 @@ trait HakukohdeExctractors extends ExtractorBase {
 
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
     id = r.nextStringOption().map(UUID.fromString),
+    hakukohdeOid = r.nextStringOption().map(HakukohdeOid),
     tyyppiKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
     kuvaus = extractKielistetty(r.nextStringOption()),

@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestData.{Liite1, Liite2}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -322,7 +323,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   it should "fail to update hakukohde if the valintaperuste does not exist" in {
     val oid = put(hakukohde(toteutusOid, hakuOid))
-    val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
+    val savedHakukohde = getIds(hakukohde(oid, toteutusOid, hakuOid))
     val lastModified = get(oid, savedHakukohde)
     val valintaperusteId = UUID.randomUUID()
     val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
@@ -358,7 +359,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   it should "fail to update hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
     val oid = put(hakukohde(toteutusOid, hakuOid))
-    val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
+    val savedHakukohde = getIds(hakukohde(oid, toteutusOid, hakuOid))
     val lastModified = get(oid, savedHakukohde)
     val valintaperusteId = put(TestData.YoValintaperuste)
     val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
@@ -535,11 +536,16 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
     )
     val oid = put(hakukohdeWithValintakokeet)
-    val lastModified = get(oid, getIds(hakukohdeWithValintakokeet.copy(oid = Some(HakukohdeOid(oid)))))
+    val lastModified = get(oid, getIds(
+      hakukohdeWithValintakokeet.copy(
+        oid = Some(HakukohdeOid(oid)),
+        liitteet = List(Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))))))
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
     val updateValintakoe = getIds(tallennettuHakukohde(oid)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
     update(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
-    get(oid, getIds(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
+    get(oid, getIds(tallennettuHakukohde(oid).copy(
+      valintakokeet = Seq(newValintakoe, updateValintakoe),
+      liitteet = List(Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))))))
   }
 
   it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {

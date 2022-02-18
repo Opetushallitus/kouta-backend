@@ -466,6 +466,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 }
 
 case class Liite(id: Option[UUID] = None,
+                 hakukohdeOid: Option[HakukohdeOid] = None,
                  tyyppiKoodiUri: Option[String],
                  nimi: Kielistetty = Map(),
                  kuvaus: Kielistetty = Map(),

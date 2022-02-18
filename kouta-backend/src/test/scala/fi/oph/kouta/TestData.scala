@@ -35,6 +35,7 @@ object TestData {
 
   val Liite1: Liite = Liite(
     id = None,
+    hakukohdeOid = None,
     tyyppiKoodiUri = Some("liitetyypitamm_2#1"),
     nimi = Map(Fi -> "liite 1 Fi", Sv -> "liite 1 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),
@@ -44,6 +45,7 @@ object TestData {
 
   val Liite2: Liite = Liite(
     id = None,
+    hakukohdeOid = None,
     tyyppiKoodiUri = Some("liitetyypitamm_1#1"),
     nimi = Map(Fi -> "liite 2 Fi", Sv -> "liite 2 Sv"),
     kuvaus = Map(Fi -> "kuvaus Fi", Sv -> "kuvaus Sv"),

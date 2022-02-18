@@ -23,7 +23,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object HakukohdeService
-    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient, KayttooikeusClient)
+    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient, KayttooikeusClient, ToteutusService)
 
 class HakukohdeService(
     sqsInTransactionService: SqsInTransactionService,
@@ -31,7 +31,8 @@ class HakukohdeService(
     val organisaatioService: OrganisaatioService,
     val lokalisointiClient: LokalisointiClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-    kayttooikeusClient: KayttooikeusClient
+    kayttooikeusClient: KayttooikeusClient,
+    toteutusService: ToteutusService
 ) extends ValidatingService[Hakukohde]
     with RoleEntityAuthorizationService[Hakukohde] {
 
@@ -101,6 +102,7 @@ class HakukohdeService(
 
   def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): (List[HakukohdeOid], List[ToteutusOid]) = {
     val hakukohteet = HakukohdeDAO.getHakukohteetByOids(hakukohdeOids)
+    val hakukohteidenLiitteet = HakukohdeDAO.getLiitteetByHakukohdeOids(hakukohdeOids).groupBy(_.hakukohdeOid)
     val toteutusOids = hakukohteet.map(h => h.toteutusOid).toList
     val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
     val hakukohdeToteutusTuples = for {
@@ -115,11 +117,21 @@ class HakukohdeService(
         hakukohde.toteutusOid == toteutus.oid.get
       }
     } map {
-      case(hakukohde, toteutus ) => {
+      case(hakukohde, toteutus) => {
+        val hakukohteenLiitteet = hakukohteidenLiitteet.get(hakukohde.oid)
         val newToteutus = toteutus.copy(tila = Tallennettu)
-        val newToteutusOid = ToteutusService.put(newToteutus)
+        val newToteutusOid = toteutusService.put(newToteutus)
+
         val hakukohdeCopyAsLuonnos = hakukohde.copy(tila = Tallennettu, toteutusOid = newToteutusOid, hakuOid = hakuOid)
         val newHakukohdeOid = put(hakukohdeCopyAsLuonnos)
+
+        val liiteResult = hakukohteenLiitteet.map(liitteet => {
+          for (liite <- liitteet) {
+            val liiteCopy = liite.copy(id = Some(UUID.randomUUID()), hakukohdeOid = Some(newHakukohdeOid))
+            HakukohdeDAO.putLiite(Some(newHakukohdeOid), liiteCopy, hakukohdeCopyAsLuonnos.muokkaaja)
+          }
+        })
+
         (newHakukohdeOid, newToteutusOid)
       }
     }

@@ -141,6 +141,18 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
         })
     }.get
   }
+
+  def getLiitteetByHakukohdeOids(hakukohdeOids: List[HakukohdeOid]) = {
+    KoutaDatabase.runBlockingTransactionally(
+      selectLiitteetByHakukohdeOids(hakukohdeOids)
+    ).get
+  }
+
+  def putLiite(hakukohdeOid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid) = {
+    KoutaDatabase.runBlockingTransactionally(
+      insertLiite(hakukohdeOid, liite, muokkaaja)
+    ).get
+  }
 }
 
 sealed trait HakukohdeModificationSQL extends SQLHelpers {
@@ -413,8 +425,13 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectLiitteet(oid: HakukohdeOid): DBIO[Vector[Liite]] = {
-    sql"""select id, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
+    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
           from hakukohteiden_liitteet where hakukohde_oid = $oid""".as[Liite]
+  }
+
+  def selectLiitteetByHakukohdeOids(oids: List[HakukohdeOid]) = {
+    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
+          from hakukohteiden_liitteet where hakukohde_oid in (#${createOidInParams(oids)})""".as[Liite]
   }
 
   def insertHakuaika(oid: Option[HakukohdeOid], hakuaika: Ajanjakso, muokkaaja: UserOid): DBIO[Int] = {

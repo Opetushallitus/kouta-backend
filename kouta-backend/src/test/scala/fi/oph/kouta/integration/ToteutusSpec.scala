@@ -679,7 +679,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(ToteutusPath, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Toteutusta", "hakukohteita"))))
   }
 
-  "Copy toteutukset" should "make a copy of a julkaistu toteutus and store the it as tallennettu" in {
+  "Copy toteutukset" should "make a copy of a julkaistu toteutus and store it as tallennettu" in {
     val julkaistuToteutusOid = put(toteutus(koulutusOid))
     val toteutukset = List(julkaistuToteutusOid)
     val copyOids = put(toteutukset)
