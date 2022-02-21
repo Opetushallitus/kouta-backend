@@ -22,28 +22,9 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
       jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid)), tila = Poistettu), ophSession)
 
-    get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids", headers = Seq(sessionHeader(indexerSession))) {
+    post(s"$IndexerPath/list-hakukohde-oids-by-jarjestyspaikat", body=bytes(Seq(jarjestyspaikkaOid)), headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid))
-    }
-  }
-
-  "List hakukohteet by järjestyspaikka oids" should "List also poistetut hakukohteet if instructed" in {
-    val oppilaitosOid = put(oppilaitos, ophSession)
-    val jarjestyspaikkaOid = put(oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid)), ophSession)
-
-    val koulutusOid = put(koulutus, ophSession)
-    val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid)), ophSession)
-    val hakuOid = put(haku, ophSession)
-    val hakukohdeOid = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
-      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid))), ophSession)
-    val hakukohdeOid2 = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
-      jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid)), tila = Poistettu), ophSession)
-
-    get(s"$IndexerPath/jarjestyspaikka/$jarjestyspaikkaOid/hakukohde-oids?vainOlemassaolevat=false",
-      headers = Seq(sessionHeader(indexerSession))) {
-        status should equal (200)
-        read[List[String]](body) should contain theSameElementsAs(List(hakukohdeOid, hakukohdeOid2))
     }
   }
 

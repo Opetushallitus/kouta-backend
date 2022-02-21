@@ -536,48 +536,6 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
 
-  registerPath("/indexer/jarjestyspaikka/{jarjestyspaikkaOid}/hakukohde-oids",
-    """    get:
-      |      summary: Hakee hakukohteet, joissa oppilaitoksen osa on järjestyspaikkana
-      |      operationId: Järjestyspaikan hakukohteet
-      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa annettu oppilaitoksen osa
-      |        on järjestyspaikkana. Tämä rajapinta on indeksointia varten
-      |      tags:
-      |        - Indexer
-      |      parameters:
-      |        - in: path
-      |          name: jarjestyspaikkaOid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Järjestyspaikka-oid
-      |          example: 1.2.246.562.10.00101010101
-      |        - in: query
-      |          name: vainOlemassaolevat
-      |          schema:
-      |            type: boolean
-      |          required: false
-      |          default: true
-      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
-      |      responses:
-      |        '200':
-      |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: array
-      |                items: string
-      |
-      |""".stripMargin)
-  get("/jarjestyspaikka/:jarjestyspaikkaOid/hakukohde-oids") {
-
-    implicit val authenticated: Authenticated = authenticate()
-    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(HakukohdeService.getOidsByJarjestyspaikat(Seq(OrganisaatioOid(params("jarjestyspaikkaOid"))),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
-  }
-
-
   registerPath("/indexer/list-hakukohde-oids-by-jarjestyspaikat",
     """    post:
       |      summary: Hakee järjestyspaikkaa (oppilaitos tai toimipiste) vastaavat hakukohteet
@@ -586,11 +544,18 @@ class IndexerServlet(koulutusService: KoulutusService,
       |      tags:
       |        - Indexer
       |      requestBody:
-      |        description: Lista järjestyspaikkojen oideja
+      |        description: Lista järjestyspaikkojen organisaatio-oideja
       |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example: 1.2.246.562.10.56753942459
       |      responses:
       |        '200':
-      |          description: O
+      |          description: Ok
       |""".stripMargin)
   post("/list-hakukohde-oids-by-jarjestyspaikat") {
 
@@ -608,22 +573,17 @@ class IndexerServlet(koulutusService: KoulutusService,
       |      parameters:
       |        - in: path
       |          name: organisaatioOid
+      |          description: Organisaation oid
       |          schema:
       |            type: string
       |          required: true
-      |          description: Organisaation oid
       |          example: 1.2.246.562.10.00101010101
       |      responses:
       |        '200':
       |          description: Ok
       |""".stripMargin)
   get("/oppilaitos-hierarkia/:organisaatioOid") {
-
     implicit val authenticated: Authenticated = authenticate()
-    // Kokeillaan Etsiä oppilaitoksen osa kannasta organisaatioOidilla
-    // Jos löytyy, palautetaan se
-    // Jos ei löydy, kokeillaan etsiä oppilaitos kannasta
-    // Jos oppilaitos löytyy, etsitään myös oppilaitoksen osat kannasta ja palautetaan niiden kanssa
     val oppilaitoksenOsaResult = oppilaitoksenOsaService.get(OrganisaatioOid(params("organisaatioOid")))
     oppilaitoksenOsaResult match {
       case Some((oppilaitoksenOsa, _)) => Ok(oppilaitoksenOsa)
