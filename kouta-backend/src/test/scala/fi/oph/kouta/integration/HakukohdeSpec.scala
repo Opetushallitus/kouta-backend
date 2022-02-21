@@ -1,6 +1,6 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData.{Liite1, Liite2}
+import fi.oph.kouta.TestData.{Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -525,7 +525,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val tallennettu = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
-      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2"))),
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2"), hakukohdeOid = Some(HakukohdeOid(oid)))),
       liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.inFuture(9000)))))
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, getIds(muokattuHakukohde))
@@ -539,12 +539,14 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val lastModified = get(oid, getIds(
       hakukohdeWithValintakokeet.copy(
         oid = Some(HakukohdeOid(oid)),
-        liitteet = List(Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))))))
+        liitteet = List(Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))),
+        valintakokeet = Seq(TestData.Valintakoe1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6"), hakukohdeOid = Some(HakukohdeOid(oid))))
+      )))
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
     val updateValintakoe = getIds(tallennettuHakukohde(oid)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
     update(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
     get(oid, getIds(tallennettuHakukohde(oid).copy(
-      valintakokeet = Seq(newValintakoe, updateValintakoe),
+      valintakokeet = Seq(newValintakoe.copy(hakukohdeOid = Some(HakukohdeOid(oid))), updateValintakoe.copy(hakukohdeOid = Some(HakukohdeOid(oid)))),
       liitteet = List(Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))))))
   }
 

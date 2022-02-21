@@ -148,9 +148,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     ).get
   }
 
-  def putLiite(hakukohdeOid: Option[HakukohdeOid], liite: Liite, muokkaaja: UserOid) = {
+  def getValintakokeetByHakukohdeOids(hakukohdeOids: List[HakukohdeOid]) = {
     KoutaDatabase.runBlockingTransactionally(
-      insertLiite(hakukohdeOid, liite, muokkaaja)
+      selectValintakokeetByHakukohdeOids(hakukohdeOids)
     ).get
   }
 }
@@ -420,8 +420,13 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectValintakokeet(oid: HakukohdeOid): DBIO[Vector[Valintakoe]] = {
-    sql"""select id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
+    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
           from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
+  }
+
+  def selectValintakokeetByHakukohdeOids(oids: List[HakukohdeOid]): DBIO[Vector[Valintakoe]] = {
+    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
+          from hakukohteiden_valintakokeet where hakukohde_oid in (#${createOidInParams(oids)})""".as[Valintakoe]
   }
 
   def selectLiitteet(oid: HakukohdeOid): DBIO[Vector[Liite]] = {

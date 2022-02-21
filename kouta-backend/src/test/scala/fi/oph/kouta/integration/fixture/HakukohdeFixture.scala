@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2}
+import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient}
 import fi.oph.kouta.domain._
@@ -11,7 +11,7 @@ import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakukohdeDAO, SQLHelpers}
 import fi.oph.kouta.service.{HakukohdeService, KeywordService, OrganisaatioServiceImpl, ToteutusService}
-import fi.oph.kouta.servlet.{HakukohdeServlet}
+import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
 
@@ -78,7 +78,12 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       tila = Tallennettu,
       liitteet = List(
         Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))),
-        Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))))
+        Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
+      ),
+      valintakokeet = List(
+        Valintakoe1.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
+      )
+    )
 
   def julkaistuHakukohde(toteutusOid: String, hakuOid: String): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = None, tila = Julkaistu)
@@ -94,7 +99,11 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       valintaperusteId = Some(valintaperusteId),
       liitteet = List(
         Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))),
-        Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid))))
+        Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
+      ),
+      valintakokeet = List(
+        Valintakoe1.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
+      )
     )
 
   def hakukohde(oid: String, toteutusOid: String, hakuOid: String, valintaperusteId: UUID, tila: Julkaisutila): Hakukohde = hakukohde.copy(

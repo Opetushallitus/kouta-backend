@@ -34,6 +34,7 @@ trait ExtractorBase extends KoutaJsonFormats {
 
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
     id = r.nextStringOption().map(UUID.fromString),
+    hakukohdeOid = r.nextStringOption().map(HakukohdeOid),
     tyyppiKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[ValintakoeMetadata]),

@@ -6,7 +6,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, Oid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
@@ -103,6 +103,7 @@ class HakukohdeService(
   def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): (List[HakukohdeOid], List[ToteutusOid]) = {
     val hakukohteet = HakukohdeDAO.getHakukohteetByOids(hakukohdeOids)
     val hakukohteidenLiitteet = HakukohdeDAO.getLiitteetByHakukohdeOids(hakukohdeOids).groupBy(_.hakukohdeOid)
+    val hakukohteidenValintakokeet = HakukohdeDAO.getValintakokeetByHakukohdeOids(hakukohdeOids).groupBy(_.hakukohdeOid)
     val toteutusOids = hakukohteet.map(h => h.toteutusOid).toList
     val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
     val hakukohdeToteutusTuples = for {
@@ -118,20 +119,22 @@ class HakukohdeService(
       }
     } map {
       case(hakukohde, toteutus) => {
-        val hakukohteenLiitteet = hakukohteidenLiitteet.get(hakukohde.oid)
+        val hakukohteenLiitteet = hakukohteidenLiitteet.get(hakukohde.oid).getOrElse(Vector())
+        val hakukohteenValintakokeet = hakukohteidenValintakokeet.get(hakukohde.oid).getOrElse(Vector())
+
         val newToteutus = toteutus.copy(tila = Tallennettu)
         val newToteutusOid = toteutusService.put(newToteutus)
 
-        val hakukohdeCopyAsLuonnos = hakukohde.copy(tila = Tallennettu, toteutusOid = newToteutusOid, hakuOid = hakuOid)
-        val newHakukohdeOid = put(hakukohdeCopyAsLuonnos)
-
-        val liiteResult = hakukohteenLiitteet.map(liitteet => {
-          for (liite <- liitteet) {
-            val liiteCopy = liite.copy(id = Some(UUID.randomUUID()), hakukohdeOid = Some(newHakukohdeOid))
-            HakukohdeDAO.putLiite(Some(newHakukohdeOid), liiteCopy, hakukohdeCopyAsLuonnos.muokkaaja)
-          }
+        val liitteet = hakukohteenLiitteet.map(liite => {
+          liite.copy(id = Some(UUID.randomUUID()), hakukohdeOid = None)
         })
 
+        val valintakokeet = hakukohteenValintakokeet.map(valintakoe => {
+          valintakoe.copy(id = Some(UUID.randomUUID()), hakukohdeOid = None)
+        })
+        val hakukohdeCopyAsLuonnos = hakukohde.copy(tila = Tallennettu, toteutusOid = newToteutusOid, hakuOid = hakuOid, liitteet = liitteet, valintakokeet = valintakokeet)
+
+        val newHakukohdeOid = put(hakukohdeCopyAsLuonnos)
         (newHakukohdeOid, newToteutusOid)
       }
     }
