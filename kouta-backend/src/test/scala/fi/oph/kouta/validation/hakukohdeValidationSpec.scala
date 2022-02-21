@@ -32,6 +32,14 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
     failsValidation(min.copy(toteutusOid = ToteutusOid("3.4.5")), "toteutusOid", validationMsg("3.4.5"))
   }
 
+  it should "fail if organisaatio oid is invalid" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
+  }
+
+  it should "fail if organisaatio oid is empty" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
+  }
+
   it should "fail if tallennettu hakukohde has invalid information" in {
     val invalidHakuajat = TestData.getInvalidHakuajat
     failsValidation(min.copy(hakuajat = invalidHakuajat), "hakuajat[0]", invalidAjanjaksoMsg(invalidHakuajat.head))
