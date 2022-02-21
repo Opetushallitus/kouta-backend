@@ -126,9 +126,9 @@ class HakukohdeService(
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated) =
+  def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated) =
     withRootAccess(indexerRoles) {
-      HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOid, tilaFilter)
+      HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }
 
   private def validateDependenciesIntegrity(hakukohde: Hakukohde, authenticated: Authenticated, method: String): Unit = {

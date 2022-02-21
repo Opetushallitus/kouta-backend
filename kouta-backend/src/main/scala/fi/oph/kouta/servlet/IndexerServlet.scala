@@ -3,45 +3,46 @@ package fi.oph.kouta.servlet
 import java.net.URLDecoder
 import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.TilaFilter
+import fi.oph.kouta.domain.{OppilaitoksenOsa, Oppilaitos, TilaFilter}
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
+import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitoksenOsaService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
 import fi.oph.kouta.util.TimeUtils.parseHttpDate
-import org.scalatra.Ok
+import org.scalatra.{NotFound, Ok}
 
 class IndexerServlet(koulutusService: KoulutusService,
                      toteutusService: ToteutusService,
                      hakuService: HakuService,
                      valintaperusteService: ValintaperusteService,
                      sorakuvausService: SorakuvausService,
-                     oppilaitosService: OppilaitosService) extends KoutaServlet {
+                     oppilaitosService: OppilaitosService,
+                     oppilaitoksenOsaService: OppilaitoksenOsaService) extends KoutaServlet {
 
-  def this() = this(KoulutusService, ToteutusService, HakuService, ValintaperusteService, SorakuvausService, OppilaitosService)
+  def this() = this(KoulutusService, ToteutusService, HakuService, ValintaperusteService, SorakuvausService, OppilaitosService, OppilaitoksenOsaService)
 
   registerPath("/indexer/modifiedSince/{since}",
     s"""    get:
-      |      summary: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
-      |      operationId: Hae lista muuttuneista
-      |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen. Tämä rajapinta on indeksointia varten
-      |      tags:
-      |        - Indexer
-      |      parameters:
-      |        - in: path
-      |          name: since
-      |          schema:
-      |            type: string
-      |          format: date-time
-      |          required: true
-      |          example: ${SampleHttpDate}
-      |      responses:
-      |        '200':
-      |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                $$ref: '#/components/schemas/ListEverything'
-      |""".stripMargin)
+       |      summary: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
+       |      operationId: Hae lista muuttuneista
+       |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen. Tämä rajapinta on indeksointia varten
+       |      tags:
+       |        - Indexer
+       |      parameters:
+       |        - in: path
+       |          name: since
+       |          schema:
+       |            type: string
+       |          format: date-time
+       |          required: true
+       |          example: ${SampleHttpDate}
+       |      responses:
+       |        '200':
+       |          description: Ok
+       |          content:
+       |            application/json:
+       |              schema:
+       |                $$ref: '#/components/schemas/ListEverything'
+       |""".stripMargin)
   get("/modifiedSince/:since") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -49,7 +50,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(ModificationService.getModifiedSince(parseHttpDate(URLDecoder.decode(params("since"), "UTF-8"))))
   }
 
-  registerPath( "/indexer/tarjoaja/{organisaatioOid}/koulutukset",
+  registerPath("/indexer/tarjoaja/{organisaatioOid}/koulutukset",
     """    get:
       |      summary: Hakee julkaistut koulutukset, joissa organisaatio tai sen aliorganisaatio on tarjoajana
       |      operationId: Tarjoajan julkaistut koulutukset
@@ -82,7 +83,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(koulutusService.getTarjoajanJulkaistutKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
   }
 
-  registerPath( "/indexer/koulutus/{oid}/toteutukset",
+  registerPath("/indexer/koulutus/{oid}/toteutukset",
     """    get:
       |      summary: Hae koulutuksen toteutukset
       |      operationId: Hae koulutuksen toteutukset
@@ -131,7 +132,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.vainJulkaistutOrVainOlemassaolevat(vainJulkaistut, vainOlemassaolevat)))
   }
 
-  registerPath( "/indexer/koulutus/{oid}/toteutukset/list",
+  registerPath("/indexer/koulutus/{oid}/toteutukset/list",
     """    get:
       |      summary: Listaa kaikki koulutuksen toteutukset
       |      operationId: Listaa koulutuksen toteutukset
@@ -172,7 +173,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
-  registerPath( "/indexer/koulutus/{oid}/hakutiedot",
+  registerPath("/indexer/koulutus/{oid}/hakutiedot",
     """    get:
       |      summary: Hae koulutukseen liittyvät hakutiedot
       |      operationId: Hae koulutuksen hakutiedot
@@ -204,7 +205,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
 
-  registerPath( "/indexer/toteutus/{oid}/haut/list",
+  registerPath("/indexer/toteutus/{oid}/haut/list",
     """    get:
       |      summary: Listaa kaikki toteutukseen liitetyt haut
       |      operationId: Listaa toteutuksen haut
@@ -245,7 +246,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
-  registerPath( "/indexer/toteutus/{oid}/hakukohteet/list",
+  registerPath("/indexer/toteutus/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet
       |      operationId: Listaa toteutuksen hakukohteet
@@ -285,7 +286,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
-  registerPath( "/indexer/haku/{oid}/hakukohteet/list",
+  registerPath("/indexer/haku/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun
       |      operationId: Listaa haun hakukohteet
@@ -389,7 +390,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
   }
 
-  registerPath( "/indexer/valintaperuste/{id}/hakukohteet/list",
+  registerPath("/indexer/valintaperuste/{id}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty
       |      operationId: Lista valintaperusteen hakukohteet
@@ -430,7 +431,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
-  registerPath( "/indexer/sorakuvaus/{id}/koulutukset/list",
+  registerPath("/indexer/sorakuvaus/{id}/koulutukset/list",
     """    get:
       |      summary: Listaa kaikki koulutukset, joihin SORA-kuvaus on liitetty
       |      operationId: Listaa sorakuvauksen koulutukset
@@ -471,7 +472,7 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
-  registerPath( "/indexer/oppilaitos/{oid}/osat/list",
+  registerPath("/indexer/oppilaitos/{oid}/osat/list",
     """    get:
       |      summary: Listaa kaikki oppilaitoksen osien kuvailutiedot
       |      operationId: Listaa oppilaitoksen osat
@@ -503,7 +504,7 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(oppilaitosService.listOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
 
-  registerPath( "/indexer/oppilaitos/{oid}/osat",
+  registerPath("/indexer/oppilaitos/{oid}/osat",
     """    get:
       |      summary: Hakee oppilaitoksen kaikkien osien kuvailutiedot
       |      operationId: Hae oppilaitoksen osat
@@ -535,44 +536,67 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
 
-  registerPath( "/indexer/jarjestyspaikka/{jarjestyspaikkaOid}/hakukohde-oids",
-    """    get:
-      |      summary: Hakee hakukohteet, joissa oppilaitoksen osa on järjestyspaikkana
+  registerPath("/indexer/list-hakukohde-oids-by-jarjestyspaikat",
+    """    post:
+      |      summary: Hakee järjestyspaikkaa (oppilaitos tai toimipiste) vastaavat hakukohteet
       |      operationId: Järjestyspaikan hakukohteet
-      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa annettu oppilaitoksen osa
-      |        on järjestyspaikkana. Tämä rajapinta on indeksointia varten
+      |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa annettu oppilaitos/toimipiste on sen järjestyspaikkana suoraan tai oppilaitoksen kautta (jos toimipiste). Tämä rajapinta on indeksointia varten
+      |      tags:
+      |        - Indexer
+      |      requestBody:
+      |        description: Lista järjestyspaikkojen organisaatio-oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example: 1.2.246.562.10.56753942459
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
+  post("/list-hakukohde-oids-by-jarjestyspaikat") {
+
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(HakukohdeService.getOidsByJarjestyspaikat(parsedBody.extract[Seq[OrganisaatioOid]],
+      TilaFilter.onlyOlemassaolevat()))
+  }
+
+  registerPath("/indexer/oppilaitos-hierarkia/{organisaatioOid}",
+    """    get:
+      |      summary: Hakee organisaatio-oidilla oppilaitoksen tai -osan ja sen osat
+      |      description: Hakee organisaatio-oidilla oppilaitoksen tai -osan ja sen osat. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      parameters:
       |        - in: path
-      |          name: jarjestyspaikkaOid
+      |          name: organisaatioOid
+      |          description: Organisaation oid
       |          schema:
       |            type: string
       |          required: true
-      |          description: Järjestyspaikka-oid
       |          example: 1.2.246.562.10.00101010101
-      |        - in: query
-      |          name: vainOlemassaolevat
-      |          schema:
-      |            type: boolean
-      |          required: false
-      |          default: true
-      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
       |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: array
-      |                items: string
-      |                  
       |""".stripMargin)
-  get("/jarjestyspaikka/:jarjestyspaikkaOid/hakukohde-oids") {
-
+  get("/oppilaitos-hierarkia/:organisaatioOid") {
     implicit val authenticated: Authenticated = authenticate()
-    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(HakukohdeService.getOidsByJarjestyspaikka(OrganisaatioOid(params("jarjestyspaikkaOid")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    val oppilaitoksenOsaResult = oppilaitoksenOsaService.get(OrganisaatioOid(params("organisaatioOid")))
+    oppilaitoksenOsaResult match {
+      case Some((oppilaitoksenOsa, _)) => Ok(oppilaitoksenOsa)
+      case None => {
+        val oppilaitosResult = oppilaitosService.get(OrganisaatioOid(params("organisaatioOid")))
+        oppilaitosResult match {
+          case Some((oppilaitos, _)) => {
+              val oppilaitoksenOsat = oppilaitosService.getOppilaitoksenOsat(oppilaitos.oid)
+              Ok(oppilaitos.withOsat(oppilaitoksenOsat))
+          }
+          case None => NotFound("Oppilaitosta tai oppilaitoksen osaa ei löytynyt!")
+        }
+      }
+    }
   }
 }

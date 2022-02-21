@@ -280,7 +280,8 @@ case class Oppilaitos(oid: OrganisaatioOid,
                       teemakuva: Option[String] = None,
                       logo: Option[String] = None,
                       modified: Option[Modified] = None,
-                     _enrichedData: Option[OppilaitosEnrichedData] = None)
+                      _enrichedData: Option[OppilaitosEnrichedData] = None,
+                      osat: Option[Seq[OppilaitoksenOsa]] = None)
   extends Validatable
     with AuthorizableEntity[Oppilaitos]
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
@@ -306,6 +307,8 @@ case class Oppilaitos(oid: OrganisaatioOid,
   override def withModified(modified: Modified): Oppilaitos = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Oppilaitos = this.copy(muokkaaja = oid)
+
+  def withOsat(osat: Seq[OppilaitoksenOsa]): Oppilaitos = this.copy(osat = Some(osat))
 }
 
 case class OppilaitoksenOsa(oid: OrganisaatioOid,
