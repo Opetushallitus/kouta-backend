@@ -304,7 +304,8 @@ case class AmmatillinenMuuValintaperusteMetadata(tyyppi: Koulutustyyppi = AmmMuu
                                                  hakukelpoisuus: Kielistetty = Map(),
                                                  lisatiedot: Kielistetty = Map(),
                                                  sisalto: Seq[Sisalto] = Seq(),
-                                                 valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                 valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class TutkintokoulutukseenValmentavaValintaperusteMetadata(tyyppi: Koulutustyyppi = Tuva,
@@ -353,7 +354,8 @@ case class AikuistenPerusopetusValintaperusteMetadata(tyyppi: Koulutustyyppi = A
                                                       hakukelpoisuus: Kielistetty = Map(),
                                                       lisatiedot: Kielistetty = Map(),
                                                       sisalto: Seq[Sisalto] = Seq(),
-                                                      valintakokeidenYleiskuvaus: Kielistetty = Map())
+                                                      valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                                      isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
 case class MuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Muu,

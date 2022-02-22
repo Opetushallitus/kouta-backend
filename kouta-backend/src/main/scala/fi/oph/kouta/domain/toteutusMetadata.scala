@@ -672,7 +672,9 @@ case class AmmatillinenMuuToteutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
                                            lisatietoaHakeutumisesta: Kielistetty = Map(),
                                            lisatietoaValintaperusteista: Kielistetty = Map(),
                                            hakuaika: Option[Ajanjakso] = None,
-                                           aloituspaikat: Option[Int] = None) extends TutkintoonJohtamatonToteutusMetadata {
+                                           aloituspaikat: Option[Int] = None,
+                                           isMuokkaajaOphVirkailija: Option[Boolean] = None
+                                          ) extends TutkintoonJohtamatonToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, and(
@@ -953,5 +955,6 @@ case class AikuistenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 lisatietoaHakeutumisesta: Kielistetty = Map(),
                                                 lisatietoaValintaperusteista: Kielistetty = Map(),
                                                 hakuaika: Option[Ajanjakso] = None,
-                                                aloituspaikat: Option[Int] = None
+                                                aloituspaikat: Option[Int] = None,
+                                                isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends TutkintoonJohtamatonToteutusMetadata

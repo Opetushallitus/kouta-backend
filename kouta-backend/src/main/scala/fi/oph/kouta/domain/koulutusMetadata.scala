@@ -340,8 +340,9 @@ case class AmmatillinenMuuKoulutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
                                            lisatiedot: Seq[Lisatieto] = Seq(),
                                            kuvaus: Kielistetty = Map(),
                                            koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                           opintojenLaajuusKoodiUri: Option[String] = None
-                                              ) extends KoulutusMetadata {
+                                           opintojenLaajuusKoodiUri: Option[String] = None,
+                                           isMuokkaajaOphVirkailija: Option[Boolean] = None
+                                          ) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
@@ -461,7 +462,8 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 kuvaus: Kielistetty = Map(),
                                                 lisatiedot: Seq[Lisatieto] = Seq(),
                                                 linkkiEPerusteisiin: Kielistetty = Map(),
-                                                opintojenLaajuusKoodiUri: Option[String] = None
+                                                opintojenLaajuusKoodiUri: Option[String] = None,
+                                                isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends KoulutusMetadata {
 
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(

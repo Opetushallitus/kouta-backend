@@ -184,13 +184,20 @@ object TestData {
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+      isMuokkaajaOphVirkailija = Some(false),
     )),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/amm-kuva"),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
 
   val LukioKoulutus: Koulutus = Koulutus(
     oid = None,
@@ -305,14 +312,21 @@ object TestData {
     metadata = Some(AikuistenPerusopetusKoulutusMetadata(
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
-      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv")
+      linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
+      isMuokkaajaOphVirkailija = Some(false)
     )),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/lkkuva"),
-    modified = None)
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
 
   val MinKoulutus: Koulutus = Koulutus(
     koulutustyyppi = Amm,
@@ -779,7 +793,8 @@ object TestData {
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
-    aloituspaikat = Some(100)
+    aloituspaikat = Some(100),
+    isMuokkaajaOphVirkailija = Some(false)
   )
 
   val AikuistenPerusopetusToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(AikuistenPerusopetusToteutusMetatieto))
@@ -925,7 +940,9 @@ object TestData {
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
-    yhteyshenkilot = Seq(Yhteystieto1))))
+    yhteyshenkilot = Seq(Yhteystieto1),
+    isMuokkaajaOphVirkailija = Some(false)
+  )))
 
   val JulkaistuOppilaitos: Oppilaitos = Oppilaitos(
     oid = ChildOid,
