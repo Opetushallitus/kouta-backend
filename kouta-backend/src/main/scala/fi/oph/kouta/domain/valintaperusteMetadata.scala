@@ -183,7 +183,6 @@ package object valintaperusteMetadata {
       |            - vapaa-sivistystyo-muu
       |""".stripMargin
 
-  // @TODO viimeistele speksien päivityksen jälkeen
   val AikuistenPerusopetusValintaperusteMetadataModel =
     """    AikuistenPerusopetusValintaperusteMetadata:
       |      type: object
@@ -348,7 +347,6 @@ case class VapaaSivistystyoMuuValintaperusteMetadata(tyyppi: Koulutustyyppi = Va
                                                      isMuokkaajaOphVirkailija: Option[Boolean] = None)
   extends ValintaperusteMetadata
 
-// @TODO viimeistele speksien päivityksen jälkeen
 case class AikuistenPerusopetusValintaperusteMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
                                                       valintatavat: Seq[Valintatapa],
                                                       kuvaus: Kielistetty = Map(),
