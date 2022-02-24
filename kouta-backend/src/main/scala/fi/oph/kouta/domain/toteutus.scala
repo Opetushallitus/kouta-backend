@@ -228,7 +228,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     organisaatioOid: OrganisaatioOid,
                     kielivalinta: Seq[Kieli] = Seq(),
                     teemakuva: Option[String] = None,
-                    modified: Option[Modified],
+                    modified: Option[Modified] = None,
                     koulutusMetadata: Option[KoulutusMetadata] = None,
                     _enrichedData: Option[ToteutusEnrichedData] = None
                    )

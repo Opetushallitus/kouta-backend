@@ -1,6 +1,6 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData.{Liite1, Liite2, Valintakoe1}
+import fi.oph.kouta.TestData.{Liite1, Liite2}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -525,7 +525,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val tallennettu = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
-      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2"), hakukohdeOid = Some(HakukohdeOid(oid)))),
+      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2"))),
       liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.inFuture(9000)))))
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, getIds(muokattuHakukohde))
@@ -535,19 +535,21 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val hakukohdeWithValintakokeet = uusiHakukohde.copy(
       valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
     )
+    println("hakukohdeWithValintakokeet:")
+    println(hakukohdeWithValintakokeet)
     val oid = put(hakukohdeWithValintakokeet)
     val lastModified = get(oid, getIds(
       hakukohdeWithValintakokeet.copy(
         oid = Some(HakukohdeOid(oid)),
-        liitteet = List(Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))),
-        valintakokeet = Seq(TestData.Valintakoe1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6"), hakukohdeOid = Some(HakukohdeOid(oid))))
+        liitteet = List(Liite1, Liite2),
+        valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
       )))
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
     val updateValintakoe = getIds(tallennettuHakukohde(oid)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
     update(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
     get(oid, getIds(tallennettuHakukohde(oid).copy(
-      valintakokeet = Seq(newValintakoe.copy(hakukohdeOid = Some(HakukohdeOid(oid))), updateValintakoe.copy(hakukohdeOid = Some(HakukohdeOid(oid)))),
-      liitteet = List(Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))), Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))))))
+      valintakokeet = Seq(newValintakoe, updateValintakoe),
+      liitteet = List(Liite1, Liite2))))
   }
 
   it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {
@@ -625,5 +627,26 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     lastModified = get(arkistoituId, arkistoitu)
     update(HakukohdePath, arkistoitu.copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Tallennettu))))
     update(HakukohdePath, arkistoitu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Poistettu))))
+  }
+
+  "Copy hakukohteet" should "make a copies of two julkaistu hakukohde and related toteutus and store them as tallennettu" in {
+    val julkaistuHakukohde1Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val julkaistuHakukohde2Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
+    val copyOids = put(hakukohteet, hakuOid)
+    val tallennettuHakukohdeCopy = tallennettuHakukohde(copyOids.hakukohdeOids.head).copy(
+      oid = Some(HakukohdeOid(copyOids.hakukohdeOids.head)),
+      toteutusOid = ToteutusOid(copyOids.toteutusOids.head),
+      hakuOid = HakuOid(hakuOid),
+      tila = Tallennettu,
+      liitteet = List(Liite2, Liite1))
+    val tallennettuToteutusCopy = toteutus(koulutusOid).copy(
+      oid = Some(ToteutusOid(copyOids.toteutusOids.head)),
+      tila = Tallennettu,
+      tarjoajat = List(AmmOid))
+    get(copyOids.hakukohdeOids.head, getIds(tallennettuHakukohdeCopy))
+    get(copyOids.toteutusOids.head, tallennettuToteutusCopy)
+    get(copyOids.hakukohdeOids.last, getIds(tallennettuHakukohdeCopy.copy(oid = Some(HakukohdeOid(copyOids.hakukohdeOids.last)), toteutusOid = ToteutusOid(copyOids.toteutusOids.last))))
+    get(copyOids.toteutusOids.last, tallennettuToteutusCopy.copy(oid = Some(ToteutusOid(copyOids.toteutusOids.last))))
   }
 }

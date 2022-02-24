@@ -412,7 +412,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      muokkaaja: UserOid,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
-                     modified: Option[Modified],
+                     modified: Option[Modified] = None,
                      _enrichedData: Option[EnrichedData] = None) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
@@ -466,7 +466,6 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
 }
 
 case class Liite(id: Option[UUID] = None,
-                 hakukohdeOid: Option[HakukohdeOid] = None,
                  tyyppiKoodiUri: Option[String],
                  nimi: Kielistetty = Map(),
                  kuvaus: Kielistetty = Map(),

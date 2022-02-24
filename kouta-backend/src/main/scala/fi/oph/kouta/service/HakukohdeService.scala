@@ -1,22 +1,17 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
-import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations.validateStateChange
-import org.checkerframework.checker.units.qual.m
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -101,45 +96,26 @@ class HakukohdeService(
   }
 
   def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): (List[HakukohdeOid], List[ToteutusOid]) = {
-    val hakukohteet = HakukohdeDAO.getHakukohteetByOids(hakukohdeOids)
-    val hakukohteidenLiitteet = HakukohdeDAO.getLiitteetByHakukohdeOids(hakukohdeOids).groupBy(_.hakukohdeOid)
-    val hakukohteidenValintakokeet = HakukohdeDAO.getValintakokeetByHakukohdeOids(hakukohdeOids).groupBy(_.hakukohdeOid)
-    val toteutusOids = hakukohteet.map(h => h.toteutusOid).toList
-    val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
-    val hakukohdeToteutusTuples = for {
-      hakukohde <- hakukohteet
-      toteutus <- toteutukset
-    } yield {
-      (hakukohde, toteutus)
-    }
+    val hakukohdeAndRelatedEntities = HakukohdeDAO.getHakukohdeAndRelatedEntities(hakukohdeOids).groupBy(_._1.oid.get)
 
-    val hakukohdeToteutusPairs = hakukohdeToteutusTuples.toList filter {
-      case (hakukohde, toteutus) => {
-        hakukohde.toteutusOid == toteutus.oid.get
-      }
-    } map {
-      case(hakukohde, toteutus) => {
-        val hakukohteenLiitteet = hakukohteidenLiitteet.get(hakukohde.oid).getOrElse(Vector())
-        val hakukohteenValintakokeet = hakukohteidenValintakokeet.get(hakukohde.oid).getOrElse(Vector())
+    val copyOids = hakukohdeAndRelatedEntities.toList.map(hakukohde => {
+      val entities = hakukohde._2
+      val hk = entities.head._1
+      val toteutus = entities.head._2
+      val liitteet = entities.map(_._3).distinct.filter(_.id.nonEmpty)
+      val valintakokeet = hakukohde._2.map(_._4).distinct.filter(_.id.nonEmpty)
+      val hakuajat = hakukohde._2.map(_._5).distinct.filter(_.oid.nonEmpty).map(hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
 
-        val newToteutus = toteutus.copy(tila = Tallennettu)
-        val newToteutusOid = toteutusService.put(newToteutus)
+      val toteutusCopy = toteutus.copy(tila = Tallennettu)
+      val toteutusCopyOid = toteutusService.put(toteutusCopy)
 
-        val liitteet = hakukohteenLiitteet.map(liite => {
-          liite.copy(id = Some(UUID.randomUUID()), hakukohdeOid = None)
-        })
+      val hakukohdeCopyAsLuonnos = hk.copy(tila = Tallennettu, toteutusOid = toteutusCopyOid, hakuOid = hakuOid, liitteet = liitteet, valintakokeet = valintakokeet, hakuajat = hakuajat)
+      val newHakukohdeOid = put(hakukohdeCopyAsLuonnos)
 
-        val valintakokeet = hakukohteenValintakokeet.map(valintakoe => {
-          valintakoe.copy(id = Some(UUID.randomUUID()), hakukohdeOid = None)
-        })
-        val hakukohdeCopyAsLuonnos = hakukohde.copy(tila = Tallennettu, toteutusOid = newToteutusOid, hakuOid = hakuOid, liitteet = liitteet, valintakokeet = valintakokeet)
+      (newHakukohdeOid, toteutusCopyOid)
+    })
 
-        val newHakukohdeOid = put(hakukohdeCopyAsLuonnos)
-        (newHakukohdeOid, newToteutusOid)
-      }
-    }
-
-    (hakukohdeToteutusPairs.map(t => t._1), hakukohdeToteutusPairs.map(t => t._2))
+    (copyOids.map(t => t._1), copyOids.map(t => t._2))
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {

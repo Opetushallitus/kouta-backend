@@ -129,28 +129,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(List(jarjestyspaikkaOid), tilaFilter))
   }
 
-  def getHakukohteetByOids(hakukohdeOids: List[HakukohdeOid]): Seq[Hakukohde] = {
+  def getHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) = {
     KoutaDatabase.runBlockingTransactionally(
-      for {
-        hakukohteet <- selectHakukohteetByOids(hakukohdeOids).as[Hakukohde]
-      } yield (hakukohteet)
-    ).map {
-      case (hakukohteet) =>
-        hakukohteet.map(h => {
-          h
-        })
-    }.get
-  }
-
-  def getLiitteetByHakukohdeOids(hakukohdeOids: List[HakukohdeOid]) = {
-    KoutaDatabase.runBlockingTransactionally(
-      selectLiitteetByHakukohdeOids(hakukohdeOids)
-    ).get
-  }
-
-  def getValintakokeetByHakukohdeOids(hakukohdeOids: List[HakukohdeOid]) = {
-    KoutaDatabase.runBlockingTransactionally(
-      selectValintakokeetByHakukohdeOids(hakukohdeOids)
+      selectHakukohdeAndRelatedEntities(hakukohdeOids)
     ).get
   }
 }
@@ -199,38 +180,6 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
 }
 
 sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
-
-  val selectHakukohdeSql =
-    """select oid,
-       external_id,
-       toteutus_oid,
-       haku_oid,
-       tila,
-       nimi,
-       hakukohde_koodi_uri,
-       hakulomaketyyppi,
-       hakulomake_ataru_id,
-       hakulomake_kuvaus,
-       hakulomake_linkki,
-       kaytetaan_haun_hakulomaketta,
-       jarjestyspaikka_oid,
-       pohjakoulutusvaatimus_koodi_urit,
-       pohjakoulutusvaatimus_tarkenne,
-       muu_pohjakoulutusvaatimus_kuvaus,
-       toinen_aste_onko_kaksoistutkinto,
-       kaytetaan_haun_aikataulua,
-       valintaperuste_id,
-       liitteet_onko_sama_toimitusaika,
-       liitteet_onko_sama_toimitusosoite,
-       liitteiden_toimitusaika,
-       liitteiden_toimitustapa,
-       liitteiden_toimitusosoite,
-       esikatselu,
-       metadata,
-       muokkaaja,
-       organisaatio_oid,
-       kielivalinta,
-       lower(system_time) from hakukohteet"""
 
   def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (
@@ -356,8 +305,36 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectHakukohde(oid: HakukohdeOid, tilaFilter: TilaFilter): DBIO[Option[Hakukohde]] = {
-    sql"""#$selectHakukohdeSql
-          where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
+    sql"""select oid,
+             external_id,
+             toteutus_oid,
+             haku_oid,
+             tila,
+             nimi,
+             hakukohde_koodi_uri,
+             hakulomaketyyppi,
+             hakulomake_ataru_id,
+             hakulomake_kuvaus,
+             hakulomake_linkki,
+             kaytetaan_haun_hakulomaketta,
+             jarjestyspaikka_oid,
+             pohjakoulutusvaatimus_koodi_urit,
+             pohjakoulutusvaatimus_tarkenne,
+             muu_pohjakoulutusvaatimus_kuvaus,
+             toinen_aste_onko_kaksoistutkinto,
+             kaytetaan_haun_aikataulua,
+             valintaperuste_id,
+             liitteet_onko_sama_toimitusaika,
+             liitteet_onko_sama_toimitusosoite,
+             liitteiden_toimitusaika,
+             liitteiden_toimitustapa,
+             liitteiden_toimitusosoite,
+             esikatselu,
+             metadata,
+             muokkaaja,
+             organisaatio_oid,
+             kielivalinta,
+             lower(system_time) from hakukohteet where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
   }
 
   def insertHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
@@ -420,23 +397,13 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectValintakokeet(oid: HakukohdeOid): DBIO[Vector[Valintakoe]] = {
-    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
+    sql"""select id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
           from hakukohteiden_valintakokeet where hakukohde_oid = $oid""".as[Valintakoe]
   }
 
-  def selectValintakokeetByHakukohdeOids(oids: List[HakukohdeOid]): DBIO[Vector[Valintakoe]] = {
-    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, metadata, tilaisuudet
-          from hakukohteiden_valintakokeet where hakukohde_oid in (#${createOidInParams(oids)})""".as[Valintakoe]
-  }
-
   def selectLiitteet(oid: HakukohdeOid): DBIO[Vector[Liite]] = {
-    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
+    sql"""select id, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
           from hakukohteiden_liitteet where hakukohde_oid = $oid""".as[Liite]
-  }
-
-  def selectLiitteetByHakukohdeOids(oids: List[HakukohdeOid]) = {
-    sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
-          from hakukohteiden_liitteet where hakukohde_oid in (#${createOidInParams(oids)})""".as[Liite]
   }
 
   def insertHakuaika(oid: Option[HakukohdeOid], hakuaika: Ajanjakso, muokkaaja: UserOid): DBIO[Int] = {
@@ -589,7 +556,98 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
     """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]
 
-  def selectHakukohteetByOids(hakukohdeOids: List[HakukohdeOid]) =
-    sql"""#$selectHakukohdeSql
-          where oid in (#${createOidInParams(hakukohdeOids)})"""
+  def selectHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) =
+    sql"""select
+       hk.oid,
+       hk.external_id,
+       hk.toteutus_oid,
+       hk.haku_oid,
+       hk.tila,
+       hk.nimi,
+       hk.hakukohde_koodi_uri,
+       hk.hakulomaketyyppi,
+       hk.hakulomake_ataru_id,
+       hk.hakulomake_kuvaus,
+       hk.hakulomake_linkki,
+       hk.kaytetaan_haun_hakulomaketta,
+       hk.jarjestyspaikka_oid,
+       hk.pohjakoulutusvaatimus_koodi_urit,
+       hk.pohjakoulutusvaatimus_tarkenne,
+       hk.muu_pohjakoulutusvaatimus_kuvaus,
+       hk.toinen_aste_onko_kaksoistutkinto,
+       hk.kaytetaan_haun_aikataulua,
+       hk.valintaperuste_id,
+       hk.liitteet_onko_sama_toimitusaika,
+       hk.liitteet_onko_sama_toimitusosoite,
+       hk.liitteiden_toimitusaika,
+       hk.liitteiden_toimitustapa,
+       hk.liitteiden_toimitusosoite,
+       hk.esikatselu,
+       hk.metadata,
+       hk.muokkaaja,
+       hk.organisaatio_oid,
+       hk.kielivalinta,
+       toteutus.oid,
+       toteutus.external_id,
+       toteutus.koulutus_oid,
+       toteutus.tila,
+       toteutus.tarjoajat,
+       toteutus.nimi,
+       toteutus.metadata,
+       toteutus.muokkaaja,
+       toteutus.esikatselu,
+       toteutus.organisaatio_oid,
+       toteutus.kielivalinta,
+       toteutus.teemakuva,
+       toteutus.sorakuvaus_id,
+       liitteet.id,
+       liitteet.tyyppi_koodi_uri,
+       liitteet.nimi,
+       liitteet.kuvaus,
+       liitteet.toimitusaika,
+       liitteet.toimitustapa,
+       liitteet.toimitusosoite,
+       valintakokeet.id,
+       valintakokeet.tyyppi_koodi_uri,
+       valintakokeet.nimi,
+       valintakokeet.metadata,
+       valintakokeet.tilaisuudet,
+       hakuajat.hakukohde_oid,
+       lower(hakuajat.hakuaika),
+       upper(hakuajat.hakuaika)
+    from hakukohteet hk
+    inner join
+        (select oid,
+                external_id,
+                koulutus_oid,
+                tila,
+                nimi,
+                metadata,
+                muokkaaja,
+                esikatselu,
+                organisaatio_oid,
+                kielivalinta,
+                teemakuva,
+                sorakuvaus_id,
+                array_agg(tt.tarjoaja_oid) as tarjoajat
+        from toteutukset t
+            left join
+                (select toteutus_oid, tarjoaja_oid
+                from toteutusten_tarjoajat) tt on tt.toteutus_oid = t.oid
+     	          group by oid,
+     	                  external_id,
+     	                  koulutus_oid,
+     	                  tila,
+     	                  nimi,
+     	                  metadata,
+     	                  muokkaaja,
+     	                  esikatselu,
+     	                  organisaatio_oid,
+     	                  kielivalinta,
+     	                  teemakuva,
+     	                  sorakuvaus_id) as toteutus on toteutus.oid = hk.toteutus_oid
+    left join hakukohteiden_liitteet as liitteet on liitteet.hakukohde_oid = hk.oid
+    left join hakukohteiden_valintakokeet as valintakokeet on valintakokeet.hakukohde_oid = hk.oid
+    left join hakukohteiden_hakuajat as hakuajat on hakuajat.hakukohde_oid = hk.oid
+    where hk.oid in (#${createOidInParams(hakukohdeOids)})""".as[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)]
 }

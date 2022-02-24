@@ -512,7 +512,6 @@ package object domain {
   }
 
   case class Valintakoe(id: Option[UUID] = None,
-                        hakukohdeOid: Option[HakukohdeOid] = None,
                         tyyppiKoodiUri: Option[String] = None,
                         nimi: Kielistetty = Map(),
                         metadata: Option[ValintakoeMetadata] = None,

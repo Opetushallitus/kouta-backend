@@ -16,6 +16,7 @@ import slick.jdbc._
 trait ExtractorBase extends KoutaJsonFormats {
   case class Tarjoaja(oid: GenericOid, tarjoajaOid: OrganisaatioOid)
   case class Hakuaika(oid: GenericOid, alkaa: LocalDateTime, paattyy: Option[LocalDateTime])
+  case class HakukohdeHakuaika(oid: Option[HakukohdeOid], alkaa: Option[LocalDateTime], paattyy: Option[LocalDateTime])
 
   implicit val getKoulutusOidResult: GetResult[KoulutusOid] = GetResult(r => KoulutusOid(r.nextString()))
   implicit val getToteutusOidResult: GetResult[ToteutusOid] = GetResult(r => ToteutusOid(r.nextString()))
@@ -34,7 +35,6 @@ trait ExtractorBase extends KoutaJsonFormats {
 
   implicit val getValintakoeResult: GetResult[Valintakoe] = GetResult(r => Valintakoe(
     id = r.nextStringOption().map(UUID.fromString),
-    hakukohdeOid = r.nextStringOption().map(HakukohdeOid),
     tyyppiKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[ValintakoeMetadata]),
@@ -284,9 +284,81 @@ trait HakukohdeExctractors extends ExtractorBase {
     }
   )
 
+  implicit val getHakukohdeAndRelatedForCopyingResult: GetResult[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)] =
+    GetResult(r => {
+      (
+        Hakukohde(
+          oid = r.nextStringOption().map(HakukohdeOid),
+          externalId = r.nextStringOption(),
+          toteutusOid = ToteutusOid(r.nextString()),
+          hakuOid = HakuOid(r.nextString()),
+          tila = Julkaisutila.withName(r.nextString()),
+          nimi = extractKielistetty(r.nextStringOption()),
+          hakukohdeKoodiUri = r.nextStringOption(),
+          hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
+          hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
+          hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
+          hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
+          kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
+          jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
+          pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
+          pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
+          muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption()),
+          toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption(),
+          kaytetaanHaunAikataulua = r.nextBooleanOption(),
+          valintaperusteId = r.nextStringOption().map(UUID.fromString),
+          liitteetOnkoSamaToimitusaika = r.nextBooleanOption(),
+          liitteetOnkoSamaToimitusosoite = r.nextBooleanOption(),
+          liitteidenToimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
+          liitteidenToimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
+          liitteidenToimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
+          esikatselu = r.nextBoolean(),
+          metadata = r.nextStringOption().map(read[HakukohdeMetadata]),
+          muokkaaja = UserOid(r.nextString()),
+          organisaatioOid = OrganisaatioOid(r.nextString()),
+          kielivalinta = extractKielivalinta(r.nextStringOption())
+        ),
+        Toteutus(
+          oid = r.nextStringOption().map(ToteutusOid),
+          externalId = r.nextStringOption(),
+          koulutusOid = KoulutusOid(r.nextString()),
+          tila = Julkaisutila.withName(r.nextString()),
+          tarjoajat = extractArray[String](r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
+          nimi = extractKielistetty(r.nextStringOption()),
+          metadata = r.nextStringOption().map(read[ToteutusMetadata]),
+          muokkaaja = UserOid(r.nextString()),
+          esikatselu = r.nextBoolean(),
+          organisaatioOid = OrganisaatioOid(r.nextString()),
+          kielivalinta = extractKielivalinta(r.nextStringOption()),
+          teemakuva = r.nextStringOption(),
+          sorakuvausId = r.nextStringOption().map(UUID.fromString),
+        ),
+        Liite(
+          id = r.nextStringOption().map(UUID.fromString),
+          tyyppiKoodiUri = r.nextStringOption(),
+          nimi = extractKielistetty(r.nextStringOption()),
+          kuvaus = extractKielistetty(r.nextStringOption()),
+          toimitusaika = r.nextTimestampOption().map(_.toLocalDateTime),
+          toimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
+          toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
+        ),
+        Valintakoe(
+          id = r.nextStringOption().map(UUID.fromString),
+          tyyppiKoodiUri = r.nextStringOption(),
+          nimi = extractKielistetty(r.nextStringOption()),
+          metadata = r.nextStringOption().map(read[ValintakoeMetadata]),
+          tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List())
+        ),
+        HakukohdeHakuaika(
+          oid = r.nextStringOption().map(HakukohdeOid),
+          alkaa = r.nextTimestampOption().map(_.toLocalDateTime),
+          paattyy = r.nextTimestampOption().map(_.toLocalDateTime)
+        )
+      )
+    })
+
   implicit val getLiiteResult: GetResult[Liite] = GetResult(r => Liite(
     id = r.nextStringOption().map(UUID.fromString),
-    hakukohdeOid = r.nextStringOption().map(HakukohdeOid),
     tyyppiKoodiUri = r.nextStringOption(),
     nimi = extractKielistetty(r.nextStringOption()),
     kuvaus = extractKielistetty(r.nextStringOption()),

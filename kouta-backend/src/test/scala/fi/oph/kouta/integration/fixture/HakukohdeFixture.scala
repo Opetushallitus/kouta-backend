@@ -76,12 +76,9 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       hakuOid = HakuOid(hakuOid),
       valintaperusteId = None,
       tila = Tallennettu,
-      liitteet = List(
-        Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))),
-        Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
-      ),
+      liitteet = List(Liite1, Liite2),
       valintakokeet = List(
-        Valintakoe1.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
+        Valintakoe1
       )
     )
 
@@ -97,12 +94,9 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       toteutusOid = ToteutusOid(toteutusOid),
       hakuOid = HakuOid(hakuOid),
       valintaperusteId = Some(valintaperusteId),
-      liitteet = List(
-        Liite1.copy(hakukohdeOid = Some(HakukohdeOid(oid))),
-        Liite2.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
-      ),
+      liitteet = List(Liite1, Liite2),
       valintakokeet = List(
-        Valintakoe1.copy(hakukohdeOid = Some(HakukohdeOid(oid)))
+        Valintakoe1
       )
     )
 
