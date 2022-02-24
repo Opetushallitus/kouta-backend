@@ -125,8 +125,8 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       name -> (tila, tyyppi, toteutusMetadata)
     }.toMap
 
-  def getOidsByJarjestyspaikka(jarjestyspaikkaOid: OrganisaatioOid, tilaFilter: TilaFilter): Seq[String] = {
-    KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(List(jarjestyspaikkaOid), tilaFilter))
+  def getOidsByJarjestyspaikka(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[String] = {
+    KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids, tilaFilter))
   }
 
   def getHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) = {
@@ -536,9 +536,11 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter) = {
-    sql"""select oid
-          from hakukohteet
-          where jarjestyspaikka_oid in (#${createOidInParams(jarjestyspaikkaOids)}) #${tilaConditions(tilaFilter)}""".as[String]
+    sql"""select distinct oid from hakukohteet
+          where (jarjestyspaikka_oid in (#${createOidInParams(jarjestyspaikkaOids)})
+          or jarjestyspaikka_oid in
+          (select oppilaitos_oid from oppilaitosten_osat where oid in (#${createOidInParams(jarjestyspaikkaOids)})))
+          #${tilaConditions(tilaFilter)}""".as[String]
   }
 
   def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]] =
