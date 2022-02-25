@@ -41,6 +41,14 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     failsValidation(min.copy(koulutusOid = KoulutusOid("1.2.3")), "koulutusOid", validationMsg("1.2.3"))
   }
 
+  it should "fail if organisaatio oid is invalid" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
+  }
+
+  it should "fail if organisaatio oid is empty" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
+  }
+
   it should "fail if julkaistu toteutus is invalid" in {
     failsValidation(amm.copy(tarjoajat = List("mummo", "varis", "1.2.3").map(OrganisaatioOid)),
       ValidationError("tarjoajat[0]", validationMsg("mummo")),

@@ -197,6 +197,7 @@ case class Valintaperuste(id: Option[UUID] = None,
 
   override def validate(): IsValid = and(
     super.validate(),
+    assertValid(organisaatioOid, "organisaatioOid"),
     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),

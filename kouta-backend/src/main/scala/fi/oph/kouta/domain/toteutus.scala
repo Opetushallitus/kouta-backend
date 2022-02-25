@@ -236,6 +236,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   override def validate(): IsValid = and(
     super.validate(),
+    assertValid(organisaatioOid, "organisaatioOid"),
     assertValid(koulutusOid, "koulutusOid"),
     validateOidList(tarjoajat, "tarjoajat"),
     validateIfDefined[ToteutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),

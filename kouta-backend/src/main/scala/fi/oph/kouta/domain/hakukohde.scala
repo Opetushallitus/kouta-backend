@@ -419,6 +419,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
     super.validate(),
     assertValid(toteutusOid, "toteutusOid"),
     assertValid(hakuOid, "hakuOid"),
+    assertValid(organisaatioOid, "organisaatioOid"),
     // Joko hakukohdeKoodiUri tai nimi täytyy olla, mutta ei molempia!
     assertTrue(hakukohdeKoodiUri.nonEmpty != nimi.nonEmpty, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri")),
     validateIfDefined[String](

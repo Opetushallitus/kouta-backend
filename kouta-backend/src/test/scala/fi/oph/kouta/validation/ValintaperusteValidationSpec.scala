@@ -2,7 +2,7 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.UserOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.validation.Validations._
 
 class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
@@ -23,6 +23,14 @@ class ValintaperusteValidationSpec extends BaseValidationSpec[Valintaperuste] {
   it should "fail if any valintaperuste is invalid" in {
     failsValidation(min.copy(hakutapaKoodiUri = Some("korppi")), "hakutapaKoodiUri", validationMsg("korppi"))
     failsValidation(min.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
+  }
+
+  it should "fail if organisaatio oid is invalid" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
+  }
+
+  it should "fail if organisaatio oid is empty" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
   }
 
   it should "validate valintakokeet" in {
