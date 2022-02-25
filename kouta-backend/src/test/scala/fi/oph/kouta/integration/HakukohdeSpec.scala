@@ -535,8 +535,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val hakukohdeWithValintakokeet = uusiHakukohde.copy(
       valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
     )
-    println("hakukohdeWithValintakokeet:")
-    println(hakukohdeWithValintakokeet)
     val oid = put(hakukohdeWithValintakokeet)
     val lastModified = get(oid, getIds(
       hakukohdeWithValintakokeet.copy(

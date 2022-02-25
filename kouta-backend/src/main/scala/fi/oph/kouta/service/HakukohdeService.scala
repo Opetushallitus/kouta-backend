@@ -104,15 +104,23 @@ class HakukohdeService(
       val toteutus = entities.head._2
       val liitteet = entities.map(_._3).distinct.filter(_.id.nonEmpty)
       val valintakokeet = hakukohde._2.map(_._4).distinct.filter(_.id.nonEmpty)
-      val hakuajat = hakukohde._2.map(_._5).distinct.filter(_.oid.nonEmpty).map(hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
+      val hakuajat = hakukohde._2.map(_._5).distinct.filter(_.oid.nonEmpty).map(
+        hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
 
       val toteutusCopy = toteutus.copy(tila = Tallennettu)
       val toteutusCopyOid = toteutusService.put(toteutusCopy)
 
-      val hakukohdeCopyAsLuonnos = hk.copy(tila = Tallennettu, toteutusOid = toteutusCopyOid, hakuOid = hakuOid, liitteet = liitteet, valintakokeet = valintakokeet, hakuajat = hakuajat)
-      val newHakukohdeOid = put(hakukohdeCopyAsLuonnos)
+      val hakukohdeCopyAsLuonnos = hk.copy(
+        tila = Tallennettu,
+        toteutusOid = toteutusCopyOid,
+        hakuOid = hakuOid,
+        liitteet = liitteet,
+        valintakokeet = valintakokeet,
+        hakuajat = hakuajat)
 
-      (newHakukohdeOid, toteutusCopyOid)
+      val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
+
+      (hakukohdeCopyOid, toteutusCopyOid)
     })
 
     (copyOids.map(t => t._1), copyOids.map(t => t._2))
