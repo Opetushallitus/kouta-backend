@@ -529,6 +529,13 @@ object TestData {
     hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
 
+  val AmmMuuValintaperusteMetadata: AmmatillinenMuuValintaperusteMetadata = AmmatillinenMuuValintaperusteMetadata(
+    valintatavat = Seq(Valintatapa1, Valintatapa2),
+    valintakokeidenYleiskuvaus = Map(Fi -> "yleiskuvaus fi", Sv -> "yleiskuvaus sv"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
+    hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
+    sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
 
   val TuvaValintaperusteMetadata: TutkintokoulutukseenValmentavaValintaperusteMetadata = TutkintokoulutukseenValmentavaValintaperusteMetadata(
     valintatavat = Seq(Valintatapa1, Valintatapa2),
@@ -545,6 +552,7 @@ object TestData {
     lisatiedot = Map(Fi -> "lisatiedot", Sv -> "lisatiedot sv"),
     hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> "hakukelpoisuus sv"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2))
+
 
   val AmmValintaperuste: Valintaperuste = Valintaperuste(
     koulutustyyppi = Amm,
@@ -589,6 +597,24 @@ object TestData {
     organisaatioOid = ChildOid,
     modified = None,
     _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))))
+
+  val AmmMuuValintaperuste: Valintaperuste = Valintaperuste(
+    koulutustyyppi = AmmMuu,
+    id = None,
+    tila = Julkaistu,
+    hakutapaKoodiUri = Some("hakutapa_02#1"),
+    kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    esikatselu = true,
+    julkinen = false,
+    valintakokeet = List(Valintakoe1),
+    metadata = Some(AmmMuuValintaperusteMetadata),
+    organisaatioOid = ChildOid,
+    muokkaaja = TestUserOid,
+    kielivalinta = List(Fi, Sv),
+    modified = None,
+    _enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))
+  )
 
   val YoSorakuvaus: Sorakuvaus = Sorakuvaus(
     id = None,
