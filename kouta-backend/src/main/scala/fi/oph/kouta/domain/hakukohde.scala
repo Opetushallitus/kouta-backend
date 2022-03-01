@@ -255,8 +255,9 @@ package object hakukohde {
       |          description: Hakukohteen aloituspaikkojen tiedot
       |          $ref: '#/components/schemas/Aloituspaikat'
       |        uudenOpiskelijanUrl:
-      |          type: string
+      |          type: object
       |          description: Uuden opiskelijan ohjeita sisältävän verkkosivun URL
+      |          $ref: '#/components/schemas/Linkki'
       |""".stripMargin
 
   val LiitteenToimitusosoiteModel: String =
@@ -538,9 +539,8 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
                              aloituspaikat: Option[Aloituspaikat] = None,
                              // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
                              hakukohteenLinja: Option[HakukohteenLinja] = None,
-                             uudenOpiskelijanUrl: Option[String] = None,
-                             isMuokkaajaOphVirkailija: Option[Boolean]
-                            ) extends ValidatableSubEntity {
+                             uudenOpiskelijanUrl: Kielistetty = Map(),
+                             isMuokkaajaOphVirkailija: Option[Boolean]) extends ValidatableSubEntity {
   def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi")),
     assertNotOptional(kaytetaanHaunAlkamiskautta, s"$path.kaytetaanHaunAlkamiskautta"),
@@ -554,7 +554,7 @@ case class HakukohdeMetadata(valintakokeidenYleiskuvaus: Kielistetty = Map(),
       // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
       validateIfDefined[HakukohteenLinja](hakukohteenLinja, _.validate(tila, kielivalinta, s"$path.hakukohteenLinja"))
     )),
-    validateIfDefined[String](uudenOpiskelijanUrl, assertValidUrl(_, s"$path.uudenOpiskelijanUrl"))
+    validateIfNonEmpty(uudenOpiskelijanUrl, s"$path.uudenOpiskelijanUrl", assertValidUrl _)
   )
 
   override def validateOnJulkaisu(path: String): IsValid = and(
