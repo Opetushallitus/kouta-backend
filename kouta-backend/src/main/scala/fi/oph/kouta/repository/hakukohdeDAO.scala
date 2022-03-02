@@ -634,20 +634,19 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
                 array_agg(tt.tarjoaja_oid) as tarjoajat
         from toteutukset t
             left join
-                (select toteutus_oid, tarjoaja_oid
-                from toteutusten_tarjoajat) tt on tt.toteutus_oid = t.oid
+                (select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat) tt on tt.toteutus_oid = t.oid
      	          group by oid,
-     	                  external_id,
-     	                  koulutus_oid,
-     	                  tila,
-     	                  nimi,
-     	                  metadata,
-     	                  muokkaaja,
-     	                  esikatselu,
-     	                  organisaatio_oid,
-     	                  kielivalinta,
-     	                  teemakuva,
-     	                  sorakuvaus_id) as toteutus on toteutus.oid = hk.toteutus_oid
+     	                   external_id,
+     	                   koulutus_oid,
+     	                   tila,
+     	                   nimi,
+     	                   metadata,
+     	                   muokkaaja,
+     	                   esikatselu,
+     	                   organisaatio_oid,
+     	                   kielivalinta,
+     	                   teemakuva,
+     	                   sorakuvaus_id) as toteutus on toteutus.oid = hk.toteutus_oid
     left join hakukohteiden_liitteet as liitteet on liitteet.hakukohde_oid = hk.oid
     left join hakukohteiden_valintakokeet as valintakokeet on valintakokeet.hakukohde_oid = hk.oid
     left join hakukohteiden_hakuajat as hakuajat on hakuajat.hakukohde_oid = hk.oid
