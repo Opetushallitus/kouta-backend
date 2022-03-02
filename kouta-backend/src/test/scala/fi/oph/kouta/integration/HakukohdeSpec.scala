@@ -576,7 +576,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val tallennettu = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
     val muokattu = tallennettu.copy(tila = Tallennettu)
     val lastModified = get(oid, tallennettu)
-    update(muokattu, lastModified, expectUpdate = true, ophSession)
+    update(muokattu, lastModified, expectUpdate = false, ophSession)
   }
 
   it should "pass legal state changes" in {
