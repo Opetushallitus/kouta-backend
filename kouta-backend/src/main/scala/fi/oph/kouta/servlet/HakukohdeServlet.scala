@@ -121,24 +121,23 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |          content:
       |            application/json:
       |              schema:
-      |                type: object
-      |                properties:
-      |                  hakukohdeOids:
-      |                    type: array
-      |                    example: [1.2.246.562.20.00000000000000012883,1.2.246.562.20.00000000000000012884]
-      |                  toteutusOids:
-      |                    type: array
-      |                    example: [1.2.246.562.17.00000000000000007101,1.2.246.562.17.00000000000000007102]
+      |                type: array
       |""".stripMargin)
   put("/copy/:hakuOid") {
 
     implicit val authenticated: Authenticated = authenticate()
 
     val oids = hakukohdeService.put(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
-    if (oids._1.isEmpty) {
+    println("oids:")
+    println(oids)
+    if (oids.isEmpty) {
       NotFound("error" -> "Unknown hakukohde oid")
     } else {
-      Ok(Map("hakukohdeOids" -> oids._1, "toteutusOids" -> oids._2))
+      val created = for {
+        (originalHakukohdeOid, hakukohdeOid, toteutusOid) <- oids
+      } yield Map("oid" -> originalHakukohdeOid, "status" -> "succeeded", "created" -> Map("hakukohdeOid" -> hakukohdeOid, "toteutusOid" -> toteutusOid))
+      println(created)
+      Ok(created)
     }
   }
 

@@ -627,24 +627,30 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     update(HakukohdePath, arkistoitu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Poistettu))))
   }
 
-  "Copy hakukohteet" should "make a copies of two julkaistu hakukohde and related toteutus and store them as tallennettu" in {
+  "Copy hakukohteet" should "make copies of two julkaistu hakukohde and related toteutus and store them as tallennettu" in {
     val julkaistuHakukohde1Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
     val julkaistuHakukohde2Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
-    val copyOids = put(hakukohteet, hakuOid)
-    val tallennettuHakukohdeCopy = tallennettuHakukohde(copyOids.hakukohdeOids.head).copy(
-      oid = Some(HakukohdeOid(copyOids.hakukohdeOids.head)),
-      toteutusOid = ToteutusOid(copyOids.toteutusOids.head),
+    val copyResponse = put(hakukohteet, hakuOid)
+    val hakukohde1CopyOid = copyResponse.head.created.hakukohdeOid.toString
+    val toteutus1CopyOid = copyResponse.head.created.toteutusOid.toString
+
+    val tallennettuHakukohdeCopy = tallennettuHakukohde(copyResponse.head.oid.toString).copy(
+      oid = Some(HakukohdeOid(hakukohde1CopyOid)),
+      toteutusOid = ToteutusOid(toteutus1CopyOid),
       hakuOid = HakuOid(hakuOid),
       tila = Tallennettu,
       liitteet = List(Liite2, Liite1))
     val tallennettuToteutusCopy = toteutus(koulutusOid).copy(
-      oid = Some(ToteutusOid(copyOids.toteutusOids.head)),
+      oid = Some(ToteutusOid(toteutus1CopyOid)),
       tila = Tallennettu,
       tarjoajat = List(AmmOid))
-    get(copyOids.hakukohdeOids.head, getIds(tallennettuHakukohdeCopy))
-    get(copyOids.toteutusOids.head, tallennettuToteutusCopy)
-    get(copyOids.hakukohdeOids.last, getIds(tallennettuHakukohdeCopy.copy(oid = Some(HakukohdeOid(copyOids.hakukohdeOids.last)), toteutusOid = ToteutusOid(copyOids.toteutusOids.last))))
-    get(copyOids.toteutusOids.last, tallennettuToteutusCopy.copy(oid = Some(ToteutusOid(copyOids.toteutusOids.last))))
+    get(hakukohde1CopyOid, getIds(tallennettuHakukohdeCopy))
+    get(toteutus1CopyOid, tallennettuToteutusCopy)
+
+    val hakukohde2CopyOid = copyResponse.last.created.hakukohdeOid.toString
+    val toteutus2CopyOid = copyResponse.last.created.toteutusOid.toString
+    get(hakukohde2CopyOid, getIds(tallennettuHakukohdeCopy.copy(oid = Some(HakukohdeOid(hakukohde2CopyOid)), toteutusOid = ToteutusOid(toteutus2CopyOid))))
+    get(toteutus2CopyOid, tallennettuToteutusCopy.copy(oid = Some(ToteutusOid(toteutus2CopyOid))))
   }
 }

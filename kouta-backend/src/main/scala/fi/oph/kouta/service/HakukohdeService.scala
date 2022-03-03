@@ -95,7 +95,7 @@ class HakukohdeService(
     }.oid.get
   }
 
-  def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): (List[HakukohdeOid], List[ToteutusOid]) = {
+  def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): List[(HakukohdeOid, HakukohdeOid, ToteutusOid)] = {
     val hakukohdeAndRelatedEntities = HakukohdeDAO.getHakukohdeAndRelatedEntities(hakukohdeOids).groupBy(_._1.oid.get)
 
     val copyOids = hakukohdeAndRelatedEntities.toList.map(hakukohde => {
@@ -120,10 +120,10 @@ class HakukohdeService(
 
       val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
 
-      (hakukohdeCopyOid, toteutusCopyOid)
+      (hk.oid.get, hakukohdeCopyOid, toteutusCopyOid)
     })
 
-    (copyOids.map(t => t._1), copyOids.map(t => t._2))
+    copyOids
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {

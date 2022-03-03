@@ -1,14 +1,16 @@
 package fi.oph.kouta.integration
 
-import java.util.UUID
+import fi.oph.kouta.domain.oid.{HakukohdeOid, ToteutusOid}
 
+import java.util.UUID
 import fi.oph.kouta.servlet.{IndexerServlet, SearchServlet}
 
 package object fixture {
 
   case class Oid(oid:String)
   case class Oids(oids:List[String])
-  case class HakukohdeAndToteutusOids(hakukohdeOids:List[String], toteutusOids: List[String])
+  case class CreatedOids(hakukohdeOid: HakukohdeOid, toteutusOid: ToteutusOid)
+  case class HakukohdeCopyResult(oid: HakukohdeOid, status: String, created: CreatedOids)
   case class Id(id:UUID)
   case class Updated(updated:Boolean)
 }

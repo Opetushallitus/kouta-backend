@@ -5,7 +5,7 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.integration.fixture.{HakukohdeAndToteutusOids, Id, Oid, Oids, Updated}
+import fi.oph.kouta.integration.fixture.{HakukohdeCopyResult, Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks.{MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
@@ -185,9 +185,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   val oids: String => List[String] = (body: String) => read[Oids](body).oids
 
-  val hakukohdeAndToteutusOids: String => HakukohdeAndToteutusOids = (body: String) => {
-    read[HakukohdeAndToteutusOids](body)
-  }
+  val hakukohdeAndToteutusOids: String => List[HakukohdeCopyResult] = (body: String) => read[List[HakukohdeCopyResult]](body)
 
   def id(body: String): UUID = read[Id](body).id
 
