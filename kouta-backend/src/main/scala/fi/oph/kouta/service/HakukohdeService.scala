@@ -109,37 +109,52 @@ class HakukohdeService(
 
   def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): List[HakukohdeCopyResultObject] = {
     val hakukohdeAndRelatedEntities = HakukohdeDAO.getHakukohdeAndRelatedEntities(hakukohdeOids).groupBy(_._1.oid.get)
-    val notFound = hakukohdeOids.filterNot(hakukohdeOid => hakukohdeAndRelatedEntities.keySet.contains(hakukohdeOid))
 
-    val copyOids = hakukohdeAndRelatedEntities.toList.map(hakukohde => {
+    val copyResultObjects = hakukohdeAndRelatedEntities.toList.map(hakukohde => {
       val entities = hakukohde._2
       val hk = entities.head._1
-      val toteutus = entities.head._2
-      val liitteet = entities.map(_._3).distinct.filter(_.id.nonEmpty)
-      val valintakokeet = hakukohde._2.map(_._4).distinct.filter(_.id.nonEmpty)
-      val hakuajat = hakukohde._2.map(_._5).distinct.filter(_.oid.nonEmpty).map(
-        hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
+      try {
+        val toteutus = entities.head._2
+        val liitteet = entities.map(_._3).distinct.filter(_.id.nonEmpty)
+        val valintakokeet = hakukohde._2.map(_._4).distinct.filter(_.id.nonEmpty)
+        val hakuajat = hakukohde._2.map(_._5).distinct.filter(_.oid.nonEmpty).map(
+          hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
 
-      val toteutusCopy = toteutus.copy(tila = Tallennettu)
-      val toteutusCopyOid = toteutusService.put(toteutusCopy)
+        val toteutusCopy = toteutus.copy(tila = Tallennettu)
+        val toteutusCopyOid = toteutusService.put(toteutusCopy)
 
-      val hakukohdeCopyAsLuonnos = hk.copy(
-        tila = Tallennettu,
-        toteutusOid = toteutusCopyOid,
-        hakuOid = hakuOid,
-        liitteet = liitteet,
-        valintakokeet = valintakokeet,
-        hakuajat = hakuajat)
+        val hakukohdeCopyAsLuonnos = hk.copy(
+          tila = Tallennettu,
+          toteutusOid = toteutusCopyOid,
+          hakuOid = hakuOid,
+          liitteet = liitteet,
+          valintakokeet = valintakokeet,
+          hakuajat = hakuajat)
 
-      val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
+        val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
 
-      HakukohdeCopyResultObject(
-        oid = hk.oid.get, status = "succeeded", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
-      )
+        HakukohdeCopyResultObject(
+          oid = hk.oid.get, status = "succeeded", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
+        )
+      } catch {
+        case error => {
+          logger.error(s"Copying hakukohde failed: ${error}")
+          HakukohdeCopyResultObject(
+            oid = hk.oid.get, status = "failed", created = CopyOids(None, None)
+          )
+        }
+      }
     })
 
-    val notFoundWithNones = for { hkOid <- notFound } yield HakukohdeCopyResultObject(oid = hkOid, status = "failed", created = CopyOids(hakukohdeOid = None, toteutusOid = None))
-    copyOids ++ notFoundWithNones
+    val notFound =
+      for {
+        hkOid <- hakukohdeOids.filterNot(hakukohdeOid => hakukohdeAndRelatedEntities.keySet.contains(hakukohdeOid))
+      } yield HakukohdeCopyResultObject(
+        oid = hkOid,
+        status = "failed",
+        created = CopyOids(hakukohdeOid = None, toteutusOid = None))
+
+    copyResultObjects ++ notFound
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
