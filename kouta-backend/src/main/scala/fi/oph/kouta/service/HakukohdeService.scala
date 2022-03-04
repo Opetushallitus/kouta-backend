@@ -20,6 +20,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object HakukohdeService
     extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient, KayttooikeusClient, ToteutusService)
 
+case class CopyOids(
+  hakukohdeOid: Option[HakukohdeOid],
+  toteutusOid: Option[ToteutusOid]
+)
+
+case class HakukohdeCopyResultObject(
+  oid: HakukohdeOid,
+  status: String,
+  created: CopyOids
+)
+
 class HakukohdeService(
     sqsInTransactionService: SqsInTransactionService,
     auditLog: AuditLog,
@@ -95,8 +106,10 @@ class HakukohdeService(
     }.oid.get
   }
 
-  def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): List[(HakukohdeOid, HakukohdeOid, ToteutusOid)] = {
+
+  def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): List[HakukohdeCopyResultObject] = {
     val hakukohdeAndRelatedEntities = HakukohdeDAO.getHakukohdeAndRelatedEntities(hakukohdeOids).groupBy(_._1.oid.get)
+    val notFound = hakukohdeOids.filterNot(hakukohdeOid => hakukohdeAndRelatedEntities.keySet.contains(hakukohdeOid))
 
     val copyOids = hakukohdeAndRelatedEntities.toList.map(hakukohde => {
       val entities = hakukohde._2
@@ -120,10 +133,13 @@ class HakukohdeService(
 
       val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
 
-      (hk.oid.get, hakukohdeCopyOid, toteutusCopyOid)
+      HakukohdeCopyResultObject(
+        oid = hk.oid.get, status = "succeeded", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
+      )
     })
 
-    copyOids
+    val notFoundWithNones = for { hkOid <- notFound } yield HakukohdeCopyResultObject(oid = hkOid, status = "failed", created = CopyOids(hakukohdeOid = None, toteutusOid = None))
+    copyOids ++ notFoundWithNones
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {

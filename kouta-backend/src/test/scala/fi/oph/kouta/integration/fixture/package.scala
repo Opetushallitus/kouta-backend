@@ -9,8 +9,6 @@ package object fixture {
 
   case class Oid(oid:String)
   case class Oids(oids:List[String])
-  case class CreatedOids(hakukohdeOid: HakukohdeOid, toteutusOid: ToteutusOid)
-  case class HakukohdeCopyResult(oid: HakukohdeOid, status: String, created: CreatedOids)
   case class Id(id:UUID)
   case class Updated(updated:Boolean)
 }

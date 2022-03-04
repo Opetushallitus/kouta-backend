@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
+import fi.oph.kouta.util.UnitSpec
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.{TestData, TestOids}
@@ -14,7 +15,7 @@ import fi.oph.kouta.{TestData, TestOids}
 import java.time.LocalDateTime
 import java.util.UUID
 
-class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with LokalisointiServiceMock {
+class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with LokalisointiServiceMock {
 
   override val roleEntities = Seq(Role.Hakukohde)
 
@@ -632,25 +633,40 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     val julkaistuHakukohde2Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
     val copyResponse = put(hakukohteet, hakuOid)
-    val hakukohde1CopyOid = copyResponse.head.created.hakukohdeOid.toString
-    val toteutus1CopyOid = copyResponse.head.created.toteutusOid.toString
+    val hakukohde1CopyOid = copyResponse.head.created.hakukohdeOid
+    val toteutus1CopyOid = copyResponse.head.created.toteutusOid
 
     val tallennettuHakukohdeCopy = tallennettuHakukohde(copyResponse.head.oid.toString).copy(
-      oid = Some(HakukohdeOid(hakukohde1CopyOid)),
-      toteutusOid = ToteutusOid(toteutus1CopyOid),
+      oid = hakukohde1CopyOid,
+      toteutusOid = toteutus1CopyOid.get,
       hakuOid = HakuOid(hakuOid),
       tila = Tallennettu,
       liitteet = List(Liite2, Liite1))
     val tallennettuToteutusCopy = toteutus(koulutusOid).copy(
-      oid = Some(ToteutusOid(toteutus1CopyOid)),
+      oid = toteutus1CopyOid,
       tila = Tallennettu,
       tarjoajat = List(AmmOid))
-    get(hakukohde1CopyOid, getIds(tallennettuHakukohdeCopy))
-    get(toteutus1CopyOid, tallennettuToteutusCopy)
 
-    val hakukohde2CopyOid = copyResponse.last.created.hakukohdeOid.toString
-    val toteutus2CopyOid = copyResponse.last.created.toteutusOid.toString
+    get(hakukohde1CopyOid.get.toString, getIds(tallennettuHakukohdeCopy))
+    get(toteutus1CopyOid.get.toString, tallennettuToteutusCopy)
+
+    val hakukohde2CopyOid = copyResponse.last.created.hakukohdeOid.get.toString
+
+    val toteutus2CopyOid = copyResponse.last.created.toteutusOid.get.toString
     get(hakukohde2CopyOid, getIds(tallennettuHakukohdeCopy.copy(oid = Some(HakukohdeOid(hakukohde2CopyOid)), toteutusOid = ToteutusOid(toteutus2CopyOid))))
     get(toteutus2CopyOid, tallennettuToteutusCopy.copy(oid = Some(ToteutusOid(toteutus2CopyOid))))
+  }
+
+  it should "fail to copy non-existing hakukohde" in {
+    val julkaistuHakukohde1Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val unknownHakukohdeOid = julkaistuHakukohde1Oid + 1
+    val hakukohteet = List(julkaistuHakukohde1Oid, unknownHakukohdeOid)
+    val copyResponse = put(hakukohteet, hakuOid)
+
+    copyResponse.length shouldBe 2
+    copyResponse.head.status shouldBe "succeeded"
+    copyResponse.last.status shouldBe "failed"
+    copyResponse.last.created.hakukohdeOid shouldBe empty
+    copyResponse.last.created.toteutusOid shouldBe empty
   }
 }

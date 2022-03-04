@@ -10,6 +10,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakukohdeDAO, SQLHelpers}
+import fi.oph.kouta.service.HakukohdeCopyResultObject
 import fi.oph.kouta.service.{HakukohdeService, KeywordService, OrganisaatioServiceImpl, ToteutusService}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
@@ -108,7 +109,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
 
   def put(hakukohde: Hakukohde): String = put(HakukohdePath, hakukohde, oid)
   def put(hakukohde: Hakukohde, sessionId: UUID): String = put(HakukohdePath, hakukohde, sessionId, oid)
-  def put(hakukohteet: List[String], hakuOid: String): List[HakukohdeCopyResult] = put(s"$HakukohdeCopyPath$hakuOid", hakukohteet, hakukohdeAndToteutusOids(_))
+  def put(hakukohteet: List[String], hakuOid: String): List[HakukohdeCopyResultObject] = put(s"$HakukohdeCopyPath$hakuOid", hakukohteet, hakukohdeCopyResponse(_))
 
   def get(oid: String, expected: Hakukohde): String = get(HakukohdePath, oid, expected.copy(modified = Some(readHakukohdeModified(oid))))
   def get(oid: String, sessionId: UUID, expected: Hakukohde): String = get(HakukohdePath, oid, sessionId, expected.copy(modified = Some(readHakukohdeModified(oid))))

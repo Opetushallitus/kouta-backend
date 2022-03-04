@@ -127,17 +127,11 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val oids = hakukohdeService.put(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
-    println("oids:")
-    println(oids)
-    if (oids.isEmpty) {
-      NotFound("error" -> "Unknown hakukohde oid")
+    val hakukohdeCopyResults = hakukohdeService.put(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
+    if (hakukohdeCopyResults.isEmpty) {
+      NotFound("error" -> "No hakukohde was copied")
     } else {
-      val created = for {
-        (originalHakukohdeOid, hakukohdeOid, toteutusOid) <- oids
-      } yield Map("oid" -> originalHakukohdeOid, "status" -> "succeeded", "created" -> Map("hakukohdeOid" -> hakukohdeOid, "toteutusOid" -> toteutusOid))
-      println(created)
-      Ok(created)
+      Ok(hakukohdeCopyResults)
     }
   }
 
