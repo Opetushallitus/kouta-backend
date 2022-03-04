@@ -204,6 +204,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   override def validate(): IsValid = {
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
+      assertValid(organisaatioOid, "organisaatioOid"),
       validateIfNonEmpty[String](koulutuksetKoodiUri, "koulutuksetKoodiUri", assertMatch(_, KoulutusKoodiPattern, _)),
       validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),

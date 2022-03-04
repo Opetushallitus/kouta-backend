@@ -29,6 +29,14 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(min.copy(oid = Some(KoulutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
   }
 
+  it should "fail if organisaatio oid is invalid" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
+  }
+
+  it should "fail if organisaatio oid is empty" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
+  }
+
   it should "fail if julkaistu koulutus is invalid" in {
     failsValidation(amm.copy(johtaaTutkintoon = false), "johtaaTutkintoon", invalidTutkintoonjohtavuus("amm"))
     failsValidation(amm.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)

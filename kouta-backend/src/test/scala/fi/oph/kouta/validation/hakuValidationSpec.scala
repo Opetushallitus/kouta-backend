@@ -32,6 +32,14 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     failsValidation(min.copy(oid = Some(HakuOid("1.2.3"))), "oid", validationMsg("1.2.3"))
   }
 
+  it should "fail if organisaatio oid is invalid" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
+  }
+
+  it should "fail if organisaatio oid is empty" in {
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
+  }
+
   it should "fail if julkaistu haku is invalid" in {
     failsValidation(max.copy(hakutapaKoodiUri = None), "hakutapaKoodiUri", missingMsg)
     failsValidation(max.copy(hakutapaKoodiUri = Some("korppi")), "hakutapaKoodiUri", validationMsg("korppi"))
