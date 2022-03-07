@@ -8,7 +8,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.ToteutusDAO
-import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusService}
+import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService}
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -67,7 +67,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
 
   def put(toteutus:Toteutus):String = put(ToteutusPath, toteutus, oid(_))
   def put(toteutus:Toteutus, sessionId: UUID):String = put(ToteutusPath, toteutus, sessionId, oid(_))
-  def put(toteutukset: List[String]):List[String] = put(ToteutusCopyPath, toteutukset, oids(_))
+  def put(toteutukset: List[String]): List[ToteutusCopyResultObject] = put(ToteutusCopyPath, toteutukset, listResponse[ToteutusCopyResultObject])
 
   def get(oid: String, expected: Toteutus): String =
     get(ToteutusPath, oid, expected.copy(modified = Some(readToteutusModified(oid))))
