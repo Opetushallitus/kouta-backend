@@ -46,6 +46,37 @@ jobs:
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
           mvn clean package -B
+        
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: kouta-backend/target
+          key: ${{ github.sha }}
+
+      - uses: actions/cache@v2
+        id: ci-tools
+        with:
+          path: ci-tools
+          key: ${{ github.sha }}
+
+  deploy_image:
+    runs-on: ubuntu-latest
+    needs: test_and_build
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        id: restore-build
+        with:
+          path: kouta-backend/target
+          key: ${{ github.sha }}
+
+      - uses: actions/cache@v2
+        id: ci-tools
+        with:
+          path: ci-tools
+          key: ${{ github.sha }}
 
       - name: Build Docker container
         shell: bash
@@ -63,3 +94,22 @@ jobs:
           ./ci-tools/github-build/build-fatjar.sh $ARTIFACT_NAME
           ./ci-tools/github-build/upload-image.sh $ARTIFACT_NAME
 
+  deploy_to_artifactory:
+    runs-on: ubuntu-latest
+    needs: test_and_build
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/cache@v2
+        id: ci-tools
+        with:
+          path: ci-tools
+          key: ${{ github.sha }}
+
+      - name: Deploy to artifactory
+        env:
+          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+        run: mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
