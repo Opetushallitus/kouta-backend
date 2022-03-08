@@ -664,8 +664,8 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val copyResponse = put(hakukohteet, hakuOid)
 
     copyResponse.length shouldBe 2
-    copyResponse.head.status shouldBe "succeeded"
-    copyResponse.last.status shouldBe "failed"
+    copyResponse.head.status shouldBe "success"
+    copyResponse.last.status shouldBe "error"
     copyResponse.last.created.hakukohdeOid shouldBe empty
     copyResponse.last.created.toteutusOid shouldBe empty
   }

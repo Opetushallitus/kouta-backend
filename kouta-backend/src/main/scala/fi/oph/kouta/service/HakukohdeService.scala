@@ -134,13 +134,13 @@ class HakukohdeService(
         val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
 
         HakukohdeCopyResultObject(
-          oid = hk.oid.get, status = "succeeded", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
+          oid = hk.oid.get, status = "success", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
         )
       } catch {
         case error => {
           logger.error(s"Copying hakukohde failed: ${error}")
           HakukohdeCopyResultObject(
-            oid = hk.oid.get, status = "failed", created = CopyOids(None, None)
+            oid = hk.oid.get, status = "error", created = CopyOids(None, None)
           )
         }
       }
@@ -151,7 +151,7 @@ class HakukohdeService(
         hkOid <- hakukohdeOids.filterNot(hakukohdeOid => hakukohdeAndRelatedEntities.keySet.contains(hakukohdeOid))
       } yield HakukohdeCopyResultObject(
         oid = hkOid,
-        status = "failed",
+        status = "error",
         created = CopyOids(hakukohdeOid = None, toteutusOid = None))
 
     copyResultObjects ++ notFound
