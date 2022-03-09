@@ -107,7 +107,7 @@ class HakukohdeService(
   }
 
 
-  def put(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): List[HakukohdeCopyResultObject] = {
+  def copy(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): List[HakukohdeCopyResultObject] = {
     val hakukohdeAndRelatedEntities = HakukohdeDAO.getHakukohdeAndRelatedEntities(hakukohdeOids).groupBy(_._1.oid.get)
 
     val copyResultObjects = hakukohdeAndRelatedEntities.toList.map(hakukohde => {

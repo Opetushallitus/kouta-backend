@@ -127,7 +127,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val hakukohdeCopyResults = hakukohdeService.put(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
+    val hakukohdeCopyResults = hakukohdeService.copy(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
     if (hakukohdeCopyResults.isEmpty) {
       NotFound("error" -> "No hakukohde was copied")
     } else {

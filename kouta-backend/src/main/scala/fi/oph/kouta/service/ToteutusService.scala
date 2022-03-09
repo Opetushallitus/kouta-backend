@@ -128,7 +128,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }.oid.get
   }
 
-  def put(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusCopyResultObject] = {
+  def copy(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusCopyResultObject] = {
     val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
     toteutukset.map(toteutus => {
       try {
