@@ -190,8 +190,6 @@ sealed trait HttpSpec extends KoutaJsonFormats {
 
   def listResponse[E](body: String)(implicit m: Manifest[E]): List[E] = read[List[E]](body)
 
-  val hakukohdeCopyResponse: String => List[HakukohdeCopyResultObject] = (body: String) => read[List[HakukohdeCopyResultObject]](body)
-
   def id(body: String): UUID = read[Id](body).id
 
   def updated(body: String): Boolean = read[Updated](body).updated

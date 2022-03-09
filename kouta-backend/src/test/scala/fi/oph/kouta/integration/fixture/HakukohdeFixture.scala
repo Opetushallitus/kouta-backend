@@ -109,7 +109,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
 
   def put(hakukohde: Hakukohde): String = put(HakukohdePath, hakukohde, oid)
   def put(hakukohde: Hakukohde, sessionId: UUID): String = put(HakukohdePath, hakukohde, sessionId, oid)
-  def put(hakukohteet: List[String], hakuOid: String): List[HakukohdeCopyResultObject] = put(s"$HakukohdeCopyPath$hakuOid", hakukohteet, hakukohdeCopyResponse(_))
+  def put(hakukohteet: List[String], hakuOid: String): List[HakukohdeCopyResultObject] = put(s"$HakukohdeCopyPath$hakuOid", hakukohteet, listResponse[HakukohdeCopyResultObject])
 
   def get(oid: String, expected: Hakukohde): String = get(HakukohdePath, oid, expected.copy(modified = Some(readHakukohdeModified(oid))))
   def get(oid: String, sessionId: UUID, expected: Hakukohde): String = get(HakukohdePath, oid, sessionId, expected.copy(modified = Some(readHakukohdeModified(oid))))
