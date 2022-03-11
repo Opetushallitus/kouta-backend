@@ -13,7 +13,7 @@ class SearchServlet(koulutusService: KoulutusService,
 
   def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
-  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "page", "size", "lng", "order-by", "order")
+  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "julkinen", "page", "size", "lng", "order-by", "order")
 
   val searchParams =
     """        - in: query
