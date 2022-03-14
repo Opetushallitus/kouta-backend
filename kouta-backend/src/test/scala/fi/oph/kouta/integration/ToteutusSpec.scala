@@ -1,5 +1,8 @@
 package fi.oph.kouta.integration
 
+import cats.Show.Shown.mat
+import fi.oph.kouta.TestData.AmmToteutuksenMetatieto
+
 import java.time.LocalDateTime
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -258,6 +261,55 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(createdToteutus.copy(tarjoajat = List(GrandChildOid)), lastModified)
     get(oid, createdToteutus.copy(tarjoajat = List(GrandChildOid)))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid)))
+  }
+
+  it should "remove toteutuksen tarjoajan oppilaitos from koulutuksen tarjoajat when removed on update" in {
+    val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List(ChildOid))
+    val koulutusOid = put(ophKoulutus, ophSession)
+    val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
+    val oid = put(newToteutus, session)
+    val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session))
+    val lastModified = get(oid, createdToteutus)
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid)))
+    update(createdToteutus.copy(tarjoajat = List()), lastModified)
+    get(oid, createdToteutus.copy(tarjoajat = List()))
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List()))
+  }
+
+  it should "prevent removal of toteutuksen tarjoajan oppilaitos from koulutuksen tarjoajat when oppilaitos still in use" in {
+    val oppilaitosAlsoInOtherToteutus = OrganisaatioOid("1.2.246.562.10.39218317368")
+    val tarjoajaOfOtherOppilaitos = OrganisaatioOid("1.2.246.562.10.74478323608")
+    val tarjoajaInOtherTotetus = OrganisaatioOid("1.2.246.562.10.46789068684")
+    val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List(ChildOid, oppilaitosAlsoInOtherToteutus))
+    val koulutusOid = put(ophKoulutus, ophSession)
+    val otherToteutus = toteutus(koulutusOid).copy(organisaatioOid = OphOid, tarjoajat = List(tarjoajaInOtherTotetus))
+    put(otherToteutus, ophSession)
+    val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = OphOid, tarjoajat = List(GrandChildOid, EvilGrandChildOid, tarjoajaOfOtherOppilaitos))
+    val oid = put(newToteutus, ophSession)
+    val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = OphUserOid)
+    val lastModified = get(oid, createdToteutus)
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid, oppilaitosAlsoInOtherToteutus)))
+    update(createdToteutus.copy(tarjoajat = List(GrandChildOid)), lastModified)
+    get(oid, createdToteutus.copy(tarjoajat = List(GrandChildOid), muokkaaja = TestUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid, oppilaitosAlsoInOtherToteutus)))
+  }
+
+  it should "make all changes to toteutuksen tarjoajien oppilaitokset accordingly in koulutuksen tarjoajat when updated in toteutus" in {
+    val untouchedOppilaitosOid = OrganisaatioOid("1.2.246.562.10.46312206843")
+    val newTarjoaja = OrganisaatioOid("1.2.246.562.10.74478323608")
+    val newTarjoaja2 = OrganisaatioOid("1.2.246.562.10.46789068684")
+    val newOppilaitos = OrganisaatioOid("1.2.246.562.10.39218317368")
+    val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List(ChildOid, untouchedOppilaitosOid))
+    val koulutusOid = put(ophKoulutus, ophSession)
+    val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = OphOid, tarjoajat = List(GrandChildOid))
+    val oid = put(newToteutus, ophSession)
+    val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = OphUserOid)
+    val lastModified = get(oid, createdToteutus)
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid, untouchedOppilaitosOid)))
+    update(createdToteutus.copy(tarjoajat = List(newTarjoaja, newTarjoaja2)), lastModified)
+    get(oid, createdToteutus.copy(tarjoajat = List(newTarjoaja, newTarjoaja2), muokkaaja = TestUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(untouchedOppilaitosOid, newOppilaitos)))
   }
 
   it should "fail to update if toteutus tyyppi does not match koulutustyyppi of koulutus" in {

@@ -133,6 +133,15 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
             t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
     }.get
   }
+
+  def getToteutustenTarjoajatByKoulutusOid(koulutusOid: KoulutusOid,
+                                           tilaFilter: TilaFilter = TilaFilter.onlyOlemassaolevatAndArkistoimattomat()): Map[ToteutusOid, Seq[OrganisaatioOid]] = {
+    val convert: ((ToteutusOid, Vector[Tarjoaja])) => (ToteutusOid, Seq[OrganisaatioOid]) = {
+      case(toteutusOid, tarjoajat) =>
+        toteutusOid -> tarjoajat.map(_.tarjoajaOid)
+    }
+    KoutaDatabase.runBlocking(selectToteutustenTarjoajatByKoulutusOid(koulutusOid, tilaFilter)).groupBy(tarjoaja => ToteutusOid(tarjoaja.oid.s)).map(convert)
+  }
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
@@ -210,6 +219,11 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
 
   def selectToteutustenTarjoajat(oids: List[ToteutusOid]): DBIO[Vector[Tarjoaja]] = {
     sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in (#${createOidInParams(oids)})""".as[Tarjoaja]
+  }
+
+  def selectToteutustenTarjoajatByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): DBIO[Vector[Tarjoaja]] = {
+    sql"""select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat where toteutus_oid in
+               (select oid from toteutukset where koulutus_oid = $koulutusOid #${tilaConditions(tilaFilter)})""".as[Tarjoaja]
   }
 
   def selectToteutuksetByOids(toteutusOids: List[ToteutusOid]) =
