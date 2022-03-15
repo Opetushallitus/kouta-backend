@@ -77,7 +77,6 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
                 .runLog
                 .map(_.mkString)
                 .map(responseBody => {
-                  println(responseBody)
                   parse(responseBody).extract[List[OrganisaatioHenkilo]]
                 })
             case r =>

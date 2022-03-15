@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -52,11 +53,15 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
 }
 
 trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
-  this: KoutaIntegrationSpec with AccessControlSpec =>
+  this: KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture =>
 
   override def hakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
+    val koodistoClient = new KoodistoClient(urlProperties.get)
+    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient,
+      new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
+        new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
+        koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient))
   }
 }

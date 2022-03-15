@@ -9,6 +9,7 @@ import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks.{MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
+import fi.oph.kouta.service.HakukohdeCopyResultObject
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
@@ -141,13 +142,14 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
   }
 }
 
-sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
+sealed trait HttpSpec extends KoutaJsonFormats {
+  this: ScalatraFlatSpec =>
   val defaultSessionId: UUID = UUID.randomUUID()
 
   val DebugJson = false
 
   def debugJson[E <: AnyRef](body: String)(implicit mf: Manifest[E]): Unit = {
-    if(DebugJson) {
+    if (DebugJson) {
       import org.json4s.jackson.Serialization.writePretty
       println(writePretty[E](read[E](body)))
     }
@@ -171,6 +173,7 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
   def headersIfUnmodifiedSince(lastModified: String, sessionHeader: (String, String) = defaultSessionHeader) = List(jsonHeader, sessionHeader, KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
+
   def sessionHeader(sessionId: UUID): (String, String) = sessionHeader(sessionId.toString)
 
   def defaultSessionHeader: (String, String) = sessionHeader(defaultSessionId)
@@ -183,9 +186,9 @@ sealed trait HttpSpec extends KoutaJsonFormats { this: ScalatraFlatSpec =>
 
   val oid: String => String = (body: String) => read[Oid](body).oid
 
-
   val oids: String => List[String] = (body: String) => read[Oids](body).oids
 
+  def listResponse[E](body: String)(implicit m: Manifest[E]): List[E] = read[List[E]](body)
 
   def id(body: String): UUID = read[Id](body).id
 

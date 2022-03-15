@@ -1,8 +1,5 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
-import java.util.UUID
-
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -11,6 +8,8 @@ import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
@@ -128,6 +127,12 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   def getOidsByJarjestyspaikka(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[String] = {
     KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids, tilaFilter))
+  }
+
+  def getHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) = {
+    KoutaDatabase.runBlockingTransactionally(
+      selectHakukohdeAndRelatedEntities(hakukohdeOids)
+    ).get
   }
 }
 
@@ -552,4 +557,98 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           from valintaperusteet
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
     """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])]
+
+  def selectHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) =
+    sql"""select
+       hk.oid,
+       hk.external_id,
+       hk.toteutus_oid,
+       hk.haku_oid,
+       hk.tila,
+       hk.nimi,
+       hk.hakukohde_koodi_uri,
+       hk.hakulomaketyyppi,
+       hk.hakulomake_ataru_id,
+       hk.hakulomake_kuvaus,
+       hk.hakulomake_linkki,
+       hk.kaytetaan_haun_hakulomaketta,
+       hk.jarjestyspaikka_oid,
+       hk.pohjakoulutusvaatimus_koodi_urit,
+       hk.pohjakoulutusvaatimus_tarkenne,
+       hk.muu_pohjakoulutusvaatimus_kuvaus,
+       hk.toinen_aste_onko_kaksoistutkinto,
+       hk.kaytetaan_haun_aikataulua,
+       hk.valintaperuste_id,
+       hk.liitteet_onko_sama_toimitusaika,
+       hk.liitteet_onko_sama_toimitusosoite,
+       hk.liitteiden_toimitusaika,
+       hk.liitteiden_toimitustapa,
+       hk.liitteiden_toimitusosoite,
+       hk.esikatselu,
+       hk.metadata,
+       hk.muokkaaja,
+       hk.organisaatio_oid,
+       hk.kielivalinta,
+       toteutus.oid,
+       toteutus.external_id,
+       toteutus.koulutus_oid,
+       toteutus.tila,
+       toteutus.tarjoajat,
+       toteutus.nimi,
+       toteutus.metadata,
+       toteutus.muokkaaja,
+       toteutus.esikatselu,
+       toteutus.organisaatio_oid,
+       toteutus.kielivalinta,
+       toteutus.teemakuva,
+       toteutus.sorakuvaus_id,
+       liitteet.id,
+       liitteet.tyyppi_koodi_uri,
+       liitteet.nimi,
+       liitteet.kuvaus,
+       liitteet.toimitusaika,
+       liitteet.toimitustapa,
+       liitteet.toimitusosoite,
+       valintakokeet.id,
+       valintakokeet.tyyppi_koodi_uri,
+       valintakokeet.nimi,
+       valintakokeet.metadata,
+       valintakokeet.tilaisuudet,
+       hakuajat.hakukohde_oid,
+       lower(hakuajat.hakuaika),
+       upper(hakuajat.hakuaika)
+    from hakukohteet hk
+    inner join
+        (select oid,
+                external_id,
+                koulutus_oid,
+                tila,
+                nimi,
+                metadata,
+                muokkaaja,
+                esikatselu,
+                organisaatio_oid,
+                kielivalinta,
+                teemakuva,
+                sorakuvaus_id,
+                array_agg(tt.tarjoaja_oid) as tarjoajat
+        from toteutukset t
+            left join
+                (select toteutus_oid, tarjoaja_oid from toteutusten_tarjoajat) tt on tt.toteutus_oid = t.oid
+     	          group by oid,
+     	                   external_id,
+     	                   koulutus_oid,
+     	                   tila,
+     	                   nimi,
+     	                   metadata,
+     	                   muokkaaja,
+     	                   esikatselu,
+     	                   organisaatio_oid,
+     	                   kielivalinta,
+     	                   teemakuva,
+     	                   sorakuvaus_id) as toteutus on toteutus.oid = hk.toteutus_oid
+    left join hakukohteiden_liitteet as liitteet on liitteet.hakukohde_oid = hk.oid
+    left join hakukohteiden_valintakokeet as valintakokeet on valintakokeet.hakukohde_oid = hk.oid
+    left join hakukohteiden_hakuajat as hakuajat on hakuajat.hakukohde_oid = hk.oid
+    where hk.oid in (#${createOidInParams(hakukohdeOids)})""".as[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)]
 }

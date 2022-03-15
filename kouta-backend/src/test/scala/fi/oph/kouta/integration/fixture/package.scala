@@ -1,7 +1,8 @@
 package fi.oph.kouta.integration
 
-import java.util.UUID
+import fi.oph.kouta.domain.oid.{HakukohdeOid, ToteutusOid}
 
+import java.util.UUID
 import fi.oph.kouta.servlet.{IndexerServlet, SearchServlet}
 
 package object fixture {

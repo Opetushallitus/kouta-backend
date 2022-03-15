@@ -2,7 +2,7 @@ package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.{Hakukohde, TilaFilter}
-import fi.oph.kouta.domain.oid.HakukohdeOid
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid}
 import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 
@@ -85,6 +85,53 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     hakukohdeService.put(parsedBody.extract[Hakukohde]) match {
       case oid => Ok("oid" -> oid)
+    }
+  }
+  registerPath( "/hakukohde/copy/{hakuOid}",
+    """    put:
+      |      summary: Tallenna kopiot hakukohteista ja niihin liitetyistä toteutuksista
+      |      operationId: Tallenna kopiot hakukohteista
+      |      description: Luodaan kopiot pyynnössä listatuista hakukohteista sekä niihin liitetyistä toteutuksista.
+      |        Hakukohteesta tehtävä kopio liitetään hakuun, jonka oid annetaan parametrina.
+      |        Kopiot tallennetaan luonnostilaisina.
+      |        Rajapinta palauttaa tallennettujen hakukohteiden ja toteutusten yksilöivät oidit.
+      |      tags:
+      |        - Hakukohde
+      |      parameters:
+      |        - in: path
+      |          name: hakuOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Sen haun oid, johon kopioitavat hakukohteen liitetään
+      |          example: 1.2.246.562.29.00000000000000011030
+      |      requestBody:
+      |        description: Lista kopioitavien hakukohteiden oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |              example: ["1.2.246.562.20.00000000000000011083", "1.2.246.562.20.00000000000000011084"]
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |""".stripMargin)
+  put("/copy/:hakuOid") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    val hakukohdeCopyResults = hakukohdeService.copy(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
+    if (hakukohdeCopyResults.isEmpty) {
+      NotFound("error" -> "No hakukohde was copied")
+    } else {
+      Ok(hakukohdeCopyResults)
     }
   }
 

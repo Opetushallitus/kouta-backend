@@ -1,11 +1,13 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestData.{Liite1, Liite2}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
+import fi.oph.kouta.util.UnitSpec
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.{TestData, TestOids}
@@ -13,7 +15,7 @@ import fi.oph.kouta.{TestData, TestOids}
 import java.time.LocalDateTime
 import java.util.UUID
 
-class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with LokalisointiServiceMock {
+class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with LokalisointiServiceMock {
 
   override val roleEntities = Seq(Role.Hakukohde)
 
@@ -322,7 +324,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   it should "fail to update hakukohde if the valintaperuste does not exist" in {
     val oid = put(hakukohde(toteutusOid, hakuOid))
-    val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
+    val savedHakukohde = getIds(hakukohde(oid, toteutusOid, hakuOid))
     val lastModified = get(oid, savedHakukohde)
     val valintaperusteId = UUID.randomUUID()
     val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
@@ -358,7 +360,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
 
   it should "fail to update hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
     val oid = put(hakukohde(toteutusOid, hakuOid))
-    val savedHakukohde = getIds(hakukohde(toteutusOid, hakuOid).withOid(HakukohdeOid(oid)))
+    val savedHakukohde = getIds(hakukohde(oid, toteutusOid, hakuOid))
     val lastModified = get(oid, savedHakukohde)
     val valintaperusteId = put(TestData.YoValintaperuste)
     val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
@@ -535,11 +537,18 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
       valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
     )
     val oid = put(hakukohdeWithValintakokeet)
-    val lastModified = get(oid, getIds(hakukohdeWithValintakokeet.copy(oid = Some(HakukohdeOid(oid)))))
+    val lastModified = get(oid, getIds(
+      hakukohdeWithValintakokeet.copy(
+        oid = Some(HakukohdeOid(oid)),
+        liitteet = List(Liite1, Liite2),
+        valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
+      )))
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
     val updateValintakoe = getIds(tallennettuHakukohde(oid)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
     update(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
-    get(oid, getIds(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe))))
+    get(oid, getIds(tallennettuHakukohde(oid).copy(
+      valintakokeet = Seq(newValintakoe, updateValintakoe),
+      liitteet = List(Liite1, Liite2))))
   }
 
   it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {
@@ -617,5 +626,47 @@ class HakukohdeSpec extends KoutaIntegrationSpec with AccessControlSpec with Eve
     lastModified = get(arkistoituId, arkistoitu)
     update(HakukohdePath, arkistoitu.copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Tallennettu))))
     update(HakukohdePath, arkistoitu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Poistettu))))
+  }
+
+  "Copy hakukohteet" should "make copies of two julkaistu hakukohde and related toteutus and store them as tallennettu" in {
+    val julkaistuHakukohde1Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val julkaistuHakukohde2Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
+    val copyResponse = put(hakukohteet, hakuOid)
+    val hakukohde1CopyOid = copyResponse.head.created.hakukohdeOid
+    val toteutus1CopyOid = copyResponse.head.created.toteutusOid
+
+    val tallennettuHakukohdeCopy = tallennettuHakukohde(copyResponse.head.oid.toString).copy(
+      oid = hakukohde1CopyOid,
+      toteutusOid = toteutus1CopyOid.get,
+      hakuOid = HakuOid(hakuOid),
+      tila = Tallennettu,
+      liitteet = List(Liite2, Liite1))
+    val tallennettuToteutusCopy = toteutus(koulutusOid).copy(
+      oid = toteutus1CopyOid,
+      tila = Tallennettu,
+      tarjoajat = List(AmmOid))
+
+    get(hakukohde1CopyOid.get.toString, getIds(tallennettuHakukohdeCopy))
+    get(toteutus1CopyOid.get.toString, tallennettuToteutusCopy)
+
+    val hakukohde2CopyOid = copyResponse.last.created.hakukohdeOid.get.toString
+
+    val toteutus2CopyOid = copyResponse.last.created.toteutusOid.get.toString
+    get(hakukohde2CopyOid, getIds(tallennettuHakukohdeCopy.copy(oid = Some(HakukohdeOid(hakukohde2CopyOid)), toteutusOid = ToteutusOid(toteutus2CopyOid))))
+    get(toteutus2CopyOid, tallennettuToteutusCopy.copy(oid = Some(ToteutusOid(toteutus2CopyOid))))
+  }
+
+  it should "fail to copy non-existing hakukohde" in {
+    val julkaistuHakukohde1Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val unknownHakukohdeOid = julkaistuHakukohde1Oid + 1
+    val hakukohteet = List(julkaistuHakukohde1Oid, unknownHakukohdeOid)
+    val copyResponse = put(hakukohteet, hakuOid)
+
+    copyResponse.length shouldBe 2
+    copyResponse.head.status shouldBe "success"
+    copyResponse.last.status shouldBe "error"
+    copyResponse.last.created.hakukohdeOid shouldBe empty
+    copyResponse.last.created.toteutusOid shouldBe empty
   }
 }

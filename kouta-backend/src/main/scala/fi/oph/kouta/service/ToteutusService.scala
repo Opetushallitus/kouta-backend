@@ -23,6 +23,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient, OppijanumerorekisteriClient, KayttooikeusClient)
 
+
+
+case class ToteutusCopyOids(
+                     toteutusOid: Option[ToteutusOid]
+                   )
+
+case class ToteutusCopyResultObject(
+                                      oid: ToteutusOid,
+                                      status: String,
+                                      created: ToteutusCopyOids
+                                    )
+
 class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val s3ImageService: S3ImageService,
                       auditLog: AuditLog,
@@ -116,11 +128,19 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }.oid.get
   }
 
-  def put(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusOid] = {
+  def copy(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusCopyResultObject] = {
     val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
     toteutukset.map(toteutus => {
-      val toteutusCopyAsLuonnos = toteutus.copy(tila = Tallennettu)
-      put(toteutusCopyAsLuonnos)
+      try {
+        val toteutusCopyAsLuonnos = toteutus.copy(tila = Tallennettu)
+        val createdToteutusOid = put(toteutusCopyAsLuonnos)
+        ToteutusCopyResultObject(oid = toteutus.oid.get, status = "success", created = ToteutusCopyOids(Some(createdToteutusOid)))
+      } catch {
+        case error => {
+          logger.error(s"Copying toteutus failed: ${error}")
+          ToteutusCopyResultObject(oid = toteutus.oid.get, status = "error", created = ToteutusCopyOids(None))
+        }
+      }
     })
   }
 
