@@ -679,20 +679,22 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(ToteutusPath, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Toteutusta", "hakukohteita"))))
   }
 
-  "Copy toteutukset" should "make a copy of a julkaistu toteutus and store the it as tallennettu" in {
+  "Copy toteutukset" should "make a copy of a julkaistu toteutus and store it as tallennettu" in {
     val julkaistuToteutusOid = put(toteutus(koulutusOid))
     val toteutukset = List(julkaistuToteutusOid)
-    val copyOids = put(toteutukset)
-    get(copyOids.head, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(copyOids.head)), tila = Tallennettu))
+    val copyResults = put(toteutukset)
+    val copyOid = copyResults.head.created.toteutusOid
+    get(copyOid.get.toString, toteutus(koulutusOid).copy(oid = Some(copyOid.get), tila = Tallennettu))
   }
 
   it should "copy two julkaistu toteutus and store them as tallennettu" in {
     val julkaistuToteutusOid1 = put(toteutus(koulutusOid))
     val julkaistuToteutusOid2 = put(toteutus(koulutusOid))
     val toteutukset = List(julkaistuToteutusOid1, julkaistuToteutusOid2)
-    val copyOids = put(toteutukset)
-    for (oid <- copyOids) {
-      get(oid, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(oid)), tila = Tallennettu))
+    val copyResults = put(toteutukset)
+    for (result <- copyResults) {
+      val copyOid = result.created.toteutusOid.get
+      get(copyOid.toString, toteutus(koulutusOid).copy(oid = Some(copyOid), tila = Tallennettu))
     }
   }
 
