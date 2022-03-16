@@ -47,6 +47,12 @@ class SearchServlet(koulutusService: KoulutusService,
       |          description: Suodata pilkulla erotetuilla tiloilla (julkaistu/tallennettu/arkistoitu/poistettu)
       |          example: Julkaistu
       |        - in: query
+      |          name: julkinen
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Suodata entiteetin näkyvyydellä
+      |        - in: query
       |          name: page
       |          schema:
       |            type: integer
