@@ -13,7 +13,7 @@ class SearchServlet(koulutusService: KoulutusService,
 
   def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
-  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "page", "size", "lng", "order-by", "order")
+  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "hakutapa", "page", "size", "lng", "order-by", "order")
 
   val searchParams =
     """        - in: query
@@ -53,6 +53,15 @@ class SearchServlet(koulutusService: KoulutusService,
       |          required: false
       |          description: Sivunumero
       |          example: 2
+      |        - in: query
+      |          name: hakutapa
+      |          schema:
+      |            type: array
+      |            items:
+      |              type: string
+      |          required: false
+      |          description: Suodata pilkulla erotetuilla hakutapakoodiureilla
+      |          example: hakutapa_03
       |        - in: query
       |          name: size
       |          schema:
