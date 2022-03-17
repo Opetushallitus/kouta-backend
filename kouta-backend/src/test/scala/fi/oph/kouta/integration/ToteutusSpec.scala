@@ -312,6 +312,19 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(untouchedOppilaitosOid, newOppilaitos)))
   }
 
+  it should "remove toteutuksen tarjoajan oppilaitos from koulutuksen tarjoajat when deleting toteutus" in {
+    val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List(ChildOid))
+    val koulutusOid = put(ophKoulutus, ophSession)
+    val newToteutus = toteutus(koulutusOid).copy(tila = Tallennettu, organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
+    val oid = put(newToteutus, session)
+    val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session))
+    val lastModified = get(oid, createdToteutus)
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid)))
+    update(createdToteutus.copy(tila = Poistettu), lastModified)
+    get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List()))
+  }
+
   it should "fail to update if toteutus tyyppi does not match koulutustyyppi of koulutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))

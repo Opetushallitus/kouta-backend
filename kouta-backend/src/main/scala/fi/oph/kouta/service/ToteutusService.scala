@@ -135,7 +135,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         throwValidationErrors(validateStateChange("toteutukselle", oldToteutus.tila, toteutus.tila))
         validateKoulutusIntegrity(t)
         validateHakukohdeIntegrityIfDeletingToteutus(oldToteutus.tila, toteutus.tila, toteutus.oid.get)
-        val deletedTarjoajat =  oldToteutus.tarjoajat diff toteutus.tarjoajat
+        val deletedTarjoajat =
+          if (toteutus.tila == Poistettu) toteutus.tarjoajat else oldToteutus.tarjoajat diff toteutus.tarjoajat
         doUpdate(t, notModifiedSince, oldToteutus,
           koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), getDeletableTarjoajienOppilaitokset(toteutus, deletedTarjoajat)))
       }

@@ -318,7 +318,7 @@ class KoulutusService(
     filterToteutukset(KoutaIndexClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption)
   }
 
-  def getUpdateTarjoajatActions(koulutusOid: KoulutusOid, newTarjoajaOids: Set[OrganisaatioOid],
+  def getUpdateTarjoajatActions(koulutusOid: KoulutusOid, updatedTarjoajaOidsInToteutus: Set[OrganisaatioOid],
                                 tarjoajaOidsSafeToDelete: Set[OrganisaatioOid])
                                (implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
     val koulutusWithLastModified = get(koulutusOid, TilaFilter.onlyOlemassaolevat())
@@ -329,8 +329,8 @@ class KoulutusService(
 
     val Some((koulutus, lastModified)) = koulutusWithLastModified
 
-    val updatedTarjoajatForKoulutus = (koulutus.tarjoajat.toSet diff tarjoajaOidsSafeToDelete) ++ newTarjoajaOids
-    val newTarjoajatForKoulutus = newTarjoajaOids diff koulutus.tarjoajat.toSet
+    val newTarjoajatForKoulutus = updatedTarjoajaOidsInToteutus diff koulutus.tarjoajat.toSet
+    val updatedTarjoajatForKoulutus = (koulutus.tarjoajat.toSet diff tarjoajaOidsSafeToDelete) ++ newTarjoajatForKoulutus
     val tarjoajatDeletedFromKoulutus = koulutus.tarjoajat.toSet diff updatedTarjoajatForKoulutus
 
     if (newTarjoajatForKoulutus.isEmpty && tarjoajaOidsSafeToDelete.isEmpty) {
