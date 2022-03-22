@@ -318,9 +318,9 @@ class KoulutusService(
     filterToteutukset(KoutaIndexClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption)
   }
 
-  def getAddTarjoajatActions(koulutusOid: KoulutusOid, tarjoajaOids: Set[OrganisaatioOid])(implicit
-      authenticated: Authenticated
-  ): DBIO[(Koulutus, Option[Koulutus])] = {
+  def getUpdateTarjoajatActions(koulutusOid: KoulutusOid, updatedTarjoajaOidsInToteutus: Set[OrganisaatioOid],
+                                tarjoajaOidsSafeToDelete: Set[OrganisaatioOid])
+                               (implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
     val koulutusWithLastModified = get(koulutusOid, TilaFilter.onlyOlemassaolevat())
 
     if (koulutusWithLastModified.isEmpty) {
@@ -329,16 +329,18 @@ class KoulutusService(
 
     val Some((koulutus, lastModified)) = koulutusWithLastModified
 
-    val newTarjoajat = tarjoajaOids diff koulutus.tarjoajat.toSet
+    val newTarjoajatForKoulutus = updatedTarjoajaOidsInToteutus diff koulutus.tarjoajat.toSet
+    val updatedTarjoajatForKoulutus = (koulutus.tarjoajat.toSet diff tarjoajaOidsSafeToDelete) ++ newTarjoajatForKoulutus
+    val tarjoajatDeletedFromKoulutus = koulutus.tarjoajat.toSet diff updatedTarjoajatForKoulutus
 
-    if (newTarjoajat.isEmpty) {
+    if (newTarjoajatForKoulutus.isEmpty && tarjoajaOidsSafeToDelete.isEmpty) {
       DBIO.successful((koulutus, None))
     } else {
-      val newKoulutus: Koulutus = koulutus.copy(tarjoajat = koulutus.tarjoajat ++ newTarjoajat)
+      val newKoulutus: Koulutus = koulutus.copy(tarjoajat = updatedTarjoajatForKoulutus.toList)
       authorizeUpdate(
         koulutusWithLastModified,
         newKoulutus,
-        List(authorizedForTarjoajaOids(tarjoajaOids, roleEntity.readRoles).get)
+        List(authorizedForTarjoajaOids(newTarjoajatForKoulutus ++ tarjoajatDeletedFromKoulutus, roleEntity.readRoles).get)
       ) { (_, k) =>
         withValidation(newKoulutus, Some(k)) {
           DBIO.successful(koulutus) zip getUpdateTarjoajatActions(_, lastModified)

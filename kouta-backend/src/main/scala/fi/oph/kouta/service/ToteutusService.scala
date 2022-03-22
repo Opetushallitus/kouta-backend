@@ -7,7 +7,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
@@ -123,7 +123,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     authorizePut(enrichedToteutus) { t =>
       withValidation(t, None) { t =>
         validateKoulutusIntegrity(t)
-        doPut(t, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
+        doPut(t, koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), Set()))
       }
     }.oid.get
   }
@@ -155,7 +155,10 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         throwValidationErrors(validateStateChange("toteutukselle", oldToteutus.tila, toteutus.tila))
         validateKoulutusIntegrity(t)
         validateHakukohdeIntegrityIfDeletingToteutus(oldToteutus.tila, toteutus.tila, toteutus.oid.get)
-        doUpdate(t, notModifiedSince, oldToteutus, koulutusService.getAddTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus)))
+        val deletedTarjoajat =
+          if (toteutus.tila == Poistettu) toteutus.tarjoajat else oldToteutus.tarjoajat diff toteutus.tarjoajat
+        doUpdate(t, notModifiedSince, oldToteutus,
+          koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), getDeletableTarjoajienOppilaitokset(toteutus, deletedTarjoajat)))
       }
     }
   }.nonEmpty
@@ -230,6 +233,18 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
       }
 
     filterHakukohteet(KoutaIndexClient.searchToteutukset(Seq(toteutusOid), params).result.headOption)
+  }
+
+  private def getDeletableTarjoajienOppilaitokset(toteutus: Toteutus, tarjoajatDeletedFromToteutus: Seq[OrganisaatioOid]): Set[OrganisaatioOid] = {
+    val remainingTarjoajatOfToteutus = toteutus.tarjoajat diff tarjoajatDeletedFromToteutus
+    val currentToteutustenTarjoajatOfKoulutus = ToteutusDAO.getToteutustenTarjoajatByKoulutusOid(toteutus.koulutusOid)
+    val newToteutustenTarjojatOfKoulutus =
+      if (remainingTarjoajatOfToteutus.nonEmpty) currentToteutustenTarjoajatOfKoulutus updated (toteutus.oid.get, remainingTarjoajatOfToteutus)
+      else currentToteutustenTarjoajatOfKoulutus - toteutus.oid.get
+    val newOppilaitoksetOfKoulutus =
+      newToteutustenTarjojatOfKoulutus.values.flatten.toSet.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten
+    val oppilaitoksetDeletedFromToteutus = tarjoajatDeletedFromToteutus.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten.toSet
+    oppilaitoksetDeletedFromToteutus diff newOppilaitoksetOfKoulutus
   }
 
   private def getTarjoajienOppilaitokset(toteutus:Toteutus): Set[OrganisaatioOid] =
