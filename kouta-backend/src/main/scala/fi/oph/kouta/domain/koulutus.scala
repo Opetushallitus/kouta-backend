@@ -221,9 +221,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
         )),
         assertNotOptional(metadata, "metadata"),
-        validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-        validateIfTrue(!RootOrganisaatioOid.equals(organisaatioOid),
-          assertNotEmpty(tarjoajat, "tarjoajat"))
+        validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva"))
       ))
     )
   }
