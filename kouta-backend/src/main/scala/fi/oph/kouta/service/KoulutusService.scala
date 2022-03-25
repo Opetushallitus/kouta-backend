@@ -333,7 +333,7 @@ class KoulutusService(
     val updatedTarjoajatForKoulutus = (koulutus.tarjoajat.toSet diff tarjoajaOidsSafeToDelete) ++ newTarjoajatForKoulutus
     val tarjoajatDeletedFromKoulutus = koulutus.tarjoajat.toSet diff updatedTarjoajatForKoulutus
 
-    if (newTarjoajatForKoulutus.isEmpty && tarjoajaOidsSafeToDelete.isEmpty) {
+    if (newTarjoajatForKoulutus.isEmpty && tarjoajatDeletedFromKoulutus.isEmpty) {
       DBIO.successful((koulutus, None))
     } else {
       val newKoulutus: Koulutus = koulutus.copy(tarjoajat = updatedTarjoajatForKoulutus.toList)
