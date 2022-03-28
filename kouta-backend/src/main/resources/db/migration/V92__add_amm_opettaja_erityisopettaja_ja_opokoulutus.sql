@@ -1,0 +1,1 @@
+alter type koulutustyyppi add value 'ammatillinen_ope_erityisope_ja_opokoulutus';

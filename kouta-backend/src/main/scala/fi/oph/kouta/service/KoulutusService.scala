@@ -66,6 +66,10 @@ class KoulutusService(
           case kkMetadata: KorkeakoulutusKoulutusMetadata => kkMetadata match {
             case yoMetadata: YliopistoKoulutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             case amkMetadata: AmmattikorkeakouluKoulutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            case ammOpeErityisopeOpoMetadata: AmmOpeErityisopeJaOpoKoulutusMetadata => Some(ammOpeErityisopeOpoMetadata.copy(
+              isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+              opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60"),
+              koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01")))
           }
           case ammMetadata: AmmatillinenKoulutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaKoulutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
