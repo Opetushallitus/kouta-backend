@@ -657,6 +657,16 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata
 
+case class AmmOpeErityisopeJaOpoToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
+                                              kuvaus: Kielistetty = Map(),
+                                              opetus: Option[Opetus] = None,
+                                              asiasanat: List[Keyword] = List(),
+                                              ammattinimikkeet: List[Keyword] = List(),
+                                              yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                              alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
+                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
+                                              isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata
+
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
                                  opetus: Option[Opetus] = None,
