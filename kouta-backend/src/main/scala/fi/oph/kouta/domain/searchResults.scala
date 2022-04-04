@@ -1,8 +1,9 @@
 package fi.oph.kouta.domain
 
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid._
+
+import java.time.LocalDateTime
 
 package object searchResults {
 
@@ -492,6 +493,8 @@ case class HakuSearchItem(oid: HakuOid,
                           muokkaaja: Muokkaaja,
                           modified: Modified,
                           tila: Julkaisutila,
+                          hakutapa: Hakutapa,
+                          koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem,
                           hakukohdeCount: Int = 0) extends HakuItemCommon
 
 case class HakuSearchItemFromIndex(oid: HakuOid,
@@ -500,6 +503,8 @@ case class HakuSearchItemFromIndex(oid: HakuOid,
                                    muokkaaja: Muokkaaja,
                                    modified: Modified,
                                    tila: Julkaisutila,
+                                   hakutapa: Hakutapa,
+                                   koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem,
                                    hakukohteet: Seq[HakuSearchItemHakukohde] = Seq()) extends HakuItemCommon
 
 trait HakuItemCommon {
@@ -549,3 +554,21 @@ case class Paikkakunta(koodiUri: String,
 
 case class Muokkaaja(nimi: String,
                      oid: UserOid)
+
+case class Hakutapa(koodiUri: String,
+                    nimi: Kielistetty)
+
+case class KoulutuksenAlkamiskausiSearchItem(
+  alkamiskausityyppi: Option[Alkamiskausityyppi] = None,
+  henkilokohtaisenSuunnitelmanLisatiedot: Kielistetty = Map(),
+  koulutuksenAlkamiskausi: Option[KoulutuksenAlkamisKausiObject] = None,
+  koulutuksenAlkamispaivamaara: Option[LocalDateTime] = None,
+  koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
+  formatoituKoulutuksenalkamispaivamaara: Option[Kielistetty] = None,
+  formatoituKoulutuksenpaattymispaivamaara: Option[Kielistetty] = None,
+  koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
+  koulutuksenAlkamisvuosi: Option[String] = None
+)
+
+case class KoulutuksenAlkamisKausiObject(koodiUri: String,
+                                         nimi: Kielistetty)
