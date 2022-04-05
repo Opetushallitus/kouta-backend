@@ -364,6 +364,7 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
                               ) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[TietoaOpiskelusta](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
+    validateIfJulkaistu(tila, assertNotOptional(wwwSivu, s"$path.wwwSivu")),
     validateIfDefined[NimettyLinkki](wwwSivu, _.validate(tila, kielivalinta, s"$path.wwwSivu")),
     validateIfDefined[Yhteystieto](hakijapalveluidenYhteystiedot, _.validate(tila, kielivalinta, s"$path.hakijapalveluidenYhteystiedot")),
     validateIfDefined[Int](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
@@ -395,7 +396,8 @@ case class OppilaitoksenOsaMetadata(wwwSivu: Option[NimettyLinkki] = None,
     validateIfDefined[Int](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kampus, s"$path.kampus"),
-      validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely")
+      validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"),
+      assertNotOptional(wwwSivu, s"$path.wwwSivu"),
     ))
   )
 }

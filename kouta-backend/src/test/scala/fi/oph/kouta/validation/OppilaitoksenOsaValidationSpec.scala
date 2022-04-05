@@ -48,14 +48,20 @@ class OppilaitoksenOsaMetadataValidationSpec extends SubEntityValidationSpec[Opp
     failsValidation(Tallennettu, metadata, "wwwSivu.url.sv", invalidUrl("urli"))
   }
 
+  it should "fail if wwwSivu not present in a julkaistu oppilaitoksenOsa" in {
+    val metadata = max.copy(wwwSivu = None)
+    passesValidation(Tallennettu, metadata)
+    failsValidation(Julkaistu, metadata, "wwwSivu", missingMsg)
+  }
+
   it should "fail if esittely is present only for some languages in a julkaistu oppilaitoksenOsa" in {
-    val metadata = min.copy(esittely = Map(Fi -> "esittely"))
+    val metadata = max.copy(esittely = Map(Fi -> "esittely"))
     passesValidation(Tallennettu, metadata)
     failsValidation(Julkaistu, metadata, "esittely", invalidKielistetty(Seq(Sv)))
   }
 
   it should "fail if kampus is present only for some languages in a julkaistu oppilaitoksenOsa" in {
-    val metadata = min.copy(kampus = Map(Fi -> "kampus"))
+    val metadata = max.copy(kampus = Map(Fi -> "kampus"))
     passesValidation(Tallennettu, metadata)
     failsValidation(Julkaistu, metadata, "kampus", invalidKielistetty(Seq(Sv)))
   }
