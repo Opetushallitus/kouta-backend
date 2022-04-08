@@ -182,7 +182,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AmmatillinenMuuKoulutusMetadata(
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
-      opintojenLaajuusnumero = Some(10),
+      opintojenLaajuusNumero = Some(10),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
       isMuokkaajaOphVirkailija = Some(false),
@@ -313,7 +313,7 @@ object TestData {
     metadata = Some(AikuistenPerusopetusKoulutusMetadata(
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
-      opintojenLaajuusnumero = Some(10),
+      opintojenLaajuusNumero = Some(10),
       linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
       isMuokkaajaOphVirkailija = Some(false)
     )),

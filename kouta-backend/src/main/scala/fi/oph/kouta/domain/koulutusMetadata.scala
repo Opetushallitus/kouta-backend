@@ -349,15 +349,15 @@ case class AmmatillinenMuuKoulutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
                                            kuvaus: Kielistetty = Map(),
                                            koulutusalaKoodiUrit: Seq[String] = Seq(),
                                            opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                           opintojenLaajuusnumero: Option[Double] = None,
+                                           opintojenLaajuusNumero: Option[Double] = None,
                                            isMuokkaajaOphVirkailija: Option[Boolean] = None
                                           ) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri")),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusnumero, s"$path.opintojenLaajuusnumero")),
-    validateIfDefined[Double](opintojenLaajuusnumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
   )
@@ -474,7 +474,7 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 lisatiedot: Seq[Lisatieto] = Seq(),
                                                 linkkiEPerusteisiin: Kielistetty = Map(),
                                                 opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                                opintojenLaajuusnumero: Option[Double] = None,
+                                                opintojenLaajuusNumero: Option[Double] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends KoulutusMetadata {
 
@@ -485,8 +485,8 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
     // opintojenLaajuusYksikkoKoodiUri ja opintojenLaajuusnumero ovat pakollisia kenttiä Aikuisten perusopetukselle
     validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri")),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusnumero, s"$path.opintojenLaajuusnumero")),
-    validateIfDefined[Double](opintojenLaajuusnumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
     // Kuvaus on pakollinen kenttä Aikuisten perusopetukselle
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),
