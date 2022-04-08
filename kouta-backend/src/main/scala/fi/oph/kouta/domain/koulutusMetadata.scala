@@ -151,10 +151,14 @@ package object koulutusMetadata {
       |                type: string
       |                example:
       |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
-      |            opintojenLaajuusKoodiUri:
+      |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
-      |              example: opintojenlaajuus_40#1
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusnumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val LukioKoulutusMetadataModel: String =
@@ -268,10 +272,14 @@ package object koulutusMetadata {
       |              type: string
       |              description: Linkki koulutuksen eperusteisiin
       |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
-      |            opintojenLaajuusKoodiUri:
+      |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
-      |              example: opintojenlaajuus_38#1
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusnumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
@@ -340,13 +348,16 @@ case class AmmatillinenMuuKoulutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
                                            lisatiedot: Seq[Lisatieto] = Seq(),
                                            kuvaus: Kielistetty = Map(),
                                            koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                           opintojenLaajuusKoodiUri: Option[String] = None,
+                                           opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                           opintojenLaajuusnumero: Option[Double] = None,
                                            isMuokkaajaOphVirkailija: Option[Boolean] = None
                                           ) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
-    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
-    validateIfDefined[String](opintojenLaajuusKoodiUri, assertMatch(_, OpintojenLaajuusKoodiPattern, s"$path.opintojenLaajuusKoodiUri")),
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri")),
+    validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusnumero, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusnumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"))
   )
@@ -462,7 +473,8 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 kuvaus: Kielistetty = Map(),
                                                 lisatiedot: Seq[Lisatieto] = Seq(),
                                                 linkkiEPerusteisiin: Kielistetty = Map(),
-                                                opintojenLaajuusKoodiUri: Option[String] = None,
+                                                opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                                opintojenLaajuusnumero: Option[Double] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends KoulutusMetadata {
 
@@ -470,8 +482,11 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
     super.validate(tila, kielivalinta, path),
     // Aikuisten perusopetuksella ei ole lisätiedot-kenttää lomakkeessa
     assertEmpty(lisatiedot, path),
-    // OpintojenLaajuusKoodiUri on pakollinen kenttä Aikuisten perusopetukselle
-    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusKoodiUri, s"$path.opintojenLaajuusKoodiUri")),
+    // opintojenLaajuusYksikkoKoodiUri ja opintojenLaajuusnumero ovat pakollisia kenttiä Aikuisten perusopetukselle
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri")),
+    validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
+    validateIfJulkaistu(tila, assertNotOptional(opintojenLaajuusnumero, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusnumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
     // Kuvaus on pakollinen kenttä Aikuisten perusopetukselle
     validateIfJulkaistu(tila, validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")),
     validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")),

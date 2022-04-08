@@ -29,6 +29,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     super.beforeAll()
     mockKoodistoResponse("lukiopainotukset", List("lukiopainotukset_1"))
     mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", List("lukiolinjaterityinenkoulutustehtava_1"))
+    mockKoodiUriResponse("koulutus_201101", 12)
     mockLokalisointiResponse("yleiset.opintopistetta")
     mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
     koulutusOid = put(koulutus, ophSession)

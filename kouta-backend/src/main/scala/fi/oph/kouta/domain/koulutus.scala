@@ -214,6 +214,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
       validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
+      validateIfTrue(koulutustyyppi == AikuistenPerusopetus, assertOneAndOnlyOneKoodiUri(koulutuksetKoodiUri, "koulutus_201101", "koulutuksetKoodiUri")),
       validateIfJulkaistu(tila, and(
         assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         validateIfTrue((koulutustyyppi != AmmTutkinnonOsa && koulutustyyppi != AmmMuu), and(

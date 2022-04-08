@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.KoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -22,13 +23,16 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
 
   def koulutusService: KoulutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    val koodistoClient = new KoodistoClient(urlProperties.get)
+
     new KoulutusService(
       SqsInTransactionServiceIgnoringIndexing,
       MockS3ImageService,
       new AuditLog(MockAuditLogger),
       organisaatioService,
       mockOppijanumerorekisteriClient,
-      mockKayttooikeusClient
+      mockKayttooikeusClient,
+      koodistoClient
     )
   }
 

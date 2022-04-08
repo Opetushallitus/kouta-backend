@@ -13,10 +13,18 @@ trait KoodistoServiceMock extends ServiceMocks {
       "kieli": "SV"
     }]}""").mkString(",") + "]"
 
+  def koodiUriResponse(koodiUriWithoutVersion: String, version: Int): String =
+    s"""{"koodiUri": "$koodiUriWithoutVersion", "versio": $version}"""
+
   lazy val DefaultKoodistoResponse = "[]"
 
   def mockKoodistoResponse(koodisto: String, koodiArvot: List[String]): Unit =
     mockGet(getMockPath("koodisto-service.koodisto-koodit", Some(koodisto)), Map.empty, kResponse(koodiArvot))
+
+  def mockKoodiUriResponse(koodiUriWithoutVersion: String, version: Int): Unit = {
+    val path = getMockPath("koodisto-service.latest-koodiuri", Some(koodiUriWithoutVersion))
+    mockGet(path, Map.empty, koodiUriResponse(koodiUriWithoutVersion, version))
+  }
 }
 
 object KoodistoServiceMock extends KoodistoServiceMock

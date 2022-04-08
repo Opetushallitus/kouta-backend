@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
@@ -21,7 +21,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object KoulutusService
-    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
+    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, KoodistoClient)
 
 class KoulutusService(
     sqsInTransactionService: SqsInTransactionService,
@@ -29,7 +29,8 @@ class KoulutusService(
     auditLog: AuditLog,
     val organisaatioService: OrganisaatioService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-    kayttooikeusClient: KayttooikeusClient
+    kayttooikeusClient: KayttooikeusClient,
+    koodistoClient: KoodistoClient,
 ) extends ValidatingService[Koulutus]
     with RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
@@ -86,6 +87,15 @@ class KoulutusService(
     }
   }
 
+  def enrichAndPopulateFixedDefaultValues(koulutus: Koulutus): Koulutus = {
+    val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
+    koulutus.koulutustyyppi match {
+      case AikuistenPerusopetus => {
+        val koulutusKoodiUri = koodistoClient.getKoodiUriWithLatestVersion("koulutus_201101")
+        koulutus.copy(koulutuksetKoodiUri = Seq(koulutusKoodiUri), metadata = enrichedMetadata)}
+      case _ => koulutus.copy(metadata = enrichedMetadata)
+    }
+  }
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
@@ -117,10 +127,9 @@ class KoulutusService(
       AuthorizationRules(roleEntity.createRoles)
     }
 
-    val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
-    val enrichedKoulutus = koulutus.copy(metadata = enrichedMetadata)
+    val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(koulutus)
 
-    authorizePut(enrichedKoulutus, rules) { k =>
+    authorizePut(enrichedKoulutusWithFixedDefaultValues, rules) { k =>
       withValidation(k, None) { k =>
         validateSorakuvausIntegrity(koulutus)
         doPut(k)
@@ -144,9 +153,8 @@ class KoulutusService(
             (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
         }
         rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
-          val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(k)
-          val enrichedKoulutus = k.copy(metadata = enrichedMetadata)
-          withValidation(enrichedKoulutus, Some(oldKoulutus)) {
+          val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
+          withValidation(enrichedKoulutusWithFixedDefaultValues, Some(oldKoulutus)) {
             throwValidationErrors(validateStateChange("koulutukselle", oldKoulutus.tila, newKoulutus.tila))
             validateSorakuvausIntegrity(k)
             validateToteutusIntegrityIfDeletingKoulutus(oldKoulutus.tila, newKoulutus.tila, newKoulutus.oid.get)
