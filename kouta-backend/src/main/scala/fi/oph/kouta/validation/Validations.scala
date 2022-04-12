@@ -23,6 +23,7 @@ object Validations {
   val notNegativeMsg: ErrorMessage = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
   val tooManyKoodiUris: ErrorMessage = ErrorMessage(msg = s"Ainoastaan korkeakoulutuksella voi olla useampi kuin yksi koulutus", id = "tooManyKoodiUris")
   val withoutLukiolinja: ErrorMessage = ErrorMessage(msg = "Lukio-toteutuksella täytyy olla vähintään yleislinja", id = "withoutLukiolinja")
+  val invalidKoulutuskoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua koulutuskoodiuria", id = "invalidKoulutuskoodiuri")
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage = ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage = ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
@@ -90,6 +91,8 @@ object Validations {
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
   def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
     assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))
+  def assertIncludesOnlyValidValues[T](seq: Seq[T], validValues: Seq[T], path: String) : IsValid =
+    assertTrue(seq.forall(x => validValues contains x), path, invalidKoulutuskoodiuri)
 
   def assertValidUrl(url: String, path: String): IsValid = assertTrue(urlValidator.isValid(url), path, invalidUrl(url))
   def assertValidEmail(email: String, path: String): IsValid = assertTrue(emailValidator.isValid(email), path, invalidEmail(email))

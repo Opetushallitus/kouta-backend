@@ -216,11 +216,14 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     _enrichedData: Option[KoulutusEnrichedData] = None)
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
+  val ammOpeErityisopeJaOpoKoulutusKoodiUrit = Seq("koulutus_000001", "koulutus_000002", "koulutus_000003")
+
   override def validate(): IsValid = {
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
       assertValid(organisaatioOid, "organisaatioOid"),
       validateIfNonEmpty[String](koulutuksetKoodiUri, "koulutuksetKoodiUri", assertMatch(_, KoulutusKoodiPattern, _)),
+      validateIfTrue(koulutustyyppi == AmmOpeErityisopeJaOpo, assertIncludesOnlyValidValues(koulutuksetKoodiUri.map(koodiuri => koodiuri.replaceAll("#[0-9]+", "")), ammOpeErityisopeJaOpoKoulutusKoodiUrit, "koulutuksetKoodiUri")),
       validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
