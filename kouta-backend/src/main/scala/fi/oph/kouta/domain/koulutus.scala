@@ -25,11 +25,26 @@ package object koulutus {
       |          description: Onko koulutus tutkintoon johtavaa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'tuva' (tutkintokoulutukseen valmentava koulutus), 'telma' (työhön ja itsenäiseen elämään valmentava koulutus)"
+      |          description: "Koulutuksen tyyppi. Sallitut arvot:
+      |            'amm' (ammatillinen),
+      |            'yo' (yliopisto),
+      |            'lk' (lukio),
+      |            'amk' (ammattikorkea),
+      |            'amm-ope-erityisope-ja-opo' (Ammatillinen opettaja-, erityisopettaja ja opinto-ohjaajakoulutus)
+      |            'amm-tutkinnon-osa',
+      |            'amm-osaamisala',
+      |            'amm-muu',
+      |            'tuva' (tutkintokoulutukseen valmentava koulutus),
+      |            'telma' (työhön ja itsenäiseen elämään valmentava koulutus),
+      |            'vapaa-sivistystyo-opistovuosi',
+      |            'vapaa-sivistystyo-muu',
+      |            'aikuisten-perusopetus',
+      |            'muu'"
       |          enum:
       |            - amm
       |            - yo
       |            - amk
+      |            - amm-ope-erityisope-ja-opo
       |            - lk
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
