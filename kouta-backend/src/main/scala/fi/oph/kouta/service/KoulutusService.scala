@@ -318,8 +318,8 @@ class KoulutusService(
     filterToteutukset(KoutaIndexClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption)
   }
 
-  def getUpdateTarjoajatActions(koulutusOid: KoulutusOid, updatedTarjoajaOidsInToteutus: Set[OrganisaatioOid],
-                                tarjoajaOidsSafeToDelete: Set[OrganisaatioOid])
+  def getUpdateTarjoajatActions(koulutusOid: KoulutusOid, newTarjoajatInToteutus: Set[OrganisaatioOid],
+                                tarjoajatSafeToDelete: Set[OrganisaatioOid])
                                (implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
     val koulutusWithLastModified = get(koulutusOid, TilaFilter.onlyOlemassaolevat())
 
@@ -329,18 +329,18 @@ class KoulutusService(
 
     val Some((koulutus, lastModified)) = koulutusWithLastModified
 
-    val newTarjoajatForKoulutus = updatedTarjoajaOidsInToteutus diff koulutus.tarjoajat.toSet
-    val updatedTarjoajatForKoulutus = (koulutus.tarjoajat.toSet diff tarjoajaOidsSafeToDelete) ++ newTarjoajatForKoulutus
-    val tarjoajatDeletedFromKoulutus = koulutus.tarjoajat.toSet diff updatedTarjoajatForKoulutus
+    val tarjoajatAddedToKoulutus = newTarjoajatInToteutus diff koulutus.tarjoajat.toSet
+    val newTarjoajatForKoulutus = (koulutus.tarjoajat.toSet diff tarjoajatSafeToDelete) ++ tarjoajatAddedToKoulutus
+    val tarjoajatRemovedFromKoulutus = koulutus.tarjoajat.toSet diff newTarjoajatForKoulutus
 
-    if (newTarjoajatForKoulutus.isEmpty && tarjoajatDeletedFromKoulutus.isEmpty) {
+    if (tarjoajatAddedToKoulutus.isEmpty && tarjoajatRemovedFromKoulutus.isEmpty) {
       DBIO.successful((koulutus, None))
     } else {
-      val newKoulutus: Koulutus = koulutus.copy(tarjoajat = updatedTarjoajatForKoulutus.toList)
+      val newKoulutus: Koulutus = koulutus.copy(tarjoajat = newTarjoajatForKoulutus.toList)
       authorizeUpdate(
         koulutusWithLastModified,
         newKoulutus,
-        List(authorizedForTarjoajaOids(newTarjoajatForKoulutus ++ tarjoajatDeletedFromKoulutus, roleEntity.readRoles).get)
+        List(authorizedForTarjoajaOids(tarjoajatAddedToKoulutus ++ tarjoajatRemovedFromKoulutus, roleEntity.readRoles).get)
       ) { (_, k) =>
         withValidation(newKoulutus, Some(k)) {
           DBIO.successful(koulutus) zip getUpdateTarjoajatActions(_, lastModified)
