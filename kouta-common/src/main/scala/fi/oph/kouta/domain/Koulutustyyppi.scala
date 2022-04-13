@@ -121,4 +121,4 @@ case object AmmTutkinnonOsa             extends Koulutustyyppi { val name = "amm
 case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm-osaamisala"                }
 case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
 case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }
-case object AmmOpeErityisopeJaOpo       extends Koulutustyyppi { val name = "amm-ope-erityisope-ja-opo" }
+case object AmmOpeErityisopeJaOpo       extends Koulutustyyppi { val name = "amm-ope-erityisope-ja-opo"     }
