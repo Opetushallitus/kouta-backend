@@ -154,6 +154,16 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     get(oid, oppilaitoksenOsaWithImage.copy(oid = OrganisaatioOid(oid)))
   }
 
+  it should "fail validation if wwwPage undefined for published oppilaitoksen osa" in {
+    val osaWithoutWwwPage = oppilaitoksenOsa.copy(metadata = Some(oppilaitoksenOsa.metadata.get.copy(wwwSivu = None)))
+    put(OppilaitoksenOsaPath, bytes(osaWithoutWwwPage), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal (validationErrorBody(missingMsg, "metadata.wwwSivu"))
+    }
+  }
+
   "Update oppilaitoksen osa" should "update oppilaitoksen osa" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
