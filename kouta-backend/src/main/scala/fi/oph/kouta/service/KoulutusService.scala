@@ -411,7 +411,10 @@ class KoulutusService(
   ): KoulutustyyppiToOppilaitostyyppiResult = {
     val koulutustyyppi2oppilaitostyyppi: Seq[KoulutustyyppiToOppilaitostyypit] =
       oppilaitostyyppi2koulutustyyppi.foldLeft(Map[Koulutustyyppi, Seq[String]]().withDefaultValue(Seq())) {
-        case (m, (a, bs)) => bs.foldLeft(m)((map, b) => map.updated(b, m(b) :+ a))
+        case (initialMap, (oppilaitostyyppi, koulutustyypit)) =>
+          koulutustyypit.foldLeft(initialMap)(
+            (subMap, koulutustyyppi) =>
+              subMap.updated(koulutustyyppi, initialMap(koulutustyyppi) :+ oppilaitostyyppi))
       }.map(entry => KoulutustyyppiToOppilaitostyypit(entry._1, entry._2)).toSeq
 
     KoulutustyyppiToOppilaitostyyppiResult(koulutustyyppi2oppilaitostyyppi)
