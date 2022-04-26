@@ -1,6 +1,7 @@
 package fi.oph.kouta
 
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
@@ -687,5 +688,9 @@ package object domain {
     def withModified(modified: Modified): T
     def withModified(modified: Instant): T = withModified(TimeUtils.instantToModified(modified))
     def withModified(modified: LocalDateTime): T = withModified(Modified(modified))
+  }
+
+  trait ExternalRequest {
+    val authenticated: Authenticated
   }
 }

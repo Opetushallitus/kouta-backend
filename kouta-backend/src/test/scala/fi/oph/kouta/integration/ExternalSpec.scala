@@ -1,94 +1,75 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
-
 import fi.oph.kouta.TestOids
-import fi.oph.kouta.TestOids.OphOid
-import fi.oph.kouta.domain.Tallennettu
-import fi.oph.kouta.integration.fixture.{ExternalFixture, HakuFixture}
-import fi.oph.kouta.security.Role.Indexer
+import fi.oph.kouta.TestOids.{OphOid, TestUserOid}
+import fi.oph.kouta.domain.oid.KoulutusOid
+import fi.oph.kouta.domain.{ExternalKoulutusRequest, ExternalToteutusRequest, Tallennettu}
+import fi.oph.kouta.integration.fixture.ExternalFixture
 import fi.oph.kouta.security.{Authority, Role}
-import fi.oph.kouta.servlet.ExternalHakuRequest
 
-class ExternalSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture with ExternalFixture {
+class ExternalSpec extends ExternalFixture with AccessControlSpec {
 
   var externalSession: UUID = _
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    externalSession = addTestSession(Indexer, OphOid)
+    externalSession = addTestSession(Role.External, OphOid)
   }
 
-  "Create haku from external" should "store haku" in {
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku)
+  "Create koulutus from external" should "store koulutus" in {
+    val request = ExternalKoulutusRequest(authenticated(), yoKoulutus)
     val oid = put(request, externalSession)
-    get(oid, haku(oid))
+    get(oid, yoKoulutus.copy(oid =  Some(KoulutusOid(oid)), muokkaaja = TestUserOid))
   }
 
-  it should "require authentication to be attached to the request" in {
-    put(ExternalHakuPath, haku, externalSession, 400)
-    put(ExternalHakuPath, Map("haku" -> haku), externalSession, 400)
+  it should "require authentication to be attached to the request when creating new entity" in {
+    put(ExternalKoulutusPath, Map("entity" -> yoKoulutus), externalSession, 400)
   }
 
-  it should "validate the haku" in {
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku.copy(hakutapaKoodiUri = Some("virhe")))
-    put(ExternalHakuPath, request, externalSession, 400)
-  }
-
-  it should "store muokkaaja from the session sent from kouta-external" in {
+  it should "store muokkaaja from the session sent from kouta-external when creating new entity" in {
     val userOid = TestOids.randomUserOid
-    val authentication = authenticated(personOid = userOid)
-    val request = ExternalHakuRequest(authentication, haku)
+    val request = ExternalKoulutusRequest(authenticated(personOid = userOid), yoKoulutus)
     val oid = put(request, externalSession)
-    get(oid, haku(oid).copy(muokkaaja = userOid))
+    get(oid, yoKoulutus.copy(oid =  Some(KoulutusOid(oid)),muokkaaja = userOid))
   }
 
-  it should "deny a user with the wrong role" in {
+  it should "deny a user with the wrong role when creating new entity" in {
     val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku)
-    put(ExternalHakuPath, request, defaultSessionId, 403)
+    val request = ExternalKoulutusRequest(authentication, koulutus)
+    put(ExternalKoulutusPath, request, defaultSessionId, 403)
   }
 
-  it should "use the attached session for authentication" in {
+  it should "use the attached session for authentication when creating new entity" in {
     val userOid = TestOids.randomUserOid
-    val authentication = authenticated(personOid = userOid, authorities = Set(Authority(Role.Haku.Read, OphOid)))
-    val request = ExternalHakuRequest(authentication, haku)
-    put(ExternalHakuPath, request, externalSession, 403)
+    val authentication = authenticated(personOid = userOid, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
+    val request = ExternalKoulutusRequest(authentication, koulutus)
+    put(ExternalKoulutusPath, request, externalSession, 403)
   }
 
-  "Update haku from external" should "update haku" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+  /*
+  "Update koulutus from external" should "update koulutus" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
 
     val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
+    val request = ExternalKoulutusRequest(authentication, koulutus(oid, Tallennettu))
 
     update(request, lastModified, externalSession)
     get(oid, haku(oid, Tallennettu))
   }
 
-  it should "require authentication to be attached to the request" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+  it should "require authentication to be attached to the request when updating existing entity" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
 
-    update(ExternalHakuPath, haku(oid), lastModified, externalSession, 400)
-    update(ExternalHakuPath, Map("haku" -> haku(oid)), lastModified, externalSession, 400)
+    update(KoulutusPath, koulutus(oid), lastModified, externalSession, 400)
+    update(KoulutusPath, Map("entity" -> koulutus(oid)), lastModified, externalSession, 400)
   }
 
-  it should "validate the haku" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
 
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu).copy(hakutapaKoodiUri = Some("virhe")))
-
-    update(ExternalHakuPath, request, lastModified, externalSession, 400)
-  }
-
-  it should "store muokkaaja from the session sent from kouta-external" in {
-    val oid = put(haku)
+  it should "store muokkaaja from the session sent from kouta-external when updating existing entity" in {
+    val oid = put(koulutus)
     val lastModified = get(oid, haku(oid))
 
     val userOid = TestOids.randomUserOid
@@ -99,24 +80,25 @@ class ExternalSpec extends KoutaIntegrationSpec with AccessControlSpec with Haku
     get(oid, haku(oid, Tallennettu).copy(muokkaaja = userOid))
   }
 
-  it should "deny a user with the wrong role" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+  it should "deny a user with the wrong role when updating existing entity" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
 
     val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
+    val request = ExternalKoulutusRequest(authentication, koulutus(oid, Tallennettu))
 
-    update(ExternalHakuPath, request, lastModified, defaultSessionId, 403)
+    update(KoulutusPath, request, lastModified, defaultSessionId, 403)
   }
 
-  it should "use the attached session for authentication" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+  it should "use the attached session for authentication when updating existing entity" in {
+    val oid = put(koulutus)
+    val lastModified = get(oid, koulutus(oid))
 
     val userOid = TestOids.randomUserOid
-    val authentication = authenticated(personOid = userOid, authorities = Set(Authority(Role.Haku.Read, OphOid)))
+    val authentication = authenticated(personOid = userOid, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
 
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
-    update(ExternalHakuPath, request, lastModified, externalSession, 403)
+    val request = ExternalKoulutusRequest(authentication, koulutus(oid, Tallennettu))
+    update(KoulutusPath, request, lastModified, externalSession, 403)
   }
+  */
 }

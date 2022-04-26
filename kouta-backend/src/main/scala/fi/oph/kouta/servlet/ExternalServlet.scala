@@ -1,23 +1,199 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.Haku
+import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalKoulutusRequest, ExternalRequest, ExternalToteutusRequest, Haku}
 import fi.oph.kouta.domain.oid.RootOrganisaatioOid
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.service._
 import org.scalatra.Ok
 
-trait ExternalRequest {
-  def authenticated: Authenticated
-}
+class ExternalServlet(koulutusService: KoulutusService, toteutusService: ToteutusService, hakuService: HakuService) extends KoutaServlet {
 
-case class ExternalHakuRequest(authenticated: Authenticated, haku: Haku) extends ExternalRequest
+  def this() = this(KoulutusService, ToteutusService, HakuService)
 
-class ExternalServlet(hakuService: HakuService) extends KoutaServlet {
+  registerPath(
+    "/external/koulutus",
+    """    put:
+      |      summary: Tallenna uusi koulutus
+      |      operationId: Tallenna uusi koulutus
+      |      description: Tallenna uuden koulutuksen tiedot.
+      |        Rajapinta palauttaa koulutukselle generoidun yksilöivän koulutus-oidin.
+      |      tags:
+      |        - External
+      |      requestBody:
+      |        description: Tallennettava koulutus
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                haku:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Koulutus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden koulutuksen yksilöivä oid
+      |                    example: 1.2.246.562.13.00000000000000000009
+      |""".stripMargin
+  )
+  put("/koulutus") {
+    val koulutusRequest = parsedBody.extract[ExternalKoulutusRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
-  def this() = this(HakuService)
+    koulutusService.put(koulutusRequest.koulutus) match {
+      case oid => Ok("oid" -> oid)
+    }
+  }
 
-  val externalRole: Role = Role.Indexer
+  registerPath(
+    "/external/koulutus",
+    """    post:
+      |      summary: Muokkaa olemassa olevaa koulutusta
+      |      operationId: Muokkaa koulutusta
+      |      description: Muokkaa olemassa olevaa koulutusta. Rajapinnalle annetaan koulutuksen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - External
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
+      |      requestBody:
+      |        description: Muokattavan koulutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                haku:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Koulutus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden koulutuksen yksilöivä oid
+      |                    example: 1.2.246.562.13.00000000000000000009
+      |""".stripMargin)
+  post("/koulutus") {
+    val koulutusRequest = parsedBody.extract[ExternalKoulutusRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
+
+    val updated = koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince)
+    Ok("updated" -> updated)
+  }
+
+  registerPath(
+    "/external/toteutus",
+    """    put:
+      |      summary: Tallenna uusi toteutus
+      |      operationId: Tallenna uusi toteutus
+      |      description: Tallenna uuden toteutuksen tiedot.
+      |        Rajapinta palauttaa toteutukselle generoidun yksilöivän toteutus-oidin.
+      |      tags:
+      |        - External
+      |      requestBody:
+      |        description: Tallennettava toteutus
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                haku:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Toteutus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden toteutuksen yksilöivä oid
+      |                    example: 1.2.246.562.17.00000000000000000009
+      |""".stripMargin
+  )
+  put("/toteutus") {
+    val toteutusRequest = parsedBody.extract[ExternalToteutusRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
+
+    toteutusService.put(toteutusRequest.toteutus) match {
+      case oid => Ok("oid" -> oid)
+    }
+  }
+
+  registerPath(
+    "/external/toteutus",
+    """    post:
+      |      summary: Muokkaa olemassa olevaa toteutusta
+      |      operationId: Muokkaa toteutusta
+      |      description: Muokkaa olemassa olevaa toteutusta. Rajapinnalle annetaan toteutuksen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - External
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
+      |      requestBody:
+      |        description: Muokattavan toteutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                haku:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Toteutus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden toteutuksen yksilöivä oid
+      |                    example: 1.2.246.562.17.00000000000000000009
+      |""".stripMargin)
+  post("/toteutus") {
+    val toteutusRequest = parsedBody.extract[ExternalToteutusRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
+
+    val updated = toteutusService.update(toteutusRequest.toteutus, getIfUnmodifiedSince)
+    Ok("updated" -> updated)
+  }
 
   registerPath(
     "/external/haku",
@@ -111,17 +287,13 @@ class ExternalServlet(hakuService: HakuService) extends KoutaServlet {
     Ok("updated" -> updated)
   }
 
-  private def authenticateExternal[R <: ExternalRequest](request: R): Authenticated = {
+  private def authenticateExternal(request: ExternalRequest): Authenticated = {
     val session = authenticate().session
 
-    session.roleMap.get(externalRole) match {
-      case None =>
-        throw RoleAuthorizationFailedException(Seq(externalRole), session.roles)
-      case Some(orgs) =>
-        if (!orgs.contains(RootOrganisaatioOid)) {
-          throw OrganizationAuthorizationFailedException(Seq(RootOrganisaatioOid), orgs)
-        }
-        request.authenticated.copy(id = s"kouta-external-${request.authenticated.id}")
+    val acceptedRoles = Set(Role.External, Role.Paakayttaja)
+    if (session.roles.intersect(acceptedRoles).isEmpty) {
+      throw RoleAuthorizationFailedException(acceptedRoles.toSeq, session.roles)
     }
+    request.authenticated.copy(id = s"kouta-external-${request.authenticated.id}")
   }
 }

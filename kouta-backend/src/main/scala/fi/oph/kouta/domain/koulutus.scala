@@ -2,6 +2,7 @@ package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations.{validateIfTrue, _}
 
@@ -269,3 +270,5 @@ case class KoulutusListItem(oid: KoulutusOid,
                             modified: Modified) extends OidListItem
 
 case class KoulutusEnrichedData(muokkaajanNimi: Option[String] = None)
+
+case class ExternalKoulutusRequest(authenticated: Authenticated, koulutus: Koulutus) extends ExternalRequest
