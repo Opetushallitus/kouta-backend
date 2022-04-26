@@ -443,6 +443,7 @@ trait HakutietoExtractors extends ExtractorBase {
           koulutuksenAlkamiskausi = r.nextStringOption().map(read[KoulutuksenAlkamiskausi]),
           kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
           jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
+          jarjestaaUrheilijanAmmKoulutusta = r.nextBoolean(),
           hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
           hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
           hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
