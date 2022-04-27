@@ -40,7 +40,14 @@ package object valintaperuste {
       |            - yo
       |            - amk
       |            - lk
-      |            - muu
+      |            - amm-tutkinnon-osa
+      |            - amm-osaamisala
+      |            - amm-muu
+      |            - tuva
+      |            - telma
+      |            - vapaa-sivistystyo-opistovuosi
+      |            - vapaa-sivistystyo-muu
+      |            - aikuisten-perusopetus
       |          example: amm
       |        hakutapaKoodiUri:
       |          type: string
@@ -80,11 +87,16 @@ package object valintaperuste {
       |          oneOf:
       |            - $ref: '#/components/schemas/YliopistoValintaperusteMetadata'
       |            - $ref: '#/components/schemas/LukioValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaValintaperusteMetadata'
+      |            - $ref: '#/components/schemes/AmmatillinenMuuValintaperusteMetadataModel'
       |            - $ref: '#/components/schemas/TutkintokoulutukseenValmentavaValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/TelmaValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/VapaaSivistystyoOpistovuosiValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/VapaaSivistystyoMuuValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/AikuistenPerusopetusValintaperusteMetadata'
       |            - $ref: '#/components/schemas/MuuValintaperusteMetadata'
       |          example:
       |            tyyppi: amm

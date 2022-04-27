@@ -5,7 +5,7 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
-import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.mocks.{KoodistoServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
@@ -17,11 +17,16 @@ import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 import scala.util.Success
 
-class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture with UploadFixture {
+class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture with UploadFixture with KoodistoServiceMock{
 
   override val roleEntities = Seq(Role.Koulutus)
 
   val ophKoulutus: Koulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    mockKoodiUriResponse("koulutus_201101", 12)
+  }
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
@@ -451,6 +456,22 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
+  it should "create, get and update muu ammatillinen koulutus" in {
+    val muuAmmKoulutus = TestData.AmmMuuKoulutus.copy(tila = Tallennettu)
+    val oid = put(muuAmmKoulutus)
+    val lastModified = get(oid, muuAmmKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    update(muuAmmKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, muuAmmKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "create, get and update aikuisten perusopetus -koulutus" in {
+    val aiPeKoulutus = TestData.AikuistenPerusopetusKoulutus.copy(tila = Tallennettu)
+    val oid = put(aiPeKoulutus)
+    val lastModified = get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+    update(aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+  }
+
   it should "fail to update koulutus if sorakuvaus doesn't exist" in {
     val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
@@ -535,5 +556,13 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "fail deletion when all related toteutukset not deleted" in {
     val (koulutusOid: String, lastModified: String) = createKoulutusWithToteutukset(false)
     update(KoulutusPath, koulutus(koulutusOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Koulutusta", "toteutuksia"))))
+  }
+
+  it should "return koulutustyyppi2opistotyyppi mappings" in {
+    get(s"$KoulutusPath/listOppilaitostyypitByKoulutustyypit", headers = Seq(sessionHeader(ophSession))) {
+      withClue(body) {
+        status should equal(200)
+      }
+    }
   }
 }

@@ -43,6 +43,7 @@ object Validations {
   def illegalStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): ErrorMessage =
     ErrorMessage(msg = s"Siirtyminen tilasta $oldState tilaan $newState ei ole sallittu $entityDesc", id="illegalStateChange")
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage = ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id="integrityViolation")
+  def illegalValueForFixedValueSeqMsg(fixedVal: String): ErrorMessage = ErrorMessage(msg = s"Kentän täytyy sisältää täsmälleen yksi arvo '$fixedVal', ko. arvo asetetaan automaattisesti", id = "illegalValueForFixedValueSeq")
 
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen", id = "InvalidKoulutuspaivamaarat")
   val InvalidMetadataTyyppi: ErrorMessage = ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
@@ -59,6 +60,7 @@ object Validations {
   val KoulutusalaKoodiPattern: Pattern = Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso[12]_\d+#\d{1,2}""")
   val TutkintonimikeKoodiPattern: Pattern = Pattern.compile("""tutkintonimikekk_[\w*-]+#\d{1,2}""")
   val OpintojenLaajuusKoodiPattern: Pattern = Pattern.compile("""opintojenlaajuus_v?\d+#\d{1,2}""")
+  val OpintojenLaajuusyksikkoKoodiPattern: Pattern = Pattern.compile("""opintojenlaajuusyksikko_\d+#\d{1,2}""")
   val OpetuskieliKoodiPattern: Pattern = Pattern.compile("""oppilaitoksenopetuskieli_\d+#\d{1,2}""")
   val OpetusaikaKoodiPattern: Pattern = Pattern.compile("""opetusaikakk_\d+#\d{1,2}""")
   val OpetustapaKoodiPattern: Pattern = Pattern.compile("""opetuspaikkakk_\d+#\d{1,2}""")
@@ -86,7 +88,13 @@ object Validations {
   def assertValid(oid: Oid, path: String): IsValid = assertTrue(oid.isValid, path, validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
-  def assertEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.isEmpty, path, notEmptyMsg)
+  def assertEmpty[T](value: Seq[T], path: String, errorMessage: ErrorMessage = notEmptyMsg): IsValid = assertTrue(value.isEmpty, path, errorMessage)
+  def assertOneAndOnlyOneKoodiUri(value: Seq[String], expectedKoodiUriPrefix: String, path: String): IsValid =
+    if (value.size == 1 && value.head.startsWith(expectedKoodiUriPrefix)) {
+      NoErrors
+    } else {
+      error(path, illegalValueForFixedValueSeqMsg(expectedKoodiUriPrefix))
+    }
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
   def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
     assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))

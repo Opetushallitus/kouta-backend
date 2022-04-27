@@ -12,6 +12,7 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
   val min: Koulutus = MinKoulutus
   val ammTk: Koulutus = AmmTutkinnonOsaKoulutus
   val ammOa: Koulutus = AmmOsaamisalaKoulutus
+  val aiPer: Koulutus = AikuistenPerusopetusKoulutus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(KoulutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -110,6 +111,11 @@ class KoulutusValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "pass amm osaamisala koulutus" in {
     passesValidation(ammOa)
+  }
+
+  it should "fail if illegal koulutuksetKoodiUri given for Aikuisten perusopetus" in {
+    passesValidation(aiPer.copy(koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+    failsValidation(aiPer.copy(koulutuksetKoodiUri = Seq("koulutus_371101#1")), "koulutuksetKoodiUri", illegalValueForFixedValueSeqMsg("koulutus_201101"))
   }
 
   it should "return multiple error messages" in {
