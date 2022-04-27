@@ -373,7 +373,10 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
     validateIfDefined[Int](yksikoita,     assertNotNegative(_, s"$path.yksikoita")),
     validateIfDefined[Int](toimipisteita, assertNotNegative(_, s"$path.toimipisteita")),
     validateIfDefined[Int](akatemioita,   assertNotNegative(_, s"$path.akatemioita")),
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"))
+    validateIfJulkaistu(tila, and(
+      validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"),
+      assertNotOptional(wwwSivu, s"$path.wwwSivu")
+    ))
   )
 }
 
@@ -395,7 +398,8 @@ case class OppilaitoksenOsaMetadata(wwwSivu: Option[NimettyLinkki] = None,
     validateIfDefined[Int](opiskelijoita, assertNotNegative(_, s"$path.opiskelijoita")),
     validateIfJulkaistu(tila, and(
       validateOptionalKielistetty(kielivalinta, kampus, s"$path.kampus"),
-      validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely")
+      validateOptionalKielistetty(kielivalinta, esittely, s"$path.esittely"),
+      assertNotOptional(wwwSivu, s"$path.wwwSivu"),
     ))
   )
 }

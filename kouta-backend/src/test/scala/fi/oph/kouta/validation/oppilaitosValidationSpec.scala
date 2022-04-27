@@ -53,13 +53,19 @@ class OppilaitosMetadataValidationSpec extends SubEntityValidationSpec[Oppilaito
     failsValidation(Tallennettu, metadata, "wwwSivu.url.sv", invalidUrl("urli"))
   }
 
+  it should "fail if wwwSivu not present in a julkaistu oppilaitos" in {
+    val metadata = max.copy(wwwSivu = None)
+    passesValidation(Tallennettu, metadata)
+    failsValidation(Julkaistu, metadata, "wwwSivu", missingMsg)
+  }
+
   it should "validate hakijapalveluidenYhteystiedot" in {
     val metadata = min.copy(hakijapalveluidenYhteystiedot = Some(Yhteystieto(sahkoposti = Map(Fi -> "validi@eemeli.fi", Sv -> "epavalidi@eemeli"))))
     failsValidation(Tallennettu, metadata, "hakijapalveluidenYhteystiedot.sahkoposti.sv", invalidEmail("epavalidi@eemeli"))
   }
 
   it should "fail if esittely is present only for some languages in a julkaistu oppilaitos" in {
-    val metadata = min.copy(esittely = Map(Fi -> "esittely"))
+    val metadata = max.copy(esittely = Map(Fi -> "esittely"))
     passesValidation(Tallennettu, metadata)
     failsValidation(Julkaistu, metadata, "esittely", invalidKielistetty(Seq(Sv)))
   }
