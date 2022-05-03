@@ -437,5 +437,5 @@ case class OppilaitosAndOsa(
 
 case class OppilaitosByOid(
     oid: OrganisaatioOid,
-    oppilaitos: Oppilaitos
+    oppilaitos: Option[Oppilaitos]
 )

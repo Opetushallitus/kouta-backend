@@ -47,7 +47,7 @@ class OppilaitosService(
     authorizeGet(enrichedOppilaitos)
   }
 
-  def get(oids: List[OrganisaatioOid])(implicit authenticated: Authenticated): Iterable[OppilaitosByOid] = {
+  def get(oids: List[OrganisaatioOid])(implicit authenticated: Authenticated): List[OppilaitosByOid] = {
     val oppilaitokset = OppilaitosDAO.get(oids)
 
     oids.map(oid => {
@@ -56,12 +56,18 @@ class OppilaitosService(
           oppilaitosAndOsa.osa.oid == oid
       })
 
-      val oppilaitos = byOid.head.oppilaitos
-      val osat = byOid.map(oppilaitosAndOsa => {
-        oppilaitosAndOsa.osa
-      })
+      if (!byOid.isEmpty) {
+        val oppilaitos = authorizeGet(byOid.head.oppilaitos)
+        val osat = byOid.map(oppilaitosAndOsa => {
+          oppilaitosAndOsa.osa
+        })
 
-      OppilaitosByOid(oid = oid, oppilaitos = oppilaitos.copy(osat = Some(osat)))
+        val oppilaitosWithOsat = authorizeGet(oppilaitos.copy(osat = Some(osat)))
+
+        OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat))
+      } else {
+        OppilaitosByOid(oid = oid, oppilaitos = None)
+      }
     })
   }
 
