@@ -536,6 +536,40 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
 
+  registerPath("/indexer/oppilaitokset",
+    """    post:
+      |      summary: Hae oppilaitosten tiedot
+      |      operationId: Hae oppilaitokset
+      |      description: Hakee oppilaitoksen tiedot
+      |      tags:
+      |        - Indexer
+      |      requestBody:
+      |        description: Lista haettavien oppilaitosten tai niiden osien id:itä
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |              example: ["1.2.246.562.10.96162204109", "1.2.246.562.10.41201203548"]
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/OppilaitoksenOsaListItem'
+      |""".stripMargin)
+  post("/oppilaitokset") {
+
+    implicit val authenticated: Authenticated = authenticate()
+    val organisaatiot = oppilaitosService.get(parsedBody.extract[List[OrganisaatioOid]])
+    Ok(organisaatiot)
+  }
+
   registerPath("/indexer/list-hakukohde-oids-by-jarjestyspaikat",
     """    post:
       |      summary: Hakee järjestyspaikkaa (oppilaitos tai toimipiste) vastaavat hakukohteet

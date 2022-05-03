@@ -381,6 +381,33 @@ trait OppilaitosExtractors extends ExtractorBase {
     logo = r.nextStringOption(),
     modified = Some(timeStampToModified(r.nextTimestamp()))
   ))
+
+  implicit val getOppilaitosAndOsaResult: GetResult[OppilaitosAndOsa] = GetResult(r =>
+    OppilaitosAndOsa(
+      oppilaitos = Oppilaitos(
+        oid = OrganisaatioOid(r.nextString()),
+        tila = Julkaisutila.withName(r.nextString()),
+        kielivalinta = extractKielivalinta(r.nextStringOption()),
+        metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
+        muokkaaja = UserOid(r.nextString()),
+        esikatselu = r.nextBoolean(),
+        organisaatioOid = OrganisaatioOid(r.nextString()),
+        teemakuva = r.nextStringOption(),
+        logo = r.nextStringOption(),
+        modified = Some(timeStampToModified(r.nextTimestamp()))),
+      osa = OppilaitoksenOsa(
+        oid = OrganisaatioOid(r.nextString()),
+        oppilaitosOid = OrganisaatioOid(r.nextString()),
+        tila = Julkaisutila.withName(r.nextString()),
+        kielivalinta = extractKielivalinta(r.nextStringOption()),
+        metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
+        muokkaaja = UserOid(r.nextString()),
+        esikatselu = r.nextBoolean(),
+        organisaatioOid = OrganisaatioOid(r.nextString()),
+        teemakuva = r.nextStringOption(),
+        modified = Some(timeStampToModified(r.nextTimestamp())))
+    )
+  )
 }
 
 trait OppilaitoksenOsaExtractors extends ExtractorBase {

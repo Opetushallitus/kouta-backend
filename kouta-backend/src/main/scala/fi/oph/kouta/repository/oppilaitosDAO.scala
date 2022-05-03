@@ -1,9 +1,8 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos}
+import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos, OppilaitosAndOsa}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -35,6 +34,14 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
       case (Some(k), Some(l)) => Some(k, l)
       case _ => None
     }
+  }
+
+  def get(oids: List[OrganisaatioOid]): Vector[OppilaitosAndOsa] = {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        oppilaitokset <- selectOppilaitokset(oids).as[OppilaitosAndOsa]
+      } yield oppilaitokset
+    ).get
   }
 
   override def getUpdateActions(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]] =
@@ -74,6 +81,29 @@ sealed trait OppilaitosModificationSQL extends SQLHelpers {
 
 sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificationSQL with SQLHelpers {
 
+  val selectOppilaitosAndOsaSQL =
+    """select oppilaitokset.oid,
+      |       oppilaitokset.tila,
+      |                 oppilaitokset.kielivalinta,
+      |                 oppilaitokset.metadata,
+      |                 oppilaitokset.muokkaaja,
+      |                 oppilaitokset.esikatselu,
+      |                 oppilaitokset.organisaatio_oid,
+      |                 oppilaitokset.teemakuva,
+      |                 oppilaitokset.logo,
+      |                 lower(oppilaitokset.system_time),
+      |                 oppilaitosten_osat.oid,
+      |                 oppilaitosten_osat.oppilaitos_oid,
+      |                 oppilaitosten_osat.tila,
+      |                 oppilaitosten_osat.kielivalinta,
+      |                 oppilaitosten_osat.metadata,
+      |                 oppilaitosten_osat.muokkaaja,
+      |                 oppilaitosten_osat.esikatselu,
+      |                 oppilaitosten_osat.organisaatio_oid,
+      |                 oppilaitosten_osat.teemakuva,
+      |                 lower(oppilaitosten_osat.system_time)
+      |
+      |""".stripMargin
   def selectOppilaitos(oid: OrganisaatioOid): DBIO[Option[Oppilaitos]] = {
     sql"""select oid,
                  tila,
@@ -87,6 +117,20 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
                  lower(system_time)
           from oppilaitokset
           where oid = $oid""".as[Oppilaitos].headOption
+  }
+
+  def selectOppilaitokset(oids: List[OrganisaatioOid]) = {
+    sql"""#$selectOppilaitosAndOsaSQL
+          from oppilaitokset
+          inner join oppilaitosten_osat
+          on oppilaitokset.oid = oppilaitosten_osat.oppilaitos_oid
+          where oppilaitokset.oid in (#${createOidInParams(oids)})
+          union
+          #$selectOppilaitosAndOsaSQL
+          from oppilaitosten_osat
+          inner join oppilaitokset
+          on oppilaitosten_osat.oppilaitos_oid = oppilaitokset.oid
+          where oppilaitosten_osat.oid in (#${createOidInParams(oids)})"""
   }
 
   def insertOppilaitos(oppilaitos: Oppilaitos): DBIO[Int] = {

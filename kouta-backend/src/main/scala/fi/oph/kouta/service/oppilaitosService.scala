@@ -47,6 +47,24 @@ class OppilaitosService(
     authorizeGet(enrichedOppilaitos)
   }
 
+  def get(oids: List[OrganisaatioOid])(implicit authenticated: Authenticated): Iterable[OppilaitosByOid] = {
+    val oppilaitokset = OppilaitosDAO.get(oids)
+
+    oids.map(oid => {
+      val byOid = oppilaitokset.filter(oppilaitosAndOsa => {
+        oppilaitosAndOsa.oppilaitos.oid == oid ||
+          oppilaitosAndOsa.osa.oid == oid
+      })
+
+      val oppilaitos = byOid.head.oppilaitos
+      val osat = byOid.map(oppilaitosAndOsa => {
+        oppilaitosAndOsa.osa
+      })
+
+      OppilaitosByOid(oid = oid, oppilaitos = oppilaitos.copy(osat = Some(osat)))
+    })
+  }
+
   private def enrichOppilaitosMetadata(oppilaitos: Oppilaitos) : Option[OppilaitosMetadata] = {
     val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(oppilaitos.muokkaaja)
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
