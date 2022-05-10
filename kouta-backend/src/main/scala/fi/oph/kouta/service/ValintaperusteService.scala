@@ -72,23 +72,23 @@ class ValintaperusteService(
   }
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID = {
-    val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(valintaperuste)
-    val enrichedValintaperuste = valintaperuste.copy(metadata = enrichedMetadata)
-    authorizePut(enrichedValintaperuste) { v =>
-      withValidation(v, None) { v =>
-        doPut(v)
+    authorizePut(valintaperuste) { v =>
+      val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
+      val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
+      withValidation(enrichedValintaperuste, None) { valpe =>
+        doPut(valpe)
       }
     }.id.get
   }
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
-    val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(valintaperuste)
-    val enrichedValintaperuste = valintaperuste.copy(metadata = enrichedMetadata)
-    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat()), enrichedValintaperuste) { (oldValintaperuste, v) =>
-      withValidation(v, Some(oldValintaperuste)) { v =>
-        throwValidationErrors(validateStateChange("valintaperusteelle", oldValintaperuste.tila, valintaperuste.tila))
-        validateHakukohdeIntegrityIfDeletingValintaperuste(oldValintaperuste.tila, valintaperuste.tila, valintaperuste.id.get)
+    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat()), valintaperuste) { (oldValintaperuste, v) =>
+      val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
+      val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
+      withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
+        throwValidationErrors(validateStateChange("valintaperusteelle", oldValintaperuste.tila, v.tila))
+        validateHakukohdeIntegrityIfDeletingValintaperuste(oldValintaperuste.tila, v.tila, v.id.get)
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
     }.nonEmpty

@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.service.HakukohdeService
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
@@ -577,3 +578,5 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              toteutusMetadata: Option[ToteutusMetadata] = None) extends OidListItem
 
 case class HakukohdeEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
+
+case class ExternalHakukohdeRequest(authenticated: Authenticated, hakukohde: Hakukohde) extends ExternalRequest

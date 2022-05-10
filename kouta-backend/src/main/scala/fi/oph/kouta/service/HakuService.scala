@@ -66,10 +66,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       AuthorizationRules(roleEntity.createRoles)
     }
 
-    val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(haku)
-    val enrichedHaku = haku.copy(metadata = enrichedMetadata)
-    authorizePut(enrichedHaku, rules) { h =>
-      withValidation(h, None)(haku => doPut(haku))
+    authorizePut(haku, rules) { h =>
+      val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
+      val enrichedHaku = h.copy(metadata = enrichedMetadata)
+      withValidation(enrichedHaku, None)(haku => doPut(haku))
     }.oid.get
   }
 
@@ -80,12 +80,12 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       AuthorizationRules(roleEntity.createRoles)
     }
 
-    val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(haku)
-    val enrichedHaku = haku.copy(metadata = enrichedMetadata)
-    authorizeUpdate(HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat()), enrichedHaku, rules) { (oldHaku, h) =>
-      withValidation(h, Some(oldHaku)) {
-        throwValidationErrors(validateStateChange("haulle", oldHaku.tila, haku.tila))
-        validateHakukohdeIntegrityIfDeletingHaku(oldHaku.tila, haku.tila, haku.oid.get)
+    authorizeUpdate(HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat()), haku, rules) { (oldHaku, h) =>
+      val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
+      val enrichedHaku = h.copy(metadata = enrichedMetadata)
+      withValidation(enrichedHaku, Some(oldHaku)) {
+        throwValidationErrors(validateStateChange("haulle", oldHaku.tila, enrichedHaku.tila))
+        validateHakukohdeIntegrityIfDeletingHaku(oldHaku.tila, enrichedHaku.tila, enrichedHaku.oid.get)
         doUpdate(_, notModifiedSince, oldHaku)
       }
     }.nonEmpty

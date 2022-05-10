@@ -60,20 +60,20 @@ class SorakuvausService(
   }
 
   def put(sorakuvaus: Sorakuvaus)(implicit authenticated: Authenticated): UUID = {
-    val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(sorakuvaus)
-    val enrichedSorakuvaus = sorakuvaus.copy(metadata = enrichedMetadata)
-    authorizePut(enrichedSorakuvaus, createRules) { s =>
-      withValidation(s, None)(doPut)
+    authorizePut(sorakuvaus, createRules) { s =>
+      val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(s)
+      val enrichedSorakuvaus = s.copy(metadata = enrichedMetadata)
+      withValidation(enrichedSorakuvaus, None)(doPut)
     }.id.get
   }
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(sorakuvaus)
-    val enrichedSorakuvaus = sorakuvaus.copy(metadata = enrichedMetadata)
-    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat()), enrichedSorakuvaus, updateRules) { (oldSorakuvaus, s) =>
-      withValidation(s, Some(oldSorakuvaus)) {
-        throwValidationErrors(validateStateChange("sorakuvaukselle", oldSorakuvaus.tila, sorakuvaus.tila))
-        validateKoulutusIntegrityIfDeletingSorakuvaus(oldSorakuvaus.tila, sorakuvaus.tila, sorakuvaus.id.get)
+    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat()), sorakuvaus, updateRules) { (oldSorakuvaus, s) =>
+      val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(s)
+      val enrichedSorakuvaus = s.copy(metadata = enrichedMetadata)
+      withValidation(enrichedSorakuvaus, Some(oldSorakuvaus)) {
+        throwValidationErrors(validateStateChange("sorakuvaukselle", oldSorakuvaus.tila, enrichedSorakuvaus.tila))
+        validateKoulutusIntegrityIfDeletingSorakuvaus(oldSorakuvaus.tila, enrichedSorakuvaus.tila, enrichedSorakuvaus.id.get)
         doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
     }.nonEmpty

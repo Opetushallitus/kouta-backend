@@ -1,15 +1,22 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalKoulutusRequest, ExternalRequest, ExternalToteutusRequest, Haku}
+import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Sorakuvaus, Valintaperuste}
 import fi.oph.kouta.domain.oid.RootOrganisaatioOid
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.service._
 import org.scalatra.Ok
 
-class ExternalServlet(koulutusService: KoulutusService, toteutusService: ToteutusService, hakuService: HakuService) extends KoutaServlet {
+class ExternalServlet(
+    koulutusService: KoulutusService,
+    toteutusService: ToteutusService,
+    hakuService: HakuService,
+    hakukohdeService: HakukohdeService,
+    valintaperusteService: ValintaperusteService,
+    sorakuvausService: SorakuvausService
+) extends KoutaServlet {
 
-  def this() = this(KoulutusService, ToteutusService, HakuService)
+  def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService, SorakuvausService)
 
   registerPath(
     "/external/koulutus",
@@ -49,7 +56,7 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
       |""".stripMargin
   )
   put("/koulutus") {
-    val koulutusRequest = parsedBody.extract[ExternalKoulutusRequest]
+    val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
     implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
     koulutusService.put(koulutusRequest.koulutus) match {
@@ -85,18 +92,10 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
       |      responses:
       |        '200':
       |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: object
-      |                properties:
-      |                  oid:
-      |                    type: string
-      |                    description: Uuden koulutuksen yksilöivä oid
-      |                    example: 1.2.246.562.13.00000000000000000009
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/koulutus") {
-    val koulutusRequest = parsedBody.extract[ExternalKoulutusRequest]
+    val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
     implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
     val updated = koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince)
@@ -141,7 +140,7 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
       |""".stripMargin
   )
   put("/toteutus") {
-    val toteutusRequest = parsedBody.extract[ExternalToteutusRequest]
+    val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
     implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
 
     toteutusService.put(toteutusRequest.toteutus) match {
@@ -177,18 +176,10 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
       |      responses:
       |        '200':
       |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: object
-      |                properties:
-      |                  oid:
-      |                    type: string
-      |                    description: Uuden toteutuksen yksilöivä oid
-      |                    example: 1.2.246.562.17.00000000000000000009
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/toteutus") {
-    val toteutusRequest = parsedBody.extract[ExternalToteutusRequest]
+    val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
     implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
 
     val updated = toteutusService.update(toteutusRequest.toteutus, getIfUnmodifiedSince)
@@ -233,7 +224,7 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
       |""".stripMargin
   )
   put("/haku") {
-    val hakuRequest = parsedBody.extract[ExternalHakuRequest]
+    val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
     implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
 
     hakuService.put(hakuRequest.haku) match {
@@ -269,6 +260,35 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
       |      responses:
       |        '200':
       |          description: Ok
+      |""".stripMargin
+  )
+  post("/haku") {
+    val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
+
+    val updated = hakuService.update(hakuRequest.haku, getIfUnmodifiedSince)
+    Ok("updated" -> updated)
+  }
+
+  registerPath(
+    "/external/hakukohde",
+    """    put:
+      |      summary: Tallenna uusi hakukohde
+      |      operationId: Tallenna uusi hakukohde
+      |      description: Tallenna uuden hakukohteen tiedot.
+      |        Rajapinta palauttaa hakukohteelle generoidun yksilöivän hakukohde-oidin.
+      |      tags:
+      |        - Hakukohde
+      |      requestBody:
+      |        description: Tallennettava hakukohde
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Hakukohde'
+      |      responses:
+      |        '200':
+      |          description: Ok
       |          content:
       |            application/json:
       |              schema:
@@ -276,14 +296,173 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
       |                properties:
       |                  oid:
       |                    type: string
-      |                    description: Uuden haun yksilöivä oid
-      |                    example: 1.2.246.562.29.00000000000000000009
+      |                    description: Uuden hakukohteen yksilöivä oid
+      |                    example: 1.2.246.562.20.00000000000000000009
       |""".stripMargin)
-  post("/haku") {
-    val hakuRequest = parsedBody.extract[ExternalHakuRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
+  put("/hakukohde") {
+    val hakukohdeRequest                      = parsedBody.extract[ExternalHakukohdeRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
 
-    val updated = hakuService.update(hakuRequest.haku, getIfUnmodifiedSince)
+    hakukohdeService.put(hakukohdeRequest.hakukohde) match {
+      case oid => Ok("oid" -> oid)
+    }
+  }
+
+  registerPath(
+    "/external/hakukohde",
+    """    post:
+      |      summary: Muokkaa olemassa olevaa hakukohdetta
+      |      operationId: Muokkaa hakukohdetta
+      |      description: Muokkaa olemassa olevaa hakukohdetta. Rajapinnalle annetaan hakukohteen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - Hakukohde
+      |      requestBody:
+      |        description: Muokattavan hakukohteen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Hakukohde'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin
+  )
+  post("/hakukohde") {
+    val hakukohdeRequest                           = parsedBody.extract[ExternalHakukohdeRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
+
+    val updated = hakukohdeService.update(hakukohdeRequest.hakukohde, getIfUnmodifiedSince)
+    Ok("updated" -> updated)
+  }
+
+
+  registerPath( "/valintaperuste/",
+    """    put:
+      |      summary: Tallenna uusi valintaperustekuvaus
+      |      operationId: Tallenna uusi valintaperuste
+      |      description: Tallenna uuden valintaperustekuvauksen tiedot.
+      |        Rajapinta palauttaa valintaperustekuvaukselle generoidun yksilöivän id:n
+      |      tags:
+      |        - Valintaperuste
+      |      requestBody:
+      |        description: Tallennettava valintaperustekuvaus
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Valintaperuste'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  id:
+      |                    type: string
+      |                    description: Uuden valintaperustekuvauksen yksilöivä id
+      |                    example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+      |""".stripMargin)
+  put("/valintaperuste") {
+    val valintaperusteRequest                      = parsedBody.extract[ExternalValintaperusteRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
+
+    valintaperusteService.put(valintaperusteRequest.valintaperuste) match {
+      case id => Ok("id" -> id)
+    }
+  }
+
+  registerPath("/valintaperuste/",
+    """    post:
+      |      summary: Muokkaa olemassa olevaa valintaperustekuvausta
+      |      operationId: Muokkaa valintaperustetta
+      |      description: Muokkaa olemassa olevaa valintaperustekuvausta. Rajapinnalle annetaan valintaperusteen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - Valintaperuste
+      |      requestBody:
+      |        description: Muokattavan valintaperustekuvauksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Valintaperuste'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
+  post("/valintaperuste") {
+    val valintaperusteRequest                           = parsedBody.extract[ExternalValintaperusteRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
+
+    val updated = valintaperusteService.update(valintaperusteRequest.valintaperuste, getIfUnmodifiedSince)
+    Ok("updated" -> updated)
+  }
+
+  registerPath( "/sorakuvaus/",
+    """    put:
+      |      summary: Tallenna uusi SORA-kuvaus
+      |      operationId: Tallenna uusi sorakuvaus
+      |      description: Tallenna uuden SORA-kuvauksen tiedot.
+      |        Rajapinta palauttaa SORA-kuvaukselle generoidun yksilöivän id:n
+      |      tags:
+      |        - Sorakuvaus
+      |      requestBody:
+      |        description: Tallennettava SORA-kuvaus
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Sorakuvaus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: object
+      |                properties:
+      |                  oid:
+      |                    type: string
+      |                    description: Uuden SORA-kuvauksen yksilöivä id
+      |                    example: ea596a9c-5940-497e-b5b7-aded3a2352a7
+      |""".stripMargin)
+  put("/sorakuvaus") {
+    val sorakuvausRequest                      = parsedBody.extract[ExternalSorakuvausRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(sorakuvausRequest)
+
+    sorakuvausService.put(sorakuvausRequest.sorakuvaus) match {
+      case id => Ok("id" -> id)
+    }
+  }
+
+  registerPath("/sorakuvaus/",
+    """    post:
+      |      summary: Muokkaa olemassa olevaa SORA-kuvausta
+      |      operationId: Muokkaa sorakuvausta
+      |      description: Muokkaa olemassa olevaa SORA-kuvausta. Rajapinnalle annetaan SORA-kuvauksen kaikki tiedot,
+      |        ja muuttuneet tiedot tallennetaan kantaan.
+      |      tags:
+      |        - Sorakuvaus
+      |      requestBody:
+      |        description: Muokattavan SORA-kuvauksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              $ref: '#/components/schemas/Sorakuvaus'
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
+  post("/sorakuvaus") {
+    val sorakuvausRequest                           = parsedBody.extract[ExternalSorakuvausRequest]
+    implicit val authenticated: Authenticated = authenticateExternal(sorakuvausRequest)
+
+    val updated = sorakuvausService.update(sorakuvausRequest.sorakuvaus, getIfUnmodifiedSince)
     Ok("updated" -> updated)
   }
 
@@ -296,4 +475,5 @@ class ExternalServlet(koulutusService: KoulutusService, toteutusService: Toteutu
     }
     request.authenticated.copy(id = s"kouta-external-${request.authenticated.id}")
   }
+
 }

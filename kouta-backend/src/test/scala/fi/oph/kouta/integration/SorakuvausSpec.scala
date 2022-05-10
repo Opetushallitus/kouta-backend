@@ -92,7 +92,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   it should "read muokkaaja from the session" in {
     val metadata = sorakuvaus.metadata
     val oid = put(sorakuvaus.copy(muokkaaja = UserOid("random")))
-    get(oid, sorakuvaus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.get.copy(isMuokkaajaOphVirkailija = Some(false)))))
+    get(oid, sorakuvaus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
   it should "write create haku to audit log" in {
@@ -158,7 +158,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
     val lastModified = get(oid, sorakuvaus(oid))
     update(sorakuvaus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, sorakuvaus(oid, Arkistoitu).copy(metadata = Some(metadata.get.copy(isMuokkaajaOphVirkailija = Some(false)))))
+    get(oid, sorakuvaus(oid, Arkistoitu).copy(metadata = Some(metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
   it should "write sorakuvaus update to audit log" in {

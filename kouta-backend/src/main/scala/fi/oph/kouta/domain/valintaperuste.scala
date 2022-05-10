@@ -1,9 +1,9 @@
 package fi.oph.kouta.domain
 
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
 
@@ -239,3 +239,5 @@ case class ValintaperusteListItem(id: UUID,
                                   modified: Modified) extends IdListItem
 
 case class ValintaperusteEnrichedData(muokkaajanNimi: Option[String] = None)
+
+case class ExternalValintaperusteRequest(authenticated: Authenticated, valintaperuste: Valintaperuste) extends ExternalRequest
