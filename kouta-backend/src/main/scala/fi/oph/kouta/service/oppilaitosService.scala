@@ -1,8 +1,7 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioServiceClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -15,9 +14,10 @@ import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OrganisaatioServiceClient)
 
 class OppilaitosService(
   sqsInTransactionService: SqsInTransactionService,
@@ -25,7 +25,8 @@ class OppilaitosService(
   auditLog: AuditLog,
   val organisaatioService: OrganisaatioService,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-  kayttooikeusClient: KayttooikeusClient
+  kayttooikeusClient: KayttooikeusClient,
+  organisaatioClient: OrganisaatioServiceClient
 ) extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService[Oppilaitos] with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
@@ -52,21 +53,29 @@ class OppilaitosService(
 
     oids.map(oid => {
       val byOid = oppilaitokset.filter(oppilaitosAndOsa => {
-        oppilaitosAndOsa.oppilaitos.oid == oid ||
-          oppilaitosAndOsa.osa.oid == oid
+        val osaMatchesOid = oppilaitosAndOsa.osa match {
+          case Some(osa) => osa.oid == oid
+          case None => false
+        }
+
+        oppilaitosAndOsa.oppilaitos.oid == oid || osaMatchesOid
       })
 
       if (!byOid.isEmpty) {
-        val oppilaitos = authorizeGet(byOid.head.oppilaitos)
-        val osat = byOid.map(oppilaitosAndOsa => {
-          oppilaitosAndOsa.osa
-        })
+        val oppilaitos = byOid.head.oppilaitos
+        val osat = byOid.filter(oppilaitosAndOsa => {
+          oppilaitosAndOsa.osa match {
+            case Some(_) => true
+            case None => false
+          }
+        }).map(oppilaitosAndOsa => oppilaitosAndOsa.osa.get)
 
         val oppilaitosWithOsat = authorizeGet(oppilaitos.copy(osat = Some(osat)))
+        val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOid(oid)
 
-        OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat))
+        OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat), organisaatioHierarkia = Some(hierarkia))
       } else {
-        OppilaitosByOid(oid = oid, oppilaitos = None)
+        OppilaitosByOid(oid = oid)
       }
     })
   }

@@ -84,26 +84,27 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
   val selectOppilaitosAndOsaSQL =
     """select oppilaitokset.oid,
       |       oppilaitokset.tila,
-      |                 oppilaitokset.kielivalinta,
-      |                 oppilaitokset.metadata,
-      |                 oppilaitokset.muokkaaja,
-      |                 oppilaitokset.esikatselu,
-      |                 oppilaitokset.organisaatio_oid,
-      |                 oppilaitokset.teemakuva,
-      |                 oppilaitokset.logo,
-      |                 lower(oppilaitokset.system_time),
-      |                 oppilaitosten_osat.oid,
-      |                 oppilaitosten_osat.oppilaitos_oid,
-      |                 oppilaitosten_osat.tila,
-      |                 oppilaitosten_osat.kielivalinta,
-      |                 oppilaitosten_osat.metadata,
-      |                 oppilaitosten_osat.muokkaaja,
-      |                 oppilaitosten_osat.esikatselu,
-      |                 oppilaitosten_osat.organisaatio_oid,
-      |                 oppilaitosten_osat.teemakuva,
-      |                 lower(oppilaitosten_osat.system_time)
+      |       oppilaitokset.kielivalinta,
+      |       oppilaitokset.metadata,
+      |       oppilaitokset.muokkaaja,
+      |       oppilaitokset.esikatselu,
+      |       oppilaitokset.organisaatio_oid,
+      |       oppilaitokset.teemakuva,
+      |       oppilaitokset.logo,
+      |       lower(oppilaitokset.system_time),
+      |       oppilaitosten_osat.oid,
+      |       oppilaitosten_osat.oppilaitos_oid,
+      |       oppilaitosten_osat.tila,
+      |       oppilaitosten_osat.kielivalinta,
+      |       oppilaitosten_osat.metadata,
+      |       oppilaitosten_osat.muokkaaja,
+      |       oppilaitosten_osat.esikatselu,
+      |       oppilaitosten_osat.organisaatio_oid,
+      |       oppilaitosten_osat.teemakuva,
+      |       lower(oppilaitosten_osat.system_time)
       |
       |""".stripMargin
+
   def selectOppilaitos(oid: OrganisaatioOid): DBIO[Option[Oppilaitos]] = {
     sql"""select oid,
                  tila,
@@ -122,13 +123,13 @@ sealed trait OppilaitosSQL extends OppilaitosExtractors with OppilaitosModificat
   def selectOppilaitokset(oids: List[OrganisaatioOid]) = {
     sql"""#$selectOppilaitosAndOsaSQL
           from oppilaitokset
-          inner join oppilaitosten_osat
+          full outer join oppilaitosten_osat
           on oppilaitokset.oid = oppilaitosten_osat.oppilaitos_oid
           where oppilaitokset.oid in (#${createOidInParams(oids)})
           union
           #$selectOppilaitosAndOsaSQL
           from oppilaitosten_osat
-          inner join oppilaitokset
+          right outer join oppilaitokset
           on oppilaitosten_osat.oppilaitos_oid = oppilaitokset.oid
           where oppilaitosten_osat.oid in (#${createOidInParams(oids)})"""
   }

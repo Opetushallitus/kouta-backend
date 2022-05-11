@@ -1,5 +1,6 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.client.OrganisaatioHierarkia
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
@@ -432,10 +433,11 @@ case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None)
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,
-    osa: OppilaitoksenOsa
+    osa: Option[OppilaitoksenOsa] = None
 )
 
 case class OppilaitosByOid(
     oid: OrganisaatioOid,
-    oppilaitos: Option[Oppilaitos]
+    oppilaitos: Option[Oppilaitos] = None,
+    organisaatioHierarkia: Option[OrganisaatioHierarkia] = None
 )

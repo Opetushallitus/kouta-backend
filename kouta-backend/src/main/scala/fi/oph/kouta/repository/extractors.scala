@@ -382,21 +382,25 @@ trait OppilaitosExtractors extends ExtractorBase {
     modified = Some(timeStampToModified(r.nextTimestamp()))
   ))
 
-  implicit val getOppilaitosAndOsaResult: GetResult[OppilaitosAndOsa] = GetResult(r =>
-    OppilaitosAndOsa(
-      oppilaitos = Oppilaitos(
-        oid = OrganisaatioOid(r.nextString()),
-        tila = Julkaisutila.withName(r.nextString()),
-        kielivalinta = extractKielivalinta(r.nextStringOption()),
-        metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
-        muokkaaja = UserOid(r.nextString()),
-        esikatselu = r.nextBoolean(),
-        organisaatioOid = OrganisaatioOid(r.nextString()),
-        teemakuva = r.nextStringOption(),
-        logo = r.nextStringOption(),
-        modified = Some(timeStampToModified(r.nextTimestamp()))),
-      osa = OppilaitoksenOsa(
-        oid = OrganisaatioOid(r.nextString()),
+  implicit val getOppilaitosAndOsaResult: GetResult[OppilaitosAndOsa] = GetResult(r => {
+    val oppilaitos = Oppilaitos(
+      oid = OrganisaatioOid(r.nextString()),
+      tila = Julkaisutila.withName(r.nextString()),
+      kielivalinta = extractKielivalinta(r.nextStringOption()),
+      metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
+      muokkaaja = UserOid(r.nextString()),
+      esikatselu = r.nextBoolean(),
+      organisaatioOid = OrganisaatioOid(r.nextString()),
+      teemakuva = r.nextStringOption(),
+      logo = r.nextStringOption(),
+      modified = Some(timeStampToModified(r.nextTimestamp())))
+
+    val osaOid = r.nextString()
+    var osa = None: Option[OppilaitoksenOsa]
+    println(osaOid)
+    if (osaOid != null) {
+      osa = Some(OppilaitoksenOsa(
+        oid = OrganisaatioOid(osaOid),
         oppilaitosOid = OrganisaatioOid(r.nextString()),
         tila = Julkaisutila.withName(r.nextString()),
         kielivalinta = extractKielivalinta(r.nextStringOption()),
@@ -405,8 +409,13 @@ trait OppilaitosExtractors extends ExtractorBase {
         esikatselu = r.nextBoolean(),
         organisaatioOid = OrganisaatioOid(r.nextString()),
         teemakuva = r.nextStringOption(),
-        modified = Some(timeStampToModified(r.nextTimestamp())))
-    )
+        modified = Some(timeStampToModified(r.nextTimestamp()))))
+    }
+
+    OppilaitosAndOsa(
+      oppilaitos = oppilaitos,
+      osa = osa)
+  }
   )
 }
 
