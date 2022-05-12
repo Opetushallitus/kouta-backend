@@ -38,7 +38,7 @@ class ExternalServlet(
       |                authenticated:
       |                  type: object
       |                  $ref: '#/components/schemas/Authenticated'
-      |                haku:
+      |                koulutus:
       |                  type: object
       |                  $ref: '#/components/schemas/Koulutus'
       |      responses:
@@ -86,7 +86,7 @@ class ExternalServlet(
       |                authenticated:
       |                  type: object
       |                  $ref: '#/components/schemas/Authenticated'
-      |                haku:
+      |                koulutus:
       |                  type: object
       |                  $ref: '#/components/schemas/Koulutus'
       |      responses:
@@ -122,7 +122,7 @@ class ExternalServlet(
       |                authenticated:
       |                  type: object
       |                  $ref: '#/components/schemas/Authenticated'
-      |                haku:
+      |                toteutus:
       |                  type: object
       |                  $ref: '#/components/schemas/Toteutus'
       |      responses:
@@ -170,7 +170,7 @@ class ExternalServlet(
       |                authenticated:
       |                  type: object
       |                  $ref: '#/components/schemas/Authenticated'
-      |                haku:
+      |                toteutus:
       |                  type: object
       |                  $ref: '#/components/schemas/Toteutus'
       |      responses:
@@ -285,7 +285,14 @@ class ExternalServlet(
       |        content:
       |          application/json:
       |            schema:
-      |              $ref: '#/components/schemas/Hakukohde'
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                hakukohde:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Hakukohde'
       |      responses:
       |        '200':
       |          description: Ok
@@ -323,7 +330,14 @@ class ExternalServlet(
       |        content:
       |          application/json:
       |            schema:
-      |              $ref: '#/components/schemas/Hakukohde'
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                hakukohde:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Hakukohde'
       |      responses:
       |        '200':
       |          description: Ok
@@ -352,7 +366,14 @@ class ExternalServlet(
       |        content:
       |          application/json:
       |            schema:
-      |              $ref: '#/components/schemas/Valintaperuste'
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                valintaperuste:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Valintaperuste'
       |      responses:
       |        '200':
       |          description: Ok
@@ -389,7 +410,14 @@ class ExternalServlet(
       |        content:
       |          application/json:
       |            schema:
-      |              $ref: '#/components/schemas/Valintaperuste'
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                valintaperuste:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Valintaperuste'
       |      responses:
       |        '200':
       |          description: Ok
@@ -416,7 +444,14 @@ class ExternalServlet(
       |        content:
       |          application/json:
       |            schema:
-      |              $ref: '#/components/schemas/Sorakuvaus'
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                sorakuvaus:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Sorakuvaus'
       |      responses:
       |        '200':
       |          description: Ok
@@ -453,7 +488,14 @@ class ExternalServlet(
       |        content:
       |          application/json:
       |            schema:
-      |              $ref: '#/components/schemas/Sorakuvaus'
+      |              type: object
+      |              properties:
+      |                authenticated:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Authenticated'
+      |                sorakuvaus:
+      |                  type: object
+      |                  $ref: '#/components/schemas/Sorakuvaus'
       |      responses:
       |        '200':
       |          description: Ok
@@ -475,5 +517,4 @@ class ExternalServlet(
     }
     request.authenticated.copy(id = s"kouta-external-${request.authenticated.id}")
   }
-
 }
