@@ -278,7 +278,7 @@ class ExternalServlet(
       |      description: Tallenna uuden hakukohteen tiedot.
       |        Rajapinta palauttaa hakukohteelle generoidun yksilöivän hakukohde-oidin.
       |      tags:
-      |        - Hakukohde
+      |        - External
       |      requestBody:
       |        description: Tallennettava hakukohde
       |        required: true
@@ -323,7 +323,7 @@ class ExternalServlet(
       |      description: Muokkaa olemassa olevaa hakukohdetta. Rajapinnalle annetaan hakukohteen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
-      |        - Hakukohde
+      |        - External
       |      requestBody:
       |        description: Muokattavan hakukohteen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
@@ -352,14 +352,14 @@ class ExternalServlet(
   }
 
 
-  registerPath( "/valintaperuste/",
+  registerPath( "/external/valintaperuste/",
     """    put:
       |      summary: Tallenna uusi valintaperustekuvaus
       |      operationId: Tallenna uusi valintaperuste
       |      description: Tallenna uuden valintaperustekuvauksen tiedot.
       |        Rajapinta palauttaa valintaperustekuvaukselle generoidun yksilöivän id:n
       |      tags:
-      |        - Valintaperuste
+      |        - External
       |      requestBody:
       |        description: Tallennettava valintaperustekuvaus
       |        required: true
@@ -396,14 +396,14 @@ class ExternalServlet(
     }
   }
 
-  registerPath("/valintaperuste/",
+  registerPath("/external/valintaperuste/",
     """    post:
       |      summary: Muokkaa olemassa olevaa valintaperustekuvausta
       |      operationId: Muokkaa valintaperustetta
       |      description: Muokkaa olemassa olevaa valintaperustekuvausta. Rajapinnalle annetaan valintaperusteen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
-      |        - Valintaperuste
+      |        - External
       |      requestBody:
       |        description: Muokattavan valintaperustekuvauksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
@@ -430,14 +430,14 @@ class ExternalServlet(
     Ok("updated" -> updated)
   }
 
-  registerPath( "/sorakuvaus/",
+  registerPath( "/external/sorakuvaus/",
     """    put:
       |      summary: Tallenna uusi SORA-kuvaus
       |      operationId: Tallenna uusi sorakuvaus
       |      description: Tallenna uuden SORA-kuvauksen tiedot.
       |        Rajapinta palauttaa SORA-kuvaukselle generoidun yksilöivän id:n
       |      tags:
-      |        - Sorakuvaus
+      |        - External
       |      requestBody:
       |        description: Tallennettava SORA-kuvaus
       |        required: true
@@ -474,14 +474,14 @@ class ExternalServlet(
     }
   }
 
-  registerPath("/sorakuvaus/",
+  registerPath("/external/sorakuvaus/",
     """    post:
       |      summary: Muokkaa olemassa olevaa SORA-kuvausta
       |      operationId: Muokkaa sorakuvausta
       |      description: Muokkaa olemassa olevaa SORA-kuvausta. Rajapinnalle annetaan SORA-kuvauksen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
-      |        - Sorakuvaus
+      |        - External
       |      requestBody:
       |        description: Muokattavan SORA-kuvauksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
