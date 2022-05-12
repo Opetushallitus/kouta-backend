@@ -12,12 +12,14 @@ class MockOrganisaatioServiceClient(securityContext: SecurityContext, defaultAut
       organisaatiot = List(
         OrgServiceOrganisaatio(
           oid = ChildOid.toString,
+          parentOidPath = s"${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
           oppilaitostyyppi = Some("oppilaitostyyppi_21#1"),
           nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
           kotipaikkaUri = "kunta_123",
           children = List(
             OrganisaationOsa(
               oid = GrandChildOid.toString,
+              parentOidPath = s"${GrandChildOid.toString}/${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
               nimi = Map(Fi -> "Organisation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
               kotipaikkaUri = "kunta_123",
               children = List(),

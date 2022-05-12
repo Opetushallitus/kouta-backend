@@ -39,6 +39,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
 case class OrgServiceOrganisaatio(
   oid: String,
+  parentOidPath: String,
   oppilaitostyyppi: Option[String] = None,
   nimi: Kielistetty,
   kotipaikkaUri: String,
@@ -49,6 +50,7 @@ case class OrgServiceOrganisaatio(
 
 case class OrganisaationOsa(
   oid: String,
+  parentOidPath: String,
   nimi: Kielistetty,
   kotipaikkaUri: String,
   children: List[OrganisaationOsa],
