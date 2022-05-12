@@ -12,7 +12,7 @@ class MockOrganisaatioServiceClient(securityContext: SecurityContext, defaultAut
       organisaatiot = List(
         OrgServiceOrganisaatio(
           oid = ChildOid.toString,
-          oppilaitostyyppi = "oppilaitostyyppi_21#1",
+          oppilaitostyyppi = Some("oppilaitostyyppi_21#1"),
           nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
           kotipaikkaUri = "kunta_123",
           children = List(

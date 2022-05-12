@@ -28,8 +28,10 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
         "suunnitellut" -> "true",
         "lakkautetut" -> "false",
         "skipParents" -> "true"))
-    get(url, followRedirects = true) { response => {
-      parse(response).extract[OrganisaatioHierarkia]
+    get(url, followRedirects = true) {
+      response => {
+        println(response)
+        parse(response).extract[OrganisaatioHierarkia]
       }
     }
   }
@@ -37,10 +39,12 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
 case class OrgServiceOrganisaatio(
   oid: String,
-  oppilaitostyyppi: String,
+  oppilaitostyyppi: Option[String] = None,
   nimi: Kielistetty,
   kotipaikkaUri: String,
-  children: List[OrganisaationOsa]
+  children: List[OrganisaationOsa],
+  status: Option[String] = None,
+  organisaatiotyypit: Option[List[String]] = None,
 )
 
 case class OrganisaationOsa(
