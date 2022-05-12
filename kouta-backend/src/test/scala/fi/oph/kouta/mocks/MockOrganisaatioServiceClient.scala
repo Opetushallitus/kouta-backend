@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails, SecurityContext}
 
 class MockOrganisaatioServiceClient(securityContext: SecurityContext, defaultAuthorities: Set[Authority]) extends OrganisaatioServiceClient {
-  override def getOrganisaatioHierarkiaWithOid(oid: OrganisaatioOid): OrganisaatioHierarkia = {
+  override def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
     OrganisaatioHierarkia(
       organisaatiot = List(
         OrgServiceOrganisaatio(

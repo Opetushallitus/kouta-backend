@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioServiceClient}
+import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioHierarkia, OrganisaatioServiceClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -48,10 +48,15 @@ class OppilaitosService(
     authorizeGet(enrichedOppilaitos)
   }
 
-  def get(oids: List[OrganisaatioOid])(implicit authenticated: Authenticated): List[OppilaitosByOid] = {
+  case class OppilaitoksetResponse(
+    oppilaitokset: List[OppilaitosByOid],
+    organisaatioHierarkia: OrganisaatioHierarkia
+  )
+
+  def get(oids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
     val oppilaitokset = OppilaitosDAO.get(oids)
 
-    oids.map(oid => {
+    val oppilaitoksetByOids = oids.map(oid => {
       val byOid = oppilaitokset.filter(oppilaitosAndOsa => {
         val osaMatchesOid = oppilaitosAndOsa.osa match {
           case Some(osa) => osa.oid == oid
@@ -71,13 +76,16 @@ class OppilaitosService(
         }).map(oppilaitosAndOsa => oppilaitosAndOsa.osa.get)
 
         val oppilaitosWithOsat = authorizeGet(oppilaitos.copy(osat = Some(osat)))
-        val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOid(oid)
 
-        OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat), organisaatioHierarkia = Some(hierarkia))
+        OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat))
       } else {
         OppilaitosByOid(oid = oid)
       }
     })
+    val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOids(oids)
+    OppilaitoksetResponse(
+      oppilaitokset = oppilaitoksetByOids, organisaatioHierarkia = hierarkia
+    )
   }
 
   private def enrichOppilaitosMetadata(oppilaitos: Oppilaitos) : Option[OppilaitosMetadata] = {

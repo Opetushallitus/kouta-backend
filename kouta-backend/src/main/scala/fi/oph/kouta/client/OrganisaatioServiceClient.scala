@@ -19,15 +19,15 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   implicit val OrganisaatioHierarkiaCache = CaffeineCache[OrganisaatioHierarkia]
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
-  def getOrganisaatioHierarkiaWithOid(oid: OrganisaatioOid): OrganisaatioHierarkia = memoizeSync[OrganisaatioHierarkia](Some(45.minutes)) {
+  def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = memoizeSync[OrganisaatioHierarkia](Some(45.minutes)) {
+    val oidsAsQueryParams = oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
     val url = urlProperties.url(
       s"organisaatio-service.organisaatio.hierarkia.with.oid",
       toQueryParams(
-        "oid" -> oid.toString,
         "aktiiviset" -> "true",
         "suunnitellut" -> "true",
         "lakkautetut" -> "false",
-        "skipParents" -> "true"))
+        "skipParents" -> "true")) + oidsAsQueryParams
     get(url, followRedirects = true) {
       response => {
         println(response)
