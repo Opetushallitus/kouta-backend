@@ -22,7 +22,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = memoizeSync[OrganisaatioHierarkia](Some(45.minutes)) {
     val oidsAsQueryParams = oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
     val url = urlProperties.url(
-      s"organisaatio-service.organisaatio.hierarkia.with.oid",
+      s"organisaatio-service.organisaatio.hierarkia.with.oids",
       toQueryParams(
         "aktiiviset" -> "true",
         "suunnitellut" -> "true",
@@ -30,7 +30,6 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
         "skipParents" -> "true")) + oidsAsQueryParams
     get(url, followRedirects = true) {
       response => {
-        println(response)
         parse(response).extract[OrganisaatioHierarkia]
       }
     }

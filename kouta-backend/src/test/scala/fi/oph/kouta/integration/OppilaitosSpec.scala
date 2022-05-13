@@ -1,16 +1,17 @@
 package fi.oph.kouta.integration
 
-import java.time.LocalDateTime
-import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.{Arkistoitu, OppilaitosEnrichedData, OppilaitosMetadata}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.{Arkistoitu, OppilaitosEnrichedData}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+
+import java.time.LocalDateTime
+import java.util.UUID
 
 class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture {
   override val roleEntities = Seq(Role.Oppilaitos)
@@ -364,5 +365,20 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     update(oppilaitosWithImages, lastModified1)
 
     get(oid2, oppilaitos(oid2))
+  }
+
+  "Get oppilaitokset by oids" should "return organisaatio oid without oppilaitos data for oppilaitos not in kouta" in {
+    post(s"$OppilaitosPath/oppilaitokset", bytes(List(UnknownOid)), headers = defaultHeaders) {
+      status should equal (200)
+      body should include ("{\"oppilaitokset\":[{\"oid\":\"1.2.246.562.10.99999999998\"}]")
+    }
+  }
+
+  it should "succeed in sending oppilaitos data for existing oppilaitos" in {
+    val oid = put(oppilaitos)
+    post(s"$OppilaitosPath/oppilaitokset", bytes(List(oid)), headers = defaultHeaders) {
+      status should equal (200)
+      body should include (s"""{\"oppilaitokset\":[{\"oid\":\"$oid\",\"oppilaitos\":{\"oid\":\"$oid\"""")
+    }
   }
 }

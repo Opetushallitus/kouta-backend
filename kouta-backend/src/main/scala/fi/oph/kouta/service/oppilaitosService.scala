@@ -75,13 +75,19 @@ class OppilaitosService(
           }
         }).map(oppilaitosAndOsa => oppilaitosAndOsa.osa.get)
 
-        val oppilaitosWithOsat = authorizeGet(oppilaitos.copy(osat = Some(osat)))
-
-        OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat))
+        try {
+          val oppilaitosWithOsat = authorizeGet(oppilaitos.copy(osat = Some(osat)), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))
+          OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat))
+        } catch {
+          case authorizationException: OrganizationAuthorizationFailedException =>
+            logger.error(s"Authorization failed: ${authorizationException}")
+            OppilaitosByOid(oid = oid)
+        }
       } else {
         OppilaitosByOid(oid = oid)
       }
     })
+
     val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOids(oids)
     OppilaitoksetResponse(
       oppilaitokset = oppilaitoksetByOids, organisaatioHierarkia = hierarkia
