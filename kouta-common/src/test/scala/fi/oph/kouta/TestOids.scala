@@ -11,6 +11,8 @@ object TestOids {
   val EvilChildOid = OrganisaatioOid("1.2.246.562.10.66634895871")
   val GrandChildOid = OrganisaatioOid("1.2.246.562.10.67603619189")
   val EvilGrandChildOid = OrganisaatioOid("1.2.246.562.10.66603619189")
+  val GrandGrandChildOid = OrganisaatioOid("1.2.246.562.10.67603619201")
+  val EvilGrandGrandChildOid = OrganisaatioOid("1.2.246.562.10.66603619202")
   val EvilCousin = OrganisaatioOid("1.2.246.562.10.66634895666")
 
   val LonelyOid = OrganisaatioOid("1.2.246.562.10.99999999999")
