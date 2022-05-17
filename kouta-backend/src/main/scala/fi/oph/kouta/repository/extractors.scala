@@ -392,12 +392,10 @@ trait OppilaitosExtractors extends ExtractorBase {
       esikatselu = r.nextBoolean(),
       organisaatioOid = OrganisaatioOid(r.nextString()),
       teemakuva = r.nextStringOption(),
-      logo = r.nextStringOption(),
-      modified = Some(timeStampToModified(r.nextTimestamp())))
+      logo = r.nextStringOption())
 
     val osaOid = r.nextString()
     var osa = None: Option[OppilaitoksenOsa]
-    println(osaOid)
     if (osaOid != null) {
       osa = Some(OppilaitoksenOsa(
         oid = OrganisaatioOid(osaOid),
@@ -408,8 +406,7 @@ trait OppilaitosExtractors extends ExtractorBase {
         muokkaaja = UserOid(r.nextString()),
         esikatselu = r.nextBoolean(),
         organisaatioOid = OrganisaatioOid(r.nextString()),
-        teemakuva = r.nextStringOption(),
-        modified = Some(timeStampToModified(r.nextTimestamp()))))
+        teemakuva = r.nextStringOption()))
     }
 
     OppilaitosAndOsa(

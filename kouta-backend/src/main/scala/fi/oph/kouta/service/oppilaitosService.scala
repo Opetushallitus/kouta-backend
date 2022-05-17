@@ -10,7 +10,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
 import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
@@ -49,48 +49,29 @@ class OppilaitosService(
   }
 
   case class OppilaitoksetResponse(
-    oppilaitokset: List[OppilaitosByOid],
+    oppilaitokset: List[Oppilaitos],
     organisaatioHierarkia: OrganisaatioHierarkia
   )
 
-  def get(oids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
-    val oppilaitokset = OppilaitosDAO.get(oids)
+  def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
+    val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
+    val oids = OppilaitosServiceUtil.getHierarkiaOids(hierarkia)
+    val oppilaitokset = OppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
 
-    val oppilaitoksetByOids = oids.map(oid => {
-      val byOid = oppilaitokset.filter(oppilaitosAndOsa => {
-        val osaMatchesOid = oppilaitosAndOsa.osa match {
-          case Some(osa) => osa.oid == oid
-          case None => false
-        }
-
-        oppilaitosAndOsa.oppilaitos.oid == oid || osaMatchesOid
-      })
-
-      if (!byOid.isEmpty) {
-        val oppilaitos = byOid.head.oppilaitos
-        val osat = byOid.filter(oppilaitosAndOsa => {
-          oppilaitosAndOsa.osa match {
-            case Some(_) => true
-            case None => false
-          }
-        }).map(oppilaitosAndOsa => oppilaitosAndOsa.osa.get)
+    val oppilaitoksetWithOsat = oppilaitokset.map(oppilaitosAndOsatByOid => {
+      val oppilaitos = oppilaitosAndOsatByOid._2.head.oppilaitos
+      val osat = oppilaitosAndOsatByOid._2.map(oppilaitosAndOsa => oppilaitosAndOsa.osa).flatten
 
         try {
-          val oppilaitosWithOsat = authorizeGet(oppilaitos.copy(osat = Some(osat)), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))
-          OppilaitosByOid(oid = oid, oppilaitos = Some(oppilaitosWithOsat))
+          Some(authorizeGet(oppilaitos.copy(osat = Some(osat)), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)))
         } catch {
           case authorizationException: OrganizationAuthorizationFailedException =>
             logger.error(s"Authorization failed: ${authorizationException}")
-            OppilaitosByOid(oid = oid)
+            None
         }
-      } else {
-        OppilaitosByOid(oid = oid)
-      }
-    })
-
-    val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOids(oids)
+    }).toList.flatten
     OppilaitoksetResponse(
-      oppilaitokset = oppilaitoksetByOids, organisaatioHierarkia = hierarkia
+      oppilaitokset = oppilaitoksetWithOsat, organisaatioHierarkia = hierarkia
     )
   }
 

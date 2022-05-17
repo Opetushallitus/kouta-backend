@@ -367,10 +367,10 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     get(oid2, oppilaitos(oid2))
   }
 
-  "Get oppilaitokset by oids" should "return organisaatio oid without oppilaitos data for oppilaitos not in kouta" in {
+  "Get oppilaitokset by oids" should "not return oppilaitos data for oppilaitos not in kouta" in {
     post(s"$OppilaitosPath/oppilaitokset", bytes(List(UnknownOid)), headers = defaultHeaders) {
       status should equal (200)
-      body should include ("{\"oppilaitokset\":[{\"oid\":\"1.2.246.562.10.99999999998\"}]")
+      body should include ("{\"oppilaitokset\":[]")
     }
   }
 
@@ -378,7 +378,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     val oid = put(oppilaitos)
     post(s"$OppilaitosPath/oppilaitokset", bytes(List(oid)), headers = defaultHeaders) {
       status should equal (200)
-      body should include (s"""{\"oppilaitokset\":[{\"oid\":\"$oid\",\"oppilaitos\":{\"oid\":\"$oid\"""")
+      body should include (s"""{\"oppilaitokset\":[{\"oid\":\"$oid\"""")
     }
   }
 }
