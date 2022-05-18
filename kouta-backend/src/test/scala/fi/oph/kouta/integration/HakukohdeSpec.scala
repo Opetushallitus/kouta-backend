@@ -123,10 +123,10 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
 
   it should "store true as the value of isMuokkaajaOphVirkailija when muokkaaja is OPH virkailija" in {
     val uusiHk = uusiHakukohde.copy(muokkaaja = OphUserOid)
-    val oid = put(uusiHk)
+    val oid = put(uusiHk, ophSession)
     val tallennettuHk = tallennettuHakukohde(oid)
     val tallennettuHkMetadata = tallennettuHk.metadata.get
-    val tallennettuHkCopy = tallennettuHk.copy(metadata = Some(tallennettuHkMetadata.copy(isMuokkaajaOphVirkailija = Some(false))))
+    val tallennettuHkCopy = tallennettuHk.copy(muokkaaja = OphUserOid, metadata = Some(tallennettuHkMetadata.copy(isMuokkaajaOphVirkailija = Some(true))))
     get(oid, tallennettuHkCopy)
   }
 

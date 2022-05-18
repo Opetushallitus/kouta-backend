@@ -4,7 +4,23 @@ import java.util.UUID
 import fi.oph.kouta.TestOids
 import fi.oph.kouta.TestOids.{OphOid, TestUserOid}
 import fi.oph.kouta.domain.oid.{UserOid}
-import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Hakukohde, Julkaisutila, Koulutus, Sorakuvaus, Tallennettu, Toteutus, Valintaperuste}
+import fi.oph.kouta.domain.{
+  ExternalHakuRequest,
+  ExternalHakukohdeRequest,
+  ExternalKoulutusRequest,
+  ExternalRequest,
+  ExternalSorakuvausRequest,
+  ExternalToteutusRequest,
+  ExternalValintaperusteRequest,
+  Haku,
+  Hakukohde,
+  Julkaisutila,
+  Koulutus,
+  Sorakuvaus,
+  Tallennettu,
+  Toteutus,
+  Valintaperuste
+}
 import fi.oph.kouta.integration.fixture.ExternalFixture
 import fi.oph.kouta.security.{Authority, ExternalSession, Role}
 import fi.oph.kouta.servlet.Authenticated
@@ -24,8 +40,10 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
   executeModifyTests[Koulutus](
     "koulutus",
     ExternalKoulutusPath,
-    (oid: String, authenticated: Authenticated) => ExternalKoulutusRequest(authenticated, createKoulutus(oid, tila = Some(Tallennettu))),
-    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) => createKoulutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+    (oid: String, authenticated: Authenticated) =>
+      ExternalKoulutusRequest(authenticated, createKoulutus(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createKoulutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
 
   executeCreateTests[Toteutus](
@@ -37,8 +55,10 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
   executeModifyTests[Toteutus](
     "toteutus",
     ExternalToteutusPath,
-    (oid: String, authenticated: Authenticated) => ExternalToteutusRequest(authenticated, createToteutus(oid, tila = Some(Tallennettu))),
-    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) => createToteutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+    (oid: String, authenticated: Authenticated) =>
+      ExternalToteutusRequest(authenticated, createToteutus(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createToteutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
 
   executeCreateTests[Haku](
@@ -50,8 +70,10 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
   executeModifyTests[Haku](
     "haku",
     ExternalHakuPath,
-    (oid: String, authenticated: Authenticated) => ExternalHakuRequest(authenticated, createHaku(oid, tila = Some(Tallennettu))),
-    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) => createHaku(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+    (oid: String, authenticated: Authenticated) =>
+      ExternalHakuRequest(authenticated, createHaku(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createHaku(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
 
   executeCreateTests[Hakukohde](
@@ -63,40 +85,61 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
   executeModifyTests[Hakukohde](
     "hakukohde",
     ExternalHakukohdePath,
-    (oid: String, authenticated: Authenticated) => ExternalHakukohdeRequest(authenticated, createHakukohde(oid, tila = Some(Tallennettu))),
-    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) => createHakukohde(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+    (oid: String, authenticated: Authenticated) =>
+      ExternalHakukohdeRequest(authenticated, createHakukohde(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createHakukohde(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
 
   executeCreateTests[Valintaperuste](
     "valintaperuste",
     ExternalValintaperustePath,
     (authenticated: Authenticated) => ExternalValintaperusteRequest(authenticated, createValintaperuste()),
-    (oid: String, muokkaaja: Option[UserOid]) => createValintaperuste(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+    (oid: String, muokkaaja: Option[UserOid]) =>
+      createValintaperuste(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
   )
   executeModifyTests[Valintaperuste](
     "valintaperuste",
     ExternalValintaperustePath,
-    (oid: String, authenticated: Authenticated) => ExternalValintaperusteRequest(authenticated, createValintaperuste(oid, tila = Some(Tallennettu))),
-    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) => createValintaperuste(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+    (oid: String, authenticated: Authenticated) =>
+      ExternalValintaperusteRequest(authenticated, createValintaperuste(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createValintaperuste(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
 
   executeCreateTests[Sorakuvaus](
     "sorakuvaus",
     ExternalSorakuvausPath,
-    (authenticated: Authenticated) => ExternalSorakuvausRequest(
-      if (authenticated.session.personOid == OidWithReadOnlyAccess.s) authenticated
-      else authenticated.copy(session = authenticated.session.asInstanceOf[ExternalSession].copy(authorities = Set(Authority(Role.Paakayttaja, OphOid)))),
-      createSorakuvaus()),
-    (oid: String, muokkaaja: Option[UserOid]) => createSorakuvaus(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+    (authenticated: Authenticated) =>
+      ExternalSorakuvausRequest(
+        if (authenticated.session.personOid == OidWithReadOnlyAccess.s) authenticated
+        else
+          authenticated.copy(session =
+            authenticated.session
+              .asInstanceOf[ExternalSession]
+              .copy(authorities = Set(Authority(Role.Paakayttaja, OphOid)))
+          ),
+        createSorakuvaus()
+      ),
+    (oid: String, muokkaaja: Option[UserOid]) =>
+      createSorakuvaus(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
   )
   executeModifyTests[Sorakuvaus](
     "sorakuvaus",
     ExternalSorakuvausPath,
-    (oid: String, authenticated: Authenticated) => ExternalSorakuvausRequest(
-      if (authenticated.session.personOid == OidWithReadOnlyAccess.s) authenticated
-      else authenticated.copy(session = authenticated.session.asInstanceOf[ExternalSession].copy(authorities = Set(Authority(Role.Paakayttaja, OphOid)))),
-      createSorakuvaus(oid, tila = Some(Tallennettu))),
-    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) => createSorakuvaus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+    (oid: String, authenticated: Authenticated) =>
+      ExternalSorakuvausRequest(
+        if (authenticated.session.personOid == OidWithReadOnlyAccess.s) authenticated
+        else
+          authenticated.copy(session =
+            authenticated.session
+              .asInstanceOf[ExternalSession]
+              .copy(authorities = Set(Authority(Role.Paakayttaja, OphOid)))
+          ),
+        createSorakuvaus(oid, tila = Some(Tallennettu))
+      ),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createSorakuvaus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
 }
 
@@ -116,7 +159,7 @@ trait CreateTests extends TestBase {
   ): Unit = {
     s"Create $entityName from external" should s"store new $entityName" in {
       val request = makeRequest(authenticated())
-      val oidOrId     = doPut(request, externalSession)
+      val oidOrId = doPut(request, externalSession)
       doGet(oidOrId, resultEntity(oidOrId, Some(TestUserOid)))
     }
 
@@ -128,7 +171,7 @@ trait CreateTests extends TestBase {
     it should s"store muokkaaja from the session sent from kouta-external when creating new $entityName" in {
       val userOid = TestOids.randomUserOid
       val request = makeRequest(authenticated(personOid = userOid))
-      val oidOrId     = doPut(request, ophSession)
+      val oidOrId = doPut(request, ophSession)
       doGet(oidOrId, resultEntity(oidOrId, Some(userOid)))
     }
 
@@ -139,8 +182,9 @@ trait CreateTests extends TestBase {
     }
 
     it should s"use the attached session for authentication when creating new $entityName" in {
-      val authentication = authenticated(personOid = OidWithReadOnlyAccess, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
-      val request        = makeRequest(authentication)
+      val authentication =
+        authenticated(personOid = OidWithReadOnlyAccess, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
+      val request = makeRequest(authentication)
       put(path, request, externalSession, 403)
     }
   }
@@ -156,8 +200,8 @@ trait ModifyTests extends TestBase {
       resultEntity: (String, Option[UserOid], Option[Julkaisutila], Option[Boolean]) => E
   ): Unit = {
     s"Update $entityName from external" should s"update $entityName in backend" in {
-      val oidOrId              = doPut(resultEntity("", None, None, None), ophSession)
-      val lastModified     = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
       val request = makeModifyRequest(oidOrId, authenticated())
 
@@ -166,7 +210,7 @@ trait ModifyTests extends TestBase {
     }
 
     it should s"require authentication to be attached to the request when updating existing $entityName" in {
-      val oidOrId          = doPut(resultEntity("", None, None, None), ophSession)
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
       val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
       val entityName = path.split("/").last
@@ -174,8 +218,8 @@ trait ModifyTests extends TestBase {
     }
 
     it should s"store muokkaaja from the session sent from kouta-external when updating existing $entityName" in {
-      val oidOrId              = doPut(resultEntity("", None, None, None), ophSession)
-      val lastModified     = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
       val userOid        = TestOids.randomUserOid
       val authentication = authenticated(personOid = userOid)
@@ -186,8 +230,8 @@ trait ModifyTests extends TestBase {
     }
 
     it should s"deny a user with the wrong role when updating existing $entityName" in {
-      val oidOrId              = doPut(resultEntity("", None, None, None), ophSession)
-      val lastModified     = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
       val request = makeModifyRequest(oidOrId, authenticated())
 
@@ -195,11 +239,12 @@ trait ModifyTests extends TestBase {
     }
 
     it should s"use the attached session for authentication when updating existing $entityName" in {
-      val oidOrId              = doPut(resultEntity("", None, None, None), ophSession)
-      val lastModified     = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
-      val authentication = authenticated(personOid = OidWithReadOnlyAccess, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
-      val request        = makeModifyRequest(oidOrId, authentication)
+      val authentication =
+        authenticated(personOid = OidWithReadOnlyAccess, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
+      val request = makeModifyRequest(oidOrId, authentication)
       update(path, request, lastModified, externalSession, 403)
     }
   }
