@@ -467,7 +467,9 @@ trait HakutietoExtractors extends ExtractorBase {
           muokkaaja = UserOid(r.nextString()),
           valintatapaKoodiUrit = extractArray[String](r.nextObjectOption()),
           modified = Some(timeStampToModified(r.nextTimestamp())),
-          toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata]))
+          toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata]),
+          kynnysehto = extractKielistetty(r.nextStringOption()),
+          valintakoeIds = extractArray[UUID](r.nextObjectOption()))
 
       val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
         Hakukohde(

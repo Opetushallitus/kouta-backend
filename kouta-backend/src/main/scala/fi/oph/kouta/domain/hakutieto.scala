@@ -238,4 +238,6 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               organisaatioOid: OrganisaatioOid,
                               valintatapaKoodiUrit: Seq[String] = Seq(),
                               modified: Option[Modified],
-                              toteutusMetadata: Option[ToteutusMetadata] = None)
+                              toteutusMetadata: Option[ToteutusMetadata] = None,
+                              kynnysehto: Kielistetty = Map(),
+                              valintakoeIds: Seq[UUID] = Seq())
