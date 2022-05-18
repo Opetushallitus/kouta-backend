@@ -383,6 +383,15 @@ case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvauksenNimi: Kielistetty = Map(),
                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
+case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
+                                                 kuvaus: Kielistetty = Map(),
+                                                 lisatiedot: Seq[Lisatieto] = Seq(),
+                                                 koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                                 tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+                                                 opintojenLaajuusKoodiUri: Option[String] = None,
+                                                 kuvauksenNimi: Kielistetty = Map(),
+                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
+
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
                                  lisatiedot: Seq[Lisatieto] = Seq(),

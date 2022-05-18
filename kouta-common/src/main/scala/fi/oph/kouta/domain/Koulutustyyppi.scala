@@ -19,11 +19,12 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmMuu,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
+      AmmOpeErityisopeJaOpo,
       AikuistenPerusopetus
     )
 
   def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu)
-  def korkeakoulu            = List(Amk, Yo)
+  def korkeakoulu            = List(Amk, Yo, AmmOpeErityisopeJaOpo)
   def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
   def onlyOphCanSaveKoulutus = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
   def toinenAsteYhteishaku   = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
@@ -90,11 +91,11 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_24#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva), //Ammatilliset aikuiskoulutuskeskukset
     "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
     "oppilaitostyyppi_29#1" -> Seq(Amm), //Sotilasalan ammatilliset oppilaitokset
-    "oppilaitostyyppi_41#1" -> Seq(Amk), //Ammattikorkeakoulut
+    "oppilaitostyyppi_41#1" -> Seq(Amk, AmmOpeErityisopeJaOpo), //Ammattikorkeakoulut
     "oppilaitostyyppi_42#1" -> Seq(Yo), //Yliopistot
     "oppilaitostyyppi_43#1" -> Seq(Yo), //Sotilaskorkeakoulut
     "oppilaitostyyppi_45#1" -> Seq(Yo), //Lastentarhanopettajaopistot
-    "oppilaitostyyppi_46#1" -> Seq(Amk), //Väliaikaiset ammattikorkeakoulut
+    "oppilaitostyyppi_46#1" -> Seq(Amk, AmmOpeErityisopeJaOpo), //Väliaikaiset ammattikorkeakoulut
     "oppilaitostyyppi_61#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Muu), //Musiikkioppilaitokset
     "oppilaitostyyppi_62#1" -> Seq(
       Amm,
@@ -176,4 +177,5 @@ case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm
 case object AmmMuu                      extends Koulutustyyppi { val name = "amm-muu"                       }
 case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
 case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }
+case object AmmOpeErityisopeJaOpo       extends Koulutustyyppi { val name = "amm-ope-erityisope-ja-opo"     }
 case object AikuistenPerusopetus        extends Koulutustyyppi { val name = "aikuisten-perusopetus"         }

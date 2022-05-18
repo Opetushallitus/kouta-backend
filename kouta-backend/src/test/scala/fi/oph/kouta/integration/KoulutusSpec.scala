@@ -238,6 +238,15 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, koulutusWithSoraKuvaus.copy(oid = Some(KoulutusOid(oid))))
   }
 
+  it should "fail to store Amm. opettaja-, erityisopettaja- ja opokoulutus with wrong koulutuskoodiuri" in {
+    put(TestData.AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")), List(ValidationError("koulutuksetKoodiUri", invalidKoulutuskoodiuri)))
+  }
+
+  it should "succeed to store Amm. opettaja-, erityisopettaja- ja opokoulutus with koulutuskoodiuri that has version" in {
+    val oid = put(TestData.AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_000001#1")), ophSession)
+    get(oid, TestData.AmmOpettajaKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_000001#1")))
+  }
+
   "Update koulutus" should "update koulutus" in {
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))

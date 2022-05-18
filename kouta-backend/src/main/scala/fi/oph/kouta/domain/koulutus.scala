@@ -25,11 +25,26 @@ package object koulutus {
       |          description: Onko koulutus tutkintoon johtavaa
       |        koulutustyyppi:
       |          type: string
-      |          description: "Koulutuksen tyyppi. Sallitut arvot: 'amm' (ammatillinen), 'yo' (yliopisto), 'lk' (lukio), 'amk' (ammattikorkea), 'amm-tutkinnon-osa', 'amm-osaamisala', 'amm-muu', 'tuva' (tutkintokoulutukseen valmentava koulutus), 'telma' (työhön ja itsenäiseen elämään valmentava koulutus), 'vapaa-sivistystyo-opistovuosi', 'vapaa-sivistystyo-muu', 'aikuisten-perusopetus', 'muu'"
+      |          description: "Koulutuksen tyyppi. Sallitut arvot:
+      |            'amm' (ammatillinen),
+      |            'yo' (yliopisto),
+      |            'lk' (lukio),
+      |            'amk' (ammattikorkea),
+      |            'amm-ope-erityisope-ja-opo' (Ammatillinen opettaja-, erityisopettaja ja opinto-ohjaajakoulutus)
+      |            'amm-tutkinnon-osa',
+      |            'amm-osaamisala',
+      |            'amm-muu',
+      |            'tuva' (tutkintokoulutukseen valmentava koulutus),
+      |            'telma' (työhön ja itsenäiseen elämään valmentava koulutus),
+      |            'vapaa-sivistystyo-opistovuosi',
+      |            'vapaa-sivistystyo-muu',
+      |            'aikuisten-perusopetus',
+      |            'muu'"
       |          enum:
       |            - amm
       |            - yo
       |            - amk
+      |            - amm-ope-erityisope-ja-opo
       |            - lk
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
@@ -94,6 +109,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/YliopistoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/AmmOpeErityisopeJaOpoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenMuuKoulutusMetadata'
@@ -206,11 +222,14 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     _enrichedData: Option[KoulutusEnrichedData] = None)
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
+  val ammOpeErityisopeJaOpoKoulutusKoodiUrit = Seq("koulutus_000001", "koulutus_000002", "koulutus_000003")
+
   override def validate(): IsValid = {
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
       assertValid(organisaatioOid, "organisaatioOid"),
       validateIfNonEmpty[String](koulutuksetKoodiUri, "koulutuksetKoodiUri", assertMatch(_, KoulutusKoodiPattern, _)),
+      validateIfTrue(koulutustyyppi == AmmOpeErityisopeJaOpo, assertIncludesOnlyValidValues(koulutuksetKoodiUri.map(koodiuri => koodiuri.replaceAll("#[0-9]+", "")), ammOpeErityisopeJaOpoKoulutusKoodiUrit, "koulutuksetKoodiUri")),
       validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
