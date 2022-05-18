@@ -61,7 +61,7 @@ class HakukohdeService(
       case Some((h, i)) =>
         val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        val hakukohdeEnrichedDataWithMuokkaajanNimi = EnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
+        val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
         val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
         toteutus match {
           case Some((t, _)) =>

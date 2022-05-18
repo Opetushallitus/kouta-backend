@@ -99,7 +99,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     get(oid, tallennettuHakukohde(oid).copy(
       toteutusOid = ToteutusOid(tuvaToteutusOid),
       valintaperusteId = Some(tuvaValintaperusteId),
-      _enrichedData = Some(EnrichedData(esitysnimi = Map(
+      _enrichedData = Some(HakukohdeEnrichedData(esitysnimi = Map(
         Fi -> s"""Hakukohde fi (yleiset.vaativanaErityisenaTukena fi)""".stripMargin,
         Sv -> s"""Hakukohde sv (yleiset.vaativanaErityisenaTukena sv)""".stripMargin),
         muokkaajanNimi = Some("Testi Muokkaaja")
@@ -475,7 +475,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
       hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake", Sv -> "http://ataru/kivahakulomake/sv", En -> "http://ataru/kivahakulomake/en"),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))),
       _enrichedData = Some(
-      EnrichedData(
+      HakukohdeEnrichedData(
         esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
         muokkaajanNimi = Some("Testi Muokkaaja")
       )
@@ -497,7 +497,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val unfinishedHakukohde = Hakukohde(muokkaaja = TestUserOid, toteutusOid = ToteutusOid(toteutusOid),
       hakuOid = HakuOid(hakuOid), organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "hakukohde"),
       _enrichedData = Some(
-        EnrichedData(
+        HakukohdeEnrichedData(
           esitysnimi = Map(Fi -> "hakukohde"),
           muokkaajanNimi = Some("Testi Muokkaaja")
         )))

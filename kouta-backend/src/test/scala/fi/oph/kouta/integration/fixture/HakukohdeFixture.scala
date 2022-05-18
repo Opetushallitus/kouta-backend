@@ -133,7 +133,8 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       hakukohde.jarjestyspaikkaOid,
       hakukohde.organisaatioOid,
       hakukohde.muokkaaja,
-      modified
+      modified,
+      None
     )
   }
 
