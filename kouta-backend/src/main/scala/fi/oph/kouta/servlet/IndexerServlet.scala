@@ -564,6 +564,34 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.onlyOlemassaolevat()))
   }
 
+  registerPath("/indexer/list-toteutus-oids-by-tarjoajat",
+    """    post:
+      |      summary: Hakee tarjoajaa (oppilaitos tai toimipiste) vastaavat toteutukset
+      |      operationId: Tarjoajan toteutukset
+      |      description: Hakee kaikkien niiden toteutusten oidit, joissa annettu oppilaitos/toimipiste on sen tarjoajana suoraan tai oppilaitoksen kautta (jos toimipiste). Tämä rajapinta on indeksointia varten
+      |      tags:
+      |        - Indexer
+      |      requestBody:
+      |        description: Lista tarjoajien organisaatio-oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example: 1.2.246.562.10.56753942459
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
+  post("/list-toteutus-oids-by-tarjoajat") {
+
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(ToteutusService.getOidsByTarjoajat(parsedBody.extract[Seq[OrganisaatioOid]],
+      TilaFilter.onlyOlemassaolevat()))
+  }
+
   registerPath("/indexer/oppilaitos-hierarkia/{organisaatioOid}",
     """    get:
       |      summary: Hakee organisaatio-oidilla oppilaitoksen tai -osan ja sen osat

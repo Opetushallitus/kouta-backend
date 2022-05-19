@@ -327,4 +327,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   private def insertAmmattinimikkeet(toteutus: Toteutus)(implicit authenticated: Authenticated) =
     keywordService.insert(Ammattinimike, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(Seq()))
+
+  def getOidsByTarjoajat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated) =
+    withRootAccess(indexerRoles) {
+      ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
+    }
 }
