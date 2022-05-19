@@ -16,9 +16,11 @@ object KoodistoClient extends KoodistoClient(KoutaConfigurationFactory.configura
 class KoodistoClient(urlProperties: OphProperties) extends HttpClient with CallerId with Logging {
   implicit val formats       = DefaultFormats
   implicit val KoodistoCache = CaffeineCache[Map[String, Kielistetty]]
+  implicit val koodiUriCache = CaffeineCache[String]
 
   case class CodeElementMetadataItem(nimi: String, kieli: String)
   case class CodeElement(koodiUri: String, metadata: List[CodeElementMetadataItem] = List())
+  case class CodeElementWithVersion(koodiUri: String, versio: Int)
 
   def parseKoodi(codeElement: CodeElement): Kielistetty = {
     codeElement.metadata
@@ -44,4 +46,15 @@ class KoodistoClient(urlProperties: OphProperties) extends HttpClient with Calle
         parseKoodit(parse(response).extract[List[CodeElement]])
       }
     }
+
+  def getKoodiUriWithLatestVersion(koodiUriWithoutVersion: String): String = {
+    memoizeSync[String](Some(5.minutes)) {
+      get(urlProperties.url("koodisto-service.latest-koodiuri", koodiUriWithoutVersion), followRedirects = true) { response =>
+        {
+          val codeElement = parse(response).extract[CodeElementWithVersion]
+          s"${codeElement.koodiUri}#${codeElement.versio}"
+        }
+      }
+    }
+  }
 }

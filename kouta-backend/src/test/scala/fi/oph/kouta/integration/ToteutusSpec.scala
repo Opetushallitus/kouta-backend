@@ -29,6 +29,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     super.beforeAll()
     mockKoodistoResponse("lukiopainotukset", List("lukiopainotukset_1"))
     mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", List("lukiolinjaterityinenkoulutustehtava_1"))
+    mockKoodiUriResponse("koulutus_201101", 12)
     mockLokalisointiResponse("yleiset.opintopistetta")
     mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
     koulutusOid = put(koulutus, ophSession)
@@ -657,6 +658,15 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
   }
 
+  it should "create, get and update muu ammatillinen toteutus" in {
+    val ammMuuKoulutusOid = put(TestData.AmmMuuKoulutus.copy(tila = Julkaistu), ophSession)
+    val ammMuuToteutus = TestData.AmmMuuToteutus.copy(koulutusOid = KoulutusOid(ammMuuKoulutusOid), tila = Tallennettu)
+    val oid = put(ammMuuToteutus)
+    val lastModified = get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
   it should "create, get and update lukio toteutus" in {
     val _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(
       Fi -> s"""toteutuslomake.lukionYleislinjaNimiOsa fi, 40 yleiset.opintopistetta fi
@@ -769,5 +779,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
         status should equal(404)
       }
     }
+  }
+
+  it should "create, get and update aikuisten perusopetus -toteutus" in {
+    val aiPeToKoulutusOid = put(TestData.AikuistenPerusopetusKoulutus.copy(tila = Julkaistu), ophSession)
+    val aiPeToToteutus = TestData.AikuistenPerusopetusToteutus.copy(koulutusOid = KoulutusOid(aiPeToKoulutusOid), tila = Tallennettu)
+    val oid = put(aiPeToToteutus)
+    val lastModified = get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
   }
 }
