@@ -460,7 +460,7 @@ object TestData {
     kielivalinta = Seq(Fi, Sv),
     modified = None,
     _enrichedData = Some(
-      EnrichedData(
+      HakukohdeEnrichedData(
         esitysnimi = Map(Fi -> "Hakukohde fi", Sv -> "Hakukohde sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )

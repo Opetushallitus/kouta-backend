@@ -7,7 +7,7 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.service.ToteutusService
+import fi.oph.kouta.service.{HakukohdeService, ToteutusService}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.timeStampToModified
 import org.json4s.jackson.Serialization.read
@@ -266,7 +266,7 @@ trait HakukohdeExctractors extends ExtractorBase {
 
   implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] =
     GetResult(r => {
-      val enriched = HakukohdeListItemEnriched(
+      val item = HakukohdeListItem(
         oid = HakukohdeOid(r.nextString()),
         toteutusOid = ToteutusOid(r.nextString()),
         hakuOid = HakuOid(r.nextString()),
@@ -278,9 +278,19 @@ trait HakukohdeExctractors extends ExtractorBase {
         organisaatioOid = OrganisaatioOid(r.nextString()),
         muokkaaja = UserOid(r.nextString()),
         modified = timeStampToModified(r.nextTimestamp()),
-        metadata = r.nextStringOption().map(read[ToteutusMetadata])
+        toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata])
       )
-      HakukohdeListItem(enriched)
+      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
+        Hakukohde(
+          oid = Some(item.oid),
+          toteutusOid = item.toteutusOid,
+          hakuOid = item.hakuOid,
+          nimi = item.nimi,
+          muokkaaja = item.muokkaaja,
+          organisaatioOid = item.organisaatioOid,
+          modified = Some(item.modified)),
+        item.toteutusMetadata)
+      item.copy(nimi = esitysnimi, toteutusMetadata = None)
     }
   )
 
@@ -430,8 +440,7 @@ trait HakutietoExtractors extends ExtractorBase {
     GetResult(r => {
       val toteutusOid = ToteutusOid(r.nextString())
       val hakuOid = HakuOid(r.nextString())
-      val enriched =
-        HakutietoHakukohdeEnriched(
+      val ht = HakutietoHakukohde(
           hakukohdeOid = HakukohdeOid(r.nextString()),
           toteutusOid = toteutusOid,
           hakuOid = hakuOid,
@@ -458,8 +467,22 @@ trait HakutietoExtractors extends ExtractorBase {
           muokkaaja = UserOid(r.nextString()),
           valintatapaKoodiUrit = extractArray[String](r.nextObjectOption()),
           modified = Some(timeStampToModified(r.nextTimestamp())),
-          toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata]))
-        (toteutusOid, hakuOid, HakutietoHakukohde(enriched))
+          toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata]),
+          kynnysehto = extractKielistetty(r.nextStringOption()),
+          valintakoeIds = extractArray[UUID](r.nextObjectOption()))
+
+      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
+        Hakukohde(
+          oid = Some(ht.hakukohdeOid),
+          toteutusOid = ht.toteutusOid,
+          hakuOid = ht.hakuOid,
+          nimi = ht.nimi,
+          muokkaaja = ht.muokkaaja,
+          organisaatioOid = ht.organisaatioOid,
+          modified = ht.modified),
+        ht.toteutusMetadata
+      )
+      (toteutusOid, hakuOid, ht.copy(nimi = esitysnimi, toteutusMetadata = None))
     })
 }
 

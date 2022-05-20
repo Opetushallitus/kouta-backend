@@ -124,7 +124,6 @@ case class Valintatapa(nimi: Kielistetty = Map(),
       validateMinMax(vahimmaispisteet, enimmaispisteet, s"$path.vahimmaispisteet")
     ))
   )
-
 }
 
 sealed trait Sisalto extends ValidatableSubEntity

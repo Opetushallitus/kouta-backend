@@ -113,23 +113,6 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     }
   }
 
-  "List hakutiedot by koulutus" should "list all hakutiedot distinct" in {
-    val koulutusOid = put(koulutus, ophSession)
-    val totetusOid = put(toteutus(koulutusOid))
-    val hakuOid = put(haku)
-    val hkOid1 = put(julkaistuHakukohde(totetusOid, hakuOid))
-    val hkOid2 = put(julkaistuHakukohde(totetusOid, hakuOid))
-    val hkOid3 = put(julkaistuHakukohde(totetusOid, hakuOid))
-
-    get(s"$IndexerPath/koulutus/$koulutusOid/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
-      status should equal (200)
-      val result = read[List[Hakutieto]](body)
-      result.size should equal (1)
-      result.head.haut.size should equal (1)
-      result.head.haut.head.hakukohteet.map(_.hakukohdeOid.toString) should contain theSameElementsAs List(hkOid1, hkOid2, hkOid3)
-    }
-  }
-
   "Get oppilaitoksen osat" should "return oppilaitoksen osat for indexer" in {
     val oid = put(oppilaitos)
     val anotherOid = put(oppilaitos)
