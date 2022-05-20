@@ -12,6 +12,8 @@ package object validation {
     def validate(): IsValid
 
     def validateOnJulkaisu(): IsValid = NoErrors
+
+    def getEntityDescriptionAllative(): String
   }
 
   trait ValidatableSubEntity {

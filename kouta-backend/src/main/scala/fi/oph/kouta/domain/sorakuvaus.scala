@@ -147,6 +147,8 @@ case class Sorakuvaus(id: Option[UUID] = None,
   override def withId(id: UUID): Sorakuvaus = copy(id = Some(id))
 
   def withMuokkaaja(oid: UserOid): Sorakuvaus = this.copy(muokkaaja = oid)
+
+  def getEntityDescriptionAllative(): String = "sorakuvaukselle"
 }
 
 case class SorakuvausMetadata(kuvaus: Kielistetty = Map(),

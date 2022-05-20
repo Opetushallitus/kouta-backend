@@ -233,6 +233,8 @@ case class Haku(oid: Option[HakuOid] = None,
   override def withModified(modified: Modified): Haku = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Haku = this.copy(muokkaaja = oid)
+
+  def getEntityDescriptionAllative(): String = "haulle"
 }
 
 case class HakuListItem(oid: HakuOid,

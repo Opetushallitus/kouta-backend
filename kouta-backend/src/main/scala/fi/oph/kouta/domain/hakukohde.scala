@@ -466,6 +466,8 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
   override def withModified(modified: Modified): Hakukohde = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Hakukohde = this.copy(muokkaaja = oid)
+
+  def getEntityDescriptionAllative(): String = "hakukohteelle"
 }
 
 case class Liite(id: Option[UUID] = None,

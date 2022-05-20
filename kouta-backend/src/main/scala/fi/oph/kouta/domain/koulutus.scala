@@ -222,7 +222,6 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     modified: Option[Modified],
                     _enrichedData: Option[KoulutusEnrichedData] = None)
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
-
   val ammOpeErityisopeJaOpoKoulutusKoodiUrit = Seq("koulutus_000001", "koulutus_000002", "koulutus_000003")
 
   override def validate(): IsValid = {
@@ -259,6 +258,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   override def withModified(modified: Modified): Koulutus = this.copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Koulutus = this.copy(muokkaaja = oid)
+
+  def getEntityDescriptionAllative(): String = "koulutukselle"
 }
 
 case class KoulutusListItem(oid: KoulutusOid,

@@ -1,15 +1,25 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.Julkaistu
+import fi.oph.kouta.validation.Validations.validateStateChange
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 
 trait ValidatingService[E <: Validatable] {
 
   def withValidation[R](e: E, oldE: Option[E])(f: E => R): R = {
-    val errors = if (!oldE.exists(_.tila == Julkaistu) && e.tila == Julkaistu) {
-      e.validate() ++ e.validateOnJulkaisu()
+
+    val errors = if (oldE.isDefined) {
+      if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
+        e.validate() ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++ e.validateOnJulkaisu()
+      } else {
+        e.validate() ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+      }
     } else {
-      e.validate()
+      if (e.tila == Julkaistu) {
+        e.validate() ++ e.validateOnJulkaisu()
+      } else {
+        e.validate()
+      }
     }
 
     errors match {

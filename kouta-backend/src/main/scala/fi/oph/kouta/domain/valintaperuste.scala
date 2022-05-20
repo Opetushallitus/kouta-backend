@@ -229,6 +229,8 @@ case class Valintaperuste(id: Option[UUID] = None,
   override def withModified(modified: Modified): Valintaperuste = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): Valintaperuste = this.copy(muokkaaja = oid)
+
+  def getEntityDescriptionAllative(): String = "valintaperusteelle"
 }
 
 case class ValintaperusteListItem(id: UUID,
