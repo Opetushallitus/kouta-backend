@@ -1,9 +1,9 @@
 package fi.oph.kouta.domain
 
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableByKoulutustyyppi
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
@@ -169,3 +169,5 @@ case class SorakuvausListItem(id: UUID,
                               modified: Modified) extends IdListItem
 
 case class SorakuvausEnrichedData(muokkaajanNimi: Option[String] = None)
+
+case class ExternalSorakuvausRequest(authenticated: Authenticated, sorakuvaus: Sorakuvaus) extends ExternalRequest

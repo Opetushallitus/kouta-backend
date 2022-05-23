@@ -115,7 +115,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   it should "read muokkaaja from the session" in {
     val oid = put(koulutus.copy(muokkaaja = UserOid("random")), ophSession)
     val metadata = koulutus.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
-    get(oid, koulutus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.copy(isMuokkaajaOphVirkailija = Some(false)))))
+    get(oid, koulutus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
   it should "allow oph to create julkaistu koulutus without tarjoajat" in {

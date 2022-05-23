@@ -1,122 +1,251 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
-
 import fi.oph.kouta.TestOids
-import fi.oph.kouta.TestOids.OphOid
-import fi.oph.kouta.domain.Tallennettu
-import fi.oph.kouta.integration.fixture.{ExternalFixture, HakuFixture}
-import fi.oph.kouta.security.Role.Indexer
-import fi.oph.kouta.security.{Authority, Role}
-import fi.oph.kouta.servlet.ExternalHakuRequest
+import fi.oph.kouta.TestOids.{OphOid, TestUserOid}
+import fi.oph.kouta.domain.oid.{UserOid}
+import fi.oph.kouta.domain.{
+  ExternalHakuRequest,
+  ExternalHakukohdeRequest,
+  ExternalKoulutusRequest,
+  ExternalRequest,
+  ExternalSorakuvausRequest,
+  ExternalToteutusRequest,
+  ExternalValintaperusteRequest,
+  Haku,
+  Hakukohde,
+  Julkaisutila,
+  Koulutus,
+  Sorakuvaus,
+  Tallennettu,
+  Toteutus,
+  Valintaperuste
+}
+import fi.oph.kouta.integration.fixture.ExternalFixture
+import fi.oph.kouta.security.{Authority, ExternalSession, Role}
+import fi.oph.kouta.servlet.Authenticated
 
-class ExternalSpec extends KoutaIntegrationSpec with AccessControlSpec with HakuFixture with ExternalFixture {
-
-  var externalSession: UUID = _
-
+class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
   override def beforeAll(): Unit = {
     super.beforeAll()
-    externalSession = addTestSession(Indexer, OphOid)
+    externalSession = addTestSession(Role.External, OphOid)
   }
 
-  "Create haku from external" should "store haku" in {
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku)
-    val oid = put(request, externalSession)
-    get(oid, haku(oid))
+  executeCreateTests[Koulutus](
+    "koulutus",
+    ExternalKoulutusPath,
+    (authenticated: Authenticated) => ExternalKoulutusRequest(authenticated, createKoulutus()),
+    (oid: String, muokkaaja: Option[UserOid]) => createKoulutus(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+  )
+  executeModifyTests[Koulutus](
+    "koulutus",
+    ExternalKoulutusPath,
+    (oid: String, authenticated: Authenticated) =>
+      ExternalKoulutusRequest(authenticated, createKoulutus(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createKoulutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+  )
+
+  executeCreateTests[Toteutus](
+    "toteutus",
+    ExternalToteutusPath,
+    (authenticated: Authenticated) => ExternalToteutusRequest(authenticated, createToteutus()),
+    (oid: String, muokkaaja: Option[UserOid]) => createToteutus(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+  )
+  executeModifyTests[Toteutus](
+    "toteutus",
+    ExternalToteutusPath,
+    (oid: String, authenticated: Authenticated) =>
+      ExternalToteutusRequest(authenticated, createToteutus(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createToteutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+  )
+
+  executeCreateTests[Haku](
+    "haku",
+    ExternalHakuPath,
+    (authenticated: Authenticated) => ExternalHakuRequest(authenticated, createHaku()),
+    (oid: String, muokkaaja: Option[UserOid]) => createHaku(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+  )
+  executeModifyTests[Haku](
+    "haku",
+    ExternalHakuPath,
+    (oid: String, authenticated: Authenticated) =>
+      ExternalHakuRequest(authenticated, createHaku(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createHaku(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+  )
+
+  executeCreateTests[Hakukohde](
+    "hakukohde",
+    ExternalHakukohdePath,
+    (authenticated: Authenticated) => ExternalHakukohdeRequest(authenticated, createHakukohde()),
+    (oid: String, muokkaaja: Option[UserOid]) => createHakukohde(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+  )
+  executeModifyTests[Hakukohde](
+    "hakukohde",
+    ExternalHakukohdePath,
+    (oid: String, authenticated: Authenticated) =>
+      ExternalHakukohdeRequest(authenticated, createHakukohde(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createHakukohde(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+  )
+
+  executeCreateTests[Valintaperuste](
+    "valintaperuste",
+    ExternalValintaperustePath,
+    (authenticated: Authenticated) => ExternalValintaperusteRequest(authenticated, createValintaperuste()),
+    (oid: String, muokkaaja: Option[UserOid]) =>
+      createValintaperuste(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+  )
+  executeModifyTests[Valintaperuste](
+    "valintaperuste",
+    ExternalValintaperustePath,
+    (oid: String, authenticated: Authenticated) =>
+      ExternalValintaperusteRequest(authenticated, createValintaperuste(oid, tila = Some(Tallennettu))),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createValintaperuste(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+  )
+
+  executeCreateTests[Sorakuvaus](
+    "sorakuvaus",
+    ExternalSorakuvausPath,
+    (authenticated: Authenticated) =>
+      ExternalSorakuvausRequest(
+        if (authenticated.session.personOid == OidWithReadOnlyAccess.s) authenticated
+        else
+          authenticated.copy(session =
+            authenticated.session
+              .asInstanceOf[ExternalSession]
+              .copy(authorities = Set(Authority(Role.Paakayttaja, OphOid)))
+          ),
+        createSorakuvaus()
+      ),
+    (oid: String, muokkaaja: Option[UserOid]) =>
+      createSorakuvaus(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
+  )
+  executeModifyTests[Sorakuvaus](
+    "sorakuvaus",
+    ExternalSorakuvausPath,
+    (oid: String, authenticated: Authenticated) =>
+      ExternalSorakuvausRequest(
+        if (authenticated.session.personOid == OidWithReadOnlyAccess.s) authenticated
+        else
+          authenticated.copy(session =
+            authenticated.session
+              .asInstanceOf[ExternalSession]
+              .copy(authorities = Set(Authority(Role.Paakayttaja, OphOid)))
+          ),
+        createSorakuvaus(oid, tila = Some(Tallennettu))
+      ),
+    (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
+      createSorakuvaus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
+  )
+}
+
+trait TestBase {
+  var externalSession: UUID = _
+  val OidWithReadOnlyAccess = UserOid("1.2.246.562.24.10000000123")
+}
+
+trait CreateTests extends TestBase {
+  this: ExternalFixture with AccessControlSpec =>
+
+  def executeCreateTests[E <: AnyRef](
+      entityName: String,
+      path: String,
+      makeRequest: Authenticated => ExternalRequest,
+      resultEntity: (String, Option[UserOid]) => E
+  ): Unit = {
+    s"Create $entityName from external" should s"store new $entityName" in {
+      val request = makeRequest(authenticated())
+      val oidOrId = doPut(request, externalSession)
+      doGet(oidOrId, resultEntity(oidOrId, Some(TestUserOid)))
+    }
+
+    it should s"require authentication to be attached to the request when creating new $entityName" in {
+      val entityName = path.split("/").last
+      put(path, Map(entityName -> resultEntity("", Some(TestUserOid))), externalSession, 400)
+    }
+
+    it should s"store muokkaaja from the session sent from kouta-external when creating new $entityName" in {
+      val userOid = TestOids.randomUserOid
+      val request = makeRequest(authenticated(personOid = userOid))
+      val oidOrId = doPut(request, ophSession)
+      doGet(oidOrId, resultEntity(oidOrId, Some(userOid)))
+    }
+
+    it should s"deny a user with the wrong role when creating new $entityName" in {
+      val authentication = authenticated()
+      val request        = makeRequest(authentication)
+      put(path, request, defaultSessionId, 403)
+    }
+
+    it should s"use the attached session for authentication when creating new $entityName" in {
+      val authentication =
+        authenticated(personOid = OidWithReadOnlyAccess, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
+      val request = makeRequest(authentication)
+      put(path, request, externalSession, 403)
+    }
   }
+}
 
-  it should "require authentication to be attached to the request" in {
-    put(ExternalHakuPath, haku, externalSession, 400)
-    put(ExternalHakuPath, Map("haku" -> haku), externalSession, 400)
-  }
+trait ModifyTests extends TestBase {
+  this: ExternalFixture with AccessControlSpec =>
 
-  it should "validate the haku" in {
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku.copy(hakutapaKoodiUri = Some("virhe")))
-    put(ExternalHakuPath, request, externalSession, 400)
-  }
+  def executeModifyTests[E](
+      entityName: String,
+      path: String,
+      makeModifyRequest: (String, Authenticated) => ExternalRequest,
+      resultEntity: (String, Option[UserOid], Option[Julkaisutila], Option[Boolean]) => E
+  ): Unit = {
+    s"Update $entityName from external" should s"update $entityName in backend" in {
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
-  it should "store muokkaaja from the session sent from kouta-external" in {
-    val userOid = TestOids.randomUserOid
-    val authentication = authenticated(personOid = userOid)
-    val request = ExternalHakuRequest(authentication, haku)
-    val oid = put(request, externalSession)
-    get(oid, haku(oid).copy(muokkaaja = userOid))
-  }
+      val request = makeModifyRequest(oidOrId, authenticated())
 
-  it should "deny a user with the wrong role" in {
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku)
-    put(ExternalHakuPath, request, defaultSessionId, 403)
-  }
+      doUpdate(request, lastModified, externalSession)
+      doGet(oidOrId, resultEntity(oidOrId, Some(TestUserOid), Some(Tallennettu), Some(false)))
+    }
 
-  it should "use the attached session for authentication" in {
-    val userOid = TestOids.randomUserOid
-    val authentication = authenticated(personOid = userOid, authorities = Set(Authority(Role.Haku.Read, OphOid)))
-    val request = ExternalHakuRequest(authentication, haku)
-    put(ExternalHakuPath, request, externalSession, 403)
-  }
+    it should s"require authentication to be attached to the request when updating existing $entityName" in {
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
-  "Update haku from external" should "update haku" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+      val entityName = path.split("/").last
+      update(path, Map(entityName -> resultEntity(oidOrId, None, None, None)), lastModified, externalSession, 400)
+    }
 
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
+    it should s"store muokkaaja from the session sent from kouta-external when updating existing $entityName" in {
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
-    update(request, lastModified, externalSession)
-    get(oid, haku(oid, Tallennettu))
-  }
+      val userOid        = TestOids.randomUserOid
+      val authentication = authenticated(personOid = userOid)
+      val request        = makeModifyRequest(oidOrId, authentication)
 
-  it should "require authentication to be attached to the request" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+      doUpdate(request, lastModified, externalSession)
+      doGet(oidOrId, resultEntity(oidOrId, Some(userOid), Some(Tallennettu), Some(false)))
+    }
 
-    update(ExternalHakuPath, haku(oid), lastModified, externalSession, 400)
-    update(ExternalHakuPath, Map("haku" -> haku(oid)), lastModified, externalSession, 400)
-  }
+    it should s"deny a user with the wrong role when updating existing $entityName" in {
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
-  it should "validate the haku" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+      val request = makeModifyRequest(oidOrId, authenticated())
 
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu).copy(hakutapaKoodiUri = Some("virhe")))
+      update(path, request, lastModified, defaultSessionId, 403)
+    }
 
-    update(ExternalHakuPath, request, lastModified, externalSession, 400)
-  }
+    it should s"use the attached session for authentication when updating existing $entityName" in {
+      val oidOrId      = doPut(resultEntity("", None, None, None), ophSession)
+      val lastModified = doGet(oidOrId, resultEntity(oidOrId, None, None, None))
 
-  it should "store muokkaaja from the session sent from kouta-external" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-
-    val userOid = TestOids.randomUserOid
-    val authentication = authenticated(personOid = userOid)
-
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
-    update(request, lastModified, externalSession)
-    get(oid, haku(oid, Tallennettu).copy(muokkaaja = userOid))
-  }
-
-  it should "deny a user with the wrong role" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-
-    val authentication = authenticated()
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
-
-    update(ExternalHakuPath, request, lastModified, defaultSessionId, 403)
-  }
-
-  it should "use the attached session for authentication" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-
-    val userOid = TestOids.randomUserOid
-    val authentication = authenticated(personOid = userOid, authorities = Set(Authority(Role.Haku.Read, OphOid)))
-
-    val request = ExternalHakuRequest(authentication, haku(oid, Tallennettu))
-    update(ExternalHakuPath, request, lastModified, externalSession, 403)
+      val authentication =
+        authenticated(personOid = OidWithReadOnlyAccess, authorities = Set(Authority(Role.Koulutus.Read, OphOid)))
+      val request = makeModifyRequest(oidOrId, authentication)
+      update(path, request, lastModified, externalSession, 403)
+    }
   }
 }

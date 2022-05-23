@@ -131,11 +131,11 @@ class KoulutusService(
       AuthorizationRules(roleEntity.createRoles)
     }
 
-    val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(koulutus)
 
-    authorizePut(enrichedKoulutusWithFixedDefaultValues, rules) { k =>
-      withValidation(k, None) { k =>
-        validateSorakuvausIntegrity(koulutus)
+    authorizePut(koulutus, rules) { k =>
+      val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
+      withValidation(enrichedKoulutusWithFixedDefaultValues, None) { k =>
+        validateSorakuvausIntegrity(k)
         doPut(k)
       }
     }.oid.get

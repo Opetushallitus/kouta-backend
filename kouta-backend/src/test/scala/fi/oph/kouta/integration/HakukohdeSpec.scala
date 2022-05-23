@@ -123,10 +123,10 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
 
   it should "store true as the value of isMuokkaajaOphVirkailija when muokkaaja is OPH virkailija" in {
     val uusiHk = uusiHakukohde.copy(muokkaaja = OphUserOid)
-    val oid = put(uusiHk)
+    val oid = put(uusiHk, ophSession)
     val tallennettuHk = tallennettuHakukohde(oid)
     val tallennettuHkMetadata = tallennettuHk.metadata.get
-    val tallennettuHkCopy = tallennettuHk.copy(metadata = Some(tallennettuHkMetadata.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val tallennettuHkCopy = tallennettuHk.copy(muokkaaja = OphUserOid, metadata = Some(tallennettuHkMetadata.copy(isMuokkaajaOphVirkailija = Some(true))))
     get(oid, tallennettuHkCopy)
   }
 
@@ -572,9 +572,10 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val pastDate = TestData.inPast(100)
     val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenLiittamisenTakaraja = Some(pastDate), hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
     val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
-    val tallennettu = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
-    val muokattu = tallennettu.copy(tila = Tallennettu, muokkaaja = TestUserOid)
-    val lastModified = get(oid, tallennettu)
+    var tallennettuHk = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
+    tallennettuHk = tallennettuHk.copy(metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val muokattu = tallennettuHk.copy(tila = Tallennettu, muokkaaja = TestUserOid)
+    val lastModified = get(oid, tallennettuHk)
     update(HakukohdePath, muokattu, lastModified, 400, "hakukohteenMuokkaamisenTakaraja", pastDateMsg(pastDate))
   }
 
@@ -582,18 +583,19 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val pastDate = TestData.inPast(100)
     val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
     val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
-    val tallennettu = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
-    val muokattu = tallennettu.copy(tila = Tallennettu)
-    val lastModified = get(oid, tallennettu)
+    var tallennettuHk = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
+    tallennettuHk = tallennettuHk.copy(metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val muokattu = tallennettuHk.copy(tila = Tallennettu)
+    val lastModified = get(oid, tallennettuHk)
     update(muokattu, lastModified, expectUpdate = true, ophSession)
   }
 
   it should "pass legal state changes" in {
     val id = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
     val tallennettuHk = tallennettuHakukohde(id)
-    val theHakukohde = tallennettuHk.copy(muokkaaja = OphUserOid)
+    val theHakukohde = tallennettuHk.copy(muokkaaja = OphUserOid, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
     var lastModified = get(id, theHakukohde.copy(tila = Tallennettu))
-    val updatedHakukohde = theHakukohde.copy(tila = Julkaistu, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val updatedHakukohde = theHakukohde.copy(tila = Julkaistu)
     update(updatedHakukohde, lastModified, true, ophSession)
     lastModified = get(id, updatedHakukohde)
     update(updatedHakukohde.copy(tila = Arkistoitu), lastModified, true, ophSession)
@@ -606,7 +608,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
 
     val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
     val tallennettu = tallennettuHakukohde(arkistoituId).copy(muokkaaja = OphUserOid)
-    lastModified = get(arkistoituId, tallennettu.copy(tila = Arkistoitu))
+    lastModified = get(arkistoituId, tallennettu.copy(tila = Arkistoitu, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
     update(tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))), lastModified, true, ophSession)
     get(arkistoituId, tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
@@ -619,11 +621,11 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
     val arkistoitu = tallennettuHakukohde(arkistoituId).copy(tila = Arkistoitu, muokkaaja = OphUserOid)
 
-    var lastModified = get(tallennettuId, tallennettu)
+    var lastModified = get(tallennettuId, tallennettu.copy(metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
     update(HakukohdePath, tallennettu.copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Tallennettu, Arkistoitu))))
-    lastModified = get(julkaistuId, julkaistu)
+    lastModified = get(julkaistuId, julkaistu.copy(metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
     update(HakukohdePath, julkaistu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Julkaistu, Poistettu))))
-    lastModified = get(arkistoituId, arkistoitu)
+    lastModified = get(arkistoituId, arkistoitu.copy(metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
     update(HakukohdePath, arkistoitu.copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Tallennettu))))
     update(HakukohdePath, arkistoitu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Poistettu))))
   }

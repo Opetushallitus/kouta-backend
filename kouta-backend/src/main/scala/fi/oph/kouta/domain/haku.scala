@@ -2,8 +2,8 @@ package fi.oph.kouta.domain
 
 import java.time.LocalDateTime
 import java.util.UUID
-
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
@@ -258,3 +258,5 @@ case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
 }
 
 case class HakuEnrichedData(muokkaajanNimi: Option[String] = None)
+
+case class ExternalHakuRequest(authenticated: Authenticated, haku: Haku) extends ExternalRequest

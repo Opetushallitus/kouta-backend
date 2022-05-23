@@ -23,7 +23,8 @@ case class SecurityConfiguration(
   casUrl: String,
   casServiceIdentifier: String,
   kayttooikeusUrl: String,
-  useSecureCookies: Boolean
+  useSecureCookies: Boolean,
+  externalApiModifyEnabled: Boolean
 ) {
   def sessionCookieName: String = if (useSecureCookies) {
     //TODO: Kouta-indeksoija ja muut olettaa, että session nimi on session
@@ -74,7 +75,8 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     casUrl = config.getString("cas.url"),
     casServiceIdentifier = config.getString("kouta-backend.cas.service"),
     kayttooikeusUrl = config.getString("kayttooikeus-service.userDetails.byUsername"),
-    useSecureCookies = !"false".equals(System.getProperty("kouta-backend.useSecureCookies"))
+    useSecureCookies = !"false".equals(System.getProperty("kouta-backend.useSecureCookies")),
+    Try(config.getBoolean("kouta.external-api.modify.enabled")).getOrElse(false)
   )
 
   val ohjausparametritClientConfiguration: OhjausparametritClientConfiguration = OhjausparametritClientConfiguration(

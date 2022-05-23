@@ -289,10 +289,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = OphOid, tarjoajat = List(GrandChildOid, EvilGrandChildOid, tarjoajaOfOtherOppilaitos))
     val oid = put(newToteutus, ophSession)
     val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = OphUserOid)
-    val lastModified = get(oid, createdToteutus)
+    val lastModified = get(oid, createdToteutus.copy(metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid, oppilaitosAlsoInOtherToteutus)))
     update(createdToteutus.copy(tarjoajat = List(GrandChildOid)), lastModified)
-    get(oid, createdToteutus.copy(tarjoajat = List(GrandChildOid), muokkaaja = TestUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(oid, createdToteutus.copy(tarjoajat = List(GrandChildOid), muokkaaja = TestUserOid))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid, oppilaitosAlsoInOtherToteutus)))
   }
 
@@ -306,10 +306,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = OphOid, tarjoajat = List(GrandChildOid))
     val oid = put(newToteutus, ophSession)
     val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = OphUserOid)
-    val lastModified = get(oid, createdToteutus)
+    val lastModified = get(oid, createdToteutus.copy(metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid, untouchedOppilaitosOid)))
     update(createdToteutus.copy(tarjoajat = List(newTarjoaja, newTarjoaja2)), lastModified)
-    get(oid, createdToteutus.copy(tarjoajat = List(newTarjoaja, newTarjoaja2), muokkaaja = TestUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(oid, createdToteutus.copy(tarjoajat = List(newTarjoaja, newTarjoaja2), muokkaaja = TestUserOid))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(untouchedOppilaitosOid, newOppilaitos)))
   }
 
@@ -699,22 +699,26 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "pass legal state changes" in {
     val koulutusOid = put(koulutus, ophSession)
     val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
-    val toteutusBase = toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), muokkaaja = OphUserOid)
+    var toteutusBase = toteutus(koulutusOid)
+    toteutusBase = toteutusBase.copy(oid = Some(ToteutusOid(toteutusOid)), muokkaaja = OphUserOid,
+      metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true))))
     var lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
     update(toteutusBase.copy(tila = Julkaistu), lastModified, true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
     update(toteutusBase.copy(tila = Arkistoitu), lastModified, true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Arkistoitu, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Arkistoitu))
     update(toteutusBase.copy(tila = Julkaistu), lastModified, true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
     update(toteutusBase.copy(tila = Tallennettu), lastModified, true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
+    lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
     update(toteutusBase.copy(tila = Poistettu), lastModified, true, ophSession)
 
     val arkistoituOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Arkistoitu), ophSession)))
-    lastModified = get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Arkistoitu, muokkaaja = OphUserOid))
+    lastModified = get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Arkistoitu, muokkaaja = OphUserOid,
+      metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
     update(toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu), lastModified, true, ophSession)
-    get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu, muokkaaja = OphUserOid))
+    get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu, muokkaaja = OphUserOid,
+      metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
   it should "fail illegal state changes" in {
@@ -723,7 +727,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val tallennettuOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)))
     val julkaistuOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Julkaistu), ophSession)))
     val arkistoituOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Arkistoitu), ophSession)))
-    val toteutusBase = toteutus(koulutusOid).copy(muokkaaja = OphUserOid)
+    var toteutusBase = toteutus(koulutusOid)
+    toteutusBase = toteutusBase.copy(muokkaaja = OphUserOid, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true))))
 
     var lastModified = get(tallennettuOid.get.s, toteutusBase.copy(oid = tallennettuOid, tila = Tallennettu))
     update(ToteutusPath, toteutusBase.copy(oid = tallennettuOid, tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Tallennettu, Arkistoitu))))
@@ -740,7 +745,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val hakuOid = put(haku.copy(tila = Tallennettu), ophSession)
     put(hakukohde(toteutusOid, hakuOid).copy(tila = Poistettu), ophSession)
     put(hakukohde(toteutusOid, hakuOid).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu), ophSession)
-    val toteutusLastModified = get(toteutusOid, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Tallennettu, muokkaaja = OphUserOid))
+    var toteutusBase = toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)))
+    val toteutusLastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
     (toteutusOid, koulutusOid, toteutusLastModified)
   }
 
