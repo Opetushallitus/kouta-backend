@@ -1,11 +1,24 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Sorakuvaus, Valintaperuste}
+import fi.oph.kouta.config.{KoutaConfigurationFactory, SecurityConfiguration}
+import fi.oph.kouta.domain.{
+  ExternalHakuRequest,
+  ExternalHakukohdeRequest,
+  ExternalKoulutusRequest,
+  ExternalRequest,
+  ExternalSorakuvausRequest,
+  ExternalToteutusRequest,
+  ExternalValintaperusteRequest,
+  Haku,
+  Sorakuvaus,
+  Valintaperuste
+}
 import fi.oph.kouta.domain.oid.RootOrganisaatioOid
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.service._
-import org.scalatra.Ok
+import fi.vm.sade.scalaproperties.OphProperties
+import org.scalatra.{ActionResult, Ok}
 
 class ExternalServlet(
     koulutusService: KoulutusService,
@@ -16,7 +29,8 @@ class ExternalServlet(
     sorakuvausService: SorakuvausService
 ) extends KoutaServlet {
 
-  def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService, SorakuvausService)
+  def this() =
+    this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService, SorakuvausService)
 
   registerPath(
     "/external/koulutus",
@@ -56,11 +70,15 @@ class ExternalServlet(
       |""".stripMargin
   )
   put("/koulutus") {
-    val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
-    koulutusService.put(koulutusRequest.koulutus) match {
-      case oid => Ok("oid" -> oid)
+      koulutusService.put(koulutusRequest.koulutus) match {
+        case oid => Ok("oid" -> oid)
+      }
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
     }
   }
 
@@ -95,11 +113,15 @@ class ExternalServlet(
       |""".stripMargin
   )
   post("/koulutus") {
-    val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
-    val updated = koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince)
-    Ok("updated" -> updated)
+      val updated = koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince)
+      Ok("updated" -> updated)
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
+    }
   }
 
   registerPath(
@@ -140,11 +162,15 @@ class ExternalServlet(
       |""".stripMargin
   )
   put("/toteutus") {
-    val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
 
-    toteutusService.put(toteutusRequest.toteutus) match {
-      case oid => Ok("oid" -> oid)
+      toteutusService.put(toteutusRequest.toteutus) match {
+        case oid => Ok("oid" -> oid)
+      }
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
     }
   }
 
@@ -179,11 +205,15 @@ class ExternalServlet(
       |""".stripMargin
   )
   post("/toteutus") {
-    val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
 
-    val updated = toteutusService.update(toteutusRequest.toteutus, getIfUnmodifiedSince)
-    Ok("updated" -> updated)
+      val updated = toteutusService.update(toteutusRequest.toteutus, getIfUnmodifiedSince)
+      Ok("updated" -> updated)
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
+    }
   }
 
   registerPath(
@@ -224,11 +254,15 @@ class ExternalServlet(
       |""".stripMargin
   )
   put("/haku") {
-    val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
 
-    hakuService.put(hakuRequest.haku) match {
-      case oid => Ok("oid" -> oid)
+      hakuService.put(hakuRequest.haku) match {
+        case oid => Ok("oid" -> oid)
+      }
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
     }
   }
 
@@ -263,11 +297,15 @@ class ExternalServlet(
       |""".stripMargin
   )
   post("/haku") {
-    val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
 
-    val updated = hakuService.update(hakuRequest.haku, getIfUnmodifiedSince)
-    Ok("updated" -> updated)
+      val updated = hakuService.update(hakuRequest.haku, getIfUnmodifiedSince)
+      Ok("updated" -> updated)
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
+    }
   }
 
   registerPath(
@@ -305,13 +343,18 @@ class ExternalServlet(
       |                    type: string
       |                    description: Uuden hakukohteen yksilöivä oid
       |                    example: 1.2.246.562.20.00000000000000000009
-      |""".stripMargin)
+      |""".stripMargin
+  )
   put("/hakukohde") {
-    val hakukohdeRequest                      = parsedBody.extract[ExternalHakukohdeRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val hakukohdeRequest                      = parsedBody.extract[ExternalHakukohdeRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
 
-    hakukohdeService.put(hakukohdeRequest.hakukohde) match {
-      case oid => Ok("oid" -> oid)
+      hakukohdeService.put(hakukohdeRequest.hakukohde) match {
+        case oid => Ok("oid" -> oid)
+      }
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
     }
   }
 
@@ -344,15 +387,19 @@ class ExternalServlet(
       |""".stripMargin
   )
   post("/hakukohde") {
-    val hakukohdeRequest                           = parsedBody.extract[ExternalHakukohdeRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val hakukohdeRequest                      = parsedBody.extract[ExternalHakukohdeRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
 
-    val updated = hakukohdeService.update(hakukohdeRequest.hakukohde, getIfUnmodifiedSince)
-    Ok("updated" -> updated)
+      val updated = hakukohdeService.update(hakukohdeRequest.hakukohde, getIfUnmodifiedSince)
+      Ok("updated" -> updated)
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
+    }
   }
 
-
-  registerPath( "/external/valintaperuste/",
+  registerPath(
+    "/external/valintaperuste/",
     """    put:
       |      summary: Tallenna uusi valintaperustekuvaus
       |      operationId: Tallenna uusi valintaperuste
@@ -386,17 +433,23 @@ class ExternalServlet(
       |                    type: string
       |                    description: Uuden valintaperustekuvauksen yksilöivä id
       |                    example: ea596a9c-5940-497e-b5b7-aded3a2352a7
-      |""".stripMargin)
+      |""".stripMargin
+  )
   put("/valintaperuste") {
-    val valintaperusteRequest                      = parsedBody.extract[ExternalValintaperusteRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val valintaperusteRequest                 = parsedBody.extract[ExternalValintaperusteRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
 
-    valintaperusteService.put(valintaperusteRequest.valintaperuste) match {
-      case id => Ok("id" -> id)
+      valintaperusteService.put(valintaperusteRequest.valintaperuste) match {
+        case id => Ok("id" -> id)
+      }
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
     }
   }
 
-  registerPath("/external/valintaperuste/",
+  registerPath(
+    "/external/valintaperuste/",
     """    post:
       |      summary: Muokkaa olemassa olevaa valintaperustekuvausta
       |      operationId: Muokkaa valintaperustetta
@@ -421,16 +474,22 @@ class ExternalServlet(
       |      responses:
       |        '200':
       |          description: Ok
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/valintaperuste") {
-    val valintaperusteRequest                           = parsedBody.extract[ExternalValintaperusteRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val valintaperusteRequest                 = parsedBody.extract[ExternalValintaperusteRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
 
-    val updated = valintaperusteService.update(valintaperusteRequest.valintaperuste, getIfUnmodifiedSince)
-    Ok("updated" -> updated)
+      val updated = valintaperusteService.update(valintaperusteRequest.valintaperuste, getIfUnmodifiedSince)
+      Ok("updated" -> updated)
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
+    }
   }
 
-  registerPath( "/external/sorakuvaus/",
+  registerPath(
+    "/external/sorakuvaus/",
     """    put:
       |      summary: Tallenna uusi SORA-kuvaus
       |      operationId: Tallenna uusi sorakuvaus
@@ -464,17 +523,23 @@ class ExternalServlet(
       |                    type: string
       |                    description: Uuden SORA-kuvauksen yksilöivä id
       |                    example: ea596a9c-5940-497e-b5b7-aded3a2352a7
-      |""".stripMargin)
+      |""".stripMargin
+  )
   put("/sorakuvaus") {
-    val sorakuvausRequest                      = parsedBody.extract[ExternalSorakuvausRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(sorakuvausRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val sorakuvausRequest                     = parsedBody.extract[ExternalSorakuvausRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(sorakuvausRequest)
 
-    sorakuvausService.put(sorakuvausRequest.sorakuvaus) match {
-      case id => Ok("id" -> id)
+      sorakuvausService.put(sorakuvausRequest.sorakuvaus) match {
+        case id => Ok("id" -> id)
+      }
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
     }
   }
 
-  registerPath("/external/sorakuvaus/",
+  registerPath(
+    "/external/sorakuvaus/",
     """    post:
       |      summary: Muokkaa olemassa olevaa SORA-kuvausta
       |      operationId: Muokkaa sorakuvausta
@@ -499,13 +564,18 @@ class ExternalServlet(
       |      responses:
       |        '200':
       |          description: Ok
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/sorakuvaus") {
-    val sorakuvausRequest                           = parsedBody.extract[ExternalSorakuvausRequest]
-    implicit val authenticated: Authenticated = authenticateExternal(sorakuvausRequest)
+    if (securityConfiguration.externalApiModifyEnabled) {
+      val sorakuvausRequest                     = parsedBody.extract[ExternalSorakuvausRequest]
+      implicit val authenticated: Authenticated = authenticateExternal(sorakuvausRequest)
 
-    val updated = sorakuvausService.update(sorakuvausRequest.sorakuvaus, getIfUnmodifiedSince)
-    Ok("updated" -> updated)
+      val updated = sorakuvausService.update(sorakuvausRequest.sorakuvaus, getIfUnmodifiedSince)
+      Ok("updated" -> updated)
+    } else {
+      ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)
+    }
   }
 
   private def authenticateExternal(request: ExternalRequest): Authenticated = {
