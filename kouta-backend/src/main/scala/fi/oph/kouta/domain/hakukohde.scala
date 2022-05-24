@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.service.HakukohdeService
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
 
@@ -414,7 +415,7 @@ case class Hakukohde(oid: Option[HakukohdeOid] = None,
                      organisaatioOid: OrganisaatioOid,
                      kielivalinta: Seq[Kieli] = Seq(),
                      modified: Option[Modified] = None,
-                     _enrichedData: Option[EnrichedData] = None) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
+                     _enrichedData: Option[HakukohdeEnrichedData] = None) extends PerustiedotWithOidAndOptionalNimi[HakukohdeOid, Hakukohde] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -573,67 +574,9 @@ case class HakukohdeListItem(oid: HakukohdeOid,
                              jarjestyspaikkaOid: Option[OrganisaatioOid],
                              organisaatioOid: OrganisaatioOid,
                              muokkaaja: UserOid,
-                             modified: Modified) extends OidListItem
-object HakukohdeListItem {
-  def apply(e: HakukohdeListItemEnriched): HakukohdeListItem = {
-    new HakukohdeListItem(e.oid, e.toteutusOid, e.hakuOid, e.valintaperusteId, e.nimi, e.hakukohdeKoodiUri, e.tila, e.jarjestyspaikkaOid, e.organisaatioOid, e.muokkaaja, e.modified)
-  }
-}
+                             modified: Modified,
+                             toteutusMetadata: Option[ToteutusMetadata] = None) extends OidListItem
 
-case class HakukohdeListItemEnriched(
-  oid: HakukohdeOid,
-  toteutusOid: ToteutusOid,
-  hakuOid: HakuOid,
-  valintaperusteId: Option[UUID],
-  nimi: Kielistetty,
-  hakukohdeKoodiUri: Option[String] = None,
-  tila: Julkaisutila,
-  jarjestyspaikkaOid: Option[OrganisaatioOid],
-  organisaatioOid: OrganisaatioOid,
-  muokkaaja: UserOid,
-  modified: Modified,
-  metadata: Option[ToteutusMetadata]
-)
+case class HakukohdeEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
 
-object HakukohdeListItemEnriched {
-  def apply(
-    oid: HakukohdeOid,
-    toteutusOid: ToteutusOid,
-    hakuOid: HakuOid,
-    valintaperusteId: Option[UUID],
-    nimi: Kielistetty,
-    hakukohdeKoodiUri: Option[String] = None,
-    tila: Julkaisutila,
-    jarjestyspaikkaOid: Option[OrganisaatioOid],
-    organisaatioOid: OrganisaatioOid,
-    muokkaaja: UserOid,
-    modified: Modified,
-    metadata: Option[ToteutusMetadata]
-  ): HakukohdeListItemEnriched = {
-    val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
-      Hakukohde(
-        oid = Some(oid),
-        toteutusOid = toteutusOid,
-        hakuOid = hakuOid,
-        nimi = nimi,
-        muokkaaja = muokkaaja,
-        organisaatioOid = organisaatioOid,
-        modified = Some(modified)),
-      metadata)
-    new HakukohdeListItemEnriched(
-      oid,
-      toteutusOid,
-      hakuOid,
-      valintaperusteId,
-      esitysnimi,
-      hakukohdeKoodiUri,
-      tila,
-      jarjestyspaikkaOid,
-      organisaatioOid,
-      muokkaaja,
-      modified,
-      metadata)
-  }
-}
-
-case class EnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
+case class ExternalHakukohdeRequest(authenticated: Authenticated, hakukohde: Hakukohde) extends ExternalRequest

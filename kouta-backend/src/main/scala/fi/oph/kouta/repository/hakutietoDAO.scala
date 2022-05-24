@@ -1,7 +1,7 @@
 package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Hakutieto, HakutietoHaku, HakutietoHakukohde}
+import fi.oph.kouta.domain.{Ajanjakso, Hakutieto, HakutietoHaku, HakutietoHakukohde, Valintakoe}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -120,8 +120,11 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  hk.muokkaaja,
                  array(select jsonb_array_elements(v.metadata -> 'valintatavat') ->> 'valintatapaKoodiUri') as valintatapa_koodi_urit,
                  lower(hk.system_time),
-                 t.metadata
-          from hakukohteet hk
+                 t.metadata,
+                 hk.metadata -> 'kynnysehto' as kynnysehto,
+                 array(select id
+                    from hakukohteiden_valintakokeet where hakukohde_oid = hk.oid) as valintakokeet
+                 from hakukohteet hk
                    inner join haut h on hk.haku_oid = h.oid and
                        hk.tila != 'poistettu'::julkaisutila and hk.tila != 'arkistoitu'::julkaisutila
                    inner join toteutukset t on t.oid = hk.toteutus_oid and

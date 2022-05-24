@@ -47,3 +47,5 @@ ohjausparametrit-service.parametri=https://{{host_virkailija}}/ohjausparametrit-
 
 oppijanumerorekisteri-service=https://{{host_virkailija}}/oppijanumerorekisteri-service
 oppijanumerorekisteri-service.henkilo=https://{{host_virkailija}}/oppijanumerorekisteri-service/henkilo/$1
+
+kouta.external-api.modify.enabled={{kouta_external_api_modify_enabled}}

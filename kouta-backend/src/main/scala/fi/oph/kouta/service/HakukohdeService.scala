@@ -61,7 +61,7 @@ class HakukohdeService(
       case Some((h, i)) =>
         val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        val hakukohdeEnrichedDataWithMuokkaajanNimi = EnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
+        val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
         val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
         toteutus match {
           case Some((t, _)) =>
@@ -96,12 +96,12 @@ class HakukohdeService(
   }
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
-    val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hakukohde)
-    val enrichedHakukohde = hakukohde.copy(metadata = enrichedMetadata)
-    authorizePut(enrichedHakukohde) { h =>
-      withValidation(h, None) { h =>
-        validateDependenciesIntegrity(h, authenticated, "put")
-        doPut(h)
+    authorizePut(hakukohde) { hk =>
+      val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hk)
+      val enrichedHakukohde = hk.copy(metadata = enrichedMetadata)
+      withValidation(enrichedHakukohde, None) { hk =>
+        validateDependenciesIntegrity(hk, authenticated, "put")
+        doPut(hk)
       }
     }.oid.get
   }
@@ -158,15 +158,15 @@ class HakukohdeService(
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hakukohde)
-    val enrichedHakukohde = hakukohde.copy(metadata = enrichedMetadata)
     val rules = AuthorizationRules(
       roleEntity.updateRoles,
       additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
     )
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), enrichedHakukohde, rules) { (oldHakukohde, h) =>
-      withValidation(h, Some(oldHakukohde)) { h =>
-        throwValidationErrors(validateStateChange("hakukohteelle", oldHakukohde.tila, hakukohde.tila))
+    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), hakukohde, rules) { (oldHakukohde, h) =>
+      val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(h)
+      val enrichedHakukohde = h.copy(metadata = enrichedMetadata)
+      withValidation(enrichedHakukohde, Some(oldHakukohde)) { h =>
+        throwValidationErrors(validateStateChange("hakukohteelle", oldHakukohde.tila, h.tila))
         validateDependenciesIntegrity(h, authenticated, "update")
         doUpdate(h, notModifiedSince, oldHakukohde)
       }

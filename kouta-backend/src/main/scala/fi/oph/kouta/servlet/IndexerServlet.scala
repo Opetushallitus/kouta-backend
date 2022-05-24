@@ -3,7 +3,7 @@ package fi.oph.kouta.servlet
 import java.net.URLDecoder
 import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{OppilaitoksenOsa, Oppilaitos, TilaFilter}
+import fi.oph.kouta.domain.{TilaFilter}
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitoksenOsaService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
@@ -13,12 +13,13 @@ import org.scalatra.{NotFound, Ok}
 class IndexerServlet(koulutusService: KoulutusService,
                      toteutusService: ToteutusService,
                      hakuService: HakuService,
+                     hakukohdeService: HakukohdeService,
                      valintaperusteService: ValintaperusteService,
                      sorakuvausService: SorakuvausService,
                      oppilaitosService: OppilaitosService,
                      oppilaitoksenOsaService: OppilaitoksenOsaService) extends KoutaServlet {
 
-  def this() = this(KoulutusService, ToteutusService, HakuService, ValintaperusteService, SorakuvausService, OppilaitosService, OppilaitoksenOsaService)
+  def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService, SorakuvausService, OppilaitosService, OppilaitoksenOsaService)
 
   registerPath("/indexer/modifiedSince/{since}",
     s"""    get:
@@ -560,7 +561,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   post("/list-hakukohde-oids-by-jarjestyspaikat") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(HakukohdeService.getOidsByJarjestyspaikat(parsedBody.extract[Seq[OrganisaatioOid]],
+    Ok(hakukohdeService.getOidsByJarjestyspaikat(parsedBody.extract[Seq[OrganisaatioOid]],
       TilaFilter.onlyOlemassaolevat()))
   }
 

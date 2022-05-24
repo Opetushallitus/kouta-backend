@@ -121,10 +121,10 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
-    val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(toteutus)
-    val enrichedToteutus = toteutus.copy(metadata = enrichedMetadata)
-    authorizePut(enrichedToteutus) { t =>
-      withValidation(t, None) { t =>
+    authorizePut(toteutus) { t =>
+      val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
+      val enrichedToteutus = t.copy(metadata = enrichedMetadata)
+      withValidation(enrichedToteutus, None) { t =>
         validateKoulutusIntegrity(t)
         doPut(t, koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), Set()))
       }
@@ -149,19 +149,18 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
-    val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(toteutus)
-    val enrichedToteutus = toteutus.copy(metadata = enrichedMetadata)
-
     val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
-    authorizeUpdate(toteutusWithTime, enrichedToteutus, rules) { (oldToteutus, t) =>
-      withValidation(t, Some(oldToteutus)) { t =>
-        throwValidationErrors(validateStateChange("toteutukselle", oldToteutus.tila, toteutus.tila))
+    authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
+      val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
+      val enrichedToteutus = t.copy(metadata = enrichedMetadata)
+      withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
+        throwValidationErrors(validateStateChange("toteutukselle", oldToteutus.tila, t.tila))
         validateKoulutusIntegrity(t)
-        validateHakukohdeIntegrityIfDeletingToteutus(oldToteutus.tila, toteutus.tila, toteutus.oid.get)
+        validateHakukohdeIntegrityIfDeletingToteutus(oldToteutus.tila, t.tila, t.oid.get)
         val deletedTarjoajat =
-          if (toteutus.tila == Poistettu) toteutus.tarjoajat else oldToteutus.tarjoajat diff toteutus.tarjoajat
+          if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(t, notModifiedSince, oldToteutus,
-          koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), getDeletableTarjoajienOppilaitokset(toteutus, deletedTarjoajat)))
+          koulutusService.getUpdateTarjoajatActions(t.koulutusOid, getTarjoajienOppilaitokset(t), getDeletableTarjoajienOppilaitokset(t, deletedTarjoajat)))
       }
     }
   }.nonEmpty

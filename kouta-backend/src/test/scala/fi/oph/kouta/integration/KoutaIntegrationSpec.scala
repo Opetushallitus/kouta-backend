@@ -9,7 +9,6 @@ import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks.{MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockOrganisaatioServiceClient, MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
-import fi.oph.kouta.service.HakukohdeCopyResultObject
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.validation.{ErrorMessage, ValidationError}

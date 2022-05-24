@@ -1,5 +1,5 @@
 package fi.oph.kouta.integration
-
+import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -8,6 +8,7 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.generic.auto._
+import fi.oph.kouta.repository.HakukohdeDAO
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
@@ -602,6 +603,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     get(s"$IndexerPath$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
 
+      val hk1valintakokeet = HakukohdeDAO.get(hk1.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).map(_.id).flatten
+      val hk6valintakokeet = HakukohdeDAO.get(hk6.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).map(_.id).flatten
+
       val expected = List(Hakutieto(
         toteutusOid = t1.oid,
         haut = Seq(HakutietoHaku(
@@ -643,7 +647,9 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
               muokkaaja = hk1.muokkaaja,
               organisaatioOid = hk1.organisaatioOid,
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
-              modified = Some(hk1.modified)))),
+              modified = Some(hk1.modified),
+              kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
+              valintakoeIds = hk1valintakokeet))),
 
           HakutietoHaku(
             hakuOid = h3.oid,
@@ -683,7 +689,8 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
               organisaatioOid = hk6.organisaatioOid,
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
               modified = Some(hk6.modified),
-            ))))))
+              kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
+              valintakoeIds = hk6valintakokeet))))))
 
       read[List[Hakutieto]](body) should matchTo(expected)
     }
