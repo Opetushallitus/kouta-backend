@@ -132,7 +132,7 @@ class OppilaitosService(
       o
     }.get
 
-  private def doUpdate(oppilaitos: Oppilaitos, notModifiedSince: Instant, before: Oppilaitos)(implicit authenticated: Authenticated): Option[Oppilaitos] =
+  def doUpdate(oppilaitos: Oppilaitos, notModifiedSince: Instant, before: Oppilaitos)(implicit authenticated: Authenticated): Option[Oppilaitos] =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
@@ -196,6 +196,15 @@ class OppilaitoksenOsaService(
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid = {
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
+    val jarjestaaUrheilijanAmmKoulutusta = oppilaitoksenOsa.metadata match {
+      case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
+      case None => false
+    }
+
+    if (jarjestaaUrheilijanAmmKoulutusta) {
+      updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
+    }
+
     authorizePut(enrichedOppilaitoksenOsa) { o =>
       withValidation(o, None) { o =>
         validateOppilaitosIntegrity(o)
@@ -205,6 +214,23 @@ class OppilaitoksenOsaService(
   }
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val jarjestaaUrheilijanAmmKoulutusta = oppilaitoksenOsa.metadata match {
+      case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
+      case None => false
+    }
+
+    if (jarjestaaUrheilijanAmmKoulutusta) {
+      updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
+    } else {
+      val osat = OppilaitoksenOsaDAO.getByOppilaitosOid(oppilaitoksenOsa.oppilaitosOid)
+      val osatWithoutCurrentOsa = osat.filter(osa => osa.oid != oppilaitoksenOsa.oid )
+      val someOfOsatJarjestaaUrheilijanAmmKoulutusta = osatWithoutCurrentOsa.map(osa => osa.metadata match {
+        case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
+        case None => false
+      }).contains(true)
+      updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, someOfOsatJarjestaaUrheilijanAmmKoulutusta)
+    }
+
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), enrichedOppilaitoksenOsa) { (oldOsa, o) =>
@@ -213,6 +239,26 @@ class OppilaitoksenOsaService(
         doUpdate(o, notModifiedSince, oldOsa)
       }
     }.nonEmpty
+  }
+
+  private def updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa: OppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta: Boolean)(implicit authenticated: Authenticated): Unit = {
+    OppilaitosDAO.get(oppilaitoksenOsa.oppilaitosOid) match {
+      case Some(oppilaitosWithInstant) => {
+        val oppilaitos = oppilaitosWithInstant._1
+        val metadata = oppilaitos.metadata match {
+          case Some(metadata) => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
+          case None => OppilaitosMetadata(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
+        }
+
+        val oppilaitosCopy = oppilaitos.copy(metadata = Some(metadata))
+        OppilaitosService.authorizeUpdate(Some(oppilaitosWithInstant), oppilaitosCopy) { (oldOppilaitos, o) =>
+          OppilaitosService.withValidation(o, Some(oldOppilaitos)) {
+            OppilaitosService.doUpdate(_, Instant.now(), oldOppilaitos)
+          }
+        }
+      }
+      case None =>
+    }
   }
 
   private def validateOppilaitosIntegrity(oppilaitoksenOsa: OppilaitoksenOsa): Unit = {

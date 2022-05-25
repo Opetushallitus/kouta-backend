@@ -361,7 +361,8 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
                               yksikoita: Option[Int] = None,
                               toimipisteita: Option[Int] = None,
                               akatemioita: Option[Int] = None,
-                              isMuokkaajaOphVirkailija: Option[Boolean] = None
+                              isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                              jarjestaaUrheilijanAmmKoulutusta: Boolean = false,
                               ) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[TietoaOpiskelusta](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
