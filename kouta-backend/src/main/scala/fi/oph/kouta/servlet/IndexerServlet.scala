@@ -592,40 +592,4 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(ToteutusService.getOidsByTarjoajat(parsedBody.extract[Seq[OrganisaatioOid]],
       TilaFilter.onlyOlemassaolevat()))
   }
-
-  registerPath("/indexer/oppilaitos-hierarkia/{organisaatioOid}",
-    """    get:
-      |      summary: Hakee organisaatio-oidilla oppilaitoksen tai -osan ja sen osat
-      |      description: Hakee organisaatio-oidilla oppilaitoksen tai -osan ja sen osat. Tämä rajapinta on indeksointia varten
-      |      tags:
-      |        - Indexer
-      |      parameters:
-      |        - in: path
-      |          name: organisaatioOid
-      |          description: Organisaation oid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          example: 1.2.246.562.10.00101010101
-      |      responses:
-      |        '200':
-      |          description: Ok
-      |""".stripMargin)
-  get("/oppilaitos-hierarkia/:organisaatioOid") {
-    implicit val authenticated: Authenticated = authenticate()
-    val oppilaitoksenOsaResult = oppilaitoksenOsaService.get(OrganisaatioOid(params("organisaatioOid")))
-    oppilaitoksenOsaResult match {
-      case Some((oppilaitoksenOsa, _)) => Ok(oppilaitoksenOsa)
-      case None => {
-        val oppilaitosResult = oppilaitosService.get(OrganisaatioOid(params("organisaatioOid")))
-        oppilaitosResult match {
-          case Some((oppilaitos, _)) => {
-              val oppilaitoksenOsat = oppilaitosService.getOppilaitoksenOsat(oppilaitos.oid)
-              Ok(oppilaitos.withOsat(oppilaitoksenOsat))
-          }
-          case None => NotFound("Oppilaitosta tai oppilaitoksen osaa ei löytynyt!")
-        }
-      }
-    }
-  }
 }
