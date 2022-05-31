@@ -118,7 +118,7 @@ class OppilaitosService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitos)
-        (logo, o) <- checkAndMaybeClearLogo(o)
+        (logo, o)  <- checkAndMaybeClearLogo(o)
         o          <- OppilaitosDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- maybeCopyLogo(logo, o)
@@ -201,7 +201,7 @@ class OppilaitoksenOsaService(
       case None => false
     }
 
-    if (jarjestaaUrheilijanAmmKoulutusta) {
+    if (jarjestaaUrheilijanAmmKoulutusta && oppilaitoksenOsa.tila == Julkaistu) {
       updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
     }
 
@@ -219,15 +219,16 @@ class OppilaitoksenOsaService(
       case None => false
     }
 
-    if (jarjestaaUrheilijanAmmKoulutusta) {
+    if (jarjestaaUrheilijanAmmKoulutusta && oppilaitoksenOsa.tila == Julkaistu) {
       updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
     } else {
-      val osat = OppilaitoksenOsaDAO.getByOppilaitosOid(oppilaitoksenOsa.oppilaitosOid)
-      val osatWithoutCurrentOsa = osat.filter(osa => osa.oid != oppilaitoksenOsa.oid )
-      val someOfOsatJarjestaaUrheilijanAmmKoulutusta = osatWithoutCurrentOsa.map(osa => osa.metadata match {
+      val osat = getJulkaistutOppilaitoksenOsat(oppilaitoksenOsa.oppilaitosOid)
+      val osatWithoutCurrentOsa = osat.filter(osa => osa.oid != oppilaitoksenOsa.oid)
+      val someOfOsatJarjestaaUrheilijanAmmKoulutusta = osatWithoutCurrentOsa.exists(osa => osa.metadata match {
         case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
         case None => false
-      }).contains(true)
+      })
+
       updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, someOfOsatJarjestaaUrheilijanAmmKoulutusta)
     }
 
@@ -240,6 +241,9 @@ class OppilaitoksenOsaService(
       }
     }.nonEmpty
   }
+
+  def getJulkaistutOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
+    OppilaitoksenOsaDAO.getJulkaistutByOppilaitosOid(oid)
 
   private def updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa: OppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta: Boolean)(implicit authenticated: Authenticated): Unit = {
     OppilaitosDAO.get(oppilaitoksenOsa.oppilaitosOid) match {
