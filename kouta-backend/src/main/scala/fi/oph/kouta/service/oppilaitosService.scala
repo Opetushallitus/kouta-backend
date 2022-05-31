@@ -219,17 +219,19 @@ class OppilaitoksenOsaService(
       case None => false
     }
 
-    if (jarjestaaUrheilijanAmmKoulutusta && oppilaitoksenOsa.tila == Julkaistu) {
-      updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
-    } else {
-      val osat = getJulkaistutOppilaitoksenOsat(oppilaitoksenOsa.oppilaitosOid)
-      val osatWithoutCurrentOsa = osat.filter(osa => osa.oid != oppilaitoksenOsa.oid)
-      val someOfOsatJarjestaaUrheilijanAmmKoulutusta = osatWithoutCurrentOsa.exists(osa => osa.metadata match {
-        case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
-        case None => false
-      })
+    if (oppilaitoksenOsa.tila == Julkaistu) {
+      if (jarjestaaUrheilijanAmmKoulutusta) {
+        updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
+      } else {
+        val osat = getJulkaistutOppilaitoksenOsat(oppilaitoksenOsa.oppilaitosOid)
+        val osatWithoutCurrentOsa = osat.filter(osa => osa.oid != oppilaitoksenOsa.oid)
+        val someOfOsatJarjestaaUrheilijanAmmKoulutusta = osatWithoutCurrentOsa.exists(osa => osa.metadata match {
+          case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
+          case None => false
+        })
 
-      updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, someOfOsatJarjestaaUrheilijanAmmKoulutusta)
+        updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, someOfOsatJarjestaaUrheilijanAmmKoulutusta)
+      }
     }
 
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
