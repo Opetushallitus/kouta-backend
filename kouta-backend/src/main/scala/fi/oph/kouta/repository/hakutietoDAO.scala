@@ -135,9 +135,9 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                    left join valintaperusteet v on v.id = hk.valintaperuste_id and
                        v.tila != 'poistettu'::julkaisutila and v.tila != 'arkistoitu'::julkaisutila
                    left join oppilaitosten_osat osat on osat.oid = hk.jarjestyspaikka_oid and
-                       osat.tila != 'poistettu'::julkaisutila and osat.tila != 'arkistoitu'::julkaisutila
+                       osat.tila = 'julkaistu'::julkaisutila
                    left join oppilaitokset on oppilaitokset.oid = hk.jarjestyspaikka_oid and
-                       oppilaitokset.tila != 'poistettu'::julkaisutila and oppilaitokset.tila != 'arkistoitu'::julkaisutila
+                       oppilaitokset.tila = 'julkaistu'::julkaisutila
           where k.oid = ${koulutusOid.toString}
             and hk.tila != 'poistettu'::julkaisutila and hk.tila != 'arkistoitu'::julkaisutila
             """.as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
