@@ -436,9 +436,3 @@ case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,
     osa: Option[OppilaitoksenOsa] = None
 )
-
-case class OppilaitosByOid(
-    oid: OrganisaatioOid,
-    oppilaitos: Option[Oppilaitos] = None,
-    organisaatioHierarkia: Option[OrganisaatioHierarkia] = None
-)
