@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.client.{OrganisaatioHierarkia, OrganisaationOsa}
+import fi.oph.kouta.domain.{OrganisaatioHierarkia, OrganisaationOsa}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 object OppilaitosServiceUtil {

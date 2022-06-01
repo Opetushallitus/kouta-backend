@@ -4,7 +4,6 @@ import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime, LocalTime}
 import java.util.UUID
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.{OrgServiceOrganisaatio, OrganisaationOsa}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._

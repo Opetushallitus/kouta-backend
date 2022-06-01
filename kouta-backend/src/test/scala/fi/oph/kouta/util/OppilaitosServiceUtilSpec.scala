@@ -1,8 +1,7 @@
 package fi.oph.kouta.util
 
 import fi.oph.kouta.TestOids
-import fi.oph.kouta.client.{OrgServiceOrganisaatio, OrganisaatioHierarkia, OrganisaationOsa}
-import fi.oph.kouta.domain.{En, Fi, Sv}
+import fi.oph.kouta.domain.{En, Fi, OrgServiceOrganisaatio, OrganisaatioHierarkia, OrganisaationOsa, Sv}
 
 class OppilaitosServiceUtilSpec extends UnitSpec {
   val organisaationOsa = OrganisaationOsa(

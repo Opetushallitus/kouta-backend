@@ -1,7 +1,7 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.Kielistetty
+import fi.oph.kouta.domain.{Kielistetty, OrganisaatioHierarkia}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
@@ -35,29 +35,4 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     }
   }
 }
-
-case class OrgServiceOrganisaatio(
-  oid: String,
-  parentOidPath: String,
-  oppilaitostyyppi: Option[String] = None,
-  nimi: Kielistetty,
-  kotipaikkaUri: String,
-  children: List[OrganisaationOsa],
-  status: Option[String] = None,
-  organisaatiotyypit: Option[List[String]] = None,
-)
-
-case class OrganisaationOsa(
-  oid: String,
-  parentOidPath: String,
-  nimi: Kielistetty,
-  kotipaikkaUri: String,
-  children: List[OrganisaationOsa],
-  status: String,
-  organisaatiotyypit: List[String],
-)
-
-case class OrganisaatioHierarkia(
-  organisaatiot: List[OrgServiceOrganisaatio]
-)
 

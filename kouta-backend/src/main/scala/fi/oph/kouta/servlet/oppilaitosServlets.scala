@@ -153,9 +153,9 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
 
   registerPath("/oppilaitos/oppilaitokset",
     """    post:
-      |      summary: Hae oppilaitosten tiedot
-      |      operationId: Hae oppilaitokset
-      |      description: Hakee oppilaitoksen tiedot
+      |      summary: Hae oppilaitosten ja/tai oppilaitosten osien tiedot
+      |      operationId: Hae oppilaitokset ja/tai oppilaitosten osat
+      |      description: Hakee oppilaitoksen ja/tai oppilaitoksen osan tiedot
       |      tags:
       |        - Oppilaitos
       |      requestBody:
@@ -174,15 +174,13 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |          content:
       |            application/json:
       |              schema:
-      |                type: array
-      |                items:
-      |                  $ref: '#/components/schemas/OppilaitoksenOsaListItem'
+      |                $ref: '#/components/schemas/OppilaitoksetResponse'
       |""".stripMargin)
   post("/oppilaitokset") {
 
     implicit val authenticated: Authenticated = authenticate()
-    val organisaatiot = oppilaitosService.get(parsedBody.extract[List[OrganisaatioOid]])
-    Ok(organisaatiot)
+    val oppilaitoksetWithOrganisaatioHierarkia = oppilaitosService.get(parsedBody.extract[List[OrganisaatioOid]])
+    Ok(oppilaitoksetWithOrganisaatioHierarkia)
   }
 }
 

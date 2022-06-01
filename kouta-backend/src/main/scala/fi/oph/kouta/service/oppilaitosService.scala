@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioHierarkia, OrganisaatioServiceClient}
+import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioServiceClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -47,11 +47,6 @@ class OppilaitosService(
     }
     authorizeGet(enrichedOppilaitos)
   }
-
-  case class OppilaitoksetResponse(
-    oppilaitokset: List[Oppilaitos],
-    organisaatioHierarkia: OrganisaatioHierarkia
-  )
 
   def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
     val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
