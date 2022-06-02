@@ -142,6 +142,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     }
     KoutaDatabase.runBlocking(selectToteutustenTarjoajatByKoulutusOid(koulutusOid, tilaFilter)).groupBy(tarjoaja => ToteutusOid(tarjoaja.oid.s)).map(convert)
   }
+
+  def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[ToteutusOid] = {
+    KoutaDatabase.runBlocking(selectByCreatorOrTarjoaja(tarjoajaOids, tilaFilter)).map(toteutus => toteutus.oid)
+  }
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {

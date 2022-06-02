@@ -54,10 +54,14 @@ package object oppilaitos {
       |          description: Oppilaitoksen Opintopolussa näytettävän logon URL.
       |          example: https://konfo-files.opintopolku.fi/oppilaitos-logo/1.2.246.562.10.00000000000000000009/ba9dd816-81fb-44ea-aafd-14ee3014e086.png
       |        modified:
-      |           type: string
-      |           format: date-time
-      |           description: Oppilaitoksen kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
-      |           example: 2019-08-23T09:55:17
+      |          type: string
+      |          format: date-time
+      |          description: Oppilaitoksen kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
+      |          example: 2019-08-23T09:55:17
+      |        osat:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/OppilaitoksenOsa'
       |""".stripMargin
 
   val OppilaitosMetadataModel =
@@ -265,9 +269,101 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
+  val OrganisaationOsaModel =
+    """    OrganisaationOsa:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895666
+      |        parentOidPath:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895666/1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
+      |        nimi:
+      |          type: object
+      |          $ref: '#/components/schemas/Nimi'
+      |        kotipaikkaUri:
+      |          type: string
+      |          example:
+      |            - kunta_091
+      |            - kunta_398
+      |        children:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/OrganisaationOsa'
+      |        status:
+      |          type: string
+      |          example: AKTIIVINEN
+      |        organisaatiotyypit:
+      |          items:
+      |            type: string
+      |            example:
+      |              - organisaatiotyyppi_1
+      |              - organisaatiotyyppi_2
+      |""".stripMargin
+
+  val OrgServiceOrganisaatioModel =
+    """    OrgServiceOrganisaatio:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895871
+      |        parentOidPath:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
+      |        oppilaitostyyppi:
+      |          type: string
+      |          example: oppilaitostyyppi_21
+      |        nimi:
+      |          type: object
+      |          $ref: '#/components/schemas/Nimi'
+      |        kotipaikkaUri:
+      |          type: string
+      |          example:
+      |            - kunta_091
+      |            - kunta_398
+      |        children:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/OrganisaationOsa'
+      |        status:
+      |          type: string
+      |          example: AKTIIVINEN
+      |        organisaatiotyypit:
+      |          items:
+      |            type: string
+      |            example:
+      |              - organisaatiotyyppi_1
+      |              - organisaatiotyyppi_2
+      |""".stripMargin
+
+  val OrganisaatioHierarkiaModel =
+    """    OrganisaatioHierarkia:
+      |      type: object
+      |      properties:
+      |        organisaatiot:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/OrgServiceOrganisaatio'
+      |""".stripMargin
+
+  val OppilaitoksetResponseModel =
+    """    OppilaitoksetResponse:
+      |      type: object
+      |      properties:
+      |        oppilaitokset:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/Oppilaitos'
+      |        organisaatioHierarkia:
+      |          type: object
+      |          $ref: '#/components/schemas/OrganisaatioHierarkia'
+      |""".stripMargin
 
   def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel,
-    OppilaitoksenOsaListItemModel, YhteystietoModel, TietoaOpiskelustaModel)
+    OppilaitoksenOsaListItemModel, YhteystietoModel, TietoaOpiskelustaModel, OrganisaationOsaModel,
+    OrgServiceOrganisaatioModel, OrganisaatioHierarkiaModel, OppilaitoksetResponseModel)
 }
 
 case class Oppilaitos(oid: OrganisaatioOid,
@@ -360,7 +456,8 @@ case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
                               yksikoita: Option[Int] = None,
                               toimipisteita: Option[Int] = None,
                               akatemioita: Option[Int] = None,
-                              isMuokkaajaOphVirkailija: Option[Boolean] = None
+                              isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                              jarjestaaUrheilijanAmmKoulutusta: Boolean = false,
                               ) extends ValidatableSubEntity {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     validateIfNonEmpty[TietoaOpiskelusta](tietoaOpiskelusta, s"$path.tietoaOpiskelusta", _.validate(tila, kielivalinta, _)),
@@ -429,3 +526,38 @@ case class Yhteystieto(nimi: Kielistetty = Map(),
 }
 
 case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None)
+
+case class OppilaitosAndOsa(
+    oppilaitos: Oppilaitos,
+    osa: Option[OppilaitoksenOsa] = None
+)
+
+case class OppilaitoksetResponse(
+  oppilaitokset: List[Oppilaitos],
+  organisaatioHierarkia: OrganisaatioHierarkia
+)
+
+case class OrgServiceOrganisaatio(
+  oid: String,
+  parentOidPath: String,
+  oppilaitostyyppi: Option[String] = None,
+  nimi: Kielistetty,
+  kotipaikkaUri: String,
+  children: List[OrganisaationOsa],
+  status: Option[String] = None,
+  organisaatiotyypit: Option[List[String]] = None,
+)
+
+case class OrganisaationOsa(
+  oid: String,
+  parentOidPath: String,
+  nimi: Kielistetty,
+  kotipaikkaUri: String,
+  children: List[OrganisaationOsa],
+  status: String,
+  organisaatiotyypit: List[String],
+)
+
+case class OrganisaatioHierarkia(
+  organisaatiot: List[OrgServiceOrganisaatio]
+)

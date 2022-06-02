@@ -391,6 +391,39 @@ trait OppilaitosExtractors extends ExtractorBase {
     logo = r.nextStringOption(),
     modified = Some(timeStampToModified(r.nextTimestamp()))
   ))
+
+  implicit val getOppilaitosAndOsaResult: GetResult[OppilaitosAndOsa] = GetResult(r => {
+    val oppilaitos = Oppilaitos(
+      oid = OrganisaatioOid(r.nextString()),
+      tila = Julkaisutila.withName(r.nextString()),
+      kielivalinta = extractKielivalinta(r.nextStringOption()),
+      metadata = r.nextStringOption().map(read[OppilaitosMetadata]),
+      muokkaaja = UserOid(r.nextString()),
+      esikatselu = r.nextBoolean(),
+      organisaatioOid = OrganisaatioOid(r.nextString()),
+      teemakuva = r.nextStringOption(),
+      logo = r.nextStringOption())
+
+    val osaOid = r.nextString()
+    var osa = None: Option[OppilaitoksenOsa]
+    if (osaOid != null) {
+      osa = Some(OppilaitoksenOsa(
+        oid = OrganisaatioOid(osaOid),
+        oppilaitosOid = OrganisaatioOid(r.nextString()),
+        tila = Julkaisutila.withName(r.nextString()),
+        kielivalinta = extractKielivalinta(r.nextStringOption()),
+        metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
+        muokkaaja = UserOid(r.nextString()),
+        esikatselu = r.nextBoolean(),
+        organisaatioOid = OrganisaatioOid(r.nextString()),
+        teemakuva = r.nextStringOption()))
+    }
+
+    OppilaitosAndOsa(
+      oppilaitos = oppilaitos,
+      osa = osa)
+  }
+  )
 }
 
 trait OppilaitoksenOsaExtractors extends ExtractorBase {
@@ -452,6 +485,7 @@ trait HakutietoExtractors extends ExtractorBase {
           koulutuksenAlkamiskausi = r.nextStringOption().map(read[KoulutuksenAlkamiskausi]),
           kaytetaanHaunAlkamiskautta = r.nextBooleanOption(),
           jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
+          jarjestaaUrheilijanAmmKoulutusta = r.nextBoolean(),
           hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),
           hakulomakeAtaruId = r.nextStringOption().map(UUID.fromString),
           hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),

@@ -565,39 +565,31 @@ class IndexerServlet(koulutusService: KoulutusService,
       TilaFilter.onlyOlemassaolevat()))
   }
 
-  registerPath("/indexer/oppilaitos-hierarkia/{organisaatioOid}",
-    """    get:
-      |      summary: Hakee organisaatio-oidilla oppilaitoksen tai -osan ja sen osat
-      |      description: Hakee organisaatio-oidilla oppilaitoksen tai -osan ja sen osat. Tämä rajapinta on indeksointia varten
+  registerPath("/indexer/list-toteutus-oids-by-tarjoajat",
+    """    post:
+      |      summary: Hakee tarjoajaa (oppilaitos tai toimipiste) vastaavat toteutukset
+      |      operationId: Tarjoajan toteutukset
+      |      description: Hakee kaikkien niiden toteutusten oidit, joissa annettu oppilaitos/toimipiste on sen tarjoajana suoraan tai oppilaitoksen kautta (jos toimipiste). Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
-      |      parameters:
-      |        - in: path
-      |          name: organisaatioOid
-      |          description: Organisaation oid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          example: 1.2.246.562.10.00101010101
+      |      requestBody:
+      |        description: Lista tarjoajien organisaatio-oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example: 1.2.246.562.10.56753942459
       |      responses:
       |        '200':
       |          description: Ok
       |""".stripMargin)
-  get("/oppilaitos-hierarkia/:organisaatioOid") {
+  post("/list-toteutus-oids-by-tarjoajat") {
+
     implicit val authenticated: Authenticated = authenticate()
-    val oppilaitoksenOsaResult = oppilaitoksenOsaService.get(OrganisaatioOid(params("organisaatioOid")))
-    oppilaitoksenOsaResult match {
-      case Some((oppilaitoksenOsa, _)) => Ok(oppilaitoksenOsa)
-      case None => {
-        val oppilaitosResult = oppilaitosService.get(OrganisaatioOid(params("organisaatioOid")))
-        oppilaitosResult match {
-          case Some((oppilaitos, _)) => {
-              val oppilaitoksenOsat = oppilaitosService.getOppilaitoksenOsat(oppilaitos.oid)
-              Ok(oppilaitos.withOsat(oppilaitoksenOsat))
-          }
-          case None => NotFound("Oppilaitosta tai oppilaitoksen osaa ei löytynyt!")
-        }
-      }
-    }
+    Ok(ToteutusService.getOidsByTarjoajat(parsedBody.extract[Seq[OrganisaatioOid]],
+      TilaFilter.onlyOlemassaolevat()))
   }
 }

@@ -1,9 +1,8 @@
 package fi.oph.kouta.repository
 
 import java.time.Instant
-
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem}
+import fi.oph.kouta.domain.{OppilaitoksenOsa, OppilaitoksenOsaListItem, TilaFilter}
 import fi.oph.kouta.servlet.EntityNotFoundException
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
@@ -61,6 +60,9 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
   override def getByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsa] =
     KoutaDatabase.runBlocking(selectByOppilaitosOid(oppilaitosOid))
 
+  def getJulkaistutByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsa] =
+    KoutaDatabase.runBlocking(selectJulkaistutByOppilaitosOid(oppilaitosOid))
+
   override def listByOppilaitosOid(oppilaitosOid: OrganisaatioOid): Seq[OppilaitoksenOsaListItem] =
     KoutaDatabase.runBlocking(selectListByOppilaitosOid(oppilaitosOid))
 
@@ -88,6 +90,18 @@ sealed trait OppilaitoksenOsaModificationSQL extends SQLHelpers {
 }
 
 sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with OppilaitoksenOsaModificationSQL with SQLHelpers {
+  val selectOppilaitoksenOsaSQL =
+    """select oid,
+      |       oppilaitos_oid,
+      |       tila,
+      |       kielivalinta,
+      |       metadata,
+      |       muokkaaja,
+      |       esikatselu,
+      |       organisaatio_oid,
+      |       teemakuva,
+      |       lower(system_time)
+      |""".stripMargin
 
   def checkOppilaitosExists(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Boolean]  = {
     sql"""select 1 from oppilaitokset where oid = ${oppilaitoksenOsa.oppilaitosOid}""".as[Int].headOption.map(_.isDefined)
@@ -109,18 +123,15 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
   }
 
   def selectByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsa]] = {
-    sql"""select oid,
-                 oppilaitos_oid,
-                 tila,
-                 kielivalinta,
-                 metadata,
-                 muokkaaja,
-                 esikatselu,
-                 organisaatio_oid,
-                 teemakuva,
-                 lower(system_time)
+    sql"""#$selectOppilaitoksenOsaSQL
           from oppilaitosten_osat
           where oppilaitos_oid = $oppilaitosOid""".as[OppilaitoksenOsa]
+  }
+
+  def selectJulkaistutByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsa]] = {
+    sql"""#$selectOppilaitoksenOsaSQL
+          from oppilaitosten_osat
+          where oppilaitos_oid = $oppilaitosOid #${tilaConditions(TilaFilter.onlyJulkaistut)}""".as[OppilaitoksenOsa]
   }
 
   def insertOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Int] = {

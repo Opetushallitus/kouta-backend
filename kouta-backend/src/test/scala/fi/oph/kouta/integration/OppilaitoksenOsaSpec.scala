@@ -1,16 +1,17 @@
 package fi.oph.kouta.integration
 
-import java.time.LocalDateTime
-import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, OppilaitosEnrichedData, Tallennettu}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, OppilaitosEnrichedData, Tallennettu}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+
+import java.time.LocalDateTime
+import java.util.UUID
 
 class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitoksenOsaFixture
   with OppilaitosFixture with UploadFixture {

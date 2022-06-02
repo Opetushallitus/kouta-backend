@@ -6,7 +6,7 @@ import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, s
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
-import fi.oph.kouta.mocks.{MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockSecurityContext, OrganisaatioServiceMock}
+import fi.oph.kouta.mocks.{MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockOrganisaatioServiceClient, MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
@@ -42,6 +42,7 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val casUrl = "testCasUrl"
   val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
   val mockKayttooikeusClient: MockKayttooikeusClient = new MockKayttooikeusClient(securityContext, defaultAuthorities)
+  val mockOrganisaatioClient: MockOrganisaatioServiceClient = new MockOrganisaatioServiceClient(securityContext, defaultAuthorities)
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid.s, defaultAuthorities), testUser.sessionId)

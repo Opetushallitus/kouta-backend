@@ -1,8 +1,7 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioServiceClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -11,13 +10,14 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
 import fi.oph.kouta.validation.Validations
 import slick.dbio.DBIO
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OrganisaatioServiceClient)
 
 class OppilaitosService(
   sqsInTransactionService: SqsInTransactionService,
@@ -25,7 +25,8 @@ class OppilaitosService(
   auditLog: AuditLog,
   val organisaatioService: OrganisaatioService,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-  kayttooikeusClient: KayttooikeusClient
+  kayttooikeusClient: KayttooikeusClient,
+  organisaatioClient: OrganisaatioServiceClient
 ) extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService[Oppilaitos] with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
@@ -45,6 +46,28 @@ class OppilaitosService(
       case None => None
     }
     authorizeGet(enrichedOppilaitos)
+  }
+
+  def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
+    val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
+    val oids = OppilaitosServiceUtil.getHierarkiaOids(hierarkia)
+    val oppilaitokset = OppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
+
+    val oppilaitoksetWithOsat = oppilaitokset.map(oppilaitosAndOsatByOid => {
+      val oppilaitos = oppilaitosAndOsatByOid._2.head.oppilaitos
+      val osat = oppilaitosAndOsatByOid._2.map(oppilaitosAndOsa => oppilaitosAndOsa.osa).flatten
+
+        try {
+          Some(authorizeGet(oppilaitos.copy(osat = Some(osat)), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)))
+        } catch {
+          case authorizationException: OrganizationAuthorizationFailedException =>
+            logger.error(s"Authorization failed: ${authorizationException}")
+            None
+        }
+    }).toList.flatten
+    OppilaitoksetResponse(
+      oppilaitokset = oppilaitoksetWithOsat, organisaatioHierarkia = hierarkia
+    )
   }
 
   private def enrichOppilaitosMetadata(oppilaitos: Oppilaitos) : Option[OppilaitosMetadata] = {
@@ -90,7 +113,7 @@ class OppilaitosService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teema, o) <- checkAndMaybeClearTeemakuva(oppilaitos)
-        (logo, o) <- checkAndMaybeClearLogo(o)
+        (logo, o)  <- checkAndMaybeClearLogo(o)
         o          <- OppilaitosDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- maybeCopyLogo(logo, o)
@@ -104,7 +127,7 @@ class OppilaitosService(
       o
     }.get
 
-  private def doUpdate(oppilaitos: Oppilaitos, notModifiedSince: Instant, before: Oppilaitos)(implicit authenticated: Authenticated): Option[Oppilaitos] =
+  def doUpdate(oppilaitos: Oppilaitos, notModifiedSince: Instant, before: Oppilaitos)(implicit authenticated: Authenticated): Option[Oppilaitos] =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- OppilaitosDAO.checkNotModified(oppilaitos.oid, notModifiedSince)
@@ -168,6 +191,15 @@ class OppilaitoksenOsaService(
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid = {
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
+    val jarjestaaUrheilijanAmmKoulutusta = oppilaitoksenOsa.metadata match {
+      case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
+      case None => false
+    }
+
+    if (jarjestaaUrheilijanAmmKoulutusta && oppilaitoksenOsa.tila == Julkaistu) {
+      updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
+    }
+
     authorizePut(enrichedOppilaitoksenOsa) { o =>
       withValidation(o, None) { o =>
         validateOppilaitosIntegrity(o)
@@ -177,6 +209,26 @@ class OppilaitoksenOsaService(
   }
 
   def update(oppilaitoksenOsa: OppilaitoksenOsa, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+    val jarjestaaUrheilijanAmmKoulutusta = oppilaitoksenOsa.metadata match {
+      case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
+      case None => false
+    }
+
+    if (oppilaitoksenOsa.tila == Julkaistu) {
+      if (jarjestaaUrheilijanAmmKoulutusta) {
+        updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
+      } else {
+        val osat = getJulkaistutOppilaitoksenOsat(oppilaitoksenOsa.oppilaitosOid)
+        val osatWithoutCurrentOsa = osat.filter(osa => osa.oid != oppilaitoksenOsa.oid)
+        val someOfOsatJarjestaaUrheilijanAmmKoulutusta = osatWithoutCurrentOsa.exists(osa => osa.metadata match {
+          case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
+          case None => false
+        })
+
+        updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, someOfOsatJarjestaaUrheilijanAmmKoulutusta)
+      }
+    }
+
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), enrichedOppilaitoksenOsa) { (oldOsa, o) =>
@@ -185,6 +237,29 @@ class OppilaitoksenOsaService(
         doUpdate(o, notModifiedSince, oldOsa)
       }
     }.nonEmpty
+  }
+
+  def getJulkaistutOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
+    OppilaitoksenOsaDAO.getJulkaistutByOppilaitosOid(oid)
+
+  private def updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa: OppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta: Boolean)(implicit authenticated: Authenticated): Unit = {
+    OppilaitosDAO.get(oppilaitoksenOsa.oppilaitosOid) match {
+      case Some(oppilaitosWithInstant) => {
+        val oppilaitos = oppilaitosWithInstant._1
+        val metadata = oppilaitos.metadata match {
+          case Some(metadata) => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
+          case None => OppilaitosMetadata(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
+        }
+
+        val oppilaitosCopy = oppilaitos.copy(metadata = Some(metadata))
+        OppilaitosService.authorizeUpdate(Some(oppilaitosWithInstant), oppilaitosCopy) { (oldOppilaitos, o) =>
+          OppilaitosService.withValidation(o, Some(oldOppilaitos)) {
+            OppilaitosService.doUpdate(_, Instant.now(), oldOppilaitos)
+          }
+        }
+      }
+      case None =>
+    }
   }
 
   private def validateOppilaitosIntegrity(oppilaitoksenOsa: OppilaitoksenOsa): Unit = {
