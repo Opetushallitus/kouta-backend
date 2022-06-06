@@ -211,7 +211,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         }
       )
 
-    list(organisaatioOid, false, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
+    list(organisaatioOid, vainHakukohteeseenLiitettavat = false, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
       case Nil          => ToteutusSearchResult()
       case toteutusOids => assocHakukohdeCounts(KoutaIndexClient.searchToteutukset(toteutusOids, params))
     }
@@ -238,13 +238,13 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
       if (remainingTarjoajatOfToteutus.nonEmpty) currentToteutustenTarjoajatOfKoulutus updated (toteutus.oid.get, remainingTarjoajatOfToteutus)
       else currentToteutustenTarjoajatOfKoulutus - toteutus.oid.get
     val newOppilaitoksetOfKoulutus =
-      newToteutustenTarjojatOfKoulutus.values.flatten.toSet.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten
-    val oppilaitoksetDeletedFromToteutus = tarjoajatDeletedFromToteutus.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten.toSet
+      newToteutustenTarjojatOfKoulutus.values.flatten.toSet.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia)
+    val oppilaitoksetDeletedFromToteutus = tarjoajatDeletedFromToteutus.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).toSet
     oppilaitoksetDeletedFromToteutus diff newOppilaitoksetOfKoulutus
   }
 
   private def getTarjoajienOppilaitokset(toteutus:Toteutus): Set[OrganisaatioOid] =
-    toteutus.tarjoajat.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten.toSet
+    toteutus.tarjoajat.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).toSet
 
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
