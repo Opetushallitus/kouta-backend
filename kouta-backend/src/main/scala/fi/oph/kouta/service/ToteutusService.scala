@@ -54,7 +54,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     (toteutus.metadata, toteutus.koulutusMetadata) match {
       case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
         (toteutusMetadata, koulutusMetadata) match {
-          case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
+          case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) =>
             val kaannokset = Map(
               "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
               "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
@@ -70,7 +70,6 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
               kaannokset,
               koodistoKaannokset
             )
-          }
           case _ => toteutus.nimi
         }
       case _ => toteutus.nimi
@@ -107,12 +106,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   def get(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
     val toteutusWithTime = ToteutusDAO.get(oid, tilaFilter)
     val enrichedToteutus = toteutusWithTime match {
-      case Some((t, i)) => {
+      case Some((t, i)) =>
         val esitysnimi = generateToteutusEsitysnimi(t)
         val muokkaaja = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData(), i)
-      }
       case None => None
     }
     authorizeGet(enrichedToteutus, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
@@ -223,12 +221,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => toteutus
-        case organisaatioOids => {
+        case organisaatioOids =>
           toteutus.flatMap(toteutusItem => {
             val oidStrings = organisaatioOids.map(_.toString())
             Some(toteutusItem.copy(hakukohteet = toteutusItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
           })
-        }
       }
 
     filterHakukohteet(KoutaIndexClient.searchToteutukset(Seq(toteutusOid), params).result.headOption)
