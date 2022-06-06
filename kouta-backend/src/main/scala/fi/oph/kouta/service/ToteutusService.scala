@@ -139,10 +139,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         val createdToteutusOid = put(toteutusCopyAsLuonnos)
         ToteutusCopyResultObject(oid = toteutus.oid.get, status = "success", created = ToteutusCopyOids(Some(createdToteutusOid)))
       } catch {
-        case error => {
-          logger.error(s"Copying toteutus failed: ${error}")
+        case error: Throwable =>
+          logger.error(s"Copying toteutus failed: $error")
           ToteutusCopyResultObject(oid = toteutus.oid.get, status = "error", created = ToteutusCopyOids(None))
-        }
       }
     })
   }
