@@ -144,7 +144,8 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
-    val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(toteutusWithTime, toteutus)
+
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus = t.copy(metadata = enrichedMetadata)
@@ -159,6 +160,22 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
       }
     }
   }.nonEmpty
+
+  private def getAuthorizationRulesForUpdate(toteutusWithTime: Option[(Toteutus, Instant)], newToteutus: Toteutus): AuthorizationRules = {
+    toteutusWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+      case Some((oldToteutus, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldToteutus.tila, newToteutus.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        } else {
+          AuthorizationRules(
+            roleEntity.updateRoles,
+            allowAccessToParentOrganizations = true,
+            additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)
+          )
+        }
+    }
+  }
 
   def list(organisaatioOid: OrganisaatioOid, vainHakukohteeseenLiitettavat: Boolean = false, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid,
