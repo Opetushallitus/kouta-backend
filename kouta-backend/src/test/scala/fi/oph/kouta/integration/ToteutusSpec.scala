@@ -406,6 +406,25 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutus, lastModified, 403, readSessions(toteutus.organisaatioOid))
   }
 
+  it should "allow a oph user to update from julkaistu to tallennettu" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
+    update(updatedToteutus, lastModified, expectUpdate = true, ophSession)
+    get(
+      oid,
+      toteutus(oid, koulutusOid, Tallennettu)
+        .copy(muokkaaja = OphUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
+  }
+
+  it should "not allow a non oph user to update from julkaistu to tallennettu" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
+    update(updatedToteutus, lastModified, 403, crudSessions(toteutus.organisaatioOid))
+
+  }
+
   it should "deny indexer access" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
