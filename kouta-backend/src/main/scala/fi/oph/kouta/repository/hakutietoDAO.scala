@@ -77,7 +77,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                           lower(h.system_time)
           from haut h
                    inner join hakukohteet k on k.haku_oid = h.oid and
-                        k.tila != 'poistettu'::julkaisutila and k.tila != 'arkistoitu'::julkaisutila
+                        k.tila != 'poistettu'::julkaisutila
                    inner join toteutukset t on t.oid = k.toteutus_oid and
                         t.tila != 'poistettu'::julkaisutila and t.tila != 'arkistoitu'::julkaisutila
                    inner join koulutukset o on o.oid = t.koulutus_oid and
@@ -127,7 +127,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                     from hakukohteiden_valintakokeet where hakukohde_oid = hk.oid) as valintakokeet
                  from hakukohteet hk
                    inner join haut h on hk.haku_oid = h.oid and
-                       hk.tila != 'poistettu'::julkaisutila and hk.tila != 'arkistoitu'::julkaisutila
+                       hk.tila != 'poistettu'::julkaisutila
                    inner join toteutukset t on t.oid = hk.toteutus_oid and
                        t.tila != 'poistettu'::julkaisutila and t.tila != 'arkistoitu'::julkaisutila
                    inner join koulutukset k on k.oid = t.koulutus_oid and
@@ -139,7 +139,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                    left join oppilaitokset on oppilaitokset.oid = hk.jarjestyspaikka_oid and
                        oppilaitokset.tila = 'julkaistu'::julkaisutila
           where k.oid = ${koulutusOid.toString}
-            and hk.tila != 'poistettu'::julkaisutila and hk.tila != 'arkistoitu'::julkaisutila
+            and hk.tila != 'poistettu'::julkaisutila
             """.as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
   }
 
