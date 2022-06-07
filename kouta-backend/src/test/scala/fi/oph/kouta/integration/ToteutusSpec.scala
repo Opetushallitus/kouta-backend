@@ -1,6 +1,5 @@
 package fi.oph.kouta.integration
 
-import cats.Show.Shown.mat
 import fi.oph.kouta.TestData.AmmToteutuksenMetatieto
 
 import java.time.LocalDateTime
@@ -9,7 +8,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.{KoodistoServiceMock, LokalisointiServiceMock, MockAuditLogger}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.{ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.oph.kouta.validation.Validations._
@@ -21,7 +20,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   with KeywordFixture with UploadFixture with LokalisointiServiceMock
   with HakukohdeFixture with HakuFixture {
 
-  override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Toteutus, Role.Koulutus)
 
   var koulutusOid: String = _
 
