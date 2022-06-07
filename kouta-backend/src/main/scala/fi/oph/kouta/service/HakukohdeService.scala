@@ -138,8 +138,8 @@ class HakukohdeService(
           oid = hk.oid.get, status = "success", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
         )
       } catch {
-        case error => {
-          logger.error(s"Copying hakukohde failed: ${error}")
+        case error: Throwable => {
+          logger.error(s"Copying hakukohde failed: $error")
           HakukohdeCopyResultObject(
             oid = hk.oid.get, status = "error", created = CopyOids(None, None)
           )
