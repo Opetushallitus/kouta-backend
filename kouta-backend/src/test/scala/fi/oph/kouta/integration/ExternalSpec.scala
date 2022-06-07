@@ -4,7 +4,7 @@ import java.util.UUID
 import fi.oph.kouta.TestOids
 import fi.oph.kouta.TestOids.{OphOid, TestUserOid}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Hakukohde, Julkaisutila, Koulutus, Sorakuvaus, Tallennettu, Toteutus, Valintaperuste}
+import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Hakukohde, Julkaisutila, Koulutus, Sorakuvaus, Arkistoitu, Toteutus, Valintaperuste}
 import fi.oph.kouta.integration.fixture.ExternalFixture
 import fi.oph.kouta.security.{Authority, ExternalSession, Role}
 import fi.oph.kouta.servlet.Authenticated
