@@ -406,7 +406,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutus, lastModified, 403, readSessions(toteutus.organisaatioOid))
   }
 
-  it should "allow a oph user to update from julkaistu to tallennettu" in {
+  it should "allow oph user to update from julkaistu to tallennettu" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
@@ -417,7 +417,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
         .copy(muokkaaja = OphUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
-  it should "not allow a non oph user to update from julkaistu to tallennettu" in {
+  it should "not allow non oph user to update from julkaistu to tallennettu" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
