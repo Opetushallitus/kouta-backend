@@ -422,7 +422,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
     update(updatedToteutus, lastModified, 403, crudSessions(toteutus.organisaatioOid))
-
   }
 
   it should "deny indexer access" in {
