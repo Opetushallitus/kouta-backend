@@ -15,7 +15,7 @@ import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabas
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -331,4 +331,10 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
     }
+  override def validateParameterFormatAndExistence(toteutus: Toteutus): IsValid = toteutus.validate()
+  override def validateParameterFormatAndExistenceOnJulkaisu(toteutus: Toteutus): IsValid = toteutus.validateOnJulkaisu()
+
+  override def validateDependenciesToExternalServices(toteutus: Toteutus): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(toteutus: Toteutus): IsValid = NoErrors
 }

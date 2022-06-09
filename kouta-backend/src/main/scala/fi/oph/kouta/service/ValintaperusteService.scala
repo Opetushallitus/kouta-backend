@@ -10,6 +10,7 @@ import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -144,4 +145,11 @@ class ValintaperusteService(
 
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
+
+  override def validateParameterFormatAndExistence(valintaperuste: Valintaperuste): IsValid = valintaperuste.validate()
+  override def validateParameterFormatAndExistenceOnJulkaisu(valintaperuste: Valintaperuste): IsValid = valintaperuste.validateOnJulkaisu()
+
+  override def validateDependenciesToExternalServices(valintaperuste: Valintaperuste): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(valintaperuste: Valintaperuste): IsValid = NoErrors
 }

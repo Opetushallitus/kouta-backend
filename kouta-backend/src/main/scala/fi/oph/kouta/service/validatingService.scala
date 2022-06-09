@@ -1,25 +1,41 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.domain.Julkaistu
-import fi.oph.kouta.validation.Validations.validateStateChange
+import fi.oph.kouta.domain.{Julkaistu, Poistettu}
+import fi.oph.kouta.validation.Validations.{error, validateStateChange}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 
 trait ValidatingService[E <: Validatable] {
+  def validateParameterFormatAndExistence(e: E): IsValid
+  def validateParameterFormatAndExistenceOnJulkaisu(e: E): IsValid = NoErrors
+  def validateDependenciesToExternalServices(e: E): IsValid
+  def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
 
   def withValidation[R](e: E, oldE: Option[E])(f: E => R): R = {
 
-    val errors = if (oldE.isDefined) {
+    var errors = if (oldE.isDefined) {
       if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
-        e.validate() ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++ e.validateOnJulkaisu()
+        validateParameterFormatAndExistence(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
+          validateParameterFormatAndExistenceOnJulkaisu(e)
       } else {
-        e.validate() ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+        validateParameterFormatAndExistence(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
       }
     } else {
       if (e.tila == Julkaistu) {
-        e.validate() ++ e.validateOnJulkaisu()
+        validateParameterFormatAndExistence(e) ++ validateParameterFormatAndExistenceOnJulkaisu(e)
       } else {
-        e.validate()
+        validateParameterFormatAndExistence(e)
       }
+    }
+
+    if (errors.isEmpty) {
+      errors = validateDependenciesToExternalServices(e)
+    }
+
+    if (errors.isEmpty && oldE.isDefined) {
+      val tulevaTila = e.tila
+      val aiempiTila = oldE.get.tila
+      if (tulevaTila == Poistettu && tulevaTila != aiempiTila)
+        errors = validateInternalDependenciesWhenDeletingEntity(e)
     }
 
     errors match {

@@ -1,9 +1,10 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.IndexingFixture
+import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
 
 class IndexingSpec extends KoutaIntegrationSpec
@@ -15,6 +16,9 @@ class IndexingSpec extends KoutaIntegrationSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    mockKoodiUriResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
+    mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.last, Seq(("koulutus_371101", 12, None)), ammatillisetKoulutustyypit.init)
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
     koulutusOid = put(koulutus, ophSession)
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)

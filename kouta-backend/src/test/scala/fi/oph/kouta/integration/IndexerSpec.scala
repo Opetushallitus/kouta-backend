@@ -3,12 +3,21 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.mocks.KoodistoServiceMock
 import fi.oph.kouta.security.RoleEntity
+import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 import org.json4s.jackson.Serialization.read
 
 class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec {
 
   override val roleEntities: Seq[RoleEntity] = RoleEntity.all
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    mockKoodiUriResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
+    mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.last, Seq(("koulutus_371101", 12, None)), ammatillisetKoulutustyypit.init)
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
+  }
 
   "List hakukohteet by järjestyspaikka oids" should "List hakukohteet by järjestyspaikka oids" in {
     val oppilaitosOid = put(oppilaitos, ophSession)

@@ -1,10 +1,10 @@
 package fi.oph.kouta.client
 
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriExistsInList, koodiUriFromString}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
 import scalacache.caffeine.CaffeineCache
-import scalacache.memoization.memoizeSync
 import scalacache.modes.sync.mode
 
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZonedDateTime}
@@ -14,73 +14,121 @@ import scala.util.{Failure, Success, Try}
 object KoulutusKoodiClient extends KoulutusKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
 class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
-  case class KoodiUri(koodiUri: String, latestVersio: Int)
-
-  implicit val koodiUriSingleCache = CaffeineCache[String]
-  implicit val koodiUriCache       = CaffeineCache[Seq[KoodiUri]]
-
-  val ammatillisetKoulutustyypit =
-    Seq(
-      "koulutustyyppi_1",
-      "koulutustyyppi_4",
-      "koulutustyyppi_5",
-      "koulutustyyppi_7",
-      "koulutustyyppi_8",
-      "koulutustyyppi_11",
-      "koulutustyyppi_12",
-      "koulutustyyppi_13",
-      "koulutustyyppi_18",
-      "koulutustyyppi_19",
-      "koulutustyyppi_26"
-    )
+  implicit val commonKoodiUriCache   = CaffeineCache[Seq[KoodiUri]]
+  implicit val koodiuriVersionCache  = CaffeineCache[Int]
+  implicit val koulutusKoodiUriCache = CaffeineCache[Seq[KoodiUri]]
 
   case class CodeElementWithVersion(koodiUri: String, versio: Int)
-  case class KoodistoElement(koodistoUri: String)
-  case class Koulutustyyppi(
+  case class KoodistoSubElement(koodistoUri: String)
+  case class KoodistoElement(
       koodiUri: String,
       versio: Int = 1,
-      koodisto: Option[KoodistoElement],
+      koodisto: Option[KoodistoSubElement],
       voimassaLoppuPvm: Option[String]
   )
-  val emptyKoodistoElement = KoodistoElement("")
+  val emptyKoodistoSubElement = KoodistoSubElement("")
 
-  def getKoodiUriWithLatestVersion(koodiUriWithoutVersion: String): String =
-    memoizeSync[String](Some(5.minutes)) {
+  def getKoodiUriWithLatestVersion(koodiUriWithoutVersion: String): String = {
+    var versio = koodiuriVersionCache.get(koodiUriWithoutVersion)
+    if (versio.isEmpty) {
       get(urlProperties.url("koodisto-service.latest-koodiuri", koodiUriWithoutVersion), followRedirects = true) {
         response =>
-          {
-            val codeElement = parse(response).extract[CodeElementWithVersion]
-            s"${codeElement.koodiUri}#${codeElement.versio}"
-          }
+        {
+          versio = Some(parse(response).extract[CodeElementWithVersion].versio)
+          koodiuriVersionCache.put(koodiUriWithoutVersion)(versio.get, Some(15.minutes))
+        }
       }
     }
+    s"$koodiUriWithoutVersion#${versio.get}"
+  }
 
-  def ammatillinenKoulutusKoodiUriExists(koodiUri: String): Boolean = {
+  def koulutusKoodiUriOfKoulutustyypitExists(koulutustyypit: Seq[String], koodiUri: String): Boolean = {
     val now = ZonedDateTime.now().toLocalDateTime
-    ammatillisetKoulutustyypit.exists(tyyppi => {
-      var koodiUritOfKoulutustyyppi = koodiUriCache.get(tyyppi)
+    koulutustyypit.exists(tyyppi => {
+      var koodiUritOfKoulutustyyppi = koulutusKoodiUriCache.get(tyyppi)
       if (koodiUritOfKoulutustyyppi.isEmpty) {
         get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", tyyppi), followRedirects = true) { response =>
           {
             val koulutukset = parse(response)
-              .extract[List[Koulutustyyppi]]
+              .extract[List[KoodistoElement]]
               .filter(koulutus =>
-                koulutus.koodisto.getOrElse(emptyKoodistoElement).koodistoUri == "koulutus" &&
+                koulutus.koodisto.getOrElse(emptyKoodistoSubElement).koodistoUri == "koulutus" &&
                   isKoodiVoimassa(tyyppi, koulutus.koodiUri, now, koulutus.voimassaLoppuPvm)
               )
-            koodiUritOfKoulutustyyppi = Some(koulutukset.map(koulutus => KoodiUri(koulutus.koodiUri, koulutus.versio)))
-            koodiUriCache.put(tyyppi)(koodiUritOfKoulutustyyppi.get, Some(15.minutes))
+              .map(koulutus => KoodiUri(koulutus.koodiUri, koulutus.versio))
+            koodiUritOfKoulutustyyppi = Some(koulutukset)
+            koulutusKoodiUriCache.put(tyyppi)(koulutukset, Some(15.minutes))
           }
         }
       }
-      koodiUriExists(koodiUri, koodiUritOfKoulutustyyppi.get)
+      koodiUriExistsInList(koodiUri, koodiUritOfKoulutustyyppi.getOrElse(Seq()))
     })
   }
 
+  // Oletus: koofiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
+  // mahdollisesti annettuihin versioihin.
+  def koulutusKoodiUriExists(koodiUriFilter: Seq[String], koodiUri: String): Boolean = {
+    val filterSeq = koodiUriFilter.map(koodiUriFromString(_))
+
+    val koulutusKoodiUrit = getAndUpdateFromKoodiUriCache("koulutus").
+      filter(fromCache =>
+        filterSeq.exists(filterItem => fromCache.koodiUri == filterItem.koodiUri))
+    koodiUriExistsInList(koodiUri, koulutusKoodiUrit)
+  }
+
+  def lisatiedotOtsikkoKoodiUriExists(koodiUri: String): Boolean = {
+    val lisatietoOtsikkoKoodiUrit = getAndUpdateFromKoodiUriCache("koulutuksenlisatiedot")
+    koodiUriExistsInList(koodiUri, lisatietoOtsikkoKoodiUrit)
+  }
+
+  def koulutusalaKoodiUriExists(koodiUri: String): Boolean = {
+    val koulutusalaKoodiUrit =
+      getAndUpdateFromKoodiUriCache("kansallinenkoulutusluokitus2016koulutusalataso2")
+    koodiUriExistsInList(koodiUri, koulutusalaKoodiUrit)
+  }
+
+  def opintojenLaajuusKoodiUriExists(koodiUri: String): Boolean = {
+    val opintojenLaajuusKoodiUrit =
+      getAndUpdateFromKoodiUriCache("opintojenlaajuus")
+    koodiUriExistsInList(koodiUri, opintojenLaajuusKoodiUrit)
+  }
+
+  def opintojenLaajuusyksikkoKoodiUriExists(koodiUri: String): Boolean = {
+    val opintojenLaajuusyksikkoKoodiUrit =
+      getAndUpdateFromKoodiUriCache("opintojenlaajuusyksikko")
+    koodiUriExistsInList(koodiUri, opintojenLaajuusyksikkoKoodiUrit)
+  }
+
+  def tutkintoNimikeKoodiUriExists(koodiUri: String): Boolean = {
+    val tutkintoNimikeKoodiUrit =
+      getAndUpdateFromKoodiUriCache("tutkintonimikekk")
+    koodiUriExistsInList(koodiUri, tutkintoNimikeKoodiUrit)
+  }
+
+  private def getAndUpdateFromKoodiUriCache(koodisto: String): Seq[KoodiUri] = {
+    var koodiUritFromCache = commonKoodiUriCache.get(koodisto)
+    if (koodiUritFromCache.isEmpty) {
+      get(
+        urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
+        followRedirects = true
+      ) { response =>
+        {
+          val koodiUrit = parse(response)
+            .extract[List[KoodistoElement]]
+            .filter(koodiUri => isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm))
+            .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
+          koodiUritFromCache = Some(koodiUrit)
+          commonKoodiUriCache.put(koodisto)(koodiUrit, Some(15.minutes))
+        }
+      }
+    }
+    koodiUritFromCache.getOrElse(Seq())
+  }
+
   private def isKoodiVoimassa(
-      koulutustyyppi: String,
+      koodisto: String,
       koodiUri: String,
-      currentDate: LocalDateTime,
+      currentDate: LocalDateTime = ZonedDateTime.now().toLocalDateTime,
       dateToCompare: Option[String]
   ): Boolean =
     if (dateToCompare.isDefined) {
@@ -90,33 +138,11 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         case Success(dateVal) => currentDate.isBefore(dateVal.atTime(LocalTime.MAX))
         case Failure(_) =>
           logger.warn(
-            s"Failed to parse voimassaLoppuPvm '${dateToCompare.get}' of koodiUri '${koodiUri}' of tyyppi '${koulutustyyppi}'"
+            s"Failed to parse voimassaLoppuPvm '${dateToCompare.get}' of koodiUri '${koodiUri}' of koodisto '${koodisto}'"
           )
           false
       }
     } else {
       true
     }
-
-  private def koodiUriExists(koodiUri: String, availableUris: Seq[KoodiUri]): Boolean = {
-    val koodiUriBase = koodiUri.split("#").head
-    val koodiUriVersion =
-      if (koodiUri.contains("#")) {
-        Try[Int] {
-          koodiUri.split("#").last.toInt
-        } match {
-          case Success(version) => version
-          case Failure(_)       => 0
-        }
-      } else {
-        1
-      }
-
-    if (koodiUriVersion > 0) {
-      availableUris
-        .exists(candidate => koodiUriBase == candidate.koodiUri && koodiUriVersion <= candidate.latestVersio)
-    } else {
-      false
-    }
-  }
 }

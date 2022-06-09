@@ -222,31 +222,36 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     modified: Option[Modified],
                     _enrichedData: Option[KoulutusEnrichedData] = None)
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
-  val ammOpeErityisopeJaOpoKoulutusKoodiUrit = Seq("koulutus_000001", "koulutus_000002", "koulutus_000003")
 
   override def validate(): IsValid = {
+    val koulutustyypitHavingKoulutusKoodiUrit = Set[Koulutustyyppi](Amm, AmmOsaamisala, Lk, AikuistenPerusopetus) ++ Koulutustyyppi.korkeakoulu
+
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
       assertValid(organisaatioOid, "organisaatioOid"),
       validateIfNonEmpty[String](koulutuksetKoodiUri, "koulutuksetKoodiUri", assertMatch(_, KoulutusKoodiPattern, _)),
-      validateIfTrue(koulutustyyppi == AmmOpeErityisopeJaOpo, assertIncludesOnlyValidValues(koulutuksetKoodiUri.map(koodiuri => koodiuri.replaceAll("#[0-9]+", "")), ammOpeErityisopeJaOpoKoulutusKoodiUrit, "koulutuksetKoodiUri")),
       validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
       validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
       validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
-      validateIfTrue(koulutustyyppi == AikuistenPerusopetus, assertOneAndOnlyOneKoodiUri(koulutuksetKoodiUri, "koulutus_201101", "koulutuksetKoodiUri")),
       validateIfJulkaistu(tila, and(
-        assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon", invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
-        validateIfTrue((koulutustyyppi != AmmTutkinnonOsa && koulutustyyppi != AmmMuu), and(
-          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
-          validateIfTrue(Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")),
-          validateIfTrue(Koulutustyyppi.isAmmatillinen(koulutustyyppi), assertNotOptional(ePerusteId, "ePerusteId")))),
-        validateIfTrue(!Koulutustyyppi.isKorkeakoulu(koulutustyyppi), assertTrue(koulutuksetKoodiUri.size < 2, "koulutuksetKoodiUri", tooManyKoodiUris)),
-        validateIfTrue((koulutustyyppi == AmmTutkinnonOsa || koulutustyyppi == AmmMuu), and(
-          assertNotDefined(ePerusteId, "ePerusteId"),
-          assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
-        )),
+        assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon",
+          invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         assertNotOptional(metadata, "metadata"),
-        validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva"))
+        validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
+
+        validateIfTrueOrElse(koulutustyypitHavingKoulutusKoodiUrit.contains(koulutustyyppi),
+          and(
+            assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri"),
+            validateIfFalse(koulutustyyppi == Yo || koulutustyyppi == Amk,
+              assertTrue(koulutuksetKoodiUri.size < 2, "koulutuksetKoodiUri", tooManyKoodiUris))
+          ),
+          assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
+        ),
+
+        validateIfTrueOrElse(koulutustyyppi == Amm || koulutustyyppi == AmmOsaamisala,
+          assertNotOptional(ePerusteId, "ePerusteId"),
+          assertNotDefined(ePerusteId, "ePerusteId")
+        )
       ))
     )
   }

@@ -11,7 +11,7 @@ import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDA
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
-import fi.oph.kouta.validation.Validations
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -145,6 +145,12 @@ class OppilaitosService(
 
   private def index(oppilaitos: Option[Oppilaitos]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
+
+  override def validateParameterFormatAndExistence(oppilaitos: Oppilaitos): IsValid = oppilaitos.validate()
+
+  override def validateDependenciesToExternalServices(oppilaitos: Oppilaitos): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(oppilaitos: Oppilaitos): IsValid = NoErrors
 }
 
 object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
@@ -302,4 +308,10 @@ class OppilaitoksenOsaService(
 
   private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.map(_.oid.toString))
+
+  override def validateParameterFormatAndExistence(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = oppilaitoksenOsa.validate()
+
+  override def validateDependenciesToExternalServices(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = NoErrors
 }

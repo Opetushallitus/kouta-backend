@@ -2,10 +2,11 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
+import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{OrganisaatioServiceImpl, _}
 
 trait IndexingFixture extends KoulutusFixtureWithIndexing with HakuFixtureWithIndexing with ToteutusFixtureWithIndexing
@@ -28,7 +29,11 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
   override def koulutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoClient = new KoulutusKoodiClient(urlProperties.get)
-    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoClient)
+    val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
+    val koulutusServiceValidation =
+      new KoulutusServiceValidation(koodistoClient, ePerusteKoodiClient, organisaatioService, ToteutusDAO, SorakuvausDAO)
+
+    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoClient, koulutusServiceValidation)
   }
 }
 

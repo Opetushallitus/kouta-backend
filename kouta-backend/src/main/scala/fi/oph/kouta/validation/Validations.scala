@@ -3,9 +3,8 @@ package fi.oph.kouta.validation
 import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 import java.util.regex.Pattern
-
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.Oid
+import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 object Validations {
@@ -24,6 +23,28 @@ object Validations {
   val tooManyKoodiUris: ErrorMessage = ErrorMessage(msg = s"Ainoastaan korkeakoulutuksella voi olla useampi kuin yksi koulutus", id = "tooManyKoodiUris")
   val withoutLukiolinja: ErrorMessage = ErrorMessage(msg = "Lukio-toteutuksella täytyy olla vähintään yleislinja", id = "withoutLukiolinja")
   val invalidKoulutuskoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua koulutuskoodiuria", id = "invalidKoulutuskoodiuri")
+  val invalidKoulutusAlaKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua koulutusalakoodiuria", id = "invalidKoulutusalaKoodiuri")
+  val invalidTutkintoNmikeKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua tutkintonimike-koodiuria", id = "invalidTutkintoNimikeKoodiuri")
+  val invalidLisatietoOtsikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa koulutukselle valittua lisätietojen otsikkokoodiuria ei löydy, tai eivät ole voimassa",
+    id = "invalidLisatietoOtsikkoKoodiuri")
+  val invalidOpintojenLaajuusKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua opintojenlaajuus-koodiuria", id = "invalidOpintojenLaajuusKoodiuri")
+  val invalidOpintojenLaajuusyksikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua opintojenlaajuusyksikko-koodiuria", id = "invalidOpintojenLaajuusyksikkoKoodiuri")
+  val invalidTarjoajaOidsForNewKoulutusOph: ErrorMessage = ErrorMessage(msg = "Koulutukselle ei voi tallentaa tarjoajia. Koska kyseessä on uusi koulutus, ja käyttäjän organisaatio on Opetushallitus, ei tarjoajia voi valita koululutuksen luontivaiheessa.", id = "invalidTarjoajaOidsForNewKoulutusOph")
+  val invalidTarjoajaOidsForNewKoulutusNoOph: ErrorMessage = ErrorMessage(msg = "Koulutukselle ei voi tallentaa valittuja tarjoajia. Koska kyseessä on uusi koulutus, ja käyttäjän organisaatio on muu kuin Opetushallitus, voi tarjoajiksi valita ko. organisaatioon kuuluvia organisaatioOID:eja.", id = "invalidTarjoajaOidsForNewKoulutusNoOph")
+  val invalidTarjoajaOidsForModifiedKoulutusOph: ErrorMessage = ErrorMessage(msg = "Koulutukselle ei voi tallentaa valittuja tarjoajia. Koska kyseessä on muokattava koulutus, ja käyttäjän organisaatio on Opetushallitus, voi tarjoajiksi valita ko. koulutuksen olemassaolevia tarjoajia (valitut tarjoajat säilytetään koulutuksella muokkauksen yhteydessä, muut poistetaan).", id = "invalidTarjoajaOidsForModifiedKoulutusOph")
+  val invalidTarjoajaOidsForModifiedKoulutusNoOph: ErrorMessage = ErrorMessage(msg = "Koulutukselle ei voi tallentaa valittuja tarjoajia. Koska kyseessä on muokattava koulutus, ja käyttäjän organisaatio on muu kuin Opetushallitus, voi tarjoajiksi valita ko. koulutuksen olemassaolevia tarjoajia ja/tai koulutuksen organisaatioon kuuluvia organisaatioOID:eja (valitut tarjoajat tallennetaan koulutukselle muokkauksen yhteydessä, muut poistetaan).", id = "invalidTarjoajaOidsForModifiedKoulutusNoOph")
+  def unknownTajoajaOids(oids: Seq[OrganisaatioOid]): ErrorMessage = ErrorMessage(msg = s"Koulutukselle ei voi tallentaa tarjoajia oid:eilla ${oids.mkString(",")}. Tarjoaja-organisaatioita ei löydy, tai organisaatiot eivät ole aktiivisia", id = "unknownTajoajaOids")
+  def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa", id = "invalidEPerusteId")
+  def invalidEPerusteIdForKoulutusKoodiUrit(ePerusteId: Long, koodiUrit: Seq[String]): ErrorMessage =
+    ErrorMessage(msg = s"Valitut koulutuskoodiurit ($koodiUrit) eivät ole hyväksyttyjä EPerusteelle $ePerusteId", id = "invalidEPerusteIdForKoulutukset")
+  def invalidEPerusteIdForKoulutusKoodiUri(ePerusteId: Long, koodiUri: String): ErrorMessage =
+    ErrorMessage(msg = s"Valittu koulutuskoodiuri ($koodiUri) ei ole hyväksytty EPerusteelle $ePerusteId", id = "invalidEPerusteIdForKoulutus")
+  def invalidTutkinnonOsaViiteForEPeruste(ePerusteId: Long, tutkinnonOsaViite: Long): ErrorMessage =
+    ErrorMessage(msg = s"Tutkinnonosa-viite $tutkinnonOsaViite ei ole ole hyväksytty EPerusteelle $ePerusteId", id = "invalidTukinnonosaViiteForEPeruste")
+  def invalidTutkinnonOsaIdForEPeruste(ePerusteId: Long, tutkinnonOsaId: Long): ErrorMessage =
+    ErrorMessage(msg = s"TutkinnonosaID $tutkinnonOsaId ei ole ole hyväksytty EPerusteelle $ePerusteId", id = "invalidTukinnonosaIdForEPeruste")
+  def invalidOsaamisalaForEPeruste(ePerusteId: Long, osaamisalaKoodiUri: String): ErrorMessage =
+    ErrorMessage(msg = s"Osaamisala $osaamisalaKoodiUri ei ole ole hyväksytty EPerusteelle $ePerusteId", id = "invalidOsaamisalaForEPeruste")
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage = ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]", id = "invalidKielistetty")
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage = ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
@@ -44,7 +65,6 @@ object Validations {
   def illegalStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): ErrorMessage =
     ErrorMessage(msg = s"Siirtyminen tilasta $oldState tilaan $newState ei ole sallittu $entityDesc", id="illegalStateChange")
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage = ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id="integrityViolation")
-  def illegalValueForFixedValueSeqMsg(fixedVal: String): ErrorMessage = ErrorMessage(msg = s"Kentän täytyy sisältää täsmälleen yksi arvo '$fixedVal', ko. arvo asetetaan automaattisesti", id = "illegalValueForFixedValueSeq")
 
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen", id = "InvalidKoulutuspaivamaarat")
   val InvalidMetadataTyyppi: ErrorMessage = ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
@@ -82,6 +102,7 @@ object Validations {
   val validStateChanges: Map[Julkaisutila, Seq[Julkaisutila]] =
     Map(Poistettu -> Seq(), Tallennettu -> Seq(Julkaistu, Poistettu), Julkaistu -> Seq(Tallennettu, Arkistoitu), Arkistoitu -> Seq(Julkaistu))
   def assertTrue(b: Boolean, path: String, msg: ErrorMessage): IsValid = if (b) NoErrors else error(path, msg)
+  def assertFalse(b: Boolean, path: String, msg: ErrorMessage): IsValid = if (!b) NoErrors else error(path, msg)
   def assertNotNegative(i: Long, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertNotNegative(i: Double, path: String): IsValid = assertTrue(i >= 0, path, notNegativeMsg)
   def assertLessOrEqual(i: Int, x: Int, path: String): IsValid = assertTrue(i <= x, path, lessOrEqualMsg(i, x))
@@ -90,11 +111,14 @@ object Validations {
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid = assertTrue(value.nonEmpty, path, missingMsg)
   def assertEmpty[T](value: Seq[T], path: String, errorMessage: ErrorMessage = notEmptyMsg): IsValid = assertTrue(value.isEmpty, path, errorMessage)
-  def assertOneAndOnlyOneKoodiUri(value: Seq[String], expectedKoodiUriPrefix: String, path: String): IsValid =
-    if (value.size == 1 && value.head.startsWith(expectedKoodiUriPrefix)) {
-      NoErrors
+  def assertOneAndOnlyOneKoodiUri(value: Seq[String]): IsValid =
+    if (value.isEmpty) {
+      error("koulutuksetKoodiUri", missingMsg)
+    }
+    else if (value.size > 1) {
+      error("koulutuksetKoodiUri", tooManyKoodiUris)
     } else {
-      error(path, illegalValueForFixedValueSeqMsg(expectedKoodiUriPrefix))
+      NoErrors
     }
   def assertNotDefined[T](value: Option[T], path: String): IsValid = assertTrue(value.isEmpty, path, notMissingMsg(value))
   def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
@@ -117,8 +141,12 @@ object Validations {
     k.flatMap { case (k, v) => f(v, s"$path.$k") }.toSeq
 
   def validateIfTrue(b: Boolean, f: => IsValid): IsValid = if(b) f else NoErrors
+  def validateIfTrueOrElse(b: Boolean, f: => IsValid, o: => IsValid): IsValid = if(b) f else o
+  def validateIfFalse(b: Boolean, f: => IsValid): IsValid = if (!b) f else NoErrors
 
   def validateIfJulkaistu(tila: Julkaisutila, f: => IsValid): IsValid = validateIfTrue(tila == Julkaistu, f)
+  def validateIfAnyDefined(args: Seq[Option[_]], f: => IsValid): IsValid = validateIfTrue(args.exists(_.isDefined), f)
+  def validateIfAnyDefinedOrElse(args: Seq[Option[_]], f: => IsValid, o: => IsValid): IsValid = if (args.exists(_.isDefined)) f else o
 
   def validateOidList(values: Seq[Oid], path: String): IsValid = validateIfNonEmpty(values, path, assertValid _)
 
@@ -172,7 +200,8 @@ object Validations {
                          dependencyIdPath: String): IsValid = {
     dependencyTila.map { tila => and(
       assertTrue(tila != Poistettu, path="tila", nonExistent(dependencyName, dependencyId)),
-      validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId))))
+      validateIfTrue(tila != Poistettu,
+        validateIfJulkaistu(validatableTila, assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId)))))
     }.getOrElse(error(dependencyIdPath, Validations.nonExistent(dependencyName, dependencyId)))
   }
 

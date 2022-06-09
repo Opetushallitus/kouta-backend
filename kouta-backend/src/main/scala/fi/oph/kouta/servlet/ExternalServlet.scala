@@ -117,7 +117,7 @@ class ExternalServlet(
       val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
       implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
-      val updated = koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince)
+      val updated = koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince, true)
       Ok("updated" -> updated)
     } else {
       ActionResult(403, "Rajapinnan käyttö estetty tässä ympäristössä", Map.empty)

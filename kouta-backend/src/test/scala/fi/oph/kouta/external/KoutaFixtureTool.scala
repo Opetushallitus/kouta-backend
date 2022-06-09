@@ -198,7 +198,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KoulutustyyppiKey -> Amm.name,
     KoulutuksetKoodiUriKey -> "koulutus_371101#1",
     TilaKey -> Julkaistu.name,
-    TarjoajatKey -> "1.2.246.562.10.67476956288, 1.2.246.562.10.594252633210",
+    TarjoajatKey -> "1.2.246.562.10.81934895871, 1.2.246.562.10.594252633210",
     NimiKey -> "nimi",
     SorakuvausIdKey -> UUID.randomUUID().toString,
     JulkinenKey -> "false",
@@ -207,7 +207,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     OrganisaatioKey -> OtherOid.s,
     KielivalintaKey -> "fi,sv",
     TeemakuvaKey -> "https://testi.fi/koulutus-teemakuva/oid/kuva.jpg",
-    EPerusteIdKey -> "1234",
+    EPerusteIdKey -> "11",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     MetadataKey -> write(TestData.AmmKoulutus.metadata)
   )

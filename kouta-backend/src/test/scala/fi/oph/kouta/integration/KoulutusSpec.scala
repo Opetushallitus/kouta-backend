@@ -9,7 +9,7 @@ import fi.oph.kouta.mocks.{KoodistoServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.ValidationError
+import fi.oph.kouta.validation.{ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.Serialization.read
 
@@ -17,7 +17,7 @@ import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 import scala.util.Success
 
-class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture with UploadFixture with KoodistoServiceMock{
+class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Koulutus)
 
@@ -25,7 +25,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    mockKoodiUriResponse("koulutus_201101", 12)
   }
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
@@ -195,58 +194,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     put(KoulutusPath, koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession ,400)
   }
 
-  it should "fail to store julkaistu koulutus if sorakuvaus is not yet julkaistu" in {
-    val sorakuvausId = put(sorakuvaus.copy(tila = Tallennettu, metadata = None))
-    put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), List(ValidationError("tila", notYetJulkaistu("Sorakuvausta", sorakuvausId))))
-  }
-
-  it should "fail to store koulutus if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val sorakuvausId = put(yoSorakuvaus)
-    put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), List(ValidationError("koulutustyyppi", tyyppiMismatch("sorakuvauksen", sorakuvausId))))
-  }
-
-  it should "fail to store koulutus if koulutusKoodit doesn't match sorakuvaus koulutuskoodit" in {
-    val sorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
-    put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), List(ValidationError("koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit"))))
-  }
-
-  it should "succeed in storing koulutus when SORA-kuvaus has the same koulutuskoodi as koulutus" in {
-    val sorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1", "koulutus_371101#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
-    val koulutusWithSoraKuvaus = koulutus.copy(sorakuvausId = Some(sorakuvausId))
-    val oid = put(koulutusWithSoraKuvaus, ophSession)
-    get(oid, koulutusWithSoraKuvaus.copy(oid = Some(KoulutusOid(oid))))
-  }
-
-  it should "succeed in storing koulutus when SORA-kuvaus has one same koulutuskoodi as koulutus and one different" in {
-    val sorakuvausId = put(yoSorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1", "koulutus_371101#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
-    val koulutusWithSoraKuvaus = yoKoulutus.copy(sorakuvausId = Some(sorakuvausId), koulutuksetKoodiUri = Seq("koulutus_222222#2" ,"koulutus_371101#1"))
-    val oid = put(koulutusWithSoraKuvaus, ophSession)
-    get(oid, koulutusWithSoraKuvaus.copy(oid = Some(KoulutusOid(oid))))
-  }
-
-  it should "succeed in storing koulutus if koulutustyyppi is amm and sorakuvaus koulutustyyppi is amm-osaamisala" in {
-    val sorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq(), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
-    val koulutusWithSoraKuvaus = ammOsaamisalaKoulutus.copy(sorakuvausId = Some(sorakuvausId))
-    val oid = put(koulutusWithSoraKuvaus)
-    get(oid, koulutusWithSoraKuvaus.copy(oid = Some(KoulutusOid(oid))))
-  }
-
-  it should "succeed in storing koulutus if koulutustyyppi is amm and sorakuvaus koulutustyyppi is amm-tutkinnonosa" in {
-    val sorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq(), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
-    val koulutusWithSoraKuvaus = ammTutkinnonOsaKoulutus.copy(sorakuvausId = Some(sorakuvausId))
-    val oid = put(koulutusWithSoraKuvaus)
-    get(oid, koulutusWithSoraKuvaus.copy(oid = Some(KoulutusOid(oid))))
-  }
-
-  it should "fail to store Amm. opettaja-, erityisopettaja- ja opokoulutus with wrong koulutuskoodiuri" in {
-    put(TestData.AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")), List(ValidationError("koulutuksetKoodiUri", invalidKoulutuskoodiuri)))
-  }
-
-  it should "succeed to store Amm. opettaja-, erityisopettaja- ja opokoulutus with koulutuskoodiuri that has version" in {
-    val oid = put(TestData.AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_000001#1")), ophSession)
-    get(oid, TestData.AmmOpettajaKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_000001#1")))
-  }
-
   "Update koulutus" should "update koulutus" in {
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
@@ -360,7 +307,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val uusiKoulutus = koulutus(oid).copy(
       kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      tarjoajat = List(LonelyOid, OtherOid, AmmOid),
+      tarjoajat = List(LonelyOid, EvilChildOid, AmmOid),
       metadata = Some(metadata.copy(
         lisatiedot = metadata.lisatiedot.map(_.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
@@ -377,7 +324,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
     Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
 
-    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, OtherOid, AmmOid))
+    val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, EvilChildOid, AmmOid))
     update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
 
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
@@ -500,71 +447,6 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
     val tallennettuSorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
     update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(tallennettuSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId))))
-  }
-
-  it should "fail to update koulutus if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
-
-    val yoSorakuvausId = put(TestData.YoSorakuvaus)
-    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(yoSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutustyyppi", tyyppiMismatch("sorakuvauksen", yoSorakuvausId))))
-  }
-
-  it should "fail to update koulutus if koulutusKoodit doesn't match sorakuvaus koulutuskoodit" in {
-    val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
-
-    val incorrectKoulutuksetSorakuvausId = put(sorakuvaus.copy(metadata = Some(SorakuvausMetadata(koulutusKoodiUrit = Seq("koulutus_111111#1"), kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))))
-    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(incorrectKoulutuksetSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("koulutuksetKoodiUri", valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit"))))
-  }
-
-  it should "pass legal state changes" in {
-    val oid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    var lastModified = get(oid, koulutus(oid).copy(tila = Tallennettu))
-    update(koulutus(oid).copy(tila = Julkaistu), lastModified, true, ophSession)
-    lastModified = get(oid, koulutus(oid).copy(tila = Julkaistu))
-    update(koulutus(oid).copy(tila = Arkistoitu), lastModified, true, ophSession)
-    lastModified = get(oid, koulutus(oid).copy(tila = Arkistoitu))
-    update(koulutus(oid).copy(tila = Julkaistu), lastModified, true, ophSession)
-    lastModified = get(oid, koulutus(oid).copy(tila = Julkaistu))
-    update(koulutus(oid).copy(tila = Tallennettu), lastModified, true, ophSession)
-    lastModified = get(oid, koulutus(oid).copy(tila = Tallennettu))
-    update(koulutus(oid).copy(tila = Poistettu), lastModified, true, ophSession)
-
-    val arkistoituOid = put(koulutus.copy(tila = Arkistoitu), ophSession)
-    lastModified = get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Arkistoitu))
-    update(koulutus(arkistoituOid).copy(tila = Julkaistu), lastModified, true, ophSession)
-    get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Julkaistu))
-  }
-
-  it should "fail illegal state changes" in {
-    val tallennettuOid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    val julkaistuOid = put(koulutus.copy(tila = Julkaistu), ophSession)
-    val arkistoituOid = put(koulutus.copy(tila = Arkistoitu), ophSession)
-
-    var lastModified = get(tallennettuOid, koulutus(tallennettuOid).copy(tila = Tallennettu))
-    update(KoulutusPath, koulutus(tallennettuOid).copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Tallennettu, Arkistoitu))))
-    lastModified = get(julkaistuOid, koulutus(julkaistuOid).copy(tila = Julkaistu))
-    update(KoulutusPath, koulutus(julkaistuOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Julkaistu, Poistettu))))
-    lastModified = get(arkistoituOid, koulutus(arkistoituOid).copy(tila = Arkistoitu))
-    update(KoulutusPath, koulutus(arkistoituOid).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Arkistoitu, Tallennettu))))
-    update(KoulutusPath, koulutus(arkistoituOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("koulutukselle", Arkistoitu, Poistettu))))
-  }
-
-  private def createKoulutusWithToteutukset(markAllToteutuksetDeleted: Boolean) = {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), tila = Poistettu), ophSession)
-    put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), tila = if (markAllToteutuksetDeleted) Poistettu else Tallennettu), ophSession)
-    val koulutusLastModified = get(koulutusOid, koulutus(koulutusOid).copy(tila = Tallennettu))
-    (koulutusOid, koulutusLastModified)
-  }
-
-  it should "pass deletion when related toteutukset deleted" in {
-    val (koulutusOid: String, lastModified: String) = createKoulutusWithToteutukset(true)
-    update(koulutus(koulutusOid).copy(tila = Poistettu), lastModified, true, ophSession)
-  }
-
-  it should "fail deletion when all related toteutukset not deleted" in {
-    val (koulutusOid: String, lastModified: String) = createKoulutusWithToteutukset(false)
-    update(KoulutusPath, koulutus(koulutusOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Koulutusta", "toteutuksia"))))
   }
 
   it should "return koulutustyyppi2opistotyyppi mappings" in {
