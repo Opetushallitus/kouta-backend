@@ -60,7 +60,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       readRules)
   }
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
-    val rules = if (MiscUtils.isYhteishakuHakutapa2(haku.hakutapaKoodiUri)) {
+    val rules = if (MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
@@ -92,7 +92,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     oldHakuWithTime match {
       case None => throw EntityNotFoundException(s"Päivitettävää hakue ei löytynyt")
       case Some((oldHaku, _)) =>
-        if (MiscUtils.isYhteishakuHakutapa2(newHaku.hakutapaKoodiUri)) {
+        if (MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri)) {
           AuthorizationRules(Seq(Role.Paakayttaja))
         } else {
           AuthorizationRules(roleEntity.createRoles)
