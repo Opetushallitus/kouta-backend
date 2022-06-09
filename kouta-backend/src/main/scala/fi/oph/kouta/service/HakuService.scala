@@ -15,9 +15,8 @@ import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
-import java.time.{Duration, Instant, LocalDate, LocalDateTime, ZoneOffset}
-import java.time.temporal.{ChronoUnit, TemporalUnit}
-import java.util.Calendar
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
@@ -92,7 +91,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     }.nonEmpty
   }
 
-  private def validateHakukohdeIntegrityIfDeletingHaku(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, hakuOid: HakuOid) = {
+  private def validateHakukohdeIntegrityIfDeletingHaku(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, hakuOid: HakuOid): Unit = {
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
         HakukohdeDAO.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
@@ -162,12 +161,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     def filterHakukohteet(haku: Option[HakuSearchItemFromIndex]): Option[HakuSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => haku
-        case organisaatioOids => {
+        case organisaatioOids =>
           haku.flatMap(hakuItem => {
             val oidStrings = organisaatioOids.map(_.toString())
             Some(hakuItem.copy(hakukohteet = hakuItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
           })
-        }
       }
 
     filterHakukohteet(KoutaIndexClient.searchHaut(Seq(hakuOid), params).result.headOption)
