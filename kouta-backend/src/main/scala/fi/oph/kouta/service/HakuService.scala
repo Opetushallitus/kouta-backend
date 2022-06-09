@@ -91,15 +91,13 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   private def getAuthorizationRulesForUpdate(newHaku: Haku, oldHakuWithTime: Option[(Haku, Instant)]) = {
     oldHakuWithTime match {
       case None => throw EntityNotFoundException(s"Päivitettävää hakue ei löytynyt")
+      case Some((oldHaku, _)) =>
+        if (newHaku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri.get)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        } else {
+          AuthorizationRules(roleEntity.createRoles)
+        }
     }
-
-
-    val rules = if (newHaku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri.get)) {
-      AuthorizationRules(Seq(Role.Paakayttaja))
-    } else {
-      AuthorizationRules(roleEntity.createRoles)
-    }
-    rules
   }
 
   private def validateHakukohdeIntegrityIfDeletingHaku(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, hakuOid: HakuOid): Unit = {
