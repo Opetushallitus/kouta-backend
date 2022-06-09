@@ -60,7 +60,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       readRules)
   }
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
-    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
+    val rules = if (MiscUtils.isYhteishakuHakutapa2(haku.hakutapaKoodiUri)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
