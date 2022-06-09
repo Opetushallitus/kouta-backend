@@ -92,7 +92,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     oldHakuWithTime match {
       case None => throw EntityNotFoundException(s"Päivitettävää hakue ei löytynyt")
       case Some((oldHaku, _)) =>
-        if (MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri)) {
+        if (MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri) || Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldHaku.tila, newHaku.tila)) {
           AuthorizationRules(Seq(Role.Paakayttaja))
         } else {
           AuthorizationRules(roleEntity.createRoles)
