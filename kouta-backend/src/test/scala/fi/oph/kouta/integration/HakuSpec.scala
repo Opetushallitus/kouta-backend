@@ -5,7 +5,6 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
@@ -14,7 +13,7 @@ import fi.oph.kouta.validation.Validations._
 
 class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
-  override val roleEntities = Seq(Role.Haku)
+  override val roleEntities: Seq[Role.Haku.type] = Seq(Role.Haku)
 
   val ophHaku: Haku = haku.copy(organisaatioOid = OphOid)
   val yhteisHaku: Haku = haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1"))
@@ -221,7 +220,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val oid = put(haku)
     val thisHaku = haku(oid)
-    val lastModified = get(oid, thisHaku)
+    get(oid, thisHaku)
     post(HakuPath, bytes(thisHaku), Seq(defaultSessionHeader)) {
       status should equal (400)
       body should include (KoutaServlet.IfUnmodifiedSinceHeader)
@@ -231,7 +230,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "return 401 without a valid session" in {
     val oid = put(haku)
     val thisHaku = haku(oid)
-    val lastModified = get(oid, thisHaku)
+    get(oid, thisHaku)
     post(HakuPath, bytes(thisHaku), Map.empty) {
       status should equal (401)
       body should include ("Unauthorized")
@@ -375,19 +374,19 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   it should "pass legal state changes" in {
     val id = put(haku.copy(tila = Tallennettu))
     var lastModified = get(id, haku(id).copy(tila = Tallennettu))
-    update(haku(id).copy(tila = Julkaistu), lastModified, true)
+    update(haku(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     lastModified = get(id, haku(id).copy(tila = Julkaistu))
-    update(haku(id).copy(tila = Arkistoitu), lastModified, true)
+    update(haku(id).copy(tila = Arkistoitu), lastModified, expectUpdate = true)
     lastModified = get(id, haku(id).copy(tila = Arkistoitu))
-    update(haku(id).copy(tila = Julkaistu), lastModified, true)
+    update(haku(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     lastModified = get(id, haku(id).copy(tila = Julkaistu))
-    update(haku(id).copy(tila = Tallennettu), lastModified, true)
+    update(haku(id).copy(tila = Tallennettu), lastModified, expectUpdate = true)
     lastModified = get(id, haku(id).copy(tila = Tallennettu))
-    update(haku(id).copy(tila = Poistettu), lastModified, true)
+    update(haku(id).copy(tila = Poistettu), lastModified, expectUpdate = true)
 
     val arkistoituId = put(haku.copy(tila = Arkistoitu))
     lastModified = get(arkistoituId, haku(arkistoituId).copy(tila = Arkistoitu))
-    update(haku(arkistoituId).copy(tila = Julkaistu), lastModified, true)
+    update(haku(arkistoituId).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     get(arkistoituId, haku(arkistoituId).copy(tila = Julkaistu))
   }
 
@@ -417,7 +416,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   it should "pass deletion when related hakukohteet deleted" in {
     val (hakuOid: String, lastModified: String) = createHakuWithHakukohteet(true)
-    update(haku(hakuOid).copy(tila = Poistettu), lastModified, true)
+    update(haku(hakuOid).copy(tila = Poistettu), lastModified, expectUpdate = true)
   }
 
   it should "fail deletion when all related hakukohteet not deleted" in {
