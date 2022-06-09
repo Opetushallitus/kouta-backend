@@ -380,14 +380,10 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     lastModified = get(id, haku(id).copy(tila = Arkistoitu))
     update(haku(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     lastModified = get(id, haku(id).copy(tila = Julkaistu))
-    update(haku(id).copy(tila = Tallennettu), lastModified, expectUpdate = true)
-    lastModified = get(id, haku(id).copy(tila = Tallennettu))
-    update(haku(id).copy(tila = Poistettu), lastModified, expectUpdate = true)
 
-    val arkistoituId = put(haku.copy(tila = Arkistoitu))
-    lastModified = get(arkistoituId, haku(arkistoituId).copy(tila = Arkistoitu))
-    update(haku(arkistoituId).copy(tila = Julkaistu), lastModified, expectUpdate = true)
-    get(arkistoituId, haku(arkistoituId).copy(tila = Julkaistu))
+    val tallennettuId = put(haku.copy(tila = Tallennettu))
+    lastModified = get(tallennettuId, haku(tallennettuId).copy(tila = Tallennettu))
+    update(haku(tallennettuId).copy(tila = Poistettu), lastModified, expectUpdate = true)
   }
 
   it should "fail illegal state changes" in {
