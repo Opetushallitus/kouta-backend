@@ -9,7 +9,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -75,7 +75,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val oldHaku = HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat())
-    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(haku)
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(haku, oldHaku)
 
     authorizeUpdate(oldHaku, haku, rules) { (oldHaku, h) =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
@@ -88,8 +88,13 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     }.nonEmpty
   }
 
-  private def getAuthorizationRulesForUpdate(haku: Haku) = {
-    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
+  private def getAuthorizationRulesForUpdate(newHaku: Haku, oldHakuWithTime: Option[(Haku, Instant)]) = {
+    oldHakuWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää hakue ei löytynyt")
+    }
+
+
+    val rules = if (newHaku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri.get)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
