@@ -74,13 +74,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
-      AuthorizationRules(Seq(Role.Paakayttaja))
-    } else {
-      AuthorizationRules(roleEntity.createRoles)
-    }
+    val oldHaku = HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat())
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(haku)
 
-    authorizeUpdate(HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat()), haku, rules) { (oldHaku, h) =>
+    authorizeUpdate(oldHaku, haku, rules) { (oldHaku, h) =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
       val enrichedHaku = h.copy(metadata = enrichedMetadata)
       withValidation(enrichedHaku, Some(oldHaku)) {
@@ -89,6 +86,15 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         doUpdate(_, notModifiedSince, oldHaku)
       }
     }.nonEmpty
+  }
+
+  private def getAuthorizationRulesForUpdate(haku: Haku) = {
+    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
+      AuthorizationRules(Seq(Role.Paakayttaja))
+    } else {
+      AuthorizationRules(roleEntity.createRoles)
+    }
+    rules
   }
 
   private def validateHakukohdeIntegrityIfDeletingHaku(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, hakuOid: HakuOid): Unit = {
