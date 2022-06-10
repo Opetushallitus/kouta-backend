@@ -8,14 +8,14 @@ import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, Poistettu, SorakuvausEnriched
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{KoulutusFixture, SorakuvausFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
 class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with SorakuvausFixture with KoulutusFixture {
 
-  override val roleEntities = Seq(Role.Valintaperuste)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Valintaperuste)
 
   def OphHeaders: Seq[(String, String)] = Seq(sessionHeader(ophSession), jsonHeader)
 
@@ -174,7 +174,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val id = put(sorakuvaus)
     val lastModified = get(id, sorakuvaus(id))
     MockAuditLogger.clean()
-    update(sorakuvaus(id), lastModified, false)
+    update(sorakuvaus(id), lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
     get(id, sorakuvaus(id)) should equal (lastModified)
   }
@@ -277,19 +277,19 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
   it should "pass legal state changes" in {
     val id = put(sorakuvaus.copy(tila = Tallennettu), ophSession)
     var lastModified = get(id, sorakuvaus(id).copy(tila = Tallennettu))
-    update(sorakuvaus(id).copy(tila = Julkaistu), lastModified, true, ophSession)
+    update(sorakuvaus(id).copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, sorakuvaus(id).copy(tila = Julkaistu))
-    update(sorakuvaus(id).copy(tila = Arkistoitu), lastModified, true, ophSession)
+    update(sorakuvaus(id).copy(tila = Arkistoitu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, sorakuvaus(id).copy(tila = Arkistoitu))
-    update(sorakuvaus(id).copy(tila = Julkaistu), lastModified, true, ophSession)
+    update(sorakuvaus(id).copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, sorakuvaus(id).copy(tila = Julkaistu))
-    update(sorakuvaus(id).copy(tila = Tallennettu), lastModified, true, ophSession)
+    update(sorakuvaus(id).copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, sorakuvaus(id).copy(tila = Tallennettu))
-    update(sorakuvaus(id).copy(tila = Poistettu), lastModified, true, ophSession)
+    update(sorakuvaus(id).copy(tila = Poistettu), lastModified, expectUpdate = true, ophSession)
 
     val arkistoituId = put(sorakuvaus.copy(tila = Arkistoitu), ophSession)
     lastModified = get(arkistoituId, sorakuvaus(arkistoituId).copy(tila = Arkistoitu))
-    update(sorakuvaus(arkistoituId).copy(tila = Julkaistu), lastModified, true, ophSession)
+    update(sorakuvaus(arkistoituId).copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
     get(arkistoituId, sorakuvaus(arkistoituId).copy(tila = Julkaistu))
   }
 
@@ -317,7 +317,7 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
 
   it should "pass deletion when related koulutukset deleted" in {
     val (sorakuvausId: UUID, lastModified: String) = createSorakuvausWithKoulutukset(true)
-    update(sorakuvaus(sorakuvausId).copy(tila = Poistettu), lastModified, true, ophSession)
+    update(sorakuvaus(sorakuvausId).copy(tila = Poistettu), lastModified, expectUpdate = true, ophSession)
   }
 
   it should "fail deletion when all related hakukohteet not deleted" in {

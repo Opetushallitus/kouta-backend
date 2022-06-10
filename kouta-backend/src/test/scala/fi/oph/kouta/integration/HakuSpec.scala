@@ -6,14 +6,14 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.MockAuditLogger
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
 class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
-  override val roleEntities: Seq[Role.Haku.type] = Seq(Role.Haku)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Haku)
 
   val ophHaku: Haku = haku.copy(organisaatioOid = OphOid)
   val yhteisHaku: Haku = haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1"))

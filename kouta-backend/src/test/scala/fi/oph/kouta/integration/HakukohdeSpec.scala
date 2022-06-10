@@ -5,7 +5,7 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.UnitSpec
 import fi.oph.kouta.validation.ValidationError
@@ -17,7 +17,7 @@ import java.util.UUID
 
 class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with LokalisointiServiceMock {
 
-  override val roleEntities: Seq[Role.Hakukohde.type] = Seq(Role.Hakukohde)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Hakukohde)
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId: UUID = _
