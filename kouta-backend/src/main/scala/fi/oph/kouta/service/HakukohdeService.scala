@@ -159,11 +159,11 @@ class HakukohdeService(
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val rules = AuthorizationRules(
-      roleEntity.updateRoles,
-      additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
-    )
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), hakukohde, rules) { (oldHakukohde, h) =>
+    val oldHakukohdeWithTime = HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat())
+
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(hakukohde, oldHakukohdeWithTime)
+
+    authorizeUpdate(oldHakukohdeWithTime, hakukohde, rules) { (oldHakukohde, h) =>
       val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(h)
       val enrichedHakukohde = h.copy(metadata = enrichedMetadata)
       withValidation(enrichedHakukohde, Some(oldHakukohde)) { h =>
@@ -172,6 +172,14 @@ class HakukohdeService(
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
+  }
+
+  private def getAuthorizationRulesForUpdate(hakukohde: Hakukohde, oldHakukohdeWithTime: Option[(Hakukohde, Instant)]) = {
+    val rules = AuthorizationRules(
+      roleEntity.updateRoles,
+      additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
+    )
+    rules
   }
 
   def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
