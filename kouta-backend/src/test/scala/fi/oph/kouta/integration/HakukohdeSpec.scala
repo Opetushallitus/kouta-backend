@@ -552,8 +552,8 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {
-    val oid = put(uusiHakukohde)
-    val tallennettu = tallennettuHakukohde(oid)
+    val oid = put(uusiHakukohde.copy(tila = Tallennettu))
+    val tallennettu = tallennettuHakukohde(oid).copy(tila = Tallennettu)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
