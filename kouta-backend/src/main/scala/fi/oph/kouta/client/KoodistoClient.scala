@@ -26,6 +26,9 @@ object KoodistoUtils {
     }
   }
 
+  def kooriUriToString(koodiUri: KoodiUri): String =
+    s"${koodiUri.koodiUri}#${koodiUri.latestVersio}"
+
   def koodiUriExistsInList(koodiUri: String, koodiUriList: Seq[KoodiUri]): Boolean = {
     val theKoodiUri = koodiUriFromString(koodiUri)
     koodiUriList.exists(uri =>

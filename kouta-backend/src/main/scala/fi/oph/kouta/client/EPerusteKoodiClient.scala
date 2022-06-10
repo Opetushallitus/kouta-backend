@@ -7,14 +7,14 @@ import org.json4s.JsonAST.{JNothing, JObject}
 import scalacache.caffeine.CaffeineCache
 import org.json4s.jackson.JsonMethods.parse
 
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{Duration, DurationInt}
 import scalacache.modes.sync.mode
 
 import scala.util.{Failure, Success, Try}
 
-object EPerusteKoodiClient extends EPerusteKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
+object EPerusteKoodiClient extends EPerusteKoodiClient(KoutaConfigurationFactory.configuration.urlProperties, 15.minutes)
 
-class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
+class EPerusteKoodiClient(urlProperties: OphProperties, cacheTtl: Duration = 15.minutes) extends KoodistoClient(urlProperties) {
   implicit val ePerusteToKoodiuritCache       = CaffeineCache[Seq[KoodiUri]]
   implicit val ePerusteToTutkinnonosaCache    = CaffeineCache[Seq[(Long, Long)]]
   implicit val ePerusteToOsaamisalaCache      = CaffeineCache[Seq[KoodiUri]]
@@ -41,7 +41,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       } match {
         case Success(koodiUris) => {
           koodiUritForEPeruste = Some(koodiUris)
-          ePerusteToKoodiuritCache.put(ePerusteId)(koodiUris, Some(15.minutes))
+          ePerusteToKoodiuritCache.put(ePerusteId)(koodiUris, Some(cacheTtl))
         }
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => koodiUritForEPeruste = None
         case Failure(exp: KoodistoQueryException) =>
@@ -65,7 +65,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       } match {
         case Success(viiteAndIdt) => {
           viitteetAndIdtForEPeruste = Some(viiteAndIdt)
-          ePerusteToTutkinnonosaCache.put(ePerusteId)(viiteAndIdt, Some(15.minutes))
+          ePerusteToTutkinnonosaCache.put(ePerusteId)(viiteAndIdt, Some(cacheTtl))
         }
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => viitteetAndIdtForEPeruste = None
         case Failure(exp: KoodistoQueryException) =>
@@ -87,7 +87,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       } match {
         case Success(koodiUrit) => {
           osaamisalaKoodiUritForEPeruste = Some(koodiUrit)
-          ePerusteToOsaamisalaCache.put(ePerusteId)(koodiUrit, Some(15.minutes))
+          ePerusteToOsaamisalaCache.put(ePerusteId)(koodiUrit, Some(cacheTtl))
         }
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => osaamisalaKoodiUritForEPeruste = None
         case Failure(exp: KoodistoQueryException) =>

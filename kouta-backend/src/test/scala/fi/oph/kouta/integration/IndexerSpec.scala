@@ -14,9 +14,6 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    mockKoodiUriResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
-    mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.last, Seq(("koulutus_371101", 12, None)), ammatillisetKoulutustyypit.init)
-    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
   }
 
   "List hakukohteet by järjestyspaikka oids" should "List hakukohteet by järjestyspaikka oids" in {

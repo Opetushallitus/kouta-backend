@@ -13,10 +13,10 @@ trait KoodistoServiceMock extends ServiceMocks {
       "kieli": "SV"
     }]}""").mkString(",") + "]"
 
-  def optionalJsonString(str: Option[String]): String =
+  def optionalVoimassaOloString(str: Option[String]): String =
     str match {
-      case Some(str) => s"""$str"""
-      case _ => "null"
+      case Some(str) => s""""voimassaLoppuPvm": "$str""""
+      case _ => s""""voimassaLoppuPvm": null"""
     }
 
   def koodiUriResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) = "[" + koodiUrit.map(uri =>
@@ -25,9 +25,7 @@ trait KoodistoServiceMock extends ServiceMocks {
         "versio": ${uri._2},
         "koodisto": {
           "koodistoUri": "$koodisto"
-        },
-        "voimassaLoppuPvm": ${optionalJsonString(uri._3)}
-        }""").mkString(",") + "]"
+        },""" + optionalVoimassaOloString(uri._3) + "}").mkString(",") + "]"
 
   def latestKoodiUriResponse(koodiUriWithoutVersion: String, version: Int): String =
     s"""{"koodiUri": "$koodiUriWithoutVersion", "versio": $version}"""

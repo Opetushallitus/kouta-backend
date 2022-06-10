@@ -1,6 +1,6 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.client.KoodistoUtils.{koodiUriExistsInList, koodiUriFromString}
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriExistsInList, koodiUriFromString, kooriUriToString}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
@@ -8,12 +8,12 @@ import scalacache.caffeine.CaffeineCache
 import scalacache.modes.sync.mode
 
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZonedDateTime}
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.{Failure, Success, Try}
 
-object KoulutusKoodiClient extends KoulutusKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
+object KoulutusKoodiClient extends KoulutusKoodiClient(KoutaConfigurationFactory.configuration.urlProperties, 15.minutes)
 
-class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
+class KoulutusKoodiClient(urlProperties: OphProperties, cacheTtl: Duration = 15.minutes) extends KoodistoClient(urlProperties) {
   implicit val commonKoodiUriCache   = CaffeineCache[Seq[KoodiUri]]
   implicit val koodiuriVersionCache  = CaffeineCache[Int]
   implicit val koulutusKoodiUriCache = CaffeineCache[Seq[KoodiUri]]
@@ -35,7 +35,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         response =>
         {
           versio = Some(parse(response).extract[CodeElementWithVersion].versio)
-          koodiuriVersionCache.put(koodiUriWithoutVersion)(versio.get, Some(15.minutes))
+          koodiuriVersionCache.put(koodiUriWithoutVersion)(versio.get, Some(cacheTtl))
         }
       }
     }
@@ -57,7 +57,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
               )
               .map(koulutus => KoodiUri(koulutus.koodiUri, koulutus.versio))
             koodiUritOfKoulutustyyppi = Some(koulutukset)
-            koulutusKoodiUriCache.put(tyyppi)(koulutukset, Some(15.minutes))
+            koulutusKoodiUriCache.put(tyyppi)(koulutukset, Some(cacheTtl))
           }
         }
       }
@@ -118,7 +118,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
             .filter(koodiUri => isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm))
             .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
           koodiUritFromCache = Some(koodiUrit)
-          commonKoodiUriCache.put(koodisto)(koodiUrit, Some(15.minutes))
+          commonKoodiUriCache.put(koodisto)(koodiUrit, Some(cacheTtl))
         }
       }
     }
