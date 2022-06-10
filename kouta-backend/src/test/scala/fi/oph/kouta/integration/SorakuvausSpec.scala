@@ -274,6 +274,19 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     }
   }
 
+  it should "allow oph user to update from julkaistu to tallennettu" in {
+    val oid = put(sorakuvaus)
+    val lastModified = get(oid, sorakuvaus(oid))
+    update(sorakuvaus(oid).copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
+    get(oid, sorakuvaus(oid).copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(sorakuvaus.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
+  }
+
+  it should "not allow non oph user to update from julkaistu to tallennettu" in {
+    val oid = put(sorakuvaus)
+    val lastModified = get(oid, sorakuvaus(oid))
+    update(sorakuvaus(oid).copy(tila = Tallennettu), lastModified, 403, crudSessions(ChildOid))
+  }
+
   it should "pass legal state changes" in {
     val id = put(sorakuvaus.copy(tila = Tallennettu), ophSession)
     var lastModified = get(id, sorakuvaus(id).copy(tila = Tallennettu))
