@@ -96,7 +96,6 @@ class SorakuvausService(
     }
   }
 
-
   private def validateKoulutusIntegrityIfDeletingSorakuvaus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, sorakuvausId: UUID) =
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
