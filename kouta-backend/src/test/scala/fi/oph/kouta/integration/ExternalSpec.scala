@@ -3,24 +3,8 @@ package fi.oph.kouta.integration
 import java.util.UUID
 import fi.oph.kouta.TestOids
 import fi.oph.kouta.TestOids.{OphOid, TestUserOid}
-import fi.oph.kouta.domain.oid.{UserOid}
-import fi.oph.kouta.domain.{
-  ExternalHakuRequest,
-  ExternalHakukohdeRequest,
-  ExternalKoulutusRequest,
-  ExternalRequest,
-  ExternalSorakuvausRequest,
-  ExternalToteutusRequest,
-  ExternalValintaperusteRequest,
-  Haku,
-  Hakukohde,
-  Julkaisutila,
-  Koulutus,
-  Sorakuvaus,
-  Tallennettu,
-  Toteutus,
-  Valintaperuste
-}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Hakukohde, Julkaisutila, Koulutus, Sorakuvaus, Tallennettu, Toteutus, Valintaperuste}
 import fi.oph.kouta.integration.fixture.ExternalFixture
 import fi.oph.kouta.security.{Authority, ExternalSession, Role}
 import fi.oph.kouta.servlet.Authenticated
@@ -141,6 +125,19 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
     (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
       createSorakuvaus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
+
+  "Modifying Koulutus from external" should "fail when adding tarjoajat not beloning to koulutus organisaatio" in {
+    val koulutusRequest = ExternalKoulutusRequest(authenticated(), createKoulutus(isMuokkaajaOphVirkailija = Some(false)))
+    val oid      = doPut(koulutusRequest, ophSession)
+    val koulutus = koulutusRequest.koulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid)
+    val lastModified = doGet(oid, koulutus)
+
+    val modifyRequest = ExternalKoulutusRequest(authenticated(), koulutus.copy(tarjoajat =
+      // Helsingin yliopistoon kuuluvia OIDeja
+      List(OrganisaatioOid("1.2.246.562.10.73307006806"), OrganisaatioOid("1.2.246.562.10.445049088710"))))
+
+    update(ExternalKoulutusPath, modifyRequest, lastModified, externalSession, 403)
+  }
 }
 
 trait TestBase {

@@ -18,6 +18,8 @@ import slick.dbio.DBIO
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
+case class ExternalModifyAuthorizationFailedException(message: String) extends RuntimeException(message)
+
 object KoulutusService
     extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, KoulutusKoodiClient, KoulutusServiceValidation)
 
@@ -170,13 +172,13 @@ class KoulutusService(
     }
   }
 
-  def authorizeAddedTarjoajatFromExternal(organisaatioOid: OrganisaatioOid, addedTarjoajat: Set[OrganisaatioOid]) = {
+  def authorizeAddedTarjoajatFromExternal(organisaatioOid: OrganisaatioOid, addedTarjoajat: Set[OrganisaatioOid]): Unit = {
     if (addedTarjoajat.nonEmpty) {
       val allowedOrganisaatioOids = organisaatioService.findOrganisaatioOidsFlatByMemberOid(organisaatioOid).toSet
       if (!addedTarjoajat.subsetOf(allowedOrganisaatioOids)) {
         var msg = "Valittuja tarjoajia ei voi lisätä koulutukselle ulkoisen rajapinnan kautta. "
         msg += s"Tarjoajiksi voi lisätä ainoastaan koulutuksen omistavaan organisaatioon ($organisaatioOid) kuuluvia organisaatioOID:eja."
-        throw new RuntimeException(msg)
+        throw ExternalModifyAuthorizationFailedException(msg)
       }
     }
   }
