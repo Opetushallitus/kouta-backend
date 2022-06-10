@@ -90,7 +90,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
   private def getAuthorizationRulesForUpdate(newHaku: Haku, oldHakuWithTime: Option[(Haku, Instant)]) = {
     oldHakuWithTime match {
-      case None => throw EntityNotFoundException(s"Päivitettävää hakue ei löytynyt")
+      case None => throw EntityNotFoundException(s"Päivitettävää hakua ei löytynyt")
       case Some((oldHaku, _)) =>
         if (MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri) || Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldHaku.tila, newHaku.tila)) {
           AuthorizationRules(Seq(Role.Paakayttaja))

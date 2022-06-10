@@ -8,7 +8,7 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
 import fi.oph.kouta.repository.{KoulutusDAO, KoutaDatabase, SorakuvausDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -83,8 +83,17 @@ class SorakuvausService(
     }.nonEmpty
   }
 
-  private def getAuthorizationRulesForUpdate(sorakuvaus: Sorakuvaus, oldSorakuvausWithTime: Option[(Sorakuvaus, Instant)]): AuthorizationRules = {
-    updateRules
+  private def getAuthorizationRulesForUpdate(newSorakuvaus: Sorakuvaus, oldSorakuvausWithTime: Option[(Sorakuvaus, Instant)]): AuthorizationRules = {
+    oldSorakuvausWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää sorakuvausta ei löytynyt")
+      case Some((oldSorakuvaus, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldSorakuvaus.tila, newSorakuvaus.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        }
+        else {
+          updateRules
+        }
+    }
   }
 
 
