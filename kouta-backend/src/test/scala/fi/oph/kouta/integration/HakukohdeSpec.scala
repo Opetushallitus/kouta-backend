@@ -485,8 +485,8 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "delete all hakuajat and read last modified from history" in {
-    val oid = put(uusiHakukohde)
-    val lastModified = get(oid, tallennettuHakukohde(oid))
+    val oid = put(uusiHakukohde.copy(tila = Tallennettu))
+    val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
     Thread.sleep(1500)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
