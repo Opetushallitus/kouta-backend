@@ -185,7 +185,7 @@ class HakukohdeService(
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated) =
+  def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }
