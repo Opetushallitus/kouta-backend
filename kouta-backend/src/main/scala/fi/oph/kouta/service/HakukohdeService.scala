@@ -174,14 +174,19 @@ class HakukohdeService(
     }.nonEmpty
   }
 
-  private def getAuthorizationRulesForUpdate(hakukohde: Hakukohde, oldHakukohdeWithTime: Option[(Hakukohde, Instant)]) = {
+  private def getAuthorizationRulesForUpdate(newHakukohde: Hakukohde, oldHakukohdeWithTime: Option[(Hakukohde, Instant)]) = {
     oldHakukohdeWithTime match {
       case None => throw EntityNotFoundException(s"Päivitettävää hakukohdetta ei löytynyt")
       case Some((oldHakukohde, _)) =>
-        AuthorizationRules(
-          roleEntity.updateRoles,
-          additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
-        )
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldHakukohde.tila, newHakukohde.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        }
+        else {
+          AuthorizationRules(
+            roleEntity.updateRoles,
+            additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(newHakukohde.oid.get)
+          )
+        }
     }
   }
 
