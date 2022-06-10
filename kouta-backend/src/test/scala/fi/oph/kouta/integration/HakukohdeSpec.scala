@@ -590,6 +590,19 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     update(muokattu, lastModified, expectUpdate = true, ophSession)
   }
 
+  it should "allow oph user to update from julkaistu to tallennettu" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    update(tallennettuHakukohde(oid).copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
+    get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(hakukohde.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
+  }
+
+  it should "not allow non oph user to update from julkaistu to tallennettu" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    update(tallennettuHakukohde(oid).copy(tila = Tallennettu), lastModified, 403, crudSessions(hakukohde.organisaatioOid))
+  }
+
   it should "pass legal state changes" in {
     val id = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
     val tallennettuHk = tallennettuHakukohde(id)
