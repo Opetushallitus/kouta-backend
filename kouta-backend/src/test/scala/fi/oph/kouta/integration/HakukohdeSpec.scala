@@ -574,7 +574,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
     var tallennettuHk = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
     tallennettuHk = tallennettuHk.copy(metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
-    val muokattu = tallennettuHk.copy(tila = Tallennettu, muokkaaja = TestUserOid)
+    val muokattu = tallennettuHk.copy(muokkaaja = TestUserOid)
     val lastModified = get(oid, tallennettuHk)
     update(HakukohdePath, muokattu, lastModified, 400, "hakukohteenMuokkaamisenTakaraja", pastDateMsg(pastDate))
   }
