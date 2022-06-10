@@ -69,7 +69,10 @@ class SorakuvausService(
   }
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat()), sorakuvaus, updateRules) { (oldSorakuvaus, s) =>
+    val oldSorakuvausWithTime = SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat())
+    val rules = getAuthorizationRulesForUpdate(sorakuvaus, oldSorakuvausWithTime)
+
+    authorizeUpdate(oldSorakuvausWithTime, sorakuvaus, rules) { (oldSorakuvaus, s) =>
       val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(s)
       val enrichedSorakuvaus = s.copy(metadata = enrichedMetadata)
       withValidation(enrichedSorakuvaus, Some(oldSorakuvaus)) {
@@ -78,6 +81,10 @@ class SorakuvausService(
         doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
     }.nonEmpty
+  }
+
+  private def getAuthorizationRulesForUpdate(sorakuvaus: Sorakuvaus, oldSorakuvausWithTime: Option[(Sorakuvaus, Instant)]): AuthorizationRules = {
+    updateRules
   }
 
 
