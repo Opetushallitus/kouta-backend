@@ -9,7 +9,7 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.validateStateChange
@@ -175,11 +175,14 @@ class HakukohdeService(
   }
 
   private def getAuthorizationRulesForUpdate(hakukohde: Hakukohde, oldHakukohdeWithTime: Option[(Hakukohde, Instant)]) = {
-    val rules = AuthorizationRules(
-      roleEntity.updateRoles,
-      additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
-    )
-    rules
+    oldHakukohdeWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää hakukohdetta ei löytynyt")
+      case Some((oldHakukohde, _)) =>
+        AuthorizationRules(
+          roleEntity.updateRoles,
+          additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
+        )
+    }
   }
 
   def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
