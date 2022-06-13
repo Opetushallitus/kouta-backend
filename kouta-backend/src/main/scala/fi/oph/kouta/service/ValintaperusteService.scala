@@ -84,8 +84,10 @@ class ValintaperusteService(
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
-    val rules = AuthorizationRules(roleEntity.updateRoles)
-    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat()), valintaperuste, rules) { (oldValintaperuste, v) =>
+    val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
+    val rules: AuthorizationRules = GetAuthorizationRulesForUpdate
+
+    authorizeUpdate(oldValintaPerusteWithTime, valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
       withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
@@ -94,6 +96,11 @@ class ValintaperusteService(
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
     }.nonEmpty
+  }
+
+  private def GetAuthorizationRulesForUpdate = {
+    val rules = AuthorizationRules(roleEntity.updateRoles)
+    rules
   }
 
   private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID) =
