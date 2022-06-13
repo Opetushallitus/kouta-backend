@@ -85,7 +85,7 @@ class ValintaperusteService(
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
     val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
-    val rules: AuthorizationRules = GetAuthorizationRulesForUpdate(oldValintaPerusteWithTime, valintaperuste)
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(oldValintaPerusteWithTime, valintaperuste)
 
     authorizeUpdate(oldValintaPerusteWithTime, valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
@@ -98,7 +98,7 @@ class ValintaperusteService(
     }.nonEmpty
   }
 
-  private def GetAuthorizationRulesForUpdate(oldValintaperusteWithTime: Option[(Valintaperuste, Instant)], newValintaperuste: Valintaperuste) = {
+  private def getAuthorizationRulesForUpdate(oldValintaperusteWithTime: Option[(Valintaperuste, Instant)], newValintaperuste: Valintaperuste) = {
     oldValintaperusteWithTime match {
       case None => throw EntityNotFoundException(s"Päivitettävää valintaperustetta ei löytynyt")
       case Some((oldValintaperuste, _)) =>
