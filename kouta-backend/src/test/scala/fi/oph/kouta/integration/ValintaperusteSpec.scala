@@ -7,16 +7,15 @@ import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.mocks.MockAuditLogger
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
 class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
 
-  override val roleEntities = Seq(Role.Valintaperuste)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Valintaperuste)
 
   def ophValintaperuste: Valintaperuste = valintaperuste.copy(julkinen = true, organisaatioOid = OphOid)
 
@@ -346,19 +345,19 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
   it should "pass legal state changes" in {
     val id = put(valintaperuste.copy(tila = Tallennettu))
     var lastModified = get(id, valintaperuste(id).copy(tila = Tallennettu))
-    update(valintaperuste(id).copy(tila = Julkaistu), lastModified, true)
+    update(valintaperuste(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     lastModified = get(id, valintaperuste(id).copy(tila = Julkaistu))
-    update(valintaperuste(id).copy(tila = Arkistoitu), lastModified, true)
+    update(valintaperuste(id).copy(tila = Arkistoitu), lastModified, expectUpdate = true)
     lastModified = get(id, valintaperuste(id).copy(tila = Arkistoitu))
-    update(valintaperuste(id).copy(tila = Julkaistu), lastModified, true)
+    update(valintaperuste(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     lastModified = get(id, valintaperuste(id).copy(tila = Julkaistu))
-    update(valintaperuste(id).copy(tila = Tallennettu), lastModified, true)
+    update(valintaperuste(id).copy(tila = Tallennettu), lastModified, expectUpdate = true)
     lastModified = get(id, valintaperuste(id).copy(tila = Tallennettu))
-    update(valintaperuste(id).copy(tila = Poistettu), lastModified, true)
+    update(valintaperuste(id).copy(tila = Poistettu), lastModified, expectUpdate = true)
 
     val arkistoituId = put(valintaperuste.copy(tila = Arkistoitu))
     lastModified = get(arkistoituId, valintaperuste(arkistoituId).copy(tila = Arkistoitu))
-    update(valintaperuste(arkistoituId).copy(tila = Julkaistu), lastModified, true)
+    update(valintaperuste(arkistoituId).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     get(arkistoituId, valintaperuste(arkistoituId).copy(tila = Julkaistu))
   }
 
@@ -389,7 +388,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   it should "pass deletion when related hakukohteet deleted" in {
     val (valintaperusteId: UUID, lastModified: String) = createValintaperusteWithHakukohteet(true)
-    update(valintaperuste(valintaperusteId).copy(tila = Poistettu), lastModified, true)
+    update(valintaperuste(valintaperusteId).copy(tila = Poistettu), lastModified, expectUpdate = true)
   }
 
   it should "fail deletion when all related hakukohteet not deleted" in {
