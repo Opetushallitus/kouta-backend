@@ -84,7 +84,8 @@ class ValintaperusteService(
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
-    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat()), valintaperuste) { (oldValintaperuste, v) =>
+    val rules = AuthorizationRules(roleEntity.updateRoles)
+    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat()), valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
       withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
