@@ -351,14 +351,10 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     lastModified = get(id, valintaperuste(id).copy(tila = Arkistoitu))
     update(valintaperuste(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
     lastModified = get(id, valintaperuste(id).copy(tila = Julkaistu))
-    update(valintaperuste(id).copy(tila = Tallennettu), lastModified, expectUpdate = true)
-    lastModified = get(id, valintaperuste(id).copy(tila = Tallennettu))
-    update(valintaperuste(id).copy(tila = Poistettu), lastModified, expectUpdate = true)
 
-    val arkistoituId = put(valintaperuste.copy(tila = Arkistoitu))
-    lastModified = get(arkistoituId, valintaperuste(arkistoituId).copy(tila = Arkistoitu))
-    update(valintaperuste(arkistoituId).copy(tila = Julkaistu), lastModified, expectUpdate = true)
-    get(arkistoituId, valintaperuste(arkistoituId).copy(tila = Julkaistu))
+    val tallennettuId = put(valintaperuste.copy(tila = Tallennettu))
+    lastModified = get(tallennettuId, valintaperuste(tallennettuId).copy(tila = Tallennettu))
+    update(valintaperuste(tallennettuId).copy(tila = Poistettu), lastModified, expectUpdate = true)
   }
 
   it should "fail illegal state changes" in {
