@@ -8,7 +8,7 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -85,7 +85,7 @@ class ValintaperusteService(
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
     val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
-    val rules: AuthorizationRules = GetAuthorizationRulesForUpdate
+    val rules: AuthorizationRules = GetAuthorizationRulesForUpdate(oldValintaPerusteWithTime, valintaperuste)
 
     authorizeUpdate(oldValintaPerusteWithTime, valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
@@ -98,9 +98,17 @@ class ValintaperusteService(
     }.nonEmpty
   }
 
-  private def GetAuthorizationRulesForUpdate = {
-    val rules = AuthorizationRules(roleEntity.updateRoles)
-    rules
+  private def GetAuthorizationRulesForUpdate(oldValintaperusteWithTime: Option[(Valintaperuste, Instant)], newValintaperuste: Valintaperuste) = {
+    oldValintaperusteWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää valintaperustetta ei löytynyt")
+      case Some((oldValintaperuste, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldValintaperuste.tila, newValintaperuste.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        }
+        else {
+          AuthorizationRules(roleEntity.updateRoles)
+        }
+    }
   }
 
   private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID) =
