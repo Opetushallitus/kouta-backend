@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache local Maven repository
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -22,10 +22,10 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Set up JDK 11
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '11'
-          distribution: 'temurin'
+          distribution: 'corretto'
 
       - uses: szenius/set-timezone@v1.0
         with:
@@ -47,13 +47,13 @@ jobs:
           source ci-tools/common/setup-tools.sh
           mvn clean package -B
         
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: restore-build
         with:
           path: kouta-backend/target
           key: ${{ github.sha }}
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: ci-tools
         with:
           path: ci-tools
@@ -64,15 +64,15 @@ jobs:
     needs: test_and_build
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: restore-build
         with:
           path: kouta-backend/target
           key: ${{ github.sha }}
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: ci-tools
         with:
           path: ci-tools
@@ -89,7 +89,7 @@ jobs:
           source ci-tools/common/setup-tools.sh
           mv kouta-backend/target/kouta-backend-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
           cp -vr kouta-backend/src/main/resources/* $DOCKER_BUILD_DIR/config/
-          export BASE_IMAGE="baseimage-fatjar-openjdk11:master"
+          export BASE_IMAGE="baseimage-fatjar-openjdk11-corretto:master"
           ./ci-tools/common/pull-image.sh
           ./ci-tools/github-build/build-fatjar.sh $ARTIFACT_NAME
           ./ci-tools/github-build/upload-image.sh $ARTIFACT_NAME
@@ -100,9 +100,9 @@ jobs:
     if: github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         id: ci-tools
         with:
           path: ci-tools
