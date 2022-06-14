@@ -1,14 +1,21 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.domain.{Julkaistu, Poistettu}
-import fi.oph.kouta.validation.Validations.{error, validateStateChange}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{Amm, AmmOsaamisala, AmmTutkinnonOsa, Julkaistu, Julkaisutila, Koulutus, Koulutustyyppi, Poistettu, Tallennettu, Toteutus}
+import fi.oph.kouta.repository.SorakuvausDAO
+import fi.oph.kouta.validation.Validations.{and, assertEmpty, assertTrue, error, tyyppiMismatch, unknownTajoajaOids, validateDependency, validateIfDefined, validateIfTrue, validateStateChange, valuesDontMatch}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
+
+import java.util.UUID
 
 trait ValidatingService[E <: Validatable] {
   def validateParameterFormatAndExistence(e: E): IsValid
   def validateParameterFormatAndExistenceOnJulkaisu(e: E): IsValid = NoErrors
   def validateDependenciesToExternalServices(e: E): IsValid
   def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
+
+  def organisaatioService: OrganisaatioService
+  def sorakuvausDAO: SorakuvausDAO
 
   def withValidation[R](e: E, oldE: Option[E])(f: E => R): R = {
 
@@ -46,6 +53,57 @@ trait ValidatingService[E <: Validatable] {
 
   def throwValidationErrors(errors: IsValid): Unit =
     if(errors.nonEmpty) throw KoutaValidationException(errors)
+
+  def validateTarjoajat(tarjoajat: List[OrganisaatioOid]): IsValid = {
+    val unknownOrgs = organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(tarjoajat.toSet).toSeq
+    assertEmpty(unknownOrgs, "tarjoajat", unknownTajoajaOids(unknownOrgs))
+  }
+
+  def validateSorakuvausIntegrity(
+    sorakuvausId: Option[UUID],
+    entityTila: Julkaisutila,
+    entityTyyppi: Koulutustyyppi,
+    entityTyyppiPath: String = "koulutustyyppi",
+    koulutusKoodiUrit: Seq[String] = Seq()
+  ): IsValid = {
+
+    validateIfDefined[UUID](
+      sorakuvausId,
+      sorakuvausId => {
+        val (sorakuvausTila, sorakuvausTyyppi, koulutuskoodiUrit) =
+          sorakuvausDAO.getTilaTyyppiAndKoulutusKoodit(sorakuvausId)
+        and(
+          validateDependency(entityTila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
+          validateIfDefined[Koulutustyyppi](
+            sorakuvausTyyppi,
+            sorakuvausTyyppi =>
+              // "Tutkinnon osa" ja Osaamisala koulutuksiin saa liittää myös SORA-kuvauksen, jonka koulutustyyppi on "ammatillinen"
+              assertTrue(
+                sorakuvausTyyppi == entityTyyppi || (sorakuvausTyyppi == Amm && Seq(
+                  AmmOsaamisala,
+                  AmmTutkinnonOsa
+                ).contains(entityTyyppi)),
+                entityTyyppiPath,
+                tyyppiMismatch("sorakuvauksen", sorakuvausId)
+              )
+          ),
+          validateIfDefined[Seq[String]](
+            koulutuskoodiUrit,
+            koulutuskoodiUrit => {
+              validateIfTrue(
+                koulutuskoodiUrit.nonEmpty,
+                assertTrue(
+                  koulutuskoodiUrit.intersect(koulutusKoodiUrit).nonEmpty,
+                  "koulutuksetKoodiUri",
+                  valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")
+                )
+              )
+            }
+          )
+        )
+      }
+    )
+  }
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException {

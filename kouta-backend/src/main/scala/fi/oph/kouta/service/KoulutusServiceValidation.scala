@@ -15,16 +15,16 @@ object KoulutusServiceValidation
 class KoulutusServiceValidation(
    koulutusKoodiClient: KoulutusKoodiClient,
    ePerusteKoodiClient: EPerusteKoodiClient,
-   organisaatioService: OrganisaatioService,
+   protected val organisaatioService: OrganisaatioService,
    toteutusDAO: ToteutusDAO,
-   sorakuvausDAO: SorakuvausDAO
+   protected val sorakuvausDAO: SorakuvausDAO
 ) extends ValidatingService[Koulutus] {
 
   override def validateParameterFormatAndExistence(koulutus: Koulutus): IsValid = koulutus.validate()
 
   override def validateDependenciesToExternalServices(koulutus: Koulutus): IsValid = {
     val commonErrors = and(
-      validateTarjoajat(koulutus),
+      validateTarjoajat(koulutus.tarjoajat),
       validateIfDefined[KoulutusMetadata](
         koulutus.metadata,
         m =>
@@ -32,7 +32,8 @@ class KoulutusServiceValidation(
             "metadata.lisatiedot.otsikkoKoodiUri",
             invalidLisatietoOtsikkoKoodiuri)
       ),
-      validateSorakuvausIntegrity(koulutus)
+      validateSorakuvausIntegrity(koulutus.sorakuvausId, koulutus.tila, koulutus.koulutustyyppi,
+        koulutusKoodiUrit = koulutus.koulutuksetKoodiUri)
     )
 
     val koulutusLevelErrors: IsValid =
@@ -102,45 +103,6 @@ class KoulutusServiceValidation(
     Seq(commonErrors, koulutusLevelErrors, metadataErrors).flatten
   }
 
-  private def validateSorakuvausIntegrity(
-      koulutus: Koulutus
-  ): IsValid =
-    validateIfDefined[UUID](
-      koulutus.sorakuvausId,
-      sorakuvausId => {
-        val (sorakuvausTila, sorakuvausTyyppi, koulutuskoodiUrit) =
-          sorakuvausDAO.getTilaTyyppiAndKoulutusKoodit(sorakuvausId)
-        and(
-          validateDependency(koulutus.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
-          validateIfDefined[Koulutustyyppi](
-            sorakuvausTyyppi,
-            sorakuvausTyyppi =>
-              // "Tutkinnon osa" ja Osaamisala koulutuksiin saa liittää myös SORA-kuvauksen, jonka koulutustyyppi on "ammatillinen"
-              assertTrue(
-                sorakuvausTyyppi == koulutus.koulutustyyppi || (sorakuvausTyyppi == Amm && Seq(
-                  AmmOsaamisala,
-                  AmmTutkinnonOsa
-                ).contains(koulutus.koulutustyyppi)),
-                "koulutustyyppi",
-                tyyppiMismatch("sorakuvauksen", sorakuvausId)
-              )
-          ),
-          validateIfDefined[Seq[String]](
-            koulutuskoodiUrit,
-            koulutuskoodiUrit => {
-              validateIfTrue(
-                koulutuskoodiUrit.nonEmpty,
-                assertTrue(
-                  koulutuskoodiUrit.intersect(koulutus.koulutuksetKoodiUri).nonEmpty,
-                  "koulutuksetKoodiUri",
-                  valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")
-                )
-              )
-            }
-          )
-        )
-      }
-    )
 
   override def validateInternalDependenciesWhenDeletingEntity(koulutus: Koulutus): IsValid = {
     assertTrue(
@@ -296,9 +258,4 @@ class KoulutusServiceValidation(
           invalidOpintojenLaajuusyksikkoKoodiuri
         )
     )
-
-  private def validateTarjoajat(koulutus: Koulutus): IsValid = {
-    val unknownOrgs = organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(koulutus.tarjoajat.toSet).toSeq
-    assertEmpty(unknownOrgs, "tarjoajat", unknownTarjoajaOids(unknownOrgs))
-  }
 }
