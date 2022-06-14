@@ -110,6 +110,7 @@ class KoulutusServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach 
     when(koulutusKoodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110#2")).thenAnswer(true)
     // ammatilliset
     when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371101#1")).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371101#12")).thenAnswer(true)
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(11L)).thenAnswer(Seq(koodiUriFromString("koulutus_371101")))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(123L)).thenAnswer(Seq(koodiUriFromString("koulutus_371101")))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(111L)).thenAnswer(Seq[KoodiUri]())
@@ -137,6 +138,10 @@ class KoulutusServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach 
 
   "Validation" should "succeed when new valid koulutus" in {
     validator.withValidation(AmmKoulutus.copy(sorakuvausId = Some(sorakuvausId)), None)(koulutus => koulutus)
+  }
+
+  it should "succeed when koulutuskoodiUri has higher version than the matching koodiUri in ePeruste" in {
+    validator.withValidation(AmmKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_371101#12")), None)(koulutus => koulutus)
   }
 
   it should "succeed when new valid AmmOsaamisala koulutus" in {

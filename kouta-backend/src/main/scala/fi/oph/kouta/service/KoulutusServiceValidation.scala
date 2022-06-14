@@ -13,11 +13,11 @@ object KoulutusServiceValidation
     extends KoulutusServiceValidation(KoulutusKoodiClient, EPerusteKoodiClient, OrganisaatioServiceImpl, ToteutusDAO, SorakuvausDAO)
 
 class KoulutusServiceValidation(
-                                 koulutusKoodiClient: KoulutusKoodiClient,
-                                 ePerusteKoodiClient: EPerusteKoodiClient,
-                                 organisaatioService: OrganisaatioService,
-                                 toteutusDAO: ToteutusDAO,
-                                 sorakuvausDAO: SorakuvausDAO
+   koulutusKoodiClient: KoulutusKoodiClient,
+   ePerusteKoodiClient: EPerusteKoodiClient,
+   organisaatioService: OrganisaatioService,
+   toteutusDAO: ToteutusDAO,
+   sorakuvausDAO: SorakuvausDAO
 ) extends ValidatingService[Koulutus] {
 
   override def validateParameterFormatAndExistence(koulutus: Koulutus): IsValid = koulutus.validate()
@@ -84,8 +84,10 @@ class KoulutusServiceValidation(
             )
           case yoKoulutusMetadata: YliopistoKoulutusMetadata           => validateKorkeaKoulutus(yoKoulutusMetadata)
           case amkKoulutusMetadata: AmmattikorkeakouluKoulutusMetadata => validateKorkeaKoulutus(amkKoulutusMetadata)
-          case ammOpeErityisopeJaOpoKoulutusMetadata: AmmOpeErityisopeJaOpoKoulutusMetadata =>
-            validateKorkeaKoulutus(ammOpeErityisopeJaOpoKoulutusMetadata)
+          case ammOpeErityisopeJaOpoKoulutusMetadata: AmmOpeErityisopeJaOpoKoulutusMetadata => and(
+              assertTutkintonimikeKoodiUrit(ammOpeErityisopeJaOpoKoulutusMetadata.tutkintonimikeKoodiUrit),
+              assertOpintojenLaajuusKoodiUri(ammOpeErityisopeJaOpoKoulutusMetadata.opintojenLaajuusKoodiUri)
+            )
           case lukioKoulutusMetadata: LukioKoulutusMetadata =>
             assertOpintojenLaajuusKoodiUri(lukioKoulutusMetadata.opintojenLaajuusKoodiUri)
           case tuvaKoulutusMetadata: TuvaKoulutusMetadata =>
@@ -258,7 +260,7 @@ class KoulutusServiceValidation(
         validateIfTrue(
           koulutusKoodiUrit.nonEmpty && koodiUritForEperuste.nonEmpty,
           assertFalse(
-            koulutusKoodiUrit.exists(koodiUri => !koodiUriExistsInList(koodiUri, koodiUritForEperuste)
+            koulutusKoodiUrit.exists(koodiUri => !koodiUriExistsInList(koodiUri, koodiUritForEperuste, false)
             ),
             path,
             // Nykyisellään (6/2022) millään koulutustyypillä ei määritellä ePerusteID:tä + useita koulutusKoodiUreja

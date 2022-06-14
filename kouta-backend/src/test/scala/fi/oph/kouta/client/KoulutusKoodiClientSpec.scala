@@ -45,6 +45,11 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
       Seq(KoodiUri("some_1111", 1), KoodiUri("some_2222", 1))) should equal(false)
   }
 
+  it should "find match regardless of the version if requested" in {
+    KoodistoUtils.koodiUriExistsInList("some_1111#12",
+      Seq(KoodiUri("some_1111", 1), KoodiUri("some_2222", 1)), false) should equal(true)
+  }
+
   "Getting latest version of koodiUri" should "return version from cache" in {
     mockLatestKoodiUriResponse("koulutus_201101", 12)
     koodiClient.getKoodiUriWithLatestVersion("koulutus_201101") should equal("koulutus_201101#12")
@@ -74,7 +79,7 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
       ("koulutus_301101", 1, None), ("koulutus_111111", 1, Some(dayInPast))))
     koodiClient.koulutusKoodiUriExists(filter, "koulutus_309902") should equal(true)
     koodiClient.koulutusKoodiUriExists(filter, "koulutus_301101") should equal(true)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_301102") should equal(true)
+    koodiClient.koulutusKoodiUriExists(filter, "koulutus_301102#2") should equal(true)
     koodiClient.koulutusKoodiUriExists(filter, "koulutus_111111") should equal(false)
     koodiClient.koulutusKoodiUriExists(filter, "koulutus_222222") should equal(false)
     clearServiceMocks()
