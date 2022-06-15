@@ -258,7 +258,7 @@ class KoulutusServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach 
   }
 
   it should "fail if unknown tarjoaja OIDs" in {
-    expectValidationErrors(AmmKoulutus.copy(tarjoajat = List(GrandChildOid, UnknownOid, LonelyOid)), errorCodes = "unknownTajoajaOids")
+    expectValidationErrors(AmmKoulutus.copy(tarjoajat = List(GrandChildOid, UnknownOid, LonelyOid)), errorCodes = "unknownTarjoajaOids")
   }
   it should "fail if unknown lisätieto-otsikkoUri" in {
     expectValidationErrors(AmmKoulutus.copy(metadata =

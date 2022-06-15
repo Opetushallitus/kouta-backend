@@ -6,8 +6,8 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.KoodistoServiceMock
 import fi.oph.kouta.validation.{ammatillisetKoulutustyypit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
 import org.scalatra.test.scalatest.ScalatraFlatSpec
+import scalacache.modes.sync.mode
 
-import java.lang.Thread.sleep
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
 import scala.concurrent.duration.DurationInt
@@ -33,20 +33,20 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
   }
 
   "Searching KoodiUri from list" should "find match if versio is equal or lower" in {
-    KoodistoUtils.koodiUriExistsInList("some_1111#12",
+    KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList("some_1111#12",
       Seq(KoodiUri("some_1111", 12), KoodiUri("some_2222", 1))) should equal(true)
-    KoodistoUtils.koodiUriExistsInList("some_1111#10",
+    KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList("some_1111#10",
       Seq(KoodiUri("some_1111", 12), KoodiUri("some_2222", 1))) should equal(true)
-    KoodistoUtils.koodiUriExistsInList("some_1111",
+    KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList("some_1111",
       Seq(KoodiUri("some_1111", 1), KoodiUri("some_2222", 1))) should equal(true)
-    KoodistoUtils.koodiUriExistsInList("some_1111#2",
+    KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList("some_1111#2",
       Seq(KoodiUri("some_1111", 1), KoodiUri("some_2222", 1))) should equal(false)
-    KoodistoUtils.koodiUriExistsInList("some_3333#1",
+    KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList("some_3333#1",
       Seq(KoodiUri("some_1111", 1), KoodiUri("some_2222", 1))) should equal(false)
   }
 
   it should "find match regardless of the version if requested" in {
-    KoodistoUtils.koodiUriExistsInList("some_1111#12",
+    KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList("some_1111#12",
       Seq(KoodiUri("some_1111", 1), KoodiUri("some_2222", 1)), false) should equal(true)
   }
 
@@ -138,7 +138,7 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_20") should equal(false)
   }
 
-  "After cache TTL is expired" should "data fetched to cache again" in {
+  "When cache data is expired or removed" should "data fetched to cache again" in {
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 2)
     mockKoulutustyyppiResponse(yoKoulutustyypit.last,
       Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), yoKoulutustyypit.init)
@@ -158,8 +158,9 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_111#3")) should equal(false)
     koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_120")) should equal(false)
 
-    // Odotetaan että cache TTL expiroituu
-    sleep(5000)
+    koodiClient.koodiuriVersionCache.removeAll()
+    koodiClient.koulutusKoodiUriCache.removeAll()
+    koodiClient.commonKoodiUriCache.removeAll()
     clearServiceMocks()
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10)
     mockKoulutustyyppiResponse(yoKoulutustyypit.last, Seq(("koulutus_111111", 12, None)), yoKoulutustyypit.init)

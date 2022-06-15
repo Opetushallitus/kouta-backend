@@ -29,12 +29,12 @@ object KoodistoUtils {
   def kooriUriToString(koodiUri: KoodiUri): String =
     s"${koodiUri.koodiUri}#${koodiUri.latestVersio}"
 
-  def koodiUriExistsInList(koodiUri: String, koodiUriList: Seq[KoodiUri], checkVersio: Boolean = true): Boolean = {
-    val theKoodiUri = if (checkVersio) koodiUriFromString(koodiUri) else
+  def koodiUriWithEqualOrHigherVersioNbrInList(koodiUri: String, koodiUriList: Seq[KoodiUri], checkVersio: Boolean = true): Boolean = {
+    val koodiUriObjectToSearch = if (checkVersio) koodiUriFromString(koodiUri) else
       koodiUriFromString(koodiUri).copy(latestVersio = 1)
     koodiUriList.exists(uri =>
-      uri.koodiUri == theKoodiUri.koodiUri &&
-        uri.latestVersio >= theKoodiUri.latestVersio)
+      uri.koodiUri == koodiUriObjectToSearch.koodiUri &&
+        uri.latestVersio >= koodiUriObjectToSearch.latestVersio)
   }
 }
 

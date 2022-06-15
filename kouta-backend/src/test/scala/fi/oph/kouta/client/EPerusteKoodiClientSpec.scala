@@ -5,8 +5,8 @@ import fi.oph.kouta.TestSetups.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CO
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.KoodistoServiceMock
 import org.scalatra.test.scalatest.ScalatraFlatSpec
+import scalacache.modes.sync.mode
 
-import java.lang.Thread.sleep
 import scala.concurrent.duration.DurationInt
 
 class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
@@ -52,7 +52,7 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.getOsaamisalaKoodiuritForEPeruste(11L) should equal(Seq(KoodiUri("osaamisala_01", 1), KoodiUri("osaamisala_02", 1)))
   }
 
-  "After cache TTL is expired" should "data fetched to cache again" in {
+  "When cache data is expired or removed" should "data fetched to cache again" in {
     mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101", "koulutus_371102"))
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
@@ -60,8 +60,9 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(123L) should equal(Seq((122L, 1234L)))
     koodiClient.getOsaamisalaKoodiuritForEPeruste(11L) should equal(Seq(KoodiUri("osaamisala_01", 1), KoodiUri("osaamisala_02", 1)))
 
-    // Odotetaan että cache TTL expiroituu
-    sleep(5000)
+    koodiClient.ePerusteToOsaamisalaCache.removeAll()
+    koodiClient.ePerusteToKoodiuritCache.removeAll()
+    koodiClient.ePerusteToTutkinnonosaCache.removeAll()
 
     clearServiceMocks()
     mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371107", "koulutus_371108"))

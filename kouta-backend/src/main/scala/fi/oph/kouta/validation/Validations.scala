@@ -29,7 +29,7 @@ object Validations {
     id = "invalidLisatietoOtsikkoKoodiuri")
   val invalidOpintojenLaajuusKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutukselle valittua opintojenlaajuus-koodiuria ei löydy, tai ei ole voimassa", id = "invalidOpintojenLaajuusKoodiuri")
   val invalidOpintojenLaajuusyksikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutukselle valittua opintojenlaajuusyksikko-koodiuria ei löydy, tai ei ole voimassa", id = "invalidOpintojenLaajuusyksikkoKoodiuri")
-  def unknownTajoajaOids(oids: Seq[OrganisaatioOid]): ErrorMessage = ErrorMessage(msg = s"Koulutukselle ei voi tallentaa tarjoajia oid:eilla ${oids.mkString(",")}. Tarjoaja-organisaatioita ei löydy, tai organisaatiot eivät ole aktiivisia", id = "unknownTajoajaOids")
+  def unknownTarjoajaOids(oids: Seq[OrganisaatioOid]): ErrorMessage = ErrorMessage(msg = s"Koulutukselle ei voi tallentaa tarjoajia oid:eilla ${oids.mkString(",")}. Tarjoaja-organisaatioita ei löydy, tai organisaatiot eivät ole aktiivisia", id = "unknownTarjoajaOids")
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa", id = "invalidEPerusteId")
   def invalidEPerusteIdForKoulutusKoodiUrit(ePerusteId: Long, koodiUrit: Seq[String]): ErrorMessage =
     ErrorMessage(msg = s"Valitut koulutuskoodiurit ($koodiUrit) eivät ole hyväksyttyjä EPerusteelle $ePerusteId", id = "invalidEPerusteIdForKoulutukset")

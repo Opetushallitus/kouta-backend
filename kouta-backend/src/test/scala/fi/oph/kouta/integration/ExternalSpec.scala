@@ -126,7 +126,7 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
       createSorakuvaus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
 
-  "Modifying Koulutus from external" should "fail when adding tarjoajat not beloning to koulutus organisaatio" in {
+  "Modifying Koulutus from external" should "fail when adding tarjoajat not belonging to koulutus organisaatio" in {
     val koulutusRequest = ExternalKoulutusRequest(authenticated(), createKoulutus(isMuokkaajaOphVirkailija = Some(false)))
     val oid      = doPut(koulutusRequest, ophSession)
     val koulutus = koulutusRequest.koulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid)

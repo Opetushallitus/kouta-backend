@@ -1,6 +1,6 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.client.KoodistoUtils.{koodiUriExistsInList, koodiUriFromString, kooriUriToString}
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriWithEqualOrHigherVersioNbrInList, koodiUriFromString, kooriUriToString}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
@@ -62,7 +62,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties, cacheTtl: Duration = 15.
             }
           }
         }
-        koodiUriExistsInList(koodiUri, koodiUritOfKoulutustyyppi.getOrElse(Seq()))
+        koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritOfKoulutustyyppi.getOrElse(Seq()))
       })
     })
   }
@@ -75,36 +75,36 @@ class KoulutusKoodiClient(urlProperties: OphProperties, cacheTtl: Duration = 15.
     val koulutusKoodiUrit = getAndUpdateFromKoodiUriCache("koulutus").
       filter(fromCache =>
         filterSeq.exists(filterItem => fromCache.koodiUri == filterItem.koodiUri))
-    koodiUrit.forall(koodiUri => koodiUriExistsInList(koodiUri, koulutusKoodiUrit))
+    koodiUrit.forall(koodiUri => koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koulutusKoodiUrit))
   }
 
   def lisatiedotOtsikkoKoodiUritExist(koodiUrit: Seq[String]): Boolean = {
     val lisatietoOtsikkoKoodiUrit = getAndUpdateFromKoodiUriCache("koulutuksenlisatiedot")
-    koodiUrit.forall(koodiUri => koodiUriExistsInList(koodiUri, lisatietoOtsikkoKoodiUrit))
+    koodiUrit.forall(koodiUri => koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, lisatietoOtsikkoKoodiUrit))
   }
 
   def koulutusalaKoodiUritExist(koodiUrit: Seq[String]): Boolean = {
     val koulutusalaKoodiUrit =
       getAndUpdateFromKoodiUriCache("kansallinenkoulutusluokitus2016koulutusalataso2")
-    koodiUrit.forall(koodiUri => koodiUriExistsInList(koodiUri, koulutusalaKoodiUrit))
+    koodiUrit.forall(koodiUri => koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koulutusalaKoodiUrit))
   }
 
   def opintojenLaajuusKoodiUriExists(koodiUri: String): Boolean = {
     val opintojenLaajuusKoodiUrit =
       getAndUpdateFromKoodiUriCache("opintojenlaajuus")
-    koodiUriExistsInList(koodiUri, opintojenLaajuusKoodiUrit)
+    koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, opintojenLaajuusKoodiUrit)
   }
 
   def opintojenLaajuusyksikkoKoodiUriExists(koodiUri: String): Boolean = {
     val opintojenLaajuusyksikkoKoodiUrit =
       getAndUpdateFromKoodiUriCache("opintojenlaajuusyksikko")
-    koodiUriExistsInList(koodiUri, opintojenLaajuusyksikkoKoodiUrit)
+    koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, opintojenLaajuusyksikkoKoodiUrit)
   }
 
   def tutkintoNimikeKoodiUritExist(koodiUrit: Seq[String]): Boolean = {
     val tutkintoNimikeKoodiUrit =
       getAndUpdateFromKoodiUriCache("tutkintonimikekk")
-    koodiUrit.forall(koodiUri => koodiUriExistsInList(koodiUri, tutkintoNimikeKoodiUrit))
+    koodiUrit.forall(koodiUri => koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, tutkintoNimikeKoodiUrit))
   }
 
   private def getAndUpdateFromKoodiUriCache(koodisto: String): Seq[KoodiUri] = {

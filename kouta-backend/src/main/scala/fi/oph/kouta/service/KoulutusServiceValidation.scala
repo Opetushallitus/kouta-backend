@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoodistoUtils.koodiUriExistsInList
+import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
@@ -62,7 +62,7 @@ class KoulutusServiceValidation(
                     koulutus.ePerusteId,
                     ePerusteId => {
                       assertTrue(
-                        koodiUriExistsInList(koodiUri,
+                        koodiUriWithEqualOrHigherVersioNbrInList(koodiUri,
                         ePerusteKoodiClient
                           .getOsaamisalaKoodiuritForEPeruste(ePerusteId)),
                         "metadata.osaamisalaKoodiUri",
@@ -250,7 +250,7 @@ class KoulutusServiceValidation(
           koulutusKoodiUrit.nonEmpty && koodiUritForEperuste.nonEmpty,
           assertTrue(
             koulutusKoodiUrit.forall(koodiUri =>
-              koodiUriExistsInList(koodiUri, koodiUritForEperuste, false)),
+              koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritForEperuste, false)),
             path,
             // Nykyisellään (6/2022) millään koulutustyypillä ei määritellä ePerusteID:tä + useita koulutusKoodiUreja
             if (koulutusKoodiUrit.size > 1) invalidEPerusteIdForKoulutusKoodiUrit(ePerusteId, koulutusKoodiUrit.toSeq)
@@ -299,6 +299,6 @@ class KoulutusServiceValidation(
 
   private def validateTarjoajat(koulutus: Koulutus): IsValid = {
     val unknownOrgs = organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(koulutus.tarjoajat.toSet).toSeq
-    assertEmpty(unknownOrgs, "tarjoajat", unknownTajoajaOids(unknownOrgs))
+    assertEmpty(unknownOrgs, "tarjoajat", unknownTarjoajaOids(unknownOrgs))
   }
 }
