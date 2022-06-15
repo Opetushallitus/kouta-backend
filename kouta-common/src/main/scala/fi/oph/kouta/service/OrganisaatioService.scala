@@ -40,6 +40,27 @@ trait OrganisaatioService {
   def findOppilaitosOidFromOrganisaationHierarkia(oid: OrganisaatioOid): Option[OrganisaatioOid] =
     find(_.isOppilaitos, getHierarkia(oid).toSet).map(_.oid)
 
+  def findOrganisaatioOidsFlatByMemberOid(oid: OrganisaatioOid): Seq[OrganisaatioOid] =
+    getHierarkia(oid) match {
+      case Some(hierarkia) => childOidsFlat(hierarkia) :+ hierarkia.oid
+      case _ => Seq()
+    }
+
+
+  def findUnknownOrganisaatioOidsFromHierarkia(checkedOrganisaatiot: Set[OrganisaatioOid]): Set[OrganisaatioOid] = {
+    val topLevelItem = OidAndChildren(RootOrganisaatioOid, cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
+      RootOrganisaatioOid.s, None, "AKTIIVINEN")
+
+    def findChildren(item: OidAndChildren): Seq[OrganisaatioOid] = {
+      item.children.flatMap(c => {
+        if (checkedOrganisaatiot.contains(c.oid)) c.oid +: findChildren(c)
+        else findChildren(c)
+      })
+    }
+
+    checkedOrganisaatiot diff findChildren(topLevelItem).toSet
+  }
+
   private def children(hierarkia: Option[OidAndChildren]): Seq[OrganisaatioOid] =
     hierarkia.map(x => x.oid +: childOidsFlat(x)).getOrElse(Seq()).distinct
 

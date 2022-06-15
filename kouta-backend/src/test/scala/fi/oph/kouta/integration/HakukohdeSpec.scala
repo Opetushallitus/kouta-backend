@@ -175,7 +175,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "fail to store lukiokoulutus if hakukohde does not contain hakukohteenLinja" in {
-    val koulutusOid = put(koulutus.copy(koulutustyyppi = Lk, metadata = Some(LukioKoulutusMetadata())), ophSession)
+    val koulutusOid = put(koulutus.copy(koulutustyyppi = Lk, koulutuksetKoodiUri = Seq("koulutus_301101#1"), ePerusteId = None, metadata = Some(LukioKoulutusMetadata())), ophSession)
     val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), metadata = Some(TestData.LukioToteutus.metadata.get)))
     val valintaperusteId = put(valintaperuste.copy(koulutustyyppi = Lk, metadata = Some(TestData.LkValintaperusteMetadata)))
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "metadata.hakukohteenLinja", missingMsg)

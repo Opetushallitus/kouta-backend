@@ -7,14 +7,14 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>6.26.0-SNAPSHOT</version>
+        <version>6.27.0-SNAPSHOT</version>
     </parent>
     <artifactId>kouta-backend</artifactId>
-    <version>6.26.0-SNAPSHOT</version>
+    <version>6.27.0-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.8.3-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.8.4-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -32,23 +32,6 @@
             <groupId>fi.oph.kouta</groupId>
             <artifactId>kouta-common</artifactId>
             <version>${kouta-common.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-scala_2.12</artifactId>
-            <version>1.16.23</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scalactic</groupId>
-                    <artifactId>scalactic_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-core</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -317,6 +300,10 @@
                     <groupId>org.apache.httpcomponents</groupId>
                     <artifactId>httpclient</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -333,6 +320,12 @@
             <groupId>org.mock-server</groupId>
             <artifactId>mockserver-netty</artifactId>
             <version>5.5.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-scala-scalatest_2.12</artifactId>
+            <version>1.17.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>

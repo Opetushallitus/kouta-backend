@@ -11,14 +11,14 @@ import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.{KoodistoServiceMock, LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.ValidationError
+import fi.oph.kouta.validation.{ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.{TestData, TestOids}
 import org.json4s.jackson.JsonMethods
 
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
-  with KeywordFixture with UploadFixture with KoodistoServiceMock with LokalisointiServiceMock
+  with KeywordFixture with UploadFixture with LokalisointiServiceMock
   with HakukohdeFixture with HakuFixture {
 
   override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
@@ -29,7 +29,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     super.beforeAll()
     mockKoodistoResponse("lukiopainotukset", List("lukiopainotukset_1"))
     mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", List("lukiolinjaterityinenkoulutustehtava_1"))
-    mockKoodiUriResponse("koulutus_201101", 12)
     mockLokalisointiResponse("yleiset.opintopistetta")
     mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
     koulutusOid = put(koulutus, ophSession)

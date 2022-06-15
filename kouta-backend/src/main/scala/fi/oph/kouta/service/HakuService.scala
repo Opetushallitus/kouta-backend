@@ -11,6 +11,7 @@ import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -208,4 +209,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       hakutoiveidenMaaraRajoitettu = Some(false)))
     ).toDBIO
   }
+
+  override def validateParameterFormatAndExistence(haku: Haku): IsValid = haku.validate()
+  override def validateParameterFormatAndExistenceOnJulkaisu(haku: Haku): IsValid = haku.validateOnJulkaisu()
+
+  override def validateDependenciesToExternalServices(haku: Haku): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(haku: Haku): IsValid = NoErrors
 }

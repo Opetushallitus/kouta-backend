@@ -6,12 +6,12 @@ import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, s
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
-import fi.oph.kouta.mocks.{MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockOrganisaatioServiceClient, MockSecurityContext, OrganisaatioServiceMock}
+import fi.oph.kouta.mocks.{KoodistoServiceMock, MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockOrganisaatioServiceClient, MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
+import fi.oph.kouta.validation.{ErrorMessage, ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
 import org.scalactic.Equality
@@ -71,7 +71,7 @@ object KoutaIntegrationSpec {
   val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, OphOid)).toSet
 }
 
-trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { this: HttpSpec =>
+trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock with KoodistoServiceMock { this: HttpSpec =>
 
   protected val roleEntities: Seq[RoleEntity] = Seq.empty
 
@@ -86,6 +86,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     addTestSessions()
 
     mockOrganisaatioResponse()
+    addDefaultKoodistoMockResponsesForKoulutus()
   }
 
   override def afterAll(): Unit = {
@@ -139,6 +140,27 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock { 
     indexerSession = addTestSession(Role.Indexer, OphOid)
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
     otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)
+  }
+
+  def addDefaultKoodistoMockResponsesForKoulutus(): Unit = {
+    mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_00", 1)
+    mockLatestKoodiUriResponse("koulutus_201101", 12)
+    mockKoodiUriResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
+    mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.last, Seq(("koulutus_371101", 12, None)), ammatillisetKoulutustyypit.init)
+    mockKoulutustyyppiResponse(yoKoulutustyypit.last, Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), yoKoulutustyypit.init)
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
+    mockKoulutusKoodiUritForEPerusteResponse(123L, None, Seq("koulutus_371101"))
+    mockKoodiUriResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
+    mockKoodiUriResponse("opintojenlaajuus", Seq(
+      ("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None)))
+    mockKoodiUriResponse("koulutus", Seq(("koulutus_301101", 1, None)))
+    mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
+    mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
+    mockKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso2",Seq(
+      ("kansallinenkoulutusluokitus2016koulutusalataso2_080", 2, None),
+      ("kansallinenkoulutusluokitus2016koulutusalataso2_020", 2, None),
+      ("kansallinenkoulutusluokitus2016koulutusalataso1_001", 2, None)))
+    mockKoodiUriResponse("opintojenlaajuusyksikko", Seq(("opintojenlaajuusyksikko_6", 1, None)))
   }
 }
 

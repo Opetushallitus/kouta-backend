@@ -11,6 +11,7 @@ import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDA
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.validateStateChange
 import slick.dbio.DBIO
 
@@ -220,4 +221,11 @@ class HakukohdeService(
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
+
+  override def validateParameterFormatAndExistence(hakukohde: Hakukohde): IsValid = hakukohde.validate()
+  override def validateParameterFormatAndExistenceOnJulkaisu(hakukohde: Hakukohde): IsValid = hakukohde.validateOnJulkaisu()
+
+  override def validateDependenciesToExternalServices(hakukohde: Hakukohde): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(hakukohde: Hakukohde): IsValid = NoErrors
 }

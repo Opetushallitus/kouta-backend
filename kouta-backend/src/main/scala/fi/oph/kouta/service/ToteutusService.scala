@@ -4,24 +4,24 @@ import com.hubspot.jinjava.lib.filter.ListFilter
 
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoodistoKaannosClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.Validations
-import fi.oph.kouta.validation.Validations.{TutkintonimikeKoodiPattern, assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
+import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoClient, OppijanumerorekisteriClient, KayttooikeusClient)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoKaannosClient, OppijanumerorekisteriClient, KayttooikeusClient)
 
 
 
@@ -42,7 +42,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val organisaatioService: OrganisaatioService,
                       koulutusService: KoulutusService,
                       lokalisointiClient: LokalisointiClient,
-                      koodistoClient: KoodistoClient,
+                      koodistoClient: KoodistoKaannosClient,
                       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
                       kayttooikeusClient: KayttooikeusClient
   )
@@ -331,4 +331,10 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
     }
+  override def validateParameterFormatAndExistence(toteutus: Toteutus): IsValid = toteutus.validate()
+  override def validateParameterFormatAndExistenceOnJulkaisu(toteutus: Toteutus): IsValid = toteutus.validateOnJulkaisu()
+
+  override def validateDependenciesToExternalServices(toteutus: Toteutus): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(toteutus: Toteutus): IsValid = NoErrors
 }

@@ -261,6 +261,8 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   def withEnrichedData(enrichedData: ToteutusEnrichedData): Toteutus = this.copy(_enrichedData = Some(enrichedData))
   def withoutRelatedData(): Toteutus = this.copy(koulutusMetadata = None)
+
+  def getEntityDescriptionAllative(): String = "toteutukselle"
 }
 
 case class ToteutusListItem(oid: ToteutusOid,

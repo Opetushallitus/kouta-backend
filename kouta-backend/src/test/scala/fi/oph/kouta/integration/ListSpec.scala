@@ -9,6 +9,7 @@ import org.json4s.jackson.Serialization.read
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.generic.auto._
 import fi.oph.kouta.repository.HakukohdeDAO
+import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
@@ -28,7 +29,6 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    mockOrganisaatioResponse()
     createTestData()
   }
 

@@ -125,7 +125,36 @@ object TestData {
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/yokuva"),
-    ePerusteId = Some(12L),
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
+
+  val AmkKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = true,
+    koulutustyyppi = Amk,
+    koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1"),
+    esikatselu = true,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(AmmattikorkeakouluKoulutusMetadata(
+      tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
+      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+      koulutusalaKoodiUrit =
+        Seq("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"),
+      kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      lisatiedot = Seq(Lisatieto1),
+      isMuokkaajaOphVirkailija = Some(true))),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/yokuva"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -155,7 +184,6 @@ object TestData {
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/yokuva"),
-    ePerusteId = Some(12L),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -213,7 +241,7 @@ object TestData {
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
       opintojenLaajuusNumero = Some(10),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_080#1"),
       isMuokkaajaOphVirkailija = Some(false),
     )),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
@@ -240,7 +268,7 @@ object TestData {
     metadata = Some(LukioKoulutusMetadata(
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_00#1"),
       lisatiedot = Seq(Lisatieto1),
       isMuokkaajaOphVirkailija = Some(true))),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
@@ -248,7 +276,6 @@ object TestData {
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/lkkuva"),
-    ePerusteId = Some(12L),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -261,7 +288,6 @@ object TestData {
     oid = None,
     johtaaTutkintoon = false,
     koulutustyyppi = Tuva,
-    koulutuksetKoodiUri = Seq("koulutus_301101#1"),
     esikatselu = false,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
@@ -283,7 +309,6 @@ object TestData {
     oid = None,
     johtaaTutkintoon = false,
     koulutustyyppi = Telma,
-    koulutuksetKoodiUri = Seq("koulutus_301101#1"),
     esikatselu = false,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
@@ -337,6 +362,7 @@ object TestData {
     oid = None,
     johtaaTutkintoon = false,
     koulutustyyppi = AikuistenPerusopetus,
+    koulutuksetKoodiUri = Seq("koulutus_201101#12"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(AikuistenPerusopetusKoulutusMetadata(
