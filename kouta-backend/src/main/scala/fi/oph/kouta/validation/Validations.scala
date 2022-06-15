@@ -22,13 +22,13 @@ object Validations {
   val notNegativeMsg: ErrorMessage = ErrorMessage(msg = s"ei voi olla negatiivinen", id = "notNegativeMsg")
   val tooManyKoodiUris: ErrorMessage = ErrorMessage(msg = s"Ainoastaan korkeakoulutuksella voi olla useampi kuin yksi koulutus", id = "tooManyKoodiUris")
   val withoutLukiolinja: ErrorMessage = ErrorMessage(msg = "Lukio-toteutuksella täytyy olla vähintään yleislinja", id = "withoutLukiolinja")
-  val invalidKoulutuskoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua koulutuskoodiuria", id = "invalidKoulutuskoodiuri")
-  val invalidKoulutusAlaKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua koulutusalakoodiuria", id = "invalidKoulutusalaKoodiuri")
-  val invalidTutkintoNmikeKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua tutkintonimike-koodiuria", id = "invalidTutkintoNimikeKoodiuri")
+  val invalidKoulutuskoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa koulutukselle valittua koulutuskoodiuria ei löydy, tai eivät ole voimassa", id = "invalidKoulutuskoodiuri")
+  val invalidKoulutusAlaKoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa koulutukselle valittua koulutusalakoodiuria ei löydy, tai eivät ole voimassa", id = "invalidKoulutusalaKoodiuri")
+  val invalidTutkintoNimikeKoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa koulutukselle valittua tutkintonimike-koodiuria ei löydy, tai eivät ole voimassa", id = "invalidTutkintoNimikeKoodiuri")
   val invalidLisatietoOtsikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa koulutukselle valittua lisätietojen otsikkokoodiuria ei löydy, tai eivät ole voimassa",
     id = "invalidLisatietoOtsikkoKoodiuri")
-  val invalidOpintojenLaajuusKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua opintojenlaajuus-koodiuria", id = "invalidOpintojenLaajuusKoodiuri")
-  val invalidOpintojenLaajuusyksikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutustyypille ei voi tallentaa valittua opintojenlaajuusyksikko-koodiuria", id = "invalidOpintojenLaajuusyksikkoKoodiuri")
+  val invalidOpintojenLaajuusKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutukselle valittua opintojenlaajuus-koodiuria ei löydy, tai ei ole voimassa", id = "invalidOpintojenLaajuusKoodiuri")
+  val invalidOpintojenLaajuusyksikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutukselle valittua opintojenlaajuusyksikko-koodiuria ei löydy, tai ei ole voimassa", id = "invalidOpintojenLaajuusyksikkoKoodiuri")
   def unknownTajoajaOids(oids: Seq[OrganisaatioOid]): ErrorMessage = ErrorMessage(msg = s"Koulutukselle ei voi tallentaa tarjoajia oid:eilla ${oids.mkString(",")}. Tarjoaja-organisaatioita ei löydy, tai organisaatiot eivät ole aktiivisia", id = "unknownTajoajaOids")
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa", id = "invalidEPerusteId")
   def invalidEPerusteIdForKoulutusKoodiUrit(ePerusteId: Long, koodiUrit: Seq[String]): ErrorMessage =

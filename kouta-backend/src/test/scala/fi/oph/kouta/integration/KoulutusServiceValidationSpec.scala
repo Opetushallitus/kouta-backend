@@ -85,8 +85,9 @@ class KoulutusServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach 
     // yleiset
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(GrandChildOid, EvilGrandChildOid, EvilCousin))).thenAnswer(Set[OrganisaatioOid]())
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(GrandChildOid, UnknownOid, LonelyOid))).thenAnswer(Set(UnknownOid, LonelyOid))
-    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(true)
-    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_04#1")).thenAnswer(false)
+    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUritExist(Seq())).thenAnswer(true)
+    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUritExist(Seq("koulutuksenlisatiedot_03#1"))).thenAnswer(true)
+    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUritExist(Seq("koulutuksenlisatiedot_04#1"))).thenAnswer(false)
 
     // sorakuvaukset
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId)).thenAnswer((Some(Julkaistu), Some(Amm), Some(Seq("koulutus_371101#1"))))
@@ -98,19 +99,19 @@ class KoulutusServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach 
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId7)).thenAnswer((Some(Julkaistu), Some(Amm), None))
 
     // yleiset metadatat
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso1_01")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_080#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020#1")).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01"))).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"))).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_6#1")).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40#1")).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60")).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60#1")).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_v53#1")).thenAnswer(true)
-    when(koulutusKoodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110#2")).thenAnswer(true)
+    when(koulutusKoodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_110#2"))).thenAnswer(true)
     // ammatilliset
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371101#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371101#12")).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#1"))).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#12"))).thenAnswer(true)
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(11L)).thenAnswer(Seq(koodiUriFromString("koulutus_371101")))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(123L)).thenAnswer(Seq(koodiUriFromString("koulutus_371101")))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(111L)).thenAnswer(Seq[KoodiUri]())
@@ -120,14 +121,12 @@ class KoulutusServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach 
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(123L)).thenAnswer(Seq((122L, 1234L), (123L, 1235L)))
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(200L)).thenAnswer(Seq[(Long, Long)]())
     // korkeakoulu
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(yoKoulutustyypit, "koulutus_371101#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(yoKoulutustyypit, "koulutus_201000#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(yoKoulutustyypit, "koulutus_201111#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(amkKoulutustyypit, "koulutus_371101#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(amkKoulutustyypit, "koulutus_201000#1")).thenAnswer(true)
-    when(koulutusKoodiClient.koulutusKoodiUriExists(ammOpeErityisopeJaOpoKoulutusKoodiUrit, "koulutus_000002#12")).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUritOfKoulutustyypitExist(yoKoulutustyypit, Seq("koulutus_371101#1", "koulutus_201000#1"))).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUritOfKoulutustyypitExist(yoKoulutustyypit, Seq("koulutus_371101#1", "koulutus_201111#1"))).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUritOfKoulutustyypitExist(amkKoulutustyypit, Seq("koulutus_371101#1", "koulutus_201000#1"))).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUritExist(ammOpeErityisopeJaOpoKoulutusKoodiUrit, Seq("koulutus_000002#12"))).thenAnswer(true)
     // lukio
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301101#1")).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUritExist(lukioKoulutusKoodiUrit, Seq("koulutus_301101#1"))).thenAnswer(true)
     // toteutukset
     when(toteutusDao.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(Seq(
       JulkaistuAmmToteutus.copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),

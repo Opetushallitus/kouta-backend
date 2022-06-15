@@ -28,13 +28,9 @@ class KoulutusServiceValidation(
       validateIfDefined[KoulutusMetadata](
         koulutus.metadata,
         m =>
-          assertFalse(
-            m.lisatiedot
-              .map(_.otsikkoKoodiUri)
-              .exists(otsikkoKoodiUri => !koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists(otsikkoKoodiUri)),
+          assertTrue(koulutusKoodiClient.lisatiedotOtsikkoKoodiUritExist(m.lisatiedot.map(_.otsikkoKoodiUri)),
             "metadata.lisatiedot.otsikkoKoodiUri",
-            invalidLisatietoOtsikkoKoodiuri
-          )
+            invalidLisatietoOtsikkoKoodiuri)
       ),
       validateSorakuvausIntegrity(koulutus)
     )
@@ -84,10 +80,9 @@ class KoulutusServiceValidation(
             )
           case yoKoulutusMetadata: YliopistoKoulutusMetadata           => validateKorkeaKoulutus(yoKoulutusMetadata)
           case amkKoulutusMetadata: AmmattikorkeakouluKoulutusMetadata => validateKorkeaKoulutus(amkKoulutusMetadata)
-          case ammOpeErityisopeJaOpoKoulutusMetadata: AmmOpeErityisopeJaOpoKoulutusMetadata => and(
-              assertTutkintonimikeKoodiUrit(ammOpeErityisopeJaOpoKoulutusMetadata.tutkintonimikeKoodiUrit),
+          case ammOpeErityisopeJaOpoKoulutusMetadata: AmmOpeErityisopeJaOpoKoulutusMetadata =>
               assertOpintojenLaajuusKoodiUri(ammOpeErityisopeJaOpoKoulutusMetadata.opintojenLaajuusKoodiUri)
-            )
+
           case lukioKoulutusMetadata: LukioKoulutusMetadata =>
             assertOpintojenLaajuusKoodiUri(lukioKoulutusMetadata.opintojenLaajuusKoodiUri)
           case tuvaKoulutusMetadata: TuvaKoulutusMetadata =>
@@ -232,20 +227,14 @@ class KoulutusServiceValidation(
   // Oletus: koofiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
   // mahdollisesti annettuihin versioihin.
   private def assertKoulutusKoodiUrit(koodiUriFilter: Seq[String], koulutus: Koulutus): IsValid = {
-    assertFalse(
-      koulutus.koulutuksetKoodiUri.exists(koodiUri =>
-        !koulutusKoodiClient.koulutusKoodiUriExists(koodiUriFilter, koodiUri)
-      ),
+    assertTrue(koulutusKoodiClient.koulutusKoodiUritExist(koodiUriFilter, koulutus.koulutuksetKoodiUri),
       "koulutuksetKoodiUri",
       invalidKoulutuskoodiuri
     )
   }
 
   private def assertKoulutusKoodiUritOfKoulutustyypit(koulutusTyypit: Seq[String], koulutus: Koulutus): IsValid = {
-    assertFalse(
-      koulutus.koulutuksetKoodiUri.exists(koodiUri =>
-        !koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExists(koulutusTyypit, koodiUri)
-      ),
+    assertTrue(koulutusKoodiClient.koulutusKoodiUritOfKoulutustyypitExist(koulutusTyypit, koulutus.koulutuksetKoodiUri),
       "koulutuksetKoodiUri",
       invalidKoulutuskoodiuri
     )
@@ -259,9 +248,9 @@ class KoulutusServiceValidation(
         assertTrue(koodiUritForEperuste.nonEmpty, path, invalidEPerusteId(ePerusteId)),
         validateIfTrue(
           koulutusKoodiUrit.nonEmpty && koodiUritForEperuste.nonEmpty,
-          assertFalse(
-            koulutusKoodiUrit.exists(koodiUri => !koodiUriExistsInList(koodiUri, koodiUritForEperuste, false)
-            ),
+          assertTrue(
+            koulutusKoodiUrit.forall(koodiUri =>
+              koodiUriExistsInList(koodiUri, koodiUritForEperuste, false)),
             path,
             // Nykyisellään (6/2022) millään koulutustyypillä ei määritellä ePerusteID:tä + useita koulutusKoodiUreja
             if (koulutusKoodiUrit.size > 1) invalidEPerusteIdForKoulutusKoodiUrit(ePerusteId, koulutusKoodiUrit.toSeq)
@@ -272,19 +261,19 @@ class KoulutusServiceValidation(
     })
   }
 
-  private def assertKoulutusalaKoodiUrit(koodiUrit: Seq[String]): IsValid =
-    assertFalse(
-      koodiUrit.exists(koodiUri => !koulutusKoodiClient.koulutusalaKoodiUriExists(koodiUri)),
+  private def assertKoulutusalaKoodiUrit(koodiUrit: Seq[String]): IsValid = {
+    assertTrue(koulutusKoodiClient.koulutusalaKoodiUritExist(koodiUrit),
       "metadata.koulutusalaKoodiUrit",
       invalidKoulutusAlaKoodiuri
     )
+  }
 
-  private def assertTutkintonimikeKoodiUrit(koodiUrit: Seq[String]): IsValid =
-    assertFalse(
-      koodiUrit.exists(koodiUri => !koulutusKoodiClient.tutkintoNimikeKoodiUriExists(koodiUri)),
+  private def assertTutkintonimikeKoodiUrit(koodiUrit: Seq[String]): IsValid = {
+    assertTrue(koulutusKoodiClient.tutkintoNimikeKoodiUritExist(koodiUrit),
       "metadata.tutkintonimikeKoodiUrit",
-      invalidTutkintoNmikeKoodiuri
+      invalidTutkintoNimikeKoodiuri
     )
+  }
 
   private def assertOpintojenLaajuusKoodiUri(koodiUri: Option[String]): IsValid =
     validateIfDefined[String](

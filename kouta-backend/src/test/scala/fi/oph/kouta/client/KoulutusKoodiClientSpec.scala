@@ -62,53 +62,62 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
   "Finding koulutuskoodiUri by koulutustyyppi" should "returns true when koodiuri exists for any of koulutustyypit" in {
     mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.last, Seq(("koulutus_371101", 12, None),
       ("koulutus_371102", 10, None), ("koulutus_371103", 1, Some(dayInPast))), ammatillisetKoulutustyypit.init)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371101#12") should equal(true)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371103#1") should equal(false)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371104#1") should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#12")) should equal(true)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#12", "koulutus_371102#9")) should equal(true)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371103#1")) should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#1", "koulutus_371103#1")) should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371104#1")) should equal(false)
     clearServiceMocks()
     mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.head, Seq(("koulutus_371103", 12, None)), ammatillisetKoulutustyypit.tail)
     // Should still use values from cache
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371101#12") should equal(true)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371103#1") should equal(false)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(ammatillisetKoulutustyypit, "koulutus_371104#1") should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#12")) should equal(true)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#12", "koulutus_371102#9")) should equal(true)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371103#1")) should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371101#1", "koulutus_371103#1")) should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(ammatillisetKoulutustyypit, Seq("koulutus_371104#1")) should equal(false)
   }
 
   "Finding koulutuskoodiUri by filter" should "return true when koodiUri exists with accepted version" in {
     val filter = lukioKoulutusKoodiUrit :+ "koulutus_111111"
     mockKoodiUriResponse("koulutus", Seq(("koulutus_309902", 12, None), ("koulutus_301102", 3, None),
       ("koulutus_301101", 1, None), ("koulutus_111111", 1, Some(dayInPast))))
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_309902") should equal(true)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_301101") should equal(true)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_301102#2") should equal(true)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_111111") should equal(false)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_222222") should equal(false)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_309902")) should equal(true)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_309902", "koulutus_301101", "koulutus_301102#2")) should equal(true)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_111111")) should equal(false)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_222222", "koulutus_309902")) should equal(false)
     clearServiceMocks()
     mockKoodiUriResponse("koulutus", Seq(("koulutus_222222", 12, None), ("koulutus_111111", 1, None)))
     // Should still use values from cache
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_309902") should equal(true)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_301101") should equal(true)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_301102") should equal(true)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_111111") should equal(false)
-    koodiClient.koulutusKoodiUriExists(filter, "koulutus_222222") should equal(false)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_309902")) should equal(true)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_309902", "koulutus_301101", "koulutus_301102#2")) should equal(true)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_111111")) should equal(false)
+    koodiClient.koulutusKoodiUritExist(filter, Seq("koulutus_222222", "koulutus_309902")) should equal(false)
   }
 
   "Finding lisatiedotOtsikkoKoodiUri" should "return true when koodiUri exists" in {
     mockKoodiUriResponse("koulutuksenlisatiedot",
-      Seq(("koulutuksenlisatiedot_03", 1, None), ("koulutuksenlisatiedot_04", 2, Some(dayInPast))))
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03") should equal(true)
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_04") should equal(false)
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#2") should equal(false)
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_05") should equal(false)
+      Seq(("koulutuksenlisatiedot_02", 1, None), ("koulutuksenlisatiedot_03", 1, None),
+        ("koulutuksenlisatiedot_04", 2, Some(dayInPast))))
+    koodiClient.lisatiedotOtsikkoKoodiUritExist(Seq()) should equal(true)
+    koodiClient.lisatiedotOtsikkoKoodiUritExist(Seq("koulutuksenlisatiedot_02")) should equal(true)
+    koodiClient.lisatiedotOtsikkoKoodiUritExist(Seq("koulutuksenlisatiedot_02", "koulutuksenlisatiedot_03")) should equal(true)
+    koodiClient.lisatiedotOtsikkoKoodiUritExist(Seq("koulutuksenlisatiedot_04")) should equal(false)
+    koodiClient.lisatiedotOtsikkoKoodiUritExist(Seq("koulutuksenlisatiedot_03#2")) should equal(false)
+    koodiClient.lisatiedotOtsikkoKoodiUritExist(Seq("koulutuksenlisatiedot_05", "koulutuksenlisatiedot_02")) should equal(false)
   }
 
   "Finding koulutusalaKoodiUri" should "return true when koodiUri exists" in {
     mockKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso2",
-      Seq(("kansallinenkoulutusluokitus2016koulutusalataso2_020", 1, None),
+      Seq(("kansallinenkoulutusluokitus2016koulutusalataso2_010", 3, None),
+        ("kansallinenkoulutusluokitus2016koulutusalataso2_020", 1, None),
         ("kansallinenkoulutusluokitus2016koulutusalataso2_080", 2, Some(dayInPast))))
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020") should equal(true)
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_080") should equal(false)
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020#2") should equal(false)
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_050") should equal(false)
+    koodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso2_010")) should equal(true)
+    koodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso2_010",
+      "kansallinenkoulutusluokitus2016koulutusalataso2_020")) should equal(true)
+    koodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso2_080")) should equal(false)
+    koodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso2_020#2")) should equal(false)
+    koodiClient.koulutusalaKoodiUritExist(Seq("kansallinenkoulutusluokitus2016koulutusalataso2_050",
+      "kansallinenkoulutusluokitus2016koulutusalataso2_010")) should equal(false)
   }
 
   "Finding opintojenLaajuusKoodiUri" should "return true when koodiUri exists" in {
@@ -136,17 +145,18 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     // Tutkintonimikkeiden tarkistus testataan tässä yhteydessä (ei omassa casessaan), tällöin sitä ei löydy cachesta
     // etukäteen
     mockKoodiUriResponse("tutkintonimikekk",
-      Seq(("tutkintonimikekk_110", 1, None), ("tutkintonimikekk_111", 2, Some(dayInPast))))
+      Seq(("tutkintonimikekk_110", 1, None), ("tutkintonimikekk_111", 2, None), ("tutkintonimikekk_112", 2, Some(dayInPast))))
 
     koodiClient.getKoodiUriWithLatestVersion(
       "kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
       "kansallinenkoulutusluokitus2016koulutusalataso1_01#2")
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(yoKoulutustyypit, "koulutus_201000#12") should equal(true)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(yoKoulutustyypit, "koulutus_111111#1") should equal(false)
-    koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110") should equal(true)
-    koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_111") should equal(false)
-    koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110#2") should equal(false)
-    koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_120") should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(yoKoulutustyypit, Seq("koulutus_201000#12")) should equal(true)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(yoKoulutustyypit, Seq("koulutus_111111#1")) should equal(false)
+    koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_110")) should equal(true)
+    koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_110", "tutkintonimikekk_111")) should equal(true)
+    koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_112")) should equal(false)
+    koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_111#3")) should equal(false)
+    koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_120")) should equal(false)
 
     // Odotetaan että cache TTL expiroituu
     sleep(5000)
@@ -158,10 +168,10 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.getKoodiUriWithLatestVersion(
       "kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
       "kansallinenkoulutusluokitus2016koulutusalataso1_01#10")
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(yoKoulutustyypit, "koulutus_201000#12") should equal(false)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExists(yoKoulutustyypit, "koulutus_111111#1") should equal(true)
-    koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110") should equal(false)
-    koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_120") should equal(true)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(yoKoulutustyypit, Seq("koulutus_201000#12")) should equal(false)
+    koodiClient.koulutusKoodiUritOfKoulutustyypitExist(yoKoulutustyypit, Seq("koulutus_111111#1")) should equal(true)
+    koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_110")) should equal(false)
+    koodiClient.tutkintoNimikeKoodiUritExist(Seq("tutkintonimikekk_120")) should equal(true)
 
   }
 }
