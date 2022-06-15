@@ -1,5 +1,6 @@
 package fi.oph.kouta.service
 
+import fi.oph.kouta.client.KoulutusKoodiClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Amm, AmmOsaamisala, AmmTutkinnonOsa, Julkaistu, Julkaisutila, Koulutus, Koulutustyyppi, Poistettu, Tallennettu, Toteutus}
 import fi.oph.kouta.repository.SorakuvausDAO
@@ -15,7 +16,6 @@ trait ValidatingService[E <: Validatable] {
   def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
 
   def organisaatioService: OrganisaatioService
-  def sorakuvausDAO: SorakuvausDAO
 
   def withValidation[R](e: E, oldE: Option[E])(f: E => R): R = {
 
@@ -59,13 +59,19 @@ trait ValidatingService[E <: Validatable] {
     assertEmpty(unknownOrgs, "tarjoajat", unknownTajoajaOids(unknownOrgs))
   }
 
+}
+
+trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] {
+  def koulutusKoodiClient: KoulutusKoodiClient
+  def sorakuvausDAO: SorakuvausDAO
+
   def validateSorakuvausIntegrity(
-    sorakuvausId: Option[UUID],
-    entityTila: Julkaisutila,
-    entityTyyppi: Koulutustyyppi,
-    entityTyyppiPath: String = "koulutustyyppi",
-    koulutusKoodiUrit: Seq[String] = Seq()
-  ): IsValid = {
+     sorakuvausId: Option[UUID],
+     entityTila: Julkaisutila,
+     entityTyyppi: Koulutustyyppi,
+     entityTyyppiPath: String = "koulutustyyppi",
+     entityKoulutusKoodiUrit: Seq[String] = Seq()
+   ): IsValid = {
 
     validateIfDefined[UUID](
       sorakuvausId,
@@ -91,9 +97,9 @@ trait ValidatingService[E <: Validatable] {
             koulutuskoodiUrit,
             koulutuskoodiUrit => {
               validateIfTrue(
-                koulutuskoodiUrit.nonEmpty,
+                entityKoulutusKoodiUrit.nonEmpty,
                 assertTrue(
-                  koulutuskoodiUrit.intersect(koulutusKoodiUrit).nonEmpty,
+                  koulutuskoodiUrit.intersect(entityKoulutusKoodiUrit).nonEmpty,
                   "koulutuksetKoodiUri",
                   valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")
                 )
@@ -104,6 +110,7 @@ trait ValidatingService[E <: Validatable] {
       }
     )
   }
+
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException {

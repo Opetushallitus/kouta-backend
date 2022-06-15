@@ -7,18 +7,16 @@ import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, amkKoulutustyypit, ammOpeErityisopeJaOpoKoulutusKoodiUrit, ammatillisetKoulutustyypit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
 
-import java.util.UUID
-
 object KoulutusServiceValidation
     extends KoulutusServiceValidation(KoulutusKoodiClient, EPerusteKoodiClient, OrganisaatioServiceImpl, ToteutusDAO, SorakuvausDAO)
 
 class KoulutusServiceValidation(
-   koulutusKoodiClient: KoulutusKoodiClient,
+   val koulutusKoodiClient: KoulutusKoodiClient,
    ePerusteKoodiClient: EPerusteKoodiClient,
-   protected val organisaatioService: OrganisaatioService,
+   val organisaatioService: OrganisaatioService,
    toteutusDAO: ToteutusDAO,
-   protected val sorakuvausDAO: SorakuvausDAO
-) extends ValidatingService[Koulutus] {
+   val sorakuvausDAO: SorakuvausDAO
+) extends KoulutusToteutusValidatingService[Koulutus] {
 
   override def validateParameterFormatAndExistence(koulutus: Koulutus): IsValid = koulutus.validate()
 
@@ -33,7 +31,7 @@ class KoulutusServiceValidation(
             invalidLisatietoOtsikkoKoodiuri)
       ),
       validateSorakuvausIntegrity(koulutus.sorakuvausId, koulutus.tila, koulutus.koulutustyyppi,
-        koulutusKoodiUrit = koulutus.koulutuksetKoodiUri)
+        entityKoulutusKoodiUrit = koulutus.koulutuksetKoodiUri)
     )
 
     val koulutusLevelErrors: IsValid =

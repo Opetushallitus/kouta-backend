@@ -27,8 +27,17 @@ object Validations {
   val invalidTutkintoNimikeKoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa koulutukselle valittua tutkintonimike-koodiuria ei löydy, tai eivät ole voimassa", id = "invalidTutkintoNimikeKoodiuri")
   val invalidLisatietoOtsikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa koulutukselle valittua lisätietojen otsikkokoodiuria ei löydy, tai eivät ole voimassa",
     id = "invalidLisatietoOtsikkoKoodiuri")
+  val invalidOpetusLisatietoOtsikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa toteutukselle valittua opetuksen lisätietojen otsikkokoodiuria ei löydy, tai eivät ole voimassa",
+    id = "invalidOpetusLisatietoOtsikkoKoodiuri")
   val invalidOpintojenLaajuusKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutukselle valittua opintojenlaajuus-koodiuria ei löydy, tai ei ole voimassa", id = "invalidOpintojenLaajuusKoodiuri")
   val invalidOpintojenLaajuusyksikkoKoodiuri: ErrorMessage = ErrorMessage(msg = "Koulutukselle valittua opintojenlaajuusyksikko-koodiuria ei löydy, tai ei ole voimassa", id = "invalidOpintojenLaajuusyksikkoKoodiuri")
+  val invalidOpetusKieliKoodiUri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa toteutukselle valittua opetuskieli-koodiuria ei löydy, tai eivät ole voimassa", "invalidOpetusKieliKoodiUri")
+  val invalidOpetusAikaKoodiUri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa toteutukselle valittua opetusaika-koodiuria ei löydy, tai eivät ole voimassa", "invalidOpetusAikaKoodiUri")
+  val invalidOpetusTapaKoodiUri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa toteutukselle valittua opetustapa-koodiuria ei löydy, tai eivät ole voimassa", "invalidOpetusTapaKoodiUri")
+  val invalidOsaamisalaKoodiUri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa toteutukselle valittua osaamisala-koodiuria ei löydy, tai eivät ole voimassa", "invalidOsaamisalaKoodiUri")
+  val invalidLukioDiplomiKoodiUri: ErrorMessage = ErrorMessage(msg = "Yhtä tai useampaa lukiototeutukselle valittua diplomi-koodiuria ei löydy, tai eivät ole voimassa", "invalidOsaamisalaKoodiUri")
+  def invalidKieliKoodiUri(kieliField: String): ErrorMessage = ErrorMessage(msg = s"Yhtä tai useampaa toteutukselle valittua $kieliField-koodiuria ei löydy, tai eivät ole voimassa", "invalidKieliKoodiUri")
+  def invalidLukioLinjaKoodiUri(linjaField: String): ErrorMessage = ErrorMessage(msg = s"Yhtä tai useampaa lukiototeutukselle valittua $linjaField-koodiuria ei löydy, tai eivät ole voimassa", "invalidLukioLinjaKoodiUri")
   def unknownTarjoajaOids(oids: Seq[OrganisaatioOid]): ErrorMessage = ErrorMessage(msg = s"Koulutukselle ei voi tallentaa tarjoajia oid:eilla ${oids.mkString(",")}. Tarjoaja-organisaatioita ei löydy, tai organisaatiot eivät ole aktiivisia", id = "unknownTarjoajaOids")
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa", id = "invalidEPerusteId")
   def invalidEPerusteIdForKoulutusKoodiUrit(ePerusteId: Long, koodiUrit: Seq[String]): ErrorMessage =
