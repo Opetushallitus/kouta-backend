@@ -61,39 +61,14 @@ class ToteutusServiceValidation(
         metadata =>
           and(
             validateSorakuvausIntegrity(toteutus.sorakuvausId, toteutus.tila, metadata.tyyppi, "metadata.tyyppi"),
-            validateIfDefined[Opetus](
-              metadata.opetus,
-              opetus =>
-                and(
-                  assertTrue(
-                    koulutusKoodiClient.opetusKieliKoodiUritExist(opetus.opetuskieliKoodiUrit),
-                    "metadata.opetus.opetuskieliKoodiUrit",
-                    invalidOpetusKieliKoodiUri
-                  ),
-                  assertTrue(
-                    koulutusKoodiClient.opetusAikaKoodiUritExist(opetus.opetusaikaKoodiUrit),
-                    "metadata.opetus.opetusaikaKoodiUrit",
-                    invalidOpetusAikaKoodiUri
-                  ),
-                  assertTrue(
-                    koulutusKoodiClient.opetusTapaKoodiUritExist(opetus.opetustapaKoodiUrit),
-                    "metadata.opetus.opetustapaKoodiUrit",
-                    invalidOpetusTapaKoodiUri
-                  ),
-                  assertTrue(
-                    koulutusKoodiClient.lisatiedotOtsikkoKoodiUritExist(opetus.lisatiedot.map(_.otsikkoKoodiUri)),
-                    "metadata.opetus.lisatiedot.otsikkoKoodiUri",
-                    invalidOpetusLisatietoOtsikkoKoodiuri
-                  )
-                )
-            )
+            validateIfDefined[Opetus](metadata.opetus, opetus => validateOpetus(opetus))
           )
-      )
+      ),
+      validateKoulutusIntegrity(toteutus)
     )
 
     val koulutustyyppiSpecificErrors = toteutus.metadata match {
       case Some(metadata) =>
-        val lukioKielipath = "metadata.kielivalikoima"
         metadata match {
           case ammMetadata: AmmatillinenToteutusMetadata =>
             assertTrue(
@@ -101,74 +76,100 @@ class ToteutusServiceValidation(
               "metadata.osaamisalat.koodiUri",
               invalidOsaamisalaKoodiUri
             )
-          case lkMetadata: LukioToteutusMetadata =>
-            and(
-              assertTrue(
-                koulutusKoodiClient.lukioPainotusKoodiUritExist(lkMetadata.painotukset.map(_.koodiUri)),
-                "metadata.painotukset.koodiUri",
-                invalidLukioLinjaKoodiUri("painotukset")
-              ),
-              assertTrue(
-                koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUritExist(
-                  lkMetadata.erityisetKoulutustehtavat.map(_.koodiUri)
-                ),
-                "metadata.erityisetKoulutustehtavat.koodiUri",
-                invalidLukioLinjaKoodiUri("erityisetKoulutustehtavat")
-              ),
-              assertTrue(
-                koulutusKoodiClient.lukioDiplomiKoodiUritExist(lkMetadata.diplomit.map(_.koodiUri)),
-                "metadata.diplomit.koodiUri",
-                invalidLukioDiplomiKoodiUri
-              ),
-              validateIfDefined[Kielivalikoima](
-                lkMetadata.kielivalikoima,
-                kielivalikoima =>
-                  and(
-                    assertTrue(
-                      koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.A1Kielet),
-                      s"$lukioKielipath.A1Kielet",
-                      invalidKieliKoodiUri("A1Kielet")
-                    ),
-                    assertTrue(
-                      koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.A2Kielet),
-                      s"$lukioKielipath.A2Kielet",
-                      invalidKieliKoodiUri("A2Kielet")
-                    ),
-                    assertTrue(
-                      koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.B1Kielet),
-                      s"$lukioKielipath.B1Kielet",
-                      invalidKieliKoodiUri("B1Kielet")
-                    ),
-                    assertTrue(
-                      koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.B2Kielet),
-                      s"$lukioKielipath.B2Kielet",
-                      invalidKieliKoodiUri("B2Kielet")
-                    ),
-                    assertTrue(
-                      koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.B3Kielet),
-                      s"$lukioKielipath.B3Kielet",
-                      invalidKieliKoodiUri("B3Kielet")
-                    ),
-                    assertTrue(
-                      koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.aidinkielet),
-                      s"$lukioKielipath.aidinkielet",
-                      invalidKieliKoodiUri("aidinkielet")
-                    ),
-                    assertTrue(
-                      koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.muutKielet),
-                      s"$lukioKielipath.muutKielet",
-                      invalidKieliKoodiUri("muutKielet")
-                    )
-                  )
-              )
-            )
+          case lkMetadata: LukioToteutusMetadata => validateLukioMetadata(lkMetadata)
         }
     }
 
     Seq(commonErrors, koulutustyyppiSpecificErrors).flatten
   }
 
-  private def validateKoulutusIntegrity(toteutus: Toteutus): Unit = {
+  private def validateOpetus(opetus: Opetus): IsValid =
+    and(
+      assertTrue(
+        koulutusKoodiClient.opetusKieliKoodiUritExist(opetus.opetuskieliKoodiUrit),
+        "metadata.opetus.opetuskieliKoodiUrit",
+        invalidOpetusKieliKoodiUri
+      ),
+      assertTrue(
+        koulutusKoodiClient.opetusAikaKoodiUritExist(opetus.opetusaikaKoodiUrit),
+        "metadata.opetus.opetusaikaKoodiUrit",
+        invalidOpetusAikaKoodiUri
+      ),
+      assertTrue(
+        koulutusKoodiClient.opetusTapaKoodiUritExist(opetus.opetustapaKoodiUrit),
+        "metadata.opetus.opetustapaKoodiUrit",
+        invalidOpetusTapaKoodiUri
+      ),
+      assertTrue(
+        koulutusKoodiClient.lisatiedotOtsikkoKoodiUritExist(opetus.lisatiedot.map(_.otsikkoKoodiUri)),
+        "metadata.opetus.lisatiedot.otsikkoKoodiUri",
+        invalidOpetusLisatietoOtsikkoKoodiuri
+      )
+    )
+
+  private def validateLukioMetadata(lkMetadata: LukioToteutusMetadata): IsValid =
+    and(
+      assertTrue(
+        koulutusKoodiClient.lukioPainotusKoodiUritExist(lkMetadata.painotukset.map(_.koodiUri)),
+        "metadata.painotukset.koodiUri",
+        invalidLukioLinjaKoodiUri("painotukset")
+      ),
+      assertTrue(
+        koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUritExist(
+          lkMetadata.erityisetKoulutustehtavat.map(_.koodiUri)
+        ),
+        "metadata.erityisetKoulutustehtavat.koodiUri",
+        invalidLukioLinjaKoodiUri("erityisetKoulutustehtavat")
+      ),
+      assertTrue(
+        koulutusKoodiClient.lukioDiplomiKoodiUritExist(lkMetadata.diplomit.map(_.koodiUri)),
+        "metadata.diplomit.koodiUri",
+        invalidLukioDiplomiKoodiUri
+      ),
+      validateIfDefined[Kielivalikoima](
+        lkMetadata.kielivalikoima,
+        kielivalikoima =>
+          and(
+            assertTrue(
+              koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.A1Kielet),
+              "metadata.kielivalikoima.A1Kielet",
+              invalidKieliKoodiUri("A1Kielet")
+            ),
+            assertTrue(
+              koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.A2Kielet),
+              "metadata.kielivalikoima.A2Kielet",
+              invalidKieliKoodiUri("A2Kielet")
+            ),
+            assertTrue(
+              koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.B1Kielet),
+              "metadata.kielivalikoima.B1Kielet",
+              invalidKieliKoodiUri("B1Kielet")
+            ),
+            assertTrue(
+              koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.B2Kielet),
+              "metadata.kielivalikoima.B2Kielet",
+              invalidKieliKoodiUri("B2Kielet")
+            ),
+            assertTrue(
+              koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.B3Kielet),
+              "metadata.kielivalikoima.B3Kielet",
+              invalidKieliKoodiUri("B3Kielet")
+            ),
+            assertTrue(
+              koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.aidinkielet),
+              "metadata.kielivalikoima.aidinkielet",
+              invalidKieliKoodiUri("aidinkielet")
+            ),
+            assertTrue(
+              koulutusKoodiClient.kieliKoodiUritExist(kielivalikoima.muutKielet),
+              "metadata.kielivalikoima.muutKielet",
+              invalidKieliKoodiUri("muutKielet")
+            )
+          )
+      )
+    )
+
+  private def validateKoulutusIntegrity(toteutus: Toteutus): IsValid = {
     val (koulutusTila, koulutusTyyppi) = koulutusDAO.getTilaAndTyyppi(toteutus.koulutusOid)
     and(
       validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
@@ -190,6 +191,7 @@ class ToteutusServiceValidation(
       )
     )
   }
+
   override def validateInternalDependenciesWhenDeletingEntity(toteutus: Toteutus): IsValid = assertTrue(
     hakukohdeDAO.listByToteutusOid(toteutus.oid.get, TilaFilter.onlyOlemassaolevat()).isEmpty,
     "tila",
