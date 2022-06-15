@@ -67,7 +67,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties, cacheTtl: Duration = 15.
     })
   }
 
-  // Oletus: koofiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
+  // Oletus: koodiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
   // mahdollisesti annettuihin versioihin.
   def koulutusKoodiUritExist(koodiUriFilter: Seq[String], koodiUrit: Seq[String]): Boolean = {
     val filterSeq = koodiUriFilter.map(koodiUriFromString(_))
