@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoodistoKaannosClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoodistoKaannosClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
@@ -11,7 +11,7 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -28,10 +28,10 @@ case class ToteutusCopyOids(
                    )
 
 case class ToteutusCopyResultObject(
-                                      oid: ToteutusOid,
-                                      status: String,
-                                      created: ToteutusCopyOids
-                                    )
+                                     oid: ToteutusOid,
+                                     status: String,
+                                     created: ToteutusCopyOids
+                                   )
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val s3ImageService: S3ImageService,
