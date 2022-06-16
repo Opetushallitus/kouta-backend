@@ -1,6 +1,5 @@
 package fi.oph.kouta.integration
 
-import cats.Show.Shown.mat
 import fi.oph.kouta.TestData.AmmToteutuksenMetatieto
 
 import java.time.LocalDateTime
@@ -9,7 +8,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.{KoodistoServiceMock, LokalisointiServiceMock, MockAuditLogger}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.{ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.oph.kouta.validation.Validations._
@@ -21,7 +20,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   with KeywordFixture with UploadFixture with LokalisointiServiceMock
   with HakukohdeFixture with HakuFixture {
 
-  override val roleEntities = Seq(Role.Toteutus, Role.Koulutus)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Toteutus, Role.Koulutus)
 
   var koulutusOid: String = _
 
@@ -407,6 +406,24 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(thisToteutus, lastModified, 403, readSessions(toteutus.organisaatioOid))
   }
 
+  it should "allow oph user to update from julkaistu to tallennettu" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
+    update(updatedToteutus, lastModified, expectUpdate = true, ophSession)
+    get(
+      oid,
+      toteutus(oid, koulutusOid, Tallennettu)
+        .copy(muokkaaja = OphUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
+  }
+
+  it should "not allow non oph user to update from julkaistu to tallennettu" in {
+    val oid = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
+    update(updatedToteutus, lastModified, 403, crudSessions(toteutus.organisaatioOid))
+  }
+
   it should "deny indexer access" in {
     val oid = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
@@ -702,20 +719,20 @@ class ToteutusSpec extends KoutaIntegrationSpec
     toteutusBase = toteutusBase.copy(oid = Some(ToteutusOid(toteutusOid)), muokkaaja = OphUserOid,
       metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true))))
     var lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
-    update(toteutusBase.copy(tila = Julkaistu), lastModified, true, ophSession)
+    update(toteutusBase.copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
-    update(toteutusBase.copy(tila = Arkistoitu), lastModified, true, ophSession)
+    update(toteutusBase.copy(tila = Arkistoitu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(toteutusOid, toteutusBase.copy(tila = Arkistoitu))
-    update(toteutusBase.copy(tila = Julkaistu), lastModified, true, ophSession)
+    update(toteutusBase.copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
-    update(toteutusBase.copy(tila = Tallennettu), lastModified, true, ophSession)
+    update(toteutusBase.copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
-    update(toteutusBase.copy(tila = Poistettu), lastModified, true, ophSession)
+    update(toteutusBase.copy(tila = Poistettu), lastModified, expectUpdate = true, ophSession)
 
     val arkistoituOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Arkistoitu), ophSession)))
     lastModified = get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Arkistoitu, muokkaaja = OphUserOid,
       metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
-    update(toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu), lastModified, true, ophSession)
+    update(toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
     get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu, muokkaaja = OphUserOid,
       metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
@@ -744,14 +761,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val hakuOid = put(haku.copy(tila = Tallennettu), ophSession)
     put(hakukohde(toteutusOid, hakuOid).copy(tila = Poistettu), ophSession)
     put(hakukohde(toteutusOid, hakuOid).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu), ophSession)
-    var toteutusBase = toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)))
+    val toteutusBase = toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)))
     val toteutusLastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
     (toteutusOid, koulutusOid, toteutusLastModified)
   }
 
   it should "pass deletion when related hakukohteet deleted" in {
     val (toteutusOid: String, koulutusOid: String, lastModified: String) = createToteutusWithHakukohteet(true)
-    update(toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), lastModified, true, ophSession)
+    update(toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), lastModified, expectUpdate = true, ophSession)
   }
 
   it should "fail deletion when all related hakukohteet not deleted" in {

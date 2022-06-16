@@ -39,12 +39,18 @@ trait ExternalFixture extends KoutaIntegrationSpec with KoulutusFixture with Tot
         .asInstanceOf[YliopistoKoulutusMetadata]
         .copy(isMuokkaajaOphVirkailija = Some(isMuokkaajaOphVirkailija.getOrElse(true)))))
 
-  def createToteutus(oid: String = "", muokkaaja: Option[UserOid] = None, tila: Option[Julkaisutila] = None, isMuokkaajaOphVirkailija: Option[Boolean] = None): Toteutus =
-    toteutus.copy(koulutusOid = koulutusOidForToteutus, oid = if (oid.isEmpty) None else Some(ToteutusOid(oid)), muokkaaja = muokkaaja.getOrElse(OphUserOid), tila = tila.getOrElse(Julkaistu),
-      metadata = Some(
-      toteutus.metadata.get
-        .asInstanceOf[AmmatillinenToteutusMetadata]
-        .copy(isMuokkaajaOphVirkailija = Some(isMuokkaajaOphVirkailija.getOrElse(true)))))
+  def createToteutus(oid: String = "",
+                     muokkaaja: Option[UserOid] = None,
+                     tila: Option[Julkaisutila] = None,
+                     isMuokkaajaOphVirkailija: Option[Boolean] = None): Toteutus =
+    toteutus.copy(koulutusOid = koulutusOidForToteutus,
+                  oid = if (oid.isEmpty) None else Some(ToteutusOid(oid)),
+                  muokkaaja = muokkaaja.getOrElse(OphUserOid),
+                  tila = tila.getOrElse(Julkaistu),
+                  metadata = Some(
+                    toteutus.metadata.get
+                      .asInstanceOf[AmmatillinenToteutusMetadata]
+                      .copy(isMuokkaajaOphVirkailija = Some(isMuokkaajaOphVirkailija.getOrElse(true)))))
 
   def createHaku(oid: String = "", muokkaaja: Option[UserOid] = None, tila: Option[Julkaisutila] = None, isMuokkaajaOphVirkailija: Option[Boolean] = None): Haku =
     haku.copy(oid = if (oid.isEmpty) None else Some(HakuOid(oid)), muokkaaja = muokkaaja.getOrElse(OphUserOid), tila = tila.getOrElse(Julkaistu),

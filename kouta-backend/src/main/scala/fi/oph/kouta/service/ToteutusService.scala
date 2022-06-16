@@ -1,10 +1,8 @@
 package fi.oph.kouta.service
 
-import com.hubspot.jinjava.lib.filter.ListFilter
-
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoodistoKaannosClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoodistoKaannosClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
@@ -13,7 +11,7 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -30,10 +28,10 @@ case class ToteutusCopyOids(
                    )
 
 case class ToteutusCopyResultObject(
-                                      oid: ToteutusOid,
-                                      status: String,
-                                      created: ToteutusCopyOids
-                                    )
+                                     oid: ToteutusOid,
+                                     status: String,
+                                     created: ToteutusCopyOids
+                                   )
 
 class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       val s3ImageService: S3ImageService,
@@ -56,7 +54,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     (toteutus.metadata, toteutus.koulutusMetadata) match {
       case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
         (toteutusMetadata, koulutusMetadata) match {
-          case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
+          case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) =>
             val kaannokset = Map(
               "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
               "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
@@ -72,7 +70,6 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
               kaannokset,
               koodistoKaannokset
             )
-          }
           case _ => toteutus.nimi
         }
       case _ => toteutus.nimi
@@ -109,12 +106,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   def get(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Toteutus, Instant)] = {
     val toteutusWithTime = ToteutusDAO.get(oid, tilaFilter)
     val enrichedToteutus = toteutusWithTime match {
-      case Some((t, i)) => {
+      case Some((t, i)) =>
         val esitysnimi = generateToteutusEsitysnimi(t)
         val muokkaaja = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData(), i)
-      }
       case None => None
     }
     authorizeGet(enrichedToteutus, AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)))
@@ -139,17 +135,17 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         val createdToteutusOid = put(toteutusCopyAsLuonnos)
         ToteutusCopyResultObject(oid = toteutus.oid.get, status = "success", created = ToteutusCopyOids(Some(createdToteutusOid)))
       } catch {
-        case error => {
-          logger.error(s"Copying toteutus failed: ${error}")
+        case error: Throwable =>
+          logger.error(s"Copying toteutus failed: $error")
           ToteutusCopyResultObject(oid = toteutus.oid.get, status = "error", created = ToteutusCopyOids(None))
-        }
       }
     })
   }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
-    val rules = AuthorizationRules(roleEntity.updateRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime))
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(toteutusWithTime, toteutus)
+
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus = t.copy(metadata = enrichedMetadata)
@@ -164,6 +160,22 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
       }
     }
   }.nonEmpty
+
+  private def getAuthorizationRulesForUpdate(toteutusWithTime: Option[(Toteutus, Instant)], newToteutus: Toteutus): AuthorizationRules = {
+    toteutusWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+      case Some((oldToteutus, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldToteutus.tila, newToteutus.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        } else {
+          AuthorizationRules(
+            roleEntity.updateRoles,
+            allowAccessToParentOrganizations = true,
+            additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)
+          )
+        }
+    }
+  }
 
   def list(organisaatioOid: OrganisaatioOid, vainHakukohteeseenLiitettavat: Boolean = false, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(organisaatioOid,
@@ -216,7 +228,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
         }
       )
 
-    list(organisaatioOid, false, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
+    list(organisaatioOid, vainHakukohteeseenLiitettavat = false, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
       case Nil          => ToteutusSearchResult()
       case toteutusOids => assocHakukohdeCounts(KoutaIndexClient.searchToteutukset(toteutusOids, params))
     }
@@ -226,12 +238,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => toteutus
-        case organisaatioOids => {
+        case organisaatioOids =>
           toteutus.flatMap(toteutusItem => {
             val oidStrings = organisaatioOids.map(_.toString())
             Some(toteutusItem.copy(hakukohteet = toteutusItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
           })
-        }
       }
 
     filterHakukohteet(KoutaIndexClient.searchToteutukset(Seq(toteutusOid), params).result.headOption)
@@ -244,13 +255,13 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
       if (remainingTarjoajatOfToteutus.nonEmpty) currentToteutustenTarjoajatOfKoulutus updated (toteutus.oid.get, remainingTarjoajatOfToteutus)
       else currentToteutustenTarjoajatOfKoulutus - toteutus.oid.get
     val newOppilaitoksetOfKoulutus =
-      newToteutustenTarjojatOfKoulutus.values.flatten.toSet.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten
-    val oppilaitoksetDeletedFromToteutus = tarjoajatDeletedFromToteutus.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten.toSet
+      newToteutustenTarjojatOfKoulutus.values.flatten.toSet.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia)
+    val oppilaitoksetDeletedFromToteutus = tarjoajatDeletedFromToteutus.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).toSet
     oppilaitoksetDeletedFromToteutus diff newOppilaitoksetOfKoulutus
   }
 
   private def getTarjoajienOppilaitokset(toteutus:Toteutus): Set[OrganisaatioOid] =
-    toteutus.tarjoajat.map(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).flatten.toSet
+    toteutus.tarjoajat.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).toSet
 
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
@@ -270,7 +281,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     ))
   }
 
-  private def validateHakukohdeIntegrityIfDeletingToteutus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, toteutusOid: ToteutusOid) = {
+  private def validateHakukohdeIntegrityIfDeletingToteutus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, toteutusOid: ToteutusOid): Unit = {
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
         HakukohdeDAO.listByToteutusOid(toteutusOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
@@ -327,7 +338,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   private def insertAmmattinimikkeet(toteutus: Toteutus)(implicit authenticated: Authenticated) =
     keywordService.insert(Ammattinimike, toteutus.metadata.map(_.ammattinimikkeet).getOrElse(Seq()))
 
-  def getOidsByTarjoajat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated) =
+  def getOidsByTarjoajat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ToteutusOid] =
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
     }
