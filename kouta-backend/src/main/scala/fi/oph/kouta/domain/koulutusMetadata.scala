@@ -455,8 +455,6 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
     validateIfJulkaistu(tila, and(
       validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi"),
-      assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
-      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusNumero"),
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
     )),
   )
