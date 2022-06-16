@@ -80,6 +80,49 @@ package object koulutusMetadata {
       |                - amk
       |""".stripMargin
 
+  val AmmOpeErityisopeJaOpoKoulutusMetadataModel: String =
+    """    AmmOpeErityisopeJaOpoKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KorkeakouluMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm-ope-erityisope-ja-opo
+      |              enum:
+      |                - amm-ope-erityisope-ja-opo
+      |""".stripMargin
+
+  val KkOpintojaksoKoulutusMetadataModel: String =
+    """    KkOpintojaksoKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: kk-opintojakso
+      |              enum:
+      |                - kk-opintojakso
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
+      |            opintojenLaajuusyksikkoKoodiUri:
+      |              type: string
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusnumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
+      |""".stripMargin
+
   val AmmatillinenKoulutusMetadataModel: String =
     """    AmmatillinenKoulutusMetadata:
       |      allOf:
@@ -282,8 +325,8 @@ package object koulutusMetadata {
       |              example: 10
       |""".stripMargin
 
-  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
+  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel,
+    YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
     TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel)
 }
 
@@ -394,6 +437,29 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpe
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     assertEmpty(tutkintonimikeKoodiUrit, s"$path.tutkintonimikeKoodiUrit")
+  )
+}
+
+case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
+                                         kuvaus: Kielistetty = Map(),
+                                         lisatiedot: Seq[Lisatieto] = Seq(),
+                                         koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                         tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+                                         opintojenLaajuusKoodiUri: Option[String] = None,
+                                         opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                         opintojenLaajuusNumero: Option[Double] = None,
+                                         kuvauksenNimi: Kielistetty = Map(),
+                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
+    validateIfJulkaistu(tila, and(
+      assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
+      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero"),
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    )),
   )
 }
 

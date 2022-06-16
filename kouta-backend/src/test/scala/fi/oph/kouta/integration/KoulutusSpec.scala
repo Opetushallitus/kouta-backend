@@ -194,6 +194,19 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     put(KoulutusPath, koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession ,400)
   }
 
+  it should "succeed to store Kk-Opintojakso-koulutus as OPH user" in {
+    val oid = put(TestData.KkOpintojaksoKoulutus, ophSession)
+    get(oid, TestData.KkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid))))
+  }
+
+  it should "fail to store Kk-Opintojakso-koulutus as a non-OPH user" in {
+    put(KoulutusPath, bytes(koulutus)) {
+      withClue(body) {
+        status should equal(401)
+      }
+    }
+  }
+
   "Update koulutus" should "update koulutus" in {
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))

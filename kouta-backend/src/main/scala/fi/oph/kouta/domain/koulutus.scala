@@ -31,7 +31,8 @@ package object koulutus {
       |            'yo' (yliopisto),
       |            'lk' (lukio),
       |            'amk' (ammattikorkea),
-      |            'amm-ope-erityisope-ja-opo' (Ammatillinen opettaja-, erityisopettaja ja opinto-ohjaajakoulutus)
+      |            'amm-ope-erityisope-ja-opo' (Ammatillinen opettaja-, erityisopettaja ja opinto-ohjaajakoulutus),
+      |            'kk-opintojakso',
       |            'amm-tutkinnon-osa',
       |            'amm-osaamisala',
       |            'amm-muu',
@@ -46,6 +47,7 @@ package object koulutus {
       |            - yo
       |            - amk
       |            - amm-ope-erityisope-ja-opo
+      |            - kk-opintojakso
       |            - lk
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
@@ -112,6 +114,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/AmmattikorkeaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmOpeErityisopeJaOpoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/KkOpintojaksoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenMuuKoulutusMetadata'
       |            - $ref: '#/components/schemas/LukioKoulutusMetadata'
