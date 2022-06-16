@@ -35,20 +35,7 @@ package object valintaperuste {
       |        koulutustyyppi:
       |          type: string
       |          description: Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi?
-      |          enum:
-      |            - amm
-      |            - yo
-      |            - amk
-      |            - kk-opintojakso
-      |            - lk
-      |            - amm-tutkinnon-osa
-      |            - amm-osaamisala
-      |            - amm-muu
-      |            - tuva
-      |            - telma
-      |            - vapaa-sivistystyo-opistovuosi
-      |            - vapaa-sivistystyo-muu
-      |            - aikuisten-perusopetus
+      |          $ref: '#/components/schemas/Koulutustyyppi'
       |          example: amm
       |        hakutapaKoodiUri:
       |          type: string

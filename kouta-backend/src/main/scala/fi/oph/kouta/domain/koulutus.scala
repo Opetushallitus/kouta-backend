@@ -42,22 +42,7 @@ package object koulutus {
       |            'vapaa-sivistystyo-muu',
       |            'aikuisten-perusopetus',
       |            'muu'"
-      |          enum:
-      |            - amm
-      |            - yo
-      |            - amk
-      |            - amm-ope-erityisope-ja-opo
-      |            - kk-opintojakso
-      |            - lk
-      |            - amm-tutkinnon-osa
-      |            - amm-osaamisala
-      |            - amm-muu
-      |            - tuva
-      |            - telma
-      |            - vapaa-sivistystyo-opistovuosi
-      |            - vapaa-sivistystyo-muu
-      |            - aikuisten-perusopetus
-      |            - muu
+      |          $ref: '#/components/schemas/Koulutustyyppi'
       |          example: amm
       |        koulutuksetKoodiUri:
       |          type: array
