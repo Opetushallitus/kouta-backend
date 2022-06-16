@@ -87,7 +87,6 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
             case yoMetadata: YliopistoToteutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             case amkMetadata: AmmattikorkeakouluToteutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             case ammOpeErityisopeJaOpoToteutusMetadata: AmmOpeErityisopeJaOpoToteutusMetadata => Some(ammOpeErityisopeJaOpoToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-            case kkOpintojaksoMetadata: KkOpintojaksoToteutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           }
           case ammMetadata: AmmatillinenToteutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaToteutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -99,6 +98,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
           case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiToteutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata => Some(vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case aikuistenPerusopetusToteutusMetadata: AikuistenPerusopetusToteutusMetadata => Some(aikuistenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case kkOpintojaksoMetadata: KkOpintojaksoToteutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }
