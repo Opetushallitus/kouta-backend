@@ -39,6 +39,7 @@ package object valintaperuste {
       |            - amm
       |            - yo
       |            - amk
+      |            - kk-opintojakso
       |            - lk
       |            - amm-tutkinnon-osa
       |            - amm-osaamisala
@@ -88,6 +89,7 @@ package object valintaperuste {
       |            - $ref: '#/components/schemas/YliopistoValintaperusteMetadata'
       |            - $ref: '#/components/schemas/LukioValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
+      |            - $ref: '#/components/schemas/KkOpintojaksoValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaValintaperusteMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaValintaperusteMetadata'

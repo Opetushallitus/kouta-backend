@@ -278,6 +278,16 @@ case class AmmattikorkeakouluValintaperusteMetadata(tyyppi: Koulutustyyppi = Amk
                                                     isMuokkaajaOphVirkailija: Option[Boolean] = None)
     extends ValintaperusteMetadata
 
+case class KkOpintojaksoValintaperusteMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
+                                    valintatavat: Seq[Valintatapa],
+                                    kuvaus: Kielistetty = Map(),
+                                    hakukelpoisuus: Kielistetty = Map(),
+                                    lisatiedot: Kielistetty = Map(),
+                                    sisalto: Seq[Sisalto] = Seq(),
+                                    valintakokeidenYleiskuvaus: Kielistetty = Map(),
+                                    isMuokkaajaOphVirkailija: Option[Boolean] = None)
+  extends ValintaperusteMetadata
+
 case class AmmOpeErityisopeJaOpoValintaperusteMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
                                                        valintatavat: Seq[Valintatapa],
                                                        kuvaus: Kielistetty = Map(),

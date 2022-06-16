@@ -233,7 +233,7 @@ package object toteutusMetadata {
       |""".stripMargin
 
   val AmmOpeErityisopeJaOpoToteutusMetadataModel: String =
-    """    AmmattikorkeaToteutusMetadata:
+    """    AmmOpeErityisopeJaOpoToteutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
       |        - type: object
