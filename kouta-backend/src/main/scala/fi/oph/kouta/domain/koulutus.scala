@@ -212,7 +212,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
   override def validate(): IsValid = {
-    val koulutustyypitHavingKoulutusKoodiUrit = Set[Koulutustyyppi](Amm, AmmOsaamisala, Lk, AikuistenPerusopetus) ++ Koulutustyyppi.korkeakoulu
+    val koulutustyypitHavingKoulutusKoodiUrit = Set[Koulutustyyppi](Amm, AmmOsaamisala, Lk, AikuistenPerusopetus, Amk, Yo, AmmOpeErityisopeJaOpo)
 
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
