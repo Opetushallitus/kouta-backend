@@ -198,7 +198,6 @@ object TestData {
     koulutustyyppi = KkOpintojakso,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    koulutuksetKoodiUri = Seq("koulutus_000001#1"),
     metadata = Some(KkOpintojaksoKoulutusMetadata(
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
       opintojenLaajuusNumero = Some(10),
@@ -826,7 +825,6 @@ object TestData {
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"))),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-    ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     hakutermi = Some(Hakeutuminen),
     hakulomaketyyppi = Some(MuuHakulomake),
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),

@@ -224,7 +224,7 @@ class KoulutusServiceValidation(
       assertOpintojenLaajuusKoodiUri(metadata.opintojenLaajuusKoodiUri)
     )
 
-  // Oletus: koofiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
+  // Oletus: koodiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
   // mahdollisesti annettuihin versioihin.
   private def assertKoulutusKoodiUrit(koodiUriFilter: Seq[String], koulutus: Koulutus): IsValid = {
     assertTrue(koulutusKoodiClient.koulutusKoodiUritExist(koodiUriFilter, koulutus.koulutuksetKoodiUri),

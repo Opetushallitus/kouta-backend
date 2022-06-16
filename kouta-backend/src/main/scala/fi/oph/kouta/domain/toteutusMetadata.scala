@@ -762,6 +762,8 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
   extends KorkeakoulutusToteutusMetadata with TutkintoonJohtamatonToteutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
+    // Opintojaksolla ei ole ammattinimikkeitä
+    assertEmpty(ammattinimikkeet, s"$path.ammattinimikkeet"),
     validateIfJulkaistu(tila, and(
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
     ))

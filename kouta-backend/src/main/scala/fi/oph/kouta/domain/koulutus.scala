@@ -241,7 +241,6 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-
         validateIfTrueOrElse(koulutustyypitHavingKoulutusKoodiUrit.contains(koulutustyyppi),
           and(
             assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri"),
@@ -250,7 +249,6 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           ),
           assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
         ),
-
         validateIfTrueOrElse(koulutustyyppi == Amm || koulutustyyppi == AmmOsaamisala,
           assertNotOptional(ePerusteId, "ePerusteId"),
           assertNotDefined(ePerusteId, "ePerusteId")
