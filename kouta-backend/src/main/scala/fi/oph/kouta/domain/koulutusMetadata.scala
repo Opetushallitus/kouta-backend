@@ -58,7 +58,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: yo
@@ -72,7 +72,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amk
@@ -86,7 +86,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm-ope-erityisope-ja-opo
@@ -100,7 +100,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: kk-opintojakso
@@ -129,7 +129,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm
@@ -143,7 +143,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm-tutkinnon-osa
@@ -163,7 +163,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm
@@ -181,7 +181,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm-muu
@@ -210,7 +210,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: lk
@@ -235,7 +235,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: tuva
@@ -257,7 +257,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: telma
@@ -279,7 +279,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: vapaa-sivistystyo-opistovuosi
@@ -305,7 +305,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: aikuisten-perusopetus
@@ -444,18 +444,17 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          kuvaus: Kielistetty = Map(),
                                          lisatiedot: Seq[Lisatieto] = Seq(),
                                          koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                         tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                         opintojenLaajuusKoodiUri: Option[String] = None,
-                                         opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                          opintojenLaajuusNumero: Option[Double] = None,
+                                         opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                          kuvauksenNimi: Kielistetty = Map(),
-                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata {
+                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
     validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
     validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi"),
       assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
       assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero"),
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
