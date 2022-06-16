@@ -1,7 +1,5 @@
 package fi.oph.kouta.service
 
-import com.hubspot.jinjava.lib.filter.ListFilter
-
 import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoodistoKaannosClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
