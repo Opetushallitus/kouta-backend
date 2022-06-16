@@ -198,7 +198,7 @@ package object koulutusMetadata {
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
       |              example: opintojenlaajuusyksikko_6#1
-      |            opintojenLaajuusnumero:
+      |            opintojenLaajuusNumero:
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
@@ -319,7 +319,7 @@ package object koulutusMetadata {
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
       |              example: opintojenlaajuusyksikko_6#1
-      |            opintojenLaajuusnumero:
+      |            opintojenLaajuusNumero:
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
@@ -398,11 +398,11 @@ case class AmmatillinenMuuKoulutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusNumero")),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
     validateIfJulkaistu(tila, and(
       assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
-      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero"),
+      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusNumero"),
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
     )),
   )
@@ -451,12 +451,12 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusNumero")),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
     validateIfJulkaistu(tila, and(
       validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi"),
       assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
-      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero"),
+      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusNumero"),
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
     )),
   )
@@ -570,12 +570,12 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
     // Aikuisten perusopetuksella ei ole lisätiedot-kenttää lomakkeessa
     assertEmpty(lisatiedot, path),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusNumero")),
     validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
     validateIfJulkaistu(tila, and(
-      // opintojenLaajuusYksikkoKoodiUri ja opintojenLaajuusnumero ovat pakollisia kenttiä Aikuisten perusopetukselle
+      // opintojenLaajuusYksikkoKoodiUri ja opintojenLaajuusNumero ovat pakollisia kenttiä Aikuisten perusopetukselle
       assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
-      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero"),
+      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusNumero"),
       // Kuvaus on pakollinen kenttä Aikuisten perusopetukselle
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
       validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")
