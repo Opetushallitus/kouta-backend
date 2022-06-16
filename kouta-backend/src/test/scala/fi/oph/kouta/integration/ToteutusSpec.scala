@@ -711,6 +711,15 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
   }
 
+  it should "create, get and update kk-opintojakson toteutus" in {
+    val kkOpintojaksoKoulutusOid = put(TestData.KkOpintojaksoKoulutus.copy(tila = Julkaistu), ophSession)
+    val kkOpintojaksoToteutus = TestData.JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(kkOpintojaksoKoulutusOid), tila = Tallennettu)
+    val oid = put(kkOpintojaksoToteutus)
+    val lastModified = get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
   it should "pass legal state changes" in {
     val koulutusOid = put(koulutus, ophSession)
     val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
