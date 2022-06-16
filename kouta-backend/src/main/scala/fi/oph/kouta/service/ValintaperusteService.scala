@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{AikuistenPerusopetusValintaperusteMetadata, AmmOpeErityisopeJaOpoValintaperusteMetadata, AmmatillinenMuuValintaperusteMetadata, AmmatillinenOsaamisalaValintaperusteMetadata, AmmatillinenTutkinnonOsaValintaperusteMetadata, AmmatillinenValintaperusteMetadata, AmmattikorkeakouluValintaperusteMetadata, HakukohdeListItem, Julkaisutila, KkOpintojaksoValintaperusteMetadata, Koulutustyyppi, LukioValintaperusteMetadata, MuuValintaperusteMetadata, Poistettu, TelmaValintaperusteMetadata, TilaFilter, TutkintokoulutukseenValmentavaValintaperusteMetadata, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchResult, VapaaSivistystyoMuuValintaperusteMetadata, VapaaSivistystyoOpistovuosiValintaperusteMetadata, YliopistoValintaperusteMetadata}
+import fi.oph.kouta.domain.{ GenericValintaperusteMetadata, HakukohdeListItem, Julkaisutila, Koulutustyyppi, Poistettu, TilaFilter, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
@@ -53,21 +53,7 @@ class ValintaperusteService(
 
     valintaperuste.metadata match {
       case Some(metadata) => metadata match {
-        case ammValintaperusteMetadata:  AmmatillinenValintaperusteMetadata => Some(ammValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case lukioValintaperusteMetadata: LukioValintaperusteMetadata => Some(lukioValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case yoValintaperusteMetadata: YliopistoValintaperusteMetadata => Some(yoValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case amkValintaperusteMetadata: AmmattikorkeakouluValintaperusteMetadata => Some(amkValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case kkOpintojaksoValintaperusteMetadata: KkOpintojaksoValintaperusteMetadata => Some(kkOpintojaksoValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammTutkinnonOsaValintaperusteMetadata: AmmatillinenTutkinnonOsaValintaperusteMetadata => Some(ammTutkinnonOsaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammOsaamisalaValintaperusteMetadata: AmmatillinenOsaamisalaValintaperusteMetadata => Some(ammOsaamisalaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case tuvaValintaperusteMetadata: TutkintokoulutukseenValmentavaValintaperusteMetadata => Some(tuvaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case telmaValintaperusteMetadata: TelmaValintaperusteMetadata  => Some(telmaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammatillinenMuuValintaperusteMetadata: AmmatillinenMuuValintaperusteMetadata => Some(ammatillinenMuuValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case vapaaSivistystyoOpistovuosiValintaperusteMetadata: VapaaSivistystyoOpistovuosiValintaperusteMetadata => Some(vapaaSivistystyoOpistovuosiValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case vapaaSivistystyoMuuValintaperusteMetadata: VapaaSivistystyoMuuValintaperusteMetadata => Some(vapaaSivistystyoMuuValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammOpeErityisopeJaOpoValintaperusteMetadata: AmmOpeErityisopeJaOpoValintaperusteMetadata => Some(ammOpeErityisopeJaOpoValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case aikuistenPerusopetusValintaperusteMetadata: AikuistenPerusopetusValintaperusteMetadata => Some(aikuistenPerusopetusValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case muuValintaperusteMetadata: MuuValintaperusteMetadata => Some(muuValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+        case valintaperusteMetadata: GenericValintaperusteMetadata => Some(valintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
       }
       case None => None
     }

@@ -7,21 +7,21 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
 
   def values =
     List(
+      AikuistenPerusopetus,
+      Amk,
       Amm,
+      AmmMuu,
+      AmmOpeErityisopeJaOpo,
+      AmmOsaamisala,
+      AmmTutkinnonOsa,
+      KkOpintojakso,
       Lk,
       Muu,
-      Yo,
-      Amk,
-      Tuva,
       Telma,
-      AmmTutkinnonOsa,
-      AmmOsaamisala,
-      AmmMuu,
-      VapaaSivistystyoOpistovuosi,
+      Tuva,
       VapaaSivistystyoMuu,
-      AmmOpeErityisopeJaOpo,
-      AikuistenPerusopetus,
-      KkOpintojakso,
+      VapaaSivistystyoOpistovuosi,
+      Yo
     )
 
   def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu)
@@ -164,6 +164,8 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     ), //Muut oppilaitokset
     "oppilaitostyyppi_XX#1" -> Seq(Muu) //Ei tiedossa (oppilaitostyyppi)
   )
+
+  def valuesToSwaggerEnum(padStr: String = "      |        "): String = values.map(padStr + "- " + _.toString + "\n").mkString
 }
 
 case object Amm                         extends Koulutustyyppi { val name = "amm"                           }
