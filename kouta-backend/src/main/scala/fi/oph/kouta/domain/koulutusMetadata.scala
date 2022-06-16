@@ -430,7 +430,6 @@ case class TelmaKoulutusMetadata(tyyppi: Koulutustyyppi = Telma,
 trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata {
   val kuvaus: Kielistetty
   val linkkiEPerusteisiin: Kielistetty
-  val opintojenLaajuusKoodiUri: Option[String]
   val koulutusalaKoodiUrit: Seq[String]
 }
 
@@ -448,7 +447,8 @@ case class VapaaSivistystyoMuuKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                        kuvaus: Kielistetty = Map(),
                                                        linkkiEPerusteisiin: Kielistetty = Map(),
                                                        koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                                       opintojenLaajuusKoodiUri: Option[String] = None,
+                                                       opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                                       opintojenLaajuusNumero: Option[Double] = None,
                                                        isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                       ) extends VapaaSivistystyoKoulutusMetadata
 
