@@ -163,7 +163,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   private def getAuthorizationRulesForUpdate(toteutusWithTime: Option[(Toteutus, Instant)], newToteutus: Toteutus): AuthorizationRules = {
     toteutusWithTime match {
-      case None => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+      case None => throw EntityNotFoundException(s"Päivitettävää toteutusta ei löytynyt")
       case Some((oldToteutus, _)) =>
         if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldToteutus.tila, newToteutus.tila)) {
           AuthorizationRules(Seq(Role.Paakayttaja))

@@ -9,15 +9,14 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
-import java.time.{Duration, Instant, LocalDate, LocalDateTime, ZoneOffset}
-import java.time.temporal.{ChronoUnit, TemporalUnit}
-import java.util.Calendar
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
@@ -61,7 +60,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       readRules)
   }
   def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
-    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
+    val rules = if (MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
       AuthorizationRules(roleEntity.createRoles)
@@ -75,13 +74,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   }
 
   def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val rules = if (haku.hakutapaKoodiUri.nonEmpty && MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri.get)) {
-      AuthorizationRules(Seq(Role.Paakayttaja))
-    } else {
-      AuthorizationRules(roleEntity.createRoles)
-    }
+    val oldHaku = HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat())
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(haku, oldHaku)
 
-    authorizeUpdate(HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat()), haku, rules) { (oldHaku, h) =>
+    authorizeUpdate(oldHaku, haku, rules) { (oldHaku, h) =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
       val enrichedHaku = h.copy(metadata = enrichedMetadata)
       withValidation(enrichedHaku, Some(oldHaku)) {
@@ -92,7 +88,19 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     }.nonEmpty
   }
 
-  private def validateHakukohdeIntegrityIfDeletingHaku(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, hakuOid: HakuOid) = {
+  private def getAuthorizationRulesForUpdate(newHaku: Haku, oldHakuWithTime: Option[(Haku, Instant)]) = {
+    oldHakuWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää hakua ei löytynyt")
+      case Some((oldHaku, _)) =>
+        if (MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri) || Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldHaku.tila, newHaku.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        } else {
+          AuthorizationRules(roleEntity.createRoles)
+        }
+    }
+  }
+
+  private def validateHakukohdeIntegrityIfDeletingHaku(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, hakuOid: HakuOid): Unit = {
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
         HakukohdeDAO.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
@@ -162,12 +170,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     def filterHakukohteet(haku: Option[HakuSearchItemFromIndex]): Option[HakuSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => haku
-        case organisaatioOids => {
+        case organisaatioOids =>
           haku.flatMap(hakuItem => {
             val oidStrings = organisaatioOids.map(_.toString())
             Some(hakuItem.copy(hakukohteet = hakuItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
           })
-        }
       }
 
     filterHakukohteet(KoutaIndexClient.searchHaut(Seq(hakuOid), params).result.headOption)

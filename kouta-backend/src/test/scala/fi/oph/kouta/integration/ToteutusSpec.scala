@@ -411,10 +411,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, toteutus(oid, koulutusOid))
     val updatedToteutus = toteutus(oid, koulutusOid, Tallennettu)
     update(updatedToteutus, lastModified, expectUpdate = true, ophSession)
-    get(
-      oid,
-      toteutus(oid, koulutusOid, Tallennettu)
-        .copy(muokkaaja = OphUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(oid,
+        toteutus(oid, koulutusOid, Tallennettu).copy(muokkaaja = OphUserOid,
+          metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
   it should "not allow non oph user to update from julkaistu to tallennettu" in {

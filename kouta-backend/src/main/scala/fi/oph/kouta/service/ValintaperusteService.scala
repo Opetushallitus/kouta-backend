@@ -3,12 +3,12 @@ package fi.oph.kouta.service
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{AikuistenPerusopetusValintaperusteMetadata, AmmOpeErityisopeJaOpoValintaperusteMetadata, AmmatillinenMuuValintaperusteMetadata, AmmatillinenOsaamisalaValintaperusteMetadata, AmmatillinenTutkinnonOsaValintaperusteMetadata, AmmatillinenValintaperusteMetadata, AmmattikorkeakouluValintaperusteMetadata, HakuEnrichedData, HakukohdeListItem, Julkaisutila, Koulutustyyppi, LukioValintaperusteMetadata, MuuValintaperusteMetadata, Poistettu, TelmaValintaperusteMetadata, TilaFilter, TutkintokoulutukseenValmentavaValintaperusteMetadata, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchResult, VapaaSivistystyoMuuValintaperusteMetadata, VapaaSivistystyoOpistovuosiValintaperusteMetadata, YliopistoValintaperusteMetadata}
+import fi.oph.kouta.domain.{AikuistenPerusopetusValintaperusteMetadata, AmmOpeErityisopeJaOpoValintaperusteMetadata, AmmatillinenMuuValintaperusteMetadata, AmmatillinenOsaamisalaValintaperusteMetadata, AmmatillinenTutkinnonOsaValintaperusteMetadata, AmmatillinenValintaperusteMetadata, AmmattikorkeakouluValintaperusteMetadata, HakukohdeListItem, Julkaisutila, Koulutustyyppi, LukioValintaperusteMetadata, MuuValintaperusteMetadata, Poistettu, TelmaValintaperusteMetadata, TilaFilter, TutkintokoulutukseenValmentavaValintaperusteMetadata, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchResult, VapaaSivistystyoMuuValintaperusteMetadata, VapaaSivistystyoOpistovuosiValintaperusteMetadata, YliopistoValintaperusteMetadata}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -84,7 +84,10 @@ class ValintaperusteService(
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
-    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat()), valintaperuste) { (oldValintaperuste, v) =>
+    val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(oldValintaPerusteWithTime, valintaperuste)
+
+    authorizeUpdate(oldValintaPerusteWithTime, valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
       withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
@@ -95,7 +98,20 @@ class ValintaperusteService(
     }.nonEmpty
   }
 
-  private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID) =
+  private def getAuthorizationRulesForUpdate(oldValintaperusteWithTime: Option[(Valintaperuste, Instant)], newValintaperuste: Valintaperuste) = {
+    oldValintaperusteWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää valintaperustetta ei löytynyt")
+      case Some((oldValintaperuste, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldValintaperuste.tila, newValintaperuste.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        }
+        else {
+          AuthorizationRules(roleEntity.updateRoles)
+        }
+    }
+  }
+
+  private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID): Unit =
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
         HakukohdeDAO.listByValintaperusteId(valintaperusteId, TilaFilter.onlyOlemassaolevat()).isEmpty,

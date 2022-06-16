@@ -3,7 +3,6 @@ package fi.oph.kouta.domain
 import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.service.HakukohdeService
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity}
@@ -378,7 +377,7 @@ package object hakukohde {
       |          $ref: '#/components/schemas/Nimi'
       |""".stripMargin
 
-  def models = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
+  def models: Seq[String] = List(HakukohdeListItemModel, HakukohdeModel, HakukohdeMetadataModel, LiiteModel, LiitteenToimitusosoiteModel,
     PainotettuOppiaine, OppiaineKoodiUrit, HakukohteenLinjaModel, EnrichedDataModel)
 }
 
