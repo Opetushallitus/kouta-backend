@@ -163,16 +163,21 @@ class KoulutusService(
   }
 
   private def getAuthorizationRulesForUpdate(newKoulutus: Koulutus, oldKoulutus: Koulutus) = {
-    oldKoulutus.koulutustyyppi match {
-      case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
-        List(AuthorizationRules(Seq(Role.Paakayttaja)))
-      case _ =>
-        val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
-        val newTarjoajat = newKoulutus.tarjoajat.toSet
-        val oldTarjoajat = oldKoulutus.tarjoajat.toSet
-        val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-        val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
-        (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+    if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldKoulutus.tila, newKoulutus.tila)) {
+      List(AuthorizationRules(Seq(Role.Paakayttaja)))
+    }
+    else {
+      oldKoulutus.koulutustyyppi match {
+        case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
+          List(AuthorizationRules(Seq(Role.Paakayttaja)))
+        case _ =>
+          val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
+          val newTarjoajat = newKoulutus.tarjoajat.toSet
+          val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+          val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+          val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
+          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+      }
     }
   }
 
