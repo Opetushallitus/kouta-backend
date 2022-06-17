@@ -151,17 +151,7 @@ class KoulutusService(
             newKoulutus.tarjoajat.toSet diff oldKoulutus.tarjoajat.toSet
           )
         }
-        val rules: List[AuthorizationRules] = oldKoulutus.koulutustyyppi match {
-          case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
-            List(AuthorizationRules(Seq(Role.Paakayttaja)))
-          case _ =>
-            val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
-            val newTarjoajat             = newKoulutus.tarjoajat.toSet
-            val oldTarjoajat             = oldKoulutus.tarjoajat.toSet
-            val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-            val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
-            (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
-        }
+        val rules: List[AuthorizationRules] = getAuthorizationRulesForUpdate(newKoulutus, oldKoulutus)
         rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
           koulutusServiceValidation.withValidation(enrichedKoulutusWithFixedDefaultValues, Some(oldKoulutus)) {
@@ -169,6 +159,20 @@ class KoulutusService(
           }
         }.nonEmpty
       case _ => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
+    }
+  }
+
+  private def getAuthorizationRulesForUpdate(newKoulutus: Koulutus, oldKoulutus: Koulutus) = {
+    oldKoulutus.koulutustyyppi match {
+      case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
+        List(AuthorizationRules(Seq(Role.Paakayttaja)))
+      case _ =>
+        val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
+        val newTarjoajat = newKoulutus.tarjoajat.toSet
+        val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+        val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+        val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
+        (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
     }
   }
 
