@@ -435,6 +435,33 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(nonExistentSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId))))
   }
 
+  it should "allow oph user to update from julkaistu to tallennettu" in {
+    val oid = put(yoKoulutus)
+    val lastModified = get(
+      oid,
+      yoKoulutus.copy(
+        oid = Some(KoulutusOid(oid)),
+        muokkaaja = TestUserOid,
+        metadata = Some(yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(false)))))
+    val updatedKoulutus = yoKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu)
+    update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
+    get(oid,
+      updatedKoulutus.copy(muokkaaja = OphUserOid,
+        metadata = Some(yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
+  }
+
+  it should "not allow non oph user to update from julkaistu to tallennettu" in {
+    val oid = put(yoKoulutus)
+    val lastModified = get(
+      oid,
+      yoKoulutus.copy(
+        oid = Some(KoulutusOid(oid)),
+        muokkaaja = TestUserOid,
+        metadata = Some(yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(false)))))
+    val updatedKoulutus = yoKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu)
+    update(updatedKoulutus, lastModified, crudSessions(koulutus.organisaatioOid), 403)
+  }
+
   private def createKoulutusWithSorakuvaus = {
     val sorakuvausId = put(sorakuvaus)
     val koulutusOid = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
