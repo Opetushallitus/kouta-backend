@@ -647,7 +647,8 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val tallennettuToteutusCopy = toteutus(koulutusOid).copy(
       oid = toteutus1CopyOid,
       tila = Tallennettu,
-      tarjoajat = List(AmmOid))
+      tarjoajat = List(AmmOid),
+      koulutuksetKoodiUri = Seq("koulutus_371101#1"))
 
     get(hakukohde1CopyOid.get.toString, getIds(tallennettuHakukohdeCopy))
     get(toteutus1CopyOid.get.toString, tallennettuToteutusCopy)
@@ -656,7 +657,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
 
     val toteutus2CopyOid = copyResponse.last.created.toteutusOid.get.toString
     get(hakukohde2CopyOid, getIds(tallennettuHakukohdeCopy.copy(oid = Some(HakukohdeOid(hakukohde2CopyOid)), toteutusOid = ToteutusOid(toteutus2CopyOid))))
-    get(toteutus2CopyOid, tallennettuToteutusCopy.copy(oid = Some(ToteutusOid(toteutus2CopyOid))))
+    get(toteutus2CopyOid, tallennettuToteutusCopy.copy(oid = Some(ToteutusOid(toteutus2CopyOid)), koulutuksetKoodiUri = Seq("koulutus_371101#1")))
   }
 
   it should "fail to copy non-existing hakukohde" in {

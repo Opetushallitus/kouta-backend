@@ -233,6 +233,7 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                     teemakuva: Option[String] = None,
                     modified: Option[Modified] = None,
                     koulutusMetadata: Option[KoulutusMetadata] = None,
+                    koulutuksetKoodiUri: Seq[String] = Seq(),
                     _enrichedData: Option[ToteutusEnrichedData] = None
                    )
   extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
