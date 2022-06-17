@@ -5,11 +5,11 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
-import fi.oph.kouta.mocks.{KoodistoServiceMock, MockAuditLogger}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.{ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
+import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.Serialization.read
 
@@ -19,7 +19,7 @@ import scala.util.Success
 
 class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture with UploadFixture {
 
-  override val roleEntities = Seq(Role.Koulutus)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Koulutus)
 
   val ophKoulutus: Koulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
 
@@ -294,7 +294,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
-    update(koulutus(oid, Arkistoitu), lastModified, true, ophSession)
+    update(koulutus(oid, Arkistoitu), lastModified, expectUpdate = true, ophSession)
     post(KoulutusPath, bytes(koulutus(oid)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       status should equal (409)
     }
@@ -312,7 +312,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
         lisatiedot = metadata.lisatiedot.map(_.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
       )))
-    update(uusiKoulutus, lastModified, true, ophSession)
+    update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, uusiKoulutus)
   }
 
@@ -344,7 +344,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(GrandChildOid, EvilGrandChildOid))
-    update(uusiKoulutus, lastModified, true, ophSession)
+    update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, uusiKoulutus) should not equal lastModified
   }
 
