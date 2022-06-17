@@ -117,7 +117,8 @@ trait ToteutusExtractors extends ExtractorBase {
     teemakuva = r.nextStringOption(),
     sorakuvausId = r.nextStringOption().map(UUID.fromString),
     modified = Some(timeStampToModified(r.nextTimestamp())),
-    koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata])
+    koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
+    koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
   ))
 
   implicit val getToteutusListItemResult: GetResult[ToteutusListItem] =

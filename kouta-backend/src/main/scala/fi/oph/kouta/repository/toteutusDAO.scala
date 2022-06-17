@@ -192,9 +192,10 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               t.teemakuva,
               t.sorakuvaus_id,
               m.modified,
-              k.metadata
+              k.metadata,
+              k.koulutukset_koodi_uri
        from toteutukset t
-                inner join (select oid, metadata from koulutukset) k on k.oid = t.koulutus_oid
+                inner join (select oid, koulutukset_koodi_uri, metadata from koulutukset) k on k.oid = t.koulutus_oid
                 inner join (
            select t.oid oid,
                   greatest(
