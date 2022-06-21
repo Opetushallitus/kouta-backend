@@ -1,9 +1,5 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.domain
-
-import java.time.{Instant, LocalDateTime}
-import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
@@ -12,6 +8,9 @@ import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.timeStampToModified
 import org.json4s.jackson.Serialization.read
 import slick.jdbc._
+
+import java.time.{Instant, LocalDateTime}
+import java.util.UUID
 
 trait ExtractorBase extends KoutaJsonFormats {
   case class Tarjoaja(oid: GenericOid, tarjoajaOid: OrganisaatioOid)
@@ -152,6 +151,7 @@ trait HakuExtractors extends ExtractorBase {
     hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     ajastettuJulkaisu = r.nextTimestampOption().map(_.toLocalDateTime),
+    ajastettuHakukohteidenArkistointi = r.nextTimestampOption().map(_.toLocalDateTime),
     kohdejoukkoKoodiUri = r.nextStringOption(),
     kohdejoukonTarkenneKoodiUri = r.nextStringOption(),
     hakulomaketyyppi = r.nextStringOption().map(Hakulomaketyyppi.withName),

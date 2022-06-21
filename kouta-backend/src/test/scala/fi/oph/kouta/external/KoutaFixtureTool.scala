@@ -1,10 +1,6 @@
 package fi.oph.kouta.external
 
-import java.time.temporal.{ChronoUnit, TemporalField}
-import java.time.{LocalDate, LocalDateTime, LocalTime}
-import java.util.UUID
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestDataGenerator.hakukohde
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -12,6 +8,9 @@ import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.validation.{NoErrors, Validatable}
 import org.json4s.jackson.Serialization.{read, write}
 
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.util.UUID
 import scala.collection.JavaConverters._
 
 object KoutaFixtureTool extends KoutaJsonFormats {
@@ -160,6 +159,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val ValintakokeetKey = "valintakokeet"
   val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
+  val AjastettuHakukohteidenArkistointiKey = "ajastettuHakukohteidenArkistointi"
   val MetadataKey = "metadata"
   val SorakuvausIdKey = "sorakuvausId"
   val OppilaitosOidKey = "oppilaitosOid"
@@ -248,6 +248,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakukohteenLiittamisenTakarajaKey -> formatLocalDateTime(startTime1),
     HakukohteenMuokkaamisenTakarajaKey -> formatLocalDateTime(endTime1),
     AjastettuJulkaisuKey -> formatLocalDateTime(time3),
+    AjastettuHakukohteidenArkistointiKey -> formatLocalDateTime(endTime1),
     HakuaikaAlkaaKey -> formatLocalDateTime(startTime1),
     HakuaikaPaattyyKey -> formatLocalDateTime(endTime1),
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
@@ -459,6 +460,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(parseLocalDateTime(params(HakukohteenLiittamisenTakarajaKey))),
       Some(parseLocalDateTime(params(HakukohteenMuokkaamisenTakarajaKey))),
       params.get(AjastettuJulkaisuKey).map(parseLocalDateTime),
+      params.get(AjastettuHakukohteidenArkistointiKey).map(parseLocalDateTime),
       Some(params(KohdejoukkoKoodiUriKey)),
       params.get(KohdejoukonTarkenneKoodiUriKey).flatMap(Option(_)),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
