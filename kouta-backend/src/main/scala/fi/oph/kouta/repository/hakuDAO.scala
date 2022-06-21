@@ -16,7 +16,7 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def getUpdateActions(haku: Haku): DBIO[Option[Haku]]
 
   def get(oid: HakuOid, tilaFilter: TilaFilter): Option[(Haku, Instant)]
-  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[HakuListItem]
+  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishaut: Boolean): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem]
 }
 
@@ -50,9 +50,9 @@ object HakuDAO extends HakuDAO with HakuSQL {
       m <- selectLastModified(haku.oid.get)
     } yield optionWhen(x + y > 0)(haku.withModified(m.get))
 
-  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[HakuListItem] = organisaatioOids match {
+  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishaut: Boolean): Seq[HakuListItem] = organisaatioOids match {
     case Nil => Seq()
-    case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids, tilaFilter))
+    case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids, tilaFilter, yhteishaut))
   }
 
 
@@ -226,9 +226,18 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
            group by ha.oid
          ) m on m.oid = ha.oid"""
 
-  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[HakuListItem]] = {
+  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishaut: Boolean): DBIO[Vector[HakuListItem]] = {
+    def includeYhteishaut: String = {
+      if(yhteishaut) {
+        ""
+      } else {
+        s"and hakutapa_koodi_uri NOT LIKE 'hakutapa_01%'"
+      }
+    }
+
     sql"""#$selectHakuListSql
           where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          #$includeYhteishaut
           #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakuListItem]
   }
 
