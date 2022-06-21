@@ -31,7 +31,8 @@ package object koulutus {
       |            'yo' (yliopisto),
       |            'lk' (lukio),
       |            'amk' (ammattikorkea),
-      |            'amm-ope-erityisope-ja-opo' (Ammatillinen opettaja-, erityisopettaja ja opinto-ohjaajakoulutus)
+      |            'amm-ope-erityisope-ja-opo' (Ammatillinen opettaja-, erityisopettaja ja opinto-ohjaajakoulutus),
+      |            'kk-opintojakso',
       |            'amm-tutkinnon-osa',
       |            'amm-osaamisala',
       |            'amm-muu',
@@ -41,21 +42,7 @@ package object koulutus {
       |            'vapaa-sivistystyo-muu',
       |            'aikuisten-perusopetus',
       |            'muu'"
-      |          enum:
-      |            - amm
-      |            - yo
-      |            - amk
-      |            - amm-ope-erityisope-ja-opo
-      |            - lk
-      |            - amm-tutkinnon-osa
-      |            - amm-osaamisala
-      |            - amm-muu
-      |            - tuva
-      |            - telma
-      |            - vapaa-sivistystyo-opistovuosi
-      |            - vapaa-sivistystyo-muu
-      |            - aikuisten-perusopetus
-      |            - muu
+      |          $ref: '#/components/schemas/Koulutustyyppi'
       |          example: amm
       |        koulutuksetKoodiUri:
       |          type: array
@@ -112,6 +99,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/AmmattikorkeaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmOpeErityisopeJaOpoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaKoulutusMetadata'
+      |            - $ref: '#/components/schemas/KkOpintojaksoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaKoulutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenMuuKoulutusMetadata'
       |            - $ref: '#/components/schemas/LukioKoulutusMetadata'
@@ -224,7 +212,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
   override def validate(): IsValid = {
-    val koulutustyypitHavingKoulutusKoodiUrit = Set[Koulutustyyppi](Amm, AmmOsaamisala, Lk, AikuistenPerusopetus) ++ Koulutustyyppi.korkeakoulu
+    val koulutustyypitHavingKoulutusKoodiUrit = Set[Koulutustyyppi](Amm, AmmOsaamisala, Lk, AikuistenPerusopetus, Amk, Yo, AmmOpeErityisopeJaOpo)
 
     and(super.validate(),
       validateOidList(tarjoajat, "tarjoajat"),
@@ -238,7 +226,6 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
         assertNotOptional(metadata, "metadata"),
         validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-
         validateIfTrueOrElse(koulutustyypitHavingKoulutusKoodiUrit.contains(koulutustyyppi),
           and(
             assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri"),
@@ -247,7 +234,6 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
           ),
           assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
         ),
-
         validateIfTrueOrElse(koulutustyyppi == Amm || koulutustyyppi == AmmOsaamisala,
           assertNotOptional(ePerusteId, "ePerusteId"),
           assertNotDefined(ePerusteId, "ePerusteId")

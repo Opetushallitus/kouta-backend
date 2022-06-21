@@ -35,19 +35,7 @@ package object valintaperuste {
       |        koulutustyyppi:
       |          type: string
       |          description: Minkä tyyppisille koulutuksille valintaperustekuvaus on tarkoitettu käytettäväksi?
-      |          enum:
-      |            - amm
-      |            - yo
-      |            - amk
-      |            - lk
-      |            - amm-tutkinnon-osa
-      |            - amm-osaamisala
-      |            - amm-muu
-      |            - tuva
-      |            - telma
-      |            - vapaa-sivistystyo-opistovuosi
-      |            - vapaa-sivistystyo-muu
-      |            - aikuisten-perusopetus
+      |          $ref: '#/components/schemas/Koulutustyyppi'
       |          example: amm
       |        hakutapaKoodiUri:
       |          type: string
@@ -84,20 +72,7 @@ package object valintaperuste {
       |            $ref: '#/components/schemas/Valintakoe'
       |        metadata:
       |          type: object
-      |          oneOf:
-      |            - $ref: '#/components/schemas/YliopistoValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/LukioValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/AmmattikorkeakouluValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/AmmatillinenValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaValintaperusteMetadata'
-      |            - $ref: '#/components/schemes/AmmatillinenMuuValintaperusteMetadataModel'
-      |            - $ref: '#/components/schemas/TutkintokoulutukseenValmentavaValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/TelmaValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/VapaaSivistystyoOpistovuosiValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/VapaaSivistystyoMuuValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/AikuistenPerusopetusValintaperusteMetadata'
-      |            - $ref: '#/components/schemas/MuuValintaperusteMetadata'
+      |          $ref: '#/components/schemas/ValintaperusteMetadata'
       |          example:
       |            tyyppi: amm
       |            valintatavat:
@@ -189,23 +164,25 @@ package object valintaperuste {
   def models = List(ValintaperusteModel, ValintaperusteListItemModel)
 }
 
-case class Valintaperuste(id: Option[UUID] = None,
-                          externalId: Option[String] = None,
-                          tila: Julkaisutila = Tallennettu,
-                          esikatselu: Boolean = false,
-                          koulutustyyppi: Koulutustyyppi,
-                          hakutapaKoodiUri: Option[String] = None,
-                          kohdejoukkoKoodiUri: Option[String] = None,
-                          nimi: Kielistetty = Map(),
-                          julkinen: Boolean = false,
-                          valintakokeet: Seq[Valintakoe] = Seq(),
-                          metadata: Option[ValintaperusteMetadata] = None,
-                          organisaatioOid: OrganisaatioOid,
-                          muokkaaja: UserOid,
-                          kielivalinta: Seq[Kieli] = Seq(),
-                          modified: Option[Modified],
-                          _enrichedData: Option[ValintaperusteEnrichedData] = None)
-  extends PerustiedotWithId[Valintaperuste] with AuthorizableMaybeJulkinen[Valintaperuste] {
+case class Valintaperuste(
+    id: Option[UUID] = None,
+    externalId: Option[String] = None,
+    tila: Julkaisutila = Tallennettu,
+    esikatselu: Boolean = false,
+    koulutustyyppi: Koulutustyyppi,
+    hakutapaKoodiUri: Option[String] = None,
+    kohdejoukkoKoodiUri: Option[String] = None,
+    nimi: Kielistetty = Map(),
+    julkinen: Boolean = false,
+    valintakokeet: Seq[Valintakoe] = Seq(),
+    metadata: Option[ValintaperusteMetadata] = None,
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    kielivalinta: Seq[Kieli] = Seq(),
+    modified: Option[Modified],
+    _enrichedData: Option[ValintaperusteEnrichedData] = None
+) extends PerustiedotWithId[Valintaperuste]
+    with AuthorizableMaybeJulkinen[Valintaperuste] {
 
   override def validate(): IsValid = and(
     super.validate(),
@@ -214,11 +191,17 @@ case class Valintaperuste(id: Option[UUID] = None,
     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
     validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
     validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
-    validateIfDefined[ValintaperusteMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)),
-    validateIfJulkaistu(tila, and(
-      assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
-    ))
+    validateIfDefined[ValintaperusteMetadata](
+      metadata,
+      m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)
+    ),
+    validateIfJulkaistu(
+      tila,
+      and(
+        assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
+        assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
+      )
+    )
   )
 
   override def validateOnJulkaisu(): IsValid =
@@ -233,13 +216,16 @@ case class Valintaperuste(id: Option[UUID] = None,
   def getEntityDescriptionAllative(): String = "valintaperusteelle"
 }
 
-case class ValintaperusteListItem(id: UUID,
-                                  nimi: Kielistetty,
-                                  tila: Julkaisutila,
-                                  organisaatioOid: OrganisaatioOid,
-                                  muokkaaja: UserOid,
-                                  modified: Modified) extends IdListItem
+case class ValintaperusteListItem(
+    id: UUID,
+    nimi: Kielistetty,
+    tila: Julkaisutila,
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified
+) extends IdListItem
 
 case class ValintaperusteEnrichedData(muokkaajanNimi: Option[String] = None)
 
-case class ExternalValintaperusteRequest(authenticated: Authenticated, valintaperuste: Valintaperuste) extends ExternalRequest
+case class ExternalValintaperusteRequest(authenticated: Authenticated, valintaperuste: Valintaperuste)
+    extends ExternalRequest

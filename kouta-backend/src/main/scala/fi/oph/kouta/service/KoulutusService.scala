@@ -68,6 +68,7 @@ class KoulutusService(
           case kkMetadata: KorkeakoulutusKoulutusMetadata => kkMetadata match {
             case yoMetadata: YliopistoKoulutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             case amkMetadata: AmmattikorkeakouluKoulutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             case ammOpeErityisopeOpoMetadata: AmmOpeErityisopeJaOpoKoulutusMetadata => Some(ammOpeErityisopeOpoMetadata.copy(
               isMuokkaajaOphVirkailija = Some(isOphVirkailija),
               opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60"),
@@ -89,6 +90,7 @@ class KoulutusService(
               case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
           case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata => Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }

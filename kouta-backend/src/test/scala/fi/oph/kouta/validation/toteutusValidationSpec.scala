@@ -3,6 +3,7 @@ package fi.oph.kouta.validation
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.validation.Validations._
 
@@ -27,6 +28,7 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
   val vapaaSivistystyoMuuMetadata = VapaaSivistystyoMuuToteutusMetatieto
   val vapaaSivistystyoOpistovuosiTo = VapaaSivistystyoOpistovuosiToteutus
   val vapaaSivistystyoMuuTo = VapaaSivistystyoMuuToteutus
+  val kkOpintojaksoTo = JulkaistuKkOpintojaksoToteutus
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(amm.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -285,8 +287,16 @@ class ToteutusValidationSpec extends BaseValidationSpec[Toteutus] {
     passesValidation(vapaaSivistystyoOpistovuosiTo)
   }
 
-    "Vapaa sivistystyö muu validation" should "pass valid vapaa sivistystyö muu toteutus" in {
+  "Vapaa sivistystyö muu validation" should "pass valid vapaa sivistystyö muu toteutus" in {
     passesValidation(vapaaSivistystyoOpistovuosiTo)
+  }
+
+  "Kk-opintojakso validation" should "pass valid kk-opintojakso toteutus" in {
+    passesValidation(kkOpintojaksoTo)
+  }
+
+  it should "fail kk-opintojakso validation with ammattinimikkeet" in {
+    failsValidation(kkOpintojaksoTo.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(ammattinimikkeet = List(Keyword(Fi, "nimike"))))), "metadata.ammattinimikkeet", notEmptyMsg)
   }
 }
 

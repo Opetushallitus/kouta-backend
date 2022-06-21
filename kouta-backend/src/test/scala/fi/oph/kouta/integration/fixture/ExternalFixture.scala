@@ -3,7 +3,7 @@ package fi.oph.kouta.integration.fixture
 import java.net.InetAddress
 import java.util.UUID
 import fi.oph.kouta.TestOids.{EvilCousin, EvilGrandChildOid, GrandChildOid, OphOid, OphUserOid, TestUserOid}
-import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, AmmatillinenValintaperusteMetadata, ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Hakukohde, Julkaistu, Julkaisutila, Koulutus, Sorakuvaus, Toteutus, Valintaperuste, YliopistoKoulutusMetadata}
+import fi.oph.kouta.domain.{AmmatillinenToteutusMetadata, ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, GenericValintaperusteMetadata, Haku, Hakukohde, Julkaistu, Julkaisutila, Koulutus, Sorakuvaus, Toteutus, Valintaperuste, YliopistoKoulutusMetadata}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, ToteutusOid, UserOid}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.security.{Authority, ExternalSession, Role}
@@ -69,7 +69,7 @@ trait ExternalFixture extends KoutaIntegrationSpec with KoulutusFixture with Tot
   def createValintaperuste(id: String = "", muokkaaja: Option[UserOid] = None, tila: Option[Julkaisutila] = None, isMuokkaajaOphVirkailija: Option[Boolean] = None): Valintaperuste =
     valintaperuste.copy(id = if (id.isEmpty) None else Some(UUID.fromString(id)), muokkaaja = muokkaaja.getOrElse(OphUserOid), tila = tila.getOrElse(Julkaistu),
       metadata = Some(valintaperuste.metadata.get
-        .asInstanceOf[AmmatillinenValintaperusteMetadata].copy(isMuokkaajaOphVirkailija = Some(isMuokkaajaOphVirkailija.getOrElse(true)))))
+        .asInstanceOf[GenericValintaperusteMetadata].copy(isMuokkaajaOphVirkailija = Some(isMuokkaajaOphVirkailija.getOrElse(true)))))
 
   def createSorakuvaus(id: String = "", muokkaaja: Option[UserOid] = None, tila: Option[Julkaisutila] = None, isMuokkaajaOphVirkailija: Option[Boolean] = None): Sorakuvaus =
     sorakuvaus.copy(id = if (id.isEmpty) None else Some(UUID.fromString(id)), muokkaaja = muokkaaja.getOrElse(OphUserOid), tila = tila.getOrElse(Julkaistu),
