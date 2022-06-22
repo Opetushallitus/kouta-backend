@@ -138,6 +138,13 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |          required: false
       |          default: true
       |          description: Listataanko myös arkistoidut haut
+      |        - in: query
+      |          name: yhteishaut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          default: true
+      |          description: Listataanko myös yhteishaut
       |      responses:
       |        '200':
       |          description: Ok
@@ -152,9 +159,12 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    (params.get("organisaatioOid").map(OrganisaatioOid), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
-      case (None, _) => NotFound()
-      case (Some(oid), myosArkistoidut) => Ok(hakuService.list(oid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
+    (params.get("organisaatioOid").map(OrganisaatioOid),
+      params.getOrElse("myosArkistoidut", "true").toBoolean,
+      params.getOrElse("yhteishaut", "true").toBoolean) match {
+      case (None, _, _) => NotFound()
+      case (Some(oid), myosArkistoidut, yhteishaut) =>
+        Ok(hakuService.list(oid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut), yhteishaut))
     }
   }
 

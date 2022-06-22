@@ -109,9 +109,9 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     )
   }
 
-  def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakuListItem] =
+  def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter, yhteishaut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules)(
-      oids => HakuDAO.listByAllowedOrganisaatiot(oids, tilaFilter))
+      oids => HakuDAO.listByAllowedOrganisaatiot(oids, tilaFilter, yhteishaut))
 
   def listHakukohteet(hakuOid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter))
@@ -160,7 +160,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         }
       )
 
-    list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
+    list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true), true).map(_.oid) match {
       case Nil      => HakuSearchResult()
       case hakuOids => assocHakukohdeCounts(KoutaIndexClient.searchHaut(hakuOids, params))
     }
