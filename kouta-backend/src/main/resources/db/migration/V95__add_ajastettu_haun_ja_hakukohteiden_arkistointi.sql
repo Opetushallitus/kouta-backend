@@ -1,7 +1,7 @@
 alter table haut
-    add column ajastettu_haun_ja_hakukohteiden_arkistointi timestamp without time zone;
+    add column if not exists ajastettu_haun_ja_hakukohteiden_arkistointi timestamp without time zone;
 alter table haut_history
-    add column ajastettu_haun_ja_hakukohteiden_arkistointi timestamp without time zone;
+    add column if not exists ajastettu_haun_ja_hakukohteiden_arkistointi timestamp without time zone;
 
 COMMENT ON COLUMN haut.ajastettu_haun_ja_hakukohteiden_arkistointi IS 'Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet arkistoidaan automaattisesti Opintopolussa. Jos tyhjä, arkistoidaan automaattisesti 10 kk hakuajan päättymisen jälkeen.';
 
