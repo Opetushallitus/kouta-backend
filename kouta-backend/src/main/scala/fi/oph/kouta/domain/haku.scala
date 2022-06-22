@@ -55,7 +55,7 @@ package object haku {
       |          description: Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet ja koulutukset julkaistaan
       |            automaattisesti Opintopolussa, jos ne eivät vielä ole julkisia
       |          example: 2019-08-23T09:55
-      |        ajastettuHakukohteidenArkistointi:
+      |        ajastettuHaunJaHakukohteidenArkistointi:
       |          type: string
       |          format: date-time
       |          description: Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet arkistoidaan. Jos tyhjä,
@@ -189,7 +189,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
                 hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
                 ajastettuJulkaisu: Option[LocalDateTime] = None,
-                ajastettuHakukohteidenArkistointi: Option[LocalDateTime] = None,
+                ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,
                 kohdejoukonTarkenneKoodiUri: Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,

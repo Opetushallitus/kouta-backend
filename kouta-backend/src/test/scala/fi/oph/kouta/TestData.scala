@@ -451,7 +451,7 @@ object TestData {
     hakukohteenLiittamisenTakaraja = Some(inFuture()),
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
     ajastettuJulkaisu = Some(inFuture()),
-    ajastettuHakukohteidenArkistointi = Some(inFuture()),
+    ajastettuHaunJaHakukohteidenArkistointi = Some(inFuture()),
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     hakulomaketyyppi = Some(EiSähköistä),
