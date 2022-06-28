@@ -2,21 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{
-  AikuistenPerusopetus,
-  Amm,
-  AmmMuu,
-  AmmOsaamisala,
-  AmmTutkinnonOsa,
-  Koulutustyyppi,
-  Lk,
-  Muu,
-  Telma,
-  Tuva,
-  VapaaSivistystyoMuu,
-  VapaaSivistystyoOpistovuosi,
-  Yo
-}
+import fi.oph.kouta.domain.{AikuistenPerusopetus, Amm, AmmMuu, AmmOsaamisala, AmmTutkinnonOsa, KkOpintojakso, Koulutustyyppi, Lk, Muu, Telma, Tuva, VapaaSivistystyoMuu, VapaaSivistystyoOpistovuosi, Yo}
 
 class OrganisaatioServiceSpec extends OrganisaatioFixture {
 
@@ -56,8 +42,9 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
       )
   }
   it should "return a flat list of oppilaitostyyppi present in parents and children 2" in {
-    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo)
+    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo, KkOpintojakso)
   }
+
   it should "return a flat list of oppilaitostyyppi present in parents and children 3" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(GrandChildOid)._2 should contain theSameElementsAs
       List(
@@ -76,12 +63,12 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
   }
   it should "return correct oppilaitostyypit for koulutustoimija when requesting only children" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should
-      contain theSameElementsAs List(Yo, Lk, Muu, Tuva, AikuistenPerusopetus)
+      contain theSameElementsAs List(Yo, KkOpintojakso, Lk, Muu, Tuva, AikuistenPerusopetus)
   }
 
   it should "return correct oppilaitostyypit for koulutustoimija when requesting both parents and children" in {
     organisaatioService
       .getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))
-      ._2 should contain theSameElementsAs List(Yo, Lk, Muu, Tuva, AikuistenPerusopetus)
+      ._2 should contain theSameElementsAs List(Yo, KkOpintojakso, Lk, Muu, Tuva, AikuistenPerusopetus)
   }
 }

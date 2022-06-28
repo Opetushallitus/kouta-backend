@@ -9,19 +9,7 @@ package object koulutustyyppiToOppilaitostyyppiResult {
       |        koulutustyyppi:
       |          type: string
       |          description: Koulutustyyppi
-      |          enum:
-      |            - amm
-      |            - yo
-      |            - amk
-      |            - lk
-      |            - amm-tutkinnon-osa
-      |            - amm-osaamisala
-      |            - amm-muu
-      |            - tuva
-      |            - telma
-      |            - vapaa-sivistystyo-opistovuosi
-      |            - vapaa-sivistystyo-muu
-      |            - aikuisten-perusopetus
+      |          $ref: '#/components/schemas/Koulutustyyppi'
       |          example: amm
       |        oppilaitostyypit:
       |          type: array

@@ -62,6 +62,7 @@ package object toteutus {
       |            - $ref: '#/components/schemas/YliopistoToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeaToteutusMetadata'
+      |            - $ref: '#/components/schemas/KkOpintojaksoToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenMuuToteutusMetadata'

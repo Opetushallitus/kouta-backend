@@ -58,7 +58,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: yo
@@ -72,12 +72,55 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KorkeakouluMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amk
       |              enum:
       |                - amk
+      |""".stripMargin
+
+  val AmmOpeErityisopeJaOpoKoulutusMetadataModel: String =
+    """    AmmOpeErityisopeJaOpoKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KorkeakouluMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: amm-ope-erityisope-ja-opo
+      |              enum:
+      |                - amm-ope-erityisope-ja-opo
+      |""".stripMargin
+
+  val KkOpintojaksoKoulutusMetadataModel: String =
+    """    KkOpintojaksoKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: kk-opintojakso
+      |              enum:
+      |                - kk-opintojakso
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
+      |            opintojenLaajuusyksikkoKoodiUri:
+      |              type: string
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusnumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val AmmatillinenKoulutusMetadataModel: String =
@@ -86,7 +129,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm
@@ -100,7 +143,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm-tutkinnon-osa
@@ -120,7 +163,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm
@@ -138,7 +181,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: amm-muu
@@ -155,7 +198,7 @@ package object koulutusMetadata {
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
       |              example: opintojenlaajuusyksikko_6#1
-      |            opintojenLaajuusnumero:
+      |            opintojenLaajuusNumero:
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
@@ -167,7 +210,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: lk
@@ -192,7 +235,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: tuva
@@ -214,7 +257,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: telma
@@ -236,7 +279,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: vapaa-sivistystyo-opistovuosi
@@ -262,7 +305,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: aikuisten-perusopetus
@@ -276,14 +319,14 @@ package object koulutusMetadata {
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
       |              example: opintojenlaajuusyksikko_6#1
-      |            opintojenLaajuusnumero:
+      |            opintojenLaajuusNumero:
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
       |""".stripMargin
 
-  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
+  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel,
+    YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
     TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel)
 }
 
@@ -355,11 +398,11 @@ case class AmmatillinenMuuKoulutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusNumero")),
     validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
     validateIfJulkaistu(tila, and(
       assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
-      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero"),
+      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusNumero"),
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
     )),
   )
@@ -394,6 +437,26 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpe
   override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
     super.validate(tila, kielivalinta, path),
     assertEmpty(tutkintonimikeKoodiUrit, s"$path.tutkintonimikeKoodiUrit")
+  )
+}
+
+case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
+                                         kuvaus: Kielistetty = Map(),
+                                         lisatiedot: Seq[Lisatieto] = Seq(),
+                                         koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                         opintojenLaajuusNumero: Option[Double] = None,
+                                         opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                         kuvauksenNimi: Kielistetty = Map(),
+                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
+  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    super.validate(tila, kielivalinta, path),
+    validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusNumero")),
+    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
+    validateIfJulkaistu(tila, and(
+      validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi"),
+      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+    )),
   )
 }
 
@@ -505,12 +568,12 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
     // Aikuisten perusopetuksella ei ole lisätiedot-kenttää lomakkeessa
     assertEmpty(lisatiedot, path),
     validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusnumero")),
+    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusNumero")),
     validateIfNonEmpty(linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin", assertValidUrl _),
     validateIfJulkaistu(tila, and(
-      // opintojenLaajuusYksikkoKoodiUri ja opintojenLaajuusnumero ovat pakollisia kenttiä Aikuisten perusopetukselle
+      // opintojenLaajuusYksikkoKoodiUri ja opintojenLaajuusNumero ovat pakollisia kenttiä Aikuisten perusopetukselle
       assertNotOptional(opintojenLaajuusyksikkoKoodiUri, s"$path.opintojenLaajuusyksikkoKoodiUri"),
-      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusnumero"),
+      assertNotOptional(opintojenLaajuusNumero, s"$path.opintojenLaajuusNumero"),
       // Kuvaus on pakollinen kenttä Aikuisten perusopetukselle
       validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
       validateOptionalKielistetty(kielivalinta, linkkiEPerusteisiin, s"$path.linkkiEPerusteisiin")
