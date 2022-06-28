@@ -720,9 +720,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val kkOpintojaksoKoulutusOid = put(TestData.KkOpintojaksoKoulutus.copy(tila = Julkaistu), ophSession)
     val kkOpintojaksoToteutus = TestData.JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(kkOpintojaksoKoulutusOid), tila = Tallennettu)
     val oid = put(kkOpintojaksoToteutus)
-    val lastModified = get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq()))
     update(kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq()))
   }
 
   it should "pass legal state changes" in {
