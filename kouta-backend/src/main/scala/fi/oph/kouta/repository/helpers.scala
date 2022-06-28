@@ -1,16 +1,15 @@
 package fi.oph.kouta.repository
 
-import java.sql.JDBCType
-import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
-import java.util.UUID
-
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Julkaistu, Koulutustyyppi, Poistettu, TilaFilter}
+import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi, TilaFilter}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 import slick.jdbc.{PositionedParameters, SetParameter}
 
+import java.sql.JDBCType
+import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
+import java.util.UUID
 import scala.util.{Failure, Success, Try}
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
@@ -143,6 +142,12 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   implicit object SetUUID extends SetParameter[UUID] {
     def apply(v: UUID, pp: PositionedParameters) {
       pp.setObject(v, JDBCType.BINARY.getVendorTypeNumber)
+    }
+  }
+
+  implicit object SetHakuOidSet extends SetParameter[Set[HakuOid]] {
+    def apply(o: Set[HakuOid], pp: PositionedParameters) {
+      pp.setObject(o.toArray, java.sql.Types.ARRAY)
     }
   }
 }

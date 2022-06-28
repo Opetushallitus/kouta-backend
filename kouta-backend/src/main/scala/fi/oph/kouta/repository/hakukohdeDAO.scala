@@ -25,6 +25,8 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
 
   def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])]
+
+  def archiveHakukohdesByHakuOids(hakuOids: Set[HakuOid]): Int
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -134,6 +136,8 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       selectHakukohdeAndRelatedEntities(hakukohdeOids)
     ).get
   }
+
+  override def archiveHakukohdesByHakuOids(hakuOids: Set[HakuOid]): Int = KoutaDatabase.runBlocking(updateHakukohdesToArchivedByHakuOids(hakuOids: Set[HakuOid]))
 }
 
 sealed trait HakukohdeModificationSQL extends SQLHelpers {
@@ -651,4 +655,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     left join hakukohteiden_valintakokeet as valintakokeet on valintakokeet.hakukohde_oid = hk.oid
     left join hakukohteiden_hakuajat as hakuajat on hakuajat.hakukohde_oid = hk.oid
     where hk.oid in (#${createOidInParams(hakukohdeOids)})""".as[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)]
+
+  def updateHakukohdesToArchivedByHakuOids(hakuOids: Set[HakuOid]): DBIO[Int] = {
+    sqlu"""update hakukohteet set tila = 'arkistoitu' where haku_oid in ($hakuOids) and tila = 'julkaistu'"""
+  }
 }
