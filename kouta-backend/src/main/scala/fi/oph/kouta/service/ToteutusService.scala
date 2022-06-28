@@ -19,7 +19,7 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoKaannosClient, OppijanumerorekisteriClient, KayttooikeusClient)
+object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoKaannosClient, OppijanumerorekisteriClient, KayttooikeusClient, ToteutusServiceValidation)
 
 
 
@@ -42,9 +42,10 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                       lokalisointiClient: LokalisointiClient,
                       koodistoClient: KoodistoKaannosClient,
                       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-                      kayttooikeusClient: KayttooikeusClient
+                      kayttooikeusClient: KayttooikeusClient,
+                      toteutusServiceValidation: ToteutusServiceValidation
   )
-  extends ValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
+  extends RoleEntityAuthorizationService[Toteutus] with TeemakuvaService[ToteutusOid, Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
@@ -121,8 +122,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     authorizePut(toteutus) { t =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus = t.copy(metadata = enrichedMetadata)
-      withValidation(enrichedToteutus, None) { t =>
-        validateKoulutusIntegrity(t)
+      toteutusServiceValidation.withValidation(enrichedToteutus, None) { t =>
         doPut(t, koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), Set()))
       }
     }.oid.get
@@ -150,10 +150,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus = t.copy(metadata = enrichedMetadata)
-      withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
-        throwValidationErrors(validateStateChange("toteutukselle", oldToteutus.tila, t.tila))
-        validateKoulutusIntegrity(t)
-        validateHakukohdeIntegrityIfDeletingToteutus(oldToteutus.tila, t.tila, t.oid.get)
+      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(t, notModifiedSince, oldToteutus,
@@ -267,30 +264,6 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
 
-  private def validateKoulutusIntegrity(toteutus: Toteutus): Unit = {
-    import Validations._
-    val (koulutusTila, koulutusTyyppi) = KoulutusDAO.getTilaAndTyyppi(toteutus.koulutusOid)
-
-    throwValidationErrors(and(
-      validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
-      validateIfDefined[Koulutustyyppi](koulutusTyyppi, koulutusTyyppi => and(
-        validateIfTrue(koulutusTyyppi != Lk, validateKielistetty(toteutus.kielivalinta, toteutus.nimi, "nimi")),
-        validateIfDefined[ToteutusMetadata](toteutus.metadata, toteutusMetadata =>
-          assertTrue(koulutusTyyppi == toteutusMetadata.tyyppi, "metadata.tyyppi", tyyppiMismatch("koulutuksen", toteutus.koulutusOid))
-        ))
-      )
-    ))
-  }
-
-  private def validateHakukohdeIntegrityIfDeletingToteutus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, toteutusOid: ToteutusOid): Unit = {
-    throwValidationErrors(
-      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
-        HakukohdeDAO.listByToteutusOid(toteutusOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
-        "tila",
-        integrityViolationMsg("Toteutusta", "hakukohteita")))
-    )
-  }
-
   private def doPut(toteutus: Toteutus, koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])])(implicit authenticated: Authenticated): Toteutus =
     KoutaDatabase.runBlockingTransactionally {
       for {
@@ -343,10 +316,4 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
     }
-  override def validateParameterFormatAndExistence(toteutus: Toteutus): IsValid = toteutus.validate()
-  override def validateParameterFormatAndExistenceOnJulkaisu(toteutus: Toteutus): IsValid = toteutus.validateOnJulkaisu()
-
-  override def validateDependenciesToExternalServices(toteutus: Toteutus): IsValid = NoErrors
-
-  override def validateInternalDependenciesWhenDeletingEntity(toteutus: Toteutus): IsValid = NoErrors
 }

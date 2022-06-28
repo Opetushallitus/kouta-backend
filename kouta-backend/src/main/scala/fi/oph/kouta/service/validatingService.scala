@@ -2,17 +2,16 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoulutusKoodiClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Amm, AmmOsaamisala, AmmTutkinnonOsa, Julkaistu, Julkaisutila, Koulutus, Koulutustyyppi, Poistettu, Tallennettu, Toteutus}
+import fi.oph.kouta.domain.{Amm, AmmOsaamisala, AmmTutkinnonOsa, Julkaistu, Julkaisutila, Koulutustyyppi, Poistettu}
 import fi.oph.kouta.repository.SorakuvausDAO
-import fi.oph.kouta.validation.Validations.{and, assertEmpty, assertTrue, error, tyyppiMismatch, unknownTajoajaOids, validateDependency, validateIfDefined, validateIfTrue, validateStateChange, valuesDontMatch}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, Validations}
 
 import java.util.UUID
 
 trait ValidatingService[E <: Validatable] {
-  def validateParameterFormatAndExistence(e: E): IsValid
-  def validateParameterFormatAndExistenceOnJulkaisu(e: E): IsValid = NoErrors
-  def validateDependenciesToExternalServices(e: E): IsValid
+  def validateEntity(e: E): IsValid
+  def validateEntityOnJulkaisu(e: E): IsValid = NoErrors
   def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
 
   def organisaatioService: OrganisaatioService
@@ -21,21 +20,21 @@ trait ValidatingService[E <: Validatable] {
 
     var errors = if (oldE.isDefined) {
       if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
-        validateParameterFormatAndExistence(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
-          validateParameterFormatAndExistenceOnJulkaisu(e)
+        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
+          validateEntityOnJulkaisu(e)
       } else {
-        validateParameterFormatAndExistence(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
       }
     } else {
       if (e.tila == Julkaistu) {
-        validateParameterFormatAndExistence(e) ++ validateParameterFormatAndExistenceOnJulkaisu(e)
+        validateEntity(e) ++ validateEntityOnJulkaisu(e)
       } else {
-        validateParameterFormatAndExistence(e)
+        validateEntity(e)
       }
     }
 
     if (errors.isEmpty) {
-      errors = validateDependenciesToExternalServices(e)
+      errors = validateEntity(e)
     }
 
     if (errors.isEmpty && oldE.isDefined) {
@@ -47,18 +46,28 @@ trait ValidatingService[E <: Validatable] {
 
     errors match {
       case NoErrors => f(e)
-      case errors => throw KoutaValidationException(errors)
+      case errors   => throw KoutaValidationException(errors)
     }
   }
 
   def throwValidationErrors(errors: IsValid): Unit =
-    if(errors.nonEmpty) throw KoutaValidationException(errors)
+    if (errors.nonEmpty) throw KoutaValidationException(errors)
 
   def validateTarjoajat(tarjoajat: List[OrganisaatioOid]): IsValid = {
-    val unknownOrgs = organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(tarjoajat.toSet).toSeq
-    assertEmpty(unknownOrgs, "tarjoajat", unknownTajoajaOids(unknownOrgs))
+    val validTarjoajat = tarjoajat.filter(_.isValid)
+    val unknownOrgs =
+      if (validTarjoajat.nonEmpty) organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(validTarjoajat.toSet)
+      else Set[OrganisaatioOid]()
+    validateIfNonEmpty[OrganisaatioOid](
+      tarjoajat,
+      "tarjoajat",
+      (oid, path) =>
+        validateIfSuccessful(
+          assertTrue(oid.isValid, path, validationMsg(oid.s)),
+          assertFalse(unknownOrgs.contains(oid), path, unknownTarjoajaOid(oid))
+        )
+    )
   }
-
 }
 
 trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] {
@@ -66,12 +75,12 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
   def sorakuvausDAO: SorakuvausDAO
 
   def validateSorakuvausIntegrity(
-     sorakuvausId: Option[UUID],
-     entityTila: Julkaisutila,
-     entityTyyppi: Koulutustyyppi,
-     entityTyyppiPath: String = "koulutustyyppi",
-     entityKoulutusKoodiUrit: Seq[String] = Seq()
-   ): IsValid = {
+      sorakuvausId: Option[UUID],
+      entityTila: Julkaisutila,
+      entityTyyppi: Koulutustyyppi,
+      entityTyyppiPath: String = "koulutustyyppi",
+      entityKoulutusKoodiUrit: Seq[String] = Seq()
+  ): IsValid = {
 
     validateIfDefined[UUID](
       sorakuvausId,

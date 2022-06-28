@@ -4,14 +4,13 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, KoodistoKaannosClient, LokalisointiClient}
+import fi.oph.kouta.client.{KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{HakukohdeDAO, SQLHelpers}
-import fi.oph.kouta.service.HakukohdeCopyResultObject
-import fi.oph.kouta.service.{HakukohdeService, KeywordService, OrganisaatioServiceImpl, ToteutusService}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO}
+import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, KeywordService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
@@ -26,6 +25,9 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
+    val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
+
     new HakukohdeService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),
@@ -35,7 +37,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       mockKayttooikeusClient,
       new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
         new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
-        koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
+        koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)
     )
   }
 

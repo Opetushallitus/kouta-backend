@@ -211,36 +211,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
                     _enrichedData: Option[KoulutusEnrichedData] = None)
   extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
 
-  override def validate(): IsValid = {
-    val koulutustyypitHavingKoulutusKoodiUrit = Set[Koulutustyyppi](Amm, AmmOsaamisala, Lk, AikuistenPerusopetus, Amk, Yo, AmmOpeErityisopeJaOpo)
-
-    and(super.validate(),
-      validateOidList(tarjoajat, "tarjoajat"),
-      assertValid(organisaatioOid, "organisaatioOid"),
-      validateIfNonEmpty[String](koulutuksetKoodiUri, "koulutuksetKoodiUri", assertMatch(_, KoulutusKoodiPattern, _)),
-      validateIfDefined[KoulutusMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
-      validateIfDefined[KoulutusMetadata](metadata, m => assertTrue(m.tyyppi == koulutustyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi)),
-      validateIfDefined[Long](ePerusteId, assertNotNegative(_, "ePerusteId")),
-      validateIfJulkaistu(tila, and(
-        assertTrue(johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi), "johtaaTutkintoon",
-          invalidTutkintoonjohtavuus(koulutustyyppi.toString)),
-        assertNotOptional(metadata, "metadata"),
-        validateIfDefined[String](teemakuva, assertValidUrl(_, "teemakuva")),
-        validateIfTrueOrElse(koulutustyypitHavingKoulutusKoodiUrit.contains(koulutustyyppi),
-          and(
-            assertNotEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri"),
-            validateIfFalse(koulutustyyppi == Yo || koulutustyyppi == Amk,
-              assertTrue(koulutuksetKoodiUri.size < 2, "koulutuksetKoodiUri", tooManyKoodiUris))
-          ),
-          assertEmpty(koulutuksetKoodiUri, "koulutuksetKoodiUri")
-        ),
-        validateIfTrueOrElse(koulutustyyppi == Amm || koulutustyyppi == AmmOsaamisala,
-          assertNotOptional(ePerusteId, "ePerusteId"),
-          assertNotDefined(ePerusteId, "ePerusteId")
-        )
-      ))
-    )
-  }
+  override def validate(): IsValid =
+    super.validate()
 
   def withOid(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
 

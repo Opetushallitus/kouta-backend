@@ -604,8 +604,6 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined(koulutusKoodiUri,
         assertMatch(_, KoulutusKoodiPattern, s"$path.koulutusKoodiUri")),
-      // ePerusteId on pakollinen mikäli koulutusKoodiUri, viite tai Id on annettu
-      validateIfAnyDefined(Seq(tutkinnonosaId, tutkinnonosaViite, koulutusKoodiUri), assertNotOptional(ePerusteId, s"$path.ePerusteId")),
       validateIfJulkaistu(tila, and(
         assertNotOptional(ePerusteId, s"$path.ePerusteId"),
         assertNotOptional(koulutusKoodiUri, s"$path.koulutusKoodiUri"),
