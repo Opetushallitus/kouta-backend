@@ -134,6 +134,7 @@ trait ToteutusExtractors extends ExtractorBase {
           modified = Some(timeStampToModified(r.nextTimestamp())),
           metadata = r.nextStringOption().map(read[ToteutusMetadata]),
           koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
+          koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
         )
         val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
         ToteutusListItem(t.copy(nimi = esitysnimi))
