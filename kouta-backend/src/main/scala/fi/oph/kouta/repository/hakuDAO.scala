@@ -18,6 +18,7 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def get(oid: HakuOid, tilaFilter: TilaFilter): Option[(Haku, Instant)]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishakuFilter: YhteishakuFilter): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem]
+  def listArchivableHakuOids(): Seq[HakuOid]
 }
 
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -58,6 +59,8 @@ object HakuDAO extends HakuDAO with HakuSQL {
 
   override def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid, tilaFilter))
+
+  override def listArchivableHakuOids(): Seq[HakuOid] = KoutaDatabase.runBlocking(selectArchivableHakuOids())
 }
 
 trait HakuModificationSQL extends SQLHelpers {
@@ -250,5 +253,15 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
           where toteutukset.oid = $toteutusOid
           #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakuListItem]
+  }
+
+  def selectArchivableHakuOids(): DBIO[Seq[HakuOid]] = {
+    sql"""select oid
+          from haut
+          where ajastettu_haun_ja_hakukohteiden_arkistointi <= now()::date
+          or oid in (select haku_oid
+                     from hakujen_hakuajat
+                     where upper(hakuaika)::date <= now()::date - '10 month'::interval)
+          and tila = 'julkaistu'""".as[HakuOid]
   }
 }
