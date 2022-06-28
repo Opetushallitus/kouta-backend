@@ -7,7 +7,9 @@ import fi.oph.kouta.TestData.{
   AmmTutkinnonOsaToteutus,
   JulkaistuAmkToteutus,
   JulkaistuAmmToteutus,
+  JulkaistuKkOpintojaksoToteutus,
   JulkaistuYoToteutus,
+  KkOpintojaksoToteutuksenMetatieto,
   Lisatieto1,
   LukioToteutuksenMetatieto,
   LukioToteutus,
@@ -21,6 +23,7 @@ import fi.oph.kouta.TestData.{
 }
 import fi.oph.kouta.TestOids.{AmmOid, LonelyOid, LukioOid, OtherOid}
 import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.{
   Ajanjakso,
   AlkamiskausiJaVuosi,
@@ -39,6 +42,7 @@ import fi.oph.kouta.domain.{
   HakukohdeListItem,
   Julkaistu,
   Kielistetty,
+  KkOpintojakso,
   KorkeakouluOsaamisala,
   KoulutuksenAlkamiskausi,
   Lisatieto,
@@ -82,6 +86,7 @@ import fi.oph.kouta.validation.Validations.{
   minmaxMsg,
   missingMsg,
   nonExistent,
+  notEmptyMsg,
   notMissingMsg,
   notNegativeMsg,
   notYetJulkaistu,
@@ -108,6 +113,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   val ammTutkinnonOsaToteutus = AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.124"))
   val ammMuuToteutus          = AmmMuuToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.130"))
   val yoToteutus              = JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.131"))
+  val kkOpintojaksoToteutus   = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.132"))
 
   val sorakuvausId  = UUID.randomUUID()
   val sorakuvausId2 = UUID.randomUUID()
@@ -249,7 +255,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     when(koulutusDao.getTilaAndTyyppi(KoulutusOid("1.2.246.562.13.128"))).thenAnswer((Some(Poistettu), Some(Amm)))
     when(koulutusDao.getTilaAndTyyppi(KoulutusOid("1.2.246.562.13.130"))).thenAnswer((Some(Julkaistu), Some(AmmMuu)))
     when(koulutusDao.getTilaAndTyyppi(KoulutusOid("1.2.246.562.13.131"))).thenAnswer((Some(Julkaistu), Some(Yo)))
-
+    when(koulutusDao.getTilaAndTyyppi(KoulutusOid("1.2.246.562.13.132")))
+      .thenAnswer((Some(Julkaistu), Some(KkOpintojakso)))
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
       .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq("koulutus_371101#1")))
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId2)).thenAnswer((None, None, None))
@@ -302,6 +309,10 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "succeed when new valid lukio-toteutus" in {
     passValidation(lukioToteutus)
+  }
+
+  it should "succeed when new valid kk-opintojakso toteutus" in {
+    passValidation(kkOpintojaksoToteutus)
   }
 
   it should "fail if perustiedot is invalid" in {
@@ -613,7 +624,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       missingMsg
     )
     failValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(None, None, Some(AlkamiskausiJaVuosi), koodiUri = None), Seq(
+      ammToteutusWithKoulutuksenAlkamiskausi(None, None, Some(AlkamiskausiJaVuosi), koodiUri = None),
+      Seq(
         ValidationError(
           "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri",
           missingMsg
@@ -782,6 +794,16 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       ),
       "metadata.hakulomaketyyppi",
       missingMsg
+    )
+  }
+
+  "Kk-opintojakso validation" should "fail if ammattinimikkeet given" in {
+    failValidation(
+      kkOpintojaksoToteutus.copy(metadata =
+        Some(KkOpintojaksoToteutuksenMetatieto.copy(ammattinimikkeet = List(Keyword(Fi, "nimike"))))
+      ),
+      "metadata.ammattinimikkeet",
+      notEmptyMsg
     )
   }
 

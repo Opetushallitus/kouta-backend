@@ -14,6 +14,8 @@ import fi.oph.kouta.domain.{
   Kieli,
   Kielistetty,
   Kielivalikoima,
+  KkOpintojakso,
+  KkOpintojaksoToteutusMetadata,
   KorkeakouluOsaamisala,
   KorkeakoulutusToteutusMetadata,
   KoulutuksenAlkamiskausi,
@@ -55,6 +57,7 @@ import fi.oph.kouta.validation.Validations.{
   OpetustapaKoodiPattern,
   OsaamisalaKoodiPattern,
   and,
+  assertEmpty,
   assertLessOrEqual,
   assertMatch,
   assertNotDefined,
@@ -127,7 +130,7 @@ class ToteutusServiceValidation(
     val koulutustyyppiSpecificErrors = toteutus.metadata match {
       case Some(metadata) =>
         val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
-          Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu)
+          Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, KkOpintojakso)
 
         and(
           validateIfSuccessful(
@@ -159,7 +162,15 @@ class ToteutusServiceValidation(
                 validateOsaamisala(_, _, tila, kielivalinta)
               )
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
-              validateTutkintoonJohtamatonMetadata(tila, kielivalinta, tutkintoonJohtamatonToteutusMetadata)
+              tutkintoonJohtamatonToteutusMetadata match {
+                case m: KkOpintojaksoToteutusMetadata =>
+                  and(
+                    validateTutkintoonJohtamatonMetadata(tila, kielivalinta, m),
+                    // Opintojaksolla ei ole ammattinimikkeitä
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                  )
+                case _ => validateTutkintoonJohtamatonMetadata(tila, kielivalinta, tutkintoonJohtamatonToteutusMetadata)
+              }
             case kkMetadata: KorkeakoulutusToteutusMetadata =>
               validateKorkeakouluMetadata(tila, kielivalinta, kkMetadata)
             case lkMetadata: LukioToteutusMetadata => validateLukioMetadata(tila, kielivalinta, lkMetadata)

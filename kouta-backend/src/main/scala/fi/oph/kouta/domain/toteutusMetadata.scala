@@ -710,16 +710,7 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          hakulomakeLinkki: Kielistetty = Map(),
                                          hakuaika: Option[Ajanjakso] = None,
                                          aloituspaikat: Option[Int] = None,
-                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    super.validate(tila, kielivalinta, path),
-    // Opintojaksolla ei ole ammattinimikkeitä
-    assertEmpty(ammattinimikkeet, s"$path.ammattinimikkeet"),
-    validateIfJulkaistu(tila, and(
-      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
-    ))
-  )
-}
+                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),

@@ -330,13 +330,11 @@ package object koulutusMetadata {
     TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel)
 }
 
-sealed trait KoulutusMetadata extends ValidatableSubEntity {
+sealed trait KoulutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val lisatiedot: Seq[Lisatieto]
   val isMuokkaajaOphVirkailija: Option[Boolean]
-
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = NoErrors
 }
 
 trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
@@ -406,18 +404,7 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          opintojenLaajuusNumero: Option[Double] = None,
                                          opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                          kuvauksenNimi: Kielistetty = Map(),
-                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    super.validate(tila, kielivalinta, path),
-    validateIfDefined[String](opintojenLaajuusyksikkoKoodiUri, assertMatch(_, OpintojenLaajuusyksikkoKoodiPattern, s"$path.opintojenLaajuusyksikkoKoodiUri")),
-    validateIfDefined[Double](opintojenLaajuusNumero, assertNotNegative(_, s"$path.opintojenLaajuusNumero")),
-    validateIfNonEmpty[String](koulutusalaKoodiUrit, s"$path.koulutusalaKoodiUrit", assertMatch(_, KoulutusalaKoodiPattern, _)),
-    validateIfJulkaistu(tila, and(
-      validateKielistetty(kielivalinta, kuvauksenNimi, s"$path.kuvauksenNimi"),
-      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
-    )),
-  )
-}
+                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
