@@ -3,24 +3,8 @@ package fi.oph.kouta.integration
 import java.util.UUID
 import fi.oph.kouta.TestOids
 import fi.oph.kouta.TestOids.{OphOid, TestUserOid}
-import fi.oph.kouta.domain.oid.{UserOid}
-import fi.oph.kouta.domain.{
-  ExternalHakuRequest,
-  ExternalHakukohdeRequest,
-  ExternalKoulutusRequest,
-  ExternalRequest,
-  ExternalSorakuvausRequest,
-  ExternalToteutusRequest,
-  ExternalValintaperusteRequest,
-  Haku,
-  Hakukohde,
-  Julkaisutila,
-  Koulutus,
-  Sorakuvaus,
-  Tallennettu,
-  Toteutus,
-  Valintaperuste
-}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Hakukohde, Julkaisutila, Koulutus, Sorakuvaus, Arkistoitu, Toteutus, Valintaperuste}
 import fi.oph.kouta.integration.fixture.ExternalFixture
 import fi.oph.kouta.security.{Authority, ExternalSession, Role}
 import fi.oph.kouta.servlet.Authenticated
@@ -41,7 +25,7 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
     "koulutus",
     ExternalKoulutusPath,
     (oid: String, authenticated: Authenticated) =>
-      ExternalKoulutusRequest(authenticated, createKoulutus(oid, tila = Some(Tallennettu))),
+      ExternalKoulutusRequest(authenticated, createKoulutus(oid, tila = Some(Arkistoitu))),
     (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
       createKoulutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
@@ -56,7 +40,7 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
     "toteutus",
     ExternalToteutusPath,
     (oid: String, authenticated: Authenticated) =>
-      ExternalToteutusRequest(authenticated, createToteutus(oid, tila = Some(Tallennettu))),
+      ExternalToteutusRequest(authenticated, createToteutus(oid, tila = Some(Arkistoitu))),
     (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
       createToteutus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
@@ -71,7 +55,7 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
     "haku",
     ExternalHakuPath,
     (oid: String, authenticated: Authenticated) =>
-      ExternalHakuRequest(authenticated, createHaku(oid, tila = Some(Tallennettu))),
+      ExternalHakuRequest(authenticated, createHaku(oid, tila = Some(Arkistoitu))),
     (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
       createHaku(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
@@ -86,7 +70,7 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
     "hakukohde",
     ExternalHakukohdePath,
     (oid: String, authenticated: Authenticated) =>
-      ExternalHakukohdeRequest(authenticated, createHakukohde(oid, tila = Some(Tallennettu))),
+      ExternalHakukohdeRequest(authenticated, createHakukohde(oid, tila = Some(Arkistoitu))),
     (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
       createHakukohde(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
@@ -102,7 +86,7 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
     "valintaperuste",
     ExternalValintaperustePath,
     (oid: String, authenticated: Authenticated) =>
-      ExternalValintaperusteRequest(authenticated, createValintaperuste(oid, tila = Some(Tallennettu))),
+      ExternalValintaperusteRequest(authenticated, createValintaperuste(oid, tila = Some(Arkistoitu))),
     (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
       createValintaperuste(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
@@ -136,11 +120,24 @@ class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
               .asInstanceOf[ExternalSession]
               .copy(authorities = Set(Authority(Role.Paakayttaja, OphOid)))
           ),
-        createSorakuvaus(oid, tila = Some(Tallennettu))
+        createSorakuvaus(oid, tila = Some(Arkistoitu))
       ),
     (oid: String, muokkaaja: Option[UserOid], tila: Option[Julkaisutila], isMuokkaajaOphVirkailija: Option[Boolean]) =>
       createSorakuvaus(oid, muokkaaja, tila, isMuokkaajaOphVirkailija)
   )
+
+  "Modifying Koulutus from external" should "fail when adding tarjoajat not belonging to koulutus organisaatio" in {
+    val koulutusRequest = ExternalKoulutusRequest(authenticated(), createKoulutus(isMuokkaajaOphVirkailija = Some(false)))
+    val oid      = doPut(koulutusRequest, ophSession)
+    val koulutus = koulutusRequest.koulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid)
+    val lastModified = doGet(oid, koulutus)
+
+    val modifyRequest = ExternalKoulutusRequest(authenticated(), koulutus.copy(tarjoajat =
+      // Helsingin yliopistoon kuuluvia OIDeja
+      List(OrganisaatioOid("1.2.246.562.10.73307006806"), OrganisaatioOid("1.2.246.562.10.445049088710"))))
+
+    update(ExternalKoulutusPath, modifyRequest, lastModified, externalSession, 403)
+  }
 }
 
 trait TestBase {
@@ -206,7 +203,7 @@ trait ModifyTests extends TestBase {
       val request = makeModifyRequest(oidOrId, authenticated())
 
       doUpdate(request, lastModified, externalSession)
-      doGet(oidOrId, resultEntity(oidOrId, Some(TestUserOid), Some(Tallennettu), Some(false)))
+      doGet(oidOrId, resultEntity(oidOrId, Some(TestUserOid), Some(Arkistoitu), Some(false)))
     }
 
     it should s"require authentication to be attached to the request when updating existing $entityName" in {
@@ -226,7 +223,7 @@ trait ModifyTests extends TestBase {
       val request        = makeModifyRequest(oidOrId, authentication)
 
       doUpdate(request, lastModified, externalSession)
-      doGet(oidOrId, resultEntity(oidOrId, Some(userOid), Some(Tallennettu), Some(false)))
+      doGet(oidOrId, resultEntity(oidOrId, Some(userOid), Some(Arkistoitu), Some(false)))
     }
 
     it should s"deny a user with the wrong role when updating existing $entityName" in {

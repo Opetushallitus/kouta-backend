@@ -15,6 +15,7 @@ trait SorakuvausDAO extends EntityModificationDAO[UUID] {
 
   def get(id: UUID, tilaFilter: TilaFilter): Option[(Sorakuvaus, Instant)]
   def listByKoulutustyypit(koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[SorakuvausListItem]
+  def getTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi], Option[Seq[String]])
 }
 
 object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
@@ -49,7 +50,7 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
       case _   => KoutaDatabase.runBlocking(selectByKoulutustyypit(koulutustyypit, tilaFilter))
     }
 
-  def getTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi], Option[Seq[String]]) =
+  override def getTilaTyyppiAndKoulutusKoodit(sorakuvausId: UUID): (Option[Julkaisutila], Option[Koulutustyyppi], Option[Seq[String]]) =
     KoutaDatabase.runBlocking(selectTilaTyyppiAndKoulutusKoodit(sorakuvausId)) match {
       case None => (None, None, None)
       case Some((tila, tyyppi, koulutusKoodiUrit)) => (Some(tila), Some(tyyppi), Some(koulutusKoodiUrit))

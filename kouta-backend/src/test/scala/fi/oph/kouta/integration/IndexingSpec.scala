@@ -1,9 +1,10 @@
 package fi.oph.kouta.integration
 
 import java.util.UUID
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.IndexingFixture
+import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
 
 class IndexingSpec extends KoutaIntegrationSpec

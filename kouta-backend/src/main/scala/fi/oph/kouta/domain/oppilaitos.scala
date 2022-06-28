@@ -405,6 +405,8 @@ case class Oppilaitos(oid: OrganisaatioOid,
   def withMuokkaaja(oid: UserOid): Oppilaitos = this.copy(muokkaaja = oid)
 
   def withOsat(osat: Seq[OppilaitoksenOsa]): Oppilaitos = this.copy(osat = Some(osat))
+
+  def getEntityDescriptionAllative(): String = "oppilaitokselle"
 }
 
 case class OppilaitoksenOsa(oid: OrganisaatioOid,
@@ -443,6 +445,7 @@ case class OppilaitoksenOsa(oid: OrganisaatioOid,
   override def withModified(modified: Modified): OppilaitoksenOsa = copy(modified = Some(modified))
 
   def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = oid)
+  def getEntityDescriptionAllative(): String = "oppilaitoksen osalle"
 }
 
 case class OppilaitosMetadata(tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),

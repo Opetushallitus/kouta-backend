@@ -3,10 +3,9 @@ package fi.oph.kouta.servlet
 import java.text.ParseException
 import java.time.Instant
 import java.util.ConcurrentModificationException
-
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.AuthenticationFailedException
-import fi.oph.kouta.service.{KoutaValidationException, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
+import fi.oph.kouta.service.{KoutaValidationException, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException, ExternalModifyAuthorizationFailedException}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.{parseHttpDate, renderHttpDate}
 import fi.vm.sade.utils.slf4j.Logging
@@ -70,6 +69,9 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
       Forbidden("error" -> "Forbidden")
     case e: OrganizationAuthorizationFailedException =>
+      logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
+      Forbidden("error" -> s"Forbidden ${e.getMessage}")
+    case e: ExternalModifyAuthorizationFailedException =>
       logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
       Forbidden("error" -> s"Forbidden ${e.getMessage}")
     case e: KoutaValidationException =>

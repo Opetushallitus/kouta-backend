@@ -9,8 +9,9 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.validateStateChange
 import slick.dbio.DBIO
 
@@ -137,8 +138,8 @@ class HakukohdeService(
           oid = hk.oid.get, status = "success", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
         )
       } catch {
-        case error => {
-          logger.error(s"Copying hakukohde failed: ${error}")
+        case error: Throwable => {
+          logger.error(s"Copying hakukohde failed: $error")
           HakukohdeCopyResultObject(
             oid = hk.oid.get, status = "error", created = CopyOids(None, None)
           )
@@ -158,11 +159,11 @@ class HakukohdeService(
   }
 
   def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val rules = AuthorizationRules(
-      roleEntity.updateRoles,
-      additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(hakukohde.oid.get)
-    )
-    authorizeUpdate(HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat()), hakukohde, rules) { (oldHakukohde, h) =>
+    val oldHakukohdeWithTime = HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat())
+
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(hakukohde, oldHakukohdeWithTime)
+
+    authorizeUpdate(oldHakukohdeWithTime, hakukohde, rules) { (oldHakukohde, h) =>
       val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(h)
       val enrichedHakukohde = h.copy(metadata = enrichedMetadata)
       withValidation(enrichedHakukohde, Some(oldHakukohde)) { h =>
@@ -171,6 +172,22 @@ class HakukohdeService(
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
+  }
+
+  private def getAuthorizationRulesForUpdate(newHakukohde: Hakukohde, oldHakukohdeWithTime: Option[(Hakukohde, Instant)]) = {
+    oldHakukohdeWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää hakukohdetta ei löytynyt")
+      case Some((oldHakukohde, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldHakukohde.tila, newHakukohde.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        }
+        else {
+          AuthorizationRules(
+            roleEntity.updateRoles,
+            additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(newHakukohde.oid.get)
+          )
+        }
+    }
   }
 
   def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
@@ -184,7 +201,7 @@ class HakukohdeService(
       case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
     }
 
-  def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated) =
+  def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }
@@ -220,4 +237,11 @@ class HakukohdeService(
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
+
+  override def validateParameterFormatAndExistence(hakukohde: Hakukohde): IsValid = hakukohde.validate()
+  override def validateParameterFormatAndExistenceOnJulkaisu(hakukohde: Hakukohde): IsValid = hakukohde.validateOnJulkaisu()
+
+  override def validateDependenciesToExternalServices(hakukohde: Hakukohde): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(hakukohde: Hakukohde): IsValid = NoErrors
 }

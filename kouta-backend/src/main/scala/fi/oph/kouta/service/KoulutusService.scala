@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoutaIndexClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoulutusKoodiClient, KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
@@ -12,27 +12,27 @@ import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.Validations._
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
 
 import java.time.Instant
-import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
+case class ExternalModifyAuthorizationFailedException(message: String) extends RuntimeException(message)
+
 object KoulutusService
-    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, KoodistoClient)
+    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, KoulutusKoodiClient, KoulutusServiceValidation)
 
 class KoulutusService(
-    sqsInTransactionService: SqsInTransactionService,
-    val s3ImageService: S3ImageService,
-    auditLog: AuditLog,
-    val organisaatioService: OrganisaatioService,
-    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-    kayttooikeusClient: KayttooikeusClient,
-    koodistoClient: KoodistoClient,
-) extends ValidatingService[Koulutus]
-    with RoleEntityAuthorizationService[Koulutus]
+                       sqsInTransactionService: SqsInTransactionService,
+                       val s3ImageService: S3ImageService,
+                       auditLog: AuditLog,
+                       val organisaatioService: OrganisaatioService,
+                       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+                       kayttooikeusClient: KayttooikeusClient,
+                       koodistoClient: KoulutusKoodiClient,
+                       koulutusServiceValidation: KoulutusServiceValidation
+) extends RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
     with Logging {
 
@@ -68,16 +68,20 @@ class KoulutusService(
           case kkMetadata: KorkeakoulutusKoulutusMetadata => kkMetadata match {
             case yoMetadata: YliopistoKoulutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             case amkMetadata: AmmattikorkeakouluKoulutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             case ammOpeErityisopeOpoMetadata: AmmOpeErityisopeJaOpoKoulutusMetadata => Some(ammOpeErityisopeOpoMetadata.copy(
               isMuokkaajaOphVirkailija = Some(isOphVirkailija),
               opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60"),
-              koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01")))
+              koulutusalaKoodiUrit = Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01"))))
           }
           case ammMetadata: AmmatillinenKoulutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaKoulutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammOsaamisalaMetadata: AmmatillinenOsaamisalaKoulutusMetadata => Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammatillinenMuuKoulutusMetadata: AmmatillinenMuuKoulutusMetadata => Some(ammatillinenMuuKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case lukioMetadata: LukioKoulutusMetadata => Some(lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case lukioMetadata: LukioKoulutusMetadata => Some(lukioMetadata.copy(
+            isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+            koulutusalaKoodiUrit = Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_00"))
+          ))
           case tuvaMetadata: TuvaKoulutusMetadata => Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case telmaMetadata: TelmaKoulutusMetadata => Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case vapaaSivistystyoMetadata: VapaaSivistystyoKoulutusMetadata =>
@@ -86,6 +90,7 @@ class KoulutusService(
               case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
           case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata => Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }
@@ -131,37 +136,27 @@ class KoulutusService(
       AuthorizationRules(roleEntity.createRoles)
     }
 
-
     authorizePut(koulutus, rules) { k =>
       val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
-      withValidation(enrichedKoulutusWithFixedDefaultValues, None) { k =>
-        validateSorakuvausIntegrity(k)
-        doPut(k)
+      koulutusServiceValidation.withValidation(enrichedKoulutusWithFixedDefaultValues, None) { ek =>
+        doPut(ek)
       }
     }.oid.get
   }
 
-  def update(newKoulutus: Koulutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+  def update(newKoulutus: Koulutus, notModifiedSince: Instant, fromExternal: Boolean = false)(implicit authenticated: Authenticated): Boolean = {
     val oldKoulutusWithInstant: Option[(Koulutus, Instant)] = KoulutusDAO.get(newKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())
     oldKoulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
-        val rules: List[AuthorizationRules] = oldKoulutus.koulutustyyppi match {
-          case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
-            List(AuthorizationRules(Seq(Role.Paakayttaja)))
-          case _ =>
-            val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
-            val newTarjoajat             = newKoulutus.tarjoajat.toSet
-            val oldTarjoajat             = oldKoulutus.tarjoajat.toSet
-            val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-            val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
-            (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+        if (fromExternal) {
+          authorizeAddedTarjoajatFromExternal(newKoulutus.organisaatioOid,
+            newKoulutus.tarjoajat.toSet diff oldKoulutus.tarjoajat.toSet
+          )
         }
+        val rules: List[AuthorizationRules] = getAuthorizationRulesForUpdate(newKoulutus, oldKoulutus)
         rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
-          withValidation(enrichedKoulutusWithFixedDefaultValues, Some(oldKoulutus)) {
-            throwValidationErrors(validateStateChange("koulutukselle", oldKoulutus.tila, newKoulutus.tila))
-            validateSorakuvausIntegrity(k)
-            validateToteutusIntegrityIfDeletingKoulutus(oldKoulutus.tila, newKoulutus.tila, newKoulutus.oid.get)
+          koulutusServiceValidation.withValidation(enrichedKoulutusWithFixedDefaultValues, Some(oldKoulutus)) {
             doUpdate(_, notModifiedSince, oldKoulutus)
           }
         }.nonEmpty
@@ -169,54 +164,34 @@ class KoulutusService(
     }
   }
 
-  private def validateSorakuvausIntegrity(koulutus: Koulutus): Unit = {
-    throwValidationErrors(
-      validateIfDefined[UUID](
-        koulutus.sorakuvausId,
-        sorakuvausId => {
-          val (sorakuvausTila, sorakuvausTyyppi, koulutuskoodiUrit) =
-            SorakuvausDAO.getTilaTyyppiAndKoulutusKoodit(sorakuvausId)
-          and(
-            validateDependency(koulutus.tila, sorakuvausTila, sorakuvausId, "Sorakuvausta", "sorakuvausId"),
-            validateIfDefined[Koulutustyyppi](
-              sorakuvausTyyppi,
-              sorakuvausTyyppi =>
-                // "Tutkinnon osa" ja Osaamisala koulutuksiin saa liittää myös SORA-kuvauksen, jonka koulutustyyppi on "ammatillinen"
-                assertTrue(
-                  sorakuvausTyyppi == koulutus.koulutustyyppi || (sorakuvausTyyppi == Amm && Seq(
-                    AmmOsaamisala,
-                    AmmTutkinnonOsa
-                  ).contains(koulutus.koulutustyyppi)),
-                  "koulutustyyppi",
-                  tyyppiMismatch("sorakuvauksen", sorakuvausId)
-                )
-            ),
-            validateIfDefined[Seq[String]](
-              koulutuskoodiUrit,
-              koulutuskoodiUrit => {
-                validateIfTrue(
-                  koulutuskoodiUrit.nonEmpty,
-                  assertTrue(
-                    koulutuskoodiUrit.intersect(koulutus.koulutuksetKoodiUri).nonEmpty,
-                    "koulutuksetKoodiUri",
-                    valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")
-                  )
-                )
-              }
-            )
-          )
-        }
-      )
-    )
+  private def getAuthorizationRulesForUpdate(newKoulutus: Koulutus, oldKoulutus: Koulutus) = {
+    if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldKoulutus.tila, newKoulutus.tila)) {
+      List(AuthorizationRules(Seq(Role.Paakayttaja)))
+    }
+    else {
+      oldKoulutus.koulutustyyppi match {
+        case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
+          List(AuthorizationRules(Seq(Role.Paakayttaja)))
+        case _ =>
+          val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
+          val newTarjoajat = newKoulutus.tarjoajat.toSet
+          val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+          val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+          val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
+          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+      }
+    }
   }
 
-  private def validateToteutusIntegrityIfDeletingKoulutus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, koulutusOid: KoulutusOid) = {
-    throwValidationErrors(
-      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
-        ToteutusDAO.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
-          "tila",
-          integrityViolationMsg("Koulutusta", "toteutuksia")))
-    )
+  def authorizeAddedTarjoajatFromExternal(organisaatioOid: OrganisaatioOid, addedTarjoajat: Set[OrganisaatioOid]): Unit = {
+    if (addedTarjoajat.nonEmpty) {
+      val allowedOrganisaatioOids = organisaatioService.findOrganisaatioOidsFlatByMemberOid(organisaatioOid).toSet
+      if (!addedTarjoajat.subsetOf(allowedOrganisaatioOids)) {
+        var msg = "Valittuja tarjoajia ei voi lisätä koulutukselle ulkoisen rajapinnan kautta. "
+        msg += s"Tarjoajiksi voi lisätä ainoastaan koulutuksen omistavaan organisaatioon ($organisaatioOid) kuuluvia organisaatioOID:eja."
+        throw ExternalModifyAuthorizationFailedException(msg)
+      }
+    }
   }
 
   def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit
@@ -357,7 +332,7 @@ class KoulutusService(
         newKoulutus,
         List(authorizedForTarjoajaOids(tarjoajatAddedToKoulutus ++ tarjoajatRemovedFromKoulutus, roleEntity.readRoles).get)
       ) { (_, k) =>
-        withValidation(newKoulutus, Some(k)) {
+        koulutusServiceValidation.withValidation(newKoulutus, Some(k)) {
           DBIO.successful(koulutus) zip getUpdateTarjoajatActions(_, lastModified)
         }
       }

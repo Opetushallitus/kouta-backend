@@ -22,6 +22,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
   def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String]
+  def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -125,6 +126,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   override def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String] = {
     KoutaDatabase.runBlocking(selectOidBySorakuvausId(sorakuvausId, tilaFilter))
+  }
+
+  override def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid] = {
+    KoutaDatabase.runBlocking(selectKoulutuksenTarjoajat(oid).as[Tarjoaja]).map(_.tarjoajaOid)
   }
 }
 

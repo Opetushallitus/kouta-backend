@@ -4,7 +4,7 @@ import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient}
+import fi.oph.kouta.client.{KoodistoClient, KoodistoKaannosClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -25,7 +25,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
   def hakukohdeService: HakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    val koodistoClient = new KoodistoClient(urlProperties.get)
+    val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
     new HakukohdeService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),

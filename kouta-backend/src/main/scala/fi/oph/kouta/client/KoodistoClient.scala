@@ -1,60 +1,53 @@
 package fi.oph.kouta.client
 
 import fi.vm.sade.utils.slf4j.Logging
-import org.json4s.jackson.JsonMethods.parse
-import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties
-import fi.oph.kouta.domain.{Fi, Sv, En, Kielistetty}
-import org.json4s.{DefaultFormats}
-import scalacache.caffeine._
-import scalacache.memoization.memoizeSync
-import scalacache.modes.sync._
-import scala.concurrent.duration._
+import org.json4s.DefaultFormats
 
-object KoodistoClient extends KoodistoClient(KoutaConfigurationFactory.configuration.urlProperties)
+import java.time.format.DateTimeFormatter
 
-class KoodistoClient(urlProperties: OphProperties) extends HttpClient with CallerId with Logging {
-  implicit val formats       = DefaultFormats
-  implicit val KoodistoCache = CaffeineCache[Map[String, Kielistetty]]
-  implicit val koodiUriCache = CaffeineCache[String]
+case class KoodiUri(koodiUri: String, latestVersio: Int)
 
-  case class CodeElementMetadataItem(nimi: String, kieli: String)
-  case class CodeElement(koodiUri: String, metadata: List[CodeElementMetadataItem] = List())
-  case class CodeElementWithVersion(koodiUri: String, versio: Int)
+case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
 
-  def parseKoodi(codeElement: CodeElement): Kielistetty = {
-    codeElement.metadata
-      .withFilter(metaItem => List("FI", "SV", "EN").contains(metaItem.kieli))
-      .map((metaItem: CodeElementMetadataItem) =>
-        (
-          metaItem.kieli match {
-            case "FI" => Fi
-            case "SV" => Sv
-            case "EN" => En
-          },
-          metaItem.nimi
-        )
-      )
-      .toMap
-  }
-  def parseKoodit(codeElements: List[CodeElement]): Map[String, Kielistetty] = {
-    codeElements.map(codeElement => (codeElement.koodiUri, parseKoodi(codeElement))).toMap
-  }
-  def getKoodistoKaannokset(koodisto: String): Map[String, Kielistetty] =
-    memoizeSync[Map[String, Kielistetty]](Some(5.minutes)) {
-      get(urlProperties.url("koodisto-service.koodisto-koodit", koodisto), followRedirects = true) { response =>
-        parseKoodit(parse(response).extract[List[CodeElement]])
+object KoodistoUtils {
+  def koodiUriFromString(koodiUriString: String): KoodiUri = {
+    if (koodiUriString.contains("#")) {
+      val baseVal = koodiUriString.split("#").head
+      val versioPart = koodiUriString.split("#").last
+      if (versioPart.forall(Character.isDigit)) {
+        KoodiUri(baseVal, versioPart.toInt)
+      } else {
+        // Tämä on käytännössä virhetilanne, KoodiUrin versio on aina numeerinen
+        KoodiUri(koodiUriString, 1)
       }
+    } else {
+      KoodiUri(koodiUriString, 1)
     }
+  }
 
-  def getKoodiUriWithLatestVersion(koodiUriWithoutVersion: String): String = {
-    memoizeSync[String](Some(5.minutes)) {
-      get(urlProperties.url("koodisto-service.latest-koodiuri", koodiUriWithoutVersion), followRedirects = true) { response =>
-        {
-          val codeElement = parse(response).extract[CodeElementWithVersion]
-          s"${codeElement.koodiUri}#${codeElement.versio}"
-        }
-      }
-    }
+  def kooriUriToString(koodiUri: KoodiUri): String =
+    s"${koodiUri.koodiUri}#${koodiUri.latestVersio}"
+
+  def koodiUriWithEqualOrHigherVersioNbrInList(koodiUri: String, koodiUriList: Seq[KoodiUri], checkVersio: Boolean = true): Boolean = {
+    val koodiUriObjectToSearch = if (checkVersio) koodiUriFromString(koodiUri) else
+      koodiUriFromString(koodiUri).copy(latestVersio = 1)
+    koodiUriList.exists(uri =>
+      uri.koodiUri == koodiUriObjectToSearch.koodiUri &&
+        uri.latestVersio >= koodiUriObjectToSearch.latestVersio)
   }
 }
+
+abstract class KoodistoClient(urlProperties: OphProperties)
+    extends HttpClient
+    with CallerId
+    with Logging {
+
+  val ISO_LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+  implicit val formats = DefaultFormats
+
+  val errorHandler = (url: String, status: Int, response: String) =>
+    throw KoodistoQueryException(url, status, response)
+}
+

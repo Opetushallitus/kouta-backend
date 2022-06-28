@@ -12,6 +12,13 @@ import java.util.UUID
 //Huom! Älä käytä enumeraatioita, koska Swagger ei tue niitä -> TODO: Voi ehkä käyttää, kun ei ole scalatra-swagger enää käytössä?!
 package object domain {
 
+  val KoulutustyyppiModel: String =
+    ("""    Koulutustyyppi:
+      |      type: string
+      |      enum:
+""" + Koulutustyyppi.valuesToSwaggerEnum() +
+"      |").stripMargin
+
   val KieliModel: String =
     """    Kieli:
       |      type: string
@@ -461,7 +468,7 @@ package object domain {
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
-  val models = List(KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
+  val models = List(KoulutustyyppiModel, KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
     ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel,
     KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel, AloituspaikatModel)
@@ -597,6 +604,8 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
       validateIfDefined(koulutusKoodiUri,
         assertMatch(_, KoulutusKoodiPattern, s"$path.koulutusKoodiUri")),
+      // ePerusteId on pakollinen mikäli koulutusKoodiUri, viite tai Id on annettu
+      validateIfAnyDefined(Seq(tutkinnonosaId, tutkinnonosaViite, koulutusKoodiUri), assertNotOptional(ePerusteId, s"$path.ePerusteId")),
       validateIfJulkaistu(tila, and(
         assertNotOptional(ePerusteId, s"$path.ePerusteId"),
         assertNotOptional(koulutusKoodiUri, s"$path.koulutusKoodiUri"),

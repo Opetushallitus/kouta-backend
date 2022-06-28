@@ -5,7 +5,7 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
-import fi.oph.kouta.security.Role
+import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.UnitSpec
 import fi.oph.kouta.validation.ValidationError
@@ -17,7 +17,7 @@ import java.util.UUID
 
 class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with LokalisointiServiceMock {
 
-  override val roleEntities = Seq(Role.Hakukohde)
+  override val roleEntities: Seq[RoleEntity] = Seq(Role.Hakukohde)
 
   var (koulutusOid, toteutusOid, hakuOid) = ("", "", "")
   var valintaperusteId: UUID = _
@@ -175,7 +175,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "fail to store lukiokoulutus if hakukohde does not contain hakukohteenLinja" in {
-    val koulutusOid = put(koulutus.copy(koulutustyyppi = Lk, metadata = Some(LukioKoulutusMetadata())), ophSession)
+    val koulutusOid = put(koulutus.copy(koulutustyyppi = Lk, koulutuksetKoodiUri = Seq("koulutus_301101#1"), ePerusteId = None, metadata = Some(LukioKoulutusMetadata())), ophSession)
     val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), metadata = Some(TestData.LukioToteutus.metadata.get)))
     val valintaperusteId = put(valintaperuste.copy(koulutustyyppi = Lk, metadata = Some(TestData.LkValintaperusteMetadata)))
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "metadata.hakukohteenLinja", missingMsg)
@@ -390,7 +390,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val oid = put(uusiHakukohde)
     val thisHakukohde = tallennettuHakukohde(oid)
-    val lastModified = get(oid, thisHakukohde)
+    get(oid, thisHakukohde)
     post(HakukohdePath, bytes(thisHakukohde), Seq(defaultSessionHeader)) {
       status should equal (400)
       body should include (KoutaServlet.IfUnmodifiedSinceHeader)
@@ -485,8 +485,8 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "delete all hakuajat and read last modified from history" in {
-    val oid = put(uusiHakukohde)
-    val lastModified = get(oid, tallennettuHakukohde(oid))
+    val oid = put(uusiHakukohde.copy(tila = Tallennettu))
+    val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
     Thread.sleep(1500)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
@@ -552,8 +552,8 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {
-    val oid = put(uusiHakukohde)
-    val tallennettu = tallennettuHakukohde(oid)
+    val oid = put(uusiHakukohde.copy(tila = Tallennettu))
+    val tallennettu = tallennettuHakukohde(oid).copy(tila = Tallennettu)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
@@ -574,7 +574,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
     var tallennettuHk = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
     tallennettuHk = tallennettuHk.copy(metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
-    val muokattu = tallennettuHk.copy(tila = Tallennettu, muokkaaja = TestUserOid)
+    val muokattu = tallennettuHk.copy(muokkaaja = TestUserOid)
     val lastModified = get(oid, tallennettuHk)
     update(HakukohdePath, muokattu, lastModified, 400, "hakukohteenMuokkaamisenTakaraja", pastDateMsg(pastDate))
   }
@@ -590,26 +590,39 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     update(muokattu, lastModified, expectUpdate = true, ophSession)
   }
 
+  it should "allow oph user to update from julkaistu to tallennettu" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    update(tallennettuHakukohde(oid).copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
+    get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(hakukohde.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
+  }
+
+  it should "not allow non oph user to update from julkaistu to tallennettu" in {
+    val oid = put(uusiHakukohde)
+    val lastModified = get(oid, tallennettuHakukohde(oid))
+    update(tallennettuHakukohde(oid).copy(tila = Tallennettu), lastModified, 403, crudSessions(hakukohde.organisaatioOid))
+  }
+
   it should "pass legal state changes" in {
     val id = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
     val tallennettuHk = tallennettuHakukohde(id)
     val theHakukohde = tallennettuHk.copy(muokkaaja = OphUserOid, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
     var lastModified = get(id, theHakukohde.copy(tila = Tallennettu))
     val updatedHakukohde = theHakukohde.copy(tila = Julkaistu)
-    update(updatedHakukohde, lastModified, true, ophSession)
+    update(updatedHakukohde, lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, updatedHakukohde)
-    update(updatedHakukohde.copy(tila = Arkistoitu), lastModified, true, ophSession)
+    update(updatedHakukohde.copy(tila = Arkistoitu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, updatedHakukohde.copy(tila = Arkistoitu))
-    update(updatedHakukohde.copy(tila = Julkaistu), lastModified, true, ophSession)
+    update(updatedHakukohde.copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, updatedHakukohde.copy(tila = Julkaistu))
-    update(updatedHakukohde.copy(tila = Tallennettu), lastModified, true, ophSession)
+    update(updatedHakukohde.copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
     lastModified = get(id, updatedHakukohde.copy(tila = Tallennettu))
-    update(updatedHakukohde.copy(tila = Poistettu), lastModified, true, ophSession)
+    update(updatedHakukohde.copy(tila = Poistettu), lastModified, expectUpdate = true, ophSession)
 
     val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
     val tallennettu = tallennettuHakukohde(arkistoituId).copy(muokkaaja = OphUserOid)
     lastModified = get(arkistoituId, tallennettu.copy(tila = Arkistoitu, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
-    update(tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))), lastModified, true, ophSession)
+    update(tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))), lastModified, expectUpdate = true, ophSession)
     get(arkistoituId, tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 

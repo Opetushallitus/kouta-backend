@@ -62,6 +62,7 @@ package object toteutus {
       |            - $ref: '#/components/schemas/YliopistoToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmattikorkeaToteutusMetadata'
+      |            - $ref: '#/components/schemas/KkOpintojaksoToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenMuuToteutusMetadata'
@@ -262,6 +263,8 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
 
   def withEnrichedData(enrichedData: ToteutusEnrichedData): Toteutus = this.copy(_enrichedData = Some(enrichedData))
   def withoutRelatedData(): Toteutus = this.copy(koulutusMetadata = None)
+
+  def getEntityDescriptionAllative(): String = "toteutukselle"
 }
 
 case class ToteutusListItem(oid: ToteutusOid,

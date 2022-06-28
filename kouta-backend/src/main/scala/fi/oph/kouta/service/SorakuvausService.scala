@@ -8,8 +8,9 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeSorakuvaus}
 import fi.oph.kouta.repository.{KoulutusDAO, KoutaDatabase, SorakuvausDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -68,7 +69,10 @@ class SorakuvausService(
   }
 
   def update(sorakuvaus: Sorakuvaus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    authorizeUpdate(SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat()), sorakuvaus, updateRules) { (oldSorakuvaus, s) =>
+    val oldSorakuvausWithTime = SorakuvausDAO.get(sorakuvaus.id.get, TilaFilter.onlyOlemassaolevat())
+    val rules = getAuthorizationRulesForUpdate(sorakuvaus, oldSorakuvausWithTime)
+
+    authorizeUpdate(oldSorakuvausWithTime, sorakuvaus, rules) { (oldSorakuvaus, s) =>
       val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(s)
       val enrichedSorakuvaus = s.copy(metadata = enrichedMetadata)
       withValidation(enrichedSorakuvaus, Some(oldSorakuvaus)) {
@@ -79,6 +83,18 @@ class SorakuvausService(
     }.nonEmpty
   }
 
+  private def getAuthorizationRulesForUpdate(newSorakuvaus: Sorakuvaus, oldSorakuvausWithTime: Option[(Sorakuvaus, Instant)]): AuthorizationRules = {
+    oldSorakuvausWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää sorakuvausta ei löytynyt")
+      case Some((oldSorakuvaus, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldSorakuvaus.tila, newSorakuvaus.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        }
+        else {
+          updateRules
+        }
+    }
+  }
 
   private def validateKoulutusIntegrityIfDeletingSorakuvaus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, sorakuvausId: UUID) =
     throwValidationErrors(
@@ -119,4 +135,10 @@ class SorakuvausService(
 
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
+
+  override def validateParameterFormatAndExistence(sorakuvaus: Sorakuvaus): IsValid = sorakuvaus.validate()
+
+  override def validateDependenciesToExternalServices(sorakuvaus: Sorakuvaus): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(sorakuvaus: Sorakuvaus): IsValid = NoErrors
 }

@@ -3,13 +3,14 @@ package fi.oph.kouta.service
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{AikuistenPerusopetusValintaperusteMetadata, AmmOpeErityisopeJaOpoValintaperusteMetadata, AmmatillinenMuuValintaperusteMetadata, AmmatillinenOsaamisalaValintaperusteMetadata, AmmatillinenTutkinnonOsaValintaperusteMetadata, AmmatillinenValintaperusteMetadata, AmmattikorkeakouluValintaperusteMetadata, HakuEnrichedData, HakukohdeListItem, Julkaisutila, Koulutustyyppi, LukioValintaperusteMetadata, MuuValintaperusteMetadata, Poistettu, TelmaValintaperusteMetadata, TilaFilter, TutkintokoulutukseenValmentavaValintaperusteMetadata, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchResult, VapaaSivistystyoMuuValintaperusteMetadata, VapaaSivistystyoOpistovuosiValintaperusteMetadata, YliopistoValintaperusteMetadata}
+import fi.oph.kouta.domain.{ GenericValintaperusteMetadata, HakukohdeListItem, Julkaisutila, Koulutustyyppi, Poistettu, TilaFilter, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchResult}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
@@ -52,20 +53,7 @@ class ValintaperusteService(
 
     valintaperuste.metadata match {
       case Some(metadata) => metadata match {
-        case ammValintaperusteMetadata:  AmmatillinenValintaperusteMetadata => Some(ammValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case lukioValintaperusteMetadata: LukioValintaperusteMetadata => Some(lukioValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case yoValintaperusteMetadata: YliopistoValintaperusteMetadata => Some(yoValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case amkValintaperusteMetadata: AmmattikorkeakouluValintaperusteMetadata => Some(amkValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammTutkinnonOsaValintaperusteMetadata: AmmatillinenTutkinnonOsaValintaperusteMetadata => Some(ammTutkinnonOsaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammOsaamisalaValintaperusteMetadata: AmmatillinenOsaamisalaValintaperusteMetadata => Some(ammOsaamisalaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case tuvaValintaperusteMetadata: TutkintokoulutukseenValmentavaValintaperusteMetadata => Some(tuvaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case telmaValintaperusteMetadata: TelmaValintaperusteMetadata  => Some(telmaValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammatillinenMuuValintaperusteMetadata: AmmatillinenMuuValintaperusteMetadata => Some(ammatillinenMuuValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case vapaaSivistystyoOpistovuosiValintaperusteMetadata: VapaaSivistystyoOpistovuosiValintaperusteMetadata => Some(vapaaSivistystyoOpistovuosiValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case vapaaSivistystyoMuuValintaperusteMetadata: VapaaSivistystyoMuuValintaperusteMetadata => Some(vapaaSivistystyoMuuValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case ammOpeErityisopeJaOpoValintaperusteMetadata: AmmOpeErityisopeJaOpoValintaperusteMetadata => Some(ammOpeErityisopeJaOpoValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case aikuistenPerusopetusValintaperusteMetadata: AikuistenPerusopetusValintaperusteMetadata => Some(aikuistenPerusopetusValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-        case muuValintaperusteMetadata: MuuValintaperusteMetadata => Some(muuValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+        case valintaperusteMetadata: GenericValintaperusteMetadata => Some(valintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
       }
       case None => None
     }
@@ -83,7 +71,10 @@ class ValintaperusteService(
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
             (implicit authenticated: Authenticated): Boolean = {
-    authorizeUpdate(ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat()), valintaperuste) { (oldValintaperuste, v) =>
+    val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
+    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(oldValintaPerusteWithTime, valintaperuste)
+
+    authorizeUpdate(oldValintaPerusteWithTime, valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
       withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
@@ -94,7 +85,20 @@ class ValintaperusteService(
     }.nonEmpty
   }
 
-  private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID) =
+  private def getAuthorizationRulesForUpdate(oldValintaperusteWithTime: Option[(Valintaperuste, Instant)], newValintaperuste: Valintaperuste) = {
+    oldValintaperusteWithTime match {
+      case None => throw EntityNotFoundException(s"Päivitettävää valintaperustetta ei löytynyt")
+      case Some((oldValintaperuste, _)) =>
+        if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldValintaperuste.tila, newValintaperuste.tila)) {
+          AuthorizationRules(Seq(Role.Paakayttaja))
+        }
+        else {
+          AuthorizationRules(roleEntity.updateRoles)
+        }
+    }
+  }
+
+  private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID): Unit =
     throwValidationErrors(
       validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
         HakukohdeDAO.listByValintaperusteId(valintaperusteId, TilaFilter.onlyOlemassaolevat()).isEmpty,
@@ -144,4 +148,11 @@ class ValintaperusteService(
 
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
+
+  override def validateParameterFormatAndExistence(valintaperuste: Valintaperuste): IsValid = valintaperuste.validate()
+  override def validateParameterFormatAndExistenceOnJulkaisu(valintaperuste: Valintaperuste): IsValid = valintaperuste.validateOnJulkaisu()
+
+  override def validateDependenciesToExternalServices(valintaperuste: Valintaperuste): IsValid = NoErrors
+
+  override def validateInternalDependenciesWhenDeletingEntity(valintaperuste: Valintaperuste): IsValid = NoErrors
 }
