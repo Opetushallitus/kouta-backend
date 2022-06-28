@@ -255,6 +255,13 @@
             </exclusions>
         </dependency>
 
+        <!-- Scheduler -->
+        <dependency>
+            <groupId>com.github.kagkarlsson</groupId>
+            <artifactId>db-scheduler</artifactId>
+            <version>11.2</version>
+        </dependency>
+
         <dependency>
             <groupId>io.atlassian.aws-scala</groupId>
             <artifactId>aws-scala-s3_2.12</artifactId>
