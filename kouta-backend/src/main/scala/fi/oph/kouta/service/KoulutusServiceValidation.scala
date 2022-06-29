@@ -158,7 +158,7 @@ class KoulutusServiceValidation(
         validateAmmTutkinnonosaMetadata(tila, kielivalinta, ammTutkinnonOsaMetadata)
 
       case ammOsaamisalaKoulutusMetadata: AmmatillinenOsaamisalaKoulutusMetadata =>
-        validateAmmOsaamisalaMetadata(tila, ePerusteId, ammOsaamisalaKoulutusMetadata)
+        validateAmmOsaamisalaKoulutusMetadata(tila, ePerusteId, ammOsaamisalaKoulutusMetadata)
 
       case m: AmmatillinenMuuKoulutusMetadata =>
         and(
@@ -166,9 +166,9 @@ class KoulutusServiceValidation(
           validateOpintojenLaajuusyksikko(tila, m.opintojenLaajuusyksikkoKoodiUri, m.opintojenLaajuusNumero, true)
         )
       case yoKoulutusMetadata: YliopistoKoulutusMetadata =>
-        validateKorkeaKoulutus(tila, kielivalinta, yoKoulutusMetadata)
+        validateKorkeaKoulutusMetadata(tila, kielivalinta, yoKoulutusMetadata)
       case amkKoulutusMetadata: AmmattikorkeakouluKoulutusMetadata =>
-        validateKorkeaKoulutus(tila, kielivalinta, amkKoulutusMetadata)
+        validateKorkeaKoulutusMetadata(tila, kielivalinta, amkKoulutusMetadata)
       case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
         and(
           assertEmpty(m.tutkintonimikeKoodiUrit, "metadata.tutkintonimikeKoodiUrit"),
