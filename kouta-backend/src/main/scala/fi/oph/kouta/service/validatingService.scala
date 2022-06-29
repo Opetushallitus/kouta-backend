@@ -106,7 +106,7 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
             koulutuskoodiUrit,
             koulutuskoodiUrit => {
               validateIfTrue(
-                entityKoulutusKoodiUrit.nonEmpty,
+                koulutuskoodiUrit.nonEmpty && entityKoulutusKoodiUrit.nonEmpty,
                 assertTrue(
                   koulutuskoodiUrit.intersect(entityKoulutusKoodiUrit).nonEmpty,
                   "koulutuksetKoodiUri",
