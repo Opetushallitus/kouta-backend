@@ -13,7 +13,7 @@ class SearchServlet(koulutusService: KoulutusService,
 
   def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
-  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "julkinen", "hakutapa", "koulutuksenAlkamiskausi", "koulutuksenAlkamisvuosi", "hakuOid", "toteutusOid", "page", "size", "lng", "order-by", "order")
+  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "julkinen", "hakutapa", "koulutuksenAlkamiskausi", "koulutuksenAlkamisvuosi", "hakuOid", "toteutusOid", "orgWhitelist", "page", "size", "lng", "order-by", "order")
 
   val searchParams =
     """        - in: query
@@ -360,6 +360,12 @@ class SearchServlet(koulutusService: KoulutusService,
        |          required: false
        |          description: Suodata koulutustyypillä
        |          example: yo
+       |        - in: query
+       |          name: orgWhitelist
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Rajaa palautuvia hakukohteita organisaation mukaan. Pilkulla erotettuja organisaatio-oideja.
        |$searchParams
        |      responses:
        |        '200':
