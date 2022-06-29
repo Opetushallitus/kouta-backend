@@ -17,7 +17,13 @@ trait ValidatingService[E <: Validatable] {
   def organisaatioService: OrganisaatioService
 
   def withValidation[R](e: E, oldE: Option[E])(f: E => R): R = {
+    validate(e, oldE) match {
+      case NoErrors => f(e)
+      case errors   => throw KoutaValidationException(errors)
+    }
+  }
 
+  def validate(e: E, oldE: Option[E]): IsValid = {
     var errors = if (oldE.isDefined) {
       if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
         validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
@@ -33,10 +39,6 @@ trait ValidatingService[E <: Validatable] {
       }
     }
 
-    if (errors.isEmpty) {
-      errors = validateEntity(e)
-    }
-
     if (errors.isEmpty && oldE.isDefined) {
       val tulevaTila = e.tila
       val aiempiTila = oldE.get.tila
@@ -44,10 +46,7 @@ trait ValidatingService[E <: Validatable] {
         errors = validateInternalDependenciesWhenDeletingEntity(e)
     }
 
-    errors match {
-      case NoErrors => f(e)
-      case errors   => throw KoutaValidationException(errors)
-    }
+    errors
   }
 
   def throwValidationErrors(errors: IsValid): Unit =
