@@ -150,6 +150,12 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
       pp.setObject(o.toArray, java.sql.Types.ARRAY)
     }
   }
+
+  implicit object SetHakukohdeOidSet extends SetParameter[Set[HakukohdeOid]] {
+    def apply(o: Set[HakukohdeOid], pp: PositionedParameters) {
+      pp.setObject(o.toArray, java.sql.Types.ARRAY)
+    }
+  }
 }
 
 object DBIOHelpers {
