@@ -285,7 +285,7 @@ class KoulutusServiceValidation(
     )
   }
 
-  private def validateAmmOsaamisalaMetadata(
+  private def validateAmmOsaamisalaKoulutusMetadata(
       tila: Julkaisutila,
       ePerusteId: Option[Long],
       osaamisalaMetadata: AmmatillinenOsaamisalaKoulutusMetadata
