@@ -1,4 +1,4 @@
-create table scheduled_tasks (
+create table if not exists scheduled_tasks (
                                  task_name text not null,
                                  task_instance text not null,
                                  task_data bytea,

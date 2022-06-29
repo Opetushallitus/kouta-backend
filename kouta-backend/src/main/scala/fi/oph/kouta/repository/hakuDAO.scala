@@ -19,7 +19,7 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishakuFilter: YhteishakuFilter): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem]
   def listArchivableHakuOids(): Seq[HakuOid]
-  def archiveHakusByHakuOids(hakuOids: Set[HakuOid]): Int
+  def archiveHakusByHakuOids(hakuOids: Seq[HakuOid]): Int
 }
 
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -63,7 +63,7 @@ object HakuDAO extends HakuDAO with HakuSQL {
 
   override def listArchivableHakuOids(): Seq[HakuOid] = KoutaDatabase.runBlocking(selectArchivableHakuOids())
 
-  override def archiveHakusByHakuOids(hakuOids: Set[HakuOid]): Int = KoutaDatabase.runBlocking(updateHakusToArchivedByHakuOids(hakuOids))
+  override def archiveHakusByHakuOids(hakuOids: Seq[HakuOid]): Int = KoutaDatabase.runBlocking(updateHakusToArchivedByHakuOids(hakuOids))
 }
 
 trait HakuModificationSQL extends SQLHelpers {
@@ -268,7 +268,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
           and tila = 'julkaistu'""".as[HakuOid]
   }
 
-  def updateHakusToArchivedByHakuOids(hakuOids: Set[HakuOid]): DBIO[Int] = {
-    sqlu"""update haut set tila = 'arkistoitu' where oid in ($hakuOids) and tila = 'julkaistu'"""
+  def updateHakusToArchivedByHakuOids(hakuOids: Seq[HakuOid]): DBIO[Int] = {
+    sqlu"""update haut set tila = 'arkistoitu' where oid in (#${createOidInParams(hakuOids)}) and tila = 'julkaistu'"""
   }
 }

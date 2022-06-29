@@ -25,8 +25,9 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
 
   def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])]
-  def listArchivableHakukohdeOidsByHakuOids(hakuOids: Set[HakuOid]): Seq[HakukohdeOid]
-  def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Set[HakukohdeOid]): Int
+
+  def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int
+  def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -137,10 +138,12 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     ).get
   }
 
-  override def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Set[HakukohdeOid]): Int = KoutaDatabase.runBlocking(updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Set[HakukohdeOid]))
-
-  override def listArchivableHakukohdeOidsByHakuOids(hakuOids: Set[HakuOid]): Seq[HakukohdeOid] = {
+  override def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid] = {
     KoutaDatabase.runBlocking(selectArchivableHakukohdeOidsByHakuOids(hakuOids))
+  }
+
+  override def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int = {
+    KoutaDatabase.runBlocking(updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]))
   }
 }
 
@@ -660,11 +663,11 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     left join hakukohteiden_hakuajat as hakuajat on hakuajat.hakukohde_oid = hk.oid
     where hk.oid in (#${createOidInParams(hakukohdeOids)})""".as[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)]
 
-  def updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Set[HakukohdeOid]): DBIO[Int] = {
-    sqlu"""update hakukohteet set tila = 'arkistoitu' where oid in ($hakukohdeOids) and tila = 'julkaistu'"""
+  def selectArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): DBIO[Seq[HakukohdeOid]] = {
+    sql"""select oid from hakukohteet where haku_oid in (#${createOidInParams(hakuOids)}) and tila = 'julkaistu'""".as[HakukohdeOid]
   }
 
-  def selectArchivableHakukohdeOidsByHakuOids(hakuOids: Set[HakuOid]): DBIO[Seq[HakukohdeOid]] = {
-    sql"""select oid from hakukohteet where haku_oid in ($hakuOids) and tila = 'julkaistu'""".as[HakukohdeOid]
+  def updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): DBIO[Int] = {
+    sqlu"""update hakukohteet set tila = 'arkistoitu' where oid in (#${createOidInParams(hakukohdeOids)}) and tila = 'julkaistu'"""
   }
 }

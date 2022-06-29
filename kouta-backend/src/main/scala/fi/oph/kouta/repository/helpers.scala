@@ -144,18 +144,6 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
       pp.setObject(v, JDBCType.BINARY.getVendorTypeNumber)
     }
   }
-
-  implicit object SetHakuOidSet extends SetParameter[Set[HakuOid]] {
-    def apply(o: Set[HakuOid], pp: PositionedParameters) {
-      pp.setObject(o.toArray, java.sql.Types.ARRAY)
-    }
-  }
-
-  implicit object SetHakukohdeOidSet extends SetParameter[Set[HakukohdeOid]] {
-    def apply(o: Set[HakukohdeOid], pp: PositionedParameters) {
-      pp.setObject(o.toArray, java.sql.Types.ARRAY)
-    }
-  }
 }
 
 object DBIOHelpers {
