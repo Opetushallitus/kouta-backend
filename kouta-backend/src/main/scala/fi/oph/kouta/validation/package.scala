@@ -34,6 +34,12 @@ package object validation {
     }
   }
 
+  object CrudOperations extends Enumeration {
+    type CrudOperation = Value
+
+    val create, update = Value
+  }
+
   val ammatillisetKoulutustyypit =
     Seq(
       "koulutustyyppi_1",
