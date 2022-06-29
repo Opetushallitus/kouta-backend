@@ -320,7 +320,7 @@ class KoulutusServiceValidation(
       )
     )
 
-  private def validateKorkeaKoulutus(
+  private def validateKorkeaKoulutusMetadata(
       tila: Julkaisutila,
       kielivalinta: Seq[Kieli],
       metadata: KorkeakoulutusKoulutusMetadata
