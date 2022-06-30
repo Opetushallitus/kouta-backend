@@ -1,19 +1,23 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, Ataru, Haku, Hakukohde, Julkaisutila, Koulutustyyppi, Lk, ToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata}
-import fi.oph.kouta.util.MiscUtils.isToisenAsteenYhteishaku
-import fi.oph.kouta.validation.Validations.{and, validateDependencyExistence, assertInFuture, assertNotOptional, assertTrue, cannotLinkToHakukohde, tyyppiMismatch, validateDependency, validateIfDefined, validateIfJulkaistu, validateIfTrue}
+import fi.oph.kouta.util.MiscUtils.{isEBlukiokoulutus, isToisenAsteenYhteishaku}
+import fi.oph.kouta.validation.Validations.{and, assertInFuture, assertNotOptional, assertTrue, cannotLinkToHakukohde, tyyppiMismatch, validateDependency, validateDependencyExistence, validateIfDefined, validateIfJulkaistu, validateIfTrue}
 
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 object HakukohdeServiceValidation {
 
-  def validate(hakukohde: Hakukohde, haku: Option[Haku], isOphPaakayttaja: Boolean, deps: Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata])], method: String) = {
+  def validate(hakukohde: Hakukohde, haku: Option[Haku], isOphPaakayttaja: Boolean, deps: Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])], method: String) = {
     val hakuOid = hakukohde.hakuOid.s
     val toteutusOid = hakukohde.toteutusOid.s
 
     val koulutustyyppi = deps.get(toteutusOid).flatMap(_._2)
+    val koulutuksetKoodiUri = deps.get(toteutusOid) match {
+      case None => Seq()
+      case deps => deps.get._4
+    }
 
     and(
       validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
@@ -41,7 +45,7 @@ object HakukohdeServiceValidation {
           assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
         validateIfTrue(metadata.tyyppi == VapaaSivistystyoMuu,
           assertTrue(metadata.asInstanceOf[VapaaSivistystyoMuuToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
-        validateIfTrue(metadata.tyyppi == Lk,
+        validateIfTrue(metadata.tyyppi == Lk && !isEBlukiokoulutus(koulutuksetKoodiUri),
           assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
       )),
       validateIfJulkaistu(

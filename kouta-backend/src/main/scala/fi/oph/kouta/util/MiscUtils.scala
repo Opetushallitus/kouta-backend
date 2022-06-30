@@ -12,4 +12,7 @@ object MiscUtils {
     ) && isYhteishakuHakutapa(
       hakutapaKoodiUri
     );
+
+  def EBkoodiuri = "koulutus_301104"
+  def isEBlukiokoulutus(koulutuksetKoodiUri: Seq[String]) = koulutuksetKoodiUri.map(uri => withoutKoodiVersion(uri)).contains(EBkoodiuri)
 }
