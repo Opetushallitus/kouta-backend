@@ -52,8 +52,7 @@ object Validations extends Logging {
     "invalidLukioLinjaKoodiUri"
   )
   def unknownTarjoajaOid(oid: OrganisaatioOid): ErrorMessage = ErrorMessage(
-    msg =
-      s"Tarjoaja-organisaatiota oid:illa $oid ei löydy, tai organisaatio ei ole aktiivinen",
+    msg = s"Tarjoaja-organisaatiota oid:illa $oid ei löydy, tai organisaatio ei ole aktiivinen",
     id = "unknownTarjoajaOid"
   )
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(
@@ -109,13 +108,11 @@ object Validations extends Logging {
     "invalidLukioDiplomiKoodiUri"
   )
   def invalidOpetusLisatietoOtsikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg =
-      s"Opetuksen lisätiedon otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    msg = s"Opetuksen lisätiedon otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpetusLisatietoOtsikkoKoodiuri"
   )
   def invalidKausiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg =
-      s"Opetuksen koulutuksenAlkamiskausi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    msg = s"Opetuksen koulutuksenAlkamiskausi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKausiKoodiuri"
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
@@ -157,6 +154,15 @@ object Validations extends Logging {
       msg = s"Siirtyminen tilasta $oldState tilaan $newState ei ole sallittu $entityDesc",
       id = "illegalStateChange"
     )
+  def illegalValueForFixedValueMsg(fixedValDesc: String): ErrorMessage = ErrorMessage(
+    msg = s"Kentän täytyy sisältää tietty arvo: $fixedValDesc. Ko. arvo asetetaan automaattisesti jos kenttä on tyhjä",
+    id = "illegalValueForFixedValueSeq"
+  )
+  def illegalValueForFixedValueSeqMsg(fixedValDesc: String): ErrorMessage = ErrorMessage(
+    msg =
+      s"Kentän täytyy sisältää täsmälleen yksi arvo: $fixedValDesc. Ko. arvo asetetaan automaattisesti jos kenttä on tyhjä",
+    id = "illegalValueForFixedValueSeq"
+  )
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
@@ -221,14 +227,30 @@ object Validations extends Logging {
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid       = assertTrue(value.nonEmpty, path, missingMsg)
   def assertEmpty[T](value: Seq[T], path: String, errorMessage: ErrorMessage = notEmptyMsg): IsValid =
     assertTrue(value.isEmpty, path, errorMessage)
-  def assertOneAndOnlyOneKoodiUri(value: Seq[String]): IsValid =
-    if (value.isEmpty) {
-      error("koulutuksetKoodiUri", missingMsg)
-    } else if (value.size > 1) {
-      error("koulutuksetKoodiUri", tooManyKoodiUris)
-    } else {
+  def assertCertainValue(
+      value: Option[String],
+      expectedValuePrefix: String,
+      path: String,
+      expectedValueDescription: Option[String] = None
+  ): IsValid =
+    assertTrue(
+      value.isDefined && value.get.startsWith(expectedValuePrefix),
+      path,
+      illegalValueForFixedValueMsg(expectedValueDescription.getOrElse(expectedValuePrefix))
+    )
+
+  def assertOneAndOnlyCertainValueInSeq(
+      value: Seq[String],
+      expectedValuePrefix: String,
+      path: String,
+      expectedValueDescription: Option[String] = None
+  ): IsValid =
+    if (value.size == 1 && value.head.startsWith(expectedValuePrefix)) {
       NoErrors
+    } else {
+      error(path, illegalValueForFixedValueSeqMsg(expectedValueDescription.getOrElse(expectedValuePrefix)))
     }
+
   def assertNotDefined[T](value: Option[T], path: String): IsValid =
     assertTrue(value.isEmpty, path, notMissingMsg(value))
   def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =

@@ -95,7 +95,15 @@ class KoulutusServiceValidation(
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case AikuistenPerusopetus =>
-        assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        and(
+          assertOneAndOnlyCertainValueInSeq(
+            koulutus.koulutuksetKoodiUri,
+            "koulutus_201101",
+            "koulutuksetKoodiUri",
+            koodiUriTipText("koulutus_201101")
+          ),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case Erikoislaakari => and(
         validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
         assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
@@ -177,11 +185,30 @@ class KoulutusServiceValidation(
       case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
         and(
           assertEmpty(m.tutkintonimikeKoodiUrit, "metadata.tutkintonimikeKoodiUrit"),
-          assertOpintojenLaajuusKoodiUri(m.opintojenLaajuusKoodiUri),
+          assertCertainValue(
+            m.opintojenLaajuusKoodiUri,
+            "opintojenlaajuus_60",
+            "metadata.opintojenLaajuusKoodiUri",
+            koodiUriTipText("opintojenlaajuus_60")
+          ),
+          assertOneAndOnlyCertainValueInSeq(
+            m.koulutusalaKoodiUrit,
+            "kansallinenkoulutusluokitus2016koulutusalataso1_01",
+            "metadata.koulutusalaKoodiUrit",
+            koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_01")
+          )
         )
 
-      case lukioKoulutusMetadata: LukioKoulutusMetadata =>
-        assertOpintojenLaajuusKoodiUri(lukioKoulutusMetadata.opintojenLaajuusKoodiUri)
+      case m: LukioKoulutusMetadata =>
+        and(
+          assertOneAndOnlyCertainValueInSeq(
+            m.koulutusalaKoodiUrit,
+            "kansallinenkoulutusluokitus2016koulutusalataso1_00",
+            "metadata.koulutusalaKoodiUrit",
+            koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_00")
+          ),
+          assertOpintojenLaajuusKoodiUri(m.opintojenLaajuusKoodiUri)
+        )
       case m: TuvaKoulutusMetadata =>
         validateTuvaTelma(tila, kielivalinta, m.lisatiedot, m.linkkiEPerusteisiin, m.opintojenLaajuusKoodiUri)
       case m: TelmaKoulutusMetadata =>
