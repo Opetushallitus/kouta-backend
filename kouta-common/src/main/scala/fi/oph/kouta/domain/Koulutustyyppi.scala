@@ -14,6 +14,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmOpeErityisopeJaOpo,
       AmmOsaamisala,
       AmmTutkinnonOsa,
+      Erikoislaakari,
       KkOpintojakso,
       Lk,
       Muu,
@@ -89,11 +90,17 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AikuistenPerusopetus
     ), //Ammatilliset erityisoppilaitokset
     "oppilaitostyyppi_23#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu), //Ammatilliset erikoisoppilaitokset
-    "oppilaitostyyppi_24#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva), //Ammatilliset aikuiskoulutuskeskukset
+    "oppilaitostyyppi_24#1" -> Seq(
+      Amm,
+      AmmTutkinnonOsa,
+      AmmOsaamisala,
+      AmmMuu,
+      Tuva
+    ), //Ammatilliset aikuiskoulutuskeskukset
     "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
     "oppilaitostyyppi_29#1" -> Seq(Amm), //Sotilasalan ammatilliset oppilaitokset
     "oppilaitostyyppi_41#1" -> Seq(Amk, AmmOpeErityisopeJaOpo, KkOpintojakso), //Ammattikorkeakoulut
-    "oppilaitostyyppi_42#1" -> Seq(Yo, KkOpintojakso), //Yliopistot
+    "oppilaitostyyppi_42#1" -> Seq(Yo, KkOpintojakso, Erikoislaakari), //Yliopistot
     "oppilaitostyyppi_43#1" -> Seq(Yo, KkOpintojakso), //Sotilaskorkeakoulut
     "oppilaitostyyppi_45#1" -> Seq(Yo, KkOpintojakso), //Lastentarhanopettajaopistot
     "oppilaitostyyppi_46#1" -> Seq(Amk, AmmOpeErityisopeJaOpo, KkOpintojakso), //Väliaikaiset ammattikorkeakoulut
@@ -165,21 +172,24 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_XX#1" -> Seq(Muu) //Ei tiedossa (oppilaitostyyppi)
   )
 
-  def valuesToSwaggerEnum(padStr: String = "      |        "): String = values.map(padStr + "- " + _.toString + "\n").mkString
+  def valuesToSwaggerEnum(padStr: String = "      |        "): String =
+    values.map(padStr + "- " + _.toString + "\n").mkString
 }
 
-case object Amm                         extends Koulutustyyppi { val name = "amm"                           }
-case object Lk                          extends Koulutustyyppi { val name = "lk"                            }
-case object Yo                          extends Koulutustyyppi { val name = "yo"                            }
-case object Amk                         extends Koulutustyyppi { val name = "amk"                           }
-case object Tuva                        extends Koulutustyyppi { val name = "tuva"                          }
-case object Telma                       extends Koulutustyyppi { val name = "telma"                         }
-case object Muu                         extends Koulutustyyppi { val name = "muu"                           }
-case object AmmTutkinnonOsa             extends Koulutustyyppi { val name = "amm-tutkinnon-osa"             }
-case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm-osaamisala"                }
-case object AmmMuu                      extends Koulutustyyppi { val name = "amm-muu"                       }
-case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
-case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }
-case object AmmOpeErityisopeJaOpo       extends Koulutustyyppi { val name = "amm-ope-erityisope-ja-opo"     }
 case object AikuistenPerusopetus        extends Koulutustyyppi { val name = "aikuisten-perusopetus"         }
+case object Amk                         extends Koulutustyyppi { val name = "amk"                           }
+case object Amm                         extends Koulutustyyppi { val name = "amm"                           }
+case object AmmMuu                      extends Koulutustyyppi { val name = "amm-muu"                       }
+case object AmmOpeErityisopeJaOpo       extends Koulutustyyppi { val name = "amm-ope-erityisope-ja-opo"     }
+case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm-osaamisala"                }
+case object AmmTutkinnonOsa             extends Koulutustyyppi { val name = "amm-tutkinnon-osa"             }
+case object Erikoislaakari              extends Koulutustyyppi { val name = "erikoislaakari"                }
 case object KkOpintojakso               extends Koulutustyyppi { val name = "kk-opintojakso"                }
+case object Lk                          extends Koulutustyyppi { val name = "lk"                            }
+case object Muu                         extends Koulutustyyppi { val name = "muu"                           }
+case object Telma                       extends Koulutustyyppi { val name = "telma"                         }
+case object Tuva                        extends Koulutustyyppi { val name = "tuva"                          }
+case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }
+case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
+case object Yo                          extends Koulutustyyppi { val name = "yo"                            }
+
