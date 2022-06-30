@@ -487,10 +487,12 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends KoulutusMetadata
 
+// koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
 case class ErikoislaakariKoulutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
                                           kuvauksenNimi: Kielistetty = Map(),
                                           kuvaus: Kielistetty = Map(),
                                           lisatiedot: Seq[Lisatieto] = Seq(),
                                           tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+                                          koulutusalaKoodiUrit: Seq[String] = Seq(),
                                           isMuokkaajaOphVirkailija: Option[Boolean] = None
                                          ) extends KoulutusMetadata
