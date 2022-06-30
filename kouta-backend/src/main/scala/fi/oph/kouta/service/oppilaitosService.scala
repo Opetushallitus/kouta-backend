@@ -146,9 +146,7 @@ class OppilaitosService(
   private def index(oppilaitos: Option[Oppilaitos]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
 
-  override def validateParameterFormatAndExistence(oppilaitos: Oppilaitos): IsValid = oppilaitos.validate()
-
-  override def validateDependenciesToExternalServices(oppilaitos: Oppilaitos): IsValid = NoErrors
+  override def validateEntity(oppilaitos: Oppilaitos): IsValid = oppilaitos.validate()
 
   override def validateInternalDependenciesWhenDeletingEntity(oppilaitos: Oppilaitos): IsValid = NoErrors
 }
@@ -309,9 +307,7 @@ class OppilaitoksenOsaService(
   private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.map(_.oid.toString))
 
-  override def validateParameterFormatAndExistence(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = oppilaitoksenOsa.validate()
-
-  override def validateDependenciesToExternalServices(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = NoErrors
+  override def validateEntity(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = oppilaitoksenOsa.validate()
 
   override def validateInternalDependenciesWhenDeletingEntity(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = NoErrors
 }

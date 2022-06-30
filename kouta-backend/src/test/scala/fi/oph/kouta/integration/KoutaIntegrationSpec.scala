@@ -87,6 +87,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
 
     mockOrganisaatioResponse()
     addDefaultKoodistoMockResponsesForKoulutus()
+    addDefaultKoodistoMockResponsesForToteutus()
   }
 
   override def afterAll(): Unit = {
@@ -145,23 +146,37 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
   def addDefaultKoodistoMockResponsesForKoulutus(): Unit = {
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_00", 1)
     mockLatestKoodiUriResponse("koulutus_201101", 12)
-    mockKoodiUriResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
+    mockKoodistoResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
     mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.last, Seq(("koulutus_371101", 12, None)), ammatillisetKoulutustyypit.init)
     mockKoulutustyyppiResponse(yoKoulutustyypit.last, Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), yoKoulutustyypit.init)
     mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
     mockKoulutusKoodiUritForEPerusteResponse(123L, None, Seq("koulutus_371101"))
-    mockKoodiUriResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
-    mockKoodiUriResponse("opintojenlaajuus", Seq(
+    mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
+    mockKoodistoResponse("opintojenlaajuus", Seq(
       ("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None)))
-    mockKoodiUriResponse("koulutus", Seq(("koulutus_301101", 1, None)))
+    mockKoodistoResponse("koulutus", Seq(("koulutus_301101", 1, None)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
-    mockKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso2",Seq(
+    mockKoodistoResponse("kansallinenkoulutusluokitus2016koulutusalataso2",Seq(
       ("kansallinenkoulutusluokitus2016koulutusalataso2_080", 2, None),
       ("kansallinenkoulutusluokitus2016koulutusalataso2_020", 2, None),
       ("kansallinenkoulutusluokitus2016koulutusalataso1_001", 2, None)))
-    mockKoodiUriResponse("opintojenlaajuusyksikko", Seq(("opintojenlaajuusyksikko_6", 1, None)))
+    mockKoodistoResponse("opintojenlaajuusyksikko", Seq(("opintojenlaajuusyksikko_6", 1, None)))
   }
+
+  def addDefaultKoodistoMockResponsesForToteutus(): Unit = {
+    mockKoodistoResponse("oppilaitoksenopetuskieli", Seq(("oppilaitoksenopetuskieli_1", 1, None)))
+    mockKoodistoResponse("opetusaikakk", Seq(("opetusaikakk_1", 1, None)))
+    mockKoodistoResponse("opetuspaikkakk", Seq(("opetuspaikkakk_1", 1, None), ("opetuspaikkakk_2", 1, None)))
+    mockKoodistoResponse("osaamisala", Seq(("osaamisala_0001", 1, None)))
+    mockKoodistoResponse("kausi", Seq(("kausi_k", 1, None)))
+    mockKoodistoResponse("kieli", Seq(("kieli_EN", 1, None), ("kieli_DE", 1, None), ("kieli_SV", 1, None),
+      ("kieli_FR", 1, None), ("kieli_ES", 1, None), ("kieli_FI", 1, None), ("kieli_ET", 1, None)))
+    mockKoodistoResponse("lukiopainotukset", Seq(("lukiopainotukset_1", 1, None)))
+    mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", Seq(("lukiolinjaterityinenkoulutustehtava_1", 1, None)))
+    mockKoodistoResponse("moduulikoodistolops2021", Seq(("moduulikoodistolops2021_kald3", 1, None)))
+  }
+
 }
 
 sealed trait HttpSpec extends KoutaJsonFormats {

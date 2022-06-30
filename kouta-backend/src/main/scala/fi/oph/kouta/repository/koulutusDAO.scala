@@ -21,6 +21,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
+  def getTilaAndTyyppi(koulutusOid: KoulutusOid): (Option[Julkaisutila], Option[Koulutustyyppi])
   def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String]
   def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid]
 }
@@ -118,7 +119,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     }.get
   }
 
-  def getTilaAndTyyppi(koulutusOid: KoulutusOid): (Option[Julkaisutila], Option[Koulutustyyppi]) =
+  override def getTilaAndTyyppi(koulutusOid: KoulutusOid): (Option[Julkaisutila], Option[Koulutustyyppi]) =
     KoutaDatabase.runBlocking(selectTilaAndTyyppi(koulutusOid)) match {
       case None => (None, None)
       case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
