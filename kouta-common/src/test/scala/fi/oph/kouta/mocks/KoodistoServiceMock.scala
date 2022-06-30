@@ -1,17 +1,6 @@
 package fi.oph.kouta.mocks
 
 trait KoodistoServiceMock extends ServiceMocks {
-  def kResponse(keys:List[String]) = "[" + keys.map(key => s"""{
-    "koodiUri": "$key",
-    "metadata": [
-    {
-      "nimi": "$key fi",
-      "kieli": "FI"
-    },
-    {
-      "nimi": "$key sv",
-      "kieli": "SV"
-    }]}""").mkString(",") + "]"
 
   def optionalVoimassaOloString(str: Option[String]): String =
     str match {
@@ -23,6 +12,15 @@ trait KoodistoServiceMock extends ServiceMocks {
     s"""{
         "koodiUri": "${uri._1}",
         "versio": ${uri._2},
+        "metadata": [
+          {
+            "nimi": "${uri._1} fi",
+            "kieli": "FI"
+          },
+          {
+            "nimi": "${uri._1} sv",
+            "kieli": "SV"
+          }],
         "koodisto": {
           "koodistoUri": "$koodisto"
         },""" + optionalVoimassaOloString(uri._3) + "}").mkString(",") + "]"
@@ -43,10 +41,7 @@ trait KoodistoServiceMock extends ServiceMocks {
 
   lazy val DefaultKoodistoResponse = "[]"
 
-  def mockKoodistoResponse(koodisto: String, koodiArvot: List[String]): Unit =
-    mockGet(getMockPath("koodisto-service.koodisto-koodit", Some(koodisto)), Map.empty, kResponse(koodiArvot))
-
-  def mockKoodiUriResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) = {
+  def mockKoodistoResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) = {
     val path = getMockPath("koodisto-service.koodisto-koodit", Some(koodisto))
     mockGet(path, Map.empty, koodiUriResponse(koodisto, koodiUrit))
   }

@@ -217,10 +217,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     ).toDBIO
   }
 
-  override def validateParameterFormatAndExistence(haku: Haku): IsValid = haku.validate()
-  override def validateParameterFormatAndExistenceOnJulkaisu(haku: Haku): IsValid = haku.validateOnJulkaisu()
-
-  override def validateDependenciesToExternalServices(haku: Haku): IsValid = NoErrors
+  override def validateEntity(haku: Haku): IsValid = haku.validate()
+  override def validateEntityOnJulkaisu(haku: Haku): IsValid = haku.validateOnJulkaisu()
 
   override def validateInternalDependenciesWhenDeletingEntity(haku: Haku): IsValid = NoErrors
 }

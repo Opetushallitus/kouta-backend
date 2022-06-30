@@ -44,6 +44,7 @@ abstract class PerustiedotWithOid[ID <: Oid, T] extends Perustiedot[ID, T] {
 abstract class PerustiedotWithOidAndOptionalNimi[ID <: Oid, T] extends PerustiedotWithOid[ID, T] {
   override def validate(): IsValid = and(
     validateIfDefined[Oid](oid, assertValid(_, "oid")),
+    validateOptionalKielistetty(kielivalinta, nimi, "nimi"),
     assertValid(organisaatioOid, "organisaatioOid"),
     assertNotEmpty(kielivalinta, "kielivalinta")
   )
