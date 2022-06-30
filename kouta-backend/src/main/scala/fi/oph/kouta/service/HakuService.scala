@@ -214,6 +214,9 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
 
+  def indexByOid(hakuOid: HakuOid): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, hakuOid.toString)
+
   private def setHaunOhjausparametrit(haku: Haku): DBIO[Unit] = {
     Try(ohjausparametritClient.postHaunOhjausparametrit(HaunOhjausparametrit(
       hakuOid = haku.oid.get,
