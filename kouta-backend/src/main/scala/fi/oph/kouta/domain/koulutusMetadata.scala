@@ -325,7 +325,7 @@ package object koulutusMetadata {
       |              example: 10
       |""".stripMargin
 
-  val ErikoislaakariKoulutusMetadata: String =
+  val ErikoislaakariKoulutusMetadataModel: String =
     """    ErikoislaakariKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
@@ -353,7 +353,7 @@ package object koulutusMetadata {
 
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel,
     YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
-    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel)
+    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel, ErikoislaakariKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata {

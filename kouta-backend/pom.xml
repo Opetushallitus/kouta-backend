@@ -18,9 +18,25 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-
-    <!-- TODO: dependencyManagement käyttöön? -->
-
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>2.12.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.java-json-tools</groupId>
+                <artifactId>json-schema-validator</artifactId>
+                <version>2.2.14</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>4.5.2</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <!--Huom! Lisää vain ylimmän tason riippuvudet!
         Älä määritä mukana tulevien riippuvuuksien versioita tässä, vaan anna niiden tulla implisiittisesti.
@@ -277,6 +293,13 @@
             <artifactId>scalatest_2.12</artifactId>
             <version>${scala-test.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.swagger.parser.v3</groupId>
+            <artifactId>swagger-parser</artifactId>
+            <scope>test</scope>
+            <version>2.0.33</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>

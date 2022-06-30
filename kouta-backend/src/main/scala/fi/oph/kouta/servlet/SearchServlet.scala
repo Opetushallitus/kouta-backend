@@ -117,7 +117,7 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/koulutukset",
     s"""    get:
        |      summary: Hakee organisaation koulutuksia annetuilla parametreilla
-       |      operationId: Koulutusten haku
+       |      operationId: searchKoulutukset
        |      description: Hakee organisaation koulutukset annetuilla parametreilla
        |      tags:
        |        - Search
@@ -153,11 +153,17 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/koulutus/{oid}",
     s"""    get:
        |      summary: Hakee rikastetun koulutuksen annetulla oidilla
-       |      operationId: Koulutuksen haku
+       |      operationId: searchKoulutusByOid
        |      description: Hakee rikastetun koulutuksen annetulla oidilla
        |      tags:
        |        - Search
        |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Koulutuksen oid
        |        - in: query
        |          name: koulutustyyppi
        |          schema:
@@ -188,7 +194,7 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/toteutukset",
     s"""    get:
        |      summary: Hakee organisaation toteutuksia annetuilla parametreilla
-       |      operationId: Toteutusten haku
+       |      operationId: searchToteutukset
        |      description: Hakee organisaation toteutukset annetuilla parametreilla
        |      tags:
        |        - Search
@@ -224,11 +230,17 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/toteutus/{oid}",
     s"""    get:
        |      summary: Hakee rikastetun toteutuksen annetulla oidilla
-       |      operationId: Toteutuksen haku
+       |      operationId: searchToteutusByOid
        |      description: Hakee rikastetun toteutuksen annetulla oidilla
        |      tags:
        |        - Search
        |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Toteutuksen oid
        |        - in: query
        |          name: koulutustyyppi
        |          schema:
@@ -259,7 +271,7 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/haut",
     s"""    get:
        |      summary: Hakee organisaation hakuja annetuilla parametreilla
-       |      operationId: Hakujen haku
+       |      operationId: searchHaut
        |      description: Hakee organisaation haut annetuilla parametreilla
        |      tags:
        |        - Search
@@ -288,11 +300,17 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/haku/{oid}",
     s"""    get:
        |      summary: Hakee rikastetun haun annetulla oidilla
-       |      operationId: Haun haku
+       |      operationId: searchHakuByOid
        |      description: Hakee rikastetun haun annetulla oidilla
        |      tags:
        |        - Search
        |      parameters:
+       |        - in: path
+       |          name: oid
+       |          schema:
+       |            type: string
+       |          required: true
+       |          description: Haun oid
        |$searchParams
        |      responses:
        |        '200':
@@ -316,7 +334,7 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/hakukohteet",
     s"""    get:
        |      summary: Hakee organisaation hakukohteita annetuilla parametreilla
-       |      operationId: Hakujen haku
+       |      operationId: searchHakukohteet
        |      description: Hakee organisaation hakukohteet annetuilla parametreilla
        |      tags:
        |        - Search
@@ -352,7 +370,7 @@ class SearchServlet(koulutusService: KoulutusService,
   registerPath("/search/valintaperusteet",
     s"""    get:
        |      summary: Hakee organisaation valintaperustekuvauksia annetuilla parametreilla
-       |      operationId: Valintaperustekuvausten haku
+       |      operationId: searchValintaperusteet
        |      description: Hakee organisaation valintaperustekuvaukset annetuilla parametreilla
        |      tags:
        |        - Search

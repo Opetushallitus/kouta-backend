@@ -13,6 +13,8 @@ package object koulutustyyppiToOppilaitostyyppiResult {
       |          example: amm
       |        oppilaitostyypit:
       |          type: array
+      |          items:
+      |            type: string
       |          description: Oppilaitostyypit (koodiUrit)
       |          example:
       |            - oppilaitostyyppi_21#1

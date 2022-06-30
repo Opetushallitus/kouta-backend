@@ -29,8 +29,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |          name: myosPoistetut
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
-      |          default: false
       |          description: Palautetaanko myös mahdollisesti poistettu toteutus
       |      responses:
       |        '200':
@@ -135,16 +135,16 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |          name: vainHakukohteeseenLiitettavat
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
       |          description: Listataanko vain ne toteutukset, jotka voi liittää hakukohteeseen
-      |          default: false
       |        - in: query
       |          name: myosArkistoidut
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
       |          description: Listataanko myös arkistoidut toteutukset
-      |          default: true
       |      responses:
       |        '200':
       |          description: Ok
@@ -237,8 +237,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |            application/json:
       |              schema:
       |                type: array
-      |                description: Tallennettujen kopioiden yksilöivät oid:t
-      |                example: [1.2.246.562.17.00000000000000000009]
+      |                items:
+      |                  $ref: '#/components/schemas/CopyResult'
       |""".stripMargin)
   put("/copy") {
 

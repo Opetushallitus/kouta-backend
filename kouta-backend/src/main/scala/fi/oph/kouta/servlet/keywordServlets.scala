@@ -41,7 +41,7 @@ class AsiasanaServlet(keywordService: KeywordService) extends KeywordServlet {
       |          description: Palautettavien asiasanojen maksimimäärä
       |          schema:
       |            type: integer
-      |          default: 15
+      |            default: 15
       |      responses:
       |        '200':
       |          description: Ok
@@ -144,7 +144,7 @@ class AmmattinimikeServlet(keywordService: KeywordService) extends KeywordServle
       |          description: Palautettavien ammattinimikkeiden maksimimäärä
       |          schema:
       |            type: integer
-      |          default: 15
+      |            default: 15
       |      responses:
       |        '200':
       |          description: Ok

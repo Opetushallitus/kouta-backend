@@ -246,7 +246,7 @@ package object toteutusMetadata {
   val ErikoislaakariToteutusMetadataModel: String =
     """    ErikoislaakariToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/KorkeakoulutusToteutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -571,7 +571,7 @@ package object toteutusMetadata {
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
     AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
-    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, ErikoislaakariToteutusMetadataModel)
+    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata {

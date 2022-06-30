@@ -13,7 +13,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   registerPath("/oppilaitos/{oid}",
     """    get:
       |      summary: Hae oppilaitoksen kuvailutiedot
-      |      operationId: Hae oppilaitos
+      |      operationId: getOppilaitos
       |      description: Hakee oppilaitoksen kuvailutiedot
       |      tags:
       |        - Oppilaitos
@@ -46,7 +46,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   registerPath( "/oppilaitos/",
     """    put:
       |      summary: Tallenna uusi oppilaitoksen kuvailutieto
-      |      operationId: Tallenna uusi oppilaitos
+      |      operationId: saveOppilaitos
       |      description: Tallenna uusi oppilaitoksen kuvailutieto.
       |        Palauttaa tallennetun oppilaitoksen organisaatio-oidin.
       |      tags:
@@ -83,7 +83,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   registerPath("/oppilaitos/",
     """    post:
       |      summary: Muokkaa olemassa olevaa oppilaitoksen kuvailutietoa
-      |      operationId: Muokkaa oppilaitosta
+      |      operationId: editOppilaitos
       |      description: Muokkaa olemassa olevaa oppilaitoksen kuvailutietoa.
       |        Rajapinnalle annetaan oppilaitoksen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
@@ -112,7 +112,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   registerPath( "/oppilaitos/{oid}/osat/list",
     """    get:
       |      summary: Listaa organisaation käytettävissä olevat oppilaitoksen osien kuvailutiedot
-      |      operationId: Listaa oppilaitoksen osat
+      |      operationId: listOppilaitosOsat
       |      description: Listaa ne oppilaitoksen osat, jotka ovat organisaation käytettävissä.
       |      tags:
       |        - Oppilaitos
@@ -154,7 +154,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
   registerPath("/oppilaitos/oppilaitokset",
     """    post:
       |      summary: Hae oppilaitosten ja/tai oppilaitosten osien tiedot
-      |      operationId: Hae oppilaitokset ja/tai oppilaitosten osat
+      |      operationId: listOppilaitosOppilaitokset
       |      description: Hakee oppilaitoksen ja/tai oppilaitoksen osan tiedot
       |      tags:
       |        - Oppilaitos
@@ -191,7 +191,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
   registerPath("/oppilaitoksen-osa/{oid}",
     """    get:
       |      summary: Hae oppilaitoksen osan kuvailutiedot
-      |      operationId: Hae oppilaitoksen osa
+      |      operationId: getOppilaitoksenOsa
       |      description: Hakee oppilaitoksen osan kuvailutiedot
       |      tags:
       |        - Oppilaitoksen osa
@@ -224,7 +224,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
   registerPath( "/oppilaitoksen-osa/",
     """    put:
       |      summary: Tallenna uusi oppilaitoksen osan kuvailutieto
-      |      operationId: Tallenna uusi oppilaitoksen osa
+      |      operationId: saveOppilaitoksenOsa
       |      description: Tallenna uusi oppilaitoksen osan kuvailutieto.
       |        Palauttaa tallennetun oppilaitoksen osan organisaatio-oidin.
       |      tags:
@@ -261,7 +261,7 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
   registerPath("/oppilaitoksen-osa/",
     """    post:
       |      summary: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa
-      |      operationId: Muokkaa oppilaitoksen osaa
+      |      operationId: editOppilaitoksenOsa
       |      description: Muokkaa olemassa olevaa oppilaitoksen osan kuvailutietoa.
       |        Rajapinnalle annetaan oppilaitoksen osan kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.

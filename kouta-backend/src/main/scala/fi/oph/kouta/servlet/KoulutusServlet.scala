@@ -29,8 +29,8 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |          name: myosPoistetut
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
-      |          default: false
       |          description: Palautetaanko myös mahdollisesti poistettu koulutus
       |      responses:
       |        '200':
@@ -143,8 +143,8 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |          name: myosArkistoidut
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Listataanko myös arkistoidut koulutukset
       |      responses:
       |        '200':
@@ -171,7 +171,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
   registerPath( "/koulutus/{oid}/toteutukset/list",
     """    get:
       |      summary: Listaa organisaation käytettävissä olevat tietyn koulutuksen toteutukset
-      |      operationId: Listaa koulutuksen toteutukset
+      |      operationId: listKoulutusToteutukset
       |      description: Listaa ne tietyn koulutuksen toteutukset, jotka ovat organisaation käytettävissä.
       |      tags:
       |        - Koulutus

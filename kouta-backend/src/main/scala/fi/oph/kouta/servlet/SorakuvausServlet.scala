@@ -30,8 +30,8 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |          name: myosPoistetut
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
-      |          default: false
       |          description: Palautetaanko myös mahdollisesti poistettu SORA-kuvaus
       |      responses:
       |        '200':
@@ -136,8 +136,8 @@ class SorakuvausServlet(sorakuvausService: SorakuvausService) extends KoutaServl
       |          name: myosArkistoidut
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Listataanko myös arkistoidut sorakuvaukset
       |      responses:
       |        '200':

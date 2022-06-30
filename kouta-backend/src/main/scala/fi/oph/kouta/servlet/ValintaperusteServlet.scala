@@ -31,8 +31,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |          name: myosPoistetut
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
-      |          default: false
       |          description: Palautetaanko myös mahdollisesti poistettu valintaperuste
       |      responses:
       |        '200':
@@ -152,8 +152,8 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |          name: myosArkistoidut
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Listataanko myös arkistoidut valintaperusteet
       |      responses:
       |        '200':

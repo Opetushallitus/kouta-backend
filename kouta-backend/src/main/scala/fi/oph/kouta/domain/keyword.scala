@@ -8,7 +8,7 @@ package object keyword {
       |      properties:
       |        kieli:
       |          type: string
-      |          desciption: Asiasanan kieli
+      |          description: Asiasanan kieli
       |          allOf:
       |            - $ref: '#/components/schemas/Kieli'
       |          example: fi
@@ -24,7 +24,7 @@ package object keyword {
       |      properties:
       |        kieli:
       |          type: string
-      |          desciption: Ammattinimikkeen kieli
+      |          description: Ammattinimikkeen kieli
       |          allOf:
       |            - $ref: '#/components/schemas/Kieli'
       |          example: fi

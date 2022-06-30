@@ -8,8 +8,7 @@ object SwaggerPaths {
   var paths: Map[String, List[String]] = Map[String, List[String]]()
 
   def registerPath(path: String, yaml: String) =
-    paths += (path -> (paths.getOrElse(path, List[String]()) ++ List(yaml)))
-
+    paths += (path -> (paths.getOrElse(path, List[String]()) ++ List(yaml)).distinct)
 }
 
 class SwaggerServlet extends ScalatraServlet {
@@ -22,16 +21,16 @@ class SwaggerServlet extends ScalatraServlet {
   protected def renderOpenapi3Yaml(): String = {
     var yaml =
       """
-        |openapi: 3.0.0
+        |openapi: 3.0.3
         |info:
         |  title: kouta-backend
         |  description: "Uusi koulutustarjonta"
         |  version: 0.1-SNAPSHOT
         |  termsOfService: https://opintopolku.fi/wp/fi/opintopolku/tietoa-palvelusta/
         |  contact:
-        |    name: ""
+        |    name: "Opetushallitus"
         |    email: verkkotoimitus_opintopolku@oph.fi
-        |    url: ""
+        |    url: "https://www.oph.fi/"
         |  license:
         |    name: "EUPL 1.1 or latest approved by the European Commission"
         |    url: "http://www.osor.eu/eupl/"
@@ -75,7 +74,8 @@ class SwaggerServlet extends ScalatraServlet {
       fi.oph.kouta.domain.valintaperuste.models.mkString +
       fi.oph.kouta.domain.sorakuvaus.models.mkString +
       fi.oph.kouta.domain.oppilaitos.models.mkString +
-      fi.oph.kouta.domain.searchResults.models.mkString
+      fi.oph.kouta.domain.searchResults.models.mkString +
+      fi.oph.kouta.domain.koulutustyyppiToOppilaitostyyppiResult.models.mkString
     yaml
   }
 }

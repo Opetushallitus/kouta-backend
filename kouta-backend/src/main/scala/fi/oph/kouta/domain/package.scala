@@ -150,11 +150,11 @@ package object domain {
       |        url:
       |          type: object
       |          description: Linkin url eri kielillä
-      |          $ref: '#/components/schemas/Linkki
+      |          $ref: '#/components/schemas/Linkki'
       |        nimi:
       |          type: object
       |          description: Käyttäjälle näkyvä teksti linkissä
-      |          $ref: '#/components/schemas/Teksti
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val LisatietoModel: String =
@@ -468,17 +468,32 @@ package object domain {
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
-  val HakutermiModel = """    Hakutermi:
-                         |      type: string
-                         |      enum:
-                         |        - hakeutuminen
-                         |        - ilmoittautuminen
-                         |""".stripMargin
+  val HakutermiModel: String =
+    """    Hakutermi:
+      |      type: string
+      |      enum:
+      |        - hakeutuminen
+      |        - ilmoittautuminen
+      |""".stripMargin
+
+  val CopyResultModel: String =
+    """    CopyResult:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |        status:
+      |          type: string
+      |        created:
+      |          type: array
+      |          items:
+      |            type: string
+      |""".stripMargin
 
   val models = List(KoulutustyyppiModel, KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
     ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel,
-    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel, AloituspaikatModel, HakutermiModel)
+    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel, AloituspaikatModel, HakutermiModel, CopyResultModel)
 
   type Kielistetty = Map[Kieli,String]
 

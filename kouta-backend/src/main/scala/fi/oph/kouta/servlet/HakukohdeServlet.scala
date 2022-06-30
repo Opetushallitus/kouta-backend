@@ -29,8 +29,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |          name: myosPoistetut
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
-      |          default: false
       |          description: Palautetaanko myös mahdollisesti poistettu hakukohde
       |      responses:
       |        '200':
@@ -100,9 +100,9 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |      parameters:
       |        - in: path
       |          name: hakuOid
+      |          required: true
       |          schema:
       |            type: string
-      |          required: true
       |          description: Sen haun oid, johon kopioitavat hakukohteen liitetään
       |          example: 1.2.246.562.29.00000000000000011030
       |      requestBody:
@@ -122,6 +122,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |            application/json:
       |              schema:
       |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/CopyResult'
       |""".stripMargin)
   put("/copy/:hakuOid") {
 

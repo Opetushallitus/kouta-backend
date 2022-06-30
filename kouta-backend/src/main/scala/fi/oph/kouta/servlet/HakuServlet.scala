@@ -29,8 +29,8 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |          name: myosPoistetut
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
-      |          default: false
       |          description: Palautetaanko myös mahdollisesti poistettu haku
       |      responses:
       |        '200':
@@ -135,8 +135,8 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |          name: myosArkistoidut
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Listataanko myös arkistoidut haut
       |        - in: query
       |          name: yhteishaut
