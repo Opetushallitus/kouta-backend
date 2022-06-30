@@ -331,7 +331,7 @@ package object koulutusMetadata {
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
-      |            koulutustyyppi:
+      |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
       |              example: erikoislaakari
