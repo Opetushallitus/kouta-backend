@@ -1,13 +1,58 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.domain.{AikuistenPerusopetusToteutusMetadata, AmmatillinenMuuToteutusMetadata, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, Ataru, Hakukohde, Hakulomaketyyppi, Koulutustyyppi, LukioToteutusMetadata, TilaFilter, ToteutusMetadata, VapaaSivistystyoMuuToteutusMetadata}
+import fi.oph.kouta.domain.{
+  AikuistenPerusopetusToteutusMetadata,
+  Ajanjakso,
+  AmmatillinenMuuToteutusMetadata,
+  AmmatillinenOsaamisalaToteutusMetadata,
+  AmmatillinenTutkinnonOsaToteutusMetadata,
+  Ataru,
+  Hakukohde,
+  HakukohdeMetadata,
+  Hakulomaketyyppi,
+  Julkaisutila,
+  Kieli,
+  Koulutustyyppi,
+  Liite,
+  LiitteenToimitusosoite,
+  LukioToteutusMetadata,
+  MuuOsoite,
+  TilaFilter,
+  ToteutusMetadata,
+  Valintakoe,
+  VapaaSivistystyoMuuToteutusMetadata
+}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, isToisenAsteenYhteishaku}
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
-import fi.oph.kouta.validation.Validations.{and, assertInFuture, assertNotOptional, assertTrue, cannotLinkToHakukohde, tyyppiMismatch, validateDependency, validateDependencyExistence, validateIfDefined, validateIfFalse, validateIfJulkaistu, validateIfTrue, validateIfTrueOrElse}
+import fi.oph.kouta.validation.Validations.{
+  HakukohdeKoodiPattern,
+  PohjakoulutusvaatimusKoodiPattern,
+  and,
+  assertInFuture,
+  assertMatch,
+  assertNotEmpty,
+  assertNotOptional,
+  assertTrue,
+  assertValid,
+  cannotLinkToHakukohde,
+  oneNotBoth,
+  tyyppiMismatch,
+  validateDependency,
+  validateDependencyExistence,
+  validateHakulomake,
+  validateIfDefined,
+  validateIfFalse,
+  validateIfJulkaistu,
+  validateIfNonEmpty,
+  validateIfTrue,
+  validateIfTrueOrElse,
+  validateKielistetty,
+  validateOptionalKielistetty
+}
 
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
@@ -35,9 +80,78 @@ class HakukohdeServiceValidation(
     }
   }
 
-  override def validateEntity(e: Hakukohde): IsValid = {
-    e.validate()
+  override def validateEntity(hk: Hakukohde): IsValid = {
+    val tila         = hk.tila
+    val kielivalinta = hk.kielivalinta
+
+    and(
+      hk.validate(),
+      assertValid(hk.toteutusOid, "toteutusOid"),
+      assertValid(hk.hakuOid, "hakuOid"),
+      assertValid(hk.organisaatioOid, "organisaatioOid"),
+      // Joko hakukohdeKoodiUri tai nimi täytyy olla, mutta ei molempia!
+      assertTrue(hk.hakukohdeKoodiUri.nonEmpty != hk.nimi.nonEmpty, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri")),
+      validateIfDefined[String](
+        hk.hakukohdeKoodiUri,
+        assertMatch(_, HakukohdeKoodiPattern, "hakukohdeKoodiUri")
+      ),
+      validateIfTrue(
+        hk.nimi.nonEmpty,
+        validateKielistetty(kielivalinta, hk.nimi, "nimi")
+      ),
+      validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
+      validateIfNonEmpty[String](
+        hk.pohjakoulutusvaatimusKoodiUrit,
+        "pohjakoulutusvaatimusKoodiUrit",
+        assertMatch(_, PohjakoulutusvaatimusKoodiPattern, _)
+      ),
+      validateIfDefined[LiitteenToimitusosoite](
+        hk.liitteidenToimitusosoite,
+        _.validate(tila, kielivalinta, "liitteidenToimitusosoite")
+      ),
+      validateIfNonEmpty[Liite](hk.liitteet, "liitteet", _.validate(tila, kielivalinta, _)),
+      validateIfNonEmpty[Valintakoe](hk.valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
+      validateIfDefined[HakukohdeMetadata](hk.metadata, validateMetadata(_, tila, kielivalinta)),
+      validateIfJulkaistu(
+        tila,
+        and(
+          assertNotOptional(hk.jarjestyspaikkaOid, "jarjestyspaikkaOid"),
+          validateIfTrue(
+            hk.liitteetOnkoSamaToimitusaika.contains(true),
+            assertNotOptional(hk.liitteidenToimitusaika, "liitteidenToimitusaika")
+          ),
+          validateIfTrue(
+            hk.liitteetOnkoSamaToimitusosoite.contains(true),
+            assertNotOptional(hk.liitteidenToimitustapa, "liitteidenToimitustapa")
+          ),
+          validateIfTrue(
+            hk.liitteetOnkoSamaToimitusosoite.contains(true) && hk.liitteidenToimitustapa.contains(MuuOsoite),
+            assertNotOptional(hk.liitteidenToimitusosoite, "liitteidenToimitusosoite")
+          ),
+          validateHakulomake(
+            hk.hakulomaketyyppi,
+            hk.hakulomakeAtaruId,
+            hk.hakulomakeKuvaus,
+            hk.hakulomakeLinkki,
+            kielivalinta
+          ),
+          assertNotEmpty(hk.pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
+          validateOptionalKielistetty(kielivalinta, hk.pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
+          validateOptionalKielistetty(kielivalinta, hk.muuPohjakoulutusvaatimus, "muuPohjakoulutusvaatimus"),
+          assertNotOptional(hk.kaytetaanHaunAikataulua, "kaytetaanHaunAikataulua"),
+          assertNotOptional(hk.kaytetaanHaunHakulomaketta, "kaytetaanHaunHakulomaketta"),
+          validateIfTrue(hk.kaytetaanHaunAikataulua.contains(false), assertNotEmpty(hk.hakuajat, "hakuajat")),
+          validateIfTrue(
+            hk.kaytetaanHaunHakulomaketta.contains(false),
+            assertNotOptional(hk.hakulomaketyyppi, "hakulomaketyyppi")
+          )
+        )
+      )
+    )
   }
+
+  private def validateMetadata(metadata: HakukohdeMetadata, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid =
+    metadata.validate(tila, kielivalinta, "metadata")
 
   override def validateInternalDependenciesWhenDeletingEntity(e: Hakukohde): IsValid = {
     NoErrors
@@ -88,7 +202,8 @@ class HakukohdeServiceValidation(
             )
           )
       ),
-      validateIfFalse(isOphPaakayttaja,
+      validateIfFalse(
+        isOphPaakayttaja,
         validateIfTrueOrElse(
           crudOperation == create,
           validateIfDefined[LocalDateTime](
