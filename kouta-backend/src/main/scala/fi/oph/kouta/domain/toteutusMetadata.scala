@@ -243,6 +243,20 @@ package object toteutusMetadata {
       |                - kk-opintojakso
       |""".stripMargin
 
+  val ErikoislaakariToteutusMetadataModel: String =
+    """    ErikoislaakariToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KorkeakoulutusToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: erikoislaakari
+      |              enum:
+      |                - erikoislaakari
+      |""".stripMargin
+
   val AmmatillinenToteutusMetadataModel: String =
     """    AmmatillinenToteutusMetadata:
       |      allOf:
@@ -557,7 +571,7 @@ package object toteutusMetadata {
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
     AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
-    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel)
+    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, ErikoislaakariToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata {
