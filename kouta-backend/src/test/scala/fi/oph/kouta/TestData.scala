@@ -529,6 +529,19 @@ object TestData {
     hakuOid = HakuOid("1.2.246.562.29.123"),
     modified = None)
 
+  val MinHakukohdeListItem: HakukohdeListItem = HakukohdeListItem(
+    oid = HakukohdeOid("1.2.246.562.20.123"),
+    valintaperusteId = None,
+    jarjestyspaikkaOid = None,
+    muokkaaja = TestUserOid,
+    tila = Tallennettu,
+    organisaatioOid = ChildOid,
+    nimi = kieliMap("Minimi hakukohde"),
+    toteutusOid = ToteutusOid("1.2.246.562.17.123"),
+    hakuOid = HakuOid("1.2.246.562.29.123"),
+    modified = Modified(LocalDateTime.now().minusDays(1))
+  )
+
   val Taulukko1: Taulukko = Taulukko(
     id = None,
     nimi = Map(Fi -> "Taulukko 1", Sv -> "Taulukko 1 sv"),
@@ -814,6 +827,9 @@ object TestData {
   val JulkaistuYoToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto))
 
   val JulkaistuKkOpintojaksoToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto))
+  val JulkaistuAmkToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)))
+
+  val AmmOpettajaToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = AmmOpeErityisopeJaOpo)))
 
   val TuvaToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
     tyyppi = Tuva,

@@ -26,8 +26,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    mockKoodistoResponse("lukiopainotukset", List("lukiopainotukset_1"))
-    mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", List("lukiolinjaterityinenkoulutustehtava_1"))
     mockLokalisointiResponse("yleiset.opintopistetta")
     mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
     koulutusOid = put(koulutus, ophSession)
@@ -137,16 +135,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
 
   it should "fail to store toteutus if koulutus does not exist" in {
     put(ToteutusPath, toteutus, 400, "koulutusOid", nonExistent("Koulutusta", toteutus.koulutusOid))
-  }
-
-  it should "fail to store toteutus if toteutus tyyppi does not match koulutustyyppi of koulutus" in {
-    val toteutus = TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
-    put(ToteutusPath, toteutus, 400, "metadata.tyyppi", tyyppiMismatch("koulutuksen", koulutusOid))
-  }
-
-  it should "fail to store julkaistu toteutus if the koulutus is not yet julkaistu" in {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    put(ToteutusPath, toteutus(koulutusOid), 400, "tila", notYetJulkaistu("Koulutusta", koulutusOid))
   }
 
   it should "write create toteutus to audit log" in {
@@ -324,27 +312,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List()))
   }
 
-  it should "fail to update if toteutus tyyppi does not match koulutustyyppi of koulutus" in {
-    val oid = put(toteutus(koulutusOid))
-    val lastModified = get(oid, toteutus(oid, koulutusOid))
-    val thisToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(TestData.YoToteutuksenMetatieto))
-    update(ToteutusPath, thisToteutus, lastModified, 400, "metadata.tyyppi", tyyppiMismatch("koulutuksen", koulutusOid))
-  }
-
-  it should "fail to update julkaistu toteutus if the koulutus is not yet julkaistu" in {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    val oid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
-    val lastModified = get(oid, toteutus(oid, koulutusOid).copy(tila = Tallennettu))
-    update(ToteutusPath, toteutus(oid, koulutusOid), lastModified, 400, "tila", notYetJulkaistu("Koulutusta", koulutusOid))
-  }
-
-  it should "fail to update toteutus if koulutus does not exist" in {
-    val oid = put(toteutus(koulutusOid))
-    val lastModified = get(oid, toteutus(oid, koulutusOid))
-    val randomOid = TestOids.randomKoulutusOid.s
-    update(ToteutusPath, toteutus(oid, randomOid), lastModified,400, "koulutusOid", nonExistent("Koulutusta", randomOid))
-  }
-
   it should "write toteutus update to audit log" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
@@ -498,82 +465,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
-  def pastAlkamiskausi(alkamispvm: LocalDateTime, paattymispvm: LocalDateTime): Some[KoulutuksenAlkamiskausi] = {
-    Some(KoulutuksenAlkamiskausi(
-      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
-      koulutuksenAlkamispaivamaara = Some(alkamispvm),
-      koulutuksenPaattymispaivamaara = Some(paattymispvm)))
-  }
-
-  it should "validate koulutuksen alkamisen dates only when adding a new julkaistu toteutus" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-
-    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
-    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Julkaistu)
-
-    put(thisToteutus.copy(tila = Tallennettu))
-
-    put(ToteutusPath, bytes(thisToteutus), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
-      )))
-    }
-  }
-
-  it should "validate koulutuksen alkamisen dates when moving from other states to julkaistu" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
-    val thisToteutus = toteutus(koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
-
-    val oid = put(thisToteutus)
-    val thisToteutusWithOid = toteutus(oid, koulutusOid).copy(metadata = Some(ammMetatieto.copy(opetus = Some(inPastOpetus))), tila = Tallennettu)
-
-    val lastModified = get(oid, thisToteutusWithOid)
-
-    post(ToteutusPath, bytes(thisToteutusWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(List(
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(morePast)),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(past)),
-      )))
-    }
-
-    update(thisToteutusWithOid.copy(tila = Poistettu), lastModified)
-  }
-
-  it should "not validate koulutuksen alkamisen dates when updating a julkaistu toteutus" in {
-    val (past, morePast) = (TestData.inPast(5000), TestData.inPast(60000))
-    val inPastOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = morePast, paattymispvm = past))
-    val inPastMetadata = ammMetatieto.copy(opetus = Some(inPastOpetus))
-
-    val oid = put(toteutus(koulutusOid).copy(tila = Julkaistu))
-    val thisToteutus = toteutus(oid, koulutusOid)
-
-    val lastModified = get(oid, thisToteutus)
-
-    update(thisToteutus.copy(metadata = Some(inPastMetadata)), lastModified)
-  }
-
-  it should "allow missing koulutuksen alkamiskausi" in {
-    val (future, morefuture) = (TestData.inFuture(5000), TestData.inFuture(6000))
-
-    val futureOpetus = opetus.copy(koulutuksenAlkamiskausi = pastAlkamiskausi(alkamispvm = future, paattymispvm = morefuture))
-    val toteutusMetadata = Some(ammMetatieto.copy(opetus = Some(futureOpetus)))
-    val toteutusOid = put(toteutus(koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu))
-
-    val copyOfJulkaistuToteutus = toteutus(toteutusOid, koulutusOid).copy(metadata = toteutusMetadata, tila = Julkaistu)
-    val lastModified = get(toteutusOid, copyOfJulkaistuToteutus)
-
-    val toteutusWithoutAlkamiskausi = copyOfJulkaistuToteutus.copy(metadata = Some(ammMetatieto.copy(opetus = Some(opetus.copy(koulutuksenAlkamiskausi = None)))))
-    update(toteutusWithoutAlkamiskausi, lastModified)
-  }
-
   it should "copy a temporary image to a permanent location while updating the toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
@@ -718,70 +609,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lastModified = get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid))))
     update(kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
-  }
-
-  it should "pass legal state changes" in {
-    val koulutusOid = put(koulutus, ophSession)
-    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
-    var toteutusBase = toteutus(koulutusOid)
-    toteutusBase = toteutusBase.copy(oid = Some(ToteutusOid(toteutusOid)), muokkaaja = OphUserOid,
-      metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true))))
-    var lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
-    update(toteutusBase.copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
-    update(toteutusBase.copy(tila = Arkistoitu), lastModified, expectUpdate = true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Arkistoitu))
-    update(toteutusBase.copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Julkaistu))
-    update(toteutusBase.copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
-    lastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu))
-    update(toteutusBase.copy(tila = Poistettu), lastModified, expectUpdate = true, ophSession)
-
-    val arkistoituOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Arkistoitu), ophSession)))
-    lastModified = get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Arkistoitu, muokkaaja = OphUserOid,
-      metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
-    update(toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
-    get(arkistoituOid.get.s, toteutus(koulutusOid).copy(oid = arkistoituOid, tila = Julkaistu, muokkaaja = OphUserOid,
-      metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
-  }
-
-  it should "fail illegal state changes" in {
-    val koulutusOid = put(koulutus, ophSession)
-
-    val tallennettuOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)))
-    val julkaistuOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Julkaistu), ophSession)))
-    val arkistoituOid = Some(ToteutusOid(put(toteutus(koulutusOid).copy(tila = Arkistoitu), ophSession)))
-    var toteutusBase = toteutus(koulutusOid)
-    toteutusBase = toteutusBase.copy(muokkaaja = OphUserOid, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true))))
-
-    var lastModified = get(tallennettuOid.get.s, toteutusBase.copy(oid = tallennettuOid, tila = Tallennettu))
-    update(ToteutusPath, toteutusBase.copy(oid = tallennettuOid, tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Tallennettu, Arkistoitu))))
-    lastModified = get(julkaistuOid.get.s, toteutusBase.copy(oid = julkaistuOid, tila = Julkaistu))
-    update(ToteutusPath, toteutusBase.copy(oid = julkaistuOid, tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Julkaistu, Poistettu))))
-    lastModified = get(arkistoituOid.get.s, toteutusBase.copy(oid = arkistoituOid, tila = Arkistoitu))
-    update(ToteutusPath, toteutusBase.copy(oid = arkistoituOid, tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Arkistoitu, Tallennettu))))
-    update(ToteutusPath, toteutusBase.copy(oid = arkistoituOid, tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("toteutukselle", Arkistoitu, Poistettu))))
-  }
-
-  private def createToteutusWithHakukohteet(markAllHakukohteetDeleted: Boolean) = {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
-    val hakuOid = put(haku.copy(tila = Tallennettu), ophSession)
-    put(hakukohde(toteutusOid, hakuOid).copy(tila = Poistettu), ophSession)
-    put(hakukohde(toteutusOid, hakuOid).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu), ophSession)
-    val toteutusBase = toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)))
-    val toteutusLastModified = get(toteutusOid, toteutusBase.copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(toteutusBase.metadata.get.asInstanceOf[AmmatillinenToteutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
-    (toteutusOid, koulutusOid, toteutusLastModified)
-  }
-
-  it should "pass deletion when related hakukohteet deleted" in {
-    val (toteutusOid: String, koulutusOid: String, lastModified: String) = createToteutusWithHakukohteet(true)
-    update(toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), lastModified, expectUpdate = true, ophSession)
-  }
-
-  it should "fail deletion when all related hakukohteet not deleted" in {
-    val (toteutusOid: String, koulutusOid: String, lastModified: String) = createToteutusWithHakukohteet(false)
-    update(ToteutusPath, toteutus(koulutusOid).copy(oid = Some(ToteutusOid(toteutusOid)), tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Toteutusta", "hakukohteita"))))
   }
 
   "Copy toteutukset" should "make a copy of a julkaistu toteutus and store it as tallennettu" in {

@@ -238,10 +238,8 @@ class HakukohdeService(
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
 
-  override def validateParameterFormatAndExistence(hakukohde: Hakukohde): IsValid = hakukohde.validate()
-  override def validateParameterFormatAndExistenceOnJulkaisu(hakukohde: Hakukohde): IsValid = hakukohde.validateOnJulkaisu()
-
-  override def validateDependenciesToExternalServices(hakukohde: Hakukohde): IsValid = NoErrors
+  override def validateEntity(hakukohde: Hakukohde): IsValid = hakukohde.validate()
+  override def validateEntityOnJulkaisu(hakukohde: Hakukohde): IsValid = hakukohde.validateOnJulkaisu()
 
   override def validateInternalDependenciesWhenDeletingEntity(hakukohde: Hakukohde): IsValid = NoErrors
 }

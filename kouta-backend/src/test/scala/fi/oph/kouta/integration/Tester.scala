@@ -35,7 +35,7 @@ object Tester {
     //val client = new EPerusteKoodiClient(null)
     //println("oikea vastaus: " + client.getOsaamisalaKoodiuritForEPeruste(656))
 
-    println(client.koulutusKoodiUritExist(Seq("koulutus_000001", "koulutus_000002", "koulutus_000003"), Seq("koulutus_000001#12")))
+    //println(client.koulutusKoodiUritExist(Seq("koulutus_000001", "koulutus_000002", "koulutus_000003"), Seq("koulutus_000001#12")))
     //val client = new OrganisaatioServiceImpl(null)
     //val all = client.findUnknownOrganisaatioOidsFromHierarkia(Set(OrganisaatioOid("1.2.246.562.10.42788944868"), OrganisaatioOid("1.2.246.562.10.97509708141"), OrganisaatioOid("1.2.246.562.10.53697269479"), OrganisaatioOid("1.2.246.562.10.15816289258")))
     //println(all)

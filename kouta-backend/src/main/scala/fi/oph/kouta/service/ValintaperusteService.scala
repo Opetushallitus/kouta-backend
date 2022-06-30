@@ -149,10 +149,8 @@ class ValintaperusteService(
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
 
-  override def validateParameterFormatAndExistence(valintaperuste: Valintaperuste): IsValid = valintaperuste.validate()
-  override def validateParameterFormatAndExistenceOnJulkaisu(valintaperuste: Valintaperuste): IsValid = valintaperuste.validateOnJulkaisu()
-
-  override def validateDependenciesToExternalServices(valintaperuste: Valintaperuste): IsValid = NoErrors
+  override def validateEntity(valintaperuste: Valintaperuste): IsValid = valintaperuste.validate()
+  override def validateEntityOnJulkaisu(valintaperuste: Valintaperuste): IsValid = valintaperuste.validateOnJulkaisu()
 
   override def validateInternalDependenciesWhenDeletingEntity(valintaperuste: Valintaperuste): IsValid = NoErrors
 }
