@@ -142,8 +142,8 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |          name: yhteishaut
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Listataanko myös yhteishaut
       |      responses:
       |        '200':
