@@ -61,4 +61,5 @@ package object validation {
   val ammOpeErityisopeJaOpoKoulutusKoodiUrit = Seq("koulutus_000001", "koulutus_000002", "koulutus_000003")
   val lukioKoulutusKoodiUrit                 = Seq("koulutus_309902", "koulutus_301102", "koulutus_301101",
     "koulutus_301103", "koulutus_301104")
+  val erikoislaakariKoulutusKoodiUrit        = Seq("koulutus_775101", "koulutus_775201", "koulutus_775301")
 }

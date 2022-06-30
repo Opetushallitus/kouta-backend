@@ -1,99 +1,15 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{
-  AikuistenPerusopetusKoulutus,
-  AmkKoulutus,
-  AmmKoulutus,
-  AmmMuuKoulutus,
-  AmmOpettajaKoulutus,
-  AmmOsaamisalaKoulutus,
-  AmmTutkinnonOsaKoulutus,
-  JulkaistuAmmToteutus,
-  KkOpintojaksoKoulutus,
-  Lisatieto1,
-  LukioKoulutus,
-  MinKoulutus,
-  TelmaKoulutus,
-  TuvaKoulutus,
-  VapaaSivistystyoMuuKoulutus,
-  VapaaSivistystyoOpistovuosiKoulutus,
-  YoKoulutus
-}
+import fi.oph.kouta.TestData.{AikuistenPerusopetusKoulutus, AmkKoulutus, AmmKoulutus, AmmMuuKoulutus, AmmOpettajaKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus, ErikoislaakariKoulutus, JulkaistuAmmToteutus, KkOpintojaksoKoulutus, Lisatieto1, LukioKoulutus, MinKoulutus, TelmaKoulutus, TuvaKoulutus, VapaaSivistystyoMuuKoulutus, VapaaSivistystyoOpistovuosiKoulutus, YoKoulutus}
 import fi.oph.kouta.TestOids.{EvilCousin, EvilGrandChildOid, GrandChildOid, LonelyOid, UnknownOid}
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoulutusKoodiClient}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{
-  AikuistenPerusopetusKoulutusMetadata,
-  Amm,
-  AmmOpeErityisopeJaOpoKoulutusMetadata,
-  AmmatillinenKoulutusMetadata,
-  AmmatillinenMuuKoulutusMetadata,
-  AmmatillinenOsaamisalaKoulutusMetadata,
-  AmmatillinenTutkinnonOsaKoulutusMetadata,
-  AmmattikorkeakouluKoulutusMetadata,
-  Arkistoitu,
-  Fi,
-  Julkaistu,
-  KkOpintojaksoKoulutusMetadata,
-  Koulutus,
-  Lisatieto,
-  LukioKoulutusMetadata,
-  Poistettu,
-  Sv,
-  Tallennettu,
-  TelmaKoulutusMetadata,
-  TilaFilter,
-  Toteutus,
-  TutkinnonOsa,
-  TuvaKoulutusMetadata,
-  VapaaSivistystyoMuuKoulutusMetadata,
-  VapaaSivistystyoOpistovuosiKoulutusMetadata,
-  YliopistoKoulutusMetadata,
-  Yo
-}
+import fi.oph.kouta.domain.{AikuistenPerusopetusKoulutusMetadata, Amm, AmmOpeErityisopeJaOpoKoulutusMetadata, AmmatillinenKoulutusMetadata, AmmatillinenMuuKoulutusMetadata, AmmatillinenOsaamisalaKoulutusMetadata, AmmatillinenTutkinnonOsaKoulutusMetadata, AmmattikorkeakouluKoulutusMetadata, Arkistoitu, Fi, Julkaistu, KkOpintojaksoKoulutusMetadata, Koulutus, Lisatieto, LukioKoulutusMetadata, Poistettu, Sv, Tallennettu, TelmaKoulutusMetadata, TilaFilter, Toteutus, TutkinnonOsa, TuvaKoulutusMetadata, VapaaSivistystyoMuuKoulutusMetadata, VapaaSivistystyoOpistovuosiKoulutusMetadata, YliopistoKoulutusMetadata, Yo}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{KoulutusServiceValidation, KoutaValidationException, OrganisaatioService}
-import fi.oph.kouta.validation.Validations.{
-  InvalidMetadataTyyppi,
-  illegalStateChange,
-  integrityViolationMsg,
-  invalidEPerusteId,
-  invalidEPerusteIdForKoulutusKoodiUri,
-  invalidKielistetty,
-  invalidKoulutusAlaKoodiuri,
-  invalidKoulutuskoodiuri,
-  invalidLisatietoOtsikkoKoodiuri,
-  invalidOpintojenLaajuusKoodiuri,
-  invalidOpintojenLaajuusyksikkoKoodiuri,
-  invalidOsaamisalaForEPeruste,
-  invalidTutkinnonOsaIdForEPeruste,
-  invalidTutkinnonOsaViiteForEPeruste,
-  invalidTutkintoNimikeKoodiuri,
-  invalidTutkintoonjohtavuus,
-  invalidUrl,
-  missingMsg,
-  nonExistent,
-  notEmptyMsg,
-  notMissingMsg,
-  notNegativeMsg,
-  notYetJulkaistu,
-  tooManyKoodiUris,
-  tyyppiMismatch,
-  unknownTarjoajaOid,
-  validationMsg,
-  valuesDontMatch
-}
-import fi.oph.kouta.validation.{
-  BaseValidationSpec,
-  ValidationError,
-  amkKoulutustyypit,
-  ammOpeErityisopeJaOpoKoulutusKoodiUrit,
-  ammatillisetKoulutustyypit,
-  lukioKoulutusKoodiUrit,
-  yoKoulutustyypit
-}
+import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
+import fi.oph.kouta.validation.Validations.{InvalidKoulutuspaivamaarat, InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidEPerusteId, invalidEPerusteIdForKoulutusKoodiUri, invalidKielistetty, invalidKoulutusAlaKoodiuri, invalidKoulutuskoodiuri, invalidLisatietoOtsikkoKoodiuri, invalidOpintojenLaajuusKoodiuri, invalidOpintojenLaajuusyksikkoKoodiuri, invalidOsaamisalaForEPeruste, invalidTutkinnonOsaIdForEPeruste, invalidTutkinnonOsaViiteForEPeruste, invalidTutkintoNimikeKoodiuri, invalidTutkintoonjohtavuus, invalidUrl, missingMsg, nonExistent, notEmptyMsg, notMissingMsg, notNegativeMsg, notYetJulkaistu, tooManyKoodiUris, tyyppiMismatch, unknownTarjoajaOid, validationMsg, valuesDontMatch}
+import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError, amkKoulutustyypit, ammOpeErityisopeJaOpoKoulutusKoodiUrit, ammatillisetKoulutustyypit, erikoislaakariKoulutusKoodiUrit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
 import org.scalatest.Assertion
 
 import java.util.UUID
@@ -253,6 +169,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     // ammatilliset
     acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#1")
     acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#12")
+    acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#12")
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(11L))
       .thenAnswer(Seq(koodiUriFromString("koulutus_371101")))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(123L))
@@ -276,6 +193,8 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       .thenAnswer(true)
     // lukio
     when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301101#1")).thenAnswer(true)
+    // erikoislaakari
+    when(koulutusKoodiClient.koulutusKoodiUriExists(erikoislaakariKoulutusKoodiUrit, "koulutus_775101#1")).thenAnswer(true)
     // toteutukset
     when(toteutusDao.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(
       Seq(
@@ -443,6 +362,19 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "succeed when new incomplete luonnos Kk-opintojakso koulutus" in {
     passValidation(KkOpintojaksoKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintojaksoKoulutusMetadata())))
+  }
+
+  it should "Succeed when new valid Erikoislääkäri koulutus" in {
+    passValidation(ErikoislaakariKoulutus)
+  }
+
+  it should "Fail with more than 1 koulutuksetKoodiUri" in {
+    failValidation(ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_775101#1", "koulutus_775201#1")), "koulutuksetKoodiUri", tooManyKoodiUris)
+  }
+
+  it should "Fail if unknown koulutusKoodiUri for Erikoislääkäri koulutus" in {
+    failValidation(ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
+      "koulutuksetKoodiUri[0]", invalidKoulutuskoodiuri("koulutus_111111#1"))
   }
 
   it should "fail if perustiedot is invalid" in {

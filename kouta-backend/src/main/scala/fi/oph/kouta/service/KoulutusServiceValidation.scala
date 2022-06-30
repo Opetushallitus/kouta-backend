@@ -4,16 +4,10 @@ import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInLis
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain.{koulutus, _}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
-import fi.oph.kouta.validation.{
-  IsValid,
-  NoErrors,
-  amkKoulutustyypit,
-  ammOpeErityisopeJaOpoKoulutusKoodiUrit,
-  ammatillisetKoulutustyypit,
-  lukioKoulutusKoodiUrit,
-  yoKoulutustyypit
-}
+import fi.oph.kouta.validation.{IsValid, NoErrors, amkKoulutustyypit, ammOpeErityisopeJaOpoKoulutusKoodiUrit, ammatillisetKoulutustyypit, erikoislaakariKoulutusKoodiUrit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
+import fi.oph.kouta.validation.Validations._
+
+import java.util.UUID
 
 object KoulutusServiceValidation
     extends KoulutusServiceValidation(
@@ -104,6 +98,10 @@ class KoulutusServiceValidation(
         )
       case AikuistenPerusopetus =>
         assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+      case Erikoislaakari => and(
+        validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
+        assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
+      )
       case _ =>
         and(
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
