@@ -35,6 +35,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context.mount(new SearchServlet(), "/search", "search")
     context.mount(new IndexerServlet(), "/indexer", "indexer")
     context.mount(new ExternalServlet(), "/external", "external")
+    context.mount(new ArkistointiServlet(), "/archiver","archiver")
     context.mount(new SwaggerServlet, "/swagger")
 
     val arkistointiScheduler = new ArkistointiScheduler

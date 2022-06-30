@@ -8,6 +8,9 @@ import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase}
 import fi.oph.kouta.service.HakuService
 import fi.vm.sade.utils.slf4j.Logging
+import java.time.Instant
+
+object ArkistointiScheduler extends ArkistointiScheduler(HakuService)
 
 class ArkistointiScheduler(hakuService: HakuService) extends Logging {
 
@@ -30,7 +33,6 @@ class ArkistointiScheduler(hakuService: HakuService) extends Logging {
             })
         }
         //todo: Audit-logitus
-        //todo: swagger-trigger
       } catch {
         case error: Exception => logger.error(s"Haun ja haukohteiden arkistointi epäonnistui: $error")
       }
@@ -46,11 +48,30 @@ class ArkistointiScheduler(hakuService: HakuService) extends Logging {
       .create(KoutaDatabase.dataSource)
       .startTasks(cronTask)
       .threads(numberOfThreads)
+      .registerShutdownHook()
       .build
 
   def startScheduler(): Unit = {
     logger.info(s"Käynnistetään haun ja hakukohteiden arkistointi-scheduler.")
     scheduler.start()
+  }
+
+  private val immediateTask = Tasks
+    .oneTime("immediate-archive-hakus-and-hakukohdes-task")
+    .execute(executionHandler)
+
+  private final val immediateScheduler: Scheduler =
+    Scheduler
+      .create(KoutaDatabase.dataSource, immediateTask)
+      .threads(numberOfThreads)
+      .registerShutdownHook()
+      .build
+
+  immediateScheduler.start()
+
+  def runScheduler(): Unit = {
+    logger.info(s"Käynnistetään käsin haun ja hakukohteiden arkistointi-scheduler.")
+    immediateScheduler.schedule(immediateTask.instance("one-time"), Instant.now())
   }
 
   private def archiveHautJaHakukohteet(): Option[Seq[HakuOid]] = {
@@ -71,7 +92,6 @@ class ArkistointiScheduler(hakuService: HakuService) extends Logging {
         }
       case _ =>
         logger.info(s"Ei löytynyt yhtään arkistoitavaa hakua, ei arkistoida myöskään yhtään hakukohdetta.")
-//        Some(Seq(HakuOid("x"), HakuOid("y")))
         None
     }
     logger.info(s"Arkistointi valmis, arkistoitiin $archivedHakuCount hakua ja $archivedHakukohdeCount hakukohdetta.")
