@@ -26,7 +26,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     )
 
   def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu)
-  def korkeakoulu            = List(Amk, Yo, AmmOpeErityisopeJaOpo, KkOpintojakso)
+  def korkeakoulu            = List(Amk, Yo, AmmOpeErityisopeJaOpo, KkOpintojakso, Erikoislaakari)
   def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
   def onlyOphCanSaveKoulutus = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
   def toinenAsteYhteishaku   = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
