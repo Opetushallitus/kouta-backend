@@ -4,7 +4,6 @@ import fi.oph.kouta.client.KoulutusKoodiClient
 import fi.oph.kouta.domain.{
   Ajanjakso,
   AmmMuu,
-  AmmatillinenMuuToteutusMetadata,
   AmmatillinenOsaamisala,
   AmmatillinenToteutusMetadata,
   Apuraha,
@@ -12,12 +11,9 @@ import fi.oph.kouta.domain.{
   Julkaistu,
   Julkaisutila,
   Kieli,
-  Kielistetty,
   Kielivalikoima,
   KkOpintojakso,
   KkOpintojaksoToteutusMetadata,
-  KorkeakouluOsaamisala,
-  KorkeakoulutusToteutusMetadata,
   KoulutuksenAlkamiskausi,
   Koulutustyyppi,
   Lisatieto,
@@ -29,20 +25,15 @@ import fi.oph.kouta.domain.{
   Maksullinen,
   MuuHakulomake,
   Opetus,
-  Osaamisala,
   Prosentti,
   Telma,
-  TelmaToteutusMetadata,
   TilaFilter,
   Toteutus,
   ToteutusMetadata,
   TutkintoonJohtamatonToteutusMetadata,
   Tuva,
-  TuvaToteutusMetadata,
   VapaaSivistystyoMuu,
-  VapaaSivistystyoMuuToteutusMetadata,
   VapaaSivistystyoOpistovuosi,
-  VapaaSivistystyoOpistovuosiToteutusMetadata,
   Yhteyshenkilo
 }
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
@@ -171,8 +162,6 @@ class ToteutusServiceValidation(
                   )
                 case _ => validateTutkintoonJohtamatonMetadata(tila, kielivalinta, tutkintoonJohtamatonToteutusMetadata)
               }
-            case kkMetadata: KorkeakoulutusToteutusMetadata =>
-              validateKorkeakouluMetadata(tila, kielivalinta, kkMetadata)
             case lkMetadata: LukioToteutusMetadata => validateLukioMetadata(tila, kielivalinta, lkMetadata)
             case _                                 => NoErrors
           }
@@ -306,7 +295,7 @@ class ToteutusServiceValidation(
   }
 
   private def validateOsaamisala(
-      osaamisala: Osaamisala,
+      osaamisala: AmmatillinenOsaamisala,
       path: String,
       tila: Julkaisutila,
       kielivalinta: Seq[Kieli]
@@ -320,25 +309,14 @@ class ToteutusServiceValidation(
           validateOptionalKielistetty(kielivalinta, osaamisala.otsikko, s"$path.otsikko")
         )
       ),
-      osaamisala match {
-        case ammOsaamisala: AmmatillinenOsaamisala =>
-          validateIfSuccessful(
-            assertMatch(ammOsaamisala.koodiUri, OsaamisalaKoodiPattern, s"$path.koodiUri"),
-            assertTrue(
-              koulutusKoodiClient.osaamisalaKoodiUriExists(ammOsaamisala.koodiUri),
-              s"$path.koodiUri",
-              invalidOsaamisalaKoodiUri(ammOsaamisala.koodiUri)
-            )
-          )
-        case kkOsaamisala: KorkeakouluOsaamisala =>
-          validateIfJulkaistu(
-            tila,
-            and(
-              validateKielistetty(kielivalinta, kkOsaamisala.nimi, s"$path.nimi"),
-              validateOptionalKielistetty(kielivalinta, kkOsaamisala.kuvaus, s"$path.kuvaus")
-            )
-          )
-      }
+      validateIfSuccessful(
+        assertMatch(osaamisala.koodiUri, OsaamisalaKoodiPattern, s"$path.koodiUri"),
+        assertTrue(
+          koulutusKoodiClient.osaamisalaKoodiUriExists(osaamisala.koodiUri),
+          s"$path.koodiUri",
+          invalidOsaamisalaKoodiUri(osaamisala.koodiUri)
+        )
+      )
     )
   }
 
@@ -376,23 +354,6 @@ class ToteutusServiceValidation(
         )
       )
     )
-
-  private def validateKorkeakouluMetadata(
-      tila: Julkaisutila,
-      kielivalinta: Seq[Kieli],
-      kkMetadata: KorkeakoulutusToteutusMetadata
-  ): IsValid = and(
-    validateIfNonEmpty[KorkeakouluOsaamisala](
-      kkMetadata.alemmanKorkeakoulututkinnonOsaamisalat,
-      "metadata.alemmanKorkeakoulututkinnonOsaamisalat",
-      validateOsaamisala(_, _, tila, kielivalinta)
-    ),
-    validateIfNonEmpty[KorkeakouluOsaamisala](
-      kkMetadata.ylemmanKorkeakoulututkinnonOsaamisalat,
-      "metadata.ylemmanKorkeakoulututkinnonOsaamisalat",
-      validateOsaamisala(_, _, tila, kielivalinta)
-    )
-  )
 
   private def validateKieliKoodit(koodiUrit: Seq[String], relativePath: String): IsValid =
     validateIfNonEmpty[String](
