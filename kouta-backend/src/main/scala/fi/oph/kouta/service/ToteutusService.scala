@@ -12,6 +12,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.util.MiscUtils.isDIAlukiokoulutus
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -50,12 +51,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
-  def DIAkoodiuri = "koulutus_301103"
-  def isDIAlukiototeutus(koulutuksetKoodiUri: Seq[String]) = koulutuksetKoodiUri.head.startsWith(DIAkoodiuri)
+
 
   def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
     val koulutuksetKoodiUri = toteutus.koulutuksetKoodiUri
-    if (!koulutuksetKoodiUri.isEmpty && isDIAlukiototeutus(koulutuksetKoodiUri)) {
+    if (!koulutuksetKoodiUri.isEmpty && isDIAlukiokoulutus(koulutuksetKoodiUri)) {
       toteutus.nimi
     } else {
       (toteutus.metadata, toteutus.koulutusMetadata) match {

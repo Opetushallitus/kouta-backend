@@ -13,7 +13,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec {
   val anyDep = (
     Julkaistu,
     None,
-    None
+    None,
+    Seq()
   )
 
   "Hakukohde validation" should "pass for Oph-virkailija even though hakukohteen liittämisen takaraja has expired" in {
