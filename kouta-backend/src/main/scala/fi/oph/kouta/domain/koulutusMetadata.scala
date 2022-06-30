@@ -325,6 +325,32 @@ package object koulutusMetadata {
       |              example: 10
       |""".stripMargin
 
+  val ErikoislaakariKoulutusMetadata: String =
+    """    ErikoislaakariKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            koulutustyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: erikoislaakari
+      |              enum:
+      |                - erikoislaakari
+      |            kuvauksenNimi:
+      |              type: object
+      |              description: Koulutuksen kuvauksen nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |              $ref: '#/components/schemas/Nimi'
+      |            tutkintonimikeKoodiUrit:
+      |              type: array
+      |              description: Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/tutkintonimikekk/2)
+      |              items:
+      |                type: string
+      |              example:
+      |                - tutkintonimikekk_110#2
+      |                - tutkintonimikekk_111#2
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel,
     YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
     TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel)
@@ -460,3 +486,11 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 opintojenLaajuusNumero: Option[Double] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends KoulutusMetadata
+
+case class ErikoislaakariKoulutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
+                                          kuvauksenNimi: Kielistetty = Map(),
+                                          kuvaus: Kielistetty = Map(),
+                                          lisatiedot: Seq[Lisatieto] = Seq(),
+                                          tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+                                          isMuokkaajaOphVirkailija: Option[Boolean] = None
+                                         ) extends KoulutusMetadata

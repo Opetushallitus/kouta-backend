@@ -841,3 +841,11 @@ case class AikuistenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 aloituspaikat: Option[Int] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends TutkintoonJohtamatonToteutusMetadata
+
+case class ErikoislaakariToteutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
+                                     kuvaus: Kielistetty = Map(),
+                                     opetus: Option[Opetus] = None,
+                                     asiasanat: List[Keyword] = List(),
+                                     ammattinimikkeet: List[Keyword] = List(),
+                                     yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                     isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata

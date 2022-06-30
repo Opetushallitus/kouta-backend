@@ -119,7 +119,16 @@ class KoulutusServiceValidation(
       metadata: KoulutusMetadata
   ): IsValid = {
     val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
-      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus, KkOpintojakso)
+      Set(
+        AmmMuu,
+        Tuva,
+        Telma,
+        VapaaSivistystyoOpistovuosi,
+        VapaaSivistystyoMuu,
+        AikuistenPerusopetus,
+        KkOpintojakso,
+        Erikoislaakari
+      )
 
     and(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
@@ -203,6 +212,12 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(m.koulutusalaKoodiUrit),
           validateOpintojenLaajuusyksikko(tila, m.opintojenLaajuusyksikkoKoodiUri, m.opintojenLaajuusNumero, false),
+          validateIfJulkaistu(tila, validateKielistetty(kielivalinta, m.kuvauksenNimi, "metadata.kuvauksenNimi"))
+        )
+      case m: ErikoislaakariKoulutusMetadata =>
+        and(
+          // TODO: Validoi koulutusalaKoodiUrit (kovakoodattu)
+          assertTutkintonimikeKoodiUrit(m.tutkintonimikeKoodiUrit),
           validateIfJulkaistu(tila, validateKielistetty(kielivalinta, m.kuvauksenNimi, "metadata.kuvauksenNimi"))
         )
       case _ => NoErrors
