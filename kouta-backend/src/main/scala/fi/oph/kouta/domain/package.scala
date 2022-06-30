@@ -468,10 +468,17 @@ package object domain {
       |          $ref: '#/components/schemas/Kuvaus'
       |""".stripMargin
 
+  val HakutermiModel = """    Hakutermi:
+                         |      type: string
+                         |      enum:
+                         |        - hakeutuminen
+                         |        - ilmoittautuminen
+                         |""".stripMargin
+
   val models = List(KoulutustyyppiModel, KieliModel, JulkaisutilaModel, TekstiModel, NimiModel, KuvausModel, LinkkiModel, LisatietoModel,
     YhteyshenkiloModel, HakulomaketyyppiModel, AjanjaksoModel, OsoiteModel, ValintakoeModel, ValintakoeMetadataModel,
     ValintakoetilaisuusModel, LiitteenToimitustapaModel, ListEverythingModel, AuthenticatedModel, TutkinnonOsaModel,
-    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel, AloituspaikatModel)
+    KoulutuksenAlkamiskausiModel, NimettyLinkkiModel, ValintakokeenLisatilaisuudetModel, AloituspaikatModel, HakutermiModel)
 
   type Kielistetty = Map[Kieli,String]
 
