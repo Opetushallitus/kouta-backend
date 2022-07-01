@@ -4,35 +4,40 @@ import com.github.kagkarlsson.scheduler.Scheduler
 import com.github.kagkarlsson.scheduler.task.helper.Tasks
 import com.github.kagkarlsson.scheduler.task.schedule.{CronSchedule, Schedule}
 import com.github.kagkarlsson.scheduler.task.{ExecutionContext, TaskInstance, VoidExecutionHandler}
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid}
+import fi.oph.kouta.auditlog.{AuditLog, AuditResource}
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, RootOrganisaatioOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase}
 import fi.oph.kouta.service.HakuService
+import fi.oph.kouta.servlet.Authenticated
+import fi.vm.sade.auditlog.User
 import fi.vm.sade.utils.slf4j.Logging
-import java.time.Instant
+import org.ietf.jgss.Oid
 
-object ArkistointiScheduler extends ArkistointiScheduler(HakuService)
+object ArkistointiScheduler extends ArkistointiScheduler(HakuService, AuditLog)
 
-class ArkistointiScheduler(hakuService: HakuService) extends Logging {
+class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends Logging {
 
-  def this() = this(HakuService)
+  def this() = this(HakuService, AuditLog)
 
   private val cronSchedule: Schedule     = new CronSchedule("*/5 * * * * ?")
   private val testCronSchedule: Schedule = new CronSchedule("* * * * * ?")
   private val numberOfThreads: Int       = 1
+  private val user: User = new User(new Oid(RootOrganisaatioOid.toString), null, null, "scheduler")
 
   private val executionHandler: VoidExecutionHandler[Void] = new VoidExecutionHandler[Void] {
-    override def execute(taskInstance: TaskInstance[Void], executionContext: ExecutionContext): Unit = {
+     override def execute(taskInstance: TaskInstance[Void], executionContext: ExecutionContext): Unit = {
       logger.info(s"Aloitetaan ajastettu hakujen ja hakukohteiden arkistointi.")
 
       try {
-        archiveHautJaHakukohteet() match {
+        archiveHautJaHakukohteet(user) match {
           case Some(hakuoids) =>
             hakuoids.map(hakuOid => {
               logger.info(s"Lähetetään arkistoitu haku $hakuOid SQS-jonoon indeksoitavaksi.")
               hakuService.indexByOid(hakuOid)
             })
         }
-        //todo: Audit-logitus
+        //todo: varmista että Audit-logitus toimii
+        //todo: Timestamp automaattiselle arkistointiajankohdalle
       } catch {
         case error: Exception => logger.error(s"Haun ja haukohteiden arkistointi epäonnistui: $error")
       }
@@ -56,25 +61,14 @@ class ArkistointiScheduler(hakuService: HakuService) extends Logging {
     scheduler.start()
   }
 
-  private val immediateTask = Tasks
-    .oneTime("immediate-archive-hakus-and-hakukohdes-task")
-    .execute(executionHandler)
-
-  private final val immediateScheduler: Scheduler =
-    Scheduler
-      .create(KoutaDatabase.dataSource, immediateTask)
-      .threads(numberOfThreads)
-      .registerShutdownHook()
-      .build
-
-  immediateScheduler.start()
-
-  def runScheduler(): Unit = {
+  def runScheduler()(implicit authenticated: Authenticated): Unit = {
     logger.info(s"Käynnistetään käsin haun ja hakukohteiden arkistointi-scheduler.")
-    immediateScheduler.schedule(immediateTask.instance("one-time"), Instant.now())
+  archiveHautJaHakukohteet(auditLog.getUser(authenticated))
   }
 
-  private def archiveHautJaHakukohteet(): Option[Seq[HakuOid]] = {
+  private def archiveHautJaHakukohteet(user: User): Option[Seq[HakuOid]] = {
+    logger.info("USER: " + user.toString)
+
     var archivedHakuCount: Int      = 0
     var archivedHakukohdeCount: Int = 0
     val archivedHakuOids: Option[Seq[HakuOid]] = HakuDAO.listArchivableHakuOids() match {
@@ -82,8 +76,13 @@ class ArkistointiScheduler(hakuService: HakuService) extends Logging {
         HakukohdeDAO.listArchivableHakukohdeOidsByHakuOids(hakuOids) match {
           case hakukohdeOids: Seq[HakukohdeOid] =>
             logger.info(s"Arkistoidaan julkaistut haut: $hakuOids ja niiden julkaistut hakukohteet: $hakukohdeOids.")
+
             archivedHakukohdeCount = HakukohdeDAO.archiveHakukohdesByHakukohdeOids(hakukohdeOids)
+            hakukohdeOids.map(hakukohdeOid => auditLog.logArchive(hakukohdeOid.toString, AuditResource.Hakukohde, user))
+
             archivedHakuCount = HakuDAO.archiveHakusByHakuOids(hakuOids)
+            hakuOids.map(hakuOid => auditLog.logArchive(hakuOid.toString, AuditResource.Haku, user))
+
             Some(hakuOids)
           case _ =>
             logger.info(s"Ei löytynyt arkistoitavia hakukohteita hauille: $hakuOids, arkistoidaan haut.")

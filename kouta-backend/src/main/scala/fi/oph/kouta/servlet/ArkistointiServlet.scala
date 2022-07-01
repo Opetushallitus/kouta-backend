@@ -23,7 +23,7 @@ class ArkistointiServlet(arkistointiScheduler: ArkistointiScheduler) extends Kou
       |""".stripMargin
   )
   post("/start") {
-//    implicit val authenticated: Authenticated = authenticate()
+    implicit val authenticated: Authenticated = authenticate()
     Ok("started" -> arkistointiScheduler.runScheduler())
   }
 }
