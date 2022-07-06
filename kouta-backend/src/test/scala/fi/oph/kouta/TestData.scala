@@ -309,6 +309,12 @@ object TestData {
     )
   )
 
+  val LukiokoulutuksenMetatieto = LukioKoulutusMetadata(
+    opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    lisatiedot = Seq(Lisatieto1),
+    isMuokkaajaOphVirkailija = Some(true))
+
   val LukioKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,
@@ -317,12 +323,7 @@ object TestData {
     esikatselu = true,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(LukioKoulutusMetadata(
-      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
-      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_00#1"),
-      lisatiedot = Seq(Lisatieto1),
-      isMuokkaajaOphVirkailija = Some(true))),
+    metadata = Some(LukiokoulutuksenMetatieto),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,

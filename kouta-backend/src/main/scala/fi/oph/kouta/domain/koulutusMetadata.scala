@@ -436,7 +436,7 @@ case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                  opintojenLaajuusKoodiUri: Option[String] = None,
-                                 koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                 koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,

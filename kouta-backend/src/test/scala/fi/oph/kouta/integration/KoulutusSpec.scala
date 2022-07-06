@@ -129,7 +129,8 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "store lukio koulutus" in {
     val oid = put(TestData.LukioKoulutus, ophSession)
-    get(oid, TestData.LukioKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val metadata = TestData.LukiokoulutuksenMetatieto.copy(koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_00#1"))
+    get(oid, TestData.LukioKoulutus.copy(oid = Some(KoulutusOid(oid)), metadata = Some(metadata)))
   }
 
   it should "validate new julkaistu koulutus" in {
