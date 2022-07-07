@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{AikuistenPerusopetus, Amm, AmmMuu, AmmOsaamisala, AmmTutkinnonOsa, KkOpintojakso, Koulutustyyppi, Lk, Muu, Telma, Tuva, VapaaSivistystyoMuu, VapaaSivistystyoOpistovuosi, Yo, Erikoislaakari}
+import fi.oph.kouta.domain._
 
 class OrganisaatioServiceSpec extends OrganisaatioFixture {
 

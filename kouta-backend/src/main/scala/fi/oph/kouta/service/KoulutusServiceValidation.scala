@@ -2,12 +2,10 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
-import fi.oph.kouta.domain.{koulutus, _}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.validation.{IsValid, NoErrors, amkKoulutustyypit, ammOpeErityisopeJaOpoKoulutusKoodiUrit, ammatillisetKoulutustyypit, erikoislaakariKoulutusKoodiUrit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
 import fi.oph.kouta.validation.Validations._
-
-import java.util.UUID
+import fi.oph.kouta.validation._
 
 object KoulutusServiceValidation
     extends KoulutusServiceValidation(

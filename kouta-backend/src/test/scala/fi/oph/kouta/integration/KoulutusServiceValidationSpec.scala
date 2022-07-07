@@ -1,15 +1,15 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData.{AikuistenPerusopetusKoulutus, AmkKoulutus, AmmKoulutus, AmmMuuKoulutus, AmmOpettajaKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus, ErikoislaakariKoulutus, JulkaistuAmmToteutus, KkOpintojaksoKoulutus, Lisatieto1, LukioKoulutus, MinKoulutus, TelmaKoulutus, TuvaKoulutus, VapaaSivistystyoMuuKoulutus, VapaaSivistystyoOpistovuosiKoulutus, YoKoulutus}
-import fi.oph.kouta.TestOids.{EvilCousin, EvilGrandChildOid, GrandChildOid, LonelyOid, UnknownOid}
+import fi.oph.kouta.TestData._
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoulutusKoodiClient}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{AikuistenPerusopetusKoulutusMetadata, Amm, AmmOpeErityisopeJaOpoKoulutusMetadata, AmmatillinenKoulutusMetadata, AmmatillinenMuuKoulutusMetadata, AmmatillinenOsaamisalaKoulutusMetadata, AmmatillinenTutkinnonOsaKoulutusMetadata, AmmattikorkeakouluKoulutusMetadata, Arkistoitu, Fi, Julkaistu, KkOpintojaksoKoulutusMetadata, Koulutus, Lisatieto, LukioKoulutusMetadata, Poistettu, Sv, Tallennettu, TelmaKoulutusMetadata, TilaFilter, Toteutus, TutkinnonOsa, TuvaKoulutusMetadata, VapaaSivistystyoMuuKoulutusMetadata, VapaaSivistystyoOpistovuosiKoulutusMetadata, YliopistoKoulutusMetadata, Yo}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
-import fi.oph.kouta.validation.Validations.{InvalidKoulutuspaivamaarat, InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidEPerusteId, invalidEPerusteIdForKoulutusKoodiUri, invalidKielistetty, invalidKoulutusAlaKoodiuri, invalidKoulutuskoodiuri, invalidLisatietoOtsikkoKoodiuri, invalidOpintojenLaajuusKoodiuri, invalidOpintojenLaajuusyksikkoKoodiuri, invalidOsaamisalaForEPeruste, invalidTutkinnonOsaIdForEPeruste, invalidTutkinnonOsaViiteForEPeruste, invalidTutkintoNimikeKoodiuri, invalidTutkintoonjohtavuus, invalidUrl, missingMsg, nonExistent, notEmptyMsg, notMissingMsg, notNegativeMsg, notYetJulkaistu, tooManyKoodiUris, tyyppiMismatch, unknownTarjoajaOid, validationMsg, valuesDontMatch}
-import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError, amkKoulutustyypit, ammOpeErityisopeJaOpoKoulutusKoodiUrit, ammatillisetKoulutustyypit, erikoislaakariKoulutusKoodiUrit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation._
 import org.scalatest.Assertion
 
 import java.util.UUID
