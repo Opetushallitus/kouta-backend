@@ -12,4 +12,7 @@ object MiscUtils {
     ) && isYhteishakuHakutapa(
       hakutapaKoodiUri
     );
+
+  def DIAkoodiuri = "koulutus_301103"
+  def isDIAlukiokoulutus(koulutuksetKoodiUri: Seq[String]) = koulutuksetKoodiUri.map(uri => withoutKoodiVersion(uri)).contains(DIAkoodiuri)
 }

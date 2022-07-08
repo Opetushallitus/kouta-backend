@@ -102,7 +102,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
   it should "store korkeakoulutus toteutus" in {
     val koulutusOid = put(TestData.YoKoulutus, ophSession)
     val oid = put(TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(koulutusOid)))
-    get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid)))
+    get(oid, TestData.JulkaistuYoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")))
   }
 
   it should "add toteutuksen tarjoajan oppilaitos to koulutuksen tarjoajat if it's not there" in {
@@ -445,10 +445,15 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val unfinishedToteutus = Toteutus(muokkaaja = TestUserOid, koulutusOid = KoulutusOid(koulutusOid),
       organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "toteutus"))
     val oid = put(unfinishedToteutus)
-    val lastModified = get(oid, unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)),
+    val lastModified = get(oid, unfinishedToteutus.copy(
+      oid = Some(ToteutusOid(oid)),
+      koulutuksetKoodiUri = Seq("koulutus_371101#1"),
       _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus"), muokkaajanNimi = Some("Testi Muokkaaja")))))
     val newKoulutusOid = put(koulutus, ophSession)
-    val newUnfinishedToteutus = unfinishedToteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(newKoulutusOid),
+    val newUnfinishedToteutus = unfinishedToteutus.copy(
+      oid = Some(ToteutusOid(oid)),
+      koulutusOid = KoulutusOid(newKoulutusOid),
+      koulutuksetKoodiUri = Seq("koulutus_371101#1"),
       _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "toteutus"), muokkaajanNimi = Some("Testi Muokkaaja"))))
     update(newUnfinishedToteutus, lastModified)
     get(oid, newUnfinishedToteutus)
@@ -559,18 +564,18 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val ammToKoulutusOid = put(TestData.AmmTutkinnonOsaKoulutus.copy(tila = Julkaistu))
     val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid(ammToKoulutusOid), sorakuvausId = Some(sorakuvausId), tila = Tallennettu)
     val oid = put(ammToToteutus)
-    val lastModified = get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq()))
     update(ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, ammToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq()))
   }
 
   it should "create, get and update muu ammatillinen toteutus" in {
     val ammMuuKoulutusOid = put(TestData.AmmMuuKoulutus.copy(tila = Julkaistu), ophSession)
     val ammMuuToteutus = TestData.AmmMuuToteutus.copy(koulutusOid = KoulutusOid(ammMuuKoulutusOid), tila = Tallennettu)
     val oid = put(ammMuuToteutus)
-    val lastModified = get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq()))
     update(ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, ammMuuToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq()))
   }
 
   it should "create, get and update lukio toteutus" in {
@@ -586,9 +591,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val lukioToKoulutusOid = put(TestData.LukioKoulutus.copy(tila = Julkaistu), ophSession)
     val lukioToToteutus = TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioToKoulutusOid), tila = Tallennettu, _enrichedData = _enrichedData)
     val oid = put(lukioToToteutus)
-    val lastModified = get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_301101#1")))
     update(lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu,
+    get(oid, lukioToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_301101#1"),
       _enrichedData = _enrichedData
       ))
   }
@@ -597,18 +602,18 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val tuvaToKoulutusOid = put(TestData.TuvaKoulutus.copy(tila = Julkaistu), ophSession)
     val tuvaToToteutus = TestData.TuvaToteutus.copy(koulutusOid = KoulutusOid(tuvaToKoulutusOid), tila = Tallennettu)
     val oid = put(tuvaToToteutus)
-    val lastModified = get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq()))
     update(tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq()))
   }
 
   it should "create, get and update kk-opintojakson toteutus" in {
     val kkOpintojaksoKoulutusOid = put(TestData.KkOpintojaksoKoulutus.copy(tila = Julkaistu), ophSession)
     val kkOpintojaksoToteutus = TestData.JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(kkOpintojaksoKoulutusOid), tila = Tallennettu)
     val oid = put(kkOpintojaksoToteutus)
-    val lastModified = get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq()))
     update(kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq()))
   }
 
   "Copy toteutukset" should "make a copy of a julkaistu toteutus and store it as tallennettu" in {
@@ -642,8 +647,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val aiPeToKoulutusOid = put(TestData.AikuistenPerusopetusKoulutus.copy(tila = Julkaistu), ophSession)
     val aiPeToToteutus = TestData.AikuistenPerusopetusToteutus.copy(koulutusOid = KoulutusOid(aiPeToKoulutusOid), tila = Tallennettu)
     val oid = put(aiPeToToteutus)
-    val lastModified = get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
     update(aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_201101#12")))
   }
 }

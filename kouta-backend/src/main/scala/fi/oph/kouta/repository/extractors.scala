@@ -50,6 +50,7 @@ trait ExtractorBase extends KoutaJsonFormats {
   implicit val getKoulutustyyppiOptionResult: GetResult[Option[Koulutustyyppi]] = GetResult(r => r.nextStringOption().map(Koulutustyyppi.withName))
 
   implicit val getToteutusMetadataOptionResult: GetResult[Option[ToteutusMetadata]] = GetResult(r => r.nextStringOption().map(read[ToteutusMetadata]))
+  implicit val getKoulutuksetKoodiUriResult: GetResult[Seq[String]] = GetResult(r => extractArray[String](r.nextObjectOption()))
 
   def extractArray[U](o: Option[Object]): Seq[U] = o
     .map(_.asInstanceOf[org.postgresql.jdbc.PgArray])
@@ -117,7 +118,8 @@ trait ToteutusExtractors extends ExtractorBase {
     teemakuva = r.nextStringOption(),
     sorakuvausId = r.nextStringOption().map(UUID.fromString),
     modified = Some(timeStampToModified(r.nextTimestamp())),
-    koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata])
+    koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
+    koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
   ))
 
   implicit val getToteutusListItemResult: GetResult[ToteutusListItem] =
@@ -133,6 +135,7 @@ trait ToteutusExtractors extends ExtractorBase {
           modified = Some(timeStampToModified(r.nextTimestamp())),
           metadata = r.nextStringOption().map(read[ToteutusMetadata]),
           koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
+          koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
         )
         val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
         ToteutusListItem(t.copy(nimi = esitysnimi))

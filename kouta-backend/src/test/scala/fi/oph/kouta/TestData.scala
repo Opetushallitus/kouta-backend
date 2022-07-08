@@ -816,6 +816,7 @@ object TestData {
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None,
+    koulutuksetKoodiUri = Seq("koulutus_371101#1"),
     _enrichedData = Some(
       ToteutusEnrichedData(
         esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv"),

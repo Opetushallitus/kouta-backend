@@ -12,6 +12,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.util.MiscUtils.isDIAlukiokoulutus
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -51,29 +52,37 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
+
+
   def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
-    (toteutus.metadata, toteutus.koulutusMetadata) match {
-      case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
-        (toteutusMetadata, koulutusMetadata) match {
-          case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) =>
-            val kaannokset = Map(
-              "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
-              "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
-                "toteutuslomake.lukionYleislinjaNimiOsa"
+    val koulutuksetKoodiUri = toteutus.koulutuksetKoodiUri
+    if (!koulutuksetKoodiUri.isEmpty && isDIAlukiokoulutus(koulutuksetKoodiUri)) {
+      toteutus.nimi
+    } else {
+      (toteutus.metadata, toteutus.koulutusMetadata) match {
+        case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
+          (toteutusMetadata, koulutusMetadata) match {
+            case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
+              val kaannokset = Map(
+                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
+                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
+                  "toteutuslomake.lukionYleislinjaNimiOsa"
+                )
               )
-            )
-            val painotuksetKaannokset      = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
-            val koulutustehtavatKaannokset = koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
-            val koodistoKaannokset         = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
-            NameHelper.generateLukioToteutusDisplayName(
-              lukioToteutusMetadata,
-              lukioKoulutusMetadata,
-              kaannokset,
-              koodistoKaannokset
-            )
-          case _ => toteutus.nimi
-        }
-      case _ => toteutus.nimi
+              val painotuksetKaannokset = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
+              val koulutustehtavatKaannokset = koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
+              val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
+              NameHelper.generateLukioToteutusDisplayName(
+                lukioToteutusMetadata,
+                lukioKoulutusMetadata,
+                kaannokset,
+                koodistoKaannokset
+              )
+            }
+            case _ => toteutus.nimi
+          }
+        case _ => toteutus.nimi
+      }
     }
   }
 
