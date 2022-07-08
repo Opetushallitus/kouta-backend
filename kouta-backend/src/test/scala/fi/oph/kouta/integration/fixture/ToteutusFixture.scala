@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakuKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -29,7 +29,8 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
+    val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
       koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)

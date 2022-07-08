@@ -379,6 +379,9 @@ trait HakukohdeExctractors extends ExtractorBase {
     toimitustapa = r.nextStringOption().map(LiitteenToimitustapa.withName),
     toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
   ))
+
+  implicit val getStringSequenceResult: GetResult[Seq[String]] = GetResult(r => extractArray[String](r.nextObjectOption()))
+  implicit val getUUIDSequenceResult: GetResult[Seq[UUID]] = GetResult(r => extractArray[UUID](r.nextObjectOption()))
 }
 
 trait OppilaitosExtractors extends ExtractorBase {

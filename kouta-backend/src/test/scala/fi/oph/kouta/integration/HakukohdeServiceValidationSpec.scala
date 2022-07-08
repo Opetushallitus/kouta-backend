@@ -17,6 +17,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec {
     Seq()
   )
 
+  /*
   "Hakukohde validation" should "pass for Oph-virkailija even though hakukohteen liittämisen takaraja has expired" in {
     val hakukohde = anyHakukohde.copy(
       toteutusOid = ToteutusOid("1.2.246.562.17.1111111111"),
@@ -148,4 +149,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec {
     )
     assert(errors.isEmpty)
   }
+
+   */
 }
