@@ -918,7 +918,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
-  it should "fail if invalid metadata for luonnos vapaa sivistystyo koulutus" in {
+  it should "fail if invalid metadata for luonnos vapaa sivistystyo opistovuosi koulutus" in {
     failValidation(
       VapaaSivistystyoOpistovuosiKoulutus.copy(
         tila = Tallennettu,
@@ -942,11 +942,11 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
-  it should "fail if invalid metadata for julkaistu vapaa sivistystyo koulutus" in {
+  it should "fail if invalid metadata for julkaistu vapaa sivistystyo opistovuosi koulutus" in {
     failValidation(
-      VapaaSivistystyoMuuKoulutus.copy(
+      VapaaSivistystyoOpistovuosiKoulutus.copy(
         metadata = Some(
-          VapaaSivistystyoMuuKoulutusMetadata(
+          VapaaSivistystyoOpistovuosiKoulutusMetadata(
             koulutusalaKoodiUrit = Seq("puppu"),
             opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#70"),
             linkkiEPerusteisiin = Map(Fi -> "http://www.vain.suomeksi.fi")
@@ -960,6 +960,58 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
           validationMsg("puppu")
         ),
         ValidationError("metadata.opintojenLaajuusKoodiUri", invalidOpintojenLaajuusKoodiuri("opintojenlaajuus_40#70")),
+        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for luonnos vapaa sivistystyo muu koulutus" in {
+    failValidation(
+      VapaaSivistystyoMuuKoulutus.copy(
+        tila = Tallennettu,
+        metadata = Some(
+          VapaaSivistystyoMuuKoulutusMetadata(
+            koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_70"),
+            linkkiEPerusteisiin = Map(Fi -> "puppu", Sv -> "puppu sv"),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_66#1"),
+            opintojenLaajuusNumero = Some(-1)
+          )
+        )
+      ),
+      Seq(
+        ValidationError(
+          "metadata.koulutusalaKoodiUrit[0]",
+          invalidKoulutusAlaKoodiuri("kansallinenkoulutusluokitus2016koulutusalataso1_70")
+        ),
+        ValidationError(
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          invalidOpintojenLaajuusyksikkoKoodiuri("opintojenlaajuusyksikko_66#1")
+        ),
+        ValidationError("metadata.opintojenLaajuusNumero", notNegativeMsg),
+        ValidationError("metadata.linkkiEPerusteisiin.fi", invalidUrl("puppu")),
+        ValidationError("metadata.linkkiEPerusteisiin.sv", invalidUrl("puppu sv"))
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for julkaistu vapaa sivistystyo muu koulutus" in {
+    failValidation(
+      VapaaSivistystyoMuuKoulutus.copy(
+        metadata = Some(
+          VapaaSivistystyoMuuKoulutusMetadata(
+            koulutusalaKoodiUrit = Seq("puppu"),
+            linkkiEPerusteisiin = Map(Fi -> "http://www.vain.suomeksi.fi")
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
+        ValidationError(
+          "metadata.koulutusalaKoodiUrit[0]",
+          validationMsg("puppu")
+        ),
+        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", missingMsg),
+        ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
         ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
       )
     )

@@ -1,12 +1,12 @@
 package fi.oph.kouta.repository
 
 import java.util.concurrent.TimeUnit
-
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.utils.slf4j.Logging
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.flywaydb.core.Flyway
+import org.flywaydb.core.api.configuration.Configuration
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 import slick.jdbc.TransactionIsolation
@@ -63,8 +63,7 @@ object KoutaDatabase extends Logging {
   }
 
   private def migrate() = {
-    val flyway = new Flyway()
-    flyway.setDataSource(settings.url, settings.username, settings.password)
-    flyway.migrate()
+    val flyway = Flyway.configure.dataSource(settings.url, settings.username, settings.password).load
+    flyway.migrate
   }
 }

@@ -7,7 +7,7 @@
     <groupId>fi.oph.kouta</groupId>
     <artifactId>kouta-backend-parent</artifactId>
     <packaging>pom</packaging>
-    <version>6.30.0-SNAPSHOT</version>
+    <version>6.31.0-SNAPSHOT</version>
     <name>kouta-backend-parent</name>
 
     <modules>
@@ -41,14 +41,14 @@
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
 
         <!-- Database related properties -->
-        <flyway.version>5.1.4</flyway.version>
+        <flyway.version>8.5.12</flyway.version>
         <slick.version>3.2.3</slick.version>
         <jdbc.version>42.2.5</jdbc.version>
 
         <!-- Test properties -->
         <scala-test.version>3.2.0-M4</scala-test.version>
         <scalatra-scalatest.version>2.7.0</scalatra-scalatest.version>
-        <jetty.version>9.4.17.v20190418</jetty.version>
+        <jetty.version>9.4.46.v20220331</jetty.version>
 
         <commons.io.version>2.6</commons.io.version>
         <commons.validator.version>1.6</commons.validator.version>

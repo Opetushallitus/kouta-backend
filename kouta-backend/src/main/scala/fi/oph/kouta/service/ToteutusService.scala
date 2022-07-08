@@ -1,22 +1,23 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoodistoKaannosClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
+import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object ToteutusService extends ToteutusService(SqsInTransactionService, S3ImageService, AuditLog, KeywordService, OrganisaatioServiceImpl, KoulutusService, LokalisointiClient, KoodistoKaannosClient, OppijanumerorekisteriClient, KayttooikeusClient, ToteutusServiceValidation)
@@ -52,28 +53,34 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
   def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
-    (toteutus.metadata, toteutus.koulutusMetadata) match {
-      case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
-        (toteutusMetadata, koulutusMetadata) match {
-          case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) =>
-            val kaannokset = Map(
-              "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
-              "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
-                "toteutuslomake.lukionYleislinjaNimiOsa"
+    val koulutuksetKoodiUri = toteutus.koulutuksetKoodiUri
+    if (!koulutuksetKoodiUri.isEmpty && (isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(koulutuksetKoodiUri))) {
+      toteutus.nimi
+    } else {
+      (toteutus.metadata, toteutus.koulutusMetadata) match {
+        case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
+          (toteutusMetadata, koulutusMetadata) match {
+            case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
+              val kaannokset = Map(
+                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
+                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
+                  "toteutuslomake.lukionYleislinjaNimiOsa"
+                )
               )
-            )
-            val painotuksetKaannokset      = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
-            val koulutustehtavatKaannokset = koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
-            val koodistoKaannokset         = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
-            NameHelper.generateLukioToteutusDisplayName(
-              lukioToteutusMetadata,
-              lukioKoulutusMetadata,
-              kaannokset,
-              koodistoKaannokset
-            )
-          case _ => toteutus.nimi
-        }
-      case _ => toteutus.nimi
+              val painotuksetKaannokset      = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
+              val koulutustehtavatKaannokset = koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
+              val koodistoKaannokset         = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
+              NameHelper.generateLukioToteutusDisplayName(
+                lukioToteutusMetadata,
+                lukioKoulutusMetadata,
+                kaannokset,
+                koodistoKaannokset
+              )
+            }
+            case _ => toteutus.nimi
+          }
+        case _ => toteutus.nimi
+      }
     }
   }
 

@@ -404,7 +404,8 @@ object TestData {
   val VapaaSivistystyoMuuKoulutus: Koulutus = VapaaSivistystyoOpistovuosiKoulutus.copy(
     koulutustyyppi = VapaaSivistystyoMuu,
     metadata = Some(VapaaSivistystyoMuuKoulutusMetadata(
-      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
+      opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+      opintojenLaajuusNumero = Some(12),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
       koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
@@ -822,6 +823,7 @@ object TestData {
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     modified = None,
+    koulutuksetKoodiUri = Seq("koulutus_371101#1"),
     _enrichedData = Some(
       ToteutusEnrichedData(
         esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv"),

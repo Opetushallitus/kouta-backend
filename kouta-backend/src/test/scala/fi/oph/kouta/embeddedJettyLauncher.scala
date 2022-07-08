@@ -27,7 +27,7 @@ object EmbeddedJettyLauncher extends Logging {
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
     TestSetups.setupCasSessionIdForTestDataGenerator()
-    new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt).start.join()
+    new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt, true).start.join()
   }
 }
 
