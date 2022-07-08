@@ -15,4 +15,7 @@ object MiscUtils {
 
   def EBkoodiuri = "koulutus_301104"
   def isEBlukiokoulutus(koulutuksetKoodiUri: Seq[String]) = koulutuksetKoodiUri.map(uri => withoutKoodiVersion(uri)).contains(EBkoodiuri)
+
+  def DIAkoodiuri = "koulutus_301103"
+  def isDIAlukiokoulutus(koulutuksetKoodiUri: Seq[String]) = koulutuksetKoodiUri.map(uri => withoutKoodiVersion(uri)).contains(DIAkoodiuri)
 }

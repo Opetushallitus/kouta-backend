@@ -86,6 +86,7 @@ object NameHelper {
       .filter { case (_, kaannos) => kaannos.nonEmpty }
       .toMap
   }
+
   def generateHakukohdeDisplayNameForTuva(
       hakukohdeNimi: Kielistetty,
       toteutusMetadata: ToteutusMetadata,

@@ -11,7 +11,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
-import fi.oph.kouta.util.MiscUtils.{isEBlukiokoulutus}
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
@@ -54,13 +54,13 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
   def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
     val koulutuksetKoodiUri = toteutus.koulutuksetKoodiUri
-    if (!koulutuksetKoodiUri.isEmpty && isEBlukiokoulutus(koulutuksetKoodiUri)) {
+    if (!koulutuksetKoodiUri.isEmpty && (isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(koulutuksetKoodiUri))) {
       toteutus.nimi
     } else {
       (toteutus.metadata, toteutus.koulutusMetadata) match {
         case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
           (toteutusMetadata, koulutusMetadata) match {
-            case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) =>
+            case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
               val kaannokset = Map(
                 "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
                 "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
@@ -76,6 +76,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                 kaannokset,
                 koodistoKaannokset
               )
+            }
             case _ => toteutus.nimi
           }
         case _ => toteutus.nimi
