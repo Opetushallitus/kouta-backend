@@ -140,6 +140,7 @@ class HakukohdeValidationSpec extends BaseValidationSpec[Hakukohde] {
   }
 }
 
+/*
 class HakukohdeMetadaValidationSpec extends SubEntityValidationSpec[HakukohdeMetadata]{
 
   "Hakukohde metadata validation" should "validate koulutuksenAlkamiskausi" in {
@@ -407,7 +408,6 @@ class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
 
 }
 
-/*
 class LiitteenToimitusosoiteValidationSpec extends SubEntityValidationSpec[LiitteenToimitusosoite] {
   val toimitusOsoite: LiitteenToimitusosoite = LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))
 
