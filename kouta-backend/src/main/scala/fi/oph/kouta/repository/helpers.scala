@@ -5,7 +5,7 @@ import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
 import java.util.UUID
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Arkistoitu, Julkaistu, Koulutustyyppi, Poistettu, TilaFilter}
+import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi, TilaFilter}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO

@@ -45,6 +45,7 @@ case class OppijanumerorekisteriClientConfiguration(username: String, password: 
 
 case class KayttooikeusClientConfiguration(username: String, password: String)
 
+case class HakemuspalveluClientConfiguration(username: String, password: String)
 
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties) extends ApplicationSettings(config) {
   val databaseConfiguration: KoutaDatabaseConfiguration = KoutaDatabaseConfiguration(
@@ -90,6 +91,11 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
   )
 
   val kayttooikeusClientConfiguration: KayttooikeusClientConfiguration = KayttooikeusClientConfiguration(
+    username = config.getString("kouta-backend.cas.username"),
+    password = config.getString("kouta-backend.cas.password")
+  )
+
+  val hakemuspalveluClientConfiguration: HakemuspalveluClientConfiguration = HakemuspalveluClientConfiguration(
     username = config.getString("kouta-backend.cas.username"),
     password = config.getString("kouta-backend.cas.password")
   )
