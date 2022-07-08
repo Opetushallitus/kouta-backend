@@ -112,7 +112,11 @@ class KoulutusServiceValidation(
         assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
       )
       case AmmMuu | Tuva | Telma | VapaaSivistystyoMuu | VapaaSivistystyoOpistovuosi =>
-        assertNotDefined(koulutus.sorakuvausId, "sorakuvausId")
+        and (
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
+          assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case _ =>
         and(
           validateSorakuvaus(koulutus),
@@ -154,6 +158,7 @@ class KoulutusServiceValidation(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
       validateIfTrueOrElse(
         koulutustyypitWithoutLisatiedot.contains(tyyppi),
+        assertEmpty(metadata.lisatiedot, "metadata.lisatiedot"),
         validateIfNonEmpty[Lisatieto](
           metadata.lisatiedot,
           "metadata.lisatiedot",
@@ -166,8 +171,7 @@ class KoulutusServiceValidation(
                 invalidLisatietoOtsikkoKoodiuri(lisatieto.otsikkoKoodiUri)
               )
             )
-        ),
-        assertEmpty(metadata.lisatiedot, "metadata.lisatiedot")
+        )
       ),
       validateIfJulkaistu(
         tila,
