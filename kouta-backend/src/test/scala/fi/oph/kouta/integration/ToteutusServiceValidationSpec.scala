@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{AmmOid, LonelyOid, LukioOid, OtherOid}
-import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
@@ -18,6 +18,7 @@ import java.util.UUID
 class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   val koulutusKoodiClient = mock[KoulutusKoodiClient]
   val organisaatioService = mock[OrganisaatioService]
+  val hakuKoodiClient     = mock[HakuKoodiClient]
   val koulutusDao         = mock[KoulutusDAO]
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
@@ -142,7 +143,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   }
 
   override val validator =
-    new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, koulutusDao, hakukohdeDao, sorakuvausDao)
+    new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, koulutusDao, hakukohdeDao, sorakuvausDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -156,7 +157,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_1#1")).thenAnswer(true)
     when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_2#1")).thenAnswer(true)
     when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(true)
+    when(hakuKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(true)
 
     // tietokantakyselyt
     when(koulutusDao.getTilaAndTyyppi(KoulutusOid("1.2.246.562.13.123"))).thenAnswer((Some(Julkaistu), Some(Amm)))
@@ -191,13 +192,13 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_1#1")
     ).thenAnswer(true)
     when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kieliKoodiUriExists("kieli_EN#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kieliKoodiUriExists("kieli_DE#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kieliKoodiUriExists("kieli_SV#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kieliKoodiUriExists("kieli_FR#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kieliKoodiUriExists("kieli_ES#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kieliKoodiUriExists("kieli_FI#1")).thenAnswer(true)
-    when(koulutusKoodiClient.kieliKoodiUriExists("kieli_ET#1")).thenAnswer(true)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_EN#1")).thenAnswer(true)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_DE#1")).thenAnswer(true)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_SV#1")).thenAnswer(true)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FR#1")).thenAnswer(true)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_ES#1")).thenAnswer(true)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI#1")).thenAnswer(true)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_ET#1")).thenAnswer(true)
   }
 
   "Validation" should "succeed when new valid toteutus" in {

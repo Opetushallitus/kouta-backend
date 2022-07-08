@@ -407,6 +407,7 @@ class LiiteValidationSpec extends SubEntityValidationSpec[Liite] {
 
 }
 
+/*
 class LiitteenToimitusosoiteValidationSpec extends SubEntityValidationSpec[LiitteenToimitusosoite] {
   val toimitusOsoite: LiitteenToimitusosoite = LiitteenToimitusosoite(osoite = Osoite1, sahkoposti = Some("foo@bar.fi"))
 
@@ -422,3 +423,5 @@ class LiitteenToimitusosoiteValidationSpec extends SubEntityValidationSpec[Liitt
     failsValidation(Tallennettu, toimitusOsoite.copy(osoite = Osoite1.copy(postinumeroKoodiUri = Some("invalid"))), "osoite.postinumeroKoodiUri", validationMsg("invalid"))
   }
 }
+
+ */

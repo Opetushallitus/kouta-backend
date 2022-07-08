@@ -51,12 +51,6 @@ class KoulutusServiceValidation(
         "koulutuksetKoodiUri",
         assertMatch(_, KoulutusKoodiPattern, _)
       ),
-      validateSorakuvausIntegrity(
-        koulutus.sorakuvausId,
-        tila,
-        tyyppi,
-        entityKoulutusKoodiUrit = koulutus.koulutuksetKoodiUri
-      ),
       validateIfJulkaistu(
         tila,
         and(
@@ -73,29 +67,38 @@ class KoulutusServiceValidation(
 
   private def validateKoulutustyyppiSpecificParameters(koulutus: Koulutus): IsValid = {
     koulutus.koulutustyyppi match {
-      case Amm | AmmOsaamisala => validateAmmatillinenKoulutus(koulutus)
+      case Amm | AmmOsaamisala =>
+        and(
+          validateSorakuvaus(koulutus),
+          validateAmmatillinenKoulutus(koulutus)
+        )
       case Yo =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUritOfKoulutustyypit(yoKoulutustyypit, koulutus, None),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case Amk =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUritOfKoulutustyypit(amkKoulutustyypit, koulutus, None),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case AmmOpeErityisopeJaOpo =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUrit(ammOpeErityisopeJaOpoKoulutusKoodiUrit, koulutus, Some(1)),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case Lk =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUrit(lukioKoulutusKoodiUrit, koulutus, Some(1)),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case AikuistenPerusopetus =>
         and(
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertOneAndOnlyCertainValueInSeq(
             koulutus.koulutuksetKoodiUri,
             "koulutus_201101",
@@ -108,13 +111,24 @@ class KoulutusServiceValidation(
         validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
         assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
       )
+      case AmmMuu | Tuva | Telma | VapaaSivistystyoMuu | VapaaSivistystyoOpistovuosi =>
+        assertNotDefined(koulutus.sorakuvausId, "sorakuvausId")
       case _ =>
         and(
+          validateSorakuvaus(koulutus),
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
     }
   }
+
+  private def validateSorakuvaus(koulutus: Koulutus): IsValid =
+    validateSorakuvausIntegrity(
+      koulutus.sorakuvausId,
+      koulutus.tila,
+      koulutus.koulutustyyppi,
+      entityKoulutusKoodiUrit = koulutus.koulutuksetKoodiUri
+    )
 
   private def validateCommonMetadataParameters(
       tila: Julkaisutila,
@@ -133,21 +147,27 @@ class KoulutusServiceValidation(
         KkOpintojakso,
         Erikoislaakari
       )
+    val koulutustyypitWithoutLisatiedot: Set[Koulutustyyppi] =
+      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus)
 
     and(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
-      validateIfNonEmpty[Lisatieto](
-        metadata.lisatiedot,
-        "metadata.lisatiedot",
-        (lisatieto, path) =>
-          validateIfSuccessful(
-            lisatieto.validate(tila, kielivalinta, path),
-            assertTrue(
-              koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists(lisatieto.otsikkoKoodiUri),
-              path = s"$path.otsikkoKoodiUri",
-              invalidLisatietoOtsikkoKoodiuri(lisatieto.otsikkoKoodiUri)
+      validateIfTrueOrElse(
+        koulutustyypitWithoutLisatiedot.contains(tyyppi),
+        validateIfNonEmpty[Lisatieto](
+          metadata.lisatiedot,
+          "metadata.lisatiedot",
+          (lisatieto, path) =>
+            validateIfSuccessful(
+              lisatieto.validate(tila, kielivalinta, path),
+              assertTrue(
+                koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists(lisatieto.otsikkoKoodiUri),
+                path = s"$path.otsikkoKoodiUri",
+                invalidLisatietoOtsikkoKoodiuri(lisatieto.otsikkoKoodiUri)
+              )
             )
-          )
+        ),
+        assertEmpty(metadata.lisatiedot, "metadata.lisatiedot")
       ),
       validateIfJulkaistu(
         tila,

@@ -17,7 +17,7 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
     super.startServiceMocking()
     urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort"))
-    koodiClient = new EPerusteKoodiClient(urlProperties.get, 3.seconds)
+    koodiClient = new EPerusteKoodiClient(urlProperties.get)
   }
 
   "Querying koulutusKoodiUrit for ePeruste" should "return koodiurit if ePeruste was valid" in {
