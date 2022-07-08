@@ -16,14 +16,15 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
 
-object HakemusPalveluClient extends HakemusPalveluClient
-
 case class AtaruForm(key: UUID, deleted: Option[Boolean], locked: Option[Boolean]) {
   def isActive(): Boolean =
     !deleted.getOrElse(false) && !locked.getOrElse(false)
 }
 
-trait HakemusPalveluClient extends HttpClient with CallerId with Logging {
+trait HakemusPalveluClient {
+  def isExistingAtaruId(ataruId: UUID): Boolean
+}
+object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with CallerId with Logging {
   private implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
@@ -45,7 +46,7 @@ trait HakemusPalveluClient extends HttpClient with CallerId with Logging {
 
   implicit val ataruIdCache = CaffeineCache[Seq[UUID]]
 
-  def isExistingAtaruId(ataruId: UUID): Boolean = {
+  override def isExistingAtaruId(ataruId: UUID): Boolean = {
     var existingIdsInCache = ataruIdCache.get("")
     if (existingIdsInCache.isEmpty) {
       val url = urlProperties.url("hakemuspalvelu-service.forms")
