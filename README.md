@@ -123,7 +123,7 @@ Localstackin käynnistysskripti kirjoittaa `~/.kouta_localstack` -tiedostoon kä
 Pysäytysskripti poistaa tuon tiedoston. Jos docker pysähtyy muulla tavalla, on mahdollista, että tuo tiedosto
 jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/stop_localstack`, joka poistaa "haamutiedoston".
 
-### 3.4.1 Kikkoja lokaaliin kehitykseen
+### 3.4.1 Ajo testiympäristöä vasten
 
 Mikäli tulee tarve tutkia testiympäristön kantaa tai ajaa kouta-backendia jonkin testiympäristön kantaa vasten, yksi keino tähän on
 SSH-porttiohjaus joka onnistuu seuraavilla komennoilla:
@@ -138,8 +138,13 @@ Esim. `testi.tyyppi@firma.com`: `testityy`
 Tämän lisäksi pitää vaihtaa `dev-vars.yml` tai `EmbeddedJettyLauncher.scala` tiedostoon postgresin salasana
 vastaamaan testiympäristön kannan salasanaa. Salasanat löytyvät samasta paikasta kuin muutkin OPH:n palvelujen 
 salaisuudet. Lisätietoja ylläpidolta.
-Toinen muutettava asia on kovakoodata `TempDockerDb.scala` tiedostoon `port`-muuttujaan ssh komennon alussa oleva
-portti, sillä oletuksena postgres-kontti käynnistyy random porttiin.
+
+Lisäksi pitää vielä asettaa muutama VM parametri EmbeddedJettyLauncher.scala:n ajokonfiguraatiohin:
+
+Mene Run -> Edit Configurations -> Valitse EmbeddedJettyLauncher -> Modify Options -> Add VM Options
+Ja lisää `-Dkouta-backend.config-profile=template -Dkouta-backend.embedded=false -Dkouta-backend.db.port={portti}`
+
+Korvaa {portti} ssh komennon alussa olevalla portilla, sillä oletuksena postgres-kontti käynnistyy random porttiin.
 
 ### 3.5. Versiohallinta
 
