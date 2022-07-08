@@ -554,9 +554,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val ammOaKoulutusOid = put(TestData.AmmOsaamisalaKoulutus.copy(tila = Julkaistu))
     val ammOaToteutus = TestData.AmmOsaamisalaToteutus.copy(koulutusOid = KoulutusOid(ammOaKoulutusOid), sorakuvausId = Some(sorakuvausId), tila = Tallennettu)
     val oid = put(ammOaToteutus)
-    val lastModified = get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_371101#1")))
     update(ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, ammOaToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_371101#1")))
   }
 
   it should "create, get and update ammatillinen tutkinnon osa toteutus" in {

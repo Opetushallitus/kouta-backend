@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, Ataru, Haku, Hakukohde, Julkaisutila, Koulutustyyppi, Lk, ToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata}
-import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isToisenAsteenYhteishaku}
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, isToisenAsteenYhteishaku}
 import fi.oph.kouta.validation.Validations.{and, assertInFuture, assertNotOptional, assertTrue, cannotLinkToHakukohde, tyyppiMismatch, validateDependency, validateDependencyExistence, validateIfDefined, validateIfJulkaistu, validateIfTrue}
 
 import java.time.{Instant, LocalDateTime}
@@ -18,7 +18,6 @@ object HakukohdeServiceValidation {
       case None => Seq()
       case deps => deps.get._4
     }
-
 
     and(
       validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
@@ -46,7 +45,7 @@ object HakukohdeServiceValidation {
           assertTrue(metadata.asInstanceOf[AmmatillinenOsaamisalaToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
         validateIfTrue(metadata.tyyppi == VapaaSivistystyoMuu,
           assertTrue(metadata.asInstanceOf[VapaaSivistystyoMuuToteutusMetadata].hakulomaketyyppi.exists(_ == Ataru), "toteutusOid", cannotLinkToHakukohde(toteutusOid))),
-        validateIfTrue(metadata.tyyppi == Lk && !isDIAlukiokoulutus(koulutuksetKoodiUri),
+        validateIfTrue(metadata.tyyppi == Lk && !isDIAlukiokoulutus(koulutuksetKoodiUri) && !isEBlukiokoulutus(koulutuksetKoodiUri),
           assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
       )),
       validateIfJulkaistu(
