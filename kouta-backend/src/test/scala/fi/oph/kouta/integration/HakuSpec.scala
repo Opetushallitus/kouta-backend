@@ -301,7 +301,7 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "haku"))
+    val unfinishedHaku = Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "haku"), kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"), hakutapaKoodiUri = Some("hakutapa_03#1"))
     val oid = put(unfinishedHaku)
     val lastModified = get(oid, unfinishedHaku.copy(oid = Some(HakuOid(oid)), _enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
     val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = AmmOid, _enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"))))

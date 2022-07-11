@@ -490,7 +490,9 @@ object TestData {
     organisaatioOid = LonelyOid,
     kielivalinta = Seq(Fi, Sv),
     nimi = kieliMap("Minimi haku"),
-    modified = None)
+    modified = None,
+    hakutapaKoodiUri = Some("hakutapa_03#1"),
+    kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"))
 
   val JulkaistuHakukohde: Hakukohde = Hakukohde(
     oid = None,
