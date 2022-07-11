@@ -187,27 +187,10 @@ package object toteutusMetadata {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val KorkeakouluToteutusMetadataModel: String =
-    """    KorkeakouluToteutusMetadata:
-      |      allOf:
-      |        - $ref: '#/components/schemas/ToteutusMetadata'
-      |      properties:
-      |        alemmanKorkeakoulututkinnonOsaamisalat:
-      |          type: array
-      |          description: Lista alemman korkeakoulututkinnon erikoistumisalojen, opintosuuntien, pääaineiden tms. kuvauksista.
-      |          items:
-      |            $ref: '#/components/schemas/KorkeakouluOsaamisala'
-      |        ylemmanKorkeakoulututkinnonOsaamisalat:
-      |          type: array
-      |          items:
-      |            $ref: '#/components/schemas/KorkeakouluOsaamisala'
-      |          description: Lista ylemmän korkeakoulututkinnon erikoistumisalojen, opintosuuntien, pääaineiden tms. kuvauksista.
-      |""".stripMargin
-
   val YliopistoToteutusMetadataModel: String =
     """    YliopistoToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -221,7 +204,7 @@ package object toteutusMetadata {
   val AmmattikorkeaToteutusMetadataModel: String =
     """    AmmattikorkeaToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -235,7 +218,7 @@ package object toteutusMetadata {
   val AmmOpeErityisopeJaOpoToteutusMetadataModel: String =
     """    AmmOpeErityisopeJaOpoToteutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/KorkeakouluToteutusMetadata'
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -258,6 +241,20 @@ package object toteutusMetadata {
       |              example: kk-opintojakso
       |              enum:
       |                - kk-opintojakso
+      |""".stripMargin
+
+  val ErikoislaakariToteutusMetadataModel: String =
+    """    ErikoislaakariToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: erikoislaakari
+      |              enum:
+      |                - erikoislaakari
       |""".stripMargin
 
   val AmmatillinenToteutusMetadataModel: String =
@@ -571,10 +568,10 @@ package object toteutusMetadata {
       |              - kieli_FI#1
       |""".stripMargin
 
-  val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel, KorkeakouluToteutusMetadataModel,
+  val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
     AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
-    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel)
+    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata {
@@ -587,11 +584,6 @@ sealed trait ToteutusMetadata {
   val isMuokkaajaOphVirkailija: Option[Boolean]
 
   def allowSorakuvaus: Boolean = false
-}
-
-trait KorkeakoulutusToteutusMetadata extends ToteutusMetadata {
-  val alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
-  val ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala]
 }
 
 case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
@@ -671,9 +663,7 @@ case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      asiasanat: List[Keyword] = List(),
                                      ammattinimikkeet: List[Keyword] = List(),
                                      yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                     alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                     ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                     isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata
+                                     isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata
 
 case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Kielistetty = Map(),
@@ -681,9 +671,7 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               asiasanat: List[Keyword] = List(),
                                               ammattinimikkeet: List[Keyword] = List(),
                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                              alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                              ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                              isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata
+                                              isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata
 
 case class AmmOpeErityisopeJaOpoToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
                                                  kuvaus: Kielistetty = Map(),
@@ -691,9 +679,7 @@ case class AmmOpeErityisopeJaOpoToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpe
                                                  asiasanat: List[Keyword] = List(),
                                                  ammattinimikkeet: List[Keyword] = List(),
                                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                 alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                                 ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusToteutusMetadata
+                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata
 
 case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          kuvaus: Kielistetty = Map(),
@@ -701,8 +687,6 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          asiasanat: List[Keyword] = List(),
                                          ammattinimikkeet: List[Keyword] = List(),
                                          yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                         alemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
-                                         ylemmanKorkeakoulututkinnonOsaamisalat: Seq[KorkeakouluOsaamisala] = Seq(),
                                          lisatietoaHakeutumisesta: Kielistetty = Map(),
                                          lisatietoaValintaperusteista: Kielistetty = Map(),
                                          hakutermi: Option[Hakutermi] = None,
@@ -746,19 +730,9 @@ case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
                                  aloituspaikat: Option[Int] = None,
                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata
 
-trait Osaamisala {
-  val linkki: Kielistetty
-  val otsikko: Kielistetty
-}
-
 case class AmmatillinenOsaamisala(koodiUri: String,
                                   linkki: Kielistetty = Map(),
-                                  otsikko: Kielistetty = Map()) extends Osaamisala
-
-case class KorkeakouluOsaamisala(nimi: Kielistetty = Map(),
-                                 kuvaus: Kielistetty = Map(),
-                                 linkki: Kielistetty = Map(),
-                                 otsikko: Kielistetty = Map()) extends Osaamisala
+                                  otsikko: Kielistetty = Map())
 
 case class Apuraha(min: Option[Int] = None,
                    max: Option[Int] = None,
@@ -841,3 +815,11 @@ case class AikuistenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 aloituspaikat: Option[Int] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends TutkintoonJohtamatonToteutusMetadata
+
+case class ErikoislaakariToteutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
+                                     kuvaus: Kielistetty = Map(),
+                                     opetus: Option[Opetus] = None,
+                                     asiasanat: List[Keyword] = List(),
+                                     ammattinimikkeet: List[Keyword] = List(),
+                                     yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                     isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata

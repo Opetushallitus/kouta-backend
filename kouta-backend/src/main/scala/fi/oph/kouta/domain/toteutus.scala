@@ -72,6 +72,7 @@ package object toteutus {
       |            - $ref: '#/components/schemas/VapaaSivistystyoOpistovuosiToteutusMetadata'
       |            - $ref: '#/components/schemas/VapaaSivistystyoMuuToteutusMetadata'
       |            - $ref: '#/components/schemas/AikuistenPerusopetusToteutusMetadata'
+      |            - $ref: '#/components/schemas/ErikoislaakariToteutusMetadata'
       |          example:
       |            tyyppi: amm
       |            kuvaus:

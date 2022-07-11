@@ -24,7 +24,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/modifiedSince/{since}",
     s"""    get:
        |      summary: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
-       |      operationId: Hae lista muuttuneista
+       |      operationId: indexerModifiedSince
        |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen. Tämä rajapinta on indeksointia varten
        |      tags:
        |        - Indexer
@@ -33,7 +33,7 @@ class IndexerServlet(koulutusService: KoulutusService,
        |          name: since
        |          schema:
        |            type: string
-       |          format: date-time
+       |            format: date-time
        |          required: true
        |          example: ${SampleHttpDate}
        |      responses:
@@ -54,7 +54,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/tarjoaja/{organisaatioOid}/koulutukset",
     """    get:
       |      summary: Hakee julkaistut koulutukset, joissa organisaatio tai sen aliorganisaatio on tarjoajana
-      |      operationId: Tarjoajan julkaistut koulutukset
+      |      operationId: indexerJulkaistutKoulutukset
       |      description: Hakee kaikkien niiden koulutusten kaikki tiedot, joissa organisaatio tai sen aliorganisaatio
       |        on tarjoajana ja jotka on julkaistu. Tämä rajapinta on indeksointia varten
       |      tags:
@@ -87,7 +87,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/koulutus/{oid}/toteutukset",
     """    get:
       |      summary: Hae koulutuksen toteutukset
-      |      operationId: Hae koulutuksen toteutukset
+      |      operationId: indexerKoulutusToteutukset
       |      description: Hakee koulutuksen kaikkien toteutusten kaikki tiedot. Tämä rajapinta on ideksointia varten
       |      tags:
       |        - Indexer
@@ -103,15 +103,15 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: vainJulkaistut
       |          schema:
       |            type: boolean
+      |            default: false
       |          required: false
-      |          default: false
       |          description: Palautetaanko vain julkaistut, Opintopolussa näytettävät toteutukset
       |        - in: query
       |          name: vainOlemassaolevat
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) toteutukset
       |      responses:
       |        '200':
@@ -136,7 +136,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/koulutus/{oid}/toteutukset/list",
     """    get:
       |      summary: Listaa kaikki koulutuksen toteutukset
-      |      operationId: Listaa koulutuksen toteutukset
+      |      operationId: indexerListKoulutusToteutukset
       |      description: Listaa kaikki koulutuksen toteutukset. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -152,8 +152,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: vainOlemassaolevat
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) toteutukset
       |      responses:
       |        '200':
@@ -177,7 +177,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/koulutus/{oid}/hakutiedot",
     """    get:
       |      summary: Hae koulutukseen liittyvät hakutiedot
-      |      operationId: Hae koulutuksen hakutiedot
+      |      operationId: indexerKoulutusHakutiedot
       |      description: Hakee koulutuksen olemassaolevat (=ei poistetut) ja arkistoimattomat hakutiedot. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -209,7 +209,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/toteutus/{oid}/haut/list",
     """    get:
       |      summary: Listaa kaikki toteutukseen liitetyt haut
-      |      operationId: Listaa toteutuksen haut
+      |      operationId: indexerListToteutusHaut
       |      description: Listaa kaikki toteutukseen liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -225,8 +225,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: vainOlemassaolevat
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) haut
       |      responses:
       |        '200':
@@ -250,7 +250,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/toteutus/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet
-      |      operationId: Listaa toteutuksen hakukohteet
+      |      operationId: listToteutusHakukohteet
       |      description: Listaa kaikki toteutukseen liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -266,8 +266,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: vainOlemassaolevat
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
@@ -290,7 +290,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/haku/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun
-      |      operationId: Listaa haun hakukohteet
+      |      operationId: indexerListHakuHakukohteet
       |      description: Listaa hakuun liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -306,8 +306,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: vainOlemassaolevat
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
@@ -330,7 +330,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/haku/{oid}/koulutukset/list",
     """    get:
       |      summary: Listaa kaikki hakuun liitetyt koulutukset
-      |      operationId: Listaa haun koulutukset
+      |      operationId: indexerListHakuKoulutukset
       |      description: Listaa kaikki hakuun liitetyt olemassaolevat (=ei poistetut) koulutukset. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -362,7 +362,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/haku/{oid}/toteutukset/list",
     """    get:
       |      summary: Listaa kaikki hakuun liitetyt toteutukset
-      |      operationId: Listaa haun toteutukset
+      |      operationId: indexerListHakuToteutukset
       |      description: Listaa kaikki hakuun liitetyt olemassaolevat (=ei poistetut) toteutukset. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -394,13 +394,13 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/valintaperuste/{id}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty
-      |      operationId: Lista valintaperusteen hakukohteet
+      |      operationId: indexerListValintaperusteHakukohteet
       |      description: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
       |      tags:
       |        - Indexer
       |      parameters:
       |        - in: path
-      |          name: oid
+      |          name: id
       |          schema:
       |            type: string
       |          required: true
@@ -410,8 +410,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: vainOlemassaolevat
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
       |      responses:
       |        '200':
@@ -435,13 +435,13 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/sorakuvaus/{id}/koulutukset/list",
     """    get:
       |      summary: Listaa kaikki koulutukset, joihin SORA-kuvaus on liitetty
-      |      operationId: Listaa sorakuvauksen koulutukset
+      |      operationId: indexerListSorakuvausKoulutukset
       |      description: Listaa kaikki koulutukset, joihin SORA-kuvaus on liitetty, mikäli käyttäjällä on oikeus nähdä ne
       |      tags:
       |        - Indexer
       |      parameters:
       |        - in: path
-      |          name: oid
+      |          name: id
       |          schema:
       |            type: string
       |          required: true
@@ -451,8 +451,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: vainOlemassaolevat
       |          schema:
       |            type: boolean
+      |            default: true
       |          required: false
-      |          default: true
       |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) koulutukset
       |      responses:
       |        '200':
@@ -476,7 +476,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/oppilaitos/{oid}/osat/list",
     """    get:
       |      summary: Listaa kaikki oppilaitoksen osien kuvailutiedot
-      |      operationId: Listaa oppilaitoksen osat
+      |      operationId: indexerListOppilaitosOsat
       |      description: Listaa oppilaitoksen kaikki osat. Tämä rajapinta on ideksointia varten
       |      tags:
       |        - Indexer
@@ -508,7 +508,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/oppilaitos/{oid}/osat",
     """    get:
       |      summary: Hakee oppilaitoksen kaikkien osien kuvailutiedot
-      |      operationId: Hae oppilaitoksen osat
+      |      operationId: indexerGetOppilaitosOsat
       |      description: Hakee oppilaitoksen kaikkien osien kuvailutiedot. Tämä rajapinta on ideksointia varten
       |      tags:
       |        - Indexer
@@ -540,7 +540,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/list-hakukohde-oids-by-jarjestyspaikat",
     """    post:
       |      summary: Hakee järjestyspaikkaa (oppilaitos tai toimipiste) vastaavat hakukohteet
-      |      operationId: Järjestyspaikan hakukohteet
+      |      operationId: indexerListHakukohdeOidsByJarjestyspaikat
       |      description: Hakee kaikkien niiden hakukohteiden oidit, joissa annettu oppilaitos/toimipiste on sen järjestyspaikkana suoraan tai oppilaitoksen kautta (jos toimipiste). Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
@@ -568,7 +568,7 @@ class IndexerServlet(koulutusService: KoulutusService,
   registerPath("/indexer/list-toteutus-oids-by-tarjoajat",
     """    post:
       |      summary: Hakee tarjoajaa (oppilaitos tai toimipiste) vastaavat toteutukset
-      |      operationId: Tarjoajan toteutukset
+      |      operationId: indexerListToteutusOidsByTarjoajat
       |      description: Hakee kaikkien niiden toteutusten oidit, joissa annettu oppilaitos/toimipiste on sen tarjoajana suoraan tai oppilaitoksen kautta (jos toimipiste). Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer

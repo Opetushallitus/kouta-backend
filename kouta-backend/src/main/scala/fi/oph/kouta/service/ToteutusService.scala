@@ -91,11 +91,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     toteutus.metadata match {
       case Some(metadata) =>
         metadata match {
-          case kkMetadata: KorkeakoulutusToteutusMetadata => kkMetadata match {
-            case yoMetadata: YliopistoToteutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-            case amkMetadata: AmmattikorkeakouluToteutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-            case ammOpeErityisopeJaOpoToteutusMetadata: AmmOpeErityisopeJaOpoToteutusMetadata => Some(ammOpeErityisopeJaOpoToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          }
+          case yoMetadata: YliopistoToteutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case amkMetadata: AmmattikorkeakouluToteutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammOpeErityisopeJaOpoToteutusMetadata: AmmOpeErityisopeJaOpoToteutusMetadata => Some(ammOpeErityisopeJaOpoToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammMetadata: AmmatillinenToteutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaToteutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammOsaamisalaMetadata: AmmatillinenOsaamisalaToteutusMetadata => Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -107,6 +105,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
           case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata => Some(vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case aikuistenPerusopetusToteutusMetadata: AikuistenPerusopetusToteutusMetadata => Some(aikuistenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case kkOpintojaksoMetadata: KkOpintojaksoToteutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case erikoislaakariToteutusMetadata: ErikoislaakariToteutusMetadata => Some(erikoislaakariToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }

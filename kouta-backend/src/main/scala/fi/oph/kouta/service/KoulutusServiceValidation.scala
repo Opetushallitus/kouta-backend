@@ -2,18 +2,10 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
-import fi.oph.kouta.domain.{koulutus, _}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
-import fi.oph.kouta.validation.{
-  IsValid,
-  NoErrors,
-  amkKoulutustyypit,
-  ammOpeErityisopeJaOpoKoulutusKoodiUrit,
-  ammatillisetKoulutustyypit,
-  lukioKoulutusKoodiUrit,
-  yoKoulutustyypit
-}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation._
 
 object KoulutusServiceValidation
     extends KoulutusServiceValidation(
@@ -104,6 +96,10 @@ class KoulutusServiceValidation(
         )
       case AikuistenPerusopetus =>
         assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+      case Erikoislaakari => and(
+        validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
+        assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
+      )
       case _ =>
         and(
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
@@ -119,7 +115,16 @@ class KoulutusServiceValidation(
       metadata: KoulutusMetadata
   ): IsValid = {
     val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
-      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus, KkOpintojakso)
+      Set(
+        AmmMuu,
+        Tuva,
+        Telma,
+        VapaaSivistystyoOpistovuosi,
+        VapaaSivistystyoMuu,
+        AikuistenPerusopetus,
+        KkOpintojakso,
+        Erikoislaakari
+      )
 
     and(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
@@ -205,6 +210,12 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(m.koulutusalaKoodiUrit),
           validateOpintojenLaajuusyksikko(tila, m.opintojenLaajuusyksikkoKoodiUri, m.opintojenLaajuusNumero, false),
+          validateIfJulkaistu(tila, validateKielistetty(kielivalinta, m.kuvauksenNimi, "metadata.kuvauksenNimi"))
+        )
+      case m: ErikoislaakariKoulutusMetadata =>
+        and(
+          // TODO: Validoi koulutusalaKoodiUrit (kovakoodattu)
+          assertTutkintonimikeKoodiUrit(m.tutkintonimikeKoodiUrit),
           validateIfJulkaistu(tila, validateKielistetty(kielivalinta, m.kuvauksenNimi, "metadata.kuvauksenNimi"))
         )
       case _ => NoErrors

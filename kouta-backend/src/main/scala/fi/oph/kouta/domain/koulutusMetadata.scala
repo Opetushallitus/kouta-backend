@@ -325,9 +325,35 @@ package object koulutusMetadata {
       |              example: 10
       |""".stripMargin
 
+  val ErikoislaakariKoulutusMetadataModel: String =
+    """    ErikoislaakariKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: erikoislaakari
+      |              enum:
+      |                - erikoislaakari
+      |            kuvauksenNimi:
+      |              type: object
+      |              description: Koulutuksen kuvauksen nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |              $ref: '#/components/schemas/Nimi'
+      |            tutkintonimikeKoodiUrit:
+      |              type: array
+      |              description: Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/tutkintonimikekk/2)
+      |              items:
+      |                type: string
+      |              example:
+      |                - tutkintonimikekk_110#2
+      |                - tutkintonimikekk_111#2
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel,
     YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
-    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel)
+    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel, ErikoislaakariKoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata {
@@ -410,7 +436,7 @@ case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                  opintojenLaajuusKoodiUri: Option[String] = None,
-                                 koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                 koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
@@ -460,3 +486,13 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 opintojenLaajuusNumero: Option[Double] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                ) extends KoulutusMetadata
+
+// koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
+case class ErikoislaakariKoulutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
+                                          kuvauksenNimi: Kielistetty = Map(),
+                                          kuvaus: Kielistetty = Map(),
+                                          lisatiedot: Seq[Lisatieto] = Seq(),
+                                          tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+                                          koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                          isMuokkaajaOphVirkailija: Option[Boolean] = None
+                                         ) extends KoulutusMetadata

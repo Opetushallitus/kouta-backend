@@ -6,14 +6,6 @@ object Hakutermi extends Enum[Hakutermi] {
   override def name: String = "hakutermi"
 
   override def values: List[Hakutermi] = List(Hakeutuminen, Ilmoittautuminen)
-
-  val SwaggerModel: String =
-    """    Hakutermi:
-      |      type: string
-      |      enum:
-      |        - hakeutuminen
-      |        - ilmoittautuminen
-      |""".stripMargin
 }
 
 case object Hakeutuminen extends Hakutermi { val name = "hakeutuminen"}

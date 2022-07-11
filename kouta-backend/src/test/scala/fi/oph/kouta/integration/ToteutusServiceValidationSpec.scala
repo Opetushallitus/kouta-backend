@@ -1,101 +1,14 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData.{
-  AmmMuuToteutus,
-  AmmOpettajaToteutus,
-  AmmToteutuksenMetatieto,
-  AmmTutkinnonOsaToteutus,
-  JulkaistuAmkToteutus,
-  JulkaistuAmmToteutus,
-  JulkaistuKkOpintojaksoToteutus,
-  JulkaistuYoToteutus,
-  KkOpintojaksoToteutuksenMetatieto,
-  Lisatieto1,
-  LukioToteutuksenMetatieto,
-  LukioToteutus,
-  MinHakukohdeListItem,
-  MinToteutus,
-  TelmaToteutus,
-  ToteutuksenOpetus,
-  TuvaToteutus,
-  VapaaSivistystyoMuuToteutus,
-  VapaaSivistystyoOpistovuosiToteutus
-}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{AmmOid, LonelyOid, LukioOid, OtherOid}
 import fi.oph.kouta.client.KoulutusKoodiClient
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.{
-  Ajanjakso,
-  AlkamiskausiJaVuosi,
-  Alkamiskausityyppi,
-  Amm,
-  AmmMuu,
-  AmmTutkinnonOsa,
-  AmmatillinenMuuToteutusMetadata,
-  AmmatillinenOsaamisala,
-  AmmatillinenToteutusMetadata,
-  Apuraha,
-  Arkistoitu,
-  EiSähköistä,
-  Euro,
-  Fi,
-  HakukohdeListItem,
-  Julkaistu,
-  Kielistetty,
-  KkOpintojakso,
-  KorkeakouluOsaamisala,
-  KoulutuksenAlkamiskausi,
-  Lisatieto,
-  Lk,
-  LukioToteutusMetadata,
-  LukiodiplomiTieto,
-  LukiolinjaTieto,
-  Maksullinen,
-  MuuHakulomake,
-  Opetus,
-  Poistettu,
-  Prosentti,
-  Sv,
-  Tallennettu,
-  TarkkaAlkamisajankohta,
-  TilaFilter,
-  Toteutus,
-  YliopistoToteutusMetadata,
-  Yo
-}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
 import fi.oph.kouta.service.{OrganisaatioService, ToteutusServiceValidation}
-import fi.oph.kouta.validation.Validations.{
-  InvalidKoulutuspaivamaarat,
-  illegalStateChange,
-  integrityViolationMsg,
-  invalidAjanjaksoMsg,
-  invalidKausiKoodiuri,
-  invalidKieliKoodiUri,
-  invalidKielistetty,
-  invalidLukioDiplomiKoodiUri,
-  invalidLukioLinjaKoodiUri,
-  invalidOpetusAikaKoodiUri,
-  invalidOpetusKieliKoodiUri,
-  invalidOpetusLisatietoOtsikkoKoodiuri,
-  invalidOpetusTapaKoodiUri,
-  invalidOsaamisalaKoodiUri,
-  invalidUrl,
-  lessOrEqualMsg,
-  minmaxMsg,
-  missingMsg,
-  nonExistent,
-  notEmptyMsg,
-  notMissingMsg,
-  notNegativeMsg,
-  notYetJulkaistu,
-  pastDateMsg,
-  tyyppiMismatch,
-  unknownTarjoajaOid,
-  validationMsg,
-  withoutLukiolinja
-}
+import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError}
 import org.scalatest.Assertion
 
@@ -804,67 +717,6 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       ),
       "metadata.ammattinimikkeet",
       notEmptyMsg
-    )
-  }
-
-  "Korkeakoulu toteutus validation" should "fail if invalid values for luonnos" in {
-    val metadataBase = yoToteutus.metadata.get.asInstanceOf[YliopistoToteutusMetadata]
-    failValidation(
-      yoToteutus.copy(
-        tila = Tallennettu,
-        metadata = Some(
-          metadataBase.copy(
-            alemmanKorkeakoulututkinnonOsaamisalat =
-              Seq(KorkeakouluOsaamisala(linkki = Map(Fi -> "puppua fi", Sv -> "puppua sv"))),
-            ylemmanKorkeakoulututkinnonOsaamisalat =
-              Seq(KorkeakouluOsaamisala(linkki = Map(Fi -> "huttua fi", Sv -> "huttua sv")))
-          )
-        )
-      ),
-      Seq(
-        ValidationError("metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].linkki.fi", invalidUrl("puppua fi")),
-        ValidationError("metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].linkki.sv", invalidUrl("puppua sv")),
-        ValidationError("metadata.ylemmanKorkeakoulututkinnonOsaamisalat[0].linkki.fi", invalidUrl("huttua fi")),
-        ValidationError("metadata.ylemmanKorkeakoulututkinnonOsaamisalat[0].linkki.sv", invalidUrl("huttua sv"))
-      )
-    )
-  }
-
-  "Korkeakoulu toteutus validation" should "fail if missing values for julkaistu toteutus" in {
-    val metadataBase = yoToteutus.metadata.get.asInstanceOf[YliopistoToteutusMetadata]
-    failValidation(
-      yoToteutus.copy(
-        metadata = Some(
-          metadataBase.copy(
-            alemmanKorkeakoulututkinnonOsaamisalat = Seq(
-              KorkeakouluOsaamisala(
-                linkki = Map(Fi -> "http://www.suomi.fi"),
-                otsikko = Map(Fi -> "vain suomeksi", Sv -> ""),
-                nimi = Map(Fi -> "", Sv -> ""),
-                kuvaus = Map(Fi -> "vain suomeksi", Sv -> "")
-              )
-            ),
-            ylemmanKorkeakoulututkinnonOsaamisalat = Seq(
-              KorkeakouluOsaamisala(
-                linkki = Map(Fi -> "http://www.suomi.fi"),
-                otsikko = Map(Fi -> "vain suomeksi", Sv -> ""),
-                nimi = Map(Fi -> "", Sv -> ""),
-                kuvaus = Map(Fi -> "vain suomeksi", Sv -> "")
-              )
-            )
-          )
-        )
-      ),
-      Seq(
-        ValidationError("metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].linkki", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].otsikko", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].nimi", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.alemmanKorkeakoulututkinnonOsaamisalat[0].kuvaus", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.ylemmanKorkeakoulututkinnonOsaamisalat[0].linkki", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.ylemmanKorkeakoulututkinnonOsaamisalat[0].otsikko", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.ylemmanKorkeakoulututkinnonOsaamisalat[0].nimi", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.ylemmanKorkeakoulututkinnonOsaamisalat[0].kuvaus", invalidKielistetty(Seq(Sv)))
-      )
     )
   }
 
