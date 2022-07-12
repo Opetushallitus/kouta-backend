@@ -34,10 +34,6 @@ package object koulutusMetadata {
       |            example:
       |              - kansallinenkoulutusluokitus2016koulutusalataso2_054#1
       |              - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
-      |        kuvauksenNimi:
-      |          type: object
-      |          description: Koulutuksen kuvauksen nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |          $ref: '#/components/schemas/Nimi'
       |        tutkintonimikeKoodiUrit:
       |          type: array
       |          description: Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/tutkintonimikekk/2)
@@ -337,10 +333,6 @@ package object koulutusMetadata {
       |              example: erikoislaakari
       |              enum:
       |                - erikoislaakari
-      |            kuvauksenNimi:
-      |              type: object
-      |              description: Koulutuksen kuvauksen nimi eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
-      |              $ref: '#/components/schemas/Nimi'
       |            tutkintonimikeKoodiUrit:
       |              type: array
       |              description: Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/tutkintonimikekk/2)
@@ -364,7 +356,6 @@ sealed trait KoulutusMetadata {
 }
 
 trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
-  val kuvauksenNimi: Kielistetty
   val tutkintonimikeKoodiUrit: Seq[String]
   val opintojenLaajuusKoodiUri: Option[String]
   val koulutusalaKoodiUrit: Seq[String]
@@ -402,7 +393,6 @@ case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      koulutusalaKoodiUrit: Seq[String] = Seq(),
                                      tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                      opintojenLaajuusKoodiUri: Option[String] = None,
-                                     kuvauksenNimi: Kielistetty = Map(),
                                      isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
@@ -411,7 +401,6 @@ case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               koulutusalaKoodiUrit: Seq[String] = Seq(),
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                               opintojenLaajuusKoodiUri: Option[String] = None,
-                                              kuvauksenNimi: Kielistetty = Map(),
                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
@@ -420,7 +409,6 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpe
                                                  koulutusalaKoodiUrit: Seq[String] = Seq(),
                                                  tutkintonimikeKoodiUrit: Seq[String] = Seq(),
                                                  opintojenLaajuusKoodiUri: Option[String] = None,
-                                                 kuvauksenNimi: Kielistetty = Map(),
                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
@@ -429,7 +417,6 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          koulutusalaKoodiUrit: Seq[String] = Seq(),
                                          opintojenLaajuusNumero: Option[Double] = None,
                                          opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                         kuvauksenNimi: Kielistetty = Map(),
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
@@ -489,7 +476,6 @@ case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = Aikuist
 
 // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
 case class ErikoislaakariKoulutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
-                                          kuvauksenNimi: Kielistetty = Map(),
                                           kuvaus: Kielistetty = Map(),
                                           lisatiedot: Seq[Lisatieto] = Seq(),
                                           tutkintonimikeKoodiUrit: Seq[String] = Seq(),

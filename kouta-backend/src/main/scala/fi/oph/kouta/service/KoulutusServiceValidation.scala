@@ -178,10 +178,6 @@ class KoulutusServiceValidation(
         and(
           assertEmpty(m.tutkintonimikeKoodiUrit, "metadata.tutkintonimikeKoodiUrit"),
           assertOpintojenLaajuusKoodiUri(m.opintojenLaajuusKoodiUri),
-          validateIfJulkaistu(
-            tila,
-            validateKielistetty(kielivalinta, m.kuvauksenNimi, "metadata.kuvauksenNimi")
-          )
         )
 
       case lukioKoulutusMetadata: LukioKoulutusMetadata =>
@@ -209,14 +205,12 @@ class KoulutusServiceValidation(
       case m: KkOpintojaksoKoulutusMetadata =>
         and(
           assertKoulutusalaKoodiUrit(m.koulutusalaKoodiUrit),
-          validateOpintojenLaajuusyksikko(tila, m.opintojenLaajuusyksikkoKoodiUri, m.opintojenLaajuusNumero, false),
-          validateIfJulkaistu(tila, validateKielistetty(kielivalinta, m.kuvauksenNimi, "metadata.kuvauksenNimi"))
+          validateOpintojenLaajuusyksikko(tila, m.opintojenLaajuusyksikkoKoodiUri, m.opintojenLaajuusNumero, false)
         )
       case m: ErikoislaakariKoulutusMetadata =>
         and(
           // TODO: Validoi koulutusalaKoodiUrit (kovakoodattu)
-          assertTutkintonimikeKoodiUrit(m.tutkintonimikeKoodiUrit),
-          validateIfJulkaistu(tila, validateKielistetty(kielivalinta, m.kuvauksenNimi, "metadata.kuvauksenNimi"))
+          assertTutkintonimikeKoodiUrit(m.tutkintonimikeKoodiUrit)
         )
       case _ => NoErrors
     }
@@ -341,8 +335,7 @@ class KoulutusServiceValidation(
     and(
       assertKoulutusalaKoodiUrit(metadata.koulutusalaKoodiUrit),
       assertTutkintonimikeKoodiUrit(metadata.tutkintonimikeKoodiUrit),
-      assertOpintojenLaajuusKoodiUri(metadata.opintojenLaajuusKoodiUri),
-      validateIfJulkaistu(tila, validateKielistetty(kielivalinta, metadata.kuvauksenNimi, "metadata.kuvauksenNimi"))
+      assertOpintojenLaajuusKoodiUri(metadata.opintojenLaajuusKoodiUri)
     )
 
   private def validateTuvaTelma(

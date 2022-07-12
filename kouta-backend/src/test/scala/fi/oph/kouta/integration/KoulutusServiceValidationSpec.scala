@@ -770,14 +770,6 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
-  it should "fail if invalid kuvauksenNimi for Yo koulutus" in {
-    failValidation(
-      yo.copy(metadata = Some(YliopistoKoulutusMetadata(kuvauksenNimi = Map(Fi -> "vain suomeksi")))),
-      "metadata.kuvauksenNimi",
-      invalidKielistetty(Seq(Sv))
-    )
-  }
-
   it should "fail if invalid koulutusKoodiUri for Amk koulutus" in {
     failValidation(amk.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
     failValidation(
@@ -830,14 +822,12 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       AmmOpettajaKoulutus.copy(metadata =
         Some(
           AmmOpeErityisopeJaOpoKoulutusMetadata(
-            kuvauksenNimi = Map(Fi -> "vain suomeksi"),
             tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
             opintojenLaajuusKoodiUri = Some("puppu")
           )
         )
       ),
       Seq(
-        ValidationError("metadata.kuvauksenNimi", invalidKielistetty(Seq(Sv))),
         ValidationError("metadata.tutkintonimikeKoodiUrit", notEmptyMsg),
         ValidationError("metadata.opintojenLaajuusKoodiUri", validationMsg("puppu"))
       )
@@ -1090,8 +1080,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     failValidation(
       KkOpintojaksoKoulutus.copy(metadata = Some(KkOpintojaksoKoulutusMetadata())),
       Seq(
-        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.kuvauksenNimi", invalidKielistetty(Seq(Fi, Sv)))
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
       )
     )
   }

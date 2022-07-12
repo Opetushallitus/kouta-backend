@@ -116,7 +116,6 @@ object TestData {
     metadata = Some(YliopistoKoulutusMetadata(
       tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
-      kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(Lisatieto1),
       isMuokkaajaOphVirkailija = Some(true))),
@@ -146,7 +145,6 @@ object TestData {
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
       koulutusalaKoodiUrit =
         Seq("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"),
-      kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(Lisatieto1),
       isMuokkaajaOphVirkailija = Some(true))),
@@ -175,7 +173,6 @@ object TestData {
       tutkintonimikeKoodiUrit = Seq(),
       koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01"),
       opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60"),
-      kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       lisatiedot = Seq(Lisatieto1),
       isMuokkaajaOphVirkailija = Some(true))),
@@ -201,7 +198,6 @@ object TestData {
     metadata = Some(KkOpintojaksoKoulutusMetadata(
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
       opintojenLaajuusNumero = Some(10),
-      kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
       isMuokkaajaOphVirkailija = Some(false)
@@ -227,7 +223,6 @@ object TestData {
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(ErikoislaakariKoulutusMetadata(
-      kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       isMuokkaajaOphVirkailija = Some(true),
     )),
