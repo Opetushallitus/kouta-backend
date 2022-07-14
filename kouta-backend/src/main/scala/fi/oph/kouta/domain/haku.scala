@@ -202,6 +202,8 @@ case class Haku(oid: Option[HakuOid] = None,
   override def validate(): IsValid = and(
     super.validate(),
     assertValid(organisaatioOid, "organisaatioOid"),
+    assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
+    assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
     validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
     validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
     validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
@@ -209,8 +211,6 @@ case class Haku(oid: Option[HakuOid] = None,
     validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
     validateIfJulkaistu(tila, and(
       assertNotOptional(metadata, "metadata"),
-      assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-      assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
       validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), //Yhteishaku
