@@ -13,7 +13,7 @@ class SearchServlet(koulutusService: KoulutusService,
 
   def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
-  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "julkinen", "hakutapa", "koulutuksenAlkamiskausi", "koulutuksenAlkamisvuosi", "page", "size", "lng", "order-by", "order")
+  val SearchParams = Seq("nimi", "koulutustyyppi", "muokkaaja", "tila", "julkinen", "hakutapa", "koulutuksenAlkamiskausi", "koulutuksenAlkamisvuosi", "hakuOid", "toteutusOid", "orgWhitelist", "page", "size", "lng", "order-by", "order")
 
   val searchParams =
     """        - in: query
@@ -84,6 +84,20 @@ class SearchServlet(koulutusService: KoulutusService,
       |          required: false
       |          description: Suodata pilkulla erotetuilla vuosilla
       |          example: 2022
+      |        - in: query
+      |          name: hakuOid
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Suodata haun oidilla
+      |          example: 1.2.246.562.29.00000000000000002128
+      |        - in: query
+      |          name: toteutusOid
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Suodata haun oidilla
+      |          example: 1.2.246.562.17.00000000000000001116
       |        - in: query
       |          name: size
       |          schema:
@@ -346,6 +360,12 @@ class SearchServlet(koulutusService: KoulutusService,
        |          required: false
        |          description: Suodata koulutustyypillä
        |          example: yo
+       |        - in: query
+       |          name: orgWhitelist
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Rajaa palautuvia hakukohteita organisaation mukaan. Pilkulla erotettuja organisaatio-oideja.
        |$searchParams
        |      responses:
        |        '200':
