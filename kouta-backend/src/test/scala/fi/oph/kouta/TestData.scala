@@ -452,6 +452,7 @@ object TestData {
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
     ajastettuJulkaisu = Some(inFuture()),
     ajastettuHaunJaHakukohteidenArkistointi = Some(inFuture()),
+    ajastettuHaunJaHakukohteidenArkistointiAjettu = Some(inFuture()),
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     hakulomaketyyppi = Some(EiSähköistä),

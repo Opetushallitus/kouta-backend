@@ -20,7 +20,6 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
   def this() = this(HakuService, AuditLog)
 
   private val cronSchedule: Schedule     = new CronSchedule("*/5 * * * * ?")
-  private val testCronSchedule: Schedule = new CronSchedule("* * * * * ?")
   private val numberOfThreads: Int       = 1
   private val user: User = new User(new Oid(RootOrganisaatioOid.toString), null, null, "scheduler")
 
@@ -45,7 +44,7 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
   }
 
   private val cronTask = Tasks
-    .recurring("cron-archive-hakus-and-hakukohdes-task", testCronSchedule)
+    .recurring("cron-archive-hakus-and-hakukohdes-task", cronSchedule)
     .execute(executionHandler)
 
   private final val scheduler: Scheduler =

@@ -61,6 +61,12 @@ package object haku {
       |          description: Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet arkistoidaan. Jos tyhjä,
       |            arkistoidaan hakukohteet 10 kuukautta hakuajan päättymisen jälkeen.
       |          example: 2019-08-23T09:55
+      |        ajastettuHaunJaHakukohteidenArkistointiAjettu:
+      |          type: string
+      |          format: date-time
+      |          description: Ajanhetki, jolloin haun ja siihen liittyvät hakukohteiden ajastettu arkistointi on
+      |            ajettu kyseiselle haulle.
+      |          example: 2019-08-23T09:55
       |        kohdejoukkoKoodiUri:
       |          type: string
       |          description: Haun kohdejoukko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukko/1)
@@ -190,6 +196,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
                 ajastettuJulkaisu: Option[LocalDateTime] = None,
                 ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime] = None,
+                ajastettuHaunJaHakukohteidenArkistointiAjettu: Option[LocalDateTime] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,
                 kohdejoukonTarkenneKoodiUri: Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,

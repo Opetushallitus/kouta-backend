@@ -160,6 +160,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
   val ajastettuHaunJaHakukohteidenArkistointiKey = "ajastettuHaunJaHakukohteidenArkistointi"
+  val ajastettuHaunJaHakukohteidenArkistointiAjettuKey = "ajastettuHaunJaHakukohteidenArkistointiAjettu"
   val MetadataKey = "metadata"
   val SorakuvausIdKey = "sorakuvausId"
   val OppilaitosOidKey = "oppilaitosOid"
@@ -249,6 +250,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakukohteenMuokkaamisenTakarajaKey -> formatLocalDateTime(endTime1),
     AjastettuJulkaisuKey -> formatLocalDateTime(time3),
     ajastettuHaunJaHakukohteidenArkistointiKey -> formatLocalDateTime(endTime1),
+    ajastettuHaunJaHakukohteidenArkistointiAjettuKey -> formatLocalDateTime(endTime1),
     HakuaikaAlkaaKey -> formatLocalDateTime(startTime1),
     HakuaikaPaattyyKey -> formatLocalDateTime(endTime1),
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
@@ -461,6 +463,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(parseLocalDateTime(params(HakukohteenMuokkaamisenTakarajaKey))),
       params.get(AjastettuJulkaisuKey).map(parseLocalDateTime),
       params.get(ajastettuHaunJaHakukohteidenArkistointiKey).map(parseLocalDateTime),
+      params.get(ajastettuHaunJaHakukohteidenArkistointiAjettuKey).map(parseLocalDateTime),
       Some(params(KohdejoukkoKoodiUriKey)),
       params.get(KohdejoukonTarkenneKoodiUriKey).flatMap(Option(_)),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),

@@ -1,9 +1,18 @@
 alter table haut
     add column if not exists ajastettu_haun_ja_hakukohteiden_arkistointi timestamp without time zone;
+
 alter table haut_history
     add column if not exists ajastettu_haun_ja_hakukohteiden_arkistointi timestamp without time zone;
 
+alter table haut
+    add column if not exists ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu timestamp without time zone;
+
+alter table haut_history
+    add column if not exists ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu timestamp without time zone;
+
 COMMENT ON COLUMN haut.ajastettu_haun_ja_hakukohteiden_arkistointi IS 'Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet arkistoidaan automaattisesti Opintopolussa. Jos tyhjä, arkistoidaan automaattisesti 10 kk hakuajan päättymisen jälkeen.';
+
+COMMENT ON COLUMN haut.ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu IS 'Ajanhetki, jolloin automaattinen arkistointi on ajettu haulle ja haun hakukohteille.';
 
 create or replace function update_haut_history() returns trigger as
 $$
@@ -17,6 +26,7 @@ begin
                               hakukohteen_muokkaamisen_takaraja,
                               ajastettu_julkaisu,
                               ajastettu_haun_ja_hakukohteiden_arkistointi,
+                              ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu,
                               kohdejoukko_koodi_uri,
                               kohdejoukon_tarkenne_koodi_uri,
                               hakulomaketyyppi,
@@ -38,6 +48,7 @@ begin
             old.hakukohteen_muokkaamisen_takaraja,
             old.ajastettu_julkaisu,
             old.ajastettu_haun_ja_hakukohteiden_arkistointi,
+            old.ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu,
             old.kohdejoukko_koodi_uri,
             old.kohdejoukon_tarkenne_koodi_uri,
             old.hakulomaketyyppi,
