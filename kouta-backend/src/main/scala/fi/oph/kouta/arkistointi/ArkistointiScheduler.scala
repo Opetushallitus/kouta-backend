@@ -13,6 +13,8 @@ import fi.vm.sade.auditlog.User
 import fi.vm.sade.utils.slf4j.Logging
 import org.ietf.jgss.Oid
 
+import java.net.InetAddress
+
 object ArkistointiScheduler extends ArkistointiScheduler(HakuService, AuditLog)
 
 class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends Logging {
@@ -21,7 +23,7 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
 
   private val cronSchedule: Schedule     = new CronSchedule("1 0 * * * ?")
   private val numberOfThreads: Int       = 1
-  private val user: User = new User(new Oid(RootOrganisaatioOid.toString), null, null, "scheduler")
+  private val user: User = new User(new Oid(RootOrganisaatioOid.toString), InetAddress.getLocalHost, "scheduler", "scheduler")
 
   private val executionHandler: VoidExecutionHandler[Void] = new VoidExecutionHandler[Void] {
      override def execute(taskInstance: TaskInstance[Void], executionContext: ExecutionContext): Unit = {
