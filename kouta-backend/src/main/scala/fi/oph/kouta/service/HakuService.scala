@@ -14,6 +14,7 @@ import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
+import org.joda.time.LocalDateTime
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -80,13 +81,28 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
     authorizeUpdate(oldHaku, haku, rules) { (oldHaku, h) =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
-      val enrichedHaku = h.copy(metadata = enrichedMetadata)
+      val enrichedHaku = if (shouldDeleteSchedulerTimestamp(h)) {
+        h.copy(metadata = enrichedMetadata, ajastettuHaunJaHakukohteidenArkistointiAjettu = None)
+      } else {
+        h.copy(metadata = enrichedMetadata)
+      }
+
       withValidation(enrichedHaku, Some(oldHaku)) {
         throwValidationErrors(validateStateChange("haulle", oldHaku.tila, enrichedHaku.tila))
         validateHakukohdeIntegrityIfDeletingHaku(oldHaku.tila, enrichedHaku.tila, enrichedHaku.oid.get)
         doUpdate(_, notModifiedSince, oldHaku)
       }
     }.nonEmpty
+  }
+
+  private def shouldDeleteSchedulerTimestamp(haku: Haku): Boolean = {
+    haku.ajastettuHaunJaHakukohteidenArkistointi.getOrElse(None) match {
+      case Some(ajastettuHaunJaHakukohteidenArkistointi: LocalDateTime) =>
+        if (ajastettuHaunJaHakukohteidenArkistointi.isAfter(LocalDateTime.now()) && haku.tila.equals(Julkaistu)) {
+          true
+        } else false
+      case _ => false
+    }
   }
 
   private def getAuthorizationRulesForUpdate(newHaku: Haku, oldHakuWithTime: Option[(Haku, Instant)]) = {
