@@ -19,7 +19,7 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
 
   def this() = this(HakuService, AuditLog)
 
-  private val cronSchedule: Schedule     = new CronSchedule("*/5 * * * * ?")
+  private val cronSchedule: Schedule     = new CronSchedule("1 0 * * * ?")
   private val numberOfThreads: Int       = 1
   private val user: User = new User(new Oid(RootOrganisaatioOid.toString), null, null, "scheduler")
 
@@ -36,7 +36,6 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
             })
         }
         //todo: varmista että Audit-logitus toimii
-        //todo: Timestamp automaattiselle arkistointiajankohdalle
       } catch {
         case error: Exception => logger.error(s"Haun ja haukohteiden arkistointi epäonnistui: $error")
       }

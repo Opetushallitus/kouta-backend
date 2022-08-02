@@ -266,14 +266,15 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def selectArchivableHakuOids(): DBIO[Seq[HakuOid]] = {
-    sql"""select oid
-          from haut
-          where ajastettu_haun_ja_hakukohteiden_arkistointi <= now()::date
-          or oid in (select haku_oid
-                     from hakujen_hakuajat
-                     where upper(hakuaika)::date <= now()::date - '10 month'::interval)
-          and tila = 'julkaistu'
-          and ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is null""".as[HakuOid]
+    sql"""select oid from haut
+          where (ajastettu_haun_ja_hakukohteiden_arkistointi <= now()::date
+              and tila = 'julkaistu'
+              and ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is null)
+             or (oid in (select haku_oid
+                        from hakujen_hakuajat
+                        where upper(hakuaika)::date <= now()::date - '10 month'::interval)
+              and tila = 'julkaistu'
+              and ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is null)""".as[HakuOid]
   }
 
   def updateHakusToArchivedByHakuOids(hakuOids: Seq[HakuOid]): DBIO[Int] = {
