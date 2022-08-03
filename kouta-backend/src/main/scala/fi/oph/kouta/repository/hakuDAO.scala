@@ -57,13 +57,11 @@ object HakuDAO extends HakuDAO with HakuSQL {
     case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids, tilaFilter, yhteishakuFilter))
   }
 
-
   override def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid, tilaFilter))
 
   override def listArchivableHakuOids(): Seq[HakuOid] = {
     KoutaDatabase.runBlocking(selectArchivableHakuOids())
-//    Seq(HakuOid("1.2.246.562.29.00000000000000000009"), HakuOid("1.2.246.562.29.00000000000000000010"))
   }
 
   override def archiveHakusByHakuOids(hakuOids: Seq[HakuOid]): Int = KoutaDatabase.runBlocking(updateHakusToArchivedByHakuOids(hakuOids))

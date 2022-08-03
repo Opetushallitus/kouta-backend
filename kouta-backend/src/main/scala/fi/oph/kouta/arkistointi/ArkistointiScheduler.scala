@@ -21,7 +21,7 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
 
   def this() = this(HakuService, AuditLog)
 
-  private val cronSchedule: Schedule = new CronSchedule("*/5 * * * * ?") //new CronSchedule("1 0 * * * ?")
+  private val cronSchedule: Schedule = new CronSchedule("5 0 * * * ?")
   private val numberOfThreads: Int   = 1
   private val user: User =
     new User(new Oid(RootOrganisaatioOid.toString), InetAddress.getLocalHost, "scheduler", "scheduler")

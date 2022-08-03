@@ -140,7 +140,6 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   override def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid] = {
     KoutaDatabase.runBlocking(selectArchivableHakukohdeOidsByHakuOids(hakuOids))
-//    Seq(HakukohdeOid("1.2.246.562.20.00000000000000000009"), HakukohdeOid("1.2.246.562.20.00000000000000000010"))
   }
 
   override def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int = {
