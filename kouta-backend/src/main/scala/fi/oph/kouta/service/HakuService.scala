@@ -14,10 +14,9 @@ import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
-import org.joda.time.LocalDateTime
 import slick.dbio.DBIO
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
@@ -97,8 +96,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
   private def shouldDeleteSchedulerTimestamp(haku: Haku): Boolean = {
     haku.ajastettuHaunJaHakukohteidenArkistointi.getOrElse(None) match {
-      case Some(ajastettuHaunJaHakukohteidenArkistointi: LocalDateTime) =>
-        if (ajastettuHaunJaHakukohteidenArkistointi.isAfter(LocalDateTime.now()) && haku.tila.equals(Julkaistu)) {
+      case ajastettuHaunJaHakukohteidenArkistointi: LocalDateTime =>
+        if (ajastettuHaunJaHakukohteidenArkistointi.toLocalDate.isAfter(LocalDateTime.now().toLocalDate) && haku.tila.equals(Julkaistu)) {
           true
         } else false
       case _ => false
