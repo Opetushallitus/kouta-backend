@@ -161,6 +161,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))
       .thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_6#1")).thenAnswer(true)
+    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_5#1")).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40#1")).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60")).thenAnswer(true)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60#1")).thenAnswer(true)
@@ -194,7 +195,8 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     // lukio
     when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301101#1")).thenAnswer(true)
     // erikoislaakari
-    when(koulutusKoodiClient.koulutusKoodiUriExists(erikoislaakariKoulutusKoodiUrit, "koulutus_775101#1")).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUriExists(erikoislaakariKoulutusKoodiUrit, "koulutus_775101#1"))
+      .thenAnswer(true)
     // toteutukset
     when(toteutusDao.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(
       Seq(
@@ -369,20 +371,29 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "Fail with more than 1 koulutuksetKoodiUri" in {
-    failValidation(ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_775101#1", "koulutus_775201#1")), "koulutuksetKoodiUri", tooManyKoodiUris)
+    failValidation(
+      ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_775101#1", "koulutus_775201#1")),
+      "koulutuksetKoodiUri",
+      tooManyKoodiUris
+    )
   }
 
   it should "Fail if unknown koulutusKoodiUri for Erikoislääkäri koulutus" in {
-    failValidation(ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
-      "koulutuksetKoodiUri[0]", invalidKoulutuskoodiuri("koulutus_111111#1"))
+    failValidation(
+      ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
+      "koulutuksetKoodiUri[0]",
+      invalidKoulutuskoodiuri("koulutus_111111#1")
+    )
   }
-  
+
   it should "succeed when new valid Kk-opintokokonaisuuskoulutus" in {
     passValidation(KkOpintokokonaisuusKoulutus)
   }
 
   it should "succeed when new incomplete luonnos Kk-opintokokonaisuuskoulutus" in {
-    passValidation(KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusKoulutusMetadata())))
+    passValidation(
+      KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusKoulutusMetadata()))
+    )
   }
 
   it should "fail if perustiedot is invalid" in {
@@ -1120,7 +1131,10 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
         ),
         ValidationError("metadata.opintojenLaajuusNumeroMin", notNegativeMsg),
         ValidationError("metadata.opintojenLaajuusNumeroMax", notNegativeMsg),
-        ValidationError("metadata.opintojenLaajuusNumeroMin", minmaxMsg(opintojenLaajuusNumeroMin, opintojenLaajuusNumeroMax)),
+        ValidationError(
+          "metadata.opintojenLaajuusNumeroMin",
+          minmaxMsg(opintojenLaajuusNumeroMin, opintojenLaajuusNumeroMax)
+        )
       )
     )
   }
@@ -1132,6 +1146,139 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
       )
     )
+  }
+
+  it should "fail if julkaistu kk-opintokokonaisuus koulutus has at least one julkaistu toteutus whose opintojenlaajuusNumero is not in the range specified in koulutus" in {
+
+    val opintokokonaisuusKoulutusOid = KoulutusOid("1.2.246.562.13.00000000000000001337")
+
+    val opintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus.copy(
+      oid = Some(opintokokonaisuusKoulutusOid),
+      metadata = Some(
+        KkOpintokokonaisuusKoulutuksenMetatieto.copy(
+          opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+          opintojenLaajuusNumeroMin = Some(5),
+          opintojenLaajuusNumeroMax = Some(10)
+        )
+      ),
+      tila = Julkaistu
+    )
+
+    val opintokokonaisuusToteutusOid = randomToteutusOid
+
+    val opintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      oid = Some(opintokokonaisuusToteutusOid),
+      koulutusOid = opintokokonaisuusKoulutusOid,
+      tila = Julkaistu,
+      metadata = Some(
+        KkOpintokokonaisuusToteutuksenMetatieto.copy(
+          opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+          opintojenLaajuusNumero = Some(15)
+        )
+      )
+    )
+    when(toteutusDao.getByKoulutusOid(opintokokonaisuusKoulutusOid, TilaFilter.onlyJulkaistut())).thenAnswer(
+      Seq(
+        opintokokonaisuusToteutus
+      )
+    )
+
+    failValidation(
+      opintokokonaisuusKoulutus,
+      Seq(
+        ValidationError(
+          "metadata.opintojenLaajuusNumeroMax",
+          invalidKoulutusOpintojenLaajuusNumeroMaxIntegrity(10, Seq(opintokokonaisuusToteutusOid))
+        )
+      )
+    )
+  }
+
+  it should "fail if julkaistu kk-opintokokonaisuus koulutus has at least one julkaistu toteutus whose opintojenlaajuusyksikko is not the same as in koulutus" in {
+    val opintokokonaisuusKoulutusOid = KoulutusOid("1.2.246.562.13.00000000000000001337")
+
+    val opintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus.copy(
+      oid = Some(opintokokonaisuusKoulutusOid),
+      metadata = Some(
+        KkOpintokokonaisuusKoulutuksenMetatieto.copy(
+          opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_5#1"),
+          opintojenLaajuusNumeroMin = Some(5),
+          opintojenLaajuusNumeroMax = Some(10)
+        )
+      ),
+      tila = Julkaistu
+    )
+
+    val opintokokonaisuusToteutusOid = randomToteutusOid
+
+    val opintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      oid = Some(opintokokonaisuusToteutusOid),
+      koulutusOid = opintokokonaisuusKoulutusOid,
+      tila = Julkaistu,
+      metadata = Some(
+        KkOpintokokonaisuusToteutuksenMetatieto.copy(
+          opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+          opintojenLaajuusNumero = Some(7)
+        )
+      )
+    )
+    when(toteutusDao.getByKoulutusOid(opintokokonaisuusKoulutusOid, TilaFilter.onlyJulkaistut())).thenAnswer(
+      Seq(
+        opintokokonaisuusToteutus
+      )
+    )
+
+    failValidation(
+      opintokokonaisuusKoulutus,
+      Seq(
+        ValidationError(
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          invalidKoulutusOpintojenLaajuusyksikkoIntegrity("opintojenlaajuusyksikko_5#1", Seq(opintokokonaisuusToteutusOid)),
+        )
+      )
+    )
+  }
+
+  it should "pass when julkaistu kk-opintokokonaisuus doesn't have laajuus data and has several toteutus with different opintojenlaajuusyksikko and laajuusNumero" in {
+    val opintokokonaisuusKoulutusOid = KoulutusOid("1.2.246.562.13.00000000000000001337")
+
+    val opintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus.copy(
+      oid = Some(opintokokonaisuusKoulutusOid),
+      metadata = Some(
+        KkOpintokokonaisuusKoulutuksenMetatieto.copy(
+          opintojenLaajuusyksikkoKoodiUri = None,
+          opintojenLaajuusNumeroMin = None,
+          opintojenLaajuusNumeroMax = None
+        )
+      ),
+      tila = Julkaistu
+    )
+
+    val opintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      koulutusOid = opintokokonaisuusKoulutusOid,
+      tila = Julkaistu,
+      metadata = Some(
+        KkOpintokokonaisuusToteutuksenMetatieto.copy(
+          opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+          opintojenLaajuusNumero = Some(15)
+        )
+      )
+    )
+    when(toteutusDao.getByKoulutusOid(opintokokonaisuusKoulutusOid, TilaFilter.onlyJulkaistut())).thenAnswer(
+      Seq(
+        opintokokonaisuusToteutus,
+        opintokokonaisuusToteutus.copy(metadata =
+          Some(
+            KkOpintokokonaisuusToteutuksenMetatieto.copy(
+              opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_5#1"),
+              opintojenLaajuusNumero = Some(30)
+            )
+          )
+        )
+      )
+    )
+
+    passValidation(opintokokonaisuusKoulutus)
   }
 
   "State change" should "succeed from tallennettu to julkaistu" in {
