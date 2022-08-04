@@ -36,7 +36,7 @@ class ExternalServlet(
     "/external/koulutus",
     """    put:
       |      summary: Tallenna uusi koulutus
-      |      operationId: Tallenna uusi koulutus
+      |      operationId: externalKoulutusSave
       |      description: Tallenna uuden koulutuksen tiedot.
       |        Rajapinta palauttaa koulutukselle generoidun yksilöivän koulutus-oidin.
       |      tags:
@@ -86,7 +86,7 @@ class ExternalServlet(
     "/external/koulutus",
     """    post:
       |      summary: Muokkaa olemassa olevaa koulutusta
-      |      operationId: Muokkaa koulutusta
+      |      operationId: externalKoulutusEdit
       |      description: Muokkaa olemassa olevaa koulutusta. Rajapinnalle annetaan koulutuksen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
@@ -128,7 +128,7 @@ class ExternalServlet(
     "/external/toteutus",
     """    put:
       |      summary: Tallenna uusi toteutus
-      |      operationId: Tallenna uusi toteutus
+      |      operationId: externalToteutusSave
       |      description: Tallenna uuden toteutuksen tiedot.
       |        Rajapinta palauttaa toteutukselle generoidun yksilöivän toteutus-oidin.
       |      tags:
@@ -178,7 +178,7 @@ class ExternalServlet(
     "/external/toteutus",
     """    post:
       |      summary: Muokkaa olemassa olevaa toteutusta
-      |      operationId: Muokkaa toteutusta
+      |      operationId: externalToteutusEdit
       |      description: Muokkaa olemassa olevaa toteutusta. Rajapinnalle annetaan toteutuksen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
@@ -220,7 +220,7 @@ class ExternalServlet(
     "/external/haku",
     """    put:
       |      summary: Tallenna uusi haku
-      |      operationId: Tallenna uusi haku
+      |      operationId: externalHakuSave
       |      description: Tallenna uuden haun tiedot.
       |        Rajapinta palauttaa haulle generoidun yksilöivän haku-oidin.
       |      tags:
@@ -270,7 +270,7 @@ class ExternalServlet(
     "/external/haku",
     """    post:
       |      summary: Muokkaa olemassa olevaa hakua
-      |      operationId: Muokkaa hakua
+      |      operationId: externalHakuEdit
       |      description: Muokkaa olemassa olevaa hakua. Rajapinnalle annetaan haun kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
@@ -312,7 +312,7 @@ class ExternalServlet(
     "/external/hakukohde",
     """    put:
       |      summary: Tallenna uusi hakukohde
-      |      operationId: Tallenna uusi hakukohde
+      |      operationId: externalHakukohdeSave
       |      description: Tallenna uuden hakukohteen tiedot.
       |        Rajapinta palauttaa hakukohteelle generoidun yksilöivän hakukohde-oidin.
       |      tags:
@@ -362,7 +362,7 @@ class ExternalServlet(
     "/external/hakukohde",
     """    post:
       |      summary: Muokkaa olemassa olevaa hakukohdetta
-      |      operationId: Muokkaa hakukohdetta
+      |      operationId: externalHakukohdeEdit
       |      description: Muokkaa olemassa olevaa hakukohdetta. Rajapinnalle annetaan hakukohteen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
@@ -402,7 +402,7 @@ class ExternalServlet(
     "/external/valintaperuste/",
     """    put:
       |      summary: Tallenna uusi valintaperustekuvaus
-      |      operationId: Tallenna uusi valintaperuste
+      |      operationId: externalValintaperusteSave
       |      description: Tallenna uuden valintaperustekuvauksen tiedot.
       |        Rajapinta palauttaa valintaperustekuvaukselle generoidun yksilöivän id:n
       |      tags:
@@ -452,7 +452,7 @@ class ExternalServlet(
     "/external/valintaperuste/",
     """    post:
       |      summary: Muokkaa olemassa olevaa valintaperustekuvausta
-      |      operationId: Muokkaa valintaperustetta
+      |      operationId: externalValintaperusteEdit
       |      description: Muokkaa olemassa olevaa valintaperustekuvausta. Rajapinnalle annetaan valintaperusteen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
@@ -492,7 +492,7 @@ class ExternalServlet(
     "/external/sorakuvaus/",
     """    put:
       |      summary: Tallenna uusi SORA-kuvaus
-      |      operationId: Tallenna uusi sorakuvaus
+      |      operationId: externalSorakuvausSave
       |      description: Tallenna uuden SORA-kuvauksen tiedot.
       |        Rajapinta palauttaa SORA-kuvaukselle generoidun yksilöivän id:n
       |      tags:
@@ -542,7 +542,7 @@ class ExternalServlet(
     "/external/sorakuvaus/",
     """    post:
       |      summary: Muokkaa olemassa olevaa SORA-kuvausta
-      |      operationId: Muokkaa sorakuvausta
+      |      operationId: externalSorakuvausEdit
       |      description: Muokkaa olemassa olevaa SORA-kuvausta. Rajapinnalle annetaan SORA-kuvauksen kaikki tiedot,
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
