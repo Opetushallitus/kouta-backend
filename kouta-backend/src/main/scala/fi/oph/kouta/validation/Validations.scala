@@ -117,6 +117,10 @@ object Validations {
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
+
+  def notInTheRangeMsg(min: Option[Double], max: Option[Double], givenValue: Option[Double]): ErrorMessage =
+    ErrorMessage(msg = s"$givenValue ei ole välillä min $min - max $max", id = "notInTheRangeMsg")
+
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
     msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]",
     id = "invalidKielistetty"
