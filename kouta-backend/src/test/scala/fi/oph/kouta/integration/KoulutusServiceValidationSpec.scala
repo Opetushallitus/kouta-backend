@@ -376,6 +376,14 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     failValidation(ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
       "koulutuksetKoodiUri[0]", invalidKoulutuskoodiuri("koulutus_111111#1"))
   }
+  
+  it should "succeed when new valid Kk-opintokokonaisuuskoulutus" in {
+    passValidation(KkOpintokokonaisuusKoulutus)
+  }
+
+  it should "succeed when new incomplete luonnos Kk-opintokokonaisuuskoulutus" in {
+    passValidation(KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusKoulutusMetadata())))
+  }
 
   it should "fail if perustiedot is invalid" in {
     failValidation(amm.copy(oid = Some(KoulutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
@@ -569,6 +577,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     failValidationWithePerusteId(VapaaSivistystyoMuuKoulutus)
     failValidationWithePerusteId(AikuistenPerusopetusKoulutus)
     failValidationWithePerusteId(KkOpintojaksoKoulutus)
+    failValidationWithePerusteId(KkOpintokokonaisuusKoulutus)
   }
 
   it should "fail if invalid koulutusKoodiUris for ammatillinen koulutus" in {
@@ -1081,6 +1090,46 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       KkOpintojaksoKoulutus.copy(metadata = Some(KkOpintojaksoKoulutusMetadata())),
       Seq(
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for luonnos Kk-opintokokonaisuus koulutus" in {
+    val opintojenLaajuusNumeroMin = -5.0
+    val opintojenLaajuusNumeroMax = -15.0
+    failValidation(
+      KkOpintokokonaisuusKoulutus.copy(
+        tila = Tallennettu,
+        metadata = Some(
+          KkOpintokokonaisuusKoulutusMetadata(
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_66#1"),
+            opintojenLaajuusNumeroMin = Some(opintojenLaajuusNumeroMin),
+            opintojenLaajuusNumeroMax = Some(opintojenLaajuusNumeroMax),
+            koulutusalaKoodiUrit = Seq("puppu")
+          )
+        )
+      ),
+      Seq(
+        ValidationError(
+          "metadata.koulutusalaKoodiUrit[0]",
+          validationMsg("puppu")
+        ),
+        ValidationError(
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          invalidOpintojenLaajuusyksikkoKoodiuri("opintojenlaajuusyksikko_66#1")
+        ),
+        ValidationError("metadata.opintojenLaajuusNumeroMin", notNegativeMsg),
+        ValidationError("metadata.opintojenLaajuusNumeroMax", notNegativeMsg),
+        ValidationError("metadata.opintojenLaajuusNumeroMin", minmaxMsg(opintojenLaajuusNumeroMin, opintojenLaajuusNumeroMax)),
+      )
+    )
+  }
+
+  it should "fail if missing metadata for julkaistu Kk-opintokokonaisuus koulutus" in {
+    failValidation(
+      KkOpintokokonaisuusKoulutus.copy(metadata = Some(KkOpintokokonaisuusKoulutusMetadata())),
+      Seq(
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
       )
     )
   }
