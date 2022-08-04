@@ -620,9 +620,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val kkOpintokokonaisuusKoulutusOid = put(TestData.KkOpintokokonaisuusKoulutus.copy(tila = Julkaistu), ophSession)
     val kkOpintokokonaisuusToteutus = TestData.JulkaistuKkOpintokokonaisuusToteutus.copy(koulutusOid = KoulutusOid(kkOpintokokonaisuusKoulutusOid), tila = Tallennettu)
     val oid = put(kkOpintokokonaisuusToteutus)
-    val lastModified = get(oid, kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid))))
+    val lastModified = get(oid, kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq()))
     update(kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+    get(oid, kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq()))
   }
 
   "Copy toteutukset" should "make a copy of a julkaistu toteutus and store it as tallennettu" in {
