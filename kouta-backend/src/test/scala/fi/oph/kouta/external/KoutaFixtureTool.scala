@@ -249,7 +249,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakukohteenLiittamisenTakarajaKey -> formatLocalDateTime(startTime1),
     HakukohteenMuokkaamisenTakarajaKey -> formatLocalDateTime(endTime1),
     AjastettuJulkaisuKey -> formatLocalDateTime(time3),
-    ajastettuHaunJaHakukohteidenArkistointiKey -> formatLocalDateTime(endTime1),
+    ajastettuHaunJaHakukohteidenArkistointiKey -> formatLocalDateTime(endTime1.plusMonths(4)),
     ajastettuHaunJaHakukohteidenArkistointiAjettuKey -> formatLocalDateTime(endTime1),
     HakuaikaAlkaaKey -> formatLocalDateTime(startTime1),
     HakuaikaPaattyyKey -> formatLocalDateTime(endTime1),

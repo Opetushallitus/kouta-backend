@@ -7,6 +7,8 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
+import java.time.temporal.ChronoUnit
+
 object Validations {
   private val urlValidator   = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
@@ -157,6 +159,9 @@ object Validations {
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
+  def invalidArkistointiDate(months: Int): ErrorMessage =
+    ErrorMessage(msg = s"Arkistointipäivämäärän tulee olla vähintään $months kuukautta haun viimeisimmästä päättymispäivämäärästä.", id = "invalidArkistointiDate")
+
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(
     msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen",
     id = "InvalidKoulutuspaivamaarat"
@@ -283,6 +288,22 @@ object Validations {
     case Some(Ataru)       => assertNotOptional(hakulomakeAtaruId, "hakulomakeAtaruId")
     case Some(EiSähköistä) => validateOptionalKielistetty(kielivalinta, hakulomakeKuvaus, "hakulomakeKuvaus")
     case _                 => NoErrors
+  }
+
+  def validateArkistointiPaivamaara(ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime], haunPaattymisPaivamaarat: List[Option[LocalDateTime]]): IsValid = {
+    val months = 3
+    ajastettuHaunJaHakukohteidenArkistointi match {
+      case Some(pvm) => haunPaattymisPaivamaarat.flatten.sortWith(_.isBefore(_)) match {
+        case pvms: List[LocalDateTime] => if (pvm.toLocalDate.until(pvms.last.toLocalDate, ChronoUnit.MONTHS) >= 3) {
+          NoErrors
+        }
+        else {
+          error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(months))
+        }
+        case _ => NoErrors
+      }
+      case _ => NoErrors
+    }
   }
 
   def validateKoulutusPaivamaarat(
