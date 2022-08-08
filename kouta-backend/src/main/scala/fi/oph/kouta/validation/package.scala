@@ -22,12 +22,15 @@ package object validation {
     def validateOnJulkaisu(path: String): IsValid = NoErrors
   }
 
-  case class ErrorMessage(msg: String, id: String, extra: Option[Map[String, AnyRef]] = None)
+  case class ErrorMessage(msg: String, id: String, meta: Option[Map[String, AnyRef]] = None)
 
-  case class ValidationError(path: String, msg: String, errorType: String, additionalFields: Option[Map[String, AnyRef]] = None) {
+  case class ValidationError(path: String, msg: String, errorType: String, meta: Option[Map[String, AnyRef]] = None) {
     override def toString: String = {
-      additionalFields match {
-        case Some(af) => s"""{"path":"$path","msg":"$msg","errorType":"$errorType", ${af.map(x => x._1 + ":" + x._2.toString).mkString(", ")}}"""
+      meta match {
+        case Some(metaInfo) =>
+          s"""{"path":"$path","msg":"$msg","errorType":"$errorType", ${metaInfo
+            .map(x => x._1 + ":" + x._2.toString)
+            .mkString(", ")}}"""
         case None => s"""{"path":"$path","msg":"$msg","errorType":"$errorType"}"""
       }
     }
@@ -35,7 +38,7 @@ package object validation {
 
   object ValidationError {
     def apply(path: String, error: ErrorMessage): ValidationError = {
-      ValidationError(path, error.msg, error.id, error.extra)
+      ValidationError(path, error.msg, error.id, error.meta)
     }
   }
 
@@ -64,7 +67,7 @@ package object validation {
 
   val amkKoulutustyypit                      = Seq("tutkintotyyppi_06", "tutkintotyyppi_07", "tutkintotyyppi_12")
   val ammOpeErityisopeJaOpoKoulutusKoodiUrit = Seq("koulutus_000001", "koulutus_000002", "koulutus_000003")
-  val lukioKoulutusKoodiUrit                 = Seq("koulutus_309902", "koulutus_301102", "koulutus_301101",
-    "koulutus_301103", "koulutus_301104")
-  val erikoislaakariKoulutusKoodiUrit        = Seq("koulutus_775101", "koulutus_775201", "koulutus_775301")
+  val lukioKoulutusKoodiUrit =
+    Seq("koulutus_309902", "koulutus_301102", "koulutus_301101", "koulutus_301103", "koulutus_301104")
+  val erikoislaakariKoulutusKoodiUrit = Seq("koulutus_775101", "koulutus_775201", "koulutus_775301")
 }

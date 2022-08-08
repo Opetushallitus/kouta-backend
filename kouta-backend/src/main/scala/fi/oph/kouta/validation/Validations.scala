@@ -44,13 +44,13 @@ object Validations {
   def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
     msg = s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
     id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
-    extra = Some(Map("toteutukset" -> toteutukset))
+    meta = Some(Map("toteutukset" -> toteutukset))
   )
 
   def invalidKoulutusOpintojenLaajuusNumeroIntegrity(laajuusMin: Double, laajuusMax: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
     msg = s"Ainakin yhdellä koulutukseen liitetyllä julkaistulla toteutuksella opintojen laajuus ei ole koulutuksella määritellyllä välillä ($laajuusMin - $laajuusMax)",
     id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
-    extra = Some(Map("toteutukset" -> toteutukset))
+    meta = Some(Map("toteutukset" -> toteutukset))
   )
 
   def invalidToteutusOpintojenLaajuusyksikkoIntegrity(koulutusLaajuusyksikkoKoodiUri: Option[String], toteutusLaajuusyksikkoKoodiUri: Option[String]) = {
