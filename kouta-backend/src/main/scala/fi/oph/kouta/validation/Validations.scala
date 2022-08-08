@@ -295,16 +295,12 @@ object Validations extends Logging {
     val months = 3
     ajastettuHaunJaHakukohteidenArkistointi match {
       case Some(pvm) => haunPaattymisPaivamaarat.flatten.sortWith(_.isBefore(_)) match {
-        case pvms: List[LocalDateTime] => if (pvms.isEmpty) {
-          NoErrors
-        } else {
-          if (pvms.last.toLocalDate.until(pvm.toLocalDate, ChronoUnit.MONTHS) >= 3) {
-            NoErrors
-          }
-          else {
+        case paattymisPaivamaarat: List[LocalDateTime] => if (paattymisPaivamaarat.nonEmpty) {
+          if (paattymisPaivamaarat.last.toLocalDate.until(pvm.toLocalDate, ChronoUnit.MONTHS) < 3) {
             error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(months))
           }
-        }
+          else NoErrors
+        } else NoErrors
         case _ => NoErrors
       }
       case _ => NoErrors
