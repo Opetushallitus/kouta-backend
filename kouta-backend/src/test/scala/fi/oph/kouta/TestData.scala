@@ -13,6 +13,7 @@ object TestData {
   def now(): LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
   def inFuture(s:Long = 500): LocalDateTime = LocalDateTime.now().plusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
   def inPast(s:Long = 500): LocalDateTime = LocalDateTime.now().minusSeconds(s).truncatedTo(ChronoUnit.MINUTES)
+  def inFourMonths(): LocalDateTime = LocalDateTime.now().plusMonths(4).truncatedTo(ChronoUnit.MINUTES)
   val startTime1: LocalDateTime = LocalDate.now().plusDays(1).atTime(LocalTime.parse("09:49")).truncatedTo(ChronoUnit.MINUTES)
   val endTime1: LocalDateTime = LocalDate.now().plusDays(1).atTime(LocalTime.parse("09:58")).truncatedTo(ChronoUnit.MINUTES)
   val muokkaajanNimi: String = "Testi Muokkaaja"
@@ -451,8 +452,8 @@ object TestData {
     hakukohteenLiittamisenTakaraja = Some(inFuture()),
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
     ajastettuJulkaisu = Some(inFuture()),
-    ajastettuHaunJaHakukohteidenArkistointi = Some(inFuture().plusMonths(4)),
-    ajastettuHaunJaHakukohteidenArkistointiAjettu = Some(inFuture()),
+    ajastettuHaunJaHakukohteidenArkistointi = Some(inFourMonths()),
+    ajastettuHaunJaHakukohteidenArkistointiAjettu = None,
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
     hakulomaketyyppi = Some(EiSähköistä),

@@ -5,11 +5,12 @@ import java.util.UUID
 import java.util.regex.Pattern
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import fi.vm.sade.utils.slf4j.Logging
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 import java.time.temporal.ChronoUnit
 
-object Validations {
+object Validations extends Logging {
   private val urlValidator   = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
 
@@ -294,11 +295,15 @@ object Validations {
     val months = 3
     ajastettuHaunJaHakukohteidenArkistointi match {
       case Some(pvm) => haunPaattymisPaivamaarat.flatten.sortWith(_.isBefore(_)) match {
-        case pvms: List[LocalDateTime] => if (pvm.toLocalDate.until(pvms.last.toLocalDate, ChronoUnit.MONTHS) >= 3) {
+        case pvms: List[LocalDateTime] => if (pvms.isEmpty) {
           NoErrors
-        }
-        else {
-          error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(months))
+        } else {
+          if (pvms.last.toLocalDate.until(pvm.toLocalDate, ChronoUnit.MONTHS) >= 3) {
+            NoErrors
+          }
+          else {
+            error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(months))
+          }
         }
         case _ => NoErrors
       }
