@@ -421,8 +421,16 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
+  private def failSorakuvausValidation(koulutus: Koulutus): Assertion =
+    failValidation(koulutus.copy(sorakuvausId = Some(sorakuvausId)), "sorakuvausId", notMissingMsg(Some(sorakuvausId)))
+
   it should "fail if sorakuvausId given for koulutustyyppi not accepting sorakuvaus" in {
-    // TODO 
+    failSorakuvausValidation(AikuistenPerusopetusKoulutus)
+    failSorakuvausValidation(AmmMuuKoulutus)
+    failSorakuvausValidation(TuvaKoulutus)
+    failSorakuvausValidation(TelmaKoulutus)
+    failSorakuvausValidation(VapaaSivistystyoOpistovuosiKoulutus)
+    failSorakuvausValidation(VapaaSivistystyoMuuKoulutus)
   }
 
   it should "fail if sorakuvaus doesn't exist" in {
