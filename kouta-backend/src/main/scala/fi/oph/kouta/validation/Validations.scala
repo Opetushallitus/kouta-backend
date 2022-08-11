@@ -292,15 +292,11 @@ object Validations extends Logging {
   }
 
   def validateArkistointiPaivamaara(ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime], haunPaattymisPaivamaarat: List[Option[LocalDateTime]]): IsValid = {
-    val months = 3
+    val arkistointiAikaisintaanKuukautta = 3
     ajastettuHaunJaHakukohteidenArkistointi match {
       case Some(pvm) => haunPaattymisPaivamaarat.flatten.sortWith(_.isBefore(_)) match {
-        case paattymisPaivamaarat: List[LocalDateTime] => if (paattymisPaivamaarat.nonEmpty) {
-          if (paattymisPaivamaarat.last.toLocalDate.until(pvm.toLocalDate, ChronoUnit.MONTHS) < 3) {
-            error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(months))
-          }
-          else NoErrors
-        } else NoErrors
+        case paattymisPaivamaarat if paattymisPaivamaarat.nonEmpty && paattymisPaivamaarat.last.toLocalDate.until(pvm.toLocalDate, ChronoUnit.MONTHS) < arkistointiAikaisintaanKuukautta =>
+          error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(arkistointiAikaisintaanKuukautta))
         case _ => NoErrors
       }
       case _ => NoErrors
