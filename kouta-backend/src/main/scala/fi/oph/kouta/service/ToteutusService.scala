@@ -53,7 +53,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
   def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
-    val koulutuksetKoodiUri = toteutus.koulutuksetKoodiUri
+    val koulutuksetKoodiUri = toteutus.koulutuksetKoodiUri.getOrElse(Seq())
     if (!koulutuksetKoodiUri.isEmpty && (isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(koulutuksetKoodiUri))) {
       toteutus.nimi
     } else {
