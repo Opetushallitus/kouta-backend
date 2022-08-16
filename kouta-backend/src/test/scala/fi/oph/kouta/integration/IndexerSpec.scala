@@ -23,9 +23,9 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
     val koulutusOid = put(koulutus, ophSession)
     val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid)), ophSession)
     val hakuOid = put(haku, ophSession)
-    val hakukohdeOid = put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
+    val hakukohdeOid = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
       jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid))), ophSession)
-    put(hakukohde.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
+    put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid),
       jarjestyspaikkaOid = Some(OrganisaatioOid(jarjestyspaikkaOid)), tila = Poistettu), ophSession)
 
     post(s"$IndexerPath/list-hakukohde-oids-by-jarjestyspaikat", body=bytes(Seq(jarjestyspaikkaOid)), headers = Seq(sessionHeader(indexerSession))) {

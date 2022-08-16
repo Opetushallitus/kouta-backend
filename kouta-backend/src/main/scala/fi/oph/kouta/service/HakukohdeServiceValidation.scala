@@ -64,7 +64,6 @@ class HakukohdeServiceValidation(
       hk.validate(),
       assertValid(hk.toteutusOid, "toteutusOid"),
       assertValid(hk.hakuOid, "hakuOid"),
-      assertValid(hk.organisaatioOid, "organisaatioOid"),
       // Joko hakukohdeKoodiUri tai nimi täytyy olla, mutta ei molempia!
       assertTrue(hk.hakukohdeKoodiUri.nonEmpty != hk.nimi.nonEmpty, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri")),
       validateIfDefined[String](
@@ -273,7 +272,7 @@ class HakukohdeServiceValidation(
           validateOptionalKielistetty(kielivalinta, m.kynnysehto, "metadata.kynnysehto"),
           assertNotOptional(m.aloituspaikat, "metadata.aloituspaikat"),
           validateIfDefined[Aloituspaikat](m.aloituspaikat, _.validate(tila, kielivalinta, "metadata.aloituspaikat")),
-          // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille HakukohdeServicessä
+          // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille
           validateIfDefined[HakukohteenLinja](
             m.hakukohteenLinja,
             l =>
@@ -344,10 +343,10 @@ class HakukohdeServiceValidation(
 
     val haku = hakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
 
-    val hakuOid          = hakukohde.hakuOid.s
-    val toteutusOid      = hakukohde.toteutusOid.s
-    val koulutustyyppi   = deps.get(toteutusOid).flatMap(_._2)
-    val haunJulkaisutila = haku.map { haku => Some(haku.tila) }.getOrElse(None)
+    val hakuOid             = hakukohde.hakuOid.s
+    val toteutusOid         = hakukohde.toteutusOid.s
+    val koulutustyyppi      = deps.get(toteutusOid).flatMap(_._2)
+    val haunJulkaisutila    = haku.map { haku => Some(haku.tila) }.getOrElse(None)
     val koulutuksetKoodiUri = deps.get(toteutusOid).flatMap(_._4).getOrElse(Seq())
 
     and(
@@ -404,9 +403,15 @@ class HakukohdeServiceValidation(
             case m: VapaaSivistystyoMuuToteutusMetadata  => assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
             case m: AmmatillinenMuuToteutusMetadata      => assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
             case m: AikuistenPerusopetusToteutusMetadata => assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
-            case m: LukioToteutusMetadata =>
-              validateIfFalse(isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(koulutuksetKoodiUri),
-              assertNotOptional(hakukohde.metadata.get.hakukohteenLinja, "metadata.hakukohteenLinja"))
+            case _: LukioToteutusMetadata =>
+              validateIfFalse(
+                isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(koulutuksetKoodiUri),
+                assertTrue(
+                  hakukohde.metadata.isDefined && hakukohde.metadata.get.hakukohteenLinja.isDefined,
+                  "metadata.hakukohteenLinja",
+                  missingMsg
+                )
+              )
             case _ => NoErrors
           }
       ),

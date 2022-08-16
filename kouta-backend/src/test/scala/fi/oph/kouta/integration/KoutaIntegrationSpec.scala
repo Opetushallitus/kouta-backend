@@ -90,6 +90,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     mockOrganisaatioResponse()
     addDefaultKoodistoMockResponsesForKoulutus()
     addDefaultKoodistoMockResponsesForToteutus()
+    addDefaultKoodistoMockResponsesForHakukohde()
   }
 
   override def afterAll(): Unit = {
@@ -177,6 +178,14 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     mockKoodistoResponse("lukiopainotukset", Seq(("lukiopainotukset_1", 1, None)))
     mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", Seq(("lukiolinjaterityinenkoulutustehtava_1", 1, None)))
     mockKoodistoResponse("moduulikoodistolops2021", Seq(("moduulikoodistolops2021_kald3", 1, None)))
+  }
+
+  def addDefaultKoodistoMockResponsesForHakukohde(): Unit = {
+    mockKoodistoResponse("pohjakoulutusvaatimuskouta", Seq(("pohjakoulutusvaatimuskouta_pk", 1, None), ("pohjakoulutusvaatimuskouta_yo", 1, None), ("pohjakoulutusvaatimuskouta_104", 1, None), ("pohjakoulutusvaatimuskouta_109", 1, None)))
+    mockKoodistoResponse("liitetyypitamm", Seq(("liitetyypitamm_1", 1, None), ("liitetyypitamm_2", 1, None), ("liitetyypitamm_10", 1, None)))
+    mockKoodistoResponse("posti", Seq(("posti_04230", 2, None)))
+    mockKoodistoResponse("valintakokeentyyppi", Seq(("valintakokeentyyppi_1", 1, None), ("valintakokeentyyppi_11", 1, None), ("valintakokeentyyppi_42", 2, None), ("valintakokeentyyppi_57", 2, None), ("valintakokeentyyppi_66", 6, None)))
+    mockKoodistoResponse("hakukohteetperusopetuksenjalkeinenyhteishaku", Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None)))
   }
 
 }

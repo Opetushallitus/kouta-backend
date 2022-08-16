@@ -14,6 +14,7 @@ import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, Hakuko
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
+import slick.jdbc.PostgresProfile.api._
 
 trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessControlSpec with ToteutusFixture  {
   this: KoulutusFixture =>
@@ -50,9 +51,21 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
   }
 
   val hakukohde: Hakukohde = JulkaistuHakukohde
+  val hakukohdeWoValintaperusteenValintakokeet = JulkaistuHakukohde.copy(metadata = Some(JulkaistuHakukohde.metadata.get.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq())))
 
+  def withValintaperusteenValintakokeet(hakukohde: Hakukohde): Hakukohde = {
+    var metadata =
+      hakukohde.metadata.get
+    if (hakukohde.valintaperusteId.isDefined) {
+      val lisatilaisuudet =
+        metadata.valintaperusteenValintakokeidenLisatilaisuudet.map(_.copy(id = db.runBlocking(
+          sql"""select id from valintaperusteiden_valintakokeet where valintaperuste_id = ${hakukohde.valintaperusteId.get}""".as[String]).headOption.map(UUID.fromString)))
+      metadata = metadata.copy(valintaperusteenValintakokeidenLisatilaisuudet = lisatilaisuudet)
+    }
+    hakukohde.copy(metadata = Some(metadata))
+  }
   def getIds(hakukohde:Hakukohde): Hakukohde = {
-    import slick.jdbc.PostgresProfile.api._
+
     hakukohde.copy(
       liitteet = hakukohde.liitteet.map(l => l.copy(id = db.runBlocking(
         sql"""select id from hakukohteiden_liitteet where hakukohde_oid = ${hakukohde.oid} and tyyppi_koodi_uri = ${l.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString))),
@@ -73,7 +86,9 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
       toteutusOid = ToteutusOid(toteutusOid),
       hakuOid = HakuOid(hakuOid),
       valintaperusteId = None,
-      tila = Tallennettu)
+      tila = Tallennettu,
+      metadata = Some(hakukohde.metadata.get.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq()))
+    )
 
   def hakukohde(oid: String, toteutusOid: String, hakuOid: String): Hakukohde =
     hakukohde.copy(
@@ -87,9 +102,6 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
         Valintakoe1
       )
     )
-
-  def julkaistuHakukohde(toteutusOid: String, hakuOid: String): Hakukohde = hakukohde.copy(
-    toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = None, tila = Julkaistu)
 
   def hakukohde(toteutusOid: String, hakuOid: String, valintaperusteId: UUID): Hakukohde = hakukohde.copy(
     toteutusOid = ToteutusOid(toteutusOid), hakuOid = HakuOid(hakuOid), valintaperusteId = Some(valintaperusteId))
@@ -125,7 +137,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
   def update(haku: Hakukohde, lastModified: String): Unit = update(haku, lastModified, expectUpdate = true)
 
   def addToList(hakukohde: Hakukohde): HakukohdeListItem = {
-    val oid = put(hakukohde)
+    val oid = put(withValintaperusteenValintakokeet(hakukohde))
     val modified = readHakukohdeModified(oid)
     HakukohdeListItem(
       HakukohdeOid(oid),

@@ -38,8 +38,8 @@ object Tester {
     //val client = new HakuKoodiClient(null)
     //println("oikea vastaus: " + client.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_666"))
     //println("oikea vastaus: " + client.opintojenLaajuusKoodiUriExists(""))
-    HakukohdeDAO.getDependencyInformation(JulkaistuHakukohde.copy(oid = Some(HakukohdeOid("1.2.246.562.20.00000000000000004244")), toteutusOid = ToteutusOid("1.2.246.562.17.00000000000000003366"),
-      hakuOid = HakuOid("1.2.246.562.29.00000000000000002821"), valintaperusteId = Some(UUID.fromString("0c3e3cc6-8892-4b82-8663-0c2bc79c02bb")))).get("1.2.246.562.17.00000000000000003366").get._4.get.foreach(println(_))
+    //HakukohdeDAO.getDependencyInformation(JulkaistuHakukohde.copy(oid = Some(HakukohdeOid("1.2.246.562.20.00000000000000004244")), toteutusOid = ToteutusOid("1.2.246.562.17.00000000000000003366"),
+    //  hakuOid = HakuOid("1.2.246.562.29.00000000000000002821"), valintaperusteId = Some(UUID.fromString("0c3e3cc6-8892-4b82-8663-0c2bc79c02bb")))).get("1.2.246.562.17.00000000000000003366").get._4.get.foreach(println(_))
 
     //val client = new EPerusteKoodiClient(null)
     //println("oikea vastaus: " + client.getOsaamisalaKoodiuritForEPeruste(656))
@@ -50,5 +50,6 @@ object Tester {
     //println(all)
     //println(all.size)
     //println(client.findOrganisaatioOidsFlatByMemberOid(OrganisaatioOid("1.2.246.562.10.54453921329")))
+    println(UUID.randomUUID())
   }
 }

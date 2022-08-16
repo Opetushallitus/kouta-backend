@@ -47,7 +47,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
     failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
     failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), "kohdejoukonTarkenneKoodiUri", validationMsg("tonttu"))
-    failsValidation(max.copy(hakulomaketyyppi = None), "hakulomaketyyppi", missingMsg)
+    failsValidation(max.copy(hakulomaketyyppi = None, hakulomakeLinkki = Map()), "hakulomaketyyppi", missingMsg)
 
     val invalidAjanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = Some(TestData.inFuture(9000)))
     failsValidation(max.copy(hakuajat = List(invalidAjanjakso)), "hakuajat[0]", invalidAjanjaksoMsg(invalidAjanjakso))
@@ -65,17 +65,17 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail if hakulomake is invalid" in {
-    failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None), "hakulomakeAtaruId", missingMsg)
+    failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None, hakulomakeLinkki = Map()), "hakulomakeAtaruId", missingMsg)
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi")), "hakulomakeLinkki", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map()), "hakulomakeLinkki", invalidKielistetty(Seq(Fi, Sv)))
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi", Sv -> "virhe")), "hakulomakeLinkki", invalidUrl("virhe"))
-    failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus")), "hakulomakeKuvaus", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "vain suomeksi"), hakulomakeLinkki = Map()), "hakulomakeKuvaus", invalidKielistetty(Seq(Sv)))
   }
 
   it should "pass valid hakulomake" in {
-    passesValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = Some(UUID.randomUUID())))
+    passesValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = Some(UUID.randomUUID()), hakulomakeLinkki = Map()))
     passesValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi", Sv -> "http://url.se")))
-    passesValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map()))
+    passesValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeLinkki = Map(), hakulomakeKuvaus = Map()))
   }
 
   it should "pass valid julkaistu haku" in {
