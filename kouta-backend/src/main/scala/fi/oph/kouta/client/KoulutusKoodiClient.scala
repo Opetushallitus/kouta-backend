@@ -1,9 +1,6 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.client.KoodistoUtils.{
-  koodiUriWithEqualOrHigherVersioNbrInList,
-  koodiUriFromString
-}
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
