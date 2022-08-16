@@ -867,8 +867,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
           illegalValueForFixedValueSeqMsg(
             "kansallinenkoulutusluokitus2016koulutusalataso1_01#<versionumero>, esim. kansallinenkoulutusluokitus2016koulutusalataso1_01#1"
           )
-        ),
-        ValidationError("metadata.kuvauksenNimi", invalidKielistetty(Seq(Sv)))
+        )
       )
     )
   }

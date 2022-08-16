@@ -389,8 +389,8 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
     val hakuOid = put(haku.copy(tila = Tallennettu))
     val valintaperusteId = put(valintaperuste.copy(tila = Tallennettu))
-    put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Poistettu))
-    put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu))
+    put(withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Poistettu)))
+    put(withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu)))
     val lastModified = get(valintaperusteId, valintaperuste(valintaperusteId).copy(tila = Tallennettu))
     (valintaperusteId, lastModified)
   }

@@ -21,7 +21,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     updateTestData()
   }
 
-  def iHakukohde(i: Int): Hakukohde = hakukohde(hakukohdeOids(i), toteutusOids(i), hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)
+  def iHakukohde(i: Int): Hakukohde = withValintaperusteenValintakokeet(hakukohde(hakukohdeOids(i), toteutusOids(i), hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu))
 
   var koulutusOids: List[String] = List()
   var toteutusOids: List[String] = List()
@@ -43,7 +43,7 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
     sorakuvausIds = List.fill(n)(put(sorakuvaus))
     valintaperusteIds = List.fill(n)(put(valintaperuste))
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) =>
-      put(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu))
+      put(withValintaperusteenValintakokeet(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)))
     }
     Thread.sleep(1000)
     timestampAfterInserts = renderHttpDate(now())

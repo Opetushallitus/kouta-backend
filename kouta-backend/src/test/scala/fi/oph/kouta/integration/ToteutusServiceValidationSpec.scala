@@ -143,7 +143,14 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   }
 
   override val validator =
-    new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, koulutusDao, hakukohdeDao, sorakuvausDao)
+    new ToteutusServiceValidation(
+      koulutusKoodiClient,
+      organisaatioService,
+      hakuKoodiClient,
+      koulutusDao,
+      hakukohdeDao,
+      sorakuvausDao
+    )
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -486,69 +493,13 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   }
 
   it should "fail if invalid koulutuksenAlkamiskausi" in {
-    val now = LocalDateTime.now()
     failValidation(
       ammToteutusWithKoulutuksenAlkamiskausi(
-        Some(now.minusDays(1)),
-        Some(now.minusDays(2)),
-        koodiUri = Some("puppu"),
-        startYear = Some("10000")
+        Some(inFuture(2000)),
+        Some(inFuture(1000))
       ).copy(tila = Tallennettu),
-      Seq(
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara",
-          InvalidKoulutuspaivamaarat
-        ),
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri",
-          validationMsg("puppu")
-        ),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", validationMsg("10000"))
-      )
-    )
-    failValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(None, None, koodiUri = Some("kausi_k#2")).copy(tila = Tallennettu),
-      "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri",
-      invalidKausiKoodiuri("kausi_k#2")
-    )
-  }
-
-  it should "fail if missing parameters for koulutuksenAlkamiskausi in julkaistu toteutus" in {
-    failValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(
-        None,
-        None,
-        None,
-        Map(Fi -> "vain suomeksi", Sv -> "")
-      ),
-      Seq(
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.alkamiskausityyppi",
-          missingMsg
-        ),
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.henkilokohtaisenSuunnitelmanLisatiedot",
-          invalidKielistetty(Seq(Sv))
-        )
-      )
-    )
-    failValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(None, None, Some(TarkkaAlkamisajankohta)),
       "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara",
-      missingMsg
-    )
-    failValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(None, None, Some(AlkamiskausiJaVuosi), koodiUri = None),
-      Seq(
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri",
-          missingMsg
-        ),
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi",
-          missingMsg
-        )
-      )
+      InvalidKoulutuspaivamaarat
     )
   }
 

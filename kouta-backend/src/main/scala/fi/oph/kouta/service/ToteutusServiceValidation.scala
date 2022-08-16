@@ -138,7 +138,7 @@ class ToteutusServiceValidation(
       ),
       validateIfDefined[KoulutuksenAlkamiskausi](
         opetus.koulutuksenAlkamiskausi,
-        _.validate(tila, kielivalinta, "opetus.koulutuksenAlkamiskausi", hakuKoodiClient.kausiKoodiUriExists)
+        _.validate(tila, kielivalinta, "metadata.opetus.koulutuksenAlkamiskausi", hakuKoodiClient.kausiKoodiUriExists)
       ),
       validateIfDefined[Apuraha](opetus.apuraha, apuraha => validateApuraha(tila, kielivalinta, apuraha)),
       validateIfNonEmpty[Lisatieto](
