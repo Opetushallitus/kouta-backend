@@ -157,7 +157,7 @@ object Validations {
   )
   def unknownAtaruId(ataruId: UUID): ErrorMessage = ErrorMessage(
     msg = s"Hakulomaketta ID:llä $ataruId ei löydy, tai se on poistettu tai lukittu",
-    id = "invalidPostiosoiteKoodiUri"
+    id = "invalidAtaruId"
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
@@ -446,7 +446,7 @@ object Validations {
       dependencyIdPath: String
   ): IsValid = {
     dependencyTila.map { tila =>
-      assertTrue(tila != Poistettu, path = "tila", nonExistent(dependencyName, dependencyId))
+      assertTrue(tila != Poistettu, path = dependencyIdPath, nonExistent(dependencyName, dependencyId))
     }.getOrElse(error(dependencyIdPath, nonExistent(dependencyName, dependencyId)))
   }
 

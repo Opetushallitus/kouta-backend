@@ -1,15 +1,14 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{Fi, Julkaisutila, Koulutus, Sv}
+import fi.oph.kouta.domain.{Fi, Julkaisutila, Sv}
 import fi.oph.kouta.service.{KoutaValidationException, ValidatingService}
-import fi.oph.kouta.validation.Validations.notEmptyMsg
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.{Assertion, BeforeAndAfterEach}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.{contain, equal}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Assertion, BeforeAndAfterEach}
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Try}
 
 abstract class BaseValidationSpec[E <: Validatable] extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
 
