@@ -47,6 +47,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
   implicit val ataruIdCache = CaffeineCache[Seq[UUID]]
 
   override def isExistingAtaruId(ataruId: UUID): Boolean = {
+    logger.info("Checking AtaruId: " + ataruId)
     var existingIdsInCache = ataruIdCache.get("")
     if (existingIdsInCache.isEmpty) {
       val url = urlProperties.url("hakemuspalvelu-service.forms")
@@ -75,6 +76,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
           logger.error(s"Authentication to CAS failed: ${error}")
       }
     }
+    logger.info("Existing AtaruIDs: " + existingIdsInCache.getOrElse(Seq()))
     existingIdsInCache.getOrElse(Seq()).contains(ataruId)
   }
 }
