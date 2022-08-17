@@ -60,6 +60,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
                   .runLog
                   .map(_.mkString)
                   .map(responseBody => {
+                    logger.info("body: " + responseBody)
                     val ids = (parse(responseBody) \\ "forms").extract[List[AtaruForm]].filter(_.isActive()).map(_.key)
                     existingIdsInCache = Some(ids)
                     ataruIdCache.put("")(ids, Some(15.minutes))
