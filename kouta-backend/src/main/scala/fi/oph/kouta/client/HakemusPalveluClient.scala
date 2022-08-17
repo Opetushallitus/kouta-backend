@@ -56,7 +56,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
           .fold(Task.fail, url => {
             client.fetch(Request(method = GET, uri = url)) {
               case r if r.status.code == 200 =>
-                logger.info("repsonse: " + r.bodyAsText)
+                logger.info("repsonse: " + r)
                 r.bodyAsText
                   .runLog
                   .map(_.mkString)
