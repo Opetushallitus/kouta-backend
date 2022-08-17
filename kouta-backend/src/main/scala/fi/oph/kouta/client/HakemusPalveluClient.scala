@@ -51,12 +51,13 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     var existingIdsInCache = ataruIdCache.get("")
     if (existingIdsInCache.isEmpty) {
       val url = urlProperties.url("hakemuspalvelu-service.forms")
+      logger.info("Fetching from url " + url)
       try {
         Uri.fromString(url)
           .fold(Task.fail, url => {
             client.fetch(Request(method = GET, uri = url)) {
               case r if r.status.code == 200 =>
-                logger.info("repsonse: " + r)
+                logger.info("response: " + r)
                 r.bodyAsText
                   .runLog
                   .map(_.mkString)
