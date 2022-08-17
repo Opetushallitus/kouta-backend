@@ -31,7 +31,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
   private lazy val config = KoutaConfigurationFactory.configuration.hakemuspalveluClientConfiguration
   private lazy val params = CasParams(
     urlProperties.url("hakemuspalvelu-service"),
-    "j_spring_cas_security_check",
+    "auth/cas",
     config.username,
     config.password
   )
@@ -41,7 +41,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     casParams = params,
     serviceClient = defaultClient,
     clientCallerId = callerId,
-    sessionCookieName = "JSESSIONID"
+    sessionCookieName = "ring-session"
   )
 
   implicit val ataruIdCache = CaffeineCache[Seq[UUID]]
