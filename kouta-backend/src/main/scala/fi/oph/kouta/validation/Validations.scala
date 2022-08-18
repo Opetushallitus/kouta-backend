@@ -1,11 +1,12 @@
 package fi.oph.kouta.validation
 
+import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
+
 import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 import java.util.regex.Pattern
-import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{HakuOid, Oid, OrganisaatioOid}
-import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 object Validations {
   private val urlValidator   = new UrlValidator(Array("http", "https"))

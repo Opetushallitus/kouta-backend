@@ -4,14 +4,16 @@ import fi.oph.kouta.TestData.{inFuture, inPast}
 import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain.{Ajanjakso, AlkamiskausiJaVuosi, Aloituspaikat, Fi, Julkaistu, Julkaisutila, KoulutuksenAlkamiskausi, Osoite, Sv, Tallennettu, TarkkaAlkamisajankohta, Valintakoe, ValintakoeMetadata, Valintakoetilaisuus}
 import fi.oph.kouta.service.KoutaValidationException
-import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create}
-import fi.oph.kouta.validation.Validations.{InvalidKoulutuspaivamaarat, invalidAjanjaksoMsg, invalidKausiKoodiuri, invalidKielistetty, invalidPostiosoiteKoodiUri, invalidValintakoeTyyppiKooriuri, missingMsg, notNegativeMsg, pastDateMsg, validationMsg}
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
+import fi.oph.kouta.validation.Validations.{InvalidKoulutuspaivamaarat, invalidAjanjaksoMsg, invalidKausiKoodiuri, invalidKielistetty, invalidPostiosoiteKoodiUri, invalidValintakoeTyyppiKooriuri, missingMsg, notMissingMsg, notNegativeMsg, pastDateMsg, validationMsg}
 import fi.oph.kouta.validation.{NoErrors, ValidatableSubEntity, ValidationError}
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.{Assertion, BeforeAndAfterEach}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.contain
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+
+import java.util.UUID
 
 class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
   val hakuKoodiClient = mock[HakuKoodiClient]
@@ -208,6 +210,15 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)
     }
+  }
+
+  it should "fail if id given for new valintakoe" in {
+    val id = Some(UUID.randomUUID())
+    failsValidation(Valintakoe(id = id), Tallennettu, Seq(ValidationError("path.id", notMissingMsg(id))))
+  }
+
+  it should "fail if id not given for modified valintakoe" in {
+    failsValidation(Valintakoe(), Tallennettu, Seq(ValidationError("path.id", missingMsg)), update)
   }
 
   it should "fail if invalid tyyppiKoodiUri" in {
