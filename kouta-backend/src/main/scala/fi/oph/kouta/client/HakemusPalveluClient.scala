@@ -17,7 +17,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
 
-case class AtaruForm(key: UUID, deleted: Option[Boolean], locked: Option[Boolean]) {
+case class AtaruForm(key: String, deleted: Option[Boolean], locked: Option[Boolean]) {
   def isActive(): Boolean =
     !deleted.getOrElse(false) && !locked.getOrElse(false)
 }
@@ -44,7 +44,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     sessionCookieName = "ring-session"
   )
 
-  implicit val ataruIdCache = CaffeineCache[Seq[UUID]]
+  implicit val ataruIdCache = CaffeineCache[Seq[String]]
 
   override def isExistingAtaruId(ataruId: UUID): Boolean = {
     var existingIdsInCache = ataruIdCache.get("")
@@ -75,9 +75,9 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
           logger.error(s"Authentication to CAS failed: ${error}")
       }
     }
-    existingIdsInCache.getOrElse(Seq()).contains(ataruId)
+    existingIdsInCache.getOrElse(Seq()).contains(ataruId.toString)
   }
 
-  def parseIds(responseAsString: String): List[UUID] =
+  def parseIds(responseAsString: String): List[String] =
     (parse(responseAsString) \\ "forms").extract[List[AtaruForm]].filter(_.isActive()).map(_.key)
 }

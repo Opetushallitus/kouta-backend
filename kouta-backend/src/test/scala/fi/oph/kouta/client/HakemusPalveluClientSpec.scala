@@ -14,8 +14,8 @@ class HakemusPalveluClientSpec extends ScalatraFlatSpec {
         "\"created-by\":\"somebody\",\"locked\": false,\"id\":950453,\"created-time\":\"2022-03-10T11:53:38.532Z\",\"languages\":[\"fi\",\"sv\",\"en\"]}]}"
     HakemusPalveluClient.parseIds(responseString) should equal(
       Seq(
-        UUID.fromString("51666769-c664-40a8-893c-7bbe82399eea"),
-        UUID.fromString("837d728c-359e-4ad0-b61b-151bb790cb5b")
+        "51666769-c664-40a8-893c-7bbe82399eea",
+        "837d728c-359e-4ad0-b61b-151bb790cb5b"
       )
     )
   }
@@ -30,9 +30,7 @@ class HakemusPalveluClientSpec extends ScalatraFlatSpec {
         "{\"deleted\":null,\"key\":\"ad6329c3-79c5-4996-984e-d4b76d7eb129\",\"content\":[],\"name\":{\"fi\":\"Salpaus - jatkuva haku 2021\"},"+
         "\"created-by\":\"samrauni\",\"locked\":true,\"id\":771482,\"created-time\":\"2021-03-16T08:46:43.209Z\",\"languages\":[\"fi\"]}"
     HakemusPalveluClient.parseIds(responseString) should equal(
-      Seq(
-        UUID.fromString("51666769-c664-40a8-893c-7bbe82399eea")
-      )
+      Seq("51666769-c664-40a8-893c-7bbe82399eea")
     )
   }
 
