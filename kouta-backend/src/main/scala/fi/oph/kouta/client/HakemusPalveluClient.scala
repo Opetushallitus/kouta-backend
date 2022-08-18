@@ -22,6 +22,8 @@ case class AtaruForm(key: UUID, deleted: Option[Boolean], locked: Option[Boolean
     !deleted.getOrElse(false) && !locked.getOrElse(false)
 }
 
+case class AtaruId(key: String)
+
 trait HakemusPalveluClient extends KoutaJsonFormats {
   def isExistingAtaruId(ataruId: UUID): Boolean
 }
@@ -81,6 +83,8 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     existingIdsInCache.getOrElse(Seq()).contains(ataruId)
   }
 
-  def parseIds(responseAsString: String): List[UUID] =
+  def parseIds(responseAsString: String): List[UUID] = {
+    logger.info("All ids: " + (parse(responseAsString) \\ "forms").extract[List[AtaruId]].map(_.key))
     (parse(responseAsString) \\ "forms").extract[List[AtaruForm]].filter(_.isActive()).map(_.key)
+  }
 }
