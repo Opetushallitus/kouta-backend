@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import java.time.Instant
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem, TilaFilter}
+import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem, TilaFilter, YhteishakuFilter}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
@@ -16,7 +16,7 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def getUpdateActions(haku: Haku): DBIO[Option[Haku]]
 
   def get(oid: HakuOid, tilaFilter: TilaFilter): Option[(Haku, Instant)]
-  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishaut: Boolean): Seq[HakuListItem]
+  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishakuFilter: YhteishakuFilter): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem]
 }
 
@@ -50,9 +50,9 @@ object HakuDAO extends HakuDAO with HakuSQL {
       m <- selectLastModified(haku.oid.get)
     } yield optionWhen(x + y > 0)(haku.withModified(m.get))
 
-  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishaut: Boolean): Seq[HakuListItem] = organisaatioOids match {
+  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishakuFilter: YhteishakuFilter): Seq[HakuListItem] = organisaatioOids match {
     case Nil => Seq()
-    case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids, tilaFilter, yhteishaut))
+    case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids, tilaFilter, yhteishakuFilter))
   }
 
 
@@ -226,13 +226,12 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
            group by ha.oid
          ) m on m.oid = ha.oid"""
 
-  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishaut: Boolean): DBIO[Vector[HakuListItem]] = {
-    def includeYhteishaut: String = {
-      if(yhteishaut) {
-        ""
-      } else {
-        s"and hakutapa_koodi_uri NOT LIKE 'hakutapa_01%'"
-      }
+  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yf: YhteishakuFilter): DBIO[Vector[HakuListItem]] = {
+    def includeYhteishaut = (yf.removeKk, yf.removeToinenaste) match {
+      case (true, true) => s"and hakutapa_koodi_uri NOT LIKE 'hakutapa_01%'"
+      case (true, false) => s"and kohdejoukko_koodi_uri NOT LIKE 'haunkohdejoukko_12%'"
+      case (false, true) => s"and kohdejoukko_koodi_uri NOT LIKE 'haunkohdejoukko_11%'"
+      case _ => ""
     }
 
     sql"""#$selectHakuListSql

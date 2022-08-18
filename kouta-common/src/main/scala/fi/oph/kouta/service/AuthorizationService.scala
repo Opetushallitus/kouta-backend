@@ -1,6 +1,8 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.OrganisaatioOidsAndOppilaitostyypitFlat
+import fi.oph.kouta.domain.Koulutustyyppi
+import fi.oph.kouta.domain.Koulutustyyppi.isKorkeakoulu
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.security.{Authorizable, Role}
 import fi.oph.kouta.servlet.Authenticated
@@ -79,6 +81,10 @@ trait AuthorizationService extends Logging {
         case (oids, t) => f(oids, t)
       }
     }
+
+  def withAuthorizedOrganizationOidsAndRelevantKoulutustyyppis[R](oid: OrganisaatioOid, authorizationRules: AuthorizationRules)(f: OrganisaatioOidsAndOppilaitostyypitFlat => R)(implicit authenticated: Authenticated): R =
+    withAuthorizedOrganizationOidsAndOppilaitostyypit(oid, authorizationRules)(oidsAndTyypit =>
+      f(oidsAndTyypit))
 
   def withAuthorizedOrganizationOids[R](oid: OrganisaatioOid, authorizationRules: AuthorizationRules)(f: Seq[OrganisaatioOid] => R)(implicit authenticated: Authenticated): R =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(oid, authorizationRules) { case (oids, _) =>
