@@ -124,6 +124,8 @@ class KoulutusServiceValidation(
       case Erikoislaakari =>
         and(
           validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
+          assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case _ =>

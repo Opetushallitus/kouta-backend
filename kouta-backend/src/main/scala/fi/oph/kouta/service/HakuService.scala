@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
+import fi.oph.kouta.domain.Koulutustyyppi.{isKorkeakoulu, isToisenAsteenYhteishakuKoulutustyyppi}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -109,9 +110,19 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     )
   }
 
+  private def getYhteishakuFilter(yhteishaut: Boolean, koulutustyypit: Seq[Koulutustyyppi]): YhteishakuFilter = {
+    if (yhteishaut) {
+      YhteishakuFilter(
+        removeKk = !koulutustyypit.exists(kt => isKorkeakoulu(kt)),
+        removeToinenaste = !koulutustyypit.exists(kt => isToisenAsteenYhteishakuKoulutustyyppi(kt)))
+    } else {
+      YhteishakuFilter(removeKk = true, removeToinenaste = true)
+    }
+  }
+
   def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter, yhteishaut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, readRules)(
-      oids => HakuDAO.listByAllowedOrganisaatiot(oids, tilaFilter, yhteishaut))
+    withAuthorizedOrganizationOidsAndRelevantKoulutustyyppis(organisaatioOid, readRules)(
+      oidsAndTyypit => HakuDAO.listByAllowedOrganisaatiot(oidsAndTyypit._1, tilaFilter, getYhteishakuFilter(yhteishaut, oidsAndTyypit._2)))
 
   def listHakukohteet(hakuOid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter))

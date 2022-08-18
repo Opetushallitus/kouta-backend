@@ -1,6 +1,7 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
 import fi.vm.sade.utils.slf4j.Logging
 import org.http4s.Method.GET
@@ -21,11 +22,10 @@ case class AtaruForm(key: UUID, deleted: Option[Boolean], locked: Option[Boolean
     !deleted.getOrElse(false) && !locked.getOrElse(false)
 }
 
-trait HakemusPalveluClient {
+trait HakemusPalveluClient extends KoutaJsonFormats {
   def isExistingAtaruId(ataruId: UUID): Boolean
 }
 object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with CallerId with Logging {
-  private implicit val formats: DefaultFormats.type = DefaultFormats
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   private lazy val config = KoutaConfigurationFactory.configuration.hakemuspalveluClientConfiguration
@@ -57,13 +57,11 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
           .fold(Task.fail, url => {
             client.fetch(Request(method = GET, uri = url)) {
               case r if r.status.code == 200 =>
-                logger.info("response: " + r)
                 r.bodyAsText
                   .runLog
                   .map(_.mkString)
                   .map(responseBody => {
-                    logger.info("body: " + responseBody)
-                    val ids = (parse(responseBody) \\ "forms").extract[List[AtaruForm]].filter(_.isActive()).map(_.key)
+                    val ids = parseIds(responseBody)
                     existingIdsInCache = Some(ids)
                     ataruIdCache.put("")(ids, Some(15.minutes))
                   })
@@ -82,4 +80,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     logger.info("Existing AtaruIDs: " + existingIdsInCache.getOrElse(Seq()))
     existingIdsInCache.getOrElse(Seq()).contains(ataruId)
   }
+
+  def parseIds(responseAsString: String): List[UUID] =
+    (parse(responseAsString) \\ "forms").extract[List[AtaruForm]].filter(_.isActive()).map(_.key)
 }
