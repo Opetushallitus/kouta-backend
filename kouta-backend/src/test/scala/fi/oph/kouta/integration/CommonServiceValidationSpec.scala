@@ -4,6 +4,7 @@ import fi.oph.kouta.TestData.{inFuture, inPast}
 import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain.{Ajanjakso, AlkamiskausiJaVuosi, Aloituspaikat, Fi, Julkaistu, Julkaisutila, KoulutuksenAlkamiskausi, Osoite, Sv, Tallennettu, TarkkaAlkamisajankohta, Valintakoe, ValintakoeMetadata, Valintakoetilaisuus}
 import fi.oph.kouta.service.KoutaValidationException
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create}
 import fi.oph.kouta.validation.Validations.{InvalidKoulutuspaivamaarat, invalidAjanjaksoMsg, invalidKausiKoodiuri, invalidKielistetty, invalidPostiosoiteKoodiUri, invalidValintakoeTyyppiKooriuri, missingMsg, notNegativeMsg, pastDateMsg, validationMsg}
 import fi.oph.kouta.validation.{NoErrors, ValidatableSubEntity, ValidationError}
 import org.mockito.scalatest.MockitoSugar
@@ -169,12 +170,14 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
   def failsValidation(
       e: Valintakoe,
       tila: Julkaisutila,
-      expected: Seq[ValidationError]
+      expected: Seq[ValidationError],
+      crudOperation: CrudOperation = create
   ): Assertion =
     e.validate(
       tila,
       Seq(Fi, Sv),
       "path",
+      crudOperation,
       hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
       hakuKoodiClient.postiosoitekoodiExists
     ) match {
@@ -198,6 +201,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       Julkaistu,
       Seq(Fi, Sv),
       "path",
+      create,
       hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
       hakuKoodiClient.postiosoitekoodiExists
     ) match {

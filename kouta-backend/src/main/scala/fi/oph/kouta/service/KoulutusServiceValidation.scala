@@ -4,6 +4,7 @@ import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInLis
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
+import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 
@@ -24,7 +25,7 @@ class KoulutusServiceValidation(
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Koulutus] {
 
-  override def validateEntity(koulutus: Koulutus): IsValid = {
+  override def validateEntity(koulutus: Koulutus, crudOperation: CrudOperation): IsValid = {
     val commonErrors        = validateCommonParameters(koulutus)
     val koulutusLevelErrors = validateKoulutustyyppiSpecificParameters(koulutus)
 

@@ -10,6 +10,7 @@ import fi.oph.kouta.repository.{KoulutusDAO, KoutaDatabase, SorakuvausDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
@@ -136,7 +137,7 @@ class SorakuvausService(
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
 
-  override def validateEntity(sorakuvaus: Sorakuvaus): IsValid = sorakuvaus.validate()
+  override def validateEntity(sorakuvaus: Sorakuvaus, crudOperation: CrudOperation): IsValid = sorakuvaus.validate()
 
   override def validateInternalDependenciesWhenDeletingEntity(sorakuvaus: Sorakuvaus): IsValid = NoErrors
 }

@@ -11,6 +11,7 @@ import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDA
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
+import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
@@ -146,7 +147,7 @@ class OppilaitosService(
   private def index(oppilaitos: Option[Oppilaitos]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
 
-  override def validateEntity(oppilaitos: Oppilaitos): IsValid = oppilaitos.validate()
+  override def validateEntity(oppilaitos: Oppilaitos, crudOperation: CrudOperation): IsValid = oppilaitos.validate()
 
   override def validateInternalDependenciesWhenDeletingEntity(oppilaitos: Oppilaitos): IsValid = NoErrors
 }
@@ -307,7 +308,7 @@ class OppilaitoksenOsaService(
   private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.map(_.oid.toString))
 
-  override def validateEntity(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = oppilaitoksenOsa.validate()
+  override def validateEntity(oppilaitoksenOsa: OppilaitoksenOsa, crudOperation: CrudOperation): IsValid = oppilaitoksenOsa.validate()
 
   override def validateInternalDependenciesWhenDeletingEntity(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = NoErrors
 }

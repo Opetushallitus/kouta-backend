@@ -28,12 +28,12 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val organisaatioService = mock[OrganisaatioService]
-  val hakuKoodiClient = mock[HakuKoodiClient]
-  val koulutusKoodiClient = mock[KoulutusKoodiClient]
+  val organisaatioService  = mock[OrganisaatioService]
+  val hakuKoodiClient      = mock[HakuKoodiClient]
+  val koulutusKoodiClient  = mock[KoulutusKoodiClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
-  val hakukohdeDao = mock[HakukohdeDAO]
-  val hakuDao = mock[HakuDAO]
+  val hakukohdeDao         = mock[HakukohdeDAO]
+  val hakuDao              = mock[HakuDAO]
 
   val authenticatedPaakayttaja = Authenticated(
     UUID.randomUUID().toString,
@@ -56,9 +56,9 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     InetAddress.getByName("127.0.0.1")
   )
 
-  val ataruId = UUID.randomUUID()
-  val valintaperusteId = UUID.randomUUID()
-  val valintaperusteId2 = UUID.randomUUID()
+  val ataruId                       = UUID.randomUUID()
+  val valintaperusteId              = UUID.randomUUID()
+  val valintaperusteId2             = UUID.randomUUID()
   val valintaperusteenValintakoeId1 = UUID.randomUUID()
   val valintaperusteenValintakoeId2 = UUID.randomUUID()
 
@@ -76,8 +76,13 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         .copy(valintaperusteenValintakokeidenLisatilaisuudet = List(valintakokeenLisatilaisuus))
     )
   )
-  val min: Hakukohde = MinHakukohde
+  val min: Hakukohde                 = MinHakukohde
   val maxMetadata: HakukohdeMetadata = max.metadata.get
+  val maxWithIds = max.copy(
+    oid = Some(HakukohdeOid("1.2.246.562.20.123")),
+    valintakokeet = max.valintakokeet.map(_.copy(id = Some(UUID.randomUUID()))),
+    liitteet = max.liitteet.map(_.copy(id = Some(UUID.randomUUID())))
+  )
 
   val validator = new HakukohdeServiceValidation(
     organisaatioService,
@@ -104,8 +109,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     ))
   )
 
-  val vainSuomeksi = Map(Fi -> "vain suomeksi", Sv -> "")
-  val fullKielistetty = Map(Fi -> "suomeksi", Sv -> "på svenska")
+  val vainSuomeksi         = Map(Fi -> "vain suomeksi", Sv -> "")
+  val fullKielistetty      = Map(Fi -> "suomeksi", Sv -> "på svenska")
   val kielistettyWoSvenska = invalidKielistetty(Seq(Sv))
 
   override def beforeEach(): Unit = {
@@ -146,26 +151,26 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   def passesValidation(
-                        hk: Hakukohde,
-                        oldHk: Option[Hakukohde] = None,
-                        authenticated: Authenticated = authenticatedNonPaakayttaja
-                      ): Unit = validator.withValidation(hk, oldHk, authenticated)(hk => hk)
+      hk: Hakukohde,
+      oldHk: Option[Hakukohde] = None,
+      authenticated: Authenticated = authenticatedNonPaakayttaja
+  ): Unit = validator.withValidation(hk, oldHk, authenticated)(hk => hk)
 
   def failsValidation(
-                       hk: Hakukohde,
-                       path: String,
-                       message: ErrorMessage
-                     ): Assertion =
+      hk: Hakukohde,
+      path: String,
+      message: ErrorMessage
+  ): Assertion =
     failsValidation(hk, Seq(ValidationError(path, message)), authenticatedNonPaakayttaja)
 
   def failsValidation(
-                       hk: Hakukohde,
-                       expected: Seq[ValidationError],
-                       authenticated: Authenticated = authenticatedNonPaakayttaja
-                     ): Assertion =
+      hk: Hakukohde,
+      expected: Seq[ValidationError],
+      authenticated: Authenticated = authenticatedNonPaakayttaja
+  ): Assertion =
     Try(validator.withValidation(hk, None, authenticated)(hk => hk)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
-      case _ => fail("Expecting validation failure, but it succeeded")
+      case _                                      => fail("Expecting validation failure, but it succeeded")
     }
 
   "Hakukohde validation" should "succeed when new valid hakukohde" in {
@@ -249,7 +254,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakuDao.get(HakuOid("1.2.246.562.29.1111111111"), TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Some((haku.copy(hakukohteenMuokkaamisenTakaraja = Some(inPast(100))), ZonedDateTime.now().toInstant)))
     passesValidation(
-      initMockSeq(max.copy(hakuOid = HakuOid("1.2.246.562.29.1111111111"))),
+      initMockSeq(maxWithIds.copy(hakuOid = HakuOid("1.2.246.562.29.1111111111"))),
       Some(max),
       authenticatedPaakayttaja
     )
@@ -269,7 +274,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "fail when invalid perustiedot" in {
-    failsValidation(max.copy(oid = Some(HakukohdeOid("1.2.3"))), "oid", validationMsg("1.2.3"))
+    failsValidation(max.copy(oid = Some(HakukohdeOid("1.2.3"))), Seq(
+      ValidationError("oid", validationMsg("1.2.3")),
+      ValidationError("oid", notMissingMsg(Some(HakukohdeOid("1.2.3"))))
+    ))
     failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
@@ -456,11 +464,11 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   private def maxWithHakulomake(
-                                 hakulomaketyyppi: Option[Hakulomaketyyppi],
-                                 hakulomakeAtaruId: Option[UUID] = None,
-                                 hakulomakeKuvaus: Kielistetty = Map(),
-                                 hakulomakeLinkki: Kielistetty = Map()
-                               ): Hakukohde = max.copy(
+      hakulomaketyyppi: Option[Hakulomaketyyppi],
+      hakulomakeAtaruId: Option[UUID] = None,
+      hakulomakeKuvaus: Kielistetty = Map(),
+      hakulomakeLinkki: Kielistetty = Map()
+  ): Hakukohde = max.copy(
     hakulomaketyyppi = hakulomaketyyppi,
     hakulomakeAtaruId = hakulomakeAtaruId,
     hakulomakeKuvaus = hakulomakeKuvaus,
@@ -699,7 +707,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
       dependencies.filterKeys(_ == valintaperusteId.toString) + (
         toteutusOid -> (tila, Some(Amm), Some(AmmToteutuksenMetatieto), Some(Seq("koulutus_371101#1")), None)
-        )
+      )
     )
 
   private def initMockSeqForHaku(haku: Haku, hakuOid: String): Unit = {
@@ -741,17 +749,17 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   private def initMockDepsWithValintaperusteParams(
-                                                    hakukohde: Hakukohde,
-                                                    valintaperusteId: UUID,
-                                                    tila: Julkaisutila,
-                                                    koulutustyyppi: Koulutustyyppi = Amm
-                                                  ): Unit =
+      hakukohde: Hakukohde,
+      valintaperusteId: UUID,
+      tila: Julkaisutila,
+      koulutustyyppi: Koulutustyyppi = Amm
+  ): Unit =
     when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
       dependencies.filterKeys(_ == "1.2.246.562.17.123") + (
         valintaperusteId.toString -> (tila, Some(koulutustyyppi), None, None, Some(
           Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
         ))
-        )
+      )
     )
 
   it should "fail when valintaperuste not julkaistu" in {
@@ -786,14 +794,14 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "fail for oppilaitosvirkailija when hakukohteen liittämisen takaraja has expired" in {
-    val hk = max.copy(hakuOid = HakuOid("1.2.246.562.29.456"))
+    val hk       = max.copy(hakuOid = HakuOid("1.2.246.562.29.456"))
     val takaraja = inPast(100)
     initMockSeqForHaku(haku.copy(hakukohteenLiittamisenTakaraja = Some(takaraja)), "1.2.246.562.29.456")
     failsValidation(initMockSeq(hk), "hakukohteenLiittamisenTakaraja", pastDateMsg(takaraja))
   }
 
   it should "fail for oppilaitosvirkailija when hakukohteen muokkaamisen takaraja has expired" in {
-    val hk = max.copy(hakuOid = HakuOid("1.2.246.562.29.456"))
+    val hk       = maxWithIds.copy(hakuOid = HakuOid("1.2.246.562.29.456"))
     val takaraja = inPast(100)
     val expected = Seq(ValidationError("hakukohteenMuokkaamisenTakaraja", pastDateMsg(takaraja)))
     initMockSeqForHaku(
@@ -803,15 +811,15 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
     Try(validator.withValidation(initMockSeq(hk), Some(hk), authenticatedNonPaakayttaja)(hk => hk)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
-      case _ => fail("Expecting validation failure, but it succeeded")
+      case _                                      => fail("Expecting validation failure, but it succeeded")
     }
   }
 
   private def initMockDepsForKoulutustyyppi(
-                                             hakukohde: Hakukohde,
-                                             toteutusMetadata: ToteutusMetadata,
-                                             koulutusKoodiUrit: Option[Seq[String]] = None
-                                           ): Unit =
+      hakukohde: Hakukohde,
+      toteutusMetadata: ToteutusMetadata,
+      koulutusKoodiUrit: Option[Seq[String]] = None
+  ): Unit =
     when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
       Map(
         hakukohde.toteutusOid.s -> (Julkaistu, Some(toteutusMetadata.tyyppi), Some(
@@ -1011,7 +1019,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "fail if valintakokeen lisatilaisuus not in future" in {
-    val inPastJakso = Ajanjakso(inPast(1000), Some(inPast(500)))
+    val inPastJakso     = Ajanjakso(inPast(1000), Some(inPast(500)))
     val inPastTilaisuus = ValintakokeenLisatilaisuudet1.tilaisuudet.head.copy(aika = Some(inPastJakso))
     val metadata = Some(
       maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet =
@@ -1026,25 +1034,27 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   "State change" should "succeed from tallennettu to julkaistu" in {
-    passesValidation(max, Some(max.copy(tila = Tallennettu)))
+    passesValidation(initMockSeq(maxWithIds), Some(maxWithIds.copy(tila = Tallennettu)))
   }
   it should "succeed from julkaistu to arkistoitu" in {
-    passesValidation(initMockSeq(max.copy(tila = Arkistoitu)), Some(max))
+    passesValidation(initMockSeq(maxWithIds.copy(tila = Arkistoitu)), Some(maxWithIds))
   }
   it should "succeed from arkistoitu to julkaistu" in {
-    passesValidation(max, Some(max.copy(tila = Arkistoitu)))
+    passesValidation(initMockSeq(maxWithIds), Some(maxWithIds.copy(tila = Arkistoitu)))
   }
   it should "succeed from julkaistu to tallennettu" in {
-    passesValidation(initMockSeq(max.copy(tila = Tallennettu)), Some(max))
+    passesValidation(initMockSeq(maxWithIds.copy(tila = Tallennettu)), Some(maxWithIds))
   }
   it should "succeed from tallennettu to poistettu" in {
-    passesValidation(initMockSeq(max.copy(tila = Poistettu)), Some(max.copy(tila = Tallennettu)))
+    passesValidation(initMockSeq(maxWithIds.copy(tila = Poistettu)), Some(maxWithIds.copy(tila = Tallennettu)))
   }
 
   def failStageChangeValidation(newTila: Julkaisutila, oldTila: Julkaisutila): Assertion =
-    Try(validator.withValidation(max.copy(tila = newTila), Some(max.copy(tila = oldTila)))(e => e)) match {
+    Try(validator.withValidation(maxWithIds.copy(tila = newTila), Some(maxWithIds.copy(tila = oldTila)))(e => e)) match {
       case Failure(exp: KoutaValidationException) =>
-        exp.errorMessages should contain theSameElementsAs Seq(ValidationError("tila", illegalStateChange("hakukohteelle", oldTila, newTila)))
+        exp.errorMessages should contain theSameElementsAs Seq(
+          ValidationError("tila", illegalStateChange("hakukohteelle", oldTila, newTila))
+        )
       case _ => fail("Expecting illegalStateChange, but it succeeded")
     }
 

@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
+import fi.oph.kouta.domain.Koulutustyyppi.{isKorkeakoulu, isToisenAsteenYhteishakuKoulutustyyppi}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -11,6 +12,7 @@ import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
@@ -109,9 +111,19 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     )
   }
 
+  private def getYhteishakuFilter(yhteishaut: Boolean, koulutustyypit: Seq[Koulutustyyppi]): YhteishakuFilter = {
+    if (yhteishaut) {
+      YhteishakuFilter(
+        removeKk = !koulutustyypit.exists(kt => isKorkeakoulu(kt)),
+        removeToinenaste = !koulutustyypit.exists(kt => isToisenAsteenYhteishakuKoulutustyyppi(kt)))
+    } else {
+      YhteishakuFilter(removeKk = true, removeToinenaste = true)
+    }
+  }
+
   def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter, yhteishaut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, readRules)(
-      oids => HakuDAO.listByAllowedOrganisaatiot(oids, tilaFilter, yhteishaut))
+    withAuthorizedOrganizationOidsAndRelevantKoulutustyyppis(organisaatioOid, readRules)(
+      oidsAndTyypit => HakuDAO.listByAllowedOrganisaatiot(oidsAndTyypit._1, tilaFilter, getYhteishakuFilter(yhteishaut, oidsAndTyypit._2)))
 
   def listHakukohteet(hakuOid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter))
@@ -217,8 +229,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     ).toDBIO
   }
 
-  override def validateEntity(haku: Haku): IsValid = haku.validate()
-  override def validateEntityOnJulkaisu(haku: Haku): IsValid = haku.validateOnJulkaisu()
+  override def validateEntity(haku: Haku, crudOperation: CrudOperation): IsValid = haku.validate()
+  override def validateEntityOnJulkaisu(haku: Haku, crudOperation: CrudOperation): IsValid = haku.validateOnJulkaisu()
 
   override def validateInternalDependenciesWhenDeletingEntity(haku: Haku): IsValid = NoErrors
 }

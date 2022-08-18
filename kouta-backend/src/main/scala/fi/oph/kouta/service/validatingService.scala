@@ -4,14 +4,15 @@ import fi.oph.kouta.client.KoulutusKoodiClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Amm, AmmOsaamisala, AmmTutkinnonOsa, Julkaistu, Julkaisutila, Koulutustyyppi, Poistettu}
 import fi.oph.kouta.repository.SorakuvausDAO
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, Validations}
 
 import java.util.UUID
 
 trait ValidatingService[E <: Validatable] {
-  def validateEntity(e: E): IsValid
-  def validateEntityOnJulkaisu(e: E): IsValid = NoErrors
+  def validateEntity(e: E, crudOperation: CrudOperation): IsValid
+  def validateEntityOnJulkaisu(e: E, crudOperation: CrudOperation): IsValid = NoErrors
   def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
 
   def organisaatioService: OrganisaatioService
@@ -26,16 +27,16 @@ trait ValidatingService[E <: Validatable] {
   def validate(e: E, oldE: Option[E]): IsValid = {
     var errors = if (oldE.isDefined) {
       if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
-        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
-          validateEntityOnJulkaisu(e)
+        validateEntity(e, update) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
+          validateEntityOnJulkaisu(e, update)
       } else {
-        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+        validateEntity(e, update) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
       }
     } else {
       if (e.tila == Julkaistu) {
-        validateEntity(e) ++ validateEntityOnJulkaisu(e)
+        validateEntity(e, create) ++ validateEntityOnJulkaisu(e, create)
       } else {
-        validateEntity(e)
+        validateEntity(e, create)
       }
     }
 

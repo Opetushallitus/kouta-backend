@@ -56,12 +56,13 @@ class HakukohdeServiceValidation(
     }
   }
 
-  override def validateEntity(hk: Hakukohde): IsValid = {
+  override def validateEntity(hk: Hakukohde, crudOperation: CrudOperation): IsValid = {
     val tila         = hk.tila
     val kielivalinta = hk.kielivalinta
 
     and(
       hk.validate(),
+      validateIfTrueOrElse(crudOperation == update, assertNotOptional(hk.oid, "oid"), assertNotDefined(hk.oid, "oid")),
       assertValid(hk.toteutusOid, "toteutusOid"),
       assertValid(hk.hakuOid, "hakuOid"),
       // Joko hakukohdeKoodiUri tai nimi täytyy olla, mutta ei molempia!
@@ -130,7 +131,7 @@ class HakukohdeServiceValidation(
       validateIfNonEmpty[Liite](
         hk.liitteet,
         "liitteet",
-        (liite, path) => validateLiite(liite, path, tila, kielivalinta)
+        (liite, path) => validateLiite(liite, path, tila, kielivalinta, crudOperation)
       ),
       validateIfNonEmpty[Valintakoe](
         hk.valintakokeet,
@@ -139,6 +140,7 @@ class HakukohdeServiceValidation(
           tila,
           kielivalinta,
           _,
+          crudOperation,
           hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
           hakuKoodiClient.postiosoitekoodiExists
         )
@@ -198,8 +200,9 @@ class HakukohdeServiceValidation(
     )
   }
 
-  private def validateLiite(liite: Liite, path: String, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid =
+  private def validateLiite(liite: Liite, path: String, tila: Julkaisutila, kielivalinta: Seq[Kieli], crudOperation: CrudOperation): IsValid =
     and(
+      validateIfTrueOrElse(crudOperation == update, assertNotOptional(liite.id, s"$path.id"), assertNotDefined(liite.id, s"$path.id")),
       validateIfDefined[LiitteenToimitusosoite](
         liite.toimitusosoite,
         validateLiitteenToimitusosoite(_, s"$path.toimitusosoite", tila, kielivalinta)
@@ -527,7 +530,7 @@ class HakukohdeServiceValidation(
       case _ => false
     }
 
-  override def validateEntityOnJulkaisu(hk: Hakukohde): IsValid = and(
+  override def validateEntityOnJulkaisu(hk: Hakukohde, crudOperation: CrudOperation): IsValid = and(
     validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
     validateIfDefined[LocalDateTime](hk.liitteidenToimitusaika, assertInFuture(_, "liitteidenToimitusaika")),
     validateIfNonEmpty[Liite](

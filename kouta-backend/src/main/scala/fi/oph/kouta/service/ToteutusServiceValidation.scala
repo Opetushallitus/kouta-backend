@@ -5,6 +5,7 @@ import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
 import fi.oph.kouta.validation
+import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 
@@ -28,7 +29,7 @@ class ToteutusServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Toteutus] {
-  override def validateEntity(toteutus: Toteutus): IsValid = {
+  override def validateEntity(toteutus: Toteutus, crudOperation: CrudOperation): IsValid = {
     val tila         = toteutus.tila
     val kielivalinta = toteutus.kielivalinta
     val commonErrors = and(
@@ -393,7 +394,7 @@ class ToteutusServiceValidation(
       )
     )
   }
-  override def validateEntityOnJulkaisu(toteutus: Toteutus): IsValid = {
+  override def validateEntityOnJulkaisu(toteutus: Toteutus, crudOperation: CrudOperation): IsValid = {
     toteutus.metadata match {
       case Some(metadata) =>
         metadata.opetus match {
