@@ -4,7 +4,7 @@ import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoulutusKoodiClient}
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
@@ -194,7 +194,8 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     // lukio
     when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301101#1")).thenAnswer(true)
     // erikoislaakari
-    when(koulutusKoodiClient.koulutusKoodiUriExists(erikoislaakariKoulutusKoodiUrit, "koulutus_775101#1")).thenAnswer(true)
+    when(koulutusKoodiClient.koulutusKoodiUriExists(erikoislaakariKoulutusKoodiUrit, "koulutus_775101#1"))
+      .thenAnswer(true)
     // toteutukset
     when(toteutusDao.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(
       Seq(
@@ -369,16 +370,29 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "Fail with more than 1 koulutuksetKoodiUri" in {
-    failValidation(ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_775101#1", "koulutus_775201#1")), "koulutuksetKoodiUri", tooManyKoodiUris)
+    failValidation(
+      ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_775101#1", "koulutus_775201#1")),
+      "koulutuksetKoodiUri",
+      tooManyKoodiUris
+    )
   }
 
   it should "Fail if unknown koulutusKoodiUri for Erikoislääkäri koulutus" in {
-    failValidation(ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
-      "koulutuksetKoodiUri[0]", invalidKoulutuskoodiuri("koulutus_111111#1"))
+    failValidation(
+      ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
+      "koulutuksetKoodiUri[0]",
+      invalidKoulutuskoodiuri("koulutus_111111#1")
+    )
   }
 
   it should "fail if perustiedot is invalid" in {
-    failValidation(amm.copy(oid = Some(KoulutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
+    failValidation(
+      amm.copy(oid = Some(KoulutusOid("1.2.3"))),
+      Seq(
+        ValidationError("oid", validationMsg("1.2.3")),
+        ValidationError("oid", notMissingMsg(Some(KoulutusOid("1.2.3"))))
+      )
+    )
     failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(amm.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
@@ -1143,20 +1157,21 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
+  val ammWithOid = AmmKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")))
   "State change" should "succeed from tallennettu to julkaistu" in {
-    passValidation(AmmKoulutus, AmmKoulutus.copy(tila = Tallennettu))
+    passValidation(ammWithOid, AmmKoulutus.copy(tila = Tallennettu))
   }
 
   it should "succeed from julkaistu to arkistoitu" in {
-    passValidation(AmmKoulutus.copy(tila = Arkistoitu), AmmKoulutus)
+    passValidation(ammWithOid.copy(tila = Arkistoitu), AmmKoulutus)
   }
 
   it should "succeed from arkistoitu to julkaistu" in {
-    passValidation(AmmKoulutus, AmmKoulutus.copy(tila = Arkistoitu))
+    passValidation(ammWithOid, AmmKoulutus.copy(tila = Arkistoitu))
   }
 
   it should "succeed from julkaistu to tallennettu" in {
-    passValidation(AmmKoulutus.copy(tila = Tallennettu), AmmKoulutus)
+    passValidation(ammWithOid.copy(tila = Tallennettu), AmmKoulutus)
   }
 
   it should "succeed from tallennettu to poistettu when no existing toteutukset for koulutus" in {
@@ -1168,7 +1183,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail from tallennettu to arkistoitu" in {
     failStageChangeValidation(
-      AmmKoulutus.copy(tila = Arkistoitu),
+      ammWithOid.copy(tila = Arkistoitu),
       AmmKoulutus.copy(tila = Tallennettu),
       illegalStateChange("koulutukselle", Tallennettu, Arkistoitu)
     )
@@ -1176,7 +1191,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail from arkistoitu to tallennettu" in {
     failStageChangeValidation(
-      AmmKoulutus.copy(tila = Tallennettu),
+      ammWithOid.copy(tila = Tallennettu),
       AmmKoulutus.copy(tila = Arkistoitu),
       illegalStateChange("koulutukselle", Arkistoitu, Tallennettu)
     )
@@ -1184,7 +1199,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail from julkaistu to poistettu" in {
     failStageChangeValidation(
-      AmmKoulutus.copy(tila = Poistettu),
+      ammWithOid.copy(tila = Poistettu),
       AmmKoulutus.copy(tila = Julkaistu),
       illegalStateChange("koulutukselle", Julkaistu, Poistettu)
     )
@@ -1192,7 +1207,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail from arkistoitu to poistettu" in {
     failStageChangeValidation(
-      AmmKoulutus.copy(tila = Poistettu),
+      ammWithOid.copy(tila = Poistettu),
       AmmKoulutus.copy(tila = Arkistoitu),
       illegalStateChange("koulutukselle", Arkistoitu, Poistettu)
     )
@@ -1200,7 +1215,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail from poistettu to tallennettu" in {
     failStageChangeValidation(
-      AmmKoulutus.copy(tila = Tallennettu),
+      ammWithOid.copy(tila = Tallennettu),
       AmmKoulutus.copy(tila = Poistettu),
       illegalStateChange("koulutukselle", Poistettu, Tallennettu)
     )
@@ -1208,7 +1223,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail from tallennettu to poistettu when existing toteutukset for koulutus" in {
     failStageChangeValidation(
-      AmmKoulutus.copy(oid = Some(koulutusOid), tila = Poistettu),
+      ammWithOid.copy(oid = Some(koulutusOid), tila = Poistettu),
       AmmKoulutus.copy(tila = Tallennettu),
       integrityViolationMsg("Koulutusta", "toteutuksia")
     )

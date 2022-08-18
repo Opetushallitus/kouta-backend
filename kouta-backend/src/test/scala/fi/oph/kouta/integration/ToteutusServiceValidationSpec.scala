@@ -237,7 +237,13 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   }
 
   it should "fail if perustiedot is invalid" in {
-    failValidation(lukioToteutus.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
+    failValidation(
+      lukioToteutus.copy(oid = Some(ToteutusOid("1.2.3"))),
+      Seq(
+        ValidationError("oid", validationMsg("1.2.3")),
+        ValidationError("oid", notMissingMsg(Some(ToteutusOid("1.2.3"))))
+      )
+    )
     failsValidation(lukioToteutus.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(lukioToteutus.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(lukioToteutus.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
@@ -827,32 +833,33 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     )
   }
 
+  val ammWithId = JulkaistuAmmToteutus.copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123")))
   "State change" should "succeed from tallennettu to julkaistu" in {
-    passValidation(JulkaistuAmmToteutus, JulkaistuAmmToteutus.copy(tila = Tallennettu))
+    passValidation(ammWithId, JulkaistuAmmToteutus.copy(tila = Tallennettu))
   }
 
   it should "succeed from julkaistu to arkistoitu" in {
-    passValidation(JulkaistuAmmToteutus.copy(tila = Arkistoitu), JulkaistuAmmToteutus)
+    passValidation(ammWithId.copy(tila = Arkistoitu), JulkaistuAmmToteutus)
   }
 
   it should "succeed from arkistoitu to julkaistu" in {
-    passValidation(JulkaistuAmmToteutus, JulkaistuAmmToteutus.copy(tila = Arkistoitu))
+    passValidation(ammWithId, JulkaistuAmmToteutus.copy(tila = Arkistoitu))
   }
 
   it should "succeed from julkaistu to tallennettu" in {
-    passValidation(JulkaistuAmmToteutus.copy(tila = Tallennettu), JulkaistuAmmToteutus)
+    passValidation(ammWithId.copy(tila = Tallennettu), JulkaistuAmmToteutus)
   }
 
   it should "succeed from tallennettu to poistettu when no existing hakukohteet for toteutus" in {
     passValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu, oid = Some(toteutusOid)),
+      ammWithId.copy(tila = Poistettu, oid = Some(toteutusOid)),
       JulkaistuAmmToteutus.copy(tila = Tallennettu)
     )
   }
 
   it should "fail from tallennettu to arkistoitu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Arkistoitu),
+      ammWithId.copy(tila = Arkistoitu),
       JulkaistuAmmToteutus.copy(tila = Tallennettu),
       illegalStateChange("toteutukselle", Tallennettu, Arkistoitu)
     )
@@ -860,7 +867,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from arkistoitu to tallennettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Tallennettu),
+      ammWithId.copy(tila = Tallennettu),
       JulkaistuAmmToteutus.copy(tila = Arkistoitu),
       illegalStateChange("toteutukselle", Arkistoitu, Tallennettu)
     )
@@ -868,7 +875,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from julkaistu to poistettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu),
+      ammWithId.copy(tila = Poistettu),
       JulkaistuAmmToteutus,
       illegalStateChange("toteutukselle", Julkaistu, Poistettu)
     )
@@ -876,7 +883,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from arkistoitu to poistettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu),
+      ammWithId.copy(tila = Poistettu),
       JulkaistuAmmToteutus.copy(tila = Arkistoitu),
       illegalStateChange("toteutukselle", Arkistoitu, Poistettu)
     )
@@ -884,7 +891,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from poistettu to tallennettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Tallennettu),
+      ammWithId.copy(tila = Tallennettu),
       JulkaistuAmmToteutus.copy(tila = Poistettu),
       illegalStateChange("toteutukselle", Poistettu, Tallennettu)
     )
@@ -892,7 +899,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from tallennettu to poistettu when existing hakukohteet for toteutus" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu, oid = Some(toteutusOid2)),
+      ammWithId.copy(tila = Poistettu, oid = Some(toteutusOid2)),
       JulkaistuAmmToteutus.copy(tila = Tallennettu),
       integrityViolationMsg("Toteutusta", "hakukohteita")
     )
@@ -903,7 +910,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     val startDate = yearAgo.minusDays(3)
     val endDate   = yearAgo.minusDays(1)
     failStageChangeValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate)),
+      ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate))
+        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
       JulkaistuAmmToteutus.copy(tila = Tallennettu),
       Seq(
         ValidationError(
@@ -935,7 +943,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "succeed when alkamiskausi not given" in {
     passValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(None, None, startYear = Some(LocalDateTime.now().getYear.toString)),
+      ammToteutusWithKoulutuksenAlkamiskausi(None, None, startYear = Some(LocalDateTime.now().getYear.toString))
+        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
       JulkaistuAmmToteutus.copy(tila = Tallennettu)
     )
   }
@@ -944,6 +953,10 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     val yearAgo   = LocalDateTime.now().minusYears(1)
     val startDate = yearAgo.minusDays(3)
     val endDate   = yearAgo.minusDays(1)
-    passValidation(ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate)), JulkaistuAmmToteutus)
+    passValidation(
+      ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate))
+        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
+      JulkaistuAmmToteutus
+    )
   }
 }

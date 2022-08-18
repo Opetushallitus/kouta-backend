@@ -5,9 +5,9 @@ import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
 import fi.oph.kouta.validation
-import fi.oph.kouta.validation.CrudOperations.CrudOperation
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, NoErrors}
+import fi.oph.kouta.validation.{CrudOperations, IsValid, NoErrors}
 
 import java.util.regex.Pattern
 
@@ -34,6 +34,11 @@ class ToteutusServiceValidation(
     val kielivalinta = toteutus.kielivalinta
     val commonErrors = and(
       toteutus.validate(),
+      validateIfTrueOrElse(
+        crudOperation == update,
+        assertNotOptional(toteutus.oid, "oid"),
+        assertNotDefined(toteutus.oid, "oid")
+      ),
       validateTarjoajat(toteutus.tarjoajat),
       validateIfDefined[String](toteutus.teemakuva, assertValidUrl(_, "teemakuva")),
       validateIfSuccessful(

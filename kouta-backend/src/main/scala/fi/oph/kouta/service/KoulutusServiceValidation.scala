@@ -4,7 +4,7 @@ import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInLis
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.validation.CrudOperations.CrudOperation
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 
@@ -26,7 +26,7 @@ class KoulutusServiceValidation(
 ) extends KoulutusToteutusValidatingService[Koulutus] {
 
   override def validateEntity(koulutus: Koulutus, crudOperation: CrudOperation): IsValid = {
-    val commonErrors        = validateCommonParameters(koulutus)
+    val commonErrors        = validateCommonParameters(koulutus, crudOperation)
     val koulutusLevelErrors = validateKoulutustyyppiSpecificParameters(koulutus)
 
     val metadataErrors = koulutus.metadata match {
@@ -41,11 +41,16 @@ class KoulutusServiceValidation(
     Seq(commonErrors, koulutusLevelErrors, metadataErrors).flatten
   }
 
-  private def validateCommonParameters(koulutus: Koulutus): IsValid = {
+  private def validateCommonParameters(koulutus: Koulutus, crudOperation: CrudOperation): IsValid = {
     val tila   = koulutus.tila
     val tyyppi = koulutus.koulutustyyppi
     and(
       koulutus.validate(),
+      validateIfTrueOrElse(
+        crudOperation == update,
+        assertNotOptional(koulutus.oid, "oid"),
+        assertNotDefined(koulutus.oid, "oid")
+      ),
       validateTarjoajat(koulutus.tarjoajat),
       validateIfNonEmpty[String](
         koulutus.koulutuksetKoodiUri,
@@ -108,12 +113,13 @@ class KoulutusServiceValidation(
           ),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
-      case Erikoislaakari => and(
-        validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
-        assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
-      )
+      case Erikoislaakari =>
+        and(
+          validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case AmmMuu | Tuva | Telma | VapaaSivistystyoMuu | VapaaSivistystyoOpistovuosi =>
-        and (
+        and(
           assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
@@ -416,7 +422,7 @@ class KoulutusServiceValidation(
       kielivalinta: Seq[Kieli],
       metadata: VapaaSivistystyoKoulutusMetadata
   ): IsValid = {
-    val ePerusteLinkki  = metadata.linkkiEPerusteisiin
+    val ePerusteLinkki = metadata.linkkiEPerusteisiin
     and(
       assertKoulutusalaKoodiUrit(metadata.koulutusalaKoodiUrit),
       validateIfNonEmpty(ePerusteLinkki, "metadata.linkkiEPerusteisiin", assertValidUrl _),
@@ -427,29 +433,36 @@ class KoulutusServiceValidation(
     )
   }
 
-  private def validateVapaaSivistystyoOpistovuosiKoulutus(tila: Julkaisutila,
-                                                          kielivalinta: Seq[Kieli],
-                                                          metadata: VapaaSivistystyoOpistovuosiKoulutusMetadata): IsValid = {
+  private def validateVapaaSivistystyoOpistovuosiKoulutus(
+      tila: Julkaisutila,
+      kielivalinta: Seq[Kieli],
+      metadata: VapaaSivistystyoOpistovuosiKoulutusMetadata
+  ): IsValid = {
     val laajuusKoodiUri = metadata.opintojenLaajuusKoodiUri
     and(
-        validateVapaaSivistystyoKoulutus(tila, kielivalinta, metadata),
-        assertOpintojenLaajuusKoodiUri(laajuusKoodiUri),
-        validateIfJulkaistu(
-          tila,
-          assertNotOptional(laajuusKoodiUri, "metadata.opintojenLaajuusKoodiUri")
-        )
+      validateVapaaSivistystyoKoulutus(tila, kielivalinta, metadata),
+      assertOpintojenLaajuusKoodiUri(laajuusKoodiUri),
+      validateIfJulkaistu(
+        tila,
+        assertNotOptional(laajuusKoodiUri, "metadata.opintojenLaajuusKoodiUri")
       )
+    )
   }
 
-  private def validateVapaaSivistystyoMuuKoulutus(tila: Julkaisutila,
-                                                  kielivalinta: Seq[Kieli],
-                                                  metadata: VapaaSivistystyoMuuKoulutusMetadata): IsValid =
+  private def validateVapaaSivistystyoMuuKoulutus(
+      tila: Julkaisutila,
+      kielivalinta: Seq[Kieli],
+      metadata: VapaaSivistystyoMuuKoulutusMetadata
+  ): IsValid =
     and(
       validateVapaaSivistystyoKoulutus(tila, kielivalinta, metadata),
       validateOpintojenLaajuusyksikko(
         tila,
         metadata.opintojenLaajuusyksikkoKoodiUri,
-        metadata.opintojenLaajuusNumero, true))
+        metadata.opintojenLaajuusNumero,
+        true
+      )
+    )
 
   // Oletus: koodiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
   // mahdollisesti annettuihin versioihin.
