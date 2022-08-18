@@ -65,18 +65,21 @@ class KoulutusService(
     koulutus.metadata match {
       case Some(metadata) =>
         metadata match {
-          case yoMetadata: YliopistoKoulutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case amkMetadata: AmmattikorkeakouluKoulutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
-            val opintojenLaajuusKoodiUri = if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri else
-                Some(koodistoClient.getKoodiUriWithLatestVersion("opintojenlaajuus_60"))
-            val koulutusalaKoodiUrit = if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit else
-                Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
-            Some(m.copy(
-              isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-              opintojenLaajuusKoodiUri = opintojenLaajuusKoodiUri,
-              koulutusalaKoodiUrit = koulutusalaKoodiUrit))
+          case korkeakoulutusKoulutusMetadata: KorkeakoulutusKoulutusMetadata =>
+            korkeakoulutusKoulutusMetadata match {
+              case yoMetadata: YliopistoKoulutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case amkMetadata: AmmattikorkeakouluKoulutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
+                val opintojenLaajuusKoodiUri = if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri else
+                  Some(koodistoClient.getKoodiUriWithLatestVersion("opintojenlaajuus_60"))
+                val koulutusalaKoodiUrit = if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit else
+                  Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
+                Some(m.copy(
+                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                  opintojenLaajuusKoodiUri = opintojenLaajuusKoodiUri,
+                  koulutusalaKoodiUrit = koulutusalaKoodiUrit))
+
+            }
           case ammMetadata: AmmatillinenKoulutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaKoulutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammOsaamisalaMetadata: AmmatillinenOsaamisalaKoulutusMetadata => Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -90,8 +93,11 @@ class KoulutusService(
           ))
           case tuvaMetadata: TuvaKoulutusMetadata => Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case telmaMetadata: TelmaKoulutusMetadata => Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata => Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case vapaaSivistystyoKoulutusMetadata: VapaaSivistystyoKoulutusMetadata =>
+            vapaaSivistystyoKoulutusMetadata match {
+              case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata => Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            }
           case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata => Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case erikoislaakariKoulutusMetadata: ErikoislaakariKoulutusMetadata => Some(
