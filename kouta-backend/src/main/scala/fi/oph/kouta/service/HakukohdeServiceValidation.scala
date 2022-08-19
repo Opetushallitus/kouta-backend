@@ -202,7 +202,7 @@ class HakukohdeServiceValidation(
 
   private def validateLiite(liite: Liite, path: String, tila: Julkaisutila, kielivalinta: Seq[Kieli], crudOperation: CrudOperation): IsValid =
     and(
-      validateIfTrueOrElse(crudOperation == update, assertNotOptional(liite.id, s"$path.id"), assertNotDefined(liite.id, s"$path.id")),
+      validateIfTrue(crudOperation == create, assertNotDefined(liite.id, s"$path.id")),
       validateIfDefined[LiitteenToimitusosoite](
         liite.toimitusosoite,
         validateLiitteenToimitusosoite(_, s"$path.toimitusosoite", tila, kielivalinta)

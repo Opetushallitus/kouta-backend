@@ -199,35 +199,6 @@ case class Haku(oid: Option[HakuOid] = None,
                )
   extends PerustiedotWithOid[HakuOid, Haku] {
 
-  override def validate(): IsValid = and(
-    super.validate(),
-    assertValid(organisaatioOid, "organisaatioOid"),
-    assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-    assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
-    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
-    validateIfDefined[String](kohdejoukonTarkenneKoodiUri, assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")),
-    validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
-    validateIfDefined[HakuMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
-    validateIfJulkaistu(tila, and(
-      assertNotOptional(metadata, "metadata"),
-      assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
-      validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
-      validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), //Yhteishaku
-        assertNotOptional(metadata.get.koulutuksenAlkamiskausi, "metadata.koulutuksenAlkamiskausi"))
-    ))
-  )
-
-  override def validateOnJulkaisu(): IsValid = and(
-    validateIfTrue(!hakutapaKoodiUri.contains("hakutapa_03#1"), and( // Not Jatkuva haku
-      validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_))
-    )),
-    validateIfTrue(hakutapaKoodiUri.contains("hakutapa_03#1"), and( // Jatkuva haku
-      validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaHaku(_))
-    )),
-    validateIfDefined[HakuMetadata](metadata, _.validateOnJulkaisu("metadata"))
-  )
-
   def withOid(oid: HakuOid): Haku = copy(oid = Some(oid))
 
   override def withModified(modified: Modified): Haku = copy(modified = Some(modified))
@@ -247,17 +218,7 @@ case class HakuListItem(oid: HakuOid,
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
                         koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
-                        isMuokkaajaOphVirkailija: Option[Boolean]) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfNonEmpty[Yhteyshenkilo](yhteyshenkilot, s"$path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
-    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validate(tila, kielivalinta, _)),
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi"))
-  )
-
-  override def validateOnJulkaisu(path: String): IsValid = and(
-    validateIfNonEmpty[Ajanjakso](tulevaisuudenAikataulu, s"$path.tulevaisuudenAikataulu", _.validateOnJulkaisu(_)),
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")))
-}
+                        isMuokkaajaOphVirkailija: Option[Boolean])
 
 case class HakuEnrichedData(muokkaajanNimi: Option[String] = None)
 

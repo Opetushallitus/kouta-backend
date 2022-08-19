@@ -533,7 +533,18 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  "Liite validation" should "fail if invalid toimitusosoite" in {
+  "Liite validation" should "fail if id given for liite in new hakukohde" in {
+    val liiteId = Some(UUID.randomUUID())
+    failsValidation(
+      max.copy(liitteet =
+        List(Liite2.copy(id = liiteId))
+      ),
+      "liitteet[0].id",
+      notMissingMsg(liiteId)
+    )
+  }
+
+  it should "fail if invalid toimitusosoite" in {
     failsValidation(
       max.copy(liitteet =
         List(Liite2.copy(toimitusosoite = Some(LiitteenToimitusosoite(osoite = Osoite1.copy(osoite = Map())))))

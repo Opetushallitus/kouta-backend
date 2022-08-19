@@ -100,6 +100,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   }
 }
 
+/*
 class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
   val metadata: HakuMetadata = JulkaistuHaku.metadata.get
   val pastAjanjakso: Ajanjakso = Ajanjakso(alkaa = TestData.inPast(2000), paattyy = Some(TestData.inPast(100)))
@@ -215,3 +216,4 @@ class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {
     failsOnJulkaisuValidation(metadata.copy(tulevaisuudenAikataulu = List(pastAjanjakso)), "tulevaisuudenAikataulu[0].paattyy", pastDateMsg(pastAjanjakso.paattyy.get))
   }
 }
+*/

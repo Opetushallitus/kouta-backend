@@ -3,7 +3,7 @@ package fi.oph.kouta
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{CrudOperations, IsValid, ValidatableSubEntity}
 
@@ -554,7 +554,7 @@ package object domain {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String, crudOperation: CrudOperation, koodistoCheckFunc: String => Boolean, osoiteKoodistoCheckFunc: String => Boolean): IsValid =
       validateIfSuccessful(
         and(
-          validateIfTrueOrElse(crudOperation == update, assertNotOptional(id, s"$path.id"), assertNotDefined(id, s"$path.id")),
+          validateIfTrue(crudOperation == create, assertNotDefined(id, s"$path.id")),
           validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _, osoiteKoodistoCheckFunc)),
           validateExcludingTilaisuudet(tila, kielivalinta, path)
         ),

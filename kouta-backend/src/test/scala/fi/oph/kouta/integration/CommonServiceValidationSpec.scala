@@ -216,11 +216,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     val id = Some(UUID.randomUUID())
     failsValidation(Valintakoe(id = id), Tallennettu, Seq(ValidationError("path.id", notMissingMsg(id))))
   }
-
-  it should "fail if id not given for modified valintakoe" in {
-    failsValidation(Valintakoe(), Tallennettu, Seq(ValidationError("path.id", missingMsg)), update)
-  }
-
+  
   it should "fail if invalid tyyppiKoodiUri" in {
     failsValidation(
       Valintakoe(tyyppiKoodiUri = Some("puppu")),
