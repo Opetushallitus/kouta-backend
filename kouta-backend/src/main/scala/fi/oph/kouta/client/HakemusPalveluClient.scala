@@ -66,7 +66,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
                 r.bodyAsText
                   .runLog
                   .map(_.mkString)
-                  .flatMap(_ => Task.fail(new RuntimeException("Failed to fetch forms from Hakemuspalvelu")))
+                  .flatMap(_ => Task.fail(new RuntimeException(s"Failed to fetch forms from Hakemuspalvelu, statusCode: ${r.status.code}")))
             }
           }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
       } catch {
