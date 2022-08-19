@@ -57,8 +57,8 @@ class HakukohdeServiceValidation(
   }
 
   override def validateEntity(hk: Hakukohde, oldHk: Option[Hakukohde]): IsValid = {
-    val tila         = hk.tila
-    val kielivalinta = hk.kielivalinta
+    val tila          = hk.tila
+    val kielivalinta  = hk.kielivalinta
     val crudOperation = if (oldHk.isDefined) update else create
 
     and(
@@ -150,6 +150,19 @@ class HakukohdeServiceValidation(
         "hakulomaketyyppi",
         noneOrOneNotBoth("kaytetaanHaunHakulomaketta", "hakulomaketyyppi")
       ),
+      validateIfTrue(
+        hk.hakulomaketyyppi.contains(Ataru),
+        validateIfDefinedOrModified[UUID](
+          hk.hakulomakeAtaruId,
+          oldHk.map(_.hakulomakeAtaruId).getOrElse(None),
+          ataruId =>
+            assertTrue(
+              hakemusPalveluClient.isExistingAtaruId(ataruId),
+              "hakulomakeAtaruId",
+              unknownAtaruId(ataruId)
+            )
+        )
+      ),
       validateIfJulkaistu(
         tila,
         and(
@@ -166,24 +179,12 @@ class HakukohdeServiceValidation(
             hk.liitteetOnkoSamaToimitusosoite.contains(true) && hk.liitteidenToimitustapa.contains(MuuOsoite),
             assertNotOptional(hk.liitteidenToimitusosoite, "liitteidenToimitusosoite")
           ),
-          validateIfSuccessful(
-            validateHakulomake(
-              hk.hakulomaketyyppi,
-              hk.hakulomakeAtaruId,
-              hk.hakulomakeKuvaus,
-              hk.hakulomakeLinkki,
-              kielivalinta
-            ),
-            validateIfDefinedOrModified[UUID](
-              hk.hakulomakeAtaruId,
-              oldHk.map(_.hakulomakeAtaruId).getOrElse(None),
-              ataruId =>
-                assertTrue(
-                  hakemusPalveluClient.isExistingAtaruId(ataruId),
-                  "hakulomakeAtaruId",
-                  unknownAtaruId(ataruId)
-                )
-            )
+          validateHakulomake(
+            hk.hakulomaketyyppi,
+            hk.hakulomakeAtaruId,
+            hk.hakulomakeKuvaus,
+            hk.hakulomakeLinkki,
+            kielivalinta
           ),
           assertNotEmpty(hk.pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
           validateOptionalKielistetty(kielivalinta, hk.pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
