@@ -56,9 +56,10 @@ class HakukohdeServiceValidation(
     }
   }
 
-  override def validateEntity(hk: Hakukohde): IsValid = {
+  override def validateEntity(hk: Hakukohde, oldHk: Option[Hakukohde]): IsValid = {
     val tila         = hk.tila
     val kielivalinta = hk.kielivalinta
+    val crudOperation = if (oldHk.isDefined) update else create
 
     and(
       hk.validate(),
@@ -173,8 +174,9 @@ class HakukohdeServiceValidation(
               hk.hakulomakeLinkki,
               kielivalinta
             ),
-            validateIfDefined[UUID](
+            validateIfDefinedOrModified[UUID](
               hk.hakulomakeAtaruId,
+              oldHk.map(_.hakulomakeAtaruId).getOrElse(None),
               ataruId =>
                 assertTrue(
                   hakemusPalveluClient.isExistingAtaruId(ataruId),

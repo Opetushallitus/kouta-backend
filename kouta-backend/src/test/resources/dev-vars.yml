@@ -6,7 +6,7 @@ host_postgresql_kouta_app_password: oph
 host_virkailija: virkailija.hahtuvaopintopolku.fi
 cas_url: https://virkailija.hahtuvaopintopolku.fi/cas
 kouta_backend_cas_username: kouta-backend
-kouta_backend_cas_password: pupethe=ic6Cai7o
+kouta_backend_cas_password:
 kouta_backend_cas_service: http://localhost:8099/kouta-backend/auth/login
 kouta_backend_sqs_endpoint: http://localhost:4576
 kouta_backend_sqs_queue_priority: koutaIndeksoijaPriority

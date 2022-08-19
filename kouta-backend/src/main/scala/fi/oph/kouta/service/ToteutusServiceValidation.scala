@@ -28,7 +28,7 @@ class ToteutusServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Toteutus] {
-  override def validateEntity(toteutus: Toteutus): IsValid = {
+  override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
     val tila         = toteutus.tila
     val kielivalinta = toteutus.kielivalinta
     val commonErrors = and(

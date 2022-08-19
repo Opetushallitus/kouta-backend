@@ -10,7 +10,7 @@ import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, Validations}
 import java.util.UUID
 
 trait ValidatingService[E <: Validatable] {
-  def validateEntity(e: E): IsValid
+  def validateEntity(e: E, oldE: Option[E]): IsValid
   def validateEntityOnJulkaisu(e: E): IsValid = NoErrors
   def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
 
@@ -26,16 +26,16 @@ trait ValidatingService[E <: Validatable] {
   def validate(e: E, oldE: Option[E]): IsValid = {
     var errors = if (oldE.isDefined) {
       if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
-        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
+        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
           validateEntityOnJulkaisu(e)
       } else {
-        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
       }
     } else {
       if (e.tila == Julkaistu) {
-        validateEntity(e) ++ validateEntityOnJulkaisu(e)
+        validateEntity(e, None) ++ validateEntityOnJulkaisu(e)
       } else {
-        validateEntity(e)
+        validateEntity(e, None)
       }
     }
 

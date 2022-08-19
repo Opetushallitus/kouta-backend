@@ -24,7 +24,7 @@ class KoulutusServiceValidation(
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Koulutus] {
 
-  override def validateEntity(koulutus: Koulutus): IsValid = {
+  override def validateEntity(koulutus: Koulutus, oldKoulutus: Option[Koulutus]): IsValid = {
     val commonErrors        = validateCommonParameters(koulutus)
     val koulutusLevelErrors = validateKoulutustyyppiSpecificParameters(koulutus)
 
