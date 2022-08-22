@@ -314,9 +314,9 @@ class KoulutusServiceValidation(
             errorKey,
             errorKey match {
               case "metadata.opintojenLaajuusNumeroMin" =>
-                invalidKoulutusOpintojenLaajuusNumeroMinIntegrity(laajuusMin, toteutukset)
+                invalidKoulutusOpintojenLaajuusNumeroIntegrity(laajuusMin, laajuusMax, toteutukset)
               case "metadata.opintojenLaajuusNumeroMax" =>
-                invalidKoulutusOpintojenLaajuusNumeroMaxIntegrity(laajuusMax, toteutukset)
+                invalidKoulutusOpintojenLaajuusNumeroIntegrity(laajuusMin, laajuusMax, toteutukset)
               case "metadata.opintojenLaajuusyksikkoKoodiUri" =>
                 invalidKoulutusOpintojenLaajuusyksikkoIntegrity(km.opintojenLaajuusyksikkoKoodiUri.get, toteutukset)
             }

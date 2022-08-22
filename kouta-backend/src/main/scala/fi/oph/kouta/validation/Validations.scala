@@ -42,22 +42,23 @@ object Validations {
   )
 
   def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
-    msg = s"Seuraavilla koulutukseen liitetyillä toteutuksilla on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
+    msg = s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
     id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
     extra = Some(Map("toteutukset" -> toteutukset))
   )
 
-  def invalidKoulutusOpintojenLaajuusNumeroMinIntegrity(laajuusMin: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
-    msg = s"Seuraavilla koulutukseen liitetyillä toteutuksilla on pienempi laajuus kuin koulutuksen minimi ($laajuusMin)",
+  def invalidKoulutusOpintojenLaajuusNumeroIntegrity(laajuusMin: Double, laajuusMax: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
+    msg = s"Ainakin yhdellä koulutukseen liitetyllä julkaistulla toteutuksella opintojen laajuus ei ole koulutuksella määritellyllä välillä ($laajuusMin - $laajuusMax)",
     id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
     extra = Some(Map("toteutukset" -> toteutukset))
   )
 
-  def invalidKoulutusOpintojenLaajuusNumeroMaxIntegrity(laajuusMax: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
-    msg = s"Seuraavilla koulutukseen liitetyillä toteutuksilla on suurempi laajuus kuin koulutuksen maksimi ($laajuusMax)",
-    id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
-    extra = Some(Map("toteutukset" -> toteutukset))
-  )
+  def invalidToteutusOpintojenLaajuusyksikkoIntegrity(koulutusLaajuusyksikkoKoodiUri: Option[String], toteutusLaajuusyksikkoKoodiUri: Option[String]) = {
+    ErrorMessage(
+      msg = s"Toteutuksella on eri opintojen laajuusyksikkö (${toteutusLaajuusyksikkoKoodiUri.getOrElse("-")}) kuin koulutuksella (${koulutusLaajuusyksikkoKoodiUri.getOrElse("-")})",
+      id = "invalidToteutusOpintojenLaajuusyksikkoIntegrity"
+    )
+  }
 
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",

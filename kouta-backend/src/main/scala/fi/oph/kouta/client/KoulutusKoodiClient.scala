@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.client.KoodistoUtils.{
   koodiUriWithEqualOrHigherVersioNbrInList,
   koodiUriFromString,
-  kooriUriToString
+  koodiUriToString
 }
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties

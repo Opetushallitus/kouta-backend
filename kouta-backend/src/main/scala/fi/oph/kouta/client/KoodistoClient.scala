@@ -13,7 +13,7 @@ case class KoodistoQueryException(url: String, status: Int, message: String) ext
 object KoodistoUtils {
   def koodiUriFromString(koodiUriString: String): KoodiUri = {
     if (koodiUriString.contains("#")) {
-      val baseVal = koodiUriString.split("#").head
+      val baseVal    = koodiUriString.split("#").head
       val versioPart = koodiUriString.split("#").last
       if (versioPart.forall(Character.isDigit)) {
         KoodiUri(baseVal, versioPart.toInt)
@@ -26,28 +26,33 @@ object KoodistoUtils {
     }
   }
 
-  def kooriUriToString(koodiUri: KoodiUri): String =
+  def koodiUriToString(koodiUri: KoodiUri): String =
     s"${koodiUri.koodiUri}#${koodiUri.latestVersio}"
 
-  def koodiUriWithEqualOrHigherVersioNbrInList(koodiUri: String, koodiUriList: Seq[KoodiUri], checkVersio: Boolean = true): Boolean = {
-    val koodiUriObjectToSearch = if (checkVersio) koodiUriFromString(koodiUri) else
-      koodiUriFromString(koodiUri).copy(latestVersio = 1)
+  def koodiUriStringsMatch(a: String, b: String): Boolean =
+    koodiUriFromString(a).koodiUri == koodiUriFromString(b).koodiUri
+
+  def koodiUriWithEqualOrHigherVersioNbrInList(
+      koodiUri: String,
+      koodiUriList: Seq[KoodiUri],
+      checkVersio: Boolean = true
+  ): Boolean = {
+    val koodiUriObjectToSearch =
+      if (checkVersio) koodiUriFromString(koodiUri)
+      else
+        koodiUriFromString(koodiUri).copy(latestVersio = 1)
     koodiUriList.exists(uri =>
       uri.koodiUri == koodiUriObjectToSearch.koodiUri &&
-        uri.latestVersio >= koodiUriObjectToSearch.latestVersio)
+        uri.latestVersio >= koodiUriObjectToSearch.latestVersio
+    )
   }
 }
 
-abstract class KoodistoClient(urlProperties: OphProperties)
-    extends HttpClient
-    with CallerId
-    with Logging {
+abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient with CallerId with Logging {
 
   val ISO_LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   implicit val formats = DefaultFormats
 
-  val errorHandler = (url: String, status: Int, response: String) =>
-    throw KoodistoQueryException(url, status, response)
+  val errorHandler = (url: String, status: Int, response: String) => throw KoodistoQueryException(url, status, response)
 }
-
