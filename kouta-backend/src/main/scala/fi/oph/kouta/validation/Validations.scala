@@ -334,6 +334,12 @@ object Validations {
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
+  def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid = (value, oldValue) match {
+    case (Some(value), Some(oldValue)) => if (value != oldValue) f(value) else NoErrors
+    case (Some(value), None) => f(value)
+    case _ => NoErrors
+  }
+
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
 

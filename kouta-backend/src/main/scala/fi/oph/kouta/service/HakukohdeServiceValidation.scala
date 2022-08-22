@@ -56,9 +56,10 @@ class HakukohdeServiceValidation(
     }
   }
 
-  override def validateEntity(hk: Hakukohde, crudOperation: CrudOperation): IsValid = {
-    val tila         = hk.tila
-    val kielivalinta = hk.kielivalinta
+  override def validateEntity(hk: Hakukohde, oldHk: Option[Hakukohde]): IsValid = {
+    val tila          = hk.tila
+    val kielivalinta  = hk.kielivalinta
+    val crudOperation = if (oldHk.isDefined) update else create
 
     and(
       hk.validate(),
@@ -151,6 +152,19 @@ class HakukohdeServiceValidation(
         "hakulomaketyyppi",
         noneOrOneNotBoth("kaytetaanHaunHakulomaketta", "hakulomaketyyppi")
       ),
+      validateIfTrue(
+        hk.hakulomaketyyppi.contains(Ataru),
+        validateIfDefinedOrModified[UUID](
+          hk.hakulomakeAtaruId,
+          oldHk.map(_.hakulomakeAtaruId).getOrElse(None),
+          ataruId =>
+            assertTrue(
+              hakemusPalveluClient.isExistingAtaruId(ataruId),
+              "hakulomakeAtaruId",
+              unknownAtaruId(ataruId)
+            )
+        )
+      ),
       validateIfJulkaistu(
         tila,
         and(
@@ -167,23 +181,12 @@ class HakukohdeServiceValidation(
             hk.liitteetOnkoSamaToimitusosoite.contains(true) && hk.liitteidenToimitustapa.contains(MuuOsoite),
             assertNotOptional(hk.liitteidenToimitusosoite, "liitteidenToimitusosoite")
           ),
-          validateIfSuccessful(
-            validateHakulomake(
-              hk.hakulomaketyyppi,
-              hk.hakulomakeAtaruId,
-              hk.hakulomakeKuvaus,
-              hk.hakulomakeLinkki,
-              kielivalinta
-            ),
-            validateIfDefined[UUID](
-              hk.hakulomakeAtaruId,
-              ataruId =>
-                assertTrue(
-                  hakemusPalveluClient.isExistingAtaruId(ataruId),
-                  "hakulomakeAtaruId",
-                  unknownAtaruId(ataruId)
-                )
-            )
+          validateHakulomake(
+            hk.hakulomaketyyppi,
+            hk.hakulomakeAtaruId,
+            hk.hakulomakeKuvaus,
+            hk.hakulomakeLinkki,
+            kielivalinta
           ),
           assertNotEmpty(hk.pohjakoulutusvaatimusKoodiUrit, "pohjakoulutusvaatimusKoodiUrit"),
           validateOptionalKielistetty(kielivalinta, hk.pohjakoulutusvaatimusTarkenne, "pohjakoulutusvaatimusTarkenne"),
@@ -530,7 +533,7 @@ class HakukohdeServiceValidation(
       case _ => false
     }
 
-  override def validateEntityOnJulkaisu(hk: Hakukohde, crudOperation: CrudOperation): IsValid = and(
+  override def validateEntityOnJulkaisu(hk: Hakukohde): IsValid = and(
     validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
     validateIfDefined[LocalDateTime](hk.liitteidenToimitusaika, assertInFuture(_, "liitteidenToimitusaika")),
     validateIfNonEmpty[Liite](

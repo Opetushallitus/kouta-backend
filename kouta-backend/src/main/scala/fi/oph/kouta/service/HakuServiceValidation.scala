@@ -8,7 +8,7 @@ import fi.oph.kouta.validation.{IsValid, NoErrors}
 
 object HakuServiceValidation extends HakuServiceValidation(OrganisaatioServiceImpl, HakukohdeDAO)
 class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakukohdeDAO: HakukohdeDAO) extends ValidatingService[Haku] {
-  override def validateEntity(haku: Haku, crudOperation: CrudOperation): IsValid = {
+  override def validateEntity(haku: Haku, oldHaku: Option[Haku]): IsValid = {
     val tila         = haku.tila
     val kielivalinta = haku.kielivalinta
 
@@ -67,7 +67,7 @@ class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakuko
     integrityViolationMsg("Hakua", "hakukohteita")
   )
 
-  override def validateEntityOnJulkaisu(haku: Haku, crudOperation: CrudOperation): IsValid = and(
+  override def validateEntityOnJulkaisu(haku: Haku): IsValid = and(
     validateIfTrue(
       !haku.hakutapaKoodiUri.contains("hakutapa_03#1"),
       and( // Not Jatkuva haku

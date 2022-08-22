@@ -79,7 +79,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   val min: Hakukohde                 = MinHakukohde
   val maxMetadata: HakukohdeMetadata = max.metadata.get
   val maxWithIds = max.copy(
-    oid = Some(HakukohdeOid("1.2.246.562.20.123")),
+    oid = Some(HakukohdeOid("1.2.246.562.20.0000000001")),
     valintakokeet = max.valintakokeet.map(_.copy(id = Some(UUID.randomUUID()))),
     liitteet = max.liitteet.map(_.copy(id = Some(UUID.randomUUID())))
   )
@@ -169,6 +169,12 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       authenticated: Authenticated = authenticatedNonPaakayttaja
   ): Assertion =
     Try(validator.withValidation(hk, None, authenticated)(hk => hk)) match {
+      case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
+      case _                                      => fail("Expecting validation failure, but it succeeded")
+    }
+
+  def failsModifyValidation(hk: Hakukohde, oldHk: Hakukohde, expected: Seq[ValidationError]): Assertion =
+    Try(validator.withValidation(hk, Some(oldHk), authenticatedNonPaakayttaja)(hk => hk)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _                                      => fail("Expecting validation failure, but it succeeded")
     }
@@ -273,6 +279,14 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(lkHakukohde)
   }
 
+  it should "succeed when ataruId not changed in modify opertaion, eventhough ataruId is unknown" in {
+    val unknownAtaruId = Some(UUID.randomUUID())
+    passesValidation(
+      initMockSeq(maxWithIds.copy(hakulomakeAtaruId = unknownAtaruId)),
+      Some(max.copy(hakulomakeAtaruId = unknownAtaruId)),
+      authenticatedNonPaakayttaja
+    )
+  }
   it should "fail when invalid perustiedot" in {
     failsValidation(
       max.copy(oid = Some(HakukohdeOid("1.2.3"))),
@@ -431,6 +445,16 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   it should "fail when unknown ataruId" in {
     val unknownId = UUID.randomUUID()
     failsValidation(max.copy(hakulomakeAtaruId = Some(unknownId)), "hakulomakeAtaruId", unknownAtaruId(unknownId))
+  }
+
+  it should "fail when ataruId modified to unknown value" in {
+    val originalId = UUID.randomUUID()
+    val unknownId  = UUID.randomUUID()
+    failsModifyValidation(
+      maxWithIds.copy(hakulomakeAtaruId = Some(unknownId)),
+      max.copy(hakulomakeAtaruId = Some(originalId)),
+      Seq(ValidationError("hakulomakeAtaruId", unknownAtaruId(unknownId)))
+    )
   }
 
   it should "fail when values missing from julkaistu hakukohde" in {
@@ -830,11 +854,11 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       haku.copy(hakukohteenLiittamisenTakaraja = Some(inPast(200)), hakukohteenMuokkaamisenTakaraja = Some(takaraja)),
       "1.2.246.562.29.456"
     )
-
-    Try(validator.withValidation(initMockSeq(hk), Some(hk), authenticatedNonPaakayttaja)(hk => hk)) match {
-      case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
-      case _                                      => fail("Expecting validation failure, but it succeeded")
-    }
+    failsModifyValidation(
+      initMockSeq(hk),
+      hk,
+      Seq(ValidationError("hakukohteenMuokkaamisenTakaraja", pastDateMsg(takaraja)))
+    )
   }
 
   private def initMockDepsForKoulutustyyppi(

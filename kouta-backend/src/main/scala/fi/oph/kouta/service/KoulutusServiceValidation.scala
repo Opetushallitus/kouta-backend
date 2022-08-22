@@ -25,8 +25,8 @@ class KoulutusServiceValidation(
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Koulutus] {
 
-  override def validateEntity(koulutus: Koulutus, crudOperation: CrudOperation): IsValid = {
-    val commonErrors        = validateCommonParameters(koulutus, crudOperation)
+  override def validateEntity(koulutus: Koulutus, oldKoulutus: Option[Koulutus]): IsValid = {
+    val commonErrors        = validateCommonParameters(koulutus, oldKoulutus)
     val koulutusLevelErrors = validateKoulutustyyppiSpecificParameters(koulutus)
 
     val metadataErrors = koulutus.metadata match {
@@ -41,13 +41,13 @@ class KoulutusServiceValidation(
     Seq(commonErrors, koulutusLevelErrors, metadataErrors).flatten
   }
 
-  private def validateCommonParameters(koulutus: Koulutus, crudOperation: CrudOperation): IsValid = {
+  private def validateCommonParameters(koulutus: Koulutus, oldKoulutus: Option[Koulutus]): IsValid = {
     val tila   = koulutus.tila
     val tyyppi = koulutus.koulutustyyppi
     and(
       koulutus.validate(),
       validateIfTrueOrElse(
-        crudOperation == update,
+        oldKoulutus.isDefined,
         assertNotOptional(koulutus.oid, "oid"),
         assertNotDefined(koulutus.oid, "oid")
       ),

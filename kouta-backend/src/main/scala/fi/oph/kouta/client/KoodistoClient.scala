@@ -78,8 +78,6 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
     if (koodiUritFromCache.isEmpty) {
       Try[Seq[KoodiUri]] {
         get(
-          // "https://virkailija.hahtuvaopintopolku.fi/koodisto-service/rest/json/" + koodisto + "/koodi?onlyValidKoodis=true"
-          // urlProperties.url("koodisto-service.koodisto-koodit", koodisto)
           urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
           errorHandler,
           followRedirects = true

@@ -29,13 +29,13 @@ class ToteutusServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Toteutus] {
-  override def validateEntity(toteutus: Toteutus, crudOperation: CrudOperation): IsValid = {
+  override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
     val tila         = toteutus.tila
     val kielivalinta = toteutus.kielivalinta
     val commonErrors = and(
       toteutus.validate(),
       validateIfTrueOrElse(
-        crudOperation == update,
+        oldToteutus.isDefined,
         assertNotOptional(toteutus.oid, "oid"),
         assertNotDefined(toteutus.oid, "oid")
       ),
@@ -399,7 +399,7 @@ class ToteutusServiceValidation(
       )
     )
   }
-  override def validateEntityOnJulkaisu(toteutus: Toteutus, crudOperation: CrudOperation): IsValid = {
+  override def validateEntityOnJulkaisu(toteutus: Toteutus): IsValid = {
     toteutus.metadata match {
       case Some(metadata) =>
         metadata.opetus match {
