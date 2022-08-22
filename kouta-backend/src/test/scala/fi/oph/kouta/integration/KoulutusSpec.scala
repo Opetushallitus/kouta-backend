@@ -437,6 +437,14 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, kkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
+  it should "create, get and update kk-opintokokonaisuus-koulutus" in {
+    val kkOpintokokonaisuusKoulutus = TestData.KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu)
+    val oid = put(kkOpintokokonaisuusKoulutus)
+    val lastModified = get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    update(kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
   it should "fail to update koulutus if sorakuvaus doesn't exist" in {
     val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
