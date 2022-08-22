@@ -247,8 +247,8 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(KkOpintokokonaisuusKoulutusMetadata(
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
-      opintojenLaajuusNumero = Some("10 - 15"),
-      kuvauksenNimi = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      opintojenLaajuusNumeroMin = Some(5),
+      opintojenLaajuusNumeroMax = Some(15),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
       isMuokkaajaOphVirkailija = Some(false)
