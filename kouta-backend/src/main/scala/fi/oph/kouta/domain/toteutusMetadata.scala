@@ -243,6 +243,28 @@ package object toteutusMetadata {
       |                - kk-opintojakso
       |""".stripMargin
 
+  val KkOpintokokonaisuusToteutusMetadataModel: String =
+    """    KkOpintokokonaisuusToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: kk-opintojakso
+      |              enum:
+      |                - kk-opintojakso
+      |            opintojenLaajuusyksikkoKoodiUri:
+      |              type: string
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusNumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
+      |""".stripMargin
+
   val ErikoislaakariToteutusMetadataModel: String =
     """    ErikoislaakariToteutusMetadata:
       |      allOf:
@@ -571,7 +593,7 @@ package object toteutusMetadata {
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
     AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
-    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel)
+    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata {
@@ -698,7 +720,8 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
 
 case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
                                                kuvaus: Kielistetty = Map(),
-                                               laajuus: Option[Double] = None,
+                                               opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                               opintojenLaajuusNumero: Option[Double] = None,
                                                opetus: Option[Opetus] = None,
                                                asiasanat: List[Keyword] = List(),
                                                ammattinimikkeet: List[Keyword] = List(),

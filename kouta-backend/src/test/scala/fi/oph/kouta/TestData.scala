@@ -839,7 +839,7 @@ object TestData {
 
   val KkOpintokokonaisuusToteutuksenMetatieto: KkOpintokokonaisuusToteutusMetadata = KkOpintokokonaisuusToteutusMetadata(
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-    laajuus = Some(15),
+    opintojenLaajuusNumero = Some(15),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     hakutermi = Some(Hakeutuminen),

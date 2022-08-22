@@ -426,9 +426,9 @@ class ToteutusServiceValidation(
         kkOpintokokonaisuusToteutusMetadata,
         kkOpintokokonaisuusToteutusMetadata =>
           assertTrue(
-            ToteutusServiceUtil.isValidOpintojenlaajuus(koulutusOpintojenlaajuusMin, koulutusOpintojenlaajuusMax, kkOpintokokonaisuusToteutusMetadata.laajuus),
-            "metadata.laajuus",
-            notInTheRangeMsg(koulutusOpintojenlaajuusMin, koulutusOpintojenlaajuusMax, kkOpintokokonaisuusToteutusMetadata.laajuus)
+            ToteutusServiceUtil.isValidOpintojenlaajuus(koulutusOpintojenlaajuusMin, koulutusOpintojenlaajuusMax, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero),
+            "metadata.opintojenLaajuusNumero",
+            notInTheRangeMsg(koulutusOpintojenlaajuusMin, koulutusOpintojenlaajuusMax, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero)
           )
       )
     )
