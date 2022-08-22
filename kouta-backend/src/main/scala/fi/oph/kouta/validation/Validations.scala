@@ -4,7 +4,7 @@ import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 import java.util.regex.Pattern
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 object Validations {
@@ -40,6 +40,25 @@ object Validations {
     msg = s"Koulutukselle valittua opintojenlaajuusyksikko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
   )
+
+  def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
+    msg = s"Seuraavilla koulutukseen liitetyillä toteutuksilla on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
+    id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
+    extra = Some(Map("toteutukset" -> toteutukset))
+  )
+
+  def invalidKoulutusOpintojenLaajuusNumeroMinIntegrity(laajuusMin: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
+    msg = s"Seuraavilla koulutukseen liitetyillä toteutuksilla on pienempi laajuus kuin koulutuksen minimi ($laajuusMin)",
+    id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
+    extra = Some(Map("toteutukset" -> toteutukset))
+  )
+
+  def invalidKoulutusOpintojenLaajuusNumeroMaxIntegrity(laajuusMax: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
+    msg = s"Seuraavilla koulutukseen liitetyillä toteutuksilla on suurempi laajuus kuin koulutuksen maksimi ($laajuusMax)",
+    id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
+    extra = Some(Map("toteutukset" -> toteutukset))
+  )
+
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidKieliKoodiUri"

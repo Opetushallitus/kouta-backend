@@ -22,12 +22,13 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
 
-  val lukioToteutus               = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"))
-  val ammTutkinnonOsaToteutus     = AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.124"))
-  val ammMuuToteutus              = AmmMuuToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.130"))
-  val yoToteutus                  = JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.131"))
-  val kkOpintojaksoToteutus       = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.132"))
-  val kkOpintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.133"))
+  val lukioToteutus           = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"))
+  val ammTutkinnonOsaToteutus = AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.124"))
+  val ammMuuToteutus          = AmmMuuToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.130"))
+  val yoToteutus              = JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.131"))
+  val kkOpintojaksoToteutus   = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.132"))
+  val kkOpintokokonaisuusToteutus =
+    JulkaistuKkOpintokokonaisuusToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.133"))
   val kkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.133")))
 
   val sorakuvausId  = UUID.randomUUID()
@@ -174,8 +175,12 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       .thenAnswer(Some(KkOpintojaksoKoulutus.copy(tila = Julkaistu)))
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.133"))).thenAnswer(Some(kkOpintokokonaisuusKoulutus))
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.134")))
-      .thenAnswer(Some(kkOpintokokonaisuusKoulutus
-        .copy(metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(opintojenLaajuusNumeroMax = None)))))
+      .thenAnswer(
+        Some(
+          kkOpintokokonaisuusKoulutus
+            .copy(metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(opintojenLaajuusNumeroMax = None)))
+        )
+      )
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
       .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq("koulutus_371101#1")))
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId2)).thenAnswer((None, None, None))
@@ -238,6 +243,22 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     passValidation(kkOpintokokonaisuusToteutus)
   }
 
+  it should "fail when saving kk-opintokokonaisuus toteutus with different opintojenlaajuusyksikko than related koulutus" in {
+   // TODO
+  }
+
+  it should "succeed when saving kk-opintokokonaisuus toteutus with any opintojenlaajuusyksikko when related koulutus opintojenlaajuusyksikko is not defined" in {
+    // TODO
+  }
+
+  it should "fail when saving kk-opintokokonaisuus toteutus with opintojenlaajuusnumero outside the range of related koulutus" in {
+    // TODO
+  }
+
+  it should "succeed when saving kk-opintokokonaisuus toteutus with any valid opintojenlaajuusnumero when koulutus opintojenlaajuusNumero range is not defiened" in {
+    // TODO
+  }
+
   it should "fail if perustiedot is invalid" in {
     failValidation(lukioToteutus.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
     failsValidation(lukioToteutus.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
@@ -297,7 +318,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   private def failSorakuvausValidation(toteutus: Toteutus, koulutusOidStr: String): Assertion = {
     val koulutusOid = KoulutusOid(koulutusOidStr)
-    when(koulutusDao.get(koulutusOid)).thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu, koulutustyyppi = toteutus.metadata.get.tyyppi)))
+    when(koulutusDao.get(koulutusOid))
+      .thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu, koulutustyyppi = toteutus.metadata.get.tyyppi)))
     val testedToteutus = toteutus.copy(koulutusOid = koulutusOid, sorakuvausId = Some(sorakuvausId))
     failValidation(testedToteutus, "sorakuvausId", notMissingMsg(Some(sorakuvausId)))
   }
@@ -750,7 +772,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       notInTheRangeMsg(
         KkOpintokokonaisuusKoulutuksenMetatieto.opintojenLaajuusNumeroMin,
         KkOpintokokonaisuusKoulutuksenMetatieto.opintojenLaajuusNumeroMax,
-        toteutuksenLaajuus)
+        toteutuksenLaajuus
+      )
     )
   }
 
