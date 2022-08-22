@@ -696,6 +696,22 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          aloituspaikat: Option[Int] = None,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
+case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
+                                               kuvaus: Kielistetty = Map(),
+                                               laajuus: Option[Double] = None,
+                                               opetus: Option[Opetus] = None,
+                                               asiasanat: List[Keyword] = List(),
+                                               ammattinimikkeet: List[Keyword] = List(),
+                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                               lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                               lisatietoaValintaperusteista: Kielistetty = Map(),
+                                               hakutermi: Option[Hakutermi] = None,
+                                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                               hakulomakeLinkki: Kielistetty = Map(),
+                                               hakuaika: Option[Ajanjakso] = None,
+                                               aloituspaikat: Option[Int] = None,
+                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
+
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
                                  opetus: Option[Opetus] = None,

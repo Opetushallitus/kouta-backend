@@ -5,7 +5,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Amm, AmmOsaamisala, AmmTutkinnonOsa, Julkaistu, Julkaisutila, Koulutustyyppi, Poistettu}
 import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, Validations}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 
 import java.util.UUID
 
