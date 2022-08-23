@@ -41,8 +41,11 @@ object KoodistoUtils {
     }
   }
 
-  def kooriUriToString(koodiUri: KoodiUri): String =
+  def koodiUriToString(koodiUri: KoodiUri): String =
     s"${koodiUri.koodiUri}#${koodiUri.latestVersio}"
+
+  def koodiUriStringsMatch(a: String, b: String): Boolean =
+    koodiUriFromString(a).koodiUri == koodiUriFromString(b).koodiUri
 
   def koodiUriWithEqualOrHigherVersioNbrInList(
       koodiUri: String,
