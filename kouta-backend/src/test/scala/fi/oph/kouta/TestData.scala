@@ -750,7 +750,6 @@ object TestData {
   val Valintatapa1: Valintatapa = Valintatapa(
     nimi = kieliMap("Valintatapa1"),
     valintatapaKoodiUri = Some("valintatapajono_av#1"),
-    kuvaus = kieliMap("kuvaus"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
     kaytaMuuntotaulukkoa = false,
     kynnysehto = kieliMap("kynnysehto"),
@@ -761,7 +760,6 @@ object TestData {
   val Valintatapa2: Valintatapa = Valintatapa(
     nimi = kieliMap("Valintatapa2"),
     valintatapaKoodiUri = Some("valintatapajono_tv#1"),
-    kuvaus = kieliMap("kuvaus 2"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
     kaytaMuuntotaulukkoa = true,
     kynnysehto = kieliMap("kynnysehto"),
