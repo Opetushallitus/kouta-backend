@@ -24,7 +24,7 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByValintaperusteId(valintaperusteId: UUID, tilaFilter: TilaFilter): Seq[HakukohdeListItem]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
 
-  def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])]
+  def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Option[Seq[String]], Option[Seq[UUID]])]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -120,9 +120,9 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     case _   =>  KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids))
   }
 
-  override def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])] =
-    KoutaDatabase.runBlocking(selectDependencyInformation(hakukohde)).map { case (name, tila, tyyppi, toteutusMetadata, koulutuksetKoodiUri) =>
-      name -> (tila, tyyppi, toteutusMetadata, koulutuksetKoodiUri)
+  override def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Option[Seq[String]], Option[Seq[UUID]])] =
+    KoutaDatabase.runBlocking(selectDependencyInformation(hakukohde)).map { case (name, tila, tyyppi, toteutusMetadata, koulutusKoodiUrit, valintaKoeIds) =>
+      name -> (tila, tyyppi, toteutusMetadata, Some(koulutusKoodiUrit), Some(valintaKoeIds))
     }.toMap
 
   def getOidsByJarjestyspaikka(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[String] = {
@@ -543,20 +543,20 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           #${tilaConditions(tilaFilter)}""".as[String]
   }
 
-  def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])]] =
-    sql"""select t.oid, t.tila, k.tyyppi, t.metadata, k.koulutukset_koodi_uri
+  def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String], Seq[UUID])]] =
+    sql"""select t.oid, t.tila, k.tyyppi, t.metadata, k.koulutukset_koodi_uri, null::uuid[]
           from toteutukset t
           inner join koulutukset k on t.koulutus_oid = k.oid and k.tila != 'poistettu'::julkaisutila
           where t.oid = ${hakukohde.toteutusOid} and t.tila != 'poistettu'::julkaisutila
           union all
-          select oid, tila, null, null, null
-          from haut
-          where oid = ${hakukohde.hakuOid} and tila != 'poistettu'::julkaisutila
-          union all
-          select id::text, tila, koulutustyyppi, null, null
-          from valintaperusteet
+          select vp.id::text, vp.tila, vp.koulutustyyppi, null, null, vk.ids
+          from valintaperusteet vp
+            left join
+              (select valintaperuste_id vpid, array_agg(id) ids
+                  from valintaperusteiden_valintakokeet
+                  group by valintaperuste_id) vk on vk.vpid = vp.id
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
-    """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])]
+    """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String], Seq[UUID] )]
 
   def selectHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) =
     sql"""select

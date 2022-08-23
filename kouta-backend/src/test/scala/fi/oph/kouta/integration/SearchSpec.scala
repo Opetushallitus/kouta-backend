@@ -63,13 +63,11 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
     hoid2 = put(haku.copy(organisaatioOid = LonelyOid))
     hoid3 = put(haku.copy(organisaatioOid = OphOid))
 
-    hkoid1 = put(hakukohde.copy(toteutusOid = ToteutusOid(toid1), hakuOid = HakuOid(hoid1), organisaatioOid = GrandChildOid))
-    hkoid2 = put(hakukohde.copy(toteutusOid = ToteutusOid(toid2), hakuOid = HakuOid(hoid1), organisaatioOid = ParentOid))
-    hkoid3 = put(hakukohde.copy(toteutusOid = ToteutusOid(toid3), hakuOid = HakuOid(hoid2), organisaatioOid = LonelyOid))
-    hkoid4 = put(hakukohde.copy(toteutusOid = ToteutusOid(toid3), hakuOid = HakuOid(hoid3), organisaatioOid = LonelyOid))
-    hkoid5 = put(hakukohde.copy(toteutusOid = ToteutusOid(toid5), hakuOid = HakuOid(hoid3), organisaatioOid = GrandChildOid))
-
-    val sorakuvausId = put(sorakuvaus)
+    hkoid1 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid1), hakuOid = HakuOid(hoid1), organisaatioOid = GrandChildOid))
+    hkoid2 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid2), hakuOid = HakuOid(hoid1), organisaatioOid = ParentOid))
+    hkoid3 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid3), hakuOid = HakuOid(hoid2), organisaatioOid = LonelyOid))
+    hkoid4 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid3), hakuOid = HakuOid(hoid3), organisaatioOid = LonelyOid))
+    hkoid5 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid5), hakuOid = HakuOid(hoid3), organisaatioOid = GrandChildOid))
 
     vpid1 = put(valintaperuste.copy(organisaatioOid = GrandChildOid, julkinen = false)).toString
     vpid2 = put(valintaperuste.copy(organisaatioOid = ParentOid, julkinen = false)).toString

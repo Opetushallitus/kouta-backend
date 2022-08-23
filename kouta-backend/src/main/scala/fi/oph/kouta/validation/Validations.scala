@@ -4,7 +4,7 @@ import java.time.{LocalDate, LocalDateTime}
 import java.util.UUID
 import java.util.regex.Pattern
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.{HakuOid, Oid, OrganisaatioOid}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 object Validations {
@@ -24,6 +24,16 @@ object Validations {
     ErrorMessage(msg = s"Ainoastaan korkeakoulutuksella voi olla useampi kuin yksi koulutus", id = "tooManyKoodiUris")
   val withoutLukiolinja: ErrorMessage =
     ErrorMessage(msg = "Lukio-toteutuksella täytyy olla vähintään yleislinja", id = "withoutLukiolinja")
+  val illegalHaunLomaketyyppiForHakukohdeSpecificTyyppi = ErrorMessage(
+    msg =
+      "Hakukohteelle ei voi valita erillistä hakulomaketta. Erillisen lomakkeen voi valita vain jos haussa on käytössä 'muu'-tyyppinen hakulomake.",
+    id = "illegalHaunLomaketyyppiForHakukohdeSpecificTyyppi"
+  )
+  val toinenAsteOnkoKaksoistutkintoNotAllowed = ErrorMessage(
+    msg =
+      "Hakukohteelle ei voi valita kaksoistutkinnon suorittamista, kaksoistutkinto on mahdollinen vain jos kyseessä on ammatillinen perustutkinto tai lukiokoulutus (joko lukion oppimäärä tai ylioppilastutkinto, koulutuskoodi 309902 tai 301101).",
+    id = "toinenAsteOnkoKaksoistutkintoNotAllowed"
+  )
   def invalidKoulutuskoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Koulutuskoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutuskoodiuri"
@@ -49,8 +59,7 @@ object Validations {
     "invalidLukioLinjaKoodiUri"
   )
   def unknownTarjoajaOid(oid: OrganisaatioOid): ErrorMessage = ErrorMessage(
-    msg =
-      s"Tarjoaja-organisaatiota oid:illa $oid ei löydy, tai organisaatio ei ole aktiivinen",
+    msg = s"Tarjoaja-organisaatiota oid:illa $oid ei löydy, tai organisaatio ei ole aktiivinen",
     id = "unknownTarjoajaOid"
   )
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(
@@ -106,14 +115,49 @@ object Validations {
     "invalidLukioDiplomiKoodiUri"
   )
   def invalidOpetusLisatietoOtsikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg =
-      s"Opetuksen lisätiedon otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    msg = s"Opetuksen lisätiedon otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpetusLisatietoOtsikkoKoodiuri"
   )
   def invalidKausiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg =
-      s"Opetuksen koulutuksenAlkamiskausi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    msg = s"Opetuksen koulutuksenAlkamiskausi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKausiKoodiuri"
+  )
+  def invalidHakukohdeKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Hakukohde-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidHakukohdeKooriuri"
+  )
+  def invalidPohjakoulutusVaatimusKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Pohjakoulutusvaatimus-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidPohjakoulutusVaatimusKooriuri"
+  )
+  def invalidLiitetyyppiKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Liitetyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidLiitetyyppiKooriuri"
+  )
+  def invalidValintakoeTyyppiKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Valintakoetyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidValintakoeTyyppiKooriuri"
+  )
+  def invalidOppiaineKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Oppiaine-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidOppiaineKoodiuri"
+  )
+  def invalidOppiaineKieliKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Oppiainekieli-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidOppiaineKieliKoodiuri"
+  )
+  def unknownValintaperusteenValintakoeIdForHakukohde(valintaperusteId: UUID, valintakoeId: UUID): ErrorMessage =
+    ErrorMessage(
+      msg = s"Valintakoetta ID:llä $valintakoeId ei löydy hakukohteen valintaperusteelle $valintaperusteId",
+      id = "unknownValintaperusteenValintakoeIdForHakukohde"
+    )
+  def invalidPostiosoiteKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Postiosoite-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidPostiosoiteKoodiUri"
+  )
+  def unknownAtaruId(ataruId: UUID): ErrorMessage = ErrorMessage(
+    msg = s"Hakulomaketta ID:llä $ataruId ei löydy, tai se on poistettu tai lukittu",
+    id = "invalidAtaruId"
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
@@ -149,11 +193,37 @@ object Validations {
     ErrorMessage(msg = s"$relatedEntity kenttä $field ei sisällä samoja arvoja", id = "valuesDontMatch")
   def oneNotBoth(field1: String, field2: String): ErrorMessage =
     ErrorMessage(msg = s"Tarvitaan joko $field1 tai $field2, mutta ei molempia.", id = "oneNotBoth")
+  def noneOrOneNotBoth(field1: String, field2: String): ErrorMessage =
+    ErrorMessage(msg = s"Voidaan valita joko $field1 tai $field2, mutta ei molempia.", id = "noneOrOneNotBoth")
+  def notEmptyAlthoughOtherEmptyMsg(otherField: String): ErrorMessage =
+    ErrorMessage(
+      msg = s"Ei saa sisältää arvoa, koska kentässä $otherField ei ole arvoa",
+      id = "notEmptyAlthoughOtherEmptyMsg"
+    )
+  def notEmptyAlthoughBooleanFalseMsg(booleanField: String): ErrorMessage =
+    ErrorMessage(
+      msg = s"Ei saa sisältää arvoa, koska $booleanField ei ole asetettu",
+      id = "notEmptyAlthoughOtherEmptyMsg"
+    )
+  def notAllowedDueTo(reason: String): ErrorMessage =
+    ErrorMessage(
+      msg = s"Ei saa sisältää arvoa, koska $reason",
+      id = "notAllowedDueTo"
+    )
   def illegalStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): ErrorMessage =
     ErrorMessage(
       msg = s"Siirtyminen tilasta $oldState tilaan $newState ei ole sallittu $entityDesc",
       id = "illegalStateChange"
     )
+  def illegalValueForFixedValueMsg(fixedValDesc: String): ErrorMessage = ErrorMessage(
+    msg = s"Kentän täytyy sisältää tietty arvo: $fixedValDesc. Ko. arvo asetetaan automaattisesti jos kenttä on tyhjä",
+    id = "illegalValueForFixedValueSeq"
+  )
+  def illegalValueForFixedValueSeqMsg(fixedValDesc: String): ErrorMessage = ErrorMessage(
+    msg =
+      s"Kentän täytyy sisältää täsmälleen yksi arvo: $fixedValDesc. Ko. arvo asetetaan automaattisesti jos kenttä on tyhjä",
+    id = "illegalValueForFixedValueSeq"
+  )
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
@@ -215,16 +285,42 @@ object Validations {
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid       = assertTrue(value.nonEmpty, path, missingMsg)
   def assertEmpty[T](value: Seq[T], path: String, errorMessage: ErrorMessage = notEmptyMsg): IsValid =
     assertTrue(value.isEmpty, path, errorMessage)
-  def assertOneAndOnlyOneKoodiUri(value: Seq[String]): IsValid =
-    if (value.isEmpty) {
-      error("koulutuksetKoodiUri", missingMsg)
-    } else if (value.size > 1) {
-      error("koulutuksetKoodiUri", tooManyKoodiUris)
-    } else {
+  def assertEmptyKielistetty(kielistetty: Kielistetty, path: String): IsValid =
+    assertTrue(kielistetty.isEmpty, path, notEmptyMsg)
+
+  def assertCertainValue(
+      value: Option[String],
+      expectedValuePrefix: String,
+      path: String,
+      expectedValueDescription: Option[String] = None
+  ): IsValid =
+    assertTrue(
+      value.isDefined && value.get.startsWith(expectedValuePrefix),
+      path,
+      illegalValueForFixedValueMsg(expectedValueDescription.getOrElse(expectedValuePrefix))
+    )
+
+  def assertOneAndOnlyCertainValueInSeq(
+      value: Seq[String],
+      expectedValuePrefix: String,
+      path: String,
+      expectedValueDescription: Option[String] = None
+  ): IsValid =
+    if (value.size == 1 && value.head.startsWith(expectedValuePrefix)) {
       NoErrors
+    } else {
+      error(path, illegalValueForFixedValueSeqMsg(expectedValueDescription.getOrElse(expectedValuePrefix)))
     }
+
   def assertNotDefined[T](value: Option[T], path: String): IsValid =
     assertTrue(value.isEmpty, path, notMissingMsg(value))
+  def assertNotDefinedIfOtherNotDefined[A, B](
+      value: Option[A],
+      other: Option[B],
+      otherField: String,
+      path: String
+  ): IsValid =
+    if (other.isEmpty && value.nonEmpty) error(path, notEmptyAlthoughOtherEmptyMsg(otherField)) else NoErrors
   def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
     assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))
 
@@ -236,6 +332,12 @@ object Validations {
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
+
+  def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid = (value, oldValue) match {
+    case (Some(value), Some(oldValue)) => if (value != oldValue) f(value) else NoErrors
+    case (Some(value), None) => f(value)
+    case _ => NoErrors
+  }
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
@@ -277,12 +379,29 @@ object Validations {
   ): IsValid = hakulomaketyyppi match {
     case Some(MuuHakulomake) =>
       and(
+        assertNotDefined(hakulomakeAtaruId, "hakulomakeAtaruId"),
+        assertEmptyKielistetty(hakulomakeKuvaus, "hakulomakeKuvaus"),
         validateKielistetty(kielivalinta, hakulomakeLinkki, "hakulomakeLinkki"),
         hakulomakeLinkki.flatMap { case (_, u) => assertValidUrl(u, "hakulomakeLinkki") }.toSeq
       )
-    case Some(Ataru)       => assertNotOptional(hakulomakeAtaruId, "hakulomakeAtaruId")
-    case Some(EiSähköistä) => validateOptionalKielistetty(kielivalinta, hakulomakeKuvaus, "hakulomakeKuvaus")
-    case _                 => NoErrors
+    case Some(Ataru) =>
+      and(
+        assertNotOptional(hakulomakeAtaruId, "hakulomakeAtaruId"),
+        assertEmptyKielistetty(hakulomakeKuvaus, "hakulomakeKuvaus"),
+        assertEmptyKielistetty(hakulomakeLinkki, "hakulomakeLinkki")
+      )
+    case Some(EiSähköistä) =>
+      and(
+        assertNotDefined(hakulomakeAtaruId, "hakulomakeAtaruId"),
+        assertEmptyKielistetty(hakulomakeLinkki, "hakulomakeLinkki"),
+        validateOptionalKielistetty(kielivalinta, hakulomakeKuvaus, "hakulomakeKuvaus")
+      )
+    case _ =>
+      and(
+        assertNotDefinedIfOtherNotDefined(hakulomakeAtaruId, hakulomaketyyppi, "hakulomaketyyppi", "hakulomakeAtaruId"),
+        assertTrue(hakulomakeKuvaus.isEmpty, "hakulomakeKuvaus", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
+        assertTrue(hakulomakeLinkki.isEmpty, "hakulomakeLinkki", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi"))
+      )
   }
 
   def validateKoulutusPaivamaarat(
@@ -319,7 +438,7 @@ object Validations {
           tila != Poistettu,
           validateIfJulkaistu(
             validatableTila,
-            assertTrue(tila == Julkaistu, "tila", Validations.notYetJulkaistu(dependencyName, dependencyId))
+            assertTrue(tila == Julkaistu, "tila", notYetJulkaistu(dependencyName, dependencyId))
           )
         )
       )
@@ -333,7 +452,7 @@ object Validations {
       dependencyIdPath: String
   ): IsValid = {
     dependencyTila.map { tila =>
-      assertTrue(tila != Poistettu, path = "tila", nonExistent(dependencyName, dependencyId))
+      assertTrue(tila != Poistettu, path = dependencyIdPath, nonExistent(dependencyName, dependencyId))
     }.getOrElse(error(dependencyIdPath, nonExistent(dependencyName, dependencyId)))
   }
 

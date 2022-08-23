@@ -421,6 +421,18 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
+  private def failSorakuvausValidation(koulutus: Koulutus): Assertion =
+    failValidation(koulutus.copy(sorakuvausId = Some(sorakuvausId)), "sorakuvausId", notMissingMsg(Some(sorakuvausId)))
+
+  it should "fail if sorakuvausId given for koulutustyyppi not accepting sorakuvaus" in {
+    failSorakuvausValidation(AikuistenPerusopetusKoulutus)
+    failSorakuvausValidation(AmmMuuKoulutus)
+    failSorakuvausValidation(TuvaKoulutus)
+    failSorakuvausValidation(TelmaKoulutus)
+    failSorakuvausValidation(VapaaSivistystyoOpistovuosiKoulutus)
+    failSorakuvausValidation(VapaaSivistystyoMuuKoulutus)
+  }
+
   it should "fail if sorakuvaus doesn't exist" in {
     failValidation(
       amm.copy(sorakuvausId = Some(sorakuvausId2)),
@@ -494,6 +506,22 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       ammWithLisatietoParams(koodiUri = "koulutuksenlisatiedot_04#1"),
       "metadata.lisatiedot[0].otsikkoKoodiUri",
       invalidLisatietoOtsikkoKoodiuri("koulutuksenlisatiedot_04#1")
+    )
+  }
+
+  it should "fail if lisätieto given for koulutustyyppi not accepting lisätiedot" in {
+    failValidation(
+      AmmMuuKoulutus.copy(metadata =
+        Some(
+          AmmMuuKoulutus.metadata.get
+            .asInstanceOf[AmmatillinenMuuKoulutusMetadata]
+            .copy(
+              lisatiedot = Seq(Lisatieto1)
+            )
+        )
+      ),
+      "metadata.lisatiedot",
+      notEmptyMsg
     )
   }
 
@@ -823,13 +851,23 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
         Some(
           AmmOpeErityisopeJaOpoKoulutusMetadata(
             tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
+            koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalatasoXX_01"),
             opintojenLaajuusKoodiUri = Some("puppu")
           )
         )
       ),
       Seq(
         ValidationError("metadata.tutkintonimikeKoodiUrit", notEmptyMsg),
-        ValidationError("metadata.opintojenLaajuusKoodiUri", validationMsg("puppu"))
+        ValidationError(
+          "metadata.opintojenLaajuusKoodiUri",
+          illegalValueForFixedValueMsg("opintojenlaajuus_60#<versionumero>, esim. opintojenlaajuus_60#1")
+        ),
+        ValidationError(
+          "metadata.koulutusalaKoodiUrit",
+          illegalValueForFixedValueSeqMsg(
+            "kansallinenkoulutusluokitus2016koulutusalataso1_01#<versionumero>, esim. kansallinenkoulutusluokitus2016koulutusalataso1_01#1"
+          )
+        )
       )
     )
   }
@@ -843,13 +881,25 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
-  it should "fail if unknown opintojenlaajuusKoodiUri for Lukio koulutus" in {
+  it should "fail if unknown invalid metadata for Lukio koulutus" in {
     failValidation(
       LukioKoulutus.copy(metadata =
-        Some(LukioKoulutusMetadata(opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#70")))
+        Some(
+          LukioKoulutusMetadata(
+            opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#70"),
+            koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalatasoXX_01")
+          )
+        )
       ),
-      "metadata.opintojenLaajuusKoodiUri",
-      invalidOpintojenLaajuusKoodiuri("opintojenlaajuus_40#70")
+      Seq(
+        ValidationError(
+          "metadata.koulutusalaKoodiUrit",
+          illegalValueForFixedValueSeqMsg(
+            "kansallinenkoulutusluokitus2016koulutusalataso1_00#<versionumero>, esim. kansallinenkoulutusluokitus2016koulutusalataso1_00#1"
+          )
+        ),
+        ValidationError("metadata.opintojenLaajuusKoodiUri", invalidOpintojenLaajuusKoodiuri("opintojenlaajuus_40#70"))
+      )
     )
   }
 
@@ -1004,6 +1054,14 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
         ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
         ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
       )
+    )
+  }
+
+  it should "fail if invalid koulutusKoodiUri for Aikuisten perusopetus -koulutus" in {
+    failValidation(
+      AikuistenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
+      "koulutuksetKoodiUri",
+      illegalValueForFixedValueSeqMsg("koulutus_201101#<versionumero>, esim. koulutus_201101#1")
     )
   }
 

@@ -1,6 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
 import fi.oph.kouta.validation
@@ -13,6 +14,7 @@ object ToteutusServiceValidation
     extends ToteutusServiceValidation(
       KoulutusKoodiClient,
       OrganisaatioServiceImpl,
+      HakuKoodiClient,
       KoulutusDAO,
       HakukohdeDAO,
       SorakuvausDAO
@@ -21,11 +23,12 @@ object ToteutusServiceValidation
 class ToteutusServiceValidation(
     val koulutusKoodiClient: KoulutusKoodiClient,
     val organisaatioService: OrganisaatioService,
+    hakuKoodiClient: HakuKoodiClient,
     koulutusDAO: KoulutusDAO,
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Toteutus] {
-  override def validateEntity(toteutus: Toteutus): IsValid = {
+  override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
     val tila         = toteutus.tila
     val kielivalinta = toteutus.kielivalinta
     val commonErrors = and(
@@ -135,19 +138,7 @@ class ToteutusServiceValidation(
       ),
       validateIfDefined[KoulutuksenAlkamiskausi](
         opetus.koulutuksenAlkamiskausi,
-        kausi =>
-          validateIfSuccessful(
-            kausi.validate(tila, kielivalinta, s"$path.koulutuksenAlkamiskausi"),
-            validateIfDefined[String](
-              kausi.koulutuksenAlkamiskausiKoodiUri,
-              koodiUri =>
-                assertTrue(
-                  koulutusKoodiClient.kausiKoodiUriExists(koodiUri),
-                  "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamiskausiKoodiUri",
-                  invalidKausiKoodiuri(koodiUri)
-                )
-            )
-          )
+        _.validate(tila, kielivalinta, "metadata.opetus.koulutuksenAlkamiskausi", hakuKoodiClient.kausiKoodiUriExists)
       ),
       validateIfDefined[Apuraha](opetus.apuraha, apuraha => validateApuraha(tila, kielivalinta, apuraha)),
       validateIfNonEmpty[Lisatieto](
@@ -283,7 +274,7 @@ class ToteutusServiceValidation(
         validateIfSuccessful(
           assertMatch(koodiUri, KieliKoodiPattern, path),
           assertTrue(
-            koulutusKoodiClient.kieliKoodiUriExists(koodiUri),
+            hakuKoodiClient.kieliKoodiUriExists(koodiUri),
             path,
             invalidKieliKoodiUri(relativePath, koodiUri)
           )

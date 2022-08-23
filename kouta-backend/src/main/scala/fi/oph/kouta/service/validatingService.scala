@@ -10,31 +10,33 @@ import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, Validations}
 import java.util.UUID
 
 trait ValidatingService[E <: Validatable] {
-  def validateEntity(e: E): IsValid
+  def validateEntity(e: E, oldE: Option[E]): IsValid
   def validateEntityOnJulkaisu(e: E): IsValid = NoErrors
   def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
 
   def organisaatioService: OrganisaatioService
 
   def withValidation[R](e: E, oldE: Option[E])(f: E => R): R = {
+    validate(e, oldE) match {
+      case NoErrors => f(e)
+      case errors   => throw KoutaValidationException(errors)
+    }
+  }
 
+  def validate(e: E, oldE: Option[E]): IsValid = {
     var errors = if (oldE.isDefined) {
       if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
-        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
+        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
           validateEntityOnJulkaisu(e)
       } else {
-        validateEntity(e) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
       }
     } else {
       if (e.tila == Julkaistu) {
-        validateEntity(e) ++ validateEntityOnJulkaisu(e)
+        validateEntity(e, None) ++ validateEntityOnJulkaisu(e)
       } else {
-        validateEntity(e)
+        validateEntity(e, None)
       }
-    }
-
-    if (errors.isEmpty) {
-      errors = validateEntity(e)
     }
 
     if (errors.isEmpty && oldE.isDefined) {
@@ -44,10 +46,7 @@ trait ValidatingService[E <: Validatable] {
         errors = validateInternalDependenciesWhenDeletingEntity(e)
     }
 
-    errors match {
-      case NoErrors => f(e)
-      case errors   => throw KoutaValidationException(errors)
-    }
+    errors
   }
 
   def throwValidationErrors(errors: IsValid): Unit =
@@ -68,6 +67,9 @@ trait ValidatingService[E <: Validatable] {
         )
     )
   }
+
+  def koodiUriTipText(koodiUri: String): Option[String] =
+    Some(s"$koodiUri#<versionumero>, esim. $koodiUri#1")
 }
 
 trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] {
