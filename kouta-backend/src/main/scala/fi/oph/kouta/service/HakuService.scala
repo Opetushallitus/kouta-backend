@@ -16,7 +16,7 @@ import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
@@ -80,13 +80,28 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
     authorizeUpdate(oldHaku, haku, rules) { (oldHaku, h) =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
-      val enrichedHaku = h.copy(metadata = enrichedMetadata)
+      val enrichedHaku = if (shouldDeleteSchedulerTimestamp(h)) {
+        h.copy(metadata = enrichedMetadata, ajastettuHaunJaHakukohteidenArkistointiAjettu = None)
+      } else {
+        h.copy(metadata = enrichedMetadata)
+      }
+
       withValidation(enrichedHaku, Some(oldHaku)) {
         throwValidationErrors(validateStateChange("haulle", oldHaku.tila, enrichedHaku.tila))
         validateHakukohdeIntegrityIfDeletingHaku(oldHaku.tila, enrichedHaku.tila, enrichedHaku.oid.get)
         doUpdate(_, notModifiedSince, oldHaku)
       }
     }.nonEmpty
+  }
+
+  private def shouldDeleteSchedulerTimestamp(haku: Haku): Boolean = {
+    haku.ajastettuHaunJaHakukohteidenArkistointi.getOrElse(None) match {
+      case ajastettuHaunJaHakukohteidenArkistointi: LocalDateTime =>
+        if (ajastettuHaunJaHakukohteidenArkistointi.toLocalDate.isAfter(LocalDateTime.now().toLocalDate) && haku.tila.equals(Julkaistu)) {
+          true
+        } else false
+      case _ => false
+    }
   }
 
   private def getAuthorizationRulesForUpdate(newHaku: Haku, oldHakuWithTime: Option[(Haku, Instant)]) = {
@@ -213,6 +228,9 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
+
+  def indexByOid(hakuOid: HakuOid): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, hakuOid.toString)
 
   private def setHaunOhjausparametrit(haku: Haku): DBIO[Unit] = {
     Try(ohjausparametritClient.postHaunOhjausparametrit(HaunOhjausparametrit(

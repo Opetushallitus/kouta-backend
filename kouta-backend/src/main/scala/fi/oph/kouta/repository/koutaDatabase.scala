@@ -20,11 +20,25 @@ object KoutaDatabase extends Logging {
 
   val settings = KoutaConfigurationFactory.configuration.databaseConfiguration
 
+  val hikariConfig: HikariConfig = {
+    val config = new HikariConfig()
+    config.setJdbcUrl(settings.url)
+    config.setUsername(settings.username)
+    config.setPassword(settings.password)
+    val maxPoolSize = settings.maxConnections.getOrElse(10)
+    config.setMaximumPoolSize(maxPoolSize)
+    settings.minConnections.foreach(config.setMinimumIdle)
+    settings.registerMbeans.foreach(config.setRegisterMbeans)
+    //settings.initializationFailTimeout.foreach(hikariConfig.setI)
+    //hikariConfig.setLeakDetectionThreshold(settings.leakDetectionThresholdMillis.getOrElse(settings.getMaxLifetime))
+    config
+  }
+
   logger.warn(settings.username)
 
   migrate()
 
-  val db = initDb()
+  val db = initDb(hikariConfig)
 
   def init() = {}
 
@@ -43,23 +57,17 @@ object KoutaDatabase extends Logging {
     db.close()
   }
 
-  private def initDb() = {
-    val hikariConfig = new HikariConfig()
-    hikariConfig.setJdbcUrl(settings.url)
-    hikariConfig.setUsername(settings.username)
-    hikariConfig.setPassword(settings.password)
-    val maxPoolSize = settings.maxConnections.getOrElse(10)
-    hikariConfig.setMaximumPoolSize(maxPoolSize)
-    settings.minConnections.foreach(hikariConfig.setMinimumIdle)
-    settings.registerMbeans.foreach(hikariConfig.setRegisterMbeans)
-    //settings.initializationFailTimeout.foreach(hikariConfig.setI)
-    //hikariConfig.setLeakDetectionThreshold(settings.leakDetectionThresholdMillis.getOrElse(settings.getMaxLifetime))
-    val executor = AsyncExecutor("kouta", maxPoolSize, 1000)
-    logger.info(s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
-      s"${ToStringBuilder.reflectionToString(hikariConfig).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
-      s" and executor ${ToStringBuilder.reflectionToString(executor)}")
 
-    Database.forDataSource(new HikariDataSource(hikariConfig), maxConnections = Some(maxPoolSize), executor)
+  private def initDb(config: HikariConfig) = {
+    val executor = AsyncExecutor("kouta", config.getMaximumPoolSize, 1000)
+    logger.info(s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
+      s"${ToStringBuilder.reflectionToString(config).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
+      s" and executor ${ToStringBuilder.reflectionToString(executor)}")
+    Database.forDataSource(new HikariDataSource(config), maxConnections = Some(config.getMaximumPoolSize), executor)
+  }
+
+  val dataSource: javax.sql.DataSource = {
+    new HikariDataSource(hikariConfig)
   }
 
   private def migrate() = {

@@ -25,6 +25,9 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
 
   def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String])]
+
+  def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int
+  def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -133,6 +136,14 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     KoutaDatabase.runBlockingTransactionally(
       selectHakukohdeAndRelatedEntities(hakukohdeOids)
     ).get
+  }
+
+  override def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid] = {
+    KoutaDatabase.runBlocking(selectArchivableHakukohdeOidsByHakuOids(hakuOids))
+  }
+
+  override def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int = {
+    KoutaDatabase.runBlocking(updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]))
   }
 }
 
@@ -651,4 +662,12 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
     left join hakukohteiden_valintakokeet as valintakokeet on valintakokeet.hakukohde_oid = hk.oid
     left join hakukohteiden_hakuajat as hakuajat on hakuajat.hakukohde_oid = hk.oid
     where hk.oid in (#${createOidInParams(hakukohdeOids)})""".as[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)]
+
+  def selectArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): DBIO[Seq[HakukohdeOid]] = {
+    sql"""select oid from hakukohteet where haku_oid in (#${createOidInParams(hakuOids)}) and tila = 'julkaistu'""".as[HakukohdeOid]
+  }
+
+  def updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): DBIO[Int] = {
+    sqlu"""update hakukohteet set tila = 'arkistoitu' where oid in (#${createOidInParams(hakukohdeOids)}) and tila = 'julkaistu'"""
+  }
 }

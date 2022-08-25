@@ -1,13 +1,13 @@
 package fi.oph.kouta.validation
 
-import java.time.LocalDate
-import java.util.UUID
-
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.validation.Validations._
+
+import java.time.LocalDate
+import java.util.UUID
 
 class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
@@ -98,6 +98,28 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     passesValidation(max.copy(tila = Julkaistu, metadata = Some(metadata)))
     failsOnJulkaisuValidation(max.copy(metadata = Some(metadata)), "metadata.tulevaisuudenAikataulu[0].paattyy", pastDateMsg(pastAjanjakso.paattyy.get))
   }
+
+  it should "fail if ajastettu arkistointi is in the past." in {
+    val haku = max.copy(tila = Julkaistu, hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(now().plusMonths(1)))), ajastettuHaunJaHakukohteidenArkistointi = Some(now().plusMinutes(5)))
+    failsValidation(haku, "ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(3))
+  }
+
+  it should "fail if ajastettu arkistointi is in the past with multiple hakuajat." in {
+    val haku = max.copy(tila = Julkaistu, hakuajat = List(Ajanjakso(alkaa = now().minusYears(1), paattyy = Some(now().minusMonths(11))), Ajanjakso(alkaa = now(), paattyy = Some(now().plusMonths(1)))), ajastettuHaunJaHakukohteidenArkistointi = Some(now().plusMinutes(5)))
+    failsValidation(haku, "ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(3))
+  }
+
+  it should "pass if no hakuaika päättyy" in {
+    val haku = max.copy(tila = Julkaistu, hakuajat = List(onlyAlkaaAjanjakso), ajastettuHaunJaHakukohteidenArkistointi = Some(now().minusDays(1)))
+    passesValidation(haku)
+  }
+
+  it should "pass if no automaattinen arkistointi value" in {
+    val haku = max.copy(tila = Julkaistu, ajastettuHaunJaHakukohteidenArkistointi = None)
+    passesValidation(haku)
+  }
+
+
 }
 
 class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {

@@ -59,6 +59,13 @@ class AuditLog(val logger: Logger) extends GsonSupport {
       }
     }.toDBIO
 
+  def logArchive[T <: HasPrimaryId[_, T]](archivedOid: String, resource: AuditResource, user: User): DBIO[_] =
+    Try {
+        val target   = getTarget(resource, Some(archivedOid))
+        val changes  = new Changes.Builder().updated("tila", "julkaistu", "arkistoitu").build()
+        audit.log(user, resource.Archive, target.build(), changes)
+    }.toDBIO
+
   def logS3Upload(url: String)(implicit authenticated: Authenticated): Unit = {
     val target  = new Target.Builder().setField("url", url).build()
     val changes = new Changes.Builder().added("url", url).build()

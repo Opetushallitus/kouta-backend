@@ -5,9 +5,12 @@ import java.util.UUID
 import java.util.regex.Pattern
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import fi.vm.sade.utils.slf4j.Logging
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
-object Validations {
+import java.time.temporal.ChronoUnit
+
+object Validations extends Logging {
   private val urlValidator   = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
 
@@ -157,6 +160,9 @@ object Validations {
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
+  def invalidArkistointiDate(months: Int): ErrorMessage =
+    ErrorMessage(msg = s"Arkistointipäivämäärän tulee olla vähintään $months kuukautta haun viimeisimmästä päättymispäivämäärästä.", id = "invalidArkistointiDate")
+
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(
     msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen",
     id = "InvalidKoulutuspaivamaarat"
@@ -283,6 +289,18 @@ object Validations {
     case Some(Ataru)       => assertNotOptional(hakulomakeAtaruId, "hakulomakeAtaruId")
     case Some(EiSähköistä) => validateOptionalKielistetty(kielivalinta, hakulomakeKuvaus, "hakulomakeKuvaus")
     case _                 => NoErrors
+  }
+
+  def validateArkistointiPaivamaara(ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime], haunPaattymisPaivamaarat: List[Option[LocalDateTime]]): IsValid = {
+    val arkistointiAikaisintaanKuukautta = 3
+    ajastettuHaunJaHakukohteidenArkistointi match {
+      case Some(pvm) => haunPaattymisPaivamaarat.flatten.sortWith(_.isBefore(_)) match {
+        case paattymisPaivamaarat if paattymisPaivamaarat.nonEmpty && paattymisPaivamaarat.last.toLocalDate.until(pvm.toLocalDate, ChronoUnit.MONTHS) < arkistointiAikaisintaanKuukautta =>
+          error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(arkistointiAikaisintaanKuukautta))
+        case _ => NoErrors
+      }
+      case _ => NoErrors
+    }
   }
 
   def validateKoulutusPaivamaarat(

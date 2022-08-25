@@ -18,6 +18,8 @@ trait HakuDAO extends EntityModificationDAO[HakuOid] {
   def get(oid: HakuOid, tilaFilter: TilaFilter): Option[(Haku, Instant)]
   def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yhteishakuFilter: YhteishakuFilter): Seq[HakuListItem]
   def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem]
+  def listArchivableHakuOids(): Seq[HakuOid]
+  def archiveHakusByHakuOids(hakuOids: Seq[HakuOid]): Int
 }
 
 object HakuDAO extends HakuDAO with HakuSQL {
@@ -55,9 +57,14 @@ object HakuDAO extends HakuDAO with HakuSQL {
     case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids, tilaFilter, yhteishakuFilter))
   }
 
-
   override def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakuListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid, tilaFilter))
+
+  override def listArchivableHakuOids(): Seq[HakuOid] = {
+    KoutaDatabase.runBlocking(selectArchivableHakuOids())
+  }
+
+  override def archiveHakusByHakuOids(hakuOids: Seq[HakuOid]): Int = KoutaDatabase.runBlocking(updateHakusToArchivedByHakuOids(hakuOids))
 }
 
 trait HakuModificationSQL extends SQLHelpers {
@@ -97,6 +104,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              hakukohteen_liittamisen_takaraja,
                              hakukohteen_muokkaamisen_takaraja,
                              ajastettu_julkaisu,
+                             ajastettu_haun_ja_hakukohteiden_arkistointi,
+                             ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu,
                              kohdejoukko_koodi_uri,
                              kohdejoukon_tarkenne_koodi_uri,
                              hakulomaketyyppi,
@@ -114,6 +123,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                      ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
                      ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp,
                      ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp,
+                     ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp,
+                     ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp,
                      ${haku.kohdejoukkoKoodiUri},
                      ${haku.kohdejoukonTarkenneKoodiUri},
                      ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
@@ -140,7 +151,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
 
   def selectHaku(oid: HakuOid, tilaFilter: TilaFilter): DBIO[Option[Haku]] = {
     sql"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja,
-                 ajastettu_julkaisu, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri,
+                 ajastettu_julkaisu, ajastettu_haun_ja_hakukohteiden_arkistointi, ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri,
                  hakulomaketyyppi, hakulomake_ataru_id, hakulomake_kuvaus, hakulomake_linkki, metadata, organisaatio_oid,
                  muokkaaja, kielivalinta, lower(system_time) from haut where oid = $oid
                  #${tilaConditions(tilaFilter)}""".as[Haku].headOption
@@ -157,6 +168,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
               hakukohteen_liittamisen_takaraja = ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
               hakukohteen_muokkaamisen_takaraja = ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp,
               ajastettu_julkaisu = ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp,
+              ajastettu_haun_ja_hakukohteiden_arkistointi = ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp,
+              ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu = ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp,
               kohdejoukko_koodi_uri = ${haku.kohdejoukkoKoodiUri},
               kohdejoukon_tarkenne_koodi_uri = ${haku.kohdejoukonTarkenneKoodiUri},
               hakulomaketyyppi = ${haku.hakulomaketyyppi.map(_.toString)}::hakulomaketyyppi,
@@ -181,6 +194,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp
             or hakukohteen_muokkaamisen_takaraja is distinct from ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp
             or ajastettu_julkaisu is distinct from ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp
+            or ajastettu_haun_ja_hakukohteiden_arkistointi is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp
+            or ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp
             or organisaatio_oid is distinct from ${haku.organisaatioOid}
             or tila is distinct from ${haku.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(haku.nimi)}::jsonb
@@ -246,5 +261,22 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
           inner join toteutukset on toteutukset.oid = hakukohteet.toteutus_oid
           where toteutukset.oid = $toteutusOid
           #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakuListItem]
+  }
+
+  def selectArchivableHakuOids(): DBIO[Seq[HakuOid]] = {
+    sql"""select oid from haut
+          where (ajastettu_haun_ja_hakukohteiden_arkistointi <= now()::date
+              and tila = 'julkaistu'
+              and ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is null)
+             or (oid in (select haku_oid
+                        from hakujen_hakuajat
+                        where upper(hakuaika)::date <= now()::date - '10 month'::interval)
+              and tila = 'julkaistu'
+              and ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is null)""".as[HakuOid]
+  }
+
+  def updateHakusToArchivedByHakuOids(hakuOids: Seq[HakuOid]): DBIO[Int] = {
+    sqlu"""update haut set tila = 'arkistoitu', ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu = now()
+           where oid in (#${createOidInParams(hakuOids)}) and tila = 'julkaistu'"""
   }
 }

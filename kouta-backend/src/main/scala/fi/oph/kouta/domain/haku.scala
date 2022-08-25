@@ -55,6 +55,18 @@ package object haku {
       |          description: Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet ja koulutukset julkaistaan
       |            automaattisesti Opintopolussa, jos ne eivät vielä ole julkisia
       |          example: 2019-08-23T09:55
+      |        ajastettuHaunJaHakukohteidenArkistointi:
+      |          type: string
+      |          format: date-time
+      |          description: Ajanhetki, jolloin haku ja siihen liittyvät hakukohteet arkistoidaan. Jos tyhjä,
+      |            arkistoidaan hakukohteet 10 kuukautta hakuajan päättymisen jälkeen.
+      |          example: 2019-08-23T09:55
+      |        ajastettuHaunJaHakukohteidenArkistointiAjettu:
+      |          type: string
+      |          format: date-time
+      |          description: Ajanhetki, jolloin haun ja siihen liittyvät hakukohteiden ajastettu arkistointi on
+      |            ajettu kyseiselle haulle.
+      |          example: 2019-08-23T09:55
       |        kohdejoukkoKoodiUri:
       |          type: string
       |          description: Haun kohdejoukko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukko/1)
@@ -183,6 +195,8 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
                 hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
                 ajastettuJulkaisu: Option[LocalDateTime] = None,
+                ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime] = None,
+                ajastettuHaunJaHakukohteidenArkistointiAjettu: Option[LocalDateTime] = None,
                 kohdejoukkoKoodiUri: Option[String] = None,
                 kohdejoukonTarkenneKoodiUri: Option[String] = None,
                 hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
@@ -214,7 +228,8 @@ case class Haku(oid: Option[HakuOid] = None,
       assertNotOptional(hakulomaketyyppi, "hakulomaketyyppi"),
       validateHakulomake(hakulomaketyyppi, hakulomakeAtaruId, hakulomakeKuvaus, hakulomakeLinkki, kielivalinta),
       validateIfTrue(hakutapaKoodiUri.contains("hakutapa_01#1"), //Yhteishaku
-        assertNotOptional(metadata.get.koulutuksenAlkamiskausi, "metadata.koulutuksenAlkamiskausi"))
+        assertNotOptional(metadata.get.koulutuksenAlkamiskausi, "metadata.koulutuksenAlkamiskausi")),
+      validateArkistointiPaivamaara(ajastettuHaunJaHakukohteidenArkistointi, hakuajat.map(p => p.paattyy))
     ))
   )
 
