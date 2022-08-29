@@ -30,8 +30,29 @@ object KoulutusService
       OppijanumerorekisteriClient,
       KayttooikeusClient,
       KoulutusKoodiClient,
-      KoulutusServiceValidation
+      KoulutusServiceValidation,
+      KoutaSearchClient
+    ) {
+  def apply(sqsInTransactionService: SqsInTransactionService,
+    s3ImageService: S3ImageService, auditLog: AuditLog,
+    organisaatioService: OrganisaatioService,
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+    kayttooikeusClient: KayttooikeusClient,
+    koodistoClient: KoulutusKoodiClient,
+    koulutusServiceValidation: KoulutusServiceValidation): KoulutusService = {
+    new KoulutusService(
+      sqsInTransactionService,
+      s3ImageService,
+      auditLog,
+      organisaatioService,
+      oppijanumerorekisteriClient,
+      kayttooikeusClient,
+      koodistoClient,
+      koulutusServiceValidation,
+      KoutaSearchClient
     )
+  }
+}
 
 class KoulutusService(
     sqsInTransactionService: SqsInTransactionService,
@@ -41,7 +62,8 @@ class KoulutusService(
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
     koodistoClient: KoulutusKoodiClient,
-    koulutusServiceValidation: KoulutusServiceValidation
+    koulutusServiceValidation: KoulutusServiceValidation,
+    koutaSearchClient: KoutaSearchClient
 ) extends RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
     with Logging {
@@ -346,7 +368,7 @@ class KoulutusService(
 
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
       case Nil          => SearchResult[KoulutusSearchItem]()
-      case koulutusOids => assocToteutusCounts(KoutaSearchClient.searchKoulutukset(koulutusOids, params))
+      case koulutusOids => assocToteutusCounts(koutaSearchClient.searchKoulutukset(koulutusOids, params))
     }
   }
 
@@ -372,7 +394,7 @@ class KoulutusService(
       }
 
     filterToteutukset(
-      KoutaSearchClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption
+      koutaSearchClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption
     )
   }
 
