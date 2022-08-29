@@ -418,6 +418,11 @@
             <artifactId>elastic4s-core_2.12</artifactId>
             <version>7.17.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-json-json4s_2.12</artifactId>
+            <version>7.17.2</version>
+        </dependency>
     </dependencies>
 
     <build>
