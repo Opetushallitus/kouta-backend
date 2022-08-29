@@ -280,20 +280,22 @@ object TestData {
     )
   )
 
+  val KkOpintokokonaisuusKoulutuksenMetatieto: KkOpintokokonaisuusKoulutusMetadata = KkOpintokokonaisuusKoulutusMetadata(
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+    opintojenLaajuusNumeroMin = Some(5),
+    opintojenLaajuusNumeroMax = Some(15),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+    isMuokkaajaOphVirkailija = Some(false)
+  )
+
   val KkOpintokokonaisuusKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = false,
     koulutustyyppi = KkOpintokokonaisuus,
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
-    metadata = Some(KkOpintokokonaisuusKoulutusMetadata(
-      opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
-      opintojenLaajuusNumeroMin = Some(5),
-      opintojenLaajuusNumeroMax = Some(15),
-      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
-      isMuokkaajaOphVirkailija = Some(false)
-    )),
+    metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
@@ -1007,8 +1009,7 @@ object TestData {
     hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = None,
-    isMuokkaajaOphVirkailija = Some(false)
-  )
+    isMuokkaajaOphVirkailija = Some(false))
 
   val JulkaistuAmmToteutus: Toteutus = Toteutus(
     oid = None,
@@ -1035,6 +1036,8 @@ object TestData {
 
   val JulkaistuKkOpintojaksoToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto))
+  val JulkaistuKkOpintokokonaisuusToteutus: Toteutus =
+    JulkaistuAmmToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto))
   val JulkaistuAmkToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)))
 
