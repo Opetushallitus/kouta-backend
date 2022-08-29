@@ -1,15 +1,14 @@
 package fi.oph.kouta.client
 
-import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.properties.OphProperties
+import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 import scalacache.caffeine.CaffeineCache
-import scalacache.modes.scalaFuture._
 import scalacache.modes.sync.mode
 
-import java.time.{LocalDate, LocalDateTime, LocalTime, ZonedDateTime}
 import java.time.format.DateTimeFormatter
+import java.time.{LocalDate, LocalDateTime, LocalTime, ZonedDateTime}
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 
@@ -41,8 +40,11 @@ object KoodistoUtils {
     }
   }
 
-  def kooriUriToString(koodiUri: KoodiUri): String =
+  def koodiUriToString(koodiUri: KoodiUri): String =
     s"${koodiUri.koodiUri}#${koodiUri.latestVersio}"
+
+  def koodiUriStringsMatch(a: String, b: String): Boolean =
+    koodiUriFromString(a).koodiUri == koodiUriFromString(b).koodiUri
 
   def koodiUriWithEqualOrHigherVersioNbrInList(
       koodiUri: String,
@@ -105,7 +107,6 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
     }
     koodiUritFromCache.getOrElse(Seq())
   }
-
   protected def isKoodiVoimassa(
       koodisto: String,
       koodiUri: String,

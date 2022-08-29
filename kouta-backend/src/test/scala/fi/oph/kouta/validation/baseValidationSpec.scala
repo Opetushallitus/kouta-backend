@@ -14,6 +14,11 @@ abstract class BaseValidationSpec[E <: Validatable] extends AnyFlatSpec with Bef
 
   def validator: ValidatingService[E] = null
 
+  override def afterEach = {
+    super.afterEach()
+    reset()
+  }
+
   def passValidation(e: E): Unit          = validator.withValidation(e, None)(e => e)
   def passValidation(e: E, oldE: E): Unit = validator.withValidation(e, Some(oldE))(e => e)
 
