@@ -1,13 +1,12 @@
 package fi.oph.kouta.client
 
-import com.sksamuel.elastic4s.{ElasticClient, HitReader}
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.json4s.ElasticJson4s.Implicits._
 import com.sksamuel.elastic4s.requests.searches.SearchRequest
 import com.sksamuel.elastic4s.requests.searches.sort.SortOrder
+import com.sksamuel.elastic4s.{ElasticClient, HitReader}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.searchResults._
 import fi.oph.kouta.elasticsearch.ElasticsearchClient
 import fi.oph.kouta.servlet.SearchParams
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -113,7 +112,9 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
     val hakuOidFilter     = params.hakuOid.map(termQuery(getSearchFieldKeyword(lng, "hakuOid"), _))
     val toteutusOidFilter = params.toteutusOid.map(termQuery(getSearchFieldKeyword(lng, "toteutusOid"), _))
     val orgWhitelistFilter =
-      Option(params.orgWhitelist).filter(_.nonEmpty).map(x => termsQuery(getSearchFieldKeyword(lng, "orgWhitelist"), x.map(_.toString)))
+      Option(params.orgWhitelist)
+        .filter(_.nonEmpty)
+        .map(x => termsQuery(getSearchFieldKeyword(lng, "orgWhitelist"), x.map(_.toString)))
     val koulutuksenAlkamiskausiFilter = Option(params.koulutuksenAlkamisvuosi)
       .filter(_.nonEmpty)
       .map(termsQuery(getSearchFieldKeyword(lng, "koulutuksenAlkamiskausi"), _))
@@ -162,21 +163,26 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
     searchElastic[TSearchItem](req)
   }
 
-  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: SearchParams): KoulutusSearchResultFromIndex = {
+  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: SearchParams) = {
     searchEntities[KoulutusSearchItemFromIndex]("koulutus-kouta", koulutusOids.map(_.toString), params)
   }
 
-  def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: SearchParams): ToteutusSearchResultFromIndex =
+  def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: SearchParams) =
     searchEntities[ToteutusSearchItemFromIndex]("toteutus-kouta", toteutusOids.map(_.toString), params)
 
-  def searchHaut(hakuOids: Seq[HakuOid], params: SearchParams): HakuSearchResultFromIndex =
+  def searchHaut(hakuOids: Seq[HakuOid], params: SearchParams) =
     searchEntities[HakuSearchItemFromIndex]("haku-kouta", hakuOids.map(_.toString), params)
 
-  def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: SearchParams): HakukohdeSearchResult =
+  def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: SearchParams) =
     searchEntities[HakukohdeSearchItem]("hakukohde-kouta", hakukohdeOids.map(_.toString), params)
 
-  def searchValintaperusteet(valintaperusteIds: Seq[UUID], params: SearchParams): ValintaperusteSearchResult =
-    searchEntities[ValintaperusteSearchItem]("valintaperuste-kouta", valintaperusteIds.map(_.toString), params, idKey = "id")
+  def searchValintaperusteet(valintaperusteIds: Seq[UUID], params: SearchParams) =
+    searchEntities[ValintaperusteSearchItem](
+      "valintaperuste-kouta",
+      valintaperusteIds.map(_.toString),
+      params,
+      idKey = "id"
+    )
 }
 
 object KoutaSearchClient extends KoutaSearchClient(ElasticsearchClient.client)

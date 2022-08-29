@@ -25,15 +25,16 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-// Tämä on muuten kopioitu kouta-internalista, mutta kakutus on poistettu toistaiseksi versioristiriitojen takia
+// Kopioitu muutoksin kouta-internalista. Kakutus on poistettu toistaiseksi versioristiriitojen takia
 // (scalacache riippuu caffeine v2:sta ja scaffeine riippuu caffeine v3:sta).
-// Jos halutaan käyttää kouta-internalin kanssa samaa ElasticsearchClient:a, pitää kakutusongelma ratkaista.
+// Jos halutaan myöhemmin käyttää kouta-internalin kanssa samaa ElasticsearchClient:a, pitää kakutusongelma ratkaista.
+// iterativeElasticFetch:a ei ole nyt käytetty, koska kouta-index:n elastic-kutsuissa vastaavaa ei oltu tehty
+// ja se se olisi pitänyt muuttaa myös palauttamaan totalHits.
 trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
   val client: ElasticClient
   private val iterativeElasticFetch = new IterativeElasticFetch(client)
 
-  /*
-  def getItem[T <: HasTila: HitReader](id: String): Future[T] = timed(s"GetItem from ElasticSearch (Id: ${id}", 100) {
+  def getItem[T <: HasTila: HitReader](index: String)(id: String): Future[T] = timed(s"GetItem from ElasticSearch (Id: ${id}", 100) {
     val request = get(index, id)
     logger.debug(s"Elasticsearch query: ${request.show}")
     client
@@ -45,7 +46,7 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
         case response: RequestSuccess[GetResponse] =>
           logger.debug(s"Elasticsearch status: {}", response.status)
           logger.debug(s"Elasticsearch response: {}", response.result.sourceAsString)
-          handleSuccesfulReponse(id, response)
+          handleSuccesfulReponse(index)(id, response)
       }
       .flatMap {
         case None =>
@@ -56,7 +57,6 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
           Future.successful(t)
       }
   }
-   */
 
   private def handleSuccesfulReponse[T <: HasTila: HitReader](index: String)(id: String, response: RequestSuccess[GetResponse]) = {
     response.status match {
@@ -84,7 +84,7 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
     }
   }
 
-  private def mapResultToEntity[T: HitReader](index: String, response: RequestSuccess[SearchResponse]) = {
+  private def mapResultToEntity[T: HitReader](response: RequestSuccess[SearchResponse]) = {
     val totalHits = response.result.totalHits
 
     SearchResult[T](
@@ -133,18 +133,15 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
 
     logger.info(s"Elasticsearch request: ${req.show}")
 
-    val index = req.indexes.values.head
-
     client
       .execute(req)
       .flatMap {
         case failure: RequestFailure =>
-          logger.debug(s"Elasticsearch request failure: {}", failure)
+          logger.debug(s"Elasticsearch request failure: {}", failure.error)
           Future.failed(ElasticSearchException(failure.error))
         case response: RequestSuccess[SearchResponse] =>
           logger.debug(s"Elasticsearch status: {}", response.status)
-          //logger.debug(s"Elasticsearch response: {}", response.result)
-          Future.successful(mapResultToEntity[T](index, response))
+          Future.successful(mapResultToEntity[T](response))
       }.await
   }
 }
