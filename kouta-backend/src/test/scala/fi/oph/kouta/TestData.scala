@@ -263,6 +263,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(
       ErikoislaakariKoulutusMetadata(
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_091#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         isMuokkaajaOphVirkailija = Some(true)
       )

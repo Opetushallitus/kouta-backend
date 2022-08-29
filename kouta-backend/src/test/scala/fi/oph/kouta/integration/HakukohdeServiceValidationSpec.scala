@@ -9,6 +9,7 @@ import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
 import fi.oph.kouta.service.{HakukohdeServiceValidation, KoutaValidationException, OrganisaatioService}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{
   ErrorMessage,
@@ -115,19 +116,20 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")).thenAnswer(true)
-    when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(true)
-    when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(true)
-    when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_1#1")).thenAnswer(true)
-    when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_2#1")).thenAnswer(true)
-    when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(true)
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(true)
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(true)
+    when(hakuKoodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
+      .thenAnswer(itemFound)
+    when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_1#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_2#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
+    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
 
-    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(true)
-    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_fi")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_sv")).thenAnswer(true)
+    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
+    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_fi")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_sv")).thenAnswer(itemFound)
 
     when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(dependencies)
     when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(dependencies.filterKeys(_ == "1.2.246.562.17.123"))
@@ -139,10 +141,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         Seq(ammatillinenPerustutkintoKoulutustyyppi),
         "koulutus_371101#1"
       )
-    ).thenAnswer(true)
+    ).thenAnswer(itemFound)
     when(
       koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUritAllowedForKaksoistutkinto, "koulutus_301101#1")
-    ).thenAnswer(true)
+    ).thenAnswer(itemFound)
   }
 
   def initMockSeq(hakukohde: Hakukohde): Hakukohde = {
@@ -279,14 +281,122 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(lkHakukohde)
   }
 
-  it should "succeed when ataruId not changed in modify opertaion, eventhough ataruId is unknown" in {
+  it should "succeed when hakukohdeKoodiUri not changed in modify operation, eventhough hakukohdeKoodiUri unknown" in {
+    passesValidation(
+      initMockSeq(
+        maxWithIds.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX"))
+      ),
+      Some(max.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX")))
+    )
+  }
+
+  it should "succeed when pohjakoulutusKoodiUrit not changed in modify operation, eventhough koodiUrit unknown" in {
+    val urit = Seq("pohjakoulutusvaatimuskouta_XX#1", "pohjakoulutusvaatimuskouta_YY#1")
+    passesValidation(
+      initMockSeq(
+        maxWithIds.copy(pohjakoulutusvaatimusKoodiUrit = urit)
+      ),
+      Some(max.copy(pohjakoulutusvaatimusKoodiUrit = urit))
+    )
+  }
+
+  it should "succeed when liitteidentoimitusosoite not changed in modify operation, eventhough postinumeroKoodiUri unknown" in {
+    val osoite = Some(LiitteenToimitusosoite(osoite = Osoite(postinumeroKoodiUri = Some("posti_12345#1"))))
+    passesValidation(
+      initMockSeq(
+        maxWithIds.copy(
+          tila = Tallennettu,
+          liitteidenToimitustapa = Some(MuuOsoite),
+          liitteetOnkoSamaToimitusosoite = Some(true),
+          liitteidenToimitusosoite = osoite
+        )
+      ),
+      Some(max.copy(liitteidenToimitusosoite = osoite))
+    )
+  }
+
+  it should "succeed when liitteet not changed in modify operation, eventhough unknown liitetyyppi" in {
+    val liitteet = List(Liite1.copy(tyyppiKoodiUri = Some("liitetyypitamm_9#1")))
+    passesValidation(
+      initMockSeq(
+        maxWithIds.copy(liitteet = liitteet)
+      ),
+      Some(max.copy(liitteet = liitteet))
+    )
+  }
+
+  it should "succeed when valintakokeet not changed in modify operation, eventhough unknown valintakoetyyppi" in {
+    val valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_9#1")))
+    passesValidation(
+      initMockSeq(
+        maxWithIds.copy(valintakokeet = valintakokeet)
+      ),
+      Some(max.copy(valintakokeet = valintakokeet))
+    )
+  }
+
+  it should "succeed when ataruId not changed in modify operation, eventhough ataruId is unknown" in {
     val unknownAtaruId = Some(UUID.randomUUID())
     passesValidation(
       initMockSeq(maxWithIds.copy(hakulomakeAtaruId = unknownAtaruId)),
-      Some(max.copy(hakulomakeAtaruId = unknownAtaruId)),
-      authenticatedNonPaakayttaja
+      Some(max.copy(hakulomakeAtaruId = unknownAtaruId))
     )
   }
+
+  it should "succeed when KoulutuksenAlkamiskausi not changed in modify operation, eventhough kausiKoodiUri is unknown" in {
+    val metadata = maxMetadata.copy(koulutuksenAlkamiskausi =
+      Some(KoulutuksenAlkamiskausi(koulutuksenAlkamiskausiKoodiUri = Some("kausi_xx#2")))
+    )
+    passesValidation(
+      initMockSeq(maxWithIds.copy(tila = Tallennettu, metadata = Some(metadata))),
+      Some(max.copy(metadata = Some(metadata)))
+    )
+  }
+
+  it should "succeed when PainotetutArvosanat not changed in modify operation, eventhough oppiaineKoodiUri and kieli unknown" in {
+    val metadata = maxMetadata.copy(hakukohteenLinja =
+      Some(
+        LukioHakukohteenLinja.copy(painotetutArvosanat =
+          Seq(
+            PainotettuOppiaine(
+              Some(
+                OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_xxxx"), kieli = Some("kieli_xx"))
+              ),
+              Some(1.0)
+            )
+          )
+        )
+      )
+    )
+    passesValidation(
+      initMockSeq(maxWithIds.copy(metadata = Some(metadata))),
+      Some(max.copy(metadata = Some(metadata)))
+    )
+  }
+
+  it should "succeed when ValintaperusteenValintakokeidenLisatilaisuudet not changed in modify operation, eventhough unknown osoiteKoodiUri" in {
+    val metadata = maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet =
+      Seq(
+        ValintakokeenLisatilaisuudet(id = Some(valintaperusteenValintakoeId1), tilaisuudet =
+          Seq(Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("posti_12345#1")))))
+        )
+      )
+    )
+    passesValidation(
+      initMockSeq(maxWithIds.copy(tila = Tallennettu, metadata = Some(metadata))),
+      Some(max.copy(metadata = Some(metadata)))
+    )
+  }
+
+  it should "succeed when ToinenAsteOnkoKaksoistutkinto not changed in modify operation, eventhough illegal koulutus-koodiurit" in {
+    val hk = maxWithIds.copy(
+      toteutusOid = ToteutusOid("1.2.246.562.17.456"),
+      toinenAsteOnkoKaksoistutkinto = Some(true)
+    )
+    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto, Some(Seq("koulutus_301104#1")))
+    passesValidation(hk, Some(hk))
+  }
+
   it should "fail when invalid perustiedot" in {
     failsValidation(
       max.copy(oid = Some(HakukohdeOid("1.2.3"))),
@@ -560,9 +670,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   "Liite validation" should "fail if id given for liite in new hakukohde" in {
     val liiteId = Some(UUID.randomUUID())
     failsValidation(
-      max.copy(liitteet =
-        List(Liite2.copy(id = liiteId))
-      ),
+      max.copy(liitteet = List(Liite2.copy(id = liiteId))),
       "liitteet[0].id",
       notMissingMsg(liiteId)
     )

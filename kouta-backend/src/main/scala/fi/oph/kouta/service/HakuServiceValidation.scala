@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuMetadata, Julkaisutila, Kieli, KoulutuksenAlkamiskausi, TilaFilter, Yhteyshenkilo}
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.validation.CrudOperations.CrudOperation
-import fi.oph.kouta.validation.Validations.{HakutapaKoodiPattern, KohdejoukkoKoodiPattern, KohdejoukonTarkenneKoodiPattern, and, assertMatch, assertNotOptional, assertTrue, assertValid, integrityViolationMsg, validateHakulomake, validateIfDefined, validateIfJulkaistu, validateIfNonEmpty, validateIfTrue}
+import fi.oph.kouta.validation.Validations.{HakutapaKoodiPattern, KohdejoukkoKoodiPattern, KohdejoukonTarkenneKoodiPattern, and, assertMatch, assertNotOptional, assertTrue, assertValid, integrityViolationMsg, validateHakulomake, validateIfDefined, validateIfJulkaistu, validateIfNonEmptySeq, validateIfTrue}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 
 object HakuServiceValidation extends HakuServiceValidation(OrganisaatioServiceImpl, HakukohdeDAO)
@@ -25,7 +25,7 @@ class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakuko
         haku.kohdejoukonTarkenneKoodiUri,
         assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")
       ),
-      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
+      //validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
       validateIfDefined[HakuMetadata](haku.metadata, validateMetadata(_, tila, kielivalinta)),
       validateIfJulkaistu(
         tila,
@@ -48,7 +48,9 @@ class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakuko
     )
   }
 
-  private def validateMetadata(m: HakuMetadata, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = and(
+  private def validateMetadata(m: HakuMetadata, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = {
+    /*
+    and(
     validateIfNonEmpty[Yhteyshenkilo](m.yhteyshenkilot, "path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
     validateIfNonEmpty[Ajanjakso](
       m.tulevaisuudenAikataulu,
@@ -61,6 +63,10 @@ class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakuko
     )
   )
 
+     */
+    NoErrors
+  }
+
   override def validateInternalDependenciesWhenDeletingEntity(haku: Haku): IsValid = assertTrue(
     hakukohdeDAO.listByHakuOid(haku.oid.get, TilaFilter.onlyOlemassaolevat()).isEmpty,
     "tila",
@@ -71,24 +77,24 @@ class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakuko
     validateIfTrue(
       !haku.hakutapaKoodiUri.contains("hakutapa_03#1"),
       and( // Not Jatkuva haku
-        validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisu(_))
+        //validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisu(_))
       )
     ),
     validateIfTrue(
       haku.hakutapaKoodiUri.contains("hakutapa_03#1"),
       and( // Jatkuva haku
-        validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaHaku(_))
+        //validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaHaku(_))
       )
     ),
     validateIfDefined[HakuMetadata](
       haku.metadata,
       m =>
         and(
-          validateIfNonEmpty[Ajanjakso](
-            m.tulevaisuudenAikataulu,
-            "metadata.tulevaisuudenAikataulu",
-            _.validateOnJulkaisu(_)
-          ),
+          //validateIfNonEmpty[Ajanjakso](
+          //  m.tulevaisuudenAikataulu,
+          //  "metadata.tulevaisuudenAikataulu",
+          //  _.validateOnJulkaisu(_)
+          //),
           validateIfDefined[KoulutuksenAlkamiskausi](
             m.koulutuksenAlkamiskausi,
             _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")

@@ -41,8 +41,6 @@ object Tester {
     //HakukohdeDAO.getDependencyInformation(JulkaistuHakukohde.copy(oid = Some(HakukohdeOid("1.2.246.562.20.00000000000000004244")), toteutusOid = ToteutusOid("1.2.246.562.17.00000000000000003366"),
     //  hakuOid = HakuOid("1.2.246.562.29.00000000000000002821"), valintaperusteId = Some(UUID.fromString("0c3e3cc6-8892-4b82-8663-0c2bc79c02bb")))).get("1.2.246.562.17.00000000000000003366").get._4.get.foreach(println(_))
 
-    //val client = new EPerusteKoodiClient(null)
-    //println("oikea vastaus: " + client.getOsaamisalaKoodiuritForEPeruste(656))
 
     //println(client.koulutusKoodiUritExist(Seq("koulutus_000001", "koulutus_000002", "koulutus_000003"), Seq("koulutus_000001#12")))
     //val client = new OrganisaatioServiceImpl(null)
@@ -50,6 +48,21 @@ object Tester {
     //println(all)
     //println(all.size)
     //println(client.findOrganisaatioOidsFlatByMemberOid(OrganisaatioOid("1.2.246.562.10.54453921329")))
-    println(UUID.randomUUID())
+
+    case class SomeClass(optParam: Option[Int], sequ: Seq[String])
+
+    val optTest: Option[SomeClass] = Some(SomeClass(None, Seq()))
+    //println(optTest.map(_.optParam).getOrElse(Some(66)))
+
+    val optTest2: Option[SomeClass] = None//Some(SomeClass(None, Seq()))
+    //println(optTest2.map(_.optParam).getOrElse(Some(66)))
+
+    val someTest: SomeClass = SomeClass(None, Seq())
+    val optTest3: Option[SomeClass] = None//Some(SomeClass(Some(99), Seq()))
+    //println(optTest3.map(_.optParam).getOrElse(None) == someTest.optParam)
+
+    val someTest2: SomeClass = SomeClass(None, Seq("yksi", "kaksi"))
+    val optTest4: Option[SomeClass] = None//Some(SomeClass(None, Seq("kaksi", "yksi")))
+    //println(optTest4.map(_.sequ).getOrElse(Seq()).toSet == someTest2.sequ.toSet)
   }
 }

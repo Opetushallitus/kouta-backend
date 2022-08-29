@@ -1,7 +1,9 @@
 package fi.oph.kouta.validation
 
+import fi.oph.kouta.client.{HakemusPalveluClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 import java.time.{LocalDate, LocalDateTime}
@@ -228,6 +230,45 @@ object Validations {
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
+  val koodistoServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg = s"KoodiUrin voimassaoloa ei voitu tarkistaa, Koodisto-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "koodistoServiceFailure"
+    )
+
+  val ataruServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"Hakemuslomakkeen voimassaoloa ei voitu tarkistaa, Ataru-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "ataruServiceFailure"
+    )
+
+  val kaksoistutkintoValidationFailedDuetoKoodistoFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"Kaksoistutkintoon liittyvien koulutus-koodiurien voimassaoloa ei voitu tarkistaa, Koodisto-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "kaksoistutkintoValidationFailedDuetoKoodistoFailure"
+    )
+
+  val ePerusteServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"EPerusteen oikeellisuutta ei voitu tarkistaa, ePeruste-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "ePerusteServiceFailure"
+    )
+
+  val organisaatioServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"Organisaatioiden voimassaoloa ei voitu tarkistaa, Organisaatiopalvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "organisaatioServiceFailure"
+    )
+
+  def ePerusteServiceOk(ePerusteValidationStatus: IsValid): Boolean =
+    !ePerusteValidationStatus.exists(
+      _.errorType == ePerusteServiceFailureMsg.id
+    )
+
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(
     msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen",
     id = "InvalidKoulutuspaivamaarat"
@@ -332,16 +373,113 @@ object Validations {
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
-  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
-
-  def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid = (value, oldValue) match {
-    case (Some(value), Some(oldValue)) => if (value != oldValue) f(value) else NoErrors
-    case (Some(value), None) => f(value)
-    case _ => NoErrors
+  def assertKoodistoQueryResult(
+      koodiUri: String,
+      queryMethod: String => ExternalQueryResult,
+      path: String,
+      validationContext: ValidationContext,
+      errorMessage: ErrorMessage
+  ): IsValid = {
+    val queryResult = if (validationContext.isKoodistoServiceOk()) queryMethod(koodiUri) else queryFailed
+    validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
+    assertExternalQueryResult(
+      queryResult,
+      path,
+      errorMessage,
+      koodistoServiceFailureMsg
+    )
   }
+
+  def assertKoulutustyyppiQueryResult(
+      koulutusKoodiUri: String,
+      koulutusTyypit: Seq[String],
+      koulutusKoodiClient: KoulutusKoodiClient,
+      path: String,
+      validationContext: ValidationContext,
+      errorMessage: ErrorMessage,
+      koodistoServiceFailureMessage: ErrorMessage = koodistoServiceFailureMsg
+  ): IsValid = {
+    val queryResult =
+      if (validationContext.isKoodistoServiceOk())
+        koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(koulutusTyypit, koulutusKoodiUri)
+      else queryFailed
+    validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
+    assertExternalQueryResult(
+      queryResult,
+      path,
+      errorMessage,
+      koodistoServiceFailureMessage
+    )
+  }
+
+  def assertKoulutuskoodiQueryResult(
+      koulutusKoodiUri: String,
+      koulutusKoodiFilter: Seq[String],
+      koulutusKoodiClient: KoulutusKoodiClient,
+      path: String,
+      validationContext: ValidationContext,
+      errorMessage: ErrorMessage,
+      koodistoServiceFailureMessage: ErrorMessage = koodistoServiceFailureMsg
+  ): IsValid = {
+    val queryResult =
+      if (validationContext.isKoodistoServiceOk())
+        koulutusKoodiClient.koulutusKoodiUriExists(koulutusKoodiFilter, koulutusKoodiUri)
+      else queryFailed
+    validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
+    assertExternalQueryResult(
+      queryResult,
+      path,
+      errorMessage,
+      koodistoServiceFailureMessage
+    )
+  }
+
+  def assertAtaruQueryResult(
+      ataruId: UUID,
+      hakemusPalveluClient: HakemusPalveluClient,
+      path: String,
+      validationContext: ValidationContext,
+      errorMessage: ErrorMessage
+  ): IsValid = {
+    val queryResult = if (validationContext.isAtaruServiceOk()) hakemusPalveluClient.isExistingAtaruId(ataruId) else queryFailed
+    validationContext.updateAtaruServiceStatusByQueryStatus(queryResult)
+    assertExternalQueryResult(
+      queryResult,
+      path,
+      errorMessage,
+      ataruServiceFailureMsg
+    )
+  }
+
+  def assertExternalQueryResult(
+      externalQueryResult: ExternalQueryResult,
+      path: String,
+      errorMessage: ErrorMessage,
+      externalServiceFailureMessage: ErrorMessage
+  ): IsValid = {
+    // Pattern matching ei toimi ExternaQueryResultille
+    if (externalQueryResult == itemFound)
+      NoErrors
+    else if (externalQueryResult == queryFailed) {
+      error(path, externalServiceFailureMessage)
+    } else
+      error(path, errorMessage)
+  }
+
+  def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
+
+  def validateIfNonEmptySeq[T](
+      values: Seq[T],
+      newValues: Seq[T],
+      path: String,
+      f: (T, Option[T], String) => IsValid
+  ): IsValid =
+    values.zipWithIndex.flatMap { case (t, i) =>
+      if (values.size == newValues.size) f(t, newValues.lift(i), s"$path[$i]") else f(t, None, s"$path[$i]")
+    }
 
   def validateIfNonEmpty(k: Kielistetty, path: String, f: (String, String) => IsValid): IsValid =
     k.flatMap { case (k, v) => f(v, s"$path.$k") }.toSeq
