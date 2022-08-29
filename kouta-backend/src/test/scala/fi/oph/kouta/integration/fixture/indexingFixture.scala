@@ -2,11 +2,11 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, HakuKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{OrganisaatioServiceImpl, _}
 
 trait IndexingFixture extends KoulutusFixtureWithIndexing with HakuFixtureWithIndexing with ToteutusFixtureWithIndexing
@@ -45,7 +45,8 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
+    val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
     new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)
   }
@@ -68,10 +69,13 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
+    val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
+    val hakukohdeServiceValidation = new HakukohdeServiceValidation(organisaatioService, hakuKoodiClient, koulutusKoodiClient, mockHakemusPalveluClient, HakukohdeDAO, HakuDAO)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
     new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient,
       new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
         new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
-        koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation))
+        koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation),
+    hakukohdeServiceValidation)
   }
 }

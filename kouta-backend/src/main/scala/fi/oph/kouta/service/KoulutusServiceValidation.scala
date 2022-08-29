@@ -24,7 +24,7 @@ class KoulutusServiceValidation(
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Koulutus] {
 
-  override def validateEntity(koulutus: Koulutus): IsValid = {
+  override def validateEntity(koulutus: Koulutus, oldKoulutus: Option[Koulutus]): IsValid = {
     val commonErrors        = validateCommonParameters(koulutus)
     val koulutusLevelErrors = validateKoulutustyyppiSpecificParameters(koulutus)
 
@@ -51,12 +51,6 @@ class KoulutusServiceValidation(
         "koulutuksetKoodiUri",
         assertMatch(_, KoulutusKoodiPattern, _)
       ),
-      validateSorakuvausIntegrity(
-        koulutus.sorakuvausId,
-        tila,
-        tyyppi,
-        entityKoulutusKoodiUrit = koulutus.koulutuksetKoodiUri
-      ),
       validateIfJulkaistu(
         tila,
         and(
@@ -73,40 +67,72 @@ class KoulutusServiceValidation(
 
   private def validateKoulutustyyppiSpecificParameters(koulutus: Koulutus): IsValid = {
     koulutus.koulutustyyppi match {
-      case Amm | AmmOsaamisala => validateAmmatillinenKoulutus(koulutus)
+      case Amm | AmmOsaamisala =>
+        and(
+          validateSorakuvaus(koulutus),
+          validateAmmatillinenKoulutus(koulutus)
+        )
       case Yo =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUritOfKoulutustyypit(yoKoulutustyypit, koulutus, None),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case Amk =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUritOfKoulutustyypit(amkKoulutustyypit, koulutus, None),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case AmmOpeErityisopeJaOpo =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUrit(ammOpeErityisopeJaOpoKoulutusKoodiUrit, koulutus, Some(1)),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case Lk =>
         and(
+          validateSorakuvaus(koulutus),
           validateKoulutusKoodiUrit(lukioKoulutusKoodiUrit, koulutus, Some(1)),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case AikuistenPerusopetus =>
-        assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        and(
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
+          assertOneAndOnlyCertainValueInSeq(
+            koulutus.koulutuksetKoodiUri,
+            "koulutus_201101",
+            "koulutuksetKoodiUri",
+            koodiUriTipText("koulutus_201101")
+          ),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case Erikoislaakari => and(
         validateKoulutusKoodiUrit(erikoislaakariKoulutusKoodiUrit, koulutus, Some(1)),
         assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
       )
+      case AmmMuu | Tuva | Telma | VapaaSivistystyoMuu | VapaaSivistystyoOpistovuosi =>
+        and (
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
+          assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case _ =>
         and(
+          validateSorakuvaus(koulutus),
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
     }
   }
+
+  private def validateSorakuvaus(koulutus: Koulutus): IsValid =
+    validateSorakuvausIntegrity(
+      koulutus.sorakuvausId,
+      koulutus.tila,
+      koulutus.koulutustyyppi,
+      entityKoulutusKoodiUrit = koulutus.koulutuksetKoodiUri
+    )
 
   private def validateCommonMetadataParameters(
       tila: Julkaisutila,
@@ -125,21 +151,27 @@ class KoulutusServiceValidation(
         KkOpintojakso,
         Erikoislaakari
       )
+    val koulutustyypitWithoutLisatiedot: Set[Koulutustyyppi] =
+      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus)
 
     and(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
-      validateIfNonEmpty[Lisatieto](
-        metadata.lisatiedot,
-        "metadata.lisatiedot",
-        (lisatieto, path) =>
-          validateIfSuccessful(
-            lisatieto.validate(tila, kielivalinta, path),
-            assertTrue(
-              koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists(lisatieto.otsikkoKoodiUri),
-              path = s"$path.otsikkoKoodiUri",
-              invalidLisatietoOtsikkoKoodiuri(lisatieto.otsikkoKoodiUri)
+      validateIfTrueOrElse(
+        koulutustyypitWithoutLisatiedot.contains(tyyppi),
+        assertEmpty(metadata.lisatiedot, "metadata.lisatiedot"),
+        validateIfNonEmpty[Lisatieto](
+          metadata.lisatiedot,
+          "metadata.lisatiedot",
+          (lisatieto, path) =>
+            validateIfSuccessful(
+              lisatieto.validate(tila, kielivalinta, path),
+              assertTrue(
+                koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists(lisatieto.otsikkoKoodiUri),
+                path = s"$path.otsikkoKoodiUri",
+                invalidLisatietoOtsikkoKoodiuri(lisatieto.otsikkoKoodiUri)
+              )
             )
-          )
+        )
       ),
       validateIfJulkaistu(
         tila,
@@ -177,11 +209,30 @@ class KoulutusServiceValidation(
       case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
         and(
           assertEmpty(m.tutkintonimikeKoodiUrit, "metadata.tutkintonimikeKoodiUrit"),
-          assertOpintojenLaajuusKoodiUri(m.opintojenLaajuusKoodiUri),
+          assertCertainValue(
+            m.opintojenLaajuusKoodiUri,
+            "opintojenlaajuus_60",
+            "metadata.opintojenLaajuusKoodiUri",
+            koodiUriTipText("opintojenlaajuus_60")
+          ),
+          assertOneAndOnlyCertainValueInSeq(
+            m.koulutusalaKoodiUrit,
+            "kansallinenkoulutusluokitus2016koulutusalataso1_01",
+            "metadata.koulutusalaKoodiUrit",
+            koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_01")
+          )
         )
 
-      case lukioKoulutusMetadata: LukioKoulutusMetadata =>
-        assertOpintojenLaajuusKoodiUri(lukioKoulutusMetadata.opintojenLaajuusKoodiUri)
+      case m: LukioKoulutusMetadata =>
+        and(
+          assertOneAndOnlyCertainValueInSeq(
+            m.koulutusalaKoodiUrit,
+            "kansallinenkoulutusluokitus2016koulutusalataso1_00",
+            "metadata.koulutusalaKoodiUrit",
+            koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_00")
+          ),
+          assertOpintojenLaajuusKoodiUri(m.opintojenLaajuusKoodiUri)
+        )
       case m: TuvaKoulutusMetadata =>
         validateTuvaTelma(tila, kielivalinta, m.lisatiedot, m.linkkiEPerusteisiin, m.opintojenLaajuusKoodiUri)
       case m: TelmaKoulutusMetadata =>
