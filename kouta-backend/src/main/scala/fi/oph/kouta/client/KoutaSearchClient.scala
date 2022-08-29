@@ -17,9 +17,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-//TODO: Nimeä tämä jotenkin muuten kun refaktorointi valmis
-
-class KoutaIndexClient(val client: ElasticClient) extends KoutaJsonFormats with Logging with ElasticsearchClient {
+class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with Logging with ElasticsearchClient {
 
   private val DEFAULT_SOURCE_FIELDS = Set("oid", "nimi", "tila", "muokkaaja", "modified", "organisaatio")
 
@@ -55,7 +53,7 @@ class KoutaIndexClient(val client: ElasticClient) extends KoutaJsonFormats with 
         .sortBy() // TODO
         .query(baseQuery)
 
-    Await.result(searchElastic[KoulutusSearchItemFromIndex](req), Duration(5, TimeUnit.SECONDS))
+    Await.result(searchElastic[KoulutusSearchItemFromIndex](req), Duration(60, TimeUnit.SECONDS))
   }
 
   def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: Map[String, String]): ToteutusSearchResultFromIndex =
@@ -65,10 +63,10 @@ class KoutaIndexClient(val client: ElasticClient) extends KoutaJsonFormats with 
     HakuSearchResultFromIndex() // TODO
 
   def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: Map[String, String]): HakukohdeSearchResult =
-    HakukohdeSearchResult()
+    HakukohdeSearchResult() // TODO
 
   def searchValintaperusteet(valintaperusteIds: Seq[UUID], params: Map[String, String]): ValintaperusteSearchResult =
-    ValintaperusteSearchResult()
+    ValintaperusteSearchResult() // TODO
 }
 
-object KoutaIndexClient extends KoutaIndexClient(ElasticsearchClient.client)
+object KoutaSearchClient extends KoutaSearchClient(ElasticsearchClient.client)

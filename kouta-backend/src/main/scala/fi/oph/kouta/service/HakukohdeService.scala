@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
@@ -195,7 +195,7 @@ class HakukohdeService(
   ): HakukohdeSearchResult =
     listOlemassaolevat(organisaatioOid).map(_.oid) match {
       case Nil           => HakukohdeSearchResult()
-      case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
+      case hakukohdeOids => KoutaSearchClient.searchHakukohteet(hakukohdeOids, params)
     }
 
   def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =

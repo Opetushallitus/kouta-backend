@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoulutusKoodiClient, KoutaIndexClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoulutusKoodiClient, KoutaSearchClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
@@ -346,7 +346,7 @@ class KoulutusService(
 
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
       case Nil          => SearchResult[KoulutusSearchItem]()
-      case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
+      case koulutusOids => assocToteutusCounts(KoutaSearchClient.searchKoulutukset(koulutusOids, params))
     }
   }
 
@@ -372,7 +372,7 @@ class KoulutusService(
       }
 
     filterToteutukset(
-      KoutaIndexClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption
+      KoutaSearchClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption
     )
   }
 
