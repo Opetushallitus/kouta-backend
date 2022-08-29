@@ -28,22 +28,21 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
   private def getSearchFieldKeyword(lng: Kieli, field: String) = getFieldKeyword(false, lng, field)
 
   private def getFieldKeyword(forSort: Boolean, lng: Kieli, field: String): String = {
-    field.toLowerCase.trim match {
+    field match {
       case "nimi"           => s"nimi.${lng}.keyword"
+      case "koulutustyyppi" => "koulutustyyppi.keyword"
       case "tila"           => "tila.keyword"
-      case "muokkaaja"      => "muokkaaja.nimi.keyword"
+      case "julkinen"       => "julkinen"
       case "hakutapa"       => if (forSort) s"hakutapa.nimi.${lng}.keyword" else s"hakutapa.koodiUri.keyword"
       case "hakuOid"        => "hakuOid.keyword"
       case "toteutusOid"    => "toteutusOid.keyword"
       case "orgWhitelist"   => "organisaatio.oid.keyword"
       case "modified"       => "modified"
-      case "koulutustyyppi" => "koulutustyyppi.keyword"
-      case "julkinen"       => "julkinen"
       case "koulutuksenAlkamiskausi" =>
         if (forSort) s"metadata.koulutuksenAlkamiskausi.koulutuksenAlkamiskausi.nimi.${lng}.keyword"
         else s"metadata.koulutuksenAlkamiskausi.koulutuksenAlkamiskausi.koodiUri.keyword"
       case "koulutuksenAlkamisvuosi" => "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi.keyword"
-      case _                         => field
+      case _                         => throw new Exception(s"KoutaSearchClient/getFieldKeyword: Invalid field name $field!")
     }
   }
 
@@ -68,7 +67,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
       .getOrElse(req)
   }
 
-  private def isOid(s: String)  = GenericOid(s).isValid
+  private def isOid(s: String) = GenericOid(s).isValid
 
   private def isUUID(s: String) = Try(UUID.fromString(s)).isSuccess
 
@@ -95,7 +94,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
 
     val muokkaajaFilter = params.muokkaaja.map(muokkaaja => {
       if (isOid(muokkaaja)) {
-        termQuery("muokkaaja.oid", muokkaaja)
+        termQuery("muokkaaja.oid.keyword", muokkaaja)
       } else {
         matchQuery("muokkaaja.nimi", muokkaaja)
       }
