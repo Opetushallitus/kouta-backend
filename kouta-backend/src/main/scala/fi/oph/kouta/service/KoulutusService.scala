@@ -105,6 +105,7 @@ class KoulutusService(
               isMuokkaajaOphVirkailija = Some(isOphVirkailija),
               koulutusalaKoodiUrit = Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso2_091")))
           )
+          case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusKoulutusMetadata => Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }
