@@ -2,6 +2,7 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
+import fi.vm.sade.utils.slf4j.Logging
 
 import java.time.LocalDateTime
 
@@ -390,13 +391,12 @@ package object searchResults {
     KoulutusSearchItemModel, KoulutusSearchResultModel, ToteutusSearchItemModel, ToteutusSearchResultModel,
     HakukohdeSearchItemModel, HakukohdeSearchResultModel, HakuSearchItemModel, HakuSearchResultModel,
     ValintaperusteSearchItemModel, ValintaperusteSearchResultModel)
+
+  type KoulutusSearchResultFromIndex = SearchResult[KoulutusSearchItemFromIndex]
+  type ToteutusSearchResultFromIndex = SearchResult[ToteutusSearchItemFromIndex]
+  type HakuSearchResultFromIndex = SearchResult[HakuSearchItemFromIndex]
+  type KoulutusSearchResult = SearchResult[KoulutusSearchItem]
 }
-
-case class KoulutusSearchResult(totalCount: Int = 0,
-                                result: Seq[KoulutusSearchItem] = Seq())
-
-case class KoulutusSearchResultFromIndex(totalCount: Int = 0,
-                                         result: Seq[KoulutusSearchItemFromIndex] = Seq())
 
 case class KoulutusSearchItem (oid: KoulutusOid,
                                nimi: Kielistetty,
@@ -418,15 +418,14 @@ case class KoulutusSearchItemFromIndex (oid: KoulutusOid,
                                         koulutustyyppi: Koulutustyyppi,
                                         julkinen: Option[Boolean] = None,
                                         eperuste: Option[EPeruste] = None,
-                                        toteutukset: Seq[KoulutusSearchItemToteutus] = Seq()) extends KoulutusItemCommon
+                                        toteutukset: Seq[KoulutusSearchItemToteutus] = Seq()) extends KoulutusItemCommon with Logging
 
-trait KoulutusItemCommon {
+trait KoulutusItemCommon extends HasTila {
   val oid: KoulutusOid
   val nimi: Kielistetty
   val organisaatio: Organisaatio
   val muokkaaja: Muokkaaja
   val modified: Modified
-  val tila: Julkaisutila
   val eperuste: Option[EPeruste]
 }
 
@@ -440,6 +439,10 @@ case class KoulutusSearchItemToteutus(oid: ToteutusOid,
                                       modified: Modified,
                                       organisaatio: Organisaatio,
                                       organisaatiot: Seq[String] = Seq())
+
+
+case class SearchResult[TItem](totalCount: Long = 0,
+                               result: Seq[TItem] = Seq.empty)
 
 case class ToteutusSearchResult(totalCount: Int = 0,
                                 result: Seq[ToteutusSearchItem] = Seq())

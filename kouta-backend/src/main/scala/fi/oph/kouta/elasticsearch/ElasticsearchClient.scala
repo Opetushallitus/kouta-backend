@@ -5,9 +5,9 @@ import com.sksamuel.elastic4s.requests.searches.queries.Query
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.http.{JavaClient, NoOpHttpClientConfigCallback}
 import com.sksamuel.elastic4s.requests.get.GetResponse
-import com.sksamuel.elastic4s.requests.searches.SearchRequest
+import com.sksamuel.elastic4s.requests.searches.{SearchRequest, SearchResponse}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticProperties, RequestFailure, RequestSuccess}
-import fi.oph.kouta.domain.{HasTila, Tallennettu}
+import fi.oph.kouta.domain.{HasTila, SearchResult, Tallennettu}
 import fi.vm.sade.utils.Timer.timed
 import fi.vm.sade.utils.slf4j.Logging
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
@@ -16,23 +16,23 @@ import org.apache.http.impl.client.BasicCredentialsProvider
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.config.{ElasticSearchConfiguration, KoutaConfigurationFactory}
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
-import org.elasticsearch.client.RestClientBuilder.{HttpClientConfigCallback}
+import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 // Tämä on muuten kopioitu kouta-internalista, mutta kakutus on poistettu toistaiseksi versioristiriitojen takia
 // (scalacache riippuu caffeine v2:sta ja scaffeine riippuu caffeine v3:sta).
 // Jos halutaan käyttää kouta-internalin kanssa samaa ElasticsearchClient:a, pitää kakutusongelma ratkaista.
 trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
-  val index: String
   val client: ElasticClient
   private val iterativeElasticFetch = new IterativeElasticFetch(client)
 
+  /*
   def getItem[T <: HasTila: HitReader](id: String): Future[T] = timed(s"GetItem from ElasticSearch (Id: ${id}", 100) {
     val request = get(index, id)
     logger.debug(s"Elasticsearch query: ${request.show}")
@@ -56,15 +56,17 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
           Future.successful(t)
       }
   }
+   */
 
-  private def handleSuccesfulReponse[T <: HasTila: HitReader](id: String, response: RequestSuccess[GetResponse]) = {
+  private def handleSuccesfulReponse[T <: HasTila: HitReader](index: String)(id: String, response: RequestSuccess[GetResponse]) = {
     response.status match {
       case 404 => Future.successful(None)
-      case _   => mapResultToEntity(id, response)
+      case _   => mapResultToEntity(index)(id, response)
     }
   }
 
-  private def mapResultToEntity[T <: HasTila: HitReader](id: String, response: RequestSuccess[GetResponse]) = {
+
+  private def mapResultToEntity[T <: HasTila: HitReader](index: String)(id: String, response: RequestSuccess[GetResponse]) = {
     response.result.safeTo[T] match {
       case Success(x) =>
         Future.successful(Option(x))
@@ -82,6 +84,17 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
     }
   }
 
+  private def mapResultToEntity[T: HitReader](index: String, response: RequestSuccess[SearchResponse]) = {
+    val totalHits = response.result.totalHits
+
+    SearchResult[T](
+      totalCount = totalHits,
+      result = response.result.safeTo[T].map(_.get)
+    )
+
+  }
+
+ /*
   def searchItems[T: HitReader: ClassTag](query: Option[Query]): Future[IndexedSeq[T]] = {
     timed(s"SearchItems from ElasticSearch (Query: ${query}", 100) {
       val notTallennettu = not(termsQuery("tila.keyword", "tallennettu"))
@@ -105,14 +118,35 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
       executeScrollQuery[T](request)
     }
   }
+  */
 
-  private def executeScrollQuery[T: HitReader: ClassTag](searchRequest: SearchRequest): Future[IndexedSeq[T]] = {
+  def executeScrollQuery[T: HitReader](searchRequest: SearchRequest): Future[IndexedSeq[T]] = {
     implicit val duration: FiniteDuration = Duration(1, TimeUnit.MINUTES)
     logger.info(s"Elasticsearch request: ${searchRequest.show}")
       iterativeElasticFetch
         .fetch(searchRequest)
         .map(hit => hit.flatMap(_.safeTo[T].toOption))
         .mapTo[IndexedSeq[T]]
+  }
+
+  def searchElastic[T: HitReader: ClassTag](req: SearchRequest): Future[SearchResult[T]] = {
+    val duration: FiniteDuration = Duration(1, TimeUnit.MINUTES)
+
+    logger.info(s"Elasticsearch request: ${req.show}")
+
+    val index = req.indexes.values.head
+
+    client
+      .execute(req)
+      .flatMap {
+        case failure: RequestFailure =>
+          logger.debug(s"Elasticsearch status: {}", failure.status)
+          Future.failed(ElasticSearchException(failure.error))
+        case response: RequestSuccess[SearchResponse] =>
+          logger.debug(s"Elasticsearch status: {}", response.status)
+          //logger.debug(s"Elasticsearch response: {}", response.result)
+          Future.successful(mapResultToEntity[T](index, response))
+      }
   }
 }
 
