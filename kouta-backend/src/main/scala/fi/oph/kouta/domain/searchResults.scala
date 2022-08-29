@@ -495,6 +495,8 @@ case class HakuSearchItem(oid: HakuOid,
                           koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem,
                           hakukohdeCount: Int = 0) extends HakuItemCommon
 
+case class HakuMetadataIndexed(koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem)
+
 case class HakuSearchItemFromIndex(oid: HakuOid,
                                    nimi: Kielistetty,
                                    organisaatio: Organisaatio,
@@ -502,7 +504,7 @@ case class HakuSearchItemFromIndex(oid: HakuOid,
                                    modified: Modified,
                                    tila: Julkaisutila,
                                    hakutapa: Hakutapa,
-                                   koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem,
+                                   metadata: HakuMetadataIndexed,
                                    hakukohteet: Seq[HakuSearchItemHakukohde] = Seq()) extends HakuItemCommon with Logging
 
 trait HakuItemCommon extends HasTila {
@@ -525,7 +527,8 @@ case class HakukohdeSearchItem(oid: HakukohdeOid,
                                muokkaaja: Muokkaaja,
                                modified: Modified,
                                tila: Julkaisutila,
-                               koulutustyyppi: Option[Koulutustyyppi] = None) extends HasTila
+                               koulutustyyppi: Option[Koulutustyyppi] = None
+                              ) extends HasTila
 
 case class ValintaperusteSearchItem(id: UUID,
                                     nimi: Kielistetty,
