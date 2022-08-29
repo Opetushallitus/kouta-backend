@@ -180,7 +180,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
                   modified = h.modified,
                   tila = h.tila,
                   hakutapa = h.hakutapa,
-                  koulutuksenAlkamiskausi = h.koulutuksenAlkamiskausi,
+                  koulutuksenAlkamiskausi = h.metadata.koulutuksenAlkamiskausi,
                   hakukohdeCount = getCount(h, organisaatioOids))
             }
           )

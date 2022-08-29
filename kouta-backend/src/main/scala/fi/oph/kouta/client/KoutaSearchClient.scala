@@ -115,10 +115,12 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
       Option(params.orgWhitelist)
         .filter(_.nonEmpty)
         .map(x => termsQuery(getSearchFieldKeyword(lng, "orgWhitelist"), x.map(_.toString)))
-    val koulutuksenAlkamiskausiFilter = Option(params.koulutuksenAlkamisvuosi)
+    val koulutuksenAlkamiskausiFilter = Option(params.koulutuksenAlkamiskausi)
       .filter(_.nonEmpty)
-      .map(termsQuery(getSearchFieldKeyword(lng, "koulutuksenAlkamiskausi"), _))
-    val koulutuksenAlkamisvuosiFilter = Option(params.koulutuksenAlkamiskausi)
+      .map(kausi =>
+        termsQuery(getSearchFieldKeyword(lng, "koulutuksenAlkamiskausi"), kausi.map(withoutKoodiVersion(_)))
+      )
+    val koulutuksenAlkamisvuosiFilter = Option(params.koulutuksenAlkamisvuosi)
       .filter(_.nonEmpty)
       .map(termsQuery(getSearchFieldKeyword(lng, "koulutuksenAlkamisvuosi"), _))
 
