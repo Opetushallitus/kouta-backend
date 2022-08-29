@@ -1,11 +1,7 @@
 package fi.oph.kouta.validation
 
-import java.time.{LocalDate, LocalDateTime}
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-import java.util.regex.Pattern
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
 import fi.vm.sade.utils.slf4j.Logging
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
@@ -40,6 +36,17 @@ object Validations extends Logging {
     msg = s"Koulutuskoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutuskoodiuri"
   )
+
+//  def invalidKoulutustyyppiForAmmatillinenPerustutkintoErityisopetuksena(koulutustyyppi: String): ErrorMessage = ErrorMessage(
+//    msg = s"Koulutustyyppi $koulutustyyppi on virheellinen, tyyppi täytyy olla AMM että se voidaan järjestää erityisopetuksena",
+//    id = "invalidKoulutustyyppiForAmmatillinenPerustutkintoErityisopetuksena"
+//  )
+
+  def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutustyyppiKoodi: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio koulutustyyppi_1:een että se voidaan järjestää erityisopetuksena",
+    id = "invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena"
+  )
+
   def invalidLisatietoOtsikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lisätieto-otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidLisatietoOtsikkoKoodiuri"

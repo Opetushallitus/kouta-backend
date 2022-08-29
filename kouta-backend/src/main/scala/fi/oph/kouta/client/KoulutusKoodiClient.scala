@@ -33,6 +33,11 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     s"$koodiUriWithoutVersion#${versio.get}"
   }
 
+  def isKoulutusAmmatillinenPerustutkinto(koulutustyypit: Seq[String]): Boolean = {
+    logger.info("koulutustyypit exists" + koulutustyypit.exists(koulutustyyppi => koulutusKoodiUriOfKoulutustyypitExist(Seq("koulutustyyppi_1"), koulutustyyppi)))
+    koulutustyypit.exists(koulutustyyppi => koulutusKoodiUriOfKoulutustyypitExist(Seq("koulutustyyppi_1"), koulutustyyppi))
+  }
+
   def koulutusKoodiUriOfKoulutustyypitExist(koulutustyypit: Seq[String], koodiUri: String): Boolean = {
     val now = ZonedDateTime.now().toLocalDateTime
     koulutustyypit.exists(tyyppi => {
@@ -52,6 +57,8 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
           }
         }
       }
+      logger.info("got koulutustyyppikoodit: " + koodiUritOfKoulutustyyppi.getOrElse(Seq()))
+      logger.info("existaa " + koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritOfKoulutustyyppi.getOrElse(Seq())))
       koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritOfKoulutustyyppi.getOrElse(Seq()))
     })
   }

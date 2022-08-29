@@ -1,13 +1,12 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoulutusKoodiClient
-import fi.oph.kouta.client.HakuKoodiClient
+import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
-import fi.oph.kouta.util.ToteutusServiceUtil
 import fi.oph.kouta.validation
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors}
+import fi.vm.sade.utils.slf4j.Logging
 
 import java.util.regex.Pattern
 
@@ -28,7 +27,7 @@ class ToteutusServiceValidation(
     koulutusDAO: KoulutusDAO,
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO
-) extends KoulutusToteutusValidatingService[Toteutus] {
+) extends KoulutusToteutusValidatingService[Toteutus] with Logging {
   override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
     val tila         = toteutus.tila
     val kielivalinta = toteutus.kielivalinta
@@ -71,10 +70,14 @@ class ToteutusServiceValidation(
           ),
           metadata match {
             case ammMetadata: AmmatillinenToteutusMetadata =>
-              validateIfNonEmpty[AmmatillinenOsaamisala](
+              and(validateIfNonEmpty[AmmatillinenOsaamisala](
                 ammMetadata.osaamisalat,
                 "metadata.osaamisalat",
                 validateOsaamisala(_, _, tila, kielivalinta)
+              ),
+                validateIfTrue(ammMetadata.ammatillinenPerustutkintoErityisopetuksena,
+                  validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "metadata.ammatillinenPerustutkintoErityisopetuksena")
+                )
               )
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
@@ -98,8 +101,7 @@ class ToteutusServiceValidation(
         )
       case _ => if (toteutus.tila == Julkaistu) error("metadata", missingMsg) else NoErrors
     }
-
-    Seq(commonErrors, koulutustyyppiSpecificErrors).flatten
+    Seq(commonErrors, koulutustyyppiSpecificErrors).flatten.distinct
   }
 
   private def validateOpetusKoodiUriListItem(
@@ -236,6 +238,16 @@ class ToteutusServiceValidation(
         )
       )
     )
+  }
+
+  private def validateAmmatillinenPerustutkintoErityisopetuksena(toteutus: Toteutus, path: String): IsValid = {
+    logger.info("validation ammatillinen perustutkinto")
+    koulutusDAO.get(toteutus.koulutusOid, TilaFilter.all()) match {
+      case Some((koulutus, _)) =>
+        assertTrue(koulutusKoodiClient.isKoulutusAmmatillinenPerustutkinto(koulutus.koulutuksetKoodiUri), path, invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutus.koulutuksetKoodiUri.toString()))
+      case None =>
+        error("koulutusOid", nonExistent("Koulutusta", toteutus.koulutusOid))
+    }
   }
 
   private def validateTutkintoonJohtamatonMetadata(
