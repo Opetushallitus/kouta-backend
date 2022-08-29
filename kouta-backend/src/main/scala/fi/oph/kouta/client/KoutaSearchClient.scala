@@ -26,7 +26,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
   private def getSortFieldKeyword(lng: Kieli, field: String) = getFieldKeyword(true, lng, field)
 
   private def getSearchFieldKeyword(lng: Kieli, field: String) = getFieldKeyword(false, lng, field)
-  //
+
   private def getFieldKeyword(forSort: Boolean, lng: Kieli, field: String): String = {
     field.toLowerCase.trim match {
       case "nimi"           => s"nimi.${lng}.keyword"
@@ -69,6 +69,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
   }
 
   private def isOid(s: String)  = GenericOid(s).isValid
+
   private def isUUID(s: String) = Try(UUID.fromString(s)).isSuccess
 
   private def getFilterQueries(params: SearchParams) = {
