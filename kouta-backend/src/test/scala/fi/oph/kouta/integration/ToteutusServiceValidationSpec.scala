@@ -696,9 +696,9 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     val toteutuksenLaajuus = Some(25.0)
     failValidation(
       kkOpintokokonaisuusToteutus.copy(metadata =
-        Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(laajuus = toteutuksenLaajuus))
+        Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(opintojenLaajuusNumero = toteutuksenLaajuus))
       ),
-      "metadata.laajuus",
+      "metadata.opintojenLaajuusNumero",
       notInTheRangeMsg(
         KkOpintokokonaisuusKoulutuksenMetatieto.opintojenLaajuusNumeroMin,
         KkOpintokokonaisuusKoulutuksenMetatieto.opintojenLaajuusNumeroMax,

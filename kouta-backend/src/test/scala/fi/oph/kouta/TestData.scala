@@ -1011,6 +1011,21 @@ object TestData {
     aloituspaikat = None,
     isMuokkaajaOphVirkailija = Some(false))
 
+  val KkOpintokokonaisuusToteutuksenMetatieto: KkOpintokokonaisuusToteutusMetadata = KkOpintokokonaisuusToteutusMetadata(
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opintojenLaajuusNumero = Some(15),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = None,
+    isMuokkaajaOphVirkailija = Some(false))
+
   val JulkaistuAmmToteutus: Toteutus = Toteutus(
     oid = None,
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
