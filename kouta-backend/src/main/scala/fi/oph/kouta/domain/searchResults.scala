@@ -2,6 +2,7 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
+import fi.vm.sade.utils.slf4j.Logging
 
 import java.time.LocalDateTime
 
@@ -390,13 +391,14 @@ package object searchResults {
     KoulutusSearchItemModel, KoulutusSearchResultModel, ToteutusSearchItemModel, ToteutusSearchResultModel,
     HakukohdeSearchItemModel, HakukohdeSearchResultModel, HakuSearchItemModel, HakuSearchResultModel,
     ValintaperusteSearchItemModel, ValintaperusteSearchResultModel)
+
+  type KoulutusSearchResultFromIndex = SearchResult[KoulutusSearchItemFromIndex]
+  type ToteutusSearchResultFromIndex = SearchResult[ToteutusSearchItemFromIndex]
+  type HakuSearchResultFromIndex = SearchResult[HakuSearchItemFromIndex]
+  type KoulutusSearchResult = SearchResult[KoulutusSearchItem]
+  type HakukohdeSearchResult = SearchResult[HakukohdeSearchItem]
+  type ValintaperusteSearchResult = SearchResult[ValintaperusteSearchItem]
 }
-
-case class KoulutusSearchResult(totalCount: Int = 0,
-                                result: Seq[KoulutusSearchItem] = Seq())
-
-case class KoulutusSearchResultFromIndex(totalCount: Int = 0,
-                                         result: Seq[KoulutusSearchItemFromIndex] = Seq())
 
 case class KoulutusSearchItem (oid: KoulutusOid,
                                nimi: Kielistetty,
@@ -418,15 +420,14 @@ case class KoulutusSearchItemFromIndex (oid: KoulutusOid,
                                         koulutustyyppi: Koulutustyyppi,
                                         julkinen: Option[Boolean] = None,
                                         eperuste: Option[EPeruste] = None,
-                                        toteutukset: Seq[KoulutusSearchItemToteutus] = Seq()) extends KoulutusItemCommon
+                                        toteutukset: Seq[KoulutusSearchItemToteutus] = Seq()) extends KoulutusItemCommon with Logging
 
-trait KoulutusItemCommon {
+trait KoulutusItemCommon extends HasTila {
   val oid: KoulutusOid
   val nimi: Kielistetty
   val organisaatio: Organisaatio
   val muokkaaja: Muokkaaja
   val modified: Modified
-  val tila: Julkaisutila
   val eperuste: Option[EPeruste]
 }
 
@@ -441,11 +442,12 @@ case class KoulutusSearchItemToteutus(oid: ToteutusOid,
                                       organisaatio: Organisaatio,
                                       organisaatiot: Seq[String] = Seq())
 
-case class ToteutusSearchResult(totalCount: Int = 0,
-                                result: Seq[ToteutusSearchItem] = Seq())
 
-case class ToteutusSearchResultFromIndex(totalCount: Int = 0,
-                                         result: Seq[ToteutusSearchItemFromIndex] = Seq())
+case class SearchResult[TItem](totalCount: Long = 0,
+                               result: Seq[TItem] = Seq.empty)
+
+case class ToteutusSearchResult(totalCount: Long = 0,
+                                result: Seq[ToteutusSearchItem] = Seq())
 
 case class ToteutusSearchItem(oid: ToteutusOid,
                               nimi: Kielistetty,
@@ -464,15 +466,14 @@ case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
                                        tila: Julkaisutila,
                                        koulutustyyppi: Option[Koulutustyyppi] = None,
                                        organisaatiot: Seq[String] = Seq(),
-                                       hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq()) extends ToteutusItemCommon
+                                       hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq()) extends ToteutusItemCommon with Logging
 
-trait ToteutusItemCommon {
+trait ToteutusItemCommon extends HasTila {
   val oid: ToteutusOid
   val nimi: Kielistetty
   val organisaatio: Organisaatio
   val muokkaaja: Muokkaaja
   val modified: Modified
-  val tila: Julkaisutila
 }
 
 case class ToteutusSearchItemHakukohde(hakukohdeOid: HakukohdeOid, // TODO: Why is this hakukohdeOid?
@@ -481,11 +482,8 @@ case class ToteutusSearchItemHakukohde(hakukohdeOid: HakukohdeOid, // TODO: Why 
                                        modified: Modified,
                                        organisaatio: Organisaatio)
 
-case class HakuSearchResult(totalCount: Int = 0,
+case class HakuSearchResult(totalCount: Long = 0,
                             result: Seq[HakuSearchItem] = Seq())
-
-case class HakuSearchResultFromIndex(totalCount: Int = 0,
-                                     result: Seq[HakuSearchItemFromIndex] = Seq())
 
 case class HakuSearchItem(oid: HakuOid,
                           nimi: Kielistetty,
@@ -497,6 +495,8 @@ case class HakuSearchItem(oid: HakuOid,
                           koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem,
                           hakukohdeCount: Int = 0) extends HakuItemCommon
 
+case class HakuMetadataIndexed(koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem)
+
 case class HakuSearchItemFromIndex(oid: HakuOid,
                                    nimi: Kielistetty,
                                    organisaatio: Organisaatio,
@@ -504,16 +504,15 @@ case class HakuSearchItemFromIndex(oid: HakuOid,
                                    modified: Modified,
                                    tila: Julkaisutila,
                                    hakutapa: Hakutapa,
-                                   koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem,
-                                   hakukohteet: Seq[HakuSearchItemHakukohde] = Seq()) extends HakuItemCommon
+                                   metadata: HakuMetadataIndexed,
+                                   hakukohteet: Seq[HakuSearchItemHakukohde] = Seq()) extends HakuItemCommon with Logging
 
-trait HakuItemCommon {
+trait HakuItemCommon extends HasTila {
   val oid: HakuOid
   val nimi: Kielistetty
   val organisaatio: Organisaatio
   val muokkaaja: Muokkaaja
   val modified: Modified
-  val tila: Julkaisutila
 }
 
 case class HakuSearchItemHakukohde(oid: HakukohdeOid,
@@ -522,19 +521,14 @@ case class HakuSearchItemHakukohde(oid: HakukohdeOid,
                                    modified: Modified,
                                    organisaatio: Organisaatio)
 
-case class HakukohdeSearchResult(totalCount: Int = 0,
-                                 result: Seq[HakukohdeSearchItem] = Seq())
-
 case class HakukohdeSearchItem(oid: HakukohdeOid,
                                nimi: Kielistetty,
                                organisaatio: Organisaatio,
                                muokkaaja: Muokkaaja,
                                modified: Modified,
                                tila: Julkaisutila,
-                               koulutustyyppi: Option[Koulutustyyppi] = None)
-
-case class ValintaperusteSearchResult(totalCount: Int = 0,
-                                      result: Seq[ValintaperusteSearchItem] = Seq())
+                               koulutustyyppi: Option[Koulutustyyppi] = None
+                              ) extends HasTila
 
 case class ValintaperusteSearchItem(id: UUID,
                                     nimi: Kielistetty,
@@ -543,7 +537,7 @@ case class ValintaperusteSearchItem(id: UUID,
                                     modified: Modified,
                                     tila: Julkaisutila,
                                     koulutustyyppi: Koulutustyyppi,
-                                    julkinen: Option[Boolean] = None)
+                                    julkinen: Option[Boolean] = None) extends HasTila
 
 case class Organisaatio(oid: OrganisaatioOid,
                         nimi: Kielistetty,
