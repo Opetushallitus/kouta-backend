@@ -100,6 +100,7 @@ class SearchSpec
       toteutus.copy(koulutusOid = koulutus6.oid.get, organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid))
     )
 
+    /*
     hoid1 = put(haku.copy(organisaatioOid = ParentOid))
     hoid2 = put(haku.copy(organisaatioOid = LonelyOid))
     hoid3 = put(haku.copy(organisaatioOid = OphOid))
@@ -109,12 +110,14 @@ class SearchSpec
     hkoid3 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid3), hakuOid = HakuOid(hoid2), organisaatioOid = LonelyOid))
     hkoid4 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid3), hakuOid = HakuOid(hoid3), organisaatioOid = LonelyOid))
     hkoid5 = put(hakukohdeWoValintaperusteenValintakokeet.copy(toteutusOid = ToteutusOid(toid5), hakuOid = HakuOid(hoid3), organisaatioOid = GrandChildOid))
-
+    
     vpid1 = put(valintaperuste.copy(organisaatioOid = GrandChildOid, julkinen = false)).toString
     vpid2 = put(valintaperuste.copy(organisaatioOid = ParentOid, julkinen = false)).toString
     vpid3 = put(valintaperuste.copy(organisaatioOid = OphOid, julkinen = false)).toString
     vpid4 = put(valintaperuste.copy(organisaatioOid = LonelyOid, julkinen = false)).toString
     vpid5 = put(valintaperuste.copy(organisaatioOid = LonelyOid, julkinen = true)).toString
+    */
+
   }
 
   "Koulutus search" should "search allowed koulutukset and allowed toteutus counts 1" in {
