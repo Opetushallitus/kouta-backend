@@ -2,6 +2,7 @@ package fi.oph.kouta
 
 import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
+import fi.oph.kouta.util.CommandLine.{run, runBlocking}
 
 object TempLocalDb extends Logging {
 
@@ -12,7 +13,6 @@ object TempLocalDb extends Logging {
   import java.nio.file.Files
   import org.apache.commons.io.FileUtils
 
-  import CommandLine._
   import TempDbUtils.tryTimes
 
   val dataDirectoryName = s"kouta-temp-db/$port"
@@ -94,20 +94,5 @@ object TempDbUtils {
     case n if n < 1 => false
     case 1 => thunk()
     case n => thunk() || { Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk) }
-  }
-}
-
-object CommandLine {
-
-  import scala.sys.process.stringToProcess
-
-  def run(command: String) = command.run()
-
-  def runBlocking(command: String, failOnError: Boolean = true): Int = {
-    val returnValue = command.!
-    if (failOnError && returnValue != 0) {
-      throw new RuntimeException(s"Command '$command' exited with $returnValue")
-    }
-    returnValue
   }
 }

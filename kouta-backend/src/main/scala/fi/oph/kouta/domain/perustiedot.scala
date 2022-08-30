@@ -7,13 +7,17 @@ import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, Validatable}
 
+trait HasTila {
+  val tila: Julkaisutila
+}
+
 sealed trait Perustiedot[ID, T]
     extends Validatable
     with AuthorizableEntity[T]
     with HasPrimaryId[ID, T]
     with HasModified[T]
-    with HasMuokkaaja[T] {
-  val tila: Julkaisutila
+    with HasMuokkaaja[T]
+    with HasTila {
   val nimi: Kielistetty
   val muokkaaja: UserOid
   val kielivalinta: Seq[Kieli]

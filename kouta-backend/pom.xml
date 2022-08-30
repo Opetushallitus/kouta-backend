@@ -7,14 +7,14 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>6.33.5-SNAPSHOT</version>
+        <version>7.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>kouta-backend</artifactId>
-    <version>6.33.5-SNAPSHOT</version>
+    <version>7.0.5-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.14.5-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.16.0-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -23,7 +23,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
                 <artifactId>jackson-dataformat-yaml</artifactId>
-                <version>2.12.2</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.github.java-json-tools</groupId>
@@ -31,9 +31,31 @@
                 <version>2.2.14</version>
             </dependency>
             <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.15</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.4.15</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.5.2</version>
+                <!-- Jos tämän päivittää >=4.5.8, niin osa KeywordSpec-testeistä alkaa feilata.
+                     Scalatran params() ei jostain syystä osaa uudemmilla versioilla lukea ääkkösiä oikein URL:stä -->
+                <version>4.5.7</version>
+            </dependency>
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>5.8.0</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -298,7 +320,6 @@
             <artifactId>scalaz-concurrent_2.12</artifactId>
         </dependency>
 
-
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.scalatest</groupId>
@@ -390,6 +411,28 @@
                     <artifactId>aws-java-sdk-sqs</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>1.17.3</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Elasticsearch dependencies -->
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-client-esjava_2.12</artifactId>
+            <version>7.17.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-core_2.12</artifactId>
+            <version>7.17.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-json-json4s_2.12</artifactId>
+            <version>7.17.2</version>
         </dependency>
     </dependencies>
 
