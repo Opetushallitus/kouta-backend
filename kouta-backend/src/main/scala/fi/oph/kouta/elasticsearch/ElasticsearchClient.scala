@@ -1,14 +1,11 @@
 package fi.oph.kouta.elasticsearch
 
 import com.sksamuel.elastic4s.HitReader
-import com.sksamuel.elastic4s.requests.searches.queries.Query
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.http.{JavaClient, NoOpHttpClientConfigCallback}
-import com.sksamuel.elastic4s.requests.get.GetResponse
 import com.sksamuel.elastic4s.requests.searches.{SearchRequest, SearchResponse}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticProperties, RequestFailure, RequestSuccess}
 import fi.oph.kouta.domain.{HasTila, SearchResult, Tallennettu}
-import fi.vm.sade.utils.Timer.timed
 import fi.vm.sade.utils.slf4j.Logging
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.config.RequestConfig.Builder
@@ -20,10 +17,9 @@ import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success, Try}
 
 trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
   val client: ElasticClient
