@@ -148,10 +148,6 @@ class SearchSpec
             organisaatio = Organisaatio(
               oid = k.organisaatioOid,
               nimi = Map(Fi -> "fi"),
-              paikkakunta = Paikkakunta(
-                nimi = Map(Fi -> "fi"),
-                koodiUri = "paikkakunta_1#1"
-              )
             ),
             muokkaaja = Muokkaaja(nimi = "Matti Muokkaaja", oid = k.muokkaaja),
             modified = k.modified.getOrElse(Modified(LocalDateTime.now())),
@@ -165,10 +161,6 @@ class SearchSpec
                   organisaatio = Organisaatio(
                     oid = t.organisaatioOid,
                     nimi = Map(Fi -> "fi"),
-                    paikkakunta = Paikkakunta(
-                      nimi = Map(Fi -> "fi"),
-                      koodiUri = "paikkakunta_1#1"
-                    )
                   ),
                   modified = t.modified.getOrElse(Modified(LocalDateTime.now())),
                   tila = t.tila,

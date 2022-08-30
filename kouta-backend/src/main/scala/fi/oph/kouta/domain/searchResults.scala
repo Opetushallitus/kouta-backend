@@ -8,33 +8,6 @@ import java.time.LocalDateTime
 
 package object searchResults {
 
-  val PaikkakuntaModel =
-    """    Paikkakunta:
-      |      type: object
-      |      description: Organisaation paikkakunta
-      |      properties:
-      |        koodiUri:
-      |          type: string
-      |          example: kunta_398
-      |          description: Paikkakunnan kuntakoodi
-      |        nimi:
-      |          description: Paikkakunnan nimi
-      |          type: object
-      |          properties:
-      |            fi:
-      |              type: string
-      |              example: Suomenkielinen nimi
-      |              description: "Paikkakunnan suomenkielinen nimi"
-      |            sv:
-      |              type: string
-      |              example: Ruotsinkielinen nimi
-      |              description: "Paikkakunnan ruotsinkielinen nimi"
-      |            en:
-      |              type: string
-      |              example: Englanninkielinen nimi
-      |              description: "Paikkakunnan englanninkielinen nimi"
-      |""".stripMargin
-
   val OrganisaatioModel =
     """    Organisaatio:
       |      type: object
@@ -47,10 +20,6 @@ package object searchResults {
       |          type: string
       |          description: Oorganisaation oid
       |          example: 1.2.246.562.10.00101010101
-      |        paikkakunta:
-      |          type: object
-      |          description: Organisaation paikkakunta
-      |          $ref: '#/components/schemas/Paikkakunta'
       |""".stripMargin
 
   val MuokkaajaModel =
@@ -387,7 +356,7 @@ package object searchResults {
       |            $ref: '#/components/schemas/ValintaperusteSearchItem'
       |""".stripMargin
 
-  val models = Seq(PaikkakuntaModel, OrganisaatioModel, MuokkaajaModel, SearchItemModel,
+  val models = Seq(OrganisaatioModel, MuokkaajaModel, SearchItemModel,
     KoulutusSearchItemModel, KoulutusSearchResultModel, ToteutusSearchItemModel, ToteutusSearchResultModel,
     HakukohdeSearchItemModel, HakukohdeSearchResultModel, HakuSearchItemModel, HakuSearchResultModel,
     ValintaperusteSearchItemModel, ValintaperusteSearchResultModel)
@@ -540,11 +509,7 @@ case class ValintaperusteSearchItem(id: UUID,
                                     julkinen: Option[Boolean] = None) extends HasTila
 
 case class Organisaatio(oid: OrganisaatioOid,
-                        nimi: Kielistetty,
-                        paikkakunta: Paikkakunta)
-
-case class Paikkakunta(koodiUri: String,
-                       nimi: Kielistetty)
+                        nimi: Kielistetty)
 
 case class Muokkaaja(nimi: String,
                      oid: UserOid)
