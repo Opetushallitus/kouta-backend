@@ -424,9 +424,12 @@ case class ToteutusSearchItem(oid: ToteutusOid,
                               muokkaaja: Muokkaaja,
                               modified: Modified,
                               tila: Julkaisutila,
+                              organisaatiot: Seq[String] = Seq(),
                               koulutustyyppi: Option[Koulutustyyppi] = None,
+                              hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq.empty,
                               hakukohdeCount: Int = 0) extends ToteutusItemCommon
 
+case class ToteutusHakutieto(hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq.empty)
 case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
                                        nimi: Kielistetty,
                                        organisaatio: Organisaatio,
@@ -435,7 +438,8 @@ case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
                                        tila: Julkaisutila,
                                        koulutustyyppi: Option[Koulutustyyppi] = None,
                                        organisaatiot: Seq[String] = Seq(),
-                                       hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq()) extends ToteutusItemCommon with Logging
+                                       hakutiedot: Seq[ToteutusHakutieto] = Seq.empty
+                                      ) extends ToteutusItemCommon with Logging
 
 trait ToteutusItemCommon extends HasTila {
   val oid: ToteutusOid
