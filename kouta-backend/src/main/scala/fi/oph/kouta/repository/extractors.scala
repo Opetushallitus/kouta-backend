@@ -118,7 +118,7 @@ trait ToteutusExtractors extends ExtractorBase {
     sorakuvausId = r.nextStringOption().map(UUID.fromString),
     modified = Some(timeStampToModified(r.nextTimestamp())),
     koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
-    koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
+    koulutuksetKoodiUri = Some(extractArray[String](r.nextObjectOption())),
   ))
 
   implicit val getToteutusListItemResult: GetResult[ToteutusListItem] =
@@ -134,7 +134,7 @@ trait ToteutusExtractors extends ExtractorBase {
           modified = Some(timeStampToModified(r.nextTimestamp())),
           metadata = r.nextStringOption().map(read[ToteutusMetadata]),
           koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
-          koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
+          koulutuksetKoodiUri = Some(extractArray[String](r.nextObjectOption())),
         )
         val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
         ToteutusListItem(t.copy(nimi = esitysnimi))

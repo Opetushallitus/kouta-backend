@@ -365,7 +365,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
                 suunniteltuKestoKuukaudet = Some(-1),
                 maksullisuustyyppi = None
               )
-            )
+            ),
+            hasJotpaRahoitus = Some(false)
           )
         )
       ),
@@ -394,7 +395,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
                 maksullisuusKuvaus = incompleteKielistetty,
                 suunniteltuKestoKuvaus = incompleteKielistetty
               )
-            )
+            ),
+            hasJotpaRahoitus = Some(false)
           )
         )
       ),
@@ -557,7 +559,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
                 koodiUri = "osaamisala_0001#1",
                 linkki = Map(Fi -> "puppu fi", Sv -> "puppu sv")
               )
-            )
+            ),
+            hasJotpaRahoitus = Some(false)
           )
         )
       ),
@@ -601,7 +604,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
           AmmatillinenMuuToteutusMetadata(
             hakulomakeLinkki = Map(Fi -> "puppu fi", Sv -> "puppu sv"),
             hakuaika = Some(ajanjakso),
-            aloituspaikat = Some(-1)
+            aloituspaikat = Some(-1),
+            hasJotpaRahoitus = Some(false)
           )
         )
       ),
