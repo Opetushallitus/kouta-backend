@@ -602,6 +602,17 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
   }
 
+  it should "fail if koulutustyyppi changed in modify operation" in {
+    failModifyValidation(amm.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")), johtaaTutkintoon = false, koulutustyyppi = AmmOsaamisala), amm, Seq(
+      ValidationError("koulutustyyppi", notModifiableMsg("koulutustyyppiä", "koulutukselle")),
+      ValidationError("metadata.tyyppi", InvalidMetadataTyyppi)
+    ))
+  }
+
+  it should "fail if oid not given in modify operation" in {
+    failModifyValidation(amm, amm, Seq(ValidationError("oid", missingMsg)))
+  }
+
   it should "fail if invalid tarjoaja OIDs" in {
     failValidation(
       amm.copy(tarjoajat = List(OrganisaatioOid("1.2.3"), OrganisaatioOid("4.5.6"))),
@@ -1109,7 +1120,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     )
   }
 
-  it should "fail if unknown invalid metadata for Lukio koulutus" in {
+  it should "fail if invalid metadata for Lukio koulutus" in {
     failValidation(
       LukioKoulutus.copy(metadata =
         Some(

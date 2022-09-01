@@ -3,6 +3,7 @@ package fi.oph.kouta.validation
 import fi.oph.kouta.client.{HakemusPalveluClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
@@ -162,6 +163,18 @@ object Validations {
     msg = s"Hakulomaketta ID:llä $ataruId ei löydy, tai se on poistettu tai lukittu",
     id = "invalidAtaruId"
   )
+  def invalidHakutapaKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Hakutapa-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidHakutapaKoodiUri"
+  )
+  def invalidHaunKohdejoukkoKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Haun kohdejoukko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidHaunKohdejoukkoKoodiUri"
+  )
+  def invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Haun kohdejoukon tarkenne-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidHaunKohdejoukonTarkenneKoodiUri"
+  )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
@@ -230,6 +243,12 @@ object Validations {
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
+  def unknownLiiteId(liiteId: String): ErrorMessage =
+    ErrorMessage(msg = s"Liitettä ID:llä $liiteId ei löydy", id = "unknownLiiteId")
+
+  def unknownValintakoeId(valintaKoeId: String): ErrorMessage =
+    ErrorMessage(msg = s"Valintakoetta ID:llä $valintaKoeId ei löydy", id = "unknownValintakoeId")
+
   val koodistoServiceFailureMsg: ErrorMessage =
     ErrorMessage(
       msg = s"KoodiUrin voimassaoloa ei voitu tarkistaa, Koodisto-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
@@ -269,12 +288,17 @@ object Validations {
       _.errorType == ePerusteServiceFailureMsg.id
     )
 
+  def uuidToString(uuid: Option[UUID]): String = uuid.map(_.toString).getOrElse("")
+
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(
     msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen",
     id = "InvalidKoulutuspaivamaarat"
   )
   val InvalidMetadataTyyppi: ErrorMessage =
     ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
+
+  def notModifiableMsg(parameter: String, entityType: String): ErrorMessage =
+    ErrorMessage(msg = s"$parameter ei voi muuttaa olemassaolevalle $entityType", id = "notModifiable")
 
   val KoulutusKoodiPattern: Pattern                     = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val HakutapaKoodiPattern: Pattern                     = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
@@ -441,7 +465,8 @@ object Validations {
       validationContext: ValidationContext,
       errorMessage: ErrorMessage
   ): IsValid = {
-    val queryResult = if (validationContext.isAtaruServiceOk()) hakemusPalveluClient.isExistingAtaruId(ataruId) else queryFailed
+    val queryResult =
+      if (validationContext.isAtaruServiceOk()) hakemusPalveluClient.isExistingAtaruId(ataruId) else queryFailed
     validationContext.updateAtaruServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(
       queryResult,
@@ -605,4 +630,17 @@ object Validations {
       )
     )
   }
+
+  def validateSubEntityId(
+      subEntityId: Option[UUID],
+      path: String,
+      crudOperation: CrudOperation,
+      allowedIds: Seq[UUID],
+      notAllowedMsg: ErrorMessage
+  ): IsValid =
+    validateIfTrueOrElse(
+      crudOperation == update,
+      assertTrue(!subEntityId.isDefined || allowedIds.contains(subEntityId.get), path, notAllowedMsg),
+      assertNotDefined(subEntityId, path)
+    )
 }

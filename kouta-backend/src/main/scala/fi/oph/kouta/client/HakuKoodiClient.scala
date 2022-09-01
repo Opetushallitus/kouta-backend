@@ -35,6 +35,15 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
   def postiosoitekoodiExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("posti", koodiUri)
 
+  def hakutapaKoodiUriExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto("hakutapa", koodiUri)
+
+  def haunkohdejoukkoKoodiUriExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto("haunkohdejoukko", koodiUri)
+
+  def haunkohdejoukonTarkenneKoodiUriExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto("haunkohdejoukontarkenne", koodiUri)
+
   private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
     val queryRespone = getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache)
     queryRespone.success match {

@@ -25,7 +25,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     var versio = koodiuriVersionCache.get(koodiUriWithoutVersion)
     if (versio.isEmpty) {
       Try[Int] {
-        get(urlProperties.url("koodisto-service.latest-koodiuri", errorHandler, koodiUriWithoutVersion), followRedirects = true) {
+        get(urlProperties.url("koodisto-service.latest-koodiuri", koodiUriWithoutVersion), errorHandler, followRedirects = true) {
           response => parse(response).extract[CodeElementWithVersion].versio
         }
       } match {

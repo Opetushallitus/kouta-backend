@@ -325,6 +325,17 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     failValidation(lukioToteutus.copy(teemakuva = Some("puppu")), "teemakuva", invalidUrl("puppu"))
   }
 
+  it should "fail if koulutustyyppi changed in modify operation" in {
+    failModifyValidation(lukioToteutus.copy(oid = Some(toteutusOid), metadata = Some(lukioToteutus.metadata.get.asInstanceOf[LukioToteutusMetadata].copy(tyyppi = Amm))), lukioToteutus, Seq(
+      ValidationError("metadata.tyyppi", tyyppiMismatch("koulutuksen", "1.2.246.562.13.125")),
+      ValidationError("metadata.tyyppi", notModifiableMsg("koulutustyyppiä", "toteutukselle"))
+    ))
+  }
+
+  it should "fail if oid not given in modify operation" in {
+    failModifyValidation(lukioToteutus, lukioToteutus, Seq(ValidationError("oid", missingMsg)))
+  }
+
   it should "fail if metadata missing from julkaistu totetutus" in {
     failValidation(
       JulkaistuAmmToteutus.copy(metadata = None),

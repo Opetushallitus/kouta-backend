@@ -23,6 +23,9 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
   private def oldKoulutuksenAlkamiskausi(): Option[KoulutuksenAlkamiskausi] =
     oldOpetus().map(_.koulutuksenAlkamiskausi).getOrElse(None)
 
+  def koulutustyyppiChanged(): Boolean =
+    oldMetadata().isDefined && toteutus.metadata.isDefined && oldMetadata().get.tyyppi != toteutus.metadata.get.tyyppi
+
   def newOpetuskieliKoodiUrit(): Seq[String] = {
     val koodiUrit = opetus().map(_.opetuskieliKoodiUrit).getOrElse(Seq())
     if (oldOpetus().map(_.opetuskieliKoodiUrit).getOrElse(Seq()).toSet != koodiUrit.toSet) koodiUrit else Seq()
@@ -63,7 +66,8 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
 
   def newLukioErityisetKoulutustehtavat(): Seq[LukiolinjaTieto] = {
     val erityisetKoulutustehtavat = lukioErityisetKoulutustehtavat(toteutus.metadata)
-    if (lukioErityisetKoulutustehtavat(oldMetadata()).toSet != erityisetKoulutustehtavat.toSet) erityisetKoulutustehtavat
+    if (lukioErityisetKoulutustehtavat(oldMetadata()).toSet != erityisetKoulutustehtavat.toSet)
+      erityisetKoulutustehtavat
     else Seq()
   }
 

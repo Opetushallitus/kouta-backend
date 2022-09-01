@@ -555,7 +555,7 @@ package object domain {
       )
     }
 
-    def validateOnJulkaisuForJatkuvaHaku(path: String): IsValid =
+    def validateOnJulkaisuForJatkuvaOrJoustavaHaku(path: String): IsValid =
       validateIfDefined[LocalDateTime](paattyy, assertInFuture(_, s"$path.paattyy"))
   }
 
@@ -563,19 +563,16 @@ package object domain {
   case class ValintakokeenLisatilaisuudet(id: Option[UUID] = None, tilaisuudet: Seq[Valintakoetilaisuus] = Seq())
       extends ValidatableSubEntity {
     def validate(
-        tila: Julkaisutila,
-        kielivalinta: Seq[Kieli],
         path: String,
         entityWithNewValues: Option[ValintakokeenLisatilaisuudet],
-        validationContext: ValidationContext,
+        vCtx: ValidationContext,
         osoiteKoodistoCheckFunc: String => ExternalQueryResult
     ): IsValid = and(
       validateIfNonEmptySeq[Valintakoetilaisuus](
         tilaisuudet,
         entityWithNewValues.map(_.tilaisuudet).getOrElse(Seq()),
         s"$path.tilaisuudet",
-        (tilaisuus, newTilaisuus, path) =>
-          tilaisuus.validate(tila, kielivalinta, path, newTilaisuus, validationContext, osoiteKoodistoCheckFunc)
+        (tilaisuus, newTilaisuus, path) => tilaisuus.validate(path, newTilaisuus, vCtx, osoiteKoodistoCheckFunc)
       )
     )
 
@@ -595,26 +592,23 @@ package object domain {
       tilaisuudet: Seq[Valintakoetilaisuus] = Seq()
   ) extends ValidatableSubEntity {
     def validate(
-        tila: Julkaisutila,
-        kielivalinta: Seq[Kieli],
         path: String,
         entityWithNewValues: Option[Valintakoe],
-        crudOperation: CrudOperation,
-        validationContext: ValidationContext,
+        vCtx: ValidationContext,
+        existingIds: Seq[UUID],
         koodistoCheckFunc: String => ExternalQueryResult,
         osoiteKoodistoCheckFunc: String => ExternalQueryResult
     ): IsValid =
       validateIfSuccessful(
         and(
-          validateIfTrue(crudOperation == create, assertNotDefined(id, s"$path.id")),
+          validateSubEntityId(id, s"$path.id", vCtx.crudOperation, existingIds, unknownValintakoeId(uuidToString(id))),
           validateIfNonEmptySeq[Valintakoetilaisuus](
             tilaisuudet,
             entityWithNewValues.map(_.tilaisuudet).getOrElse(Seq()),
             s"$path.tilaisuudet",
-            (tilaisuus, newTilaisuus, path) =>
-              tilaisuus.validate(tila, kielivalinta, path, newTilaisuus, validationContext, osoiteKoodistoCheckFunc)
+            (tilaisuus, newTilaisuus, path) => tilaisuus.validate(path, newTilaisuus, vCtx, osoiteKoodistoCheckFunc)
           ),
-          validateExcludingTilaisuudet(tila, kielivalinta, path)
+          validateExcludingTilaisuudet(vCtx.tila, vCtx.kielivalinta, path)
         ),
         validateIfDefined[String](
           entityWithNewValues.map(_.tyyppiKoodiUri).getOrElse(None),
@@ -623,7 +617,7 @@ package object domain {
               koodiUri,
               koodistoCheckFunc,
               s"$path.tyyppiKoodiUri",
-              validationContext,
+              vCtx,
               invalidValintakoeTyyppiKooriuri(koodiUri)
             )
         )
@@ -687,25 +681,21 @@ package object domain {
       lisatietoja: Kielistetty = Map()
   ) extends ValidatableSubEntity {
     def validate(
-        tila: Julkaisutila,
-        kielivalinta: Seq[Kieli],
         path: String,
         entityWithNewValues: Option[Valintakoetilaisuus],
-        validationContext: ValidationContext,
+        vCtx: ValidationContext,
         osoiteKoodistoCheckFunc: String => ExternalQueryResult
     ): IsValid = and(
       validateIfDefined[Osoite](
         osoite,
         _.validate(
-          tila,
-          kielivalinta,
           s"$path.osoite",
           entityWithNewValues.map(_.osoite).getOrElse(None),
-          validationContext,
+          vCtx,
           osoiteKoodistoCheckFunc
         )
       ),
-      validateExcludingOsoite(tila, kielivalinta, path)
+      validateExcludingOsoite(vCtx.tila, vCtx.kielivalinta, path)
     )
 
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
@@ -777,15 +767,13 @@ package object domain {
 
   case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String]) extends ValidatableSubEntity {
     def validate(
-        tila: Julkaisutila,
-        kielivalinta: Seq[Kieli],
         path: String,
         entityWithNewValues: Option[Osoite],
-        validationContext: ValidationContext,
+        vCtx: ValidationContext,
         koodistoCheckFunc: String => ExternalQueryResult
     ): IsValid =
       validateIfSuccessful(
-        validate(tila, kielivalinta, path),
+        validate(vCtx.tila, vCtx.kielivalinta, path),
         validateIfDefined[String](
           entityWithNewValues.map(_.postinumeroKoodiUri).getOrElse(None),
           koodiUri =>
@@ -793,7 +781,7 @@ package object domain {
               koodiUri,
               koodistoCheckFunc,
               s"$path.postinumeroKoodiUri",
-              validationContext,
+              vCtx,
               invalidPostiosoiteKoodiUri(koodiUri)
             )
         )
@@ -823,15 +811,13 @@ package object domain {
       koulutuksenAlkamisvuosi: Option[String] = None
   ) extends ValidatableSubEntity {
     def validate(
-        tila: Julkaisutila,
-        kielivalinta: Seq[Kieli],
         path: String,
         entityWithNewValues: Option[KoulutuksenAlkamiskausi],
-        validationContext: ValidationContext,
+        vCtx: ValidationContext,
         koodistoCheckFunc: String => ExternalQueryResult
     ): IsValid =
       validateIfSuccessful(
-        validate(tila, kielivalinta, path),
+        validate(vCtx.tila, vCtx.kielivalinta, path),
         validateIfDefined[String](
           entityWithNewValues.map(_.koulutuksenAlkamiskausiKoodiUri).getOrElse(None),
           koodiUri =>
@@ -839,7 +825,7 @@ package object domain {
               koodiUri,
               koodistoCheckFunc,
               s"$path.koulutuksenAlkamiskausiKoodiUri",
-              validationContext,
+              vCtx,
               invalidKausiKoodiuri(koodiUri)
             )
         )

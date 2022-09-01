@@ -94,7 +94,6 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
       metadata.get match {
         case m: KorkeakoulutusKoulutusMetadata  => m.tutkintonimikeKoodiUrit
         case m: ErikoislaakariKoulutusMetadata => m.tutkintonimikeKoodiUrit
-        case m: AmmOpeErityisopeJaOpoKoulutusMetadata => m.tutkintonimikeKoodiUrit
         case _                                  => Seq()
       }
 

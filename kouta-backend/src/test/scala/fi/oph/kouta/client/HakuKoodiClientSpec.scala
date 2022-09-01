@@ -1,13 +1,10 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.Templates
-import fi.oph.kouta.TestSetups.{
-  CONFIG_PROFILE_TEMPLATE,
-  SYSTEM_PROPERTY_NAME_CONFIG_PROFILE,
-  SYSTEM_PROPERTY_NAME_TEMPLATE
-}
+import fi.oph.kouta.TestSetups.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import java.time.LocalDate
@@ -37,11 +34,11 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("hakukohteetperusopetuksenjalkeinenyhteishaku_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01") should equal(true)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_02#2") should equal(true)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_XX") should equal(false)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_YY") should equal(false)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenerillishaku_01") should equal(false)
+    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01") should equal(itemFound)
+    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_02#2") should equal(itemFound)
+    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_XX") should equal(itemNotFound)
+    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_YY") should equal(itemNotFound)
+    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenerillishaku_01") should equal(itemNotFound)
   }
 
   "Finding pohjakoulutusVaatimusKoodiUri" should "return true when koodiUri exists" in {
@@ -53,10 +50,10 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("pohjakoulutusvaatimuskouta_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_pk") should equal(true)
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_yo#2") should equal(true)
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_XX") should equal(false)
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_YY") should equal(false)
+    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_pk") should equal(itemFound)
+    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_yo#2") should equal(itemFound)
+    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_XX") should equal(itemNotFound)
+    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_YY") should equal(itemNotFound)
   }
 
   "Finding liiteTyyppiKoodiUri" should "return true when koodiUri exists" in {
@@ -68,10 +65,10 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("liitetyypitamm_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_1") should equal(true)
-    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_2#2") should equal(true)
-    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_XX") should equal(false)
-    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_YY") should equal(false)
+    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_1") should equal(itemFound)
+    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_2#2") should equal(itemFound)
+    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_XX") should equal(itemNotFound)
+    koodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_YY") should equal(itemNotFound)
   }
 
   "Finding valintakoeTyyppiKoodiUri" should "return true when koodiUri exists" in {
@@ -83,18 +80,18 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("valintakokeentyyppi_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1") should equal(true)
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_2#2") should equal(true)
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_XX") should equal(false)
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_YY") should equal(false)
+    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1") should equal(itemFound)
+    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_2#2") should equal(itemFound)
+    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_XX") should equal(itemNotFound)
+    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_YY") should equal(itemNotFound)
   }
 
   "Finding kausiKoodiUri" should "return true when koodiUri exists" in {
     mockKoodistoResponse("kausi", Seq(("kausi_s", 1, None), ("kausi_k", 3, None), ("kausi_X", 2, Some(dayInPast))))
-    koodiClient.kausiKoodiUriExists("kausi_s") should equal(true)
-    koodiClient.kausiKoodiUriExists("kausi_k#2") should equal(true)
-    koodiClient.kausiKoodiUriExists("kausi_X") should equal(false)
-    koodiClient.kausiKoodiUriExists("kausi_Y") should equal(false)
+    koodiClient.kausiKoodiUriExists("kausi_s") should equal(itemFound)
+    koodiClient.kausiKoodiUriExists("kausi_k#2") should equal(itemFound)
+    koodiClient.kausiKoodiUriExists("kausi_X") should equal(itemNotFound)
+    koodiClient.kausiKoodiUriExists("kausi_Y") should equal(itemNotFound)
   }
 
   "Finding oppiaineKoodiUri" should "return true when koodiUri exists" in {
@@ -106,18 +103,18 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("painotettavatoppiaineetlukiossa_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt") should equal(true)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt#2") should equal(true)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_XX") should equal(false)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_YY") should equal(false)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt") should equal(itemFound)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt#2") should equal(itemFound)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_XX") should equal(itemNotFound)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_YY") should equal(itemNotFound)
   }
 
   "Finding kieliKoodiUri" should "return true when koodiUri exists" in {
     mockKoodistoResponse("kieli", Seq(("kieli_fi", 1, None), ("kieli_sv", 3, None), ("kieli_su", 2, Some(dayInPast))))
-    koodiClient.kieliKoodiUriExists("kieli_fi") should equal(true)
-    koodiClient.kieliKoodiUriExists("kieli_sv#2") should equal(true)
-    koodiClient.kieliKoodiUriExists("kieli_su") should equal(false)
-    koodiClient.kieliKoodiUriExists("kieli_xx") should equal(false)
+    koodiClient.kieliKoodiUriExists("kieli_fi") should equal(itemFound)
+    koodiClient.kieliKoodiUriExists("kieli_sv#2") should equal(itemFound)
+    koodiClient.kieliKoodiUriExists("kieli_su") should equal(itemNotFound)
+    koodiClient.kieliKoodiUriExists("kieli_xx") should equal(itemNotFound)
   }
 
   "Finding postiosoitekoodi" should "return true when koodiUri exists" in {
@@ -129,9 +126,45 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("posti_XXXXX", 2, Some(dayInPast))
       )
     )
-    koodiClient.postiosoitekoodiExists("posti_37150") should equal(true)
-    koodiClient.postiosoitekoodiExists("posti_90810#2") should equal(true)
-    koodiClient.postiosoitekoodiExists("posti_XXXXX") should equal(false)
-    koodiClient.postiosoitekoodiExists("posti_YYYYY") should equal(false)
+    koodiClient.postiosoitekoodiExists("posti_37150") should equal(itemFound)
+    koodiClient.postiosoitekoodiExists("posti_90810#2") should equal(itemFound)
+    koodiClient.postiosoitekoodiExists("posti_XXXXX") should equal(itemNotFound)
+    koodiClient.postiosoitekoodiExists("posti_YYYYY") should equal(itemNotFound)
+  }
+
+  "Finding hakutapaKoodiUri" should "return true when koodiUri exists" in {
+    mockKoodistoResponse("hakutapa", Seq(
+      ("hakutapa_01", 1, None),
+      ("hakutapa_02", 3, None),
+      ("hakutapa_66", 2, Some(dayInPast))
+    ))
+    koodiClient.hakutapaKoodiUriExists("hakutapa_01") should equal(itemFound)
+    koodiClient.hakutapaKoodiUriExists("hakutapa_02#2") should equal(itemFound)
+    koodiClient.hakutapaKoodiUriExists("hakutapa_66") should equal(itemNotFound)
+    koodiClient.hakutapaKoodiUriExists("hakutapa_99") should equal(itemNotFound)
+  }
+
+  "Finding haunkohdejoukkoKoodiUri" should "return true when koodiUri exists" in {
+    mockKoodistoResponse("haunkohdejoukko", Seq(
+      ("haunkohdejoukko_17", 1, None),
+      ("haunkohdejoukko_18", 3, None),
+      ("haunkohdejoukko_66", 2, Some(dayInPast))
+    ))
+    koodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_17") should equal(itemFound)
+    koodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_18#2") should equal(itemFound)
+    koodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_66") should equal(itemNotFound)
+    koodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_99") should equal(itemNotFound)
+  }
+
+  "Finding haunkohdejoukonTarkenneKoodiUri" should "return true when koodiUri exists" in {
+    mockKoodistoResponse("haunkohdejoukontarkenne", Seq(
+      ("haunkohdejoukontarkenne_1", 1, None),
+      ("haunkohdejoukontarkenne_2", 3, None),
+      ("haunkohdejoukontarkenne_6", 2, Some(dayInPast))
+    ))
+    koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_1") should equal(itemFound)
+    koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_2#2") should equal(itemFound)
+    koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_6") should equal(itemNotFound)
+    koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_9") should equal(itemNotFound)
   }
 }

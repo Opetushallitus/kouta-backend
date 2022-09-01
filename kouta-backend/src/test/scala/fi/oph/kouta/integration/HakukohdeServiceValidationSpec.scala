@@ -262,8 +262,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakuDao.get(HakuOid("1.2.246.562.29.1111111111"), TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Some((haku.copy(hakukohteenMuokkaamisenTakaraja = Some(inPast(100))), ZonedDateTime.now().toInstant)))
     passesValidation(
-      initMockSeq(maxWithIds.copy(hakuOid = HakuOid("1.2.246.562.29.1111111111"))),
-      Some(max),
+      initMockSeq(maxWithIds),
+      Some(maxWithIds),
       authenticatedPaakayttaja
     )
   }
@@ -286,7 +286,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       initMockSeq(
         maxWithIds.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX"))
       ),
-      Some(max.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX")))
+      Some(maxWithIds.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX")))
     )
   }
 
@@ -296,7 +296,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       initMockSeq(
         maxWithIds.copy(pohjakoulutusvaatimusKoodiUrit = urit)
       ),
-      Some(max.copy(pohjakoulutusvaatimusKoodiUrit = urit))
+      Some(maxWithIds.copy(pohjakoulutusvaatimusKoodiUrit = urit))
     )
   }
 
@@ -311,7 +311,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
           liitteidenToimitusosoite = osoite
         )
       ),
-      Some(max.copy(liitteidenToimitusosoite = osoite))
+      Some(maxWithIds.copy(liitteidenToimitusosoite = osoite))
     )
   }
 
@@ -321,7 +321,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       initMockSeq(
         maxWithIds.copy(liitteet = liitteet)
       ),
-      Some(max.copy(liitteet = liitteet))
+      Some(maxWithIds.copy(liitteet = liitteet))
     )
   }
 
@@ -331,7 +331,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       initMockSeq(
         maxWithIds.copy(valintakokeet = valintakokeet)
       ),
-      Some(max.copy(valintakokeet = valintakokeet))
+      Some(maxWithIds.copy(valintakokeet = valintakokeet))
     )
   }
 
@@ -339,7 +339,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     val unknownAtaruId = Some(UUID.randomUUID())
     passesValidation(
       initMockSeq(maxWithIds.copy(hakulomakeAtaruId = unknownAtaruId)),
-      Some(max.copy(hakulomakeAtaruId = unknownAtaruId))
+      Some(maxWithIds.copy(hakulomakeAtaruId = unknownAtaruId))
     )
   }
 
@@ -349,7 +349,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
     passesValidation(
       initMockSeq(maxWithIds.copy(tila = Tallennettu, metadata = Some(metadata))),
-      Some(max.copy(metadata = Some(metadata)))
+      Some(maxWithIds.copy(metadata = Some(metadata)))
     )
   }
 
@@ -370,21 +370,22 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
     passesValidation(
       initMockSeq(maxWithIds.copy(metadata = Some(metadata))),
-      Some(max.copy(metadata = Some(metadata)))
+      Some(maxWithIds.copy(metadata = Some(metadata)))
     )
   }
 
   it should "succeed when ValintaperusteenValintakokeidenLisatilaisuudet not changed in modify operation, eventhough unknown osoiteKoodiUri" in {
     val metadata = maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet =
       Seq(
-        ValintakokeenLisatilaisuudet(id = Some(valintaperusteenValintakoeId1), tilaisuudet =
-          Seq(Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("posti_12345#1")))))
+        ValintakokeenLisatilaisuudet(
+          id = Some(valintaperusteenValintakoeId1),
+          tilaisuudet = Seq(Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("posti_12345#1")))))
         )
       )
     )
     passesValidation(
       initMockSeq(maxWithIds.copy(tila = Tallennettu, metadata = Some(metadata))),
-      Some(max.copy(metadata = Some(metadata)))
+      Some(maxWithIds.copy(metadata = Some(metadata)))
     )
   }
 
@@ -415,7 +416,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "fail when oid not given for modified hakukohde" in {
-    Try(validator.withValidation(maxWithIds.copy(oid = None), Some(max), authenticatedNonPaakayttaja)(hk => hk)) match {
+    Try(validator.withValidation(maxWithIds.copy(oid = None), Some(maxWithIds), authenticatedNonPaakayttaja)(hk => hk)) match {
       case Failure(exp: KoutaValidationException) =>
         exp.errorMessages should contain theSameElementsAs Seq(ValidationError("oid", missingMsg))
       case _ => fail("Expecting validation failure, but it succeeded")
@@ -562,7 +563,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     val unknownId  = UUID.randomUUID()
     failsModifyValidation(
       maxWithIds.copy(hakulomakeAtaruId = Some(unknownId)),
-      max.copy(hakulomakeAtaruId = Some(originalId)),
+      maxWithIds.copy(hakulomakeAtaruId = Some(originalId)),
       Seq(ValidationError("hakulomakeAtaruId", unknownAtaruId(unknownId)))
     )
   }
@@ -608,63 +609,11 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  private def maxWithHakulomake(
-      hakulomaketyyppi: Option[Hakulomaketyyppi],
-      hakulomakeAtaruId: Option[UUID] = None,
-      hakulomakeKuvaus: Kielistetty = Map(),
-      hakulomakeLinkki: Kielistetty = Map()
-  ): Hakukohde = max.copy(
-    hakulomaketyyppi = hakulomaketyyppi,
-    hakulomakeAtaruId = hakulomakeAtaruId,
-    hakulomakeKuvaus = hakulomakeKuvaus,
-    hakulomakeLinkki = hakulomakeLinkki
-  )
-
-  "Hakulomake validation" should "fail if missing or irrelevant values for MuuHakulomake" in {
-    failsValidation(
-      maxWithHakulomake(Some(MuuHakulomake), Some(ataruId), fullKielistetty, Map(Fi -> "", Sv -> "puppu")),
-      Seq(
-        ValidationError("hakulomakeAtaruId", notMissingMsg(Some(ataruId))),
-        ValidationError("hakulomakeKuvaus", notEmptyMsg),
-        ValidationError("hakulomakeLinkki", invalidKielistetty(Seq(Fi))),
-        ValidationError("hakulomakeLinkki", invalidUrl("")),
-        ValidationError("hakulomakeLinkki", invalidUrl("puppu"))
-      )
-    )
-  }
-
-  it should "fail if missing or irrelevant values for Ataru" in {
-    failsValidation(
-      maxWithHakulomake(Some(Ataru), None, fullKielistetty, fullKielistetty),
-      Seq(
-        ValidationError("hakulomakeAtaruId", missingMsg),
-        ValidationError("hakulomakeKuvaus", notEmptyMsg),
-        ValidationError("hakulomakeLinkki", notEmptyMsg)
-      )
-    )
-  }
-
-  it should "fail if missing or irrelevant values for EiSähköistä" in {
-    failsValidation(
-      maxWithHakulomake(Some(EiSähköistä), Some(ataruId), vainSuomeksi, fullKielistetty),
-      Seq(
-        ValidationError("hakulomakeAtaruId", notMissingMsg(Some(ataruId))),
-        ValidationError("hakulomakeLinkki", notEmptyMsg),
-        ValidationError("hakulomakeKuvaus", kielistettyWoSvenska)
-      )
-    )
-  }
-
-  it should "fail if values given even though type not defined" in {
-    failsValidation(
-      maxWithHakulomake(None, Some(ataruId), fullKielistetty, fullKielistetty),
-      Seq(
-        ValidationError("hakulomakeAtaruId", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
-        ValidationError("hakulomakeKuvaus", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
-        ValidationError("hakulomakeLinkki", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
-        ValidationError("hakulomaketyyppi", missingMsg)
-      )
-    )
+  it should "fail if hakulomaketyyppi missing from julkaistu hakukohde while other hakulomake values given" in {
+    failsValidation(max.copy(hakulomaketyyppi = None), Seq(
+      ValidationError("hakulomakeAtaruId", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
+      ValidationError("hakulomaketyyppi", missingMsg)
+    ))
   }
 
   "Liite validation" should "fail if id given for liite in new hakukohde" in {
@@ -673,6 +622,17 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       max.copy(liitteet = List(Liite2.copy(id = liiteId))),
       "liitteet[0].id",
       notMissingMsg(liiteId)
+    )
+  }
+
+  it should "fail if unknown id given for liite in modified hakukohde" in {
+    val liiteId = Some(UUID.randomUUID())
+    failsModifyValidation(
+      max.copy(oid = Some(HakukohdeOid("1.2.246.562.20.0000000001")), liitteet = List(Liite2.copy(id = liiteId))),
+      max.copy(liitteet = List(Liite2.copy(id = Some(UUID.randomUUID())))),
+      Seq(
+        ValidationError("liitteet[0].id", unknownLiiteId(liiteId.get.toString))
+      )
     )
   }
 

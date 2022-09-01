@@ -1,34 +1,105 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuMetadata, Julkaisutila, Kieli, KoulutuksenAlkamiskausi, TilaFilter, Yhteyshenkilo}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.HakukohdeDAO
-import fi.oph.kouta.validation.CrudOperations.CrudOperation
-import fi.oph.kouta.validation.Validations.{HakutapaKoodiPattern, KohdejoukkoKoodiPattern, KohdejoukonTarkenneKoodiPattern, and, assertMatch, assertNotOptional, assertTrue, assertValid, integrityViolationMsg, validateHakulomake, validateIfDefined, validateIfJulkaistu, validateIfNonEmptySeq, validateIfTrue}
-import fi.oph.kouta.validation.{IsValid, NoErrors}
+import fi.oph.kouta.validation.CrudOperations.{create, update}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{HakuDiffResolver, IsValid, ValidationContext}
 
-object HakuServiceValidation extends HakuServiceValidation(OrganisaatioServiceImpl, HakukohdeDAO)
-class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakukohdeDAO: HakukohdeDAO) extends ValidatingService[Haku] {
+import java.util.UUID
+
+object HakuServiceValidation
+    extends HakuServiceValidation(OrganisaatioServiceImpl, HakuKoodiClient, HakemusPalveluClient, HakukohdeDAO)
+class HakuServiceValidation(
+    val organisaatioService: OrganisaatioService,
+    hakuKoodiClient: HakuKoodiClient,
+    hakemusPalveluClient: HakemusPalveluClient,
+    hakukohdeDAO: HakukohdeDAO
+) extends ValidatingService[Haku] {
+  private def isYhteisHaku(haku: Haku): Boolean =
+    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_01")
+  private def isJatkuvaHaku(haku: Haku): Boolean =
+    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_03")
+  private def isJoustavaHaku(haku: Haku): Boolean =
+    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_04")
+
   override def validateEntity(haku: Haku, oldHaku: Option[Haku]): IsValid = {
-    val tila         = haku.tila
-    val kielivalinta = haku.kielivalinta
+    val hakuDiffResolver = HakuDiffResolver(haku, oldHaku)
+    val vCtx             = ValidationContext(haku.tila, haku.kielivalinta, if (oldHaku.isDefined) update else create)
 
     and(
       haku.validate(),
+      validateIfTrueOrElse(
+        vCtx.crudOperation == update,
+        assertNotOptional(haku.oid, "oid"),
+        assertNotDefined(haku.oid, "oid")
+      ),
       assertNotOptional(haku.hakutapaKoodiUri, "hakutapaKoodiUri"),
       assertNotOptional(haku.kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri"),
-      validateIfDefined[String](haku.hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
       validateIfDefined[String](
-        haku.kohdejoukkoKoodiUri,
-        assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")
+        hakuDiffResolver.newHakutapaKoodiUri(),
+        koodiUri =>
+          validateIfSuccessful(
+            assertMatch(koodiUri, HakutapaKoodiPattern, "hakutapaKoodiUri"),
+            assertKoodistoQueryResult(
+              koodiUri,
+              hakuKoodiClient.hakutapaKoodiUriExists,
+              "hakutapaKoodiUri",
+              vCtx,
+              invalidHakutapaKoodiUri(koodiUri)
+            )
+          )
       ),
       validateIfDefined[String](
-        haku.kohdejoukonTarkenneKoodiUri,
-        assertMatch(_, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri")
+        hakuDiffResolver.newKohdejoukkoKoodiUri(),
+        koodiUri =>
+          validateIfSuccessful(
+            assertMatch(koodiUri, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri"),
+            assertKoodistoQueryResult(
+              koodiUri,
+              hakuKoodiClient.haunkohdejoukkoKoodiUriExists,
+              "kohdejoukkoKoodiUri",
+              vCtx,
+              invalidHaunKohdejoukkoKoodiUri(koodiUri)
+            )
+          )
       ),
-      //validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validate(tila, kielivalinta, _)),
-      validateIfDefined[HakuMetadata](haku.metadata, validateMetadata(_, tila, kielivalinta)),
+      validateIfDefined[String](
+        hakuDiffResolver.newKohdejoukonTarkenneKoodiUri(),
+        koodiUri =>
+          validateIfSuccessful(
+            assertMatch(koodiUri, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri"),
+            assertKoodistoQueryResult(
+              koodiUri,
+              hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists,
+              "kohdejoukonTarkenneKoodiUri",
+              vCtx,
+              invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri)
+            )
+          )
+      ),
+      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+      validateIfDefined[HakuMetadata](
+        haku.metadata,
+        validateMetadata(_, hakuDiffResolver, vCtx)
+      ),
+      validateIfTrue(
+        haku.hakulomaketyyppi.contains(Ataru),
+        validateIfDefined[UUID](
+          hakuDiffResolver.newAtaruId(),
+          ataruId =>
+            assertAtaruQueryResult(
+              ataruId,
+              hakemusPalveluClient.isExistingAtaruId,
+              "hakulomakeAtaruId",
+              vCtx,
+              unknownAtaruId(ataruId)
+            )
+        )
+      ),
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
           assertNotOptional(haku.metadata, "metadata"),
           assertNotOptional(haku.hakulomaketyyppi, "hakulomaketyyppi"),
@@ -40,31 +111,36 @@ class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakuko
             haku.kielivalinta
           ),
           validateIfTrue(
-            haku.hakutapaKoodiUri.contains("hakutapa_01#1"), //Yhteishaku
-            assertNotOptional(haku.metadata.get.koulutuksenAlkamiskausi, "metadata.koulutuksenAlkamiskausi")
+            isYhteisHaku(haku),
+            assertNotOptional(haku.metadata.map(_.koulutuksenAlkamiskausi).getOrElse(None), "metadata.koulutuksenAlkamiskausi")
           )
         )
       )
     )
   }
 
-  private def validateMetadata(m: HakuMetadata, tila: Julkaisutila, kielivalinta: Seq[Kieli]): IsValid = {
-    /*
+  private def validateMetadata(
+      m: HakuMetadata,
+      hakuDiffResolver: HakuDiffResolver,
+      vCtx: ValidationContext
+  ): IsValid = {
     and(
-    validateIfNonEmpty[Yhteyshenkilo](m.yhteyshenkilot, "path.yhteyshenkilot", _.validate(tila, kielivalinta, _)),
-    validateIfNonEmpty[Ajanjakso](
-      m.tulevaisuudenAikataulu,
-      "path.tulevaisuudenAikataulu",
-      _.validate(tila, kielivalinta, _)
-    ),
-    validateIfDefined[KoulutuksenAlkamiskausi](
-      m.koulutuksenAlkamiskausi,
-      _.validate(tila, kielivalinta, "path.koulutuksenAlkamiskausi")
+      validateIfNonEmpty[Yhteyshenkilo](m.yhteyshenkilot, "metadata.yhteyshenkilot", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+      validateIfNonEmpty[Ajanjakso](
+        m.tulevaisuudenAikataulu,
+        "metadata.tulevaisuudenAikataulu",
+        _.validate(vCtx.tila, vCtx.kielivalinta, _)
+      ),
+      validateIfDefined[KoulutuksenAlkamiskausi](
+        m.koulutuksenAlkamiskausi,
+        _.validate(
+          "metadata.koulutuksenAlkamiskausi",
+          hakuDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
+          vCtx,
+          hakuKoodiClient.kausiKoodiUriExists
+        )
+      )
     )
-  )
-
-     */
-    NoErrors
   }
 
   override def validateInternalDependenciesWhenDeletingEntity(haku: Haku): IsValid = assertTrue(
@@ -74,27 +150,20 @@ class HakuServiceValidation(val organisaatioService: OrganisaatioService, hakuko
   )
 
   override def validateEntityOnJulkaisu(haku: Haku): IsValid = and(
-    validateIfTrue(
-      !haku.hakutapaKoodiUri.contains("hakutapa_03#1"),
-      and( // Not Jatkuva haku
-        //validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisu(_))
-      )
-    ),
-    validateIfTrue(
-      haku.hakutapaKoodiUri.contains("hakutapa_03#1"),
-      and( // Jatkuva haku
-        //validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaHaku(_))
-      )
+    validateIfTrueOrElse(
+      isJatkuvaHaku(haku) || isJoustavaHaku(haku),
+      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaOrJoustavaHaku(_)),
+      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisu(_))
     ),
     validateIfDefined[HakuMetadata](
       haku.metadata,
       m =>
         and(
-          //validateIfNonEmpty[Ajanjakso](
-          //  m.tulevaisuudenAikataulu,
-          //  "metadata.tulevaisuudenAikataulu",
-          //  _.validateOnJulkaisu(_)
-          //),
+          validateIfNonEmpty[Ajanjakso](
+            m.tulevaisuudenAikataulu,
+            "metadata.tulevaisuudenAikataulu",
+            _.validateOnJulkaisu(_)
+          ),
           validateIfDefined[KoulutuksenAlkamiskausi](
             m.koulutuksenAlkamiskausi,
             _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
