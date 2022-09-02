@@ -24,8 +24,9 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
   case class Tutkinnonosa(id: Long)
   case class TutkinnonosaViite(id: Long, tutkinnonOsa: Option[Tutkinnonosa])
 
-  def getKoulutusKoodiUritForEPeruste(ePerusteId: Long): Seq[KoodiUri] = {
+  def getKoulutusKoodiUritForEPeruste(ePerusteId: Long): (Seq[KoodiUri], Boolean) = {
     var koodiUritForEPeruste = ePerusteToKoodiuritCache.get(ePerusteId)
+    var ePerusteServiceOk = true
     if (koodiUritForEPeruste.isEmpty) {
       Try[Seq[KoodiUri]] {
         get(urlProperties.url("eperusteet-service.peruste-by-id", ePerusteId.toString), errorHandler, followRedirects = true) {
@@ -42,41 +43,43 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         case Success(koodiUris) =>
           koodiUritForEPeruste = Some(koodiUris)
           ePerusteToKoodiuritCache.put(ePerusteId)(koodiUris, Some(15.minutes))
-
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => koodiUritForEPeruste = None
         case Failure(exp: KoodistoQueryException) =>
-          throw new RuntimeException(s"Failed to get ePerusteet with id $ePerusteId, got response ${exp.status} ${exp.message}")
+          ePerusteServiceOk = false
+          logger.error(s"Failed to get ePerusteet with id $ePerusteId, got response ${exp.status} ${exp.message}")
       }
     }
 
-    koodiUritForEPeruste.getOrElse(Seq())
+    (koodiUritForEPeruste.getOrElse(Seq()), ePerusteServiceOk)
   }
 
-  def getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId: Long): Seq[(Long, Long)] = {
+  def getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId: Long): (Seq[(Long, Long)], Boolean) = {
     var viitteetAndIdtForEPeruste = ePerusteToTutkinnonosaCache.get(ePerusteId)
+    var ePerusteServiceOk = true
     if (viitteetAndIdtForEPeruste.isEmpty) {
       Try[Seq[(Long, Long)]] {
         get(urlProperties.url("eperusteet-service.tutkinnonosat-by-eperuste", ePerusteId.toString), errorHandler, followRedirects = true) {
           response => {
             parse(response).extract[List[TutkinnonosaViite]].
-            filter(_.tutkinnonOsa.isDefined).map(viite => (viite.id, viite.tutkinnonOsa.get.id))
+              filter(_.tutkinnonOsa.isDefined).map(viite => (viite.id, viite.tutkinnonOsa.get.id))
           }
         }
       } match {
-        case Success(viiteAndIdt) => {
+        case Success(viiteAndIdt) =>
           viitteetAndIdtForEPeruste = Some(viiteAndIdt)
           ePerusteToTutkinnonosaCache.put(ePerusteId)(viiteAndIdt, Some(15.minutes))
-        }
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => viitteetAndIdtForEPeruste = None
         case Failure(exp: KoodistoQueryException) =>
-          throw new RuntimeException(s"Failed to get tutkinnonosat for ePeruste with id $ePerusteId, got response ${exp.status} ${exp.message}")
+          ePerusteServiceOk = false
+          logger.error(s"Failed to get tutkinnonosat for ePeruste with id $ePerusteId, got response ${exp.status} ${exp.message}")
       }
     }
-    viitteetAndIdtForEPeruste.getOrElse(Seq())
+    (viitteetAndIdtForEPeruste.getOrElse(Seq()), ePerusteServiceOk)
   }
 
-  def getOsaamisalaKoodiuritForEPeruste(ePerusteId: Long): Seq[KoodiUri] = {
+  def getOsaamisalaKoodiuritForEPeruste(ePerusteId: Long): (Seq[KoodiUri], Boolean) = {
     var osaamisalaKoodiUritForEPeruste = ePerusteToOsaamisalaCache.get(ePerusteId)
+    var ePerusteServiceOk = true
     if (osaamisalaKoodiUritForEPeruste.isEmpty) {
       Try[Seq[KoodiUri]] {
         get(urlProperties.url("eperusteet-service.osaamisalat-by-eperuste", ePerusteId.toString), errorHandler, followRedirects = true) {
@@ -85,15 +88,15 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
           }
         }
       } match {
-        case Success(koodiUrit) => {
+        case Success(koodiUrit) =>
           osaamisalaKoodiUritForEPeruste = Some(koodiUrit)
           ePerusteToOsaamisalaCache.put(ePerusteId)(koodiUrit, Some(15.minutes))
-        }
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => osaamisalaKoodiUritForEPeruste = None
         case Failure(exp: KoodistoQueryException) =>
-          throw new RuntimeException(s"Failed to get osaamisalat for ePeruste with id $ePerusteId, got response ${exp.status} ${exp.message}")
+          ePerusteServiceOk = false
+          logger.error(s"Failed to get osaamisalat for ePeruste with id $ePerusteId, got response ${exp.status} ${exp.message}")
       }
     }
-    osaamisalaKoodiUritForEPeruste.getOrElse(Seq())
+    (osaamisalaKoodiUritForEPeruste.getOrElse(Seq()), ePerusteServiceOk)
   }
 }

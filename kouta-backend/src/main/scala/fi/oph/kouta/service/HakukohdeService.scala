@@ -120,15 +120,16 @@ class HakukohdeService(
         val hakuajat = hakukohde._2.map(_._5).distinct.filter(_.oid.nonEmpty).map(
           hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
 
-        val toteutusCopy = toteutus.copy(tila = Tallennettu)
+        val toteutusCopy = toteutus.copy(oid = None, tila = Tallennettu)
         val toteutusCopyOid = toteutusService.put(toteutusCopy)
 
         val hakukohdeCopyAsLuonnos = hk.copy(
+          oid = None,
           tila = Tallennettu,
           toteutusOid = toteutusCopyOid,
           hakuOid = hakuOid,
-          liitteet = liitteet,
-          valintakokeet = valintakokeet,
+          liitteet = liitteet.map(_.copy(id = None)),
+          valintakokeet = valintakokeet.map(_.copy(id = None)),
           hakuajat = hakuajat)
 
         val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)

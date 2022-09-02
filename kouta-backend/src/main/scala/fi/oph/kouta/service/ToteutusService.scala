@@ -141,7 +141,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     val toteutukset = ToteutusDAO.getToteutuksetByOids(toteutusOids)
     toteutukset.map(toteutus => {
       try {
-        val toteutusCopyAsLuonnos = toteutus.copy(tila = Tallennettu)
+        val toteutusCopyAsLuonnos = toteutus.copy(oid = None, tila = Tallennettu)
         val createdToteutusOid = put(toteutusCopyAsLuonnos)
         ToteutusCopyResultObject(oid = toteutus.oid.get, status = "success", created = ToteutusCopyOids(Some(createdToteutusOid)))
       } catch {

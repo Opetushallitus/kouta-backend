@@ -2,6 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, queryFailed}
 import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
 import fi.vm.sade.utils.slf4j.Logging
 import org.http4s.Method.GET
@@ -22,7 +23,7 @@ case class AtaruForm(key: String, deleted: Option[Boolean]) {
 }
 
 trait HakemusPalveluClient extends KoutaJsonFormats {
-  def isExistingAtaruId(ataruId: UUID): Boolean
+  def isExistingAtaruId(ataruId: UUID): ExternalQueryResult
 }
 object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
@@ -45,8 +46,9 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
 
   implicit val ataruIdCache = CaffeineCache[Seq[String]]
 
-  override def isExistingAtaruId(ataruId: UUID): Boolean = {
+  override def isExistingAtaruId(ataruId: UUID): ExternalQueryResult = {
     var existingIdsInCache = ataruIdCache.get("")
+    var querySuccess = true
     if (existingIdsInCache.isEmpty) {
       val url = urlProperties.url("hakemuspalvelu-service.forms")
       try {
@@ -71,10 +73,18 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
           }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
       } catch {
         case error: CasClientException =>
+          querySuccess = false
           logger.error(s"Authentication to CAS failed: ${error}")
+        case error: RuntimeException =>
+          querySuccess = false
+          logger.error(error.toString)
       }
     }
-    existingIdsInCache.getOrElse(Seq()).contains(ataruId.toString)
+    querySuccess match {
+      case true =>
+        fromBoolean(existingIdsInCache.getOrElse(Seq()).contains(ataruId.toString))
+      case _ => queryFailed
+    }
   }
 
   def parseIds(responseAsString: String): List[String] =
