@@ -110,6 +110,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
           case telmaMetadata: TelmaToteutusMetadata => Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiToteutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case erikoislaakariToteutusMetadata: ErikoislaakariToteutusMetadata => Some(erikoislaakariToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusToteutusMetadata => Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }
