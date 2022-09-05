@@ -22,15 +22,20 @@ package object validation {
     def validateOnJulkaisu(path: String): IsValid = NoErrors
   }
 
-  case class ErrorMessage(msg: String, id: String)
+  case class ErrorMessage(msg: String, id: String, extra: Option[Map[String, AnyRef]] = None)
 
-  case class ValidationError(path: String, msg: String, errorType: String) {
-    override def toString: String = s"""{"path":"$path","msg":"$msg","errorType":"$errorType"}"""
+  case class ValidationError(path: String, msg: String, errorType: String, additionalFields: Option[Map[String, AnyRef]] = None) {
+    override def toString: String = {
+      additionalFields match {
+        case Some(af) => s"""{"path":"$path","msg":"$msg","errorType":"$errorType", ${af.map(x => x._1 + ":" + x._2.toString).mkString(", ")}}"""
+        case None => s"""{"path":"$path","msg":"$msg","errorType":"$errorType"}"""
+      }
+    }
   }
 
   object ValidationError {
     def apply(path: String, error: ErrorMessage): ValidationError = {
-      ValidationError(path, error.msg, error.id)
+      ValidationError(path, error.msg, error.id, error.extra)
     }
   }
 
