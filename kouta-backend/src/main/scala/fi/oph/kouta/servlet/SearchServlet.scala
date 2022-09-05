@@ -418,8 +418,12 @@ class SearchServlet(
        |${searchParamsModel(hasKoulutustyyppi = true)}
        |        - in: query
        |          name: orgWhitelist
+       |          style: form
+       |          explode: false
        |          schema:
-       |            type: string
+       |            type: array
+       |            items:
+       |              type: string
        |          required: false
        |          description: Rajaa palautuvia hakukohteita organisaation mukaan. Pilkulla erotettuja organisaatio-oideja.
        |      responses:
