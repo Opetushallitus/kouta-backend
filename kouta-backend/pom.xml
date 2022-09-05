@@ -31,9 +31,24 @@
                 <version>2.2.14</version>
             </dependency>
             <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>1.15</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.4.15</version>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
-                <version>4.5.2</version>
+                <version>4.5.13</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -390,6 +405,17 @@
                     <artifactId>aws-java-sdk-sqs</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <!-- Elasticsearch dependencies -->
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-client-esjava_2.12</artifactId>
+            <version>7.17.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-core_2.12</artifactId>
+            <version>7.17.2</version>
         </dependency>
     </dependencies>
 
