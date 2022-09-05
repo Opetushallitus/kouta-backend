@@ -188,7 +188,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true), true).map(_.oid) match {
       case Nil      => HakuSearchResult()
-      case hakuOids => assocHakukohdeCounts(KoutaIndexClient.searchHaut(hakuOids, params))
+      case hakuOids => assocHakukohdeCounts(KoutaSearchClient.searchHaut(hakuOids, params))
     }
   }
 
@@ -203,7 +203,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
           })
       }
 
-    filterHakukohteet(KoutaIndexClient.searchHaut(Seq(hakuOid), params).result.headOption)
+    filterHakukohteet(KoutaSearchClient.searchHaut(Seq(hakuOid), params).result.headOption)
   }
 
   private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =
