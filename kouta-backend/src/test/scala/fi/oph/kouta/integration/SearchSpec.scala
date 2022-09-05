@@ -1,33 +1,36 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.searchResults.{HakukohdeSearchResult, KoulutusSearchResult, ValintaperusteSearchResult}
-import fi.oph.kouta.mocks.KoutaIndexMock
+import fi.oph.kouta.integration.fixture.ElasticDumpFixture
 import fi.oph.kouta.security.RoleEntity
-import org.json4s.jackson.Serialization.read
 import org.mockserver.model
 import org.scalatest.BeforeAndAfterEach
-import org.json4s.jackson.Serialization.write
 
-class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with SearchFixture with KoutaIndexMock with BeforeAndAfterEach  {
-
+class SearchSpec
+    extends KoutaIntegrationSpec
+    with AccessControlSpec
+    with EverythingFixture
+    with SearchFixture
+    with ElasticDumpFixture
+    with BeforeAndAfterEach {
 
   override val roleEntities = RoleEntity.all
-  override val DebugJson = false
+  override val DebugJson    = false
 
   var koid1, koid2, koid3, koid4, koid5, koid6: String = _
   var toid1, toid2, toid3, toid4, toid5, toid6: String = _
-  var hoid1, hoid2, hoid3: String = _
-  var hkoid1, hkoid2, hkoid3, hkoid4, hkoid5: String = _
-  var vpid1, vpid2, vpid3, vpid4, vpid5: String = _
+  var hoid1, hoid2, hoid3: String                      = _
+  var hkoid1, hkoid2, hkoid3, hkoid4, hkoid5: String   = _
+  var vpid1, vpid2, vpid3, vpid4, vpid5: String        = _
 
   val params = Map("nimi" -> "Hassu", "page" -> "1", "koulutustyyppi" -> "amm")
 
   def barams(organisaatioOid: OrganisaatioOid): Map[String, String] = params + ("organisaatioOid" -> organisaatioOid.s)
-  def mockParams(oids: List[String]): Map[String, String] = params + ("oids" -> oids.map(_.toString).sorted.mkString(","))
-  def mockIdParams(ids: List[String]): Map[String, String] = params + ("ids" -> ids.map(_.toString).sorted.mkString(","))
+  def mockParams(oids: List[String]): Map[String, String] =
+    params + ("oids" -> oids.map(_.toString).sorted.mkString(","))
+  def mockIdParams(ids: List[String]): Map[String, String] =
+    params + ("ids" -> ids.map(_.toString).sorted.mkString(","))
 
   var mocks: Seq[model.HttpRequest] = Seq()
 
@@ -50,15 +53,30 @@ class SearchSpec extends KoutaIntegrationSpec with AccessControlSpec with Everyt
     koid2 = put(koulutus.copy(organisaatioOid = ParentOid, tarjoajat = List(ParentOid)), ophSession)
     koid3 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)), ophSession)
     koid4 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid), julkinen = true), ophSession)
-    koid5 = put(koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid, ChildOid), julkinen = true), ophSession)
+    koid5 = put(
+      koulutus.copy(organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid, ChildOid), julkinen = true),
+      ophSession
+    )
     koid6 = put(koulutus.copy(organisaatioOid = OphOid, tarjoajat = List(LonelyOid), julkinen = true), ophSession)
 
-    toid1 = put(toteutus.copy(koulutusOid = KoulutusOid(koid1), organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid)))
-    toid2 = put(toteutus.copy(koulutusOid = KoulutusOid(koid2), organisaatioOid = ParentOid, tarjoajat = List(ParentOid)))
-    toid3 = put(toteutus.copy(koulutusOid = KoulutusOid(koid3), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
-    toid4 = put(toteutus.copy(koulutusOid = KoulutusOid(koid4), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
-    toid5 = put(toteutus.copy(koulutusOid = KoulutusOid(koid5), organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid)))
-    toid6 = put(toteutus.copy(koulutusOid = KoulutusOid(koid6), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid)))
+    toid1 = put(
+      toteutus.copy(koulutusOid = KoulutusOid(koid1), organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
+    )
+    toid2 = put(
+      toteutus.copy(koulutusOid = KoulutusOid(koid2), organisaatioOid = ParentOid, tarjoajat = List(ParentOid))
+    )
+    toid3 = put(
+      toteutus.copy(koulutusOid = KoulutusOid(koid3), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid))
+    )
+    toid4 = put(
+      toteutus.copy(koulutusOid = KoulutusOid(koid4), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid))
+    )
+    toid5 = put(
+      toteutus.copy(koulutusOid = KoulutusOid(koid5), organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
+    )
+    toid6 = put(
+      toteutus.copy(koulutusOid = KoulutusOid(koid6), organisaatioOid = LonelyOid, tarjoajat = List(LonelyOid))
+    )
 
     hoid1 = put(haku.copy(organisaatioOid = ParentOid))
     hoid2 = put(haku.copy(organisaatioOid = LonelyOid))
