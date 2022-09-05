@@ -5,12 +5,13 @@ import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.searchResults.ToteutusSearchResultFromIndex
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -203,7 +204,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ToteutusSearchResult = {
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated): ToteutusSearchResult = {
 
     def getCount(t: ToteutusSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
       organisaatioOids match {
@@ -241,7 +242,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, toteutusOid: ToteutusOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[ToteutusSearchItemFromIndex] = {
+  def search(organisaatioOid: OrganisaatioOid, toteutusOid: ToteutusOid, params: SearchParams)(implicit authenticated: Authenticated): Option[ToteutusSearchItemFromIndex] = {
     def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => toteutus
