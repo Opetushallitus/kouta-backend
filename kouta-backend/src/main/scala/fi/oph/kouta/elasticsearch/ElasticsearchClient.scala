@@ -89,9 +89,8 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
 
     SearchResult[T](
       totalCount = totalHits,
-      result = response.result.safeTo[T].map(_.get)
+      result = response.result.hits.hits.flatMap(_.safeTo[T].toOption)
     )
-
   }
 
  /*
@@ -129,8 +128,8 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
         .mapTo[IndexedSeq[T]]
   }
 
-  def searchElastic[T: HitReader: ClassTag](req: SearchRequest): Future[SearchResult[T]] = {
-    val duration: FiniteDuration = Duration(1, TimeUnit.MINUTES)
+  def searchElastic[T: HitReader: ClassTag](req: SearchRequest): SearchResult[T] = {
+    implicit val duration: FiniteDuration = Duration(1, TimeUnit.MINUTES)
 
     logger.info(s"Elasticsearch request: ${req.show}")
 
@@ -140,13 +139,13 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
       .execute(req)
       .flatMap {
         case failure: RequestFailure =>
-          logger.debug(s"Elasticsearch status: {}", failure.status)
+          logger.debug(s"Elasticsearch request failure: {}", failure)
           Future.failed(ElasticSearchException(failure.error))
         case response: RequestSuccess[SearchResponse] =>
           logger.debug(s"Elasticsearch status: {}", response.status)
           //logger.debug(s"Elasticsearch response: {}", response.result)
           Future.successful(mapResultToEntity[T](index, response))
-      }
+      }.await
   }
 }
 

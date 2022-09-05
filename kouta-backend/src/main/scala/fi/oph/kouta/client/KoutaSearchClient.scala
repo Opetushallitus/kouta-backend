@@ -3,57 +3,157 @@ package fi.oph.kouta.client
 import com.sksamuel.elastic4s.ElasticClient
 import com.sksamuel.elastic4s.ElasticDsl._
 import com.sksamuel.elastic4s.json4s.ElasticJson4s.Implicits._
+import com.sksamuel.elastic4s.requests.searches.SearchRequest
+import com.sksamuel.elastic4s.requests.searches.sort.SortOrder
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.searchResults.KoulutusSearchResultFromIndex
 import fi.oph.kouta.elasticsearch.ElasticsearchClient
 import fi.oph.kouta.servlet.SearchParams
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import fi.vm.sade.utils.slf4j.Logging
-import org.json4s.jackson.Serialization.write
 
 import java.util.UUID
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.util.Try
 
 class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with Logging with ElasticsearchClient {
 
-  private val DEFAULT_SOURCE_FIELDS = Set("oid", "nimi", "tila", "muokkaaja", "modified", "organisaatio")
+  private def getQueryFrom(page: Int, size: Int) = {
+    if (page > 0) ((page - 1) * size) else 0
+  }
 
-  private val KOULUTUS_SOURCE_FIELDS = DEFAULT_SOURCE_FIELDS ++ Set(
-    "julkinen",
-    "koulutustyyppi",
-    "metadata.eperuste",
-    "toteutukset.oid",
-    "toteutukset.tila",
-    "toteutukset.modified",
-    "toteutukset.nimi",
-    "toteutukset.organisaatio",
-    "toteutukset.organisaatiot"
-  )
+  private def getSortFieldKeyword(lng: Kieli, field: String) = getFieldKeyword(true, lng, field)
 
-  private def getQueryFrom(page: Option[Int], size: Option[Int]) = {
-    (page, size) match {
-      case (Some(p), Some(s)) => if (p > 0) ((p - 1) * s) else 0
-      case _                  => 0
+  private def getSearchFieldKeyword(lng: Kieli, field: String) = getFieldKeyword(false, lng, field)
+  //
+  private def getFieldKeyword(forSort: Boolean, lng: Kieli, field: String): String = {
+    field.toLowerCase.trim match {
+      case "nimi"           => s"nimi.${lng}.keyword"
+      case "tila"           => "tila.keyword"
+      case "muokkaaja"      => "muokkaaja.nimi.keyword"
+      case "hakutapa"       => if (forSort) s"hakutapa.nimi.${lng}.keyword" else s"hakutapa.koodiUri.keyword"
+      case "hakuOid"        => "hakuOid.keyword"
+      case "toteutusOid"    => "toteutusOid.keyword"
+      case "orgWhitelist"   => "organisaatio.oid.keyword"
+      case "modified"       => "modified"
+      case "koulutustyyppi" => "koulutustyyppi.keyword"
+      case "julkinen"       => "julkinen"
+      case "koulutuksenAlkamiskausi" =>
+        if (forSort) s"metadata.koulutuksenAlkamiskausi.koulutuksenAlkamiskausi.nimi.${lng}.keyword"
+        else s"metadata.koulutuksenAlkamiskausi.koulutuksenAlkamiskausi.koodiUri.keyword"
+      case "koulutuksenAlkamisvuosi" => "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi.keyword"
+      case _                         => field
     }
   }
 
-  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: SearchParams): KoulutusSearchResultFromIndex = {
-    val baseQuery = termsQuery("oid.keyword", koulutusOids)
+  private def getFieldSort(field: String, order: String, lng: Kieli) =
+    fieldSort(getSortFieldKeyword(lng, field))
+      .order(if (order == "desc") SortOrder.Desc else SortOrder.Asc)
+      .unmappedType("string")
 
-    val from = getQueryFrom(params.page, params.size)
+  private def withSorts(req: SearchRequest, params: SearchParams) = {
+    params.orderBy
+      .flatMap(orderBy => {
+        val lng           = params.lng
+        val baseFieldSort = getFieldSort(orderBy, params.order, lng)
+        Some(req).map {
+          if (orderBy == "nimi") {
+            _.sortBy(baseFieldSort, getFieldSort("modified", "asc", lng))
+          } else {
+            _.sortBy(baseFieldSort, getFieldSort("nimi", "asc", lng))
+          }
+        }
+      })
+      .getOrElse(req)
+  }
+
+  private def isOid(s: String)  = GenericOid(s).isValid
+  private def isUUID(s: String) = Try(UUID.fromString(s)).isSuccess
+
+  private def getFilterQueries(params: SearchParams) = {
+    val lng = params.lng
+    val nimiFilter = params.nimi.map(searchTerm => {
+      if (isOid(searchTerm)) {
+        termQuery("oid.keyword", searchTerm)
+      } else if (isUUID(searchTerm)) {
+        termQuery("id.keyword", searchTerm)
+      } else {
+        bool(
+          mustQueries = Seq(),
+          shouldQueries = Seq(
+            should(Kieli.values.map(l => matchQuery(s"nimi.${l.toString}", searchTerm))),
+            should(
+              Kieli.values.map(l => wildcardQuery(s"nimi.${l.toString}.keyword", s"*${searchTerm}*"))
+            )
+          ),
+          notQueries = Seq()
+        )
+      }
+    })
+
+    val muokkaajaFilter = params.muokkaaja.map(muokkaaja => {
+      if (isOid(muokkaaja)) {
+        termQuery("muokkaaja.oid", muokkaaja)
+      } else {
+        matchQuery("muokkaaja.nimi", muokkaaja)
+      }
+    })
+
+    val koulutustyyppiFilter = Option(params.koulutustyyppi)
+      .filter(_.nonEmpty)
+      .map(x => termsQuery(getSearchFieldKeyword(lng, "koulutustyyppi"), x.map(_.toString)))
+    val tilaFilter =
+      Option(params.tila).filter(_.nonEmpty).map(x => termsQuery(getSearchFieldKeyword(lng, "tila"), x.map(_.toString)))
+    val julkinenFilter = params.julkinen.map(termQuery(getSearchFieldKeyword(lng, "julkinen"), _))
+    val hakutapaFilter = Option(params.hakutapa)
+      .filter(_.nonEmpty)
+      .map(h => termsQuery(getSearchFieldKeyword(lng, "hakutapa"), h.map(withoutKoodiVersion(_))))
+    val hakuOidFilter     = params.hakuOid.map(termQuery(getSearchFieldKeyword(lng, "hakuOid"), _))
+    val toteutusOidFilter = params.toteutusOid.map(termQuery(getSearchFieldKeyword(lng, "toteutusOid"), _))
+    val orgWhitelistFilter =
+      Option(params.orgWhitelist).filter(_.nonEmpty).map(termsQuery(getSearchFieldKeyword(lng, "orgWhitelist"), _))
+    val koulutuksenAlkamiskausiFilter = Option(params.koulutuksenAlkamisvuosi)
+      .filter(_.nonEmpty)
+      .map(termsQuery(getSearchFieldKeyword(lng, "koulutuksenAlkamiskausi"), _))
+    val koulutuksenAlkamisvuosiFilter = Option(params.koulutuksenAlkamiskausi)
+      .filter(_.nonEmpty)
+      .map(termsQuery(getSearchFieldKeyword(lng, "koulutuksenAlkamisvuosi"), _))
+
+    List(
+      nimiFilter,
+      koulutustyyppiFilter,
+      tilaFilter,
+      muokkaajaFilter,
+      julkinenFilter,
+      hakutapaFilter,
+      hakuOidFilter,
+      toteutusOidFilter,
+      orgWhitelistFilter,
+      koulutuksenAlkamiskausiFilter,
+      koulutuksenAlkamisvuosiFilter
+    ).flatten
+  }
+
+  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: SearchParams): KoulutusSearchResultFromIndex = {
+    val baseQuery = termsQuery("oid.keyword", koulutusOids.map(_.toString))
+
+    val from          = getQueryFrom(params.page, params.size)
+    val filterQueries = getFilterQueries(params)
 
     val req =
-      search("koulutus-kouta")
-        .source(write(KOULUTUS_SOURCE_FIELDS))
-        .from(from)
-        .size(params.size.getOrElse(0))
-        .sortBy() // TODO
-        .query(baseQuery)
+      Some(search("koulutus-kouta").from(from).size(params.size))
+        .map(r => {
+          if (filterQueries.isEmpty) {
+            r.query(baseQuery)
+          } else {
+            r.query(must(baseQuery).filter(filterQueries))
+          }
+        })
+        .map(withSorts(_, params))
+        .get
 
-    Await.result(searchElastic[KoulutusSearchItemFromIndex](req), Duration(60, TimeUnit.SECONDS))
+    searchElastic[KoulutusSearchItemFromIndex](req)
   }
 
   def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: Map[String, String]): ToteutusSearchResultFromIndex =

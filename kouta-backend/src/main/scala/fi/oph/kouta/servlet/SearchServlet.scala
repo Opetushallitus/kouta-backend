@@ -10,21 +10,21 @@ import scala.util.Try
 
 case class SearchParams(
     nimi: Option[String] = None,
-    koulutustyyppi: Option[Koulutustyyppi] = None,
+    koulutustyyppi: Seq[Koulutustyyppi] = Seq.empty,
     muokkaaja: Option[String] = None,
-    tila: Option[Julkaisutila] = None,
-    julkinen: Boolean = false,
+    tila: Seq[Julkaisutila] = Seq.empty,
+    julkinen: Option[Boolean] = None,
     hakutapa: Seq[String] = Seq.empty,
     koulutuksenAlkamiskausi: Seq[String] = Seq.empty,
     koulutuksenAlkamisvuosi: Seq[String] = Seq.empty,
     hakuOid: Option[HakuOid] = None,
     toteutusOid: Option[ToteutusOid] = None,
     orgWhitelist: Seq[OrganisaatioOid] = Seq.empty,
-    page: Option[Int] = None,
-    size: Option[Int] = None,
+    page: Int = 1,
+    size: Int = 10,
     lng: Kieli = Fi,
-    `order-by`: Option[String] = None,
-    order: Option[String] = Some("asc")
+    orderBy: Option[String] = None,
+    order: String = "asc"
 )
 
 object SearchParams {
@@ -35,25 +35,26 @@ object SearchParams {
     }
   }
   def commaSepStringValToSeq(str: Option[String]): Seq[String] = str.map(_.split(",").toSeq).getOrElse(Seq.empty)
-  def apply(values: Map[String, String]): SearchParams = {
+  def apply(v: Map[String, String]): SearchParams = {
+    val values = v.filter(_._2.nonEmpty) // Suodatetaan pois tyhjät parametrit
     val nimi = values.get("nimi")
     SearchParams(
       nimi = nimi,
-      koulutustyyppi = toEnum[Koulutustyyppi](values.get("koulutustyyppi"), Koulutustyyppi),
+      koulutustyyppi = commaSepStringValToSeq(values.get("koulutustyyppi")).flatMap(s => toEnum[Koulutustyyppi](Some(s), Koulutustyyppi)),
       muokkaaja = values.get("muokkaaja"),
-      //tila = values.get("tila").map(Julkaisutila.withName(_)),
-      julkinen = values.get("julkinen").map(_.toBoolean).getOrElse(false),
+      tila = commaSepStringValToSeq(values.get("tila")).flatMap(s => toEnum[Julkaisutila](Some(s), Julkaisutila)),
+      julkinen = values.get("julkinen").map(_.toBoolean),
       hakutapa = commaSepStringValToSeq(values.get("hakutapa")),
       koulutuksenAlkamiskausi = commaSepStringValToSeq(values.get("koulutuksenAlkamiskausi")),
       koulutuksenAlkamisvuosi = commaSepStringValToSeq(values.get("koulutuksenAlkamisvuosi")),
       hakuOid = values.get("hakuOid").map(HakuOid(_)),
       toteutusOid = values.get("toteutusOid").map(ToteutusOid(_)),
       orgWhitelist = commaSepStringValToSeq(values.get("orgWhitelist")).map(OrganisaatioOid(_)),
-      page = values.get("page").map(_.toInt),
-      size = values.get("size").map(_.toInt),
+      page = values.get("page").map(_.toInt).getOrElse(1),
+      size = values.get("size").map(_.toInt).getOrElse(10),
       lng = values.get("lng").map(Kieli.withName(_)).getOrElse(Fi),
-      `order-by` = values.get("order-by"),
-      order = values.get("order")
+      orderBy = values.get("order-by"),
+      order = values.getOrElse("order", "asc")
     )
   }
 }
@@ -68,37 +69,48 @@ class SearchServlet(
 
   def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService)
 
-  val searchParams =
+  val koulutustyyppiParamModel =
     """        - in: query
+      |          name: koulutustyyppi
+      |          style: form
+      |          explode: false
+      |          schema:
+      |            type: array
+      |            items:
+      |              $ref: '#/components/schemas/Koulutustyyppi'
+      |          required: false
+      |          description: Suodata pilkulla erotetuilla koulutustyypeillä""".stripMargin
+
+  def searchParamsModel(hasKoulutustyyppi: Boolean = false) =
+    s"""${if (hasKoulutustyyppi) koulutustyyppiParamModel else ""}
+      |        - in: query
       |          name: organisaatioOid
       |          schema:
       |            type: string
       |          required: true
       |          description: Organisaation oid
-      |          example: 1.2.246.562.10.00101010101
       |        - in: query
       |          name: nimi
       |          schema:
       |            type: string
       |          required: false
       |          description: Suodata annetulla nimellä tai oidilla
-      |          example: Jalkaterapeutti
       |        - in: query
       |          name: muokkaaja
       |          schema:
       |            type: string
       |          required: false
-      |          description: Suodata muokkaajan nimellä
-      |          example: Maija
+      |          description: Suodata muokkaajan nimellä tai oidilla
       |        - in: query
       |          name: tila
+      |          style: form
+      |          explode: false
       |          schema:
       |            type: array
       |            items:
       |              type: string
       |          required: false
       |          description: Suodata pilkulla erotetuilla tiloilla (julkaistu/tallennettu/arkistoitu/poistettu)
-      |          example: Julkaistu
       |        - in: query
       |          name: julkinen
       |          schema:
@@ -111,53 +123,56 @@ class SearchServlet(
       |            type: integer
       |          required: false
       |          description: Sivunumero
-      |          example: 2
+      |          example: 1
       |        - in: query
       |          name: hakutapa
+      |          style: form
+      |          explode: false
       |          schema:
       |            type: array
       |            items:
       |              type: string
       |          required: false
       |          description: Suodata pilkulla erotetuilla hakutapakoodiureilla
-      |          example: hakutapa_03#1
       |        - in: query
       |          name: koulutuksenAlkamiskausi
+      |          style: form
+      |          explode: false
       |          schema:
       |            type: array
       |            items:
       |              type: string
       |          required: false
-      |          description: Suodata koulutuksen alkamiskausikoodiureilla
-      |          example: kausi_s#1
+      |          description: Suodata koulutuksen alkamiskausi-koodiureilla
       |        - in: query
       |          name: koulutuksenAlkamisvuosi
+      |          style: form
+      |          explode: false
       |          schema:
-      |            type: string
+      |            type: array
+      |            items:
+      |              type: number
       |          required: false
       |          description: Suodata pilkulla erotetuilla vuosilla
-      |          example: 2022
       |        - in: query
       |          name: hakuOid
       |          schema:
       |            type: string
       |          required: false
       |          description: Suodata haun oidilla
-      |          example: 1.2.246.562.29.00000000000000002128
       |        - in: query
       |          name: toteutusOid
       |          schema:
       |            type: string
       |          required: false
       |          description: Suodata haun oidilla
-      |          example: 1.2.246.562.17.00000000000000001116
       |        - in: query
       |          name: size
       |          schema:
       |            type: integer
       |          required: false
       |          description: Sivun koko
-      |          example: 20
+      |          example: 10
       |        - in: query
       |          name: lng
       |          schema:
@@ -171,14 +186,17 @@ class SearchServlet(
       |            type: string
       |          required: false
       |          description: Kenttä, jonka perusteella hakutulos järjestetään (nimi/tila/muokkaaja/modified)
-      |          example: fi
+      |          example: nimi
       |        - in: query
       |          name: order
       |          schema:
       |            type: string
+      |            enum:
+      |              - asc
+      |              - desc
+      |            default: asc
       |          required: false
       |          description: Hakutuloksen järjestys (asc/desc)
-      |          example: fi
       |""".stripMargin
 
   registerPath(
@@ -190,14 +208,7 @@ class SearchServlet(
        |      tags:
        |        - Search
        |      parameters:
-       |        - in: query
-       |          name: koulutustyyppi
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata koulutustyypillä
-       |          example: yo
-       |$searchParams
+       |${searchParamsModel(hasKoulutustyyppi = true)}
        |      responses:
        |        '200':
        |          description: Ok
@@ -235,14 +246,7 @@ class SearchServlet(
        |            type: string
        |          required: true
        |          description: Koulutuksen oid
-       |        - in: query
-       |          name: koulutustyyppi
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata koulutustyypillä
-       |          example: yo
-       |$searchParams
+       |${searchParamsModel(hasKoulutustyyppi = true)}
        |      responses:
        |        '200':
        |          description: Ok
@@ -273,14 +277,7 @@ class SearchServlet(
        |      tags:
        |        - Search
        |      parameters:
-       |        - in: query
-       |          name: koulutustyyppi
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata koulutustyypillä
-       |          example: yo
-       |$searchParams
+       |${searchParamsModel(hasKoulutustyyppi = true)}
        |      responses:
        |        '200':
        |          description: Ok
@@ -318,14 +315,7 @@ class SearchServlet(
        |            type: string
        |          required: true
        |          description: Toteutuksen oid
-       |        - in: query
-       |          name: koulutustyyppi
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata koulutustyypillä
-       |          example: yo
-       |$searchParams
+       |${searchParamsModel(hasKoulutustyyppi= true)}
        |      responses:
        |        '200':
        |          description: Ok
@@ -356,7 +346,7 @@ class SearchServlet(
        |      tags:
        |        - Search
        |      parameters:
-       |$searchParams
+       |${searchParamsModel()}
        |      responses:
        |        '200':
        |          description: Ok
@@ -394,7 +384,7 @@ class SearchServlet(
        |            type: string
        |          required: true
        |          description: Haun oid
-       |$searchParams
+       |${searchParamsModel()}
        |      responses:
        |        '200':
        |          description: Ok
@@ -425,20 +415,13 @@ class SearchServlet(
        |      tags:
        |        - Search
        |      parameters:
-       |        - in: query
-       |          name: koulutustyyppi
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata koulutustyypillä
-       |          example: yo
+       |${searchParamsModel(hasKoulutustyyppi = true)}
        |        - in: query
        |          name: orgWhitelist
        |          schema:
        |            type: string
        |          required: false
        |          description: Rajaa palautuvia hakukohteita organisaation mukaan. Pilkulla erotettuja organisaatio-oideja.
-       |$searchParams
        |      responses:
        |        '200':
        |          description: Ok
@@ -470,14 +453,7 @@ class SearchServlet(
        |      tags:
        |        - Search
        |      parameters:
-       |        - in: query
-       |          name: koulutustyyppi
-       |          schema:
-       |            type: string
-       |          required: false
-       |          description: Suodata koulutustyypillä
-       |          example: yo
-       |$searchParams
+       |${searchParamsModel(hasKoulutustyyppi = true)}
        |      responses:
        |        '200':
        |          description: Ok
