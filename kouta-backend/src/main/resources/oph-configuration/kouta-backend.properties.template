@@ -25,11 +25,6 @@ kouta-backend.s3.imageBucket={{kouta_backend_s3_image_bucket}}
 kouta-backend.s3.imageBucketPublicUrl={{kouta_backend_s3_image_bucket_public_url}}
 
 host.virkailija={{host_virkailija}}
-kouta-index.koulutus.filtered-list=https://{{host_virkailija}}/kouta-index/koulutus/filtered-list
-kouta-index.toteutus.filtered-list=https://{{host_virkailija}}/kouta-index/toteutus/filtered-list
-kouta-index.haku.filtered-list=https://{{host_virkailija}}/kouta-index/haku/filtered-list
-kouta-index.hakukohde.filtered-list=https://{{host_virkailija}}/kouta-index/hakukohde/filtered-list
-kouta-index.valintaperuste.filtered-list=https://{{host_virkailija}}/kouta-index/valintaperuste/filtered-list
 
 kayttooikeus-service=https://{{host_virkailija}}/kayttooikeus-service
 kayttooikeus-service.organisaatiohenkilo=https://{{host_virkailija}}/kayttooikeus-service/henkilo/$1/organisaatiohenkilo
