@@ -380,19 +380,31 @@ class ToteutusServiceValidation(
 
   private def validateKoulutusIntegrity(toteutus: Toteutus): IsValid = {
     val koulutus = koulutusDAO.get(toteutus.koulutusOid)
-    val (koulutusTila, koulutusTyyppi, koulutusOpintojenlaajuusMin, koulutusOpintojenlaajuusMax) = koulutus match {
-      case None => (None, None, None, None)
-      case Some(k: Koulutus) => k.metadata match {
-        case None => (Some(k.tila), Some(k.koulutustyyppi), None, None)
-        case Some(metadata: KkOpintokokonaisuusKoulutusMetadata) => (Some(k.tila), Some(k.koulutustyyppi), metadata.opintojenLaajuusNumeroMin, metadata.opintojenLaajuusNumeroMax)
-        case Some(_) => (Some(k.tila), Some(k.koulutustyyppi), None, None)
-      }
+    val (
+      koulutusTila,
+      koulutusTyyppi,
+      koulutusOpintojenlaajuusMin,
+      koulutusOpintojenlaajuusMax,
+      koulutusOpintojenLaajuusyksikko
+    ) = koulutus match {
+      case Some(k: Koulutus) =>
+        k.metadata match {
+          case Some(metadata: KkOpintokokonaisuusKoulutusMetadata) =>
+            (
+              Some(k.tila),
+              Some(k.koulutustyyppi),
+              metadata.opintojenLaajuusNumeroMin,
+              metadata.opintojenLaajuusNumeroMax,
+              metadata.opintojenLaajuusyksikkoKoodiUri
+            )
+          case _ => (Some(k.tila), Some(k.koulutustyyppi), None, None, None)
+        }
+      case None => (None, None, None, None, None)
     }
 
     val kkOpintokokonaisuusToteutusMetadata = toteutus.metadata match {
-      case None => None
       case Some(metadata: KkOpintokokonaisuusToteutusMetadata) => Some(metadata)
-      case Some(_) => None
+      case _                                                   => None
     }
 
     and(
@@ -412,14 +424,29 @@ class ToteutusServiceValidation(
                 )
             )
           )
-        ),
+      ),
       validateIfDefined[KkOpintokokonaisuusToteutusMetadata](
         kkOpintokokonaisuusToteutusMetadata,
         kkOpintokokonaisuusToteutusMetadata =>
-          assertTrue(
-            ToteutusServiceUtil.isValidOpintojenlaajuus(koulutusOpintojenlaajuusMin, koulutusOpintojenlaajuusMax, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero),
-            "metadata.opintojenLaajuusNumero",
-            notInTheRangeMsg(koulutusOpintojenlaajuusMin, koulutusOpintojenlaajuusMax, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero)
+          and(
+            assertTrue(
+              ToteutusServiceUtil.isValidOpintojenlaajuus(
+                koulutusOpintojenlaajuusMin,
+                koulutusOpintojenlaajuusMax,
+                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero
+              ),
+              "metadata.opintojenLaajuusNumero",
+              notInTheRangeMsg(
+                koulutusOpintojenlaajuusMin,
+                koulutusOpintojenlaajuusMax,
+                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero
+              )
+            ),
+            assertTrue(
+              ToteutusServiceUtil.isValidOpintojenLaajuusyksikko(koulutusOpintojenLaajuusyksikko, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusyksikkoKoodiUri),
+              "metadata.opintojenLaajuusyksikkoKoodiUri",
+              invalidToteutusOpintojenLaajuusyksikkoIntegrity(koulutusOpintojenLaajuusyksikko, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusyksikkoKoodiUri)
+            )
           )
       )
     )
