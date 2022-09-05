@@ -1,41 +1,74 @@
 package fi.oph.kouta.client
 
-import java.util.UUID
-
-import fi.oph.kouta.config.KoutaConfigurationFactory
+import com.sksamuel.elastic4s.ElasticClient
+import com.sksamuel.elastic4s.ElasticDsl._
+import com.sksamuel.elastic4s.json4s.ElasticJson4s.Implicits._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.domain.searchResults.KoulutusSearchResultFromIndex
+import fi.oph.kouta.elasticsearch.ElasticsearchClient
+import fi.oph.kouta.servlet.SearchParams
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
-import org.json4s.jackson.JsonMethods.parse
+import org.json4s.jackson.Serialization.write
 
-import scala.reflect.Manifest
+import java.util.UUID
+import java.util.concurrent.TimeUnit
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
-object KoutaIndexClient extends KoutaIndexClient
+//TODO: Nimeä tämä jotenkin muuten kun refaktorointi valmis
 
-trait KoutaIndexClient extends HttpClient with CallerId with Logging with KoutaJsonFormats {
+class KoutaIndexClient(val client: ElasticClient) extends KoutaJsonFormats with Logging with ElasticsearchClient {
 
-  private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
+  private val DEFAULT_SOURCE_FIELDS = Set("oid", "nimi", "tila", "muokkaaja", "modified", "organisaatio")
 
-  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: Map[String, String]): KoulutusSearchResultFromIndex =
-    search[KoulutusSearchResultFromIndex]("kouta-index.koulutus.filtered-list", koulutusOids.map(_.s), params)
+  private val KOULUTUS_SOURCE_FIELDS = DEFAULT_SOURCE_FIELDS ++ Set(
+    "julkinen",
+    "koulutustyyppi",
+    "metadata.eperuste",
+    "toteutukset.oid",
+    "toteutukset.tila",
+    "toteutukset.modified",
+    "toteutukset.nimi",
+    "toteutukset.organisaatio",
+    "toteutukset.organisaatiot"
+  )
 
-  def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: Map[String, String]): ToteutusSearchResultFromIndex =
-    search[ToteutusSearchResultFromIndex]("kouta-index.toteutus.filtered-list", toteutusOids.map(_.s), params)
-
-  def searchHaut(hakuOids: Seq[HakuOid], params: Map[String, String]): HakuSearchResultFromIndex =
-    search[HakuSearchResultFromIndex]("kouta-index.haku.filtered-list", hakuOids.map(_.s), params)
-
-  def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: Map[String, String]): HakukohdeSearchResult =
-    search[HakukohdeSearchResult]("kouta-index.hakukohde.filtered-list", hakukohdeOids.map(_.s),params)
-
-  def searchValintaperusteet(valintaperusteIds: Seq[UUID], params: Map[String, String]): ValintaperusteSearchResult =
-    search[ValintaperusteSearchResult]("kouta-index.valintaperuste.filtered-list", valintaperusteIds.map(_.toString), params)
-
-  private def search[T](urlKey: String, keys: Seq[String], params: Map[String, String])(implicit mf: Manifest[T]): T = {
-    val url = urlProperties.url(urlKey, toQueryParams(params.toSeq:_*))
-    post(url, keys.sorted, followRedirects = true) { response =>
-      parse(response).extract[T]
+  private def getQueryFrom(page: Option[Int], size: Option[Int]) = {
+    (page, size) match {
+      case (Some(p), Some(s)) => if (p > 0) ((p - 1) * s) else 0
+      case _                  => 0
     }
   }
+
+  def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: SearchParams): KoulutusSearchResultFromIndex = {
+    val baseQuery = termsQuery("oid.keyword", koulutusOids)
+
+    val from = getQueryFrom(params.page, params.size)
+
+    val req =
+      search("koulutus-kouta")
+        .source(write(KOULUTUS_SOURCE_FIELDS))
+        .from(from)
+        .size(params.size.getOrElse(0))
+        .sortBy() // TODO
+        .query(baseQuery)
+
+    Await.result(searchElastic[KoulutusSearchItemFromIndex](req), Duration(5, TimeUnit.SECONDS))
+  }
+
+  def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: Map[String, String]): ToteutusSearchResultFromIndex =
+    ToteutusSearchResultFromIndex() // TODO
+
+  def searchHaut(hakuOids: Seq[HakuOid], params: Map[String, String]): HakuSearchResultFromIndex =
+    HakuSearchResultFromIndex() // TODO
+
+  def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: Map[String, String]): HakukohdeSearchResult =
+    HakukohdeSearchResult()
+
+  def searchValintaperusteet(valintaperusteIds: Seq[UUID], params: Map[String, String]): ValintaperusteSearchResult =
+    ValintaperusteSearchResult()
 }
+
+object KoutaIndexClient extends KoutaIndexClient(ElasticsearchClient.client)
