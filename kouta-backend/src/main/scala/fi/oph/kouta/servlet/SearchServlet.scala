@@ -118,13 +118,6 @@ class SearchServlet(
       |          required: false
       |          description: Suodata entiteetin näkyvyydellä
       |        - in: query
-      |          name: page
-      |          schema:
-      |            type: integer
-      |          required: false
-      |          description: Sivunumero
-      |          example: 1
-      |        - in: query
       |          name: hakutapa
       |          style: form
       |          explode: false
@@ -165,7 +158,14 @@ class SearchServlet(
       |          schema:
       |            type: string
       |          required: false
-      |          description: Suodata haun oidilla
+      |          description: Suodata toteutuksen oidilla
+      |        - in: query
+      |          name: page
+      |          schema:
+      |            type: integer
+      |          required: false
+      |          description: Sivunumero
+      |          example: 1
       |        - in: query
       |          name: size
       |          schema:
@@ -296,7 +296,7 @@ class SearchServlet(
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(organisaatioOid) =>
-        Ok(toteutusService.search(organisaatioOid, params.toMap))
+        Ok(toteutusService.search(organisaatioOid, SearchParams(params.toMap)))
     }
   }
 
@@ -332,7 +332,7 @@ class SearchServlet(
 
     (ToteutusOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
       case (toteutusOid, Some(organisaatioOid)) =>
-        Ok(toteutusService.search(organisaatioOid, toteutusOid, params.toMap))
+        Ok(toteutusService.search(organisaatioOid, toteutusOid, SearchParams(params.toMap)))
       case _ => NotFound()
     }
   }
@@ -365,7 +365,7 @@ class SearchServlet(
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(organisaatioOid) =>
-        Ok(hakuService.search(organisaatioOid, params.toMap))
+        Ok(hakuService.search(organisaatioOid, SearchParams(params.toMap)))
     }
   }
 
@@ -401,7 +401,7 @@ class SearchServlet(
 
     (HakuOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
       case (hakuOid, Some(organisaatioOid)) =>
-        Ok(hakuService.search(organisaatioOid, hakuOid, params.toMap))
+        Ok(hakuService.search(organisaatioOid, hakuOid, SearchParams(params.toMap)))
       case _ => NotFound()
     }
   }
@@ -440,7 +440,7 @@ class SearchServlet(
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(organisaatioOid) =>
-        Ok(hakukohdeService.search(organisaatioOid, params.toMap))
+        Ok(hakukohdeService.search(organisaatioOid, SearchParams(params.toMap)))
     }
   }
 
@@ -472,7 +472,7 @@ class SearchServlet(
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(organisaatioOid) =>
-        Ok(valintaperusteService.search(organisaatioOid, params.toMap))
+        Ok(valintaperusteService.search(organisaatioOid, SearchParams(params.toMap)))
     }
   }
 }
