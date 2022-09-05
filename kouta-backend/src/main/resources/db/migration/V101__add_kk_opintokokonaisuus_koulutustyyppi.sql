@@ -1,1 +1,1 @@
-alter type koulutustyyppi add value 'kk-opintokokonaisuus';
+alter type koulutustyyppi add value if not exists 'kk-opintokokonaisuus';
