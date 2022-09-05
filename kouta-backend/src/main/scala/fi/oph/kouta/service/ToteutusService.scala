@@ -5,12 +5,13 @@ import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.searchResults.ToteutusSearchResultFromIndex
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -203,14 +204,15 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ToteutusSearchResult = {
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated): ToteutusSearchResult = {
 
     def getCount(t: ToteutusSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
+      val hakukohteet = t.hakutiedot.flatMap(_.hakukohteet)
       organisaatioOids match {
-        case Seq(RootOrganisaatioOid) => t.hakukohteet.length
+        case Seq(RootOrganisaatioOid) => hakukohteet.length
         case _ =>
           val oidStrings = organisaatioOids.map(_.toString())
-          t.hakukohteet.count(x => x.tila != Arkistoitu && x.tila != Poistettu && oidStrings.contains(x.organisaatio.oid.toString()))
+          hakukohteet.count(x => x.tila != Arkistoitu && x.tila != Poistettu && oidStrings.contains(x.organisaatio.oid.toString()))
       }
     }
 
@@ -228,6 +230,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
                   muokkaaja = t.muokkaaja,
                   modified = t.modified,
                   tila = t.tila,
+                  organisaatiot = t.organisaatiot,
                   koulutustyyppi = t.koulutustyyppi,
                   hakukohdeCount = getCount(t, organisaatioOids))
             }
@@ -237,22 +240,34 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
 
     list(organisaatioOid, vainHakukohteeseenLiitettavat = false, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
       case Nil          => ToteutusSearchResult()
-      case toteutusOids => assocHakukohdeCounts(KoutaIndexClient.searchToteutukset(toteutusOids, params))
+      case toteutusOids => assocHakukohdeCounts(KoutaSearchClient.searchToteutukset(toteutusOids, params))
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, toteutusOid: ToteutusOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[ToteutusSearchItemFromIndex] = {
-    def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItemFromIndex] =
-      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
-        case Seq(RootOrganisaatioOid) => toteutus
-        case organisaatioOids =>
-          toteutus.flatMap(toteutusItem => {
-            val oidStrings = organisaatioOids.map(_.toString())
-            Some(toteutusItem.copy(hakukohteet = toteutusItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
+  def search(organisaatioOid: OrganisaatioOid, toteutusOid: ToteutusOid, params: SearchParams)(implicit authenticated: Authenticated): Option[ToteutusSearchItem] = {
+    def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItem] =
+      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true))(organisaatioOids => {
+          toteutus.map(t => {
+            val hakukohteet = t.hakutiedot.flatMap(_.hakukohteet)
+            val oidStrings = organisaatioOids.map(_.toString)
+            ToteutusSearchItem(
+              oid = t.oid,
+              nimi = t.nimi,
+              organisaatio = t.organisaatio,
+              muokkaaja = t.muokkaaja,
+              modified = t.modified,
+              tila = t.tila,
+              organisaatiot = t.organisaatiot,
+              koulutustyyppi = t.koulutustyyppi,
+              hakukohteet = organisaatioOids match {
+                case Seq(RootOrganisaatioOid) => hakukohteet
+                case _ => hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))
+              }
+            )
           })
-      }
+      })
 
-    filterHakukohteet(KoutaIndexClient.searchToteutukset(Seq(toteutusOid), params).result.headOption)
+    filterHakukohteet(KoutaSearchClient.searchToteutukset(Seq(toteutusOid), params).result.headOption)
   }
 
   private def getDeletableTarjoajienOppilaitokset(toteutus: Toteutus, tarjoajatDeletedFromToteutus: Seq[OrganisaatioOid]): Set[OrganisaatioOid] = {
