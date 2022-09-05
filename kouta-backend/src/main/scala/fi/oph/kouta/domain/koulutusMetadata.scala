@@ -420,13 +420,13 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
-                                         kuvaus: Kielistetty = Map(),
-                                         lisatiedot: Seq[Lisatieto] = Seq(),
-                                         koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                         opintojenLaajuusNumero: Option[String] = None,
-                                         opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                         kuvauksenNimi: Kielistetty = Map(),
-                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
+                                               kuvaus: Kielistetty = Map(),
+                                               lisatiedot: Seq[Lisatieto] = Seq(),
+                                               koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                               opintojenLaajuusNumeroMin: Option[Double] = None,
+                                               opintojenLaajuusNumeroMax: Option[Double] = None,
+                                               opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
