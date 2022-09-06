@@ -104,6 +104,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
               case kkOpintojaksoMetadata: KkOpintojaksoToteutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata => Some(vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case aikuistenPerusopetusToteutusMetadata: AikuistenPerusopetusToteutusMetadata => Some(aikuistenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusToteutusMetadata => Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
           case lukioMetadata: LukioToteutusMetadata => Some(lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case tuvaMetadata: TuvaToteutusMetadata => Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))

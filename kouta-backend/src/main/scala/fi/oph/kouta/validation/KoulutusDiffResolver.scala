@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{AikuistenPerusopetusKoulutusMetadata, AmmOpeErityisopeJaOpoKoulutusMetadata, AmmatillinenMuuKoulutusMetadata, AmmatillinenTutkinnonOsaKoulutusMetadata, ErikoislaakariKoulutusMetadata, KkOpintojaksoKoulutusMetadata, KorkeakoulutusKoulutusMetadata, Koulutus, KoulutusMetadata, Lisatieto, LukioKoulutusMetadata, TelmaKoulutusMetadata, TutkinnonOsa, TuvaKoulutusMetadata, VapaaSivistystyoKoulutusMetadata, VapaaSivistystyoMuuKoulutusMetadata, VapaaSivistystyoOpistovuosiKoulutusMetadata}
+import fi.oph.kouta.domain.{AikuistenPerusopetusKoulutusMetadata, AmmOpeErityisopeJaOpoKoulutusMetadata, AmmatillinenMuuKoulutusMetadata, AmmatillinenTutkinnonOsaKoulutusMetadata, ErikoislaakariKoulutusMetadata, KkOpintojaksoKoulutusMetadata, KkOpintokokonaisuusKoulutusMetadata, KorkeakoulutusKoulutusMetadata, Koulutus, KoulutusMetadata, Lisatieto, LukioKoulutusMetadata, TelmaKoulutusMetadata, TutkinnonOsa, TuvaKoulutusMetadata, VapaaSivistystyoKoulutusMetadata, VapaaSivistystyoMuuKoulutusMetadata, VapaaSivistystyoOpistovuosiKoulutusMetadata}
 
 case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus]) {
   private def oldMetadata(): Option[KoulutusMetadata] = oldKoulutus.map(_.metadata).getOrElse(None)
@@ -62,6 +62,7 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
         case m: KkOpintojaksoKoulutusMetadata => m.koulutusalaKoodiUrit
         case m: ErikoislaakariKoulutusMetadata => m.koulutusalaKoodiUrit
         case m: LukioKoulutusMetadata => m.koulutusalaKoodiUrit
+        case m: KkOpintokokonaisuusKoulutusMetadata => m.koulutusalaKoodiUrit
         case _                                  => Seq()
       }
 
@@ -85,6 +86,7 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
         case m: VapaaSivistystyoMuuKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
         case m: AikuistenPerusopetusKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
         case m: KkOpintojaksoKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
+        case m: KkOpintokokonaisuusKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
         case _ => None
       }
 

@@ -16,6 +16,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmTutkinnonOsa,
       Erikoislaakari,
       KkOpintojakso,
+      KkOpintokokonaisuus,
       Lk,
       Muu,
       Telma,
@@ -26,7 +27,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     )
 
   def ammatilliset           = List(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu)
-  def korkeakoulu            = List(Amk, Yo, AmmOpeErityisopeJaOpo, KkOpintojakso, Erikoislaakari)
+  def korkeakoulu            = List(Amk, Yo, AmmOpeErityisopeJaOpo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari)
   def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
   def onlyOphCanSaveKoulutus = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
   def toinenAsteYhteishaku   = List(Amm, Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi)
@@ -99,11 +100,11 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     ), //Ammatilliset aikuiskoulutuskeskukset
     "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
     "oppilaitostyyppi_29#1" -> Seq(Amm), //Sotilasalan ammatilliset oppilaitokset
-    "oppilaitostyyppi_41#1" -> Seq(Amk, AmmOpeErityisopeJaOpo, KkOpintojakso), //Ammattikorkeakoulut
-    "oppilaitostyyppi_42#1" -> Seq(Yo, KkOpintojakso, Erikoislaakari), //Yliopistot
-    "oppilaitostyyppi_43#1" -> Seq(Yo, KkOpintojakso), //Sotilaskorkeakoulut
-    "oppilaitostyyppi_45#1" -> Seq(Yo, KkOpintojakso), //Lastentarhanopettajaopistot
-    "oppilaitostyyppi_46#1" -> Seq(Amk, AmmOpeErityisopeJaOpo, KkOpintojakso), //Väliaikaiset ammattikorkeakoulut
+    "oppilaitostyyppi_41#1" -> Seq(Amk, AmmOpeErityisopeJaOpo, KkOpintojakso, KkOpintokokonaisuus), //Ammattikorkeakoulut
+    "oppilaitostyyppi_42#1" -> Seq(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari), //Yliopistot
+    "oppilaitostyyppi_43#1" -> Seq(Yo, KkOpintojakso, KkOpintokokonaisuus), //Sotilaskorkeakoulut
+    "oppilaitostyyppi_45#1" -> Seq(Yo, KkOpintojakso, KkOpintokokonaisuus), //Lastentarhanopettajaopistot
+    "oppilaitostyyppi_46#1" -> Seq(Amk, AmmOpeErityisopeJaOpo, KkOpintojakso, KkOpintokokonaisuus), //Väliaikaiset ammattikorkeakoulut
     "oppilaitostyyppi_61#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Muu), //Musiikkioppilaitokset
     "oppilaitostyyppi_62#1" -> Seq(
       Amm,
@@ -185,6 +186,7 @@ case object AmmOsaamisala               extends Koulutustyyppi { val name = "amm
 case object AmmTutkinnonOsa             extends Koulutustyyppi { val name = "amm-tutkinnon-osa"             }
 case object Erikoislaakari              extends Koulutustyyppi { val name = "erikoislaakari"                }
 case object KkOpintojakso               extends Koulutustyyppi { val name = "kk-opintojakso"                }
+case object KkOpintokokonaisuus         extends Koulutustyyppi { val name = "kk-opintokokonaisuus"          }
 case object Lk                          extends Koulutustyyppi { val name = "lk"                            }
 case object Muu                         extends Koulutustyyppi { val name = "muu"                           }
 case object Telma                       extends Koulutustyyppi { val name = "telma"                         }
@@ -192,4 +194,3 @@ case object Tuva                        extends Koulutustyyppi { val name = "tuv
 case object VapaaSivistystyoMuu         extends Koulutustyyppi { val name = "vapaa-sivistystyo-muu"         }
 case object VapaaSivistystyoOpistovuosi extends Koulutustyyppi { val name = "vapaa-sivistystyo-opistovuosi" }
 case object Yo                          extends Koulutustyyppi { val name = "yo"                            }
-
