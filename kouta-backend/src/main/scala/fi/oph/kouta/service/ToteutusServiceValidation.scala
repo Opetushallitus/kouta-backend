@@ -4,6 +4,7 @@ import fi.oph.kouta.client.KoulutusKoodiClient
 import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
+import fi.oph.kouta.util.ToteutusServiceUtil
 import fi.oph.kouta.validation
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors}
@@ -81,6 +82,12 @@ class ToteutusServiceValidation(
                   and(
                     validateTutkintoonJohtamatonMetadata(tila, kielivalinta, m),
                     // Opintojaksolla ei ole ammattinimikkeitä
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                  )
+                case m: KkOpintokokonaisuusToteutusMetadata =>
+                  and(
+                    validateTutkintoonJohtamatonMetadata(tila, kielivalinta, m),
+                    // Opintokokonaisuudella ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
                   )
                 case _ => validateTutkintoonJohtamatonMetadata(tila, kielivalinta, tutkintoonJohtamatonToteutusMetadata)
@@ -372,7 +379,34 @@ class ToteutusServiceValidation(
     )
 
   private def validateKoulutusIntegrity(toteutus: Toteutus): IsValid = {
-    val (koulutusTila, koulutusTyyppi) = koulutusDAO.getTilaAndTyyppi(toteutus.koulutusOid)
+    val koulutus = koulutusDAO.get(toteutus.koulutusOid)
+    val (
+      koulutusTila,
+      koulutusTyyppi,
+      koulutusOpintojenlaajuusMin,
+      koulutusOpintojenlaajuusMax,
+      koulutusOpintojenLaajuusyksikko
+    ) = koulutus match {
+      case Some(k: Koulutus) =>
+        k.metadata match {
+          case Some(metadata: KkOpintokokonaisuusKoulutusMetadata) =>
+            (
+              Some(k.tila),
+              Some(k.koulutustyyppi),
+              metadata.opintojenLaajuusNumeroMin,
+              metadata.opintojenLaajuusNumeroMax,
+              metadata.opintojenLaajuusyksikkoKoodiUri
+            )
+          case _ => (Some(k.tila), Some(k.koulutustyyppi), None, None, None)
+        }
+      case None => (None, None, None, None, None)
+    }
+
+    val kkOpintokokonaisuusToteutusMetadata = toteutus.metadata match {
+      case Some(metadata: KkOpintokokonaisuusToteutusMetadata) => Some(metadata)
+      case _                                                   => None
+    }
+
     and(
       validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
       validateIfDefined[Koulutustyyppi](
@@ -390,9 +424,34 @@ class ToteutusServiceValidation(
                 )
             )
           )
+      ),
+      validateIfDefined[KkOpintokokonaisuusToteutusMetadata](
+        kkOpintokokonaisuusToteutusMetadata,
+        kkOpintokokonaisuusToteutusMetadata =>
+          and(
+            assertTrue(
+              ToteutusServiceUtil.isValidOpintojenlaajuus(
+                koulutusOpintojenlaajuusMin,
+                koulutusOpintojenlaajuusMax,
+                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero
+              ),
+              "metadata.opintojenLaajuusNumero",
+              notInTheRangeMsg(
+                koulutusOpintojenlaajuusMin,
+                koulutusOpintojenlaajuusMax,
+                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero
+              )
+            ),
+            assertTrue(
+              ToteutusServiceUtil.isValidOpintojenLaajuusyksikko(koulutusOpintojenLaajuusyksikko, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusyksikkoKoodiUri),
+              "metadata.opintojenLaajuusyksikkoKoodiUri",
+              invalidToteutusOpintojenLaajuusyksikkoIntegrity(koulutusOpintojenLaajuusyksikko, kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusyksikkoKoodiUri)
+            )
+          )
       )
     )
   }
+
   override def validateEntityOnJulkaisu(toteutus: Toteutus): IsValid = {
     toteutus.metadata match {
       case Some(metadata) =>
