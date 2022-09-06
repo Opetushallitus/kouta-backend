@@ -39,6 +39,12 @@ abstract class BaseValidationSpec[E <: Validatable] extends AnyFlatSpec with Bef
       case _                                      => fail("Expecting validation failure, but it succeeded")
     }
 
+  def failModifyValidation(e: E, oldE: E, expected: Seq[ValidationError]): Assertion =
+    Try(validator.withValidation(e, Some(oldE))(e => e)) match {
+      case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
+      case _                                      => fail("Expecting validation failure, but it succeeded")
+    }
+
   def passesValidation(e: E): Assertion = e.validate() should equal(NoErrors)
 
   def failsValidation(e: E, path: String, message: ErrorMessage): Assertion =

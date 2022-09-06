@@ -9,6 +9,7 @@ import scalacache.sync
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 trait OrganisaatioService {
   type OrganisaatioOidsAndOppilaitostyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
@@ -47,10 +48,7 @@ trait OrganisaatioService {
     }
 
 
-  def findUnknownOrganisaatioOidsFromHierarkia(checkedOrganisaatiot: Set[OrganisaatioOid]): Set[OrganisaatioOid] = {
-    val topLevelItem = OidAndChildren(RootOrganisaatioOid, cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
-      RootOrganisaatioOid.s, None, "AKTIIVINEN")
-
+  def findUnknownOrganisaatioOidsFromHierarkia(checkedOrganisaatiot: Set[OrganisaatioOid]): (Set[OrganisaatioOid], Boolean) = {
     def findChildren(item: OidAndChildren): Seq[OrganisaatioOid] = {
       item.children.flatMap(c => {
         if (checkedOrganisaatiot.contains(c.oid)) c.oid +: findChildren(c)
@@ -58,7 +56,18 @@ trait OrganisaatioService {
       })
     }
 
-    checkedOrganisaatiot diff findChildren(topLevelItem).toSet
+    var organisaatioServiceOk = true
+    var allChildren: Seq[OrganisaatioOid] = Seq()
+    Try[OidAndChildren] {
+      OidAndChildren(RootOrganisaatioOid, cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
+        RootOrganisaatioOid.s, None, "AKTIIVINEN")
+    } match {
+      case Success(topLevelItem) => allChildren = findChildren(topLevelItem)
+      case Failure(_) =>  organisaatioServiceOk = false
+    }
+
+
+    (checkedOrganisaatiot diff allChildren.toSet, organisaatioServiceOk)
   }
 
   private def children(hierarkia: Option[OidAndChildren]): Seq[OrganisaatioOid] =

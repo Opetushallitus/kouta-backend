@@ -263,6 +263,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(
       ErikoislaakariKoulutusMetadata(
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_091#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         isMuokkaajaOphVirkailija = Some(true)
       )
@@ -520,13 +521,9 @@ object TestData {
     ajastettuHaunJaHakukohteidenArkistointiAjettu = None,
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
-    //hakulomaketyyppi = Some(EiSähköistä),
     hakulomaketyyppi = Some(MuuHakulomake),
-    //hakulomakeAtaruId = Some(UUID.randomUUID()),
-    //hakulomakeKuvaus = Map(
-    //  Fi -> "Hakulomake tulostetaan ja toimitetaan postitse",
-    //  Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"
-    //),
+    hakulomakeAtaruId = None,
+    hakulomakeKuvaus = Map(),
     hakulomakeLinkki = Map(Fi -> "https://www.koulu.test.fi/hakemusinfo-fi", Sv -> "https://www.koulu.test.fi/hakemusinfo-sv"),
     metadata = Some(
       HakuMetadata(
