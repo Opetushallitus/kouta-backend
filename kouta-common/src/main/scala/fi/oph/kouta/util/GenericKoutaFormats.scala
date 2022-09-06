@@ -11,7 +11,6 @@ import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, Serialization}
 
 trait GenericKoutaJsonFormats extends GenericKoutaFormats {
-  implicit val json4s: Serialization = org.json4s.jackson.Serialization
   implicit def jsonFormats: Formats = genericKoutaFormats
 
   def toJson(data: AnyRef): String = write(data)

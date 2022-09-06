@@ -14,6 +14,7 @@ import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.config.{ElasticSearchConfiguration, KoutaConfigurationFactory}
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback
+import org.json4s.Serialization
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,6 +24,8 @@ import scala.reflect.ClassTag
 
 trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
   val client: ElasticClient
+
+  implicit val json4s: Serialization = org.json4s.jackson.Serialization
 
   private def mapResponseToSearchResult[T: HitReader](response: RequestSuccess[SearchResponse]) = {
     SearchResult[T](
