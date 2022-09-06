@@ -12,7 +12,7 @@ import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{BaseValidationSpec, ErrorMessage, ValidationError}
 import org.scalatest.Assertion
 
-import java.time.{Instant, LocalDateTime}
+import java.time.LocalDateTime
 import java.util.UUID
 
 class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
@@ -189,18 +189,13 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.132")))
       .thenAnswer(Some(KkOpintojaksoKoulutus.copy(tila = Julkaistu)))
     when(koulutusDao.get(kkOpintokokonaisuusKoulutus.oid.get)).thenAnswer(Some(kkOpintokokonaisuusKoulutus))
-    when(koulutusDao.get(koulutusOid1, TilaFilter.all()))
-      .thenAnswer(Some((AmmKoulutus.copy(oid = Some(koulutusOid1),
-        koulutuksetKoodiUri = invalidKoulutuksetKoodiUri),
-        Instant.now())))
-    when(koulutusDao.get(koulutusOid2, TilaFilter.all()))
-      .thenAnswer(Some((AmmKoulutus.copy(oid = Some(koulutusOid2),
-        koulutuksetKoodiUri = validKoulutuksetKoodiUri),
-        Instant.now())))
-    when(koulutusDao.get(invalidKoulutusOid, TilaFilter.all())).thenAnswer(None)
-    when(koulutusDao.get(koulutusOid1)).thenAnswer((Some(Julkaistu), Some(Amm)))
-    when(koulutusDao.get(koulutusOid2)).thenAnswer((Some(Julkaistu), Some(Amm)))
-    when(koulutusDao.get(invalidKoulutusOid)).thenAnswer((None, None))
+    when(koulutusDao.get(koulutusOid1))
+      .thenAnswer(Some(AmmKoulutus.copy(oid = Some(koulutusOid1),
+        koulutuksetKoodiUri = invalidKoulutuksetKoodiUri)))
+    when(koulutusDao.get(koulutusOid2))
+      .thenAnswer(Some(AmmKoulutus.copy(oid = Some(koulutusOid2),
+        koulutuksetKoodiUri = validKoulutuksetKoodiUri)))
+    when(koulutusDao.get(invalidKoulutusOid)).thenAnswer(None)
 
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
       .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq("koulutus_371101#1")))

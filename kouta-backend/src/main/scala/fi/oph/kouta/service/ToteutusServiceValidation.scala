@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
+import fi.oph.kouta.util.ToteutusServiceUtil
 import fi.oph.kouta.validation
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors}
@@ -242,8 +243,8 @@ class ToteutusServiceValidation(
 
   private def validateAmmatillinenPerustutkintoErityisopetuksena(toteutus: Toteutus, path: String): IsValid = {
     logger.info("validation ammatillinen perustutkinto")
-    koulutusDAO.get(toteutus.koulutusOid, TilaFilter.all()) match {
-      case Some((koulutus, _)) =>
+    koulutusDAO.get(toteutus.koulutusOid) match {
+      case Some(koulutus) =>
         assertTrue(koulutusKoodiClient.isKoulutusAmmatillinenPerustutkinto(koulutus.koulutuksetKoodiUri), path, invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutus.koulutuksetKoodiUri.toString()))
       case None =>
         error("koulutusOid", nonExistent("Koulutusta", toteutus.koulutusOid))
