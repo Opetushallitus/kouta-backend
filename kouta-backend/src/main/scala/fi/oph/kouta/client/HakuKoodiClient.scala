@@ -44,12 +44,12 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
   def haunkohdejoukonTarkenneKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("haunkohdejoukontarkenne", koodiUri)
 
-  private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
-    val queryRespone = getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache)
-    queryRespone.success match {
-      case true =>
-        fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, queryRespone.koodiUritInKoodisto))
+    private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
+    getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache) match {
+      case resp if resp.success =>
+        fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, resp.koodiUritInKoodisto))
       case _ => queryFailed
     }
+  }
   }
 }
