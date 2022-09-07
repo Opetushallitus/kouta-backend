@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, KoulutusKoodiClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, KoulutusKoodiClient, KoutaSearchClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -36,7 +36,8 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       koodistoClient,
-      koulutusServiceValidation
+      koulutusServiceValidation,
+      mockKoutaSearchClient
     )
   }
 

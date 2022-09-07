@@ -1,15 +1,16 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
+import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
+import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.validateStateChange
@@ -19,7 +20,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object HakukohdeService
-    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient, KayttooikeusClient, ToteutusService)
+    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient, KayttooikeusClient, ToteutusService, HakukohdeServiceValidation)
 
 case class CopyOids(
   hakukohdeOid: Option[HakukohdeOid],
@@ -39,9 +40,9 @@ class HakukohdeService(
     val lokalisointiClient: LokalisointiClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    toteutusService: ToteutusService
-) extends ValidatingService[Hakukohde]
-    with RoleEntityAuthorizationService[Hakukohde] {
+    toteutusService: ToteutusService,
+    hakukohdeServiceValidation: HakukohdeServiceValidation
+) extends RoleEntityAuthorizationService[Hakukohde] {
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
 
@@ -100,8 +101,7 @@ class HakukohdeService(
     authorizePut(hakukohde) { hk =>
       val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hk)
       val enrichedHakukohde = hk.copy(metadata = enrichedMetadata)
-      withValidation(enrichedHakukohde, None) { hk =>
-        validateDependenciesIntegrity(hk, authenticated, "put")
+      hakukohdeServiceValidation.withValidation(enrichedHakukohde, None, authenticated) { hk =>
         doPut(hk)
       }
     }.oid.get
@@ -166,9 +166,7 @@ class HakukohdeService(
     authorizeUpdate(oldHakukohdeWithTime, hakukohde, rules) { (oldHakukohde, h) =>
       val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(h)
       val enrichedHakukohde = h.copy(metadata = enrichedMetadata)
-      withValidation(enrichedHakukohde, Some(oldHakukohde)) { h =>
-        throwValidationErrors(validateStateChange("hakukohteelle", oldHakukohde.tila, h.tila))
-        validateDependenciesIntegrity(h, authenticated, "update")
+      hakukohdeServiceValidation.withValidation(enrichedHakukohde, Some(oldHakukohde), authenticated) { h =>
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
@@ -193,26 +191,18 @@ class HakukohdeService(
   def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit
-      authenticated: Authenticated
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
+                                                                     authenticated: Authenticated
   ): HakukohdeSearchResult =
     listOlemassaolevat(organisaatioOid).map(_.oid) match {
-      case Nil           => HakukohdeSearchResult()
-      case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
+      case Nil           => SearchResult[HakukohdeSearchItem]()
+      case hakukohdeOids => KoutaSearchClient.searchHakukohteet(hakukohdeOids, params)
     }
 
   def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }
-
-  private def validateDependenciesIntegrity(hakukohde: Hakukohde, authenticated: Authenticated, method: String): Unit = {
-    val isOphPaakayttaja = authenticated.session.roles.contains(Role.Paakayttaja)
-    val deps = HakukohdeDAO.getDependencyInformation(hakukohde)
-    val haku = HakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
-
-    throwValidationErrors(HakukohdeServiceValidation.validate(hakukohde, haku, isOphPaakayttaja, deps, method))
-  }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
     KoutaDatabase.runBlockingTransactionally {
@@ -237,9 +227,4 @@ class HakukohdeService(
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
-
-  override def validateEntity(hakukohde: Hakukohde): IsValid = hakukohde.validate()
-  override def validateEntityOnJulkaisu(hakukohde: Hakukohde): IsValid = hakukohde.validateOnJulkaisu()
-
-  override def validateInternalDependenciesWhenDeletingEntity(hakukohde: Hakukohde): IsValid = NoErrors
 }

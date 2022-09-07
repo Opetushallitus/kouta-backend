@@ -17,11 +17,11 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
   def getUpdateTarjoajatActions(koulutus: Koulutus): DBIO[Koulutus]
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter): Option[(Koulutus, Instant)]
+  def get(oid: KoulutusOid): Option[Koulutus]
   def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[KoulutusListItem]
   def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
-  def getTilaAndTyyppi(koulutusOid: KoulutusOid): (Option[Julkaisutila], Option[Koulutustyyppi])
   def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String]
   def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid]
 }
@@ -47,6 +47,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
         Some((k.copy(modified = Some(instantToModified(l)), tarjoajat = t.map(_.tarjoajaOid).toList), l))
       case _ => None
     }
+  }
+
+  override def get(oid: KoulutusOid): Option[Koulutus] = {
+    KoutaDatabase.runBlockingTransactionally(selectKoulutus(oid, TilaFilter.onlyOlemassaolevat()).as[Koulutus].headOption).get
   }
 
   override def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]] =
@@ -118,12 +122,6 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       }
     }.get
   }
-
-  override def getTilaAndTyyppi(koulutusOid: KoulutusOid): (Option[Julkaisutila], Option[Koulutustyyppi]) =
-    KoutaDatabase.runBlocking(selectTilaAndTyyppi(koulutusOid)) match {
-      case None => (None, None)
-      case Some((tila, tyyppi)) => (Some(tila), Some(tyyppi))
-    }
 
   override def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String] = {
     KoutaDatabase.runBlocking(selectOidBySorakuvausId(sorakuvausId, tilaFilter))
@@ -368,12 +366,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           inner join hakukohteet h on t.oid = h.toteutus_oid
           where h.haku_oid = ${hakuOid.toString} and k.tila != 'poistettu'::julkaisutila""".as[KoulutusListItem]
   }
-
-  def selectTilaAndTyyppi(koulutusOid: KoulutusOid): DBIO[Option[(Julkaisutila, Koulutustyyppi)]] =
-    sql"""select tila, tyyppi from koulutukset
-            where oid = $koulutusOid
-            and tila != 'poistettu'::julkaisutila
-    """.as[(Julkaisutila, Koulutustyyppi)].headOption
 
   def selectOidBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter) = {
     sql"""select oid

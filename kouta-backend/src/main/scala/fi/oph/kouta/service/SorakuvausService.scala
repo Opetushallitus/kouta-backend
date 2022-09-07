@@ -136,7 +136,7 @@ class SorakuvausService(
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
 
-  override def validateEntity(sorakuvaus: Sorakuvaus): IsValid = sorakuvaus.validate()
+  override def validateEntity(sorakuvaus: Sorakuvaus, oldSorakuvaus: Option[Sorakuvaus]): IsValid = sorakuvaus.validate()
 
   override def validateInternalDependenciesWhenDeletingEntity(sorakuvaus: Sorakuvaus): IsValid = NoErrors
 }

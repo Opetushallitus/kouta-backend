@@ -1,14 +1,15 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
-import fi.oph.kouta.domain.{ GenericValintaperusteMetadata, HakukohdeListItem, Julkaisutila, Koulutustyyppi, Poistettu, TilaFilter, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchResult}
+import fi.oph.kouta.domain.searchResults.ValintaperusteSearchResult
+import fi.oph.kouta.domain.{GenericValintaperusteMetadata, HakukohdeListItem, Julkaisutila, Koulutustyyppi, Poistettu, SearchResult, TilaFilter, Valintaperuste, ValintaperusteEnrichedData, ValintaperusteListItem, ValintaperusteMetadata, ValintaperusteSearchItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
@@ -121,10 +122,10 @@ class ValintaperusteService(
       HakukohdeDAO.listByValintaperusteId(valintaperusteId, tilaFilter)
     }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): ValintaperusteSearchResult =
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated): ValintaperusteSearchResult =
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.id) match {
-      case Nil               => ValintaperusteSearchResult()
-      case valintaperusteIds => KoutaIndexClient.searchValintaperusteet(valintaperusteIds, params)
+      case Nil               => SearchResult[ValintaperusteSearchItem]()
+      case valintaperusteIds => KoutaSearchClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
   private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
@@ -149,7 +150,7 @@ class ValintaperusteService(
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
 
-  override def validateEntity(valintaperuste: Valintaperuste): IsValid = valintaperuste.validate()
+  override def validateEntity(valintaperuste: Valintaperuste, oldValintaperuste: Option[Valintaperuste]): IsValid = valintaperuste.validate()
   override def validateEntityOnJulkaisu(valintaperuste: Valintaperuste): IsValid = valintaperuste.validateOnJulkaisu()
 
   override def validateInternalDependenciesWhenDeletingEntity(valintaperuste: Valintaperuste): IsValid = NoErrors

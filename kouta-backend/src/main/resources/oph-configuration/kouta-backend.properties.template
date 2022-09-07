@@ -25,11 +25,6 @@ kouta-backend.s3.imageBucket={{kouta_backend_s3_image_bucket}}
 kouta-backend.s3.imageBucketPublicUrl={{kouta_backend_s3_image_bucket_public_url}}
 
 host.virkailija={{host_virkailija}}
-kouta-index.koulutus.filtered-list=https://{{host_virkailija}}/kouta-index/koulutus/filtered-list
-kouta-index.toteutus.filtered-list=https://{{host_virkailija}}/kouta-index/toteutus/filtered-list
-kouta-index.haku.filtered-list=https://{{host_virkailija}}/kouta-index/haku/filtered-list
-kouta-index.hakukohde.filtered-list=https://{{host_virkailija}}/kouta-index/hakukohde/filtered-list
-kouta-index.valintaperuste.filtered-list=https://{{host_virkailija}}/kouta-index/valintaperuste/filtered-list
 
 kayttooikeus-service=https://{{host_virkailija}}/kayttooikeus-service
 kayttooikeus-service.organisaatiohenkilo=https://{{host_virkailija}}/kayttooikeus-service/henkilo/$1/organisaatiohenkilo
@@ -53,4 +48,12 @@ ohjausparametrit-service.parametri=https://{{host_virkailija}}/ohjausparametrit-
 oppijanumerorekisteri-service=https://{{host_virkailija}}/oppijanumerorekisteri-service
 oppijanumerorekisteri-service.henkilo=https://{{host_virkailija}}/oppijanumerorekisteri-service/henkilo/$1
 
+hakemuspalvelu-service=https://{{host_virkailija}}/lomake-editori
+hakemuspalvelu-service.forms=https://{{host_virkailija}}/lomake-editori/api/forms
+
 kouta.external-api.modify.enabled={{kouta_external_api_modify_enabled}}
+
+kouta-backend.elasticsearch.url={{kouta_backend_elasticsearch_url}}
+kouta-backend.elasticsearch.auth-enabled={{kouta_backend_elasticsearch_auth_enabled | default('false')}}
+kouta-backend.elasticsearch.username={{kouta_backend_elasticsearch_username}}
+kouta-backend.elasticsearch.password={{kouta_backend_elasticsearch_password}}

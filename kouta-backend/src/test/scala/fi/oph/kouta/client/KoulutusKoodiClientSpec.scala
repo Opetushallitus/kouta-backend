@@ -10,20 +10,18 @@ import scalacache.modes.sync.mode
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
-import scala.concurrent.duration.DurationInt
 
 class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   var koodiClient: KoulutusKoodiClient = _
 
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
-
   override def beforeAll() = {
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
     System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
     super.startServiceMocking()
     urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort"))
-    koodiClient = new KoulutusKoodiClient(urlProperties.get, 3.seconds)
+    koodiClient = new KoulutusKoodiClient(urlProperties.get)
   }
 
   "Creating KoodiUri object from string" should "work according to validity rules" in {
@@ -175,16 +173,6 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.osaamisalaKoodiUriExists("osaamisala_2248") should equal(false)
   }
 
-  "Finding kieliKoodiUri" should "return true when koodiUri exists" in {
-    mockKoodistoResponse("kieli",
-      Seq(("kieli_fi", 1, None), ("kieli_sv", 3, None),
-        ("kieli_su", 2, Some(dayInPast))))
-    koodiClient.kieliKoodiUriExists("kieli_fi") should equal(true)
-    koodiClient.kieliKoodiUriExists("kieli_sv#2") should equal(true)
-    koodiClient.kieliKoodiUriExists("kieli_su") should equal(false)
-    koodiClient.kieliKoodiUriExists("kieli_xx") should equal(false)
-  }
-
   "Finding lukioPainotusKoodiUri" should "return true when koodiUri exists" in {
     mockKoodistoResponse("lukiopainotukset",
       Seq(("lukiopainotukset_503", 1, None), ("lukiopainotukset_543", 3, None),
@@ -214,14 +202,6 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_vka5#2") should equal(true)
     koodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_vka6") should equal(false)
     koodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_uo6") should equal(false)
-  }
-
-  "Finding kausiKoodiUri" should "return true when koodiUri exists" in {
-    mockKoodistoResponse("kausi", Seq(("kausi_s", 1, None), ("kausi_k", 3, None), ("kausi_X", 2, Some(dayInPast))))
-    koodiClient.kausiKoodiUriExists("kausi_s") should equal(true)
-    koodiClient.kausiKoodiUriExists("kausi_k#2") should equal(true)
-    koodiClient.kausiKoodiUriExists("kausi_X") should equal(false)
-    koodiClient.kausiKoodiUriExists("kausi_Y") should equal(false)
   }
 
   "When cache data is expired or removed" should "data fetched to cache again" in {

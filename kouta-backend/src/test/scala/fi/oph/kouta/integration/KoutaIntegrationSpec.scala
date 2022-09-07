@@ -3,10 +3,11 @@ package fi.oph.kouta.integration
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
-import fi.oph.kouta.mocks.{KoodistoServiceMock, MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockOrganisaatioServiceClient, MockSecurityContext, OrganisaatioServiceMock}
+import fi.oph.kouta.mocks.{KoodistoServiceMock, MockHakemusPalveluClient, MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockOrganisaatioServiceClient, MockSecurityContext, OrganisaatioServiceMock}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
@@ -14,6 +15,7 @@ import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.validation.{ErrorMessage, ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
+import org.mockito.scalatest.MockitoSugar
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
@@ -30,7 +32,7 @@ trait DefaultTestImplicits {
   implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = (a: OrganisaatioOid, b: OrganisaatioOid) => a.s compare b.s
 }
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits {
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits with MockitoSugar {
 
   val serviceIdentifier: String = KoutaIntegrationSpec.serviceIdentifier
   val defaultAuthorities: Set[Authority] = KoutaIntegrationSpec.defaultAuthorities
@@ -43,6 +45,9 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
   val mockKayttooikeusClient: MockKayttooikeusClient = new MockKayttooikeusClient(securityContext, defaultAuthorities)
   val mockOrganisaatioClient: MockOrganisaatioServiceClient = new MockOrganisaatioServiceClient(securityContext, defaultAuthorities)
+  val mockKoutaSearchClient = mock[KoutaSearchClient]
+
+  val mockHakemusPalveluClient = new MockHakemusPalveluClient()
 
   def addDefaultSession(): Unit =  {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid.s, defaultAuthorities), testUser.sessionId)
@@ -88,6 +93,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     mockOrganisaatioResponse()
     addDefaultKoodistoMockResponsesForKoulutus()
     addDefaultKoodistoMockResponsesForToteutus()
+    addDefaultKoodistoMockResponsesForHakukohde()
   }
 
   override def afterAll(): Unit = {
@@ -175,6 +181,14 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     mockKoodistoResponse("lukiopainotukset", Seq(("lukiopainotukset_1", 1, None)))
     mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", Seq(("lukiolinjaterityinenkoulutustehtava_1", 1, None)))
     mockKoodistoResponse("moduulikoodistolops2021", Seq(("moduulikoodistolops2021_kald3", 1, None)))
+  }
+
+  def addDefaultKoodistoMockResponsesForHakukohde(): Unit = {
+    mockKoodistoResponse("pohjakoulutusvaatimuskouta", Seq(("pohjakoulutusvaatimuskouta_pk", 1, None), ("pohjakoulutusvaatimuskouta_yo", 1, None), ("pohjakoulutusvaatimuskouta_104", 1, None), ("pohjakoulutusvaatimuskouta_109", 1, None)))
+    mockKoodistoResponse("liitetyypitamm", Seq(("liitetyypitamm_1", 1, None), ("liitetyypitamm_2", 1, None), ("liitetyypitamm_10", 1, None)))
+    mockKoodistoResponse("posti", Seq(("posti_04230", 2, None)))
+    mockKoodistoResponse("valintakokeentyyppi", Seq(("valintakokeentyyppi_1", 1, None), ("valintakokeentyyppi_11", 1, None), ("valintakokeentyyppi_42", 2, None), ("valintakokeentyyppi_57", 2, None), ("valintakokeentyyppi_66", 6, None)))
+    mockKoodistoResponse("hakukohteetperusopetuksenjalkeinenyhteishaku", Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None)))
   }
 
 }

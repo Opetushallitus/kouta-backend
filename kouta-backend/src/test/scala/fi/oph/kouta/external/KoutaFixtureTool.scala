@@ -1,10 +1,6 @@
 package fi.oph.kouta.external
 
-import java.time.temporal.{ChronoUnit, TemporalField}
-import java.time.{LocalDate, LocalDateTime, LocalTime}
-import java.util.UUID
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestDataGenerator.hakukohde
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -12,6 +8,9 @@ import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.validation.{NoErrors, Validatable}
 import org.json4s.jackson.Serialization.{read, write}
 
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.util.UUID
 import scala.collection.JavaConverters._
 
 object KoutaFixtureTool extends KoutaJsonFormats {
@@ -160,6 +159,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   val ValintakokeetKey = "valintakokeet"
   val MuuPohjakoulutusvaatimusKey = "muuPohjakoulutusvaatimus"
   val AjastettuJulkaisuKey = "ajastettuJulkaisu"
+  val ajastettuHaunJaHakukohteidenArkistointiKey = "ajastettuHaunJaHakukohteidenArkistointi"
+  val ajastettuHaunJaHakukohteidenArkistointiAjettuKey = "ajastettuHaunJaHakukohteidenArkistointiAjettu"
   val MetadataKey = "metadata"
   val SorakuvausIdKey = "sorakuvausId"
   val OppilaitosOidKey = "oppilaitosOid"
@@ -241,13 +242,16 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakutapaKoodiUriKey -> "hakutapa_03#1",
     KohdejoukkoKoodiUriKey -> "haunkohdejoukko_02#2",
     KohdejoukonTarkenneKoodiUriKey -> "haunkohdejoukontarkenne_1#11",
-    HakulomaketyyppiKey -> EiSähköistä.toString,
-    HakulomakeIdKey -> "dcd38a87-912e-4e91-8840-99c7e242dd53",
-    HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
-    HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
+    HakulomaketyyppiKey -> MuuHakulomake.toString,
+    //HakulomakeIdKey -> "dcd38a87-912e-4e91-8840-99c7e242dd53",
+    //HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
+    HakulomakeKuvausKey -> "",
+    HakulomakeLinkkiKey -> "http://www.koulu.test.fi",
     HakukohteenLiittamisenTakarajaKey -> formatLocalDateTime(startTime1),
     HakukohteenMuokkaamisenTakarajaKey -> formatLocalDateTime(endTime1),
     AjastettuJulkaisuKey -> formatLocalDateTime(time3),
+    ajastettuHaunJaHakukohteidenArkistointiKey -> formatLocalDateTime(endTime1.plusMonths(4)),
+    ajastettuHaunJaHakukohteidenArkistointiAjettuKey -> formatLocalDateTime(endTime1),
     HakuaikaAlkaaKey -> formatLocalDateTime(startTime1),
     HakuaikaPaattyyKey -> formatLocalDateTime(endTime1),
     MetadataKey -> write(TestData.JulkaistuHaku.metadata.get.copy(
@@ -273,9 +277,9 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     KielivalintaKey -> "fi,sv",
     ModifiedKey -> formatModified(LocalDateTime.now()),
     HakulomaketyyppiKey -> EiSähköistä.toString,
-    HakulomakeIdKey -> "369221b1-07d0-4b7a-89bc-04b670d8cff2",
+    //HakulomakeIdKey -> "369221b1-07d0-4b7a-89bc-04b670d8cff2",
     HakulomakeKuvausKey -> "Hakulomake tulostetaan ja toimitetaan postitse",
-    HakulomakeLinkkiKey -> "https://koulu.test/hakemusinfo",
+    HakulomakeLinkkiKey -> "",
     KaytetaanHaunHakulomakettaKey -> "false",
     EsikatseluKey -> "false",
     JarjestyspaikkaOidKey -> OtherOid.s,
@@ -288,7 +292,8 @@ object KoutaFixtureTool extends KoutaJsonFormats {
     HakuaikaAlkaaKey -> formatLocalDateTime(startTime1),
     HakuaikaPaattyyKey -> formatLocalDateTime(endTime1),
     ValintaperusteIdKey -> UUID.randomUUID().toString,
-    MetadataKey -> write(TestData.JulkaistuHakukohde.metadata.get.copy(koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
+    MetadataKey -> write(TestData.JulkaistuHakukohde.metadata.get.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq(),
+      koulutuksenAlkamiskausi = Some(KoulutuksenAlkamiskausi(
       alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
       koulutuksenAlkamisvuosi = None,
       koulutuksenAlkamiskausiKoodiUri = None,
@@ -450,6 +455,7 @@ object KoutaFixtureTool extends KoutaJsonFormats {
   def getHaku(oid:String): String = {
     val params = haut(oid)
     val kielivalinta = toKielivalinta(params)
+    val hakulomakeLinkki = params(HakulomakeLinkkiKey)
     toJsonIfValid( Haku(
       Some(HakuOid(oid)),
       Some("2233445566"),
@@ -459,12 +465,15 @@ object KoutaFixtureTool extends KoutaJsonFormats {
       Some(parseLocalDateTime(params(HakukohteenLiittamisenTakarajaKey))),
       Some(parseLocalDateTime(params(HakukohteenMuokkaamisenTakarajaKey))),
       params.get(AjastettuJulkaisuKey).map(parseLocalDateTime),
+      params.get(ajastettuHaunJaHakukohteidenArkistointiKey).map(parseLocalDateTime),
+      params.get(ajastettuHaunJaHakukohteidenArkistointiAjettuKey).map(parseLocalDateTime),
       Some(params(KohdejoukkoKoodiUriKey)),
       params.get(KohdejoukonTarkenneKoodiUriKey).flatMap(Option(_)),
       Some(Hakulomaketyyppi.withName(params(HakulomaketyyppiKey))),
       params.get(HakulomakeIdKey).map(UUID.fromString),
       toKielistetty(kielivalinta, params(HakulomakeKuvausKey)),
-      toKielistetty(kielivalinta, params(HakulomakeLinkkiKey)),
+      if (hakulomakeLinkki == null || hakulomakeLinkki.isEmpty()) Map() else
+        kielivalinta.map { k => (k, hakulomakeLinkki) }.toMap,
       params.get(MetadataKey).map(read[HakuMetadata]),
       OrganisaatioOid(params(OrganisaatioKey)),
       List(Ajanjakso(parseLocalDateTime(params(HakuaikaAlkaaKey)), Some(parseLocalDateTime(params(HakuaikaPaattyyKey))))),

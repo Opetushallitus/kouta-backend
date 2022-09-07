@@ -1,12 +1,15 @@
 package fi.oph.kouta.external
 
-import fi.oph.kouta.domain.{Hakutieto, Poistettu}
+import fi.oph.kouta.domain.{Hakutieto, MuuHakulomake, Poistettu}
+import fi.oph.kouta.external.KoutaFixtureTool.{DefaultHaku, KaytetaanHaunHakulomakettaKey}
 
 import java.util.UUID
 import fi.oph.kouta.external.{KoutaFixtureTool => KFT}
 import fi.oph.kouta.integration.{AccessControlSpec, EverythingFixture, KoutaIntegrationSpec}
 import org.json4s.jackson.Serialization.read
 import org.scalatest.BeforeAndAfterEach
+
+import scala.collection.convert.ImplicitConversions.`map AsScala`
 
 class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture with BeforeAndAfterEach with AccessControlSpec {
 
@@ -89,7 +92,7 @@ class KoutaFixtureToolSpec extends KoutaIntegrationSpec with EverythingFixture w
     val toteutus = KFT.getToteutus("1.2.246.562.17.00000000000000000009")
     val toteutusOid = oid(doPut(ToteutusPath, toteutus))
 
-    KFT.addHaku("1.2.246.562.29.00000000000000000009", KFT.DefaultHaku)
+    KFT.addHaku("1.2.246.562.29.00000000000000000009", DefaultHaku)
     val haku = KFT.getHaku("1.2.246.562.29.00000000000000000009")
     val hakuOid = oid(doPut(HakuPath, haku))
 

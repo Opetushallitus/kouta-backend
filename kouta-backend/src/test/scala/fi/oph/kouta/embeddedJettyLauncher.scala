@@ -9,6 +9,7 @@ import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{CasSession, ServiceTicket}
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
+import fi.oph.kouta.util.CommandLine
 
 import scala.util.Try
 

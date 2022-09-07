@@ -2,20 +2,22 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
+import fi.oph.kouta.domain.Koulutustyyppi.{isKorkeakoulu, isToisenAsteenYhteishakuKoulutustyyppi}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.searchResults.HakuSearchResultFromIndex
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
@@ -79,13 +81,28 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
     authorizeUpdate(oldHaku, haku, rules) { (oldHaku, h) =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
-      val enrichedHaku = h.copy(metadata = enrichedMetadata)
+      val enrichedHaku = if (shouldDeleteSchedulerTimestamp(h)) {
+        h.copy(metadata = enrichedMetadata, ajastettuHaunJaHakukohteidenArkistointiAjettu = None)
+      } else {
+        h.copy(metadata = enrichedMetadata)
+      }
+
       withValidation(enrichedHaku, Some(oldHaku)) {
         throwValidationErrors(validateStateChange("haulle", oldHaku.tila, enrichedHaku.tila))
         validateHakukohdeIntegrityIfDeletingHaku(oldHaku.tila, enrichedHaku.tila, enrichedHaku.oid.get)
         doUpdate(_, notModifiedSince, oldHaku)
       }
     }.nonEmpty
+  }
+
+  private def shouldDeleteSchedulerTimestamp(haku: Haku): Boolean = {
+    haku.ajastettuHaunJaHakukohteidenArkistointi.getOrElse(None) match {
+      case ajastettuHaunJaHakukohteidenArkistointi: LocalDateTime =>
+        if (ajastettuHaunJaHakukohteidenArkistointi.toLocalDate.isAfter(LocalDateTime.now().toLocalDate) && haku.tila.equals(Julkaistu)) {
+          true
+        } else false
+      case _ => false
+    }
   }
 
   private def getAuthorizationRulesForUpdate(newHaku: Haku, oldHakuWithTime: Option[(Haku, Instant)]) = {
@@ -109,9 +126,19 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     )
   }
 
+  private def getYhteishakuFilter(yhteishaut: Boolean, koulutustyypit: Seq[Koulutustyyppi]): YhteishakuFilter = {
+    if (yhteishaut) {
+      YhteishakuFilter(
+        removeKk = !koulutustyypit.exists(kt => isKorkeakoulu(kt)),
+        removeToinenaste = !koulutustyypit.exists(kt => isToisenAsteenYhteishakuKoulutustyyppi(kt)))
+    } else {
+      YhteishakuFilter(removeKk = true, removeToinenaste = true)
+    }
+  }
+
   def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter, yhteishaut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, readRules)(
-      oids => HakuDAO.listByAllowedOrganisaatiot(oids, tilaFilter, yhteishaut))
+    withAuthorizedOrganizationOidsAndRelevantKoulutustyyppis(organisaatioOid, readRules)(
+      oidsAndTyypit => HakuDAO.listByAllowedOrganisaatiot(oidsAndTyypit._1, tilaFilter, getYhteishakuFilter(yhteishaut, oidsAndTyypit._2)))
 
   def listHakukohteet(hakuOid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter))
@@ -128,7 +155,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   def listToteutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakuSearchResult = {
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated): HakuSearchResult = {
     def getCount(t: HakuSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
       organisaatioOids match {
         case Seq(RootOrganisaatioOid) => t.hakukohteet.length
@@ -153,7 +180,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
                   modified = h.modified,
                   tila = h.tila,
                   hakutapa = h.hakutapa,
-                  koulutuksenAlkamiskausi = h.koulutuksenAlkamiskausi,
+                  koulutuksenAlkamiskausi = h.metadata.koulutuksenAlkamiskausi,
                   hakukohdeCount = getCount(h, organisaatioOids))
             }
           )
@@ -162,11 +189,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true), true).map(_.oid) match {
       case Nil      => HakuSearchResult()
-      case hakuOids => assocHakukohdeCounts(KoutaIndexClient.searchHaut(hakuOids, params))
+      case hakuOids => assocHakukohdeCounts(KoutaSearchClient.searchHaut(hakuOids, params))
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[HakuSearchItemFromIndex] = {
+  def search(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, params: SearchParams)(implicit authenticated: Authenticated): Option[HakuSearchItemFromIndex] = {
     def filterHakukohteet(haku: Option[HakuSearchItemFromIndex]): Option[HakuSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => haku
@@ -177,7 +204,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
           })
       }
 
-    filterHakukohteet(KoutaIndexClient.searchHaut(Seq(hakuOid), params).result.headOption)
+    filterHakukohteet(KoutaSearchClient.searchHaut(Seq(hakuOid), params).result.headOption)
   }
 
   private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =
@@ -203,6 +230,9 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
 
+  def indexByOid(hakuOid: HakuOid): DBIO[_] =
+    sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, hakuOid.toString)
+
   private def setHaunOhjausparametrit(haku: Haku): DBIO[Unit] = {
     Try(ohjausparametritClient.postHaunOhjausparametrit(HaunOhjausparametrit(
       hakuOid = haku.oid.get,
@@ -217,7 +247,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     ).toDBIO
   }
 
-  override def validateEntity(haku: Haku): IsValid = haku.validate()
+  override def validateEntity(haku: Haku, oldHaku: Option[Haku]): IsValid = haku.validate()
   override def validateEntityOnJulkaisu(haku: Haku): IsValid = haku.validateOnJulkaisu()
 
   override def validateInternalDependenciesWhenDeletingEntity(haku: Haku): IsValid = NoErrors

@@ -1,6 +1,6 @@
 package fi.oph.kouta.integration
 import fi.oph.kouta.SwaggerServlet
-import fi.oph.kouta.integration.fixture.{AuthFixture, KeywordFixture, UploadFixture}
+import fi.oph.kouta.integration.fixture.{AuthFixture, ExternalFixture, KeywordFixture, UploadFixture}
 import fi.oph.kouta.servlet.HealthcheckServlet
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 import io.swagger.v3.parser.OpenAPIV3Parser
@@ -12,7 +12,8 @@ class SwaggerServletSpec
     with IndexerFixture
     with SearchFixture
     with KeywordFixture
-    with UploadFixture {
+    with UploadFixture
+    with ExternalFixture {
   addServlet(new HealthcheckServlet(), "/healthcheck")
   addServlet(new SwaggerServlet(), "/swagger")
 

@@ -16,4 +16,5 @@ trait AuditResourceOperations {
   case object Read   extends AuditOperation(s"${name}_read")
   case object Update extends AuditOperation(s"${name}_update")
   case object Create extends AuditOperation(s"${name}_create")
+  case object Archive extends AuditOperation(s"${name}_archive")
 }

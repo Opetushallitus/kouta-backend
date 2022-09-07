@@ -82,23 +82,24 @@ class IndexingSpec extends KoutaIntegrationSpec
   }
 
   "Create hakukohde" should "send indexing message after creating hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     eventuallyIndexingMessages {
       _ should contain(s"""{"hakukohteet":["$oid"]}""")
     }
   }
 
   "Update hakukohde" should "send indexing message after updating hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     eventuallyIndexingMessages {
       _ should contain(s"""{"hakukohteet":["$oid"]}""")
     }
 
-    val lastModified = get(oid, tallennettuHakukohde(oid))
-    val muokattuHakukohde = tallennettuHakukohde(oid).copy(
+    val lastModified = get(oid, withValintaperusteenValintakokeet(tallennettuHakukohde(oid)))
+    val muokattuHakukohde = withValintaperusteenValintakokeet(tallennettuHakukohde(oid)).copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
-      hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake"),
+      hakulomakeAtaruId = Some(UUID.randomUUID()),
+      hakulomakeKuvaus = Map(),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))))
     update(muokattuHakukohde, lastModified, expectUpdate = true)
 

@@ -53,7 +53,9 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       }
     }.getOrElse("")
 
-    s"Error ${request.getMethod} $contextPath${request.getServletPath}$requestPath${request.queryString} => $msgBody"
+    val queryStr = if (request.queryString.isEmpty) "" else "?" + request.queryString
+
+    s"Error ${request.getMethod} $contextPath${request.getServletPath}$requestPath${queryStr} => $msgBody"
   }
 
   def badRequest(t: Throwable): ActionResult = {

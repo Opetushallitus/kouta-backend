@@ -36,7 +36,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
 
   lazy val uusiHakukohde: Hakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
   lazy val tallennettuHakukohde: String => Hakukohde = { oid: String =>
-    getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId))
+    withValintaperusteenValintakokeet(getIds(hakukohde(oid, toteutusOid, hakuOid, valintaperusteId)))
   }
 
   "Get hakukohde by oid" should "return 404 if hakukohde not found" in {
@@ -54,37 +54,37 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "allow a user of the hakukohde organization to read the hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(oid, crudSessions(hakukohde.organisaatioOid), tallennettuHakukohde(oid))
   }
 
   it should "allow a user of toteutuksen tarjoaja organization to read the hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(oid, crudSessions(AmmOid), tallennettuHakukohde(oid))
   }
 
   it should "deny a user without access to the hakukohde organization" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(s"$HakukohdePath/$oid", crudSessions(LonelyOid), 403)
   }
 
   it should "allow a user of an ancestor organization to read the hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(oid, crudSessions(ParentOid), tallennettuHakukohde(oid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(s"$HakukohdePath/$oid", crudSessions(GrandChildOid), 403)
   }
 
   it should "deny a user with the wrong role" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(s"$HakukohdePath/$oid", otherRoleSession, 403)
   }
 
   it should "allow indexer access" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(oid, indexerSession, tallennettuHakukohde(oid))
   }
 
@@ -94,36 +94,36 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val tuvaToteutusOid = put(tuvaToteutus(tuvaKoulutusOid))
     val tuvaValintaperusteId = put(tuvaValintaperuste)
     val tuvaHakukohde: Hakukohde = hakukohde(tuvaToteutusOid, hakuOid, tuvaValintaperusteId)
-    val oid = put(tuvaHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(tuvaHakukohde))
 
-    get(oid, tallennettuHakukohde(oid).copy(
+    get(oid, withValintaperusteenValintakokeet(tallennettuHakukohde(oid).copy(
       toteutusOid = ToteutusOid(tuvaToteutusOid),
       valintaperusteId = Some(tuvaValintaperusteId),
       _enrichedData = Some(HakukohdeEnrichedData(esitysnimi = Map(
         Fi -> s"""Hakukohde fi (yleiset.vaativanaErityisenaTukena fi)""".stripMargin,
         Sv -> s"""Hakukohde sv (yleiset.vaativanaErityisenaTukena sv)""".stripMargin),
         muokkaajanNimi = Some("Testi Muokkaaja")
-      ))))
+      )))))
   }
 
   it should "return error when trying to get deleted hakukohde" in {
-    val oid = put(uusiHakukohde.copy(tila = Poistettu), ophSession)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Poistettu)), ophSession)
     get(s"$HakukohdePath/$oid", ophSession, 404)
   }
 
   it should "return ok when getting deleted hakukohde with myosPoistetut = true" in {
-    val oid = put(uusiHakukohde.copy(tila = Poistettu), ophSession)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Poistettu)), ophSession)
     get(s"$HakukohdePath/$oid?myosPoistetut=true", ophSession, 200)
   }
 
   "Create hakukohde" should "store hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     get(oid, tallennettuHakukohde(oid))
   }
 
   it should "store true as the value of isMuokkaajaOphVirkailija when muokkaaja is OPH virkailija" in {
     val uusiHk = uusiHakukohde.copy(muokkaaja = OphUserOid)
-    val oid = put(uusiHk, ophSession)
+    val oid = put(withValintaperusteenValintakokeet(uusiHk), ophSession)
     val tallennettuHk = tallennettuHakukohde(oid)
     val tallennettuHkMetadata = tallennettuHk.metadata.get
     val tallennettuHkCopy = tallennettuHk.copy(muokkaaja = OphUserOid, metadata = Some(tallennettuHkMetadata.copy(isMuokkaajaOphVirkailija = Some(true))))
@@ -131,54 +131,12 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(uusiHakukohde.copy(muokkaaja = UserOid("random")))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(muokkaaja = UserOid("random"))))
     get(oid, tallennettuHakukohde(oid).copy(muokkaaja = testUser.oid))
-  }
-
-  it should "fail to store hakukohde if the toteutus does not exist" in {
-    val toteutusOid = TestOids.randomToteutusOid.s
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
   }
 
   it should "fail to store hakukohde without jarjestyspaikkaOid" in {
     put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(jarjestyspaikkaOid = None), 400, "jarjestyspaikkaOid", missingMsg)
-  }
-
-  it should "fail to store hakukohde if the haku does not exist" in {
-    val hakuOid = TestOids.randomHakuOid.s
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "hakuOid", nonExistent("Hakua", hakuOid))
-  }
-
-  it should "fail to store hakukohde if the valintaperuste does not exist" in {
-    val valintaperusteId = UUID.randomUUID()
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId))
-  }
-
-  it should "fail to store julkaistu hakukohde if the toteutus is not yet julkaistu" in {
-    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
-  }
-
-  it should "store julkaistu hakukohde while haku is not yet julkaistu" in {
-    val hakuOid = put(haku.copy(tila = Tallennettu))
-    put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
-  }
-
-  it should "fail to store julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
-    val valintaperusteId = put(valintaperuste.copy(tila = Tallennettu, metadata = None))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "tila", notYetJulkaistu("Valintaperustetta", valintaperusteId))
-  }
-
-  it should "fail to store hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
-    val valintaperusteId = put(valintaperuste.copy(koulutustyyppi = Yo, metadata = Some(TestData.YoValintaperusteMetadata)))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
-  }
-
-  it should "fail to store lukiokoulutus if hakukohde does not contain hakukohteenLinja" in {
-    val koulutusOid = put(koulutus.copy(koulutustyyppi = Lk, koulutuksetKoodiUri = Seq("koulutus_301101#1"), ePerusteId = None, metadata = Some(LukioKoulutusMetadata())), ophSession)
-    val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), metadata = Some(TestData.LukioToteutus.metadata.get)))
-    val valintaperusteId = put(valintaperuste.copy(koulutustyyppi = Lk, metadata = Some(TestData.LkValintaperusteMetadata)))
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid, valintaperusteId), 400, "metadata.hakukohteenLinja", missingMsg)
   }
 
   it should "store ammatillinen tutkinnon osa hakukohde if toteutus uses hakemuspalvelu" in {
@@ -190,13 +148,6 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     put(hakukohde(toteutusOid, hakuOid))
   }
 
-  it should "fail to store ammatillinen tutkinnon osa hakukohde if toteutus does not use hakemuspalvelu" in {
-    val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
-    val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
-    val toteutusOid = put(ammToToteutus)
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid), 400, "toteutusOid", cannotLinkToHakukohde(toteutusOid))
-  }
-
   it should "store vapaa sivistystyo muu hakukohde if toteutus uses hakemuspalvelu" in {
     val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus, ophSession)
     val vsToToteutus = TestData.VapaaSivistystyoMuuToteutus.copy(
@@ -204,13 +155,6 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
       metadata = Some(TestData.VapaaSivistystyoMuuToteutusHakemuspalveluMetatieto))
     val toteutusOid = put(vsToToteutus)
     put(hakukohde(toteutusOid, hakuOid))
-  }
-
-  it should "fail to store vapaa sivistystyo muu hakukohde if toteutus does not use hakemuspalvelu" in {
-    val koulutusOid = put(TestData.VapaaSivistystyoMuuKoulutus, ophSession)
-    val vsToToteutus = TestData.VapaaSivistystyoMuuToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
-    val toteutusOid = put(vsToToteutus)
-    put(HakukohdePath, hakukohde(toteutusOid, hakuOid), 400, "toteutusOid", cannotLinkToHakukohde(toteutusOid))
   }
 
   it should "store hakukohde without nimi if hakukohdeKoodiUri given" in {
@@ -221,28 +165,9 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     put(ammHakukohde)
   }
 
-  it should "fail to store hakukohde if both nimi and hakukohdeKoodiUri given" in {
-    val koulutusOid = put(TestData.AmmKoulutus, ophSession)
-    val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
-    val toteutusOid = put(ammToToteutus)
-    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(nimi = Map( Fi -> "Hakukohteen nimi fi", Sv -> "Hakukohteen nimi sv"), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_101#1"))
-
-    put(HakukohdePath, ammHakukohde, 400, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri"))
-  }
-
-  it should "fail to store julkaistu toisen asteen yhteishaku hakukohde without valintaperuste" in {
-    val koulutusOid = put(TestData.AmmKoulutus, ophSession)
-    val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
-    val toteutusOid = put(ammToToteutus)
-    val hakuOid = put(TestData.JulkaistuHaku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ophSession)
-    val ammHakukohde = hakukohde(toteutusOid, hakuOid).copy(tila = Julkaistu)
-
-    put(HakukohdePath, ammHakukohde, 400, "valintaperusteId", missingMsg)
-  }
-
   it should "write create hakukohde to audit log" in {
     MockAuditLogger.clean()
-    val oid = put(uusiHakukohde.withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde.withModified(LocalDateTime.parse("1000-01-01T12:00:00"))))
     get(oid, tallennettuHakukohde(oid))
     MockAuditLogger.find(oid, "hakukohde_create") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
@@ -256,7 +181,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "allow a user of the hakukohde organization to create the hakukohde" in {
-    put(uusiHakukohde, crudSessions(hakukohde.organisaatioOid))
+    put(withValintaperusteenValintakokeet(uusiHakukohde), crudSessions(hakukohde.organisaatioOid))
   }
 
   it should "deny a user without access to the hakukohde organization" in {
@@ -264,7 +189,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "allow a user of an ancestor organization to create the hakukohde" in {
-    put(uusiHakukohde, crudSessions(ParentOid))
+    put(withValintaperusteenValintakokeet(uusiHakukohde), crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
@@ -290,7 +215,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   "Update hakukohde" should "update hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu)
     update(updatedHakukohde, lastModified)
@@ -298,7 +223,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(uusiHakukohde, crudSessions(ChildOid))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde), crudSessions(ChildOid))
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
     val lastModified = get(oid, tallennettuHakukohde(oid).copy(muokkaaja = userOid))
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu, muokkaaja = userOid)
@@ -306,69 +231,8 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     get(oid, updatedHakukohde.copy(muokkaaja = testUser.oid))
   }
 
-  it should "fail to update hakukohde if the toteutus does not exist" in {
-    val oid = put(uusiHakukohde)
-    val lastModified = get(oid, tallennettuHakukohde(oid))
-    val toteutusOid = TestOids.randomToteutusOid
-    val updatedHakukohde = tallennettuHakukohde(oid).copy(toteutusOid = toteutusOid)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, "toteutusOid", nonExistent("Toteutusta", toteutusOid))
-  }
-
-  it should "fail to update hakukohde if the haku does not exist" in {
-    val oid = put(uusiHakukohde)
-    val lastModified = get(oid, tallennettuHakukohde(oid))
-    val hakuOid = TestOids.randomHakuOid
-    val updatedHakukohde = tallennettuHakukohde(oid).copy(hakuOid = hakuOid)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, "hakuOid", nonExistent("Hakua", hakuOid))
-  }
-
-  it should "fail to update hakukohde if the valintaperuste does not exist" in {
-    val oid = put(hakukohde(toteutusOid, hakuOid))
-    val savedHakukohde = getIds(hakukohde(oid, toteutusOid, hakuOid))
-    val lastModified = get(oid, savedHakukohde)
-    val valintaperusteId = UUID.randomUUID()
-    val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId))
-  }
-
-  it should "fail to update julkaistu hakukohde if the toteutus is not yet julkaistu" in {
-    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
-    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
-    val savedHakukohde = tallennettuHakukohde(oid).copy(toteutusOid = ToteutusOid(toteutusOid), tila = Tallennettu)
-    val lastModified = get(oid, savedHakukohde)
-    val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Toteutusta", toteutusOid))
-  }
-
-  it should "update julkaistu hakukohde while haku is not yet julkaistu" in {
-    val hakuOid = put(haku.copy(tila = Tallennettu))
-    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
-    val savedHakukohde = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), tila = Tallennettu)
-    val lastModified = get(oid, savedHakukohde)
-    val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
-    update(updatedHakukohde, lastModified)
-  }
-
-  it should "fail to update julkaistu hakukohde if the valintaperuste is not yet julkaistu" in {
-    val valintaperusteId = put(valintaperuste.copy(tila = Tallennettu))
-    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Tallennettu))
-    val savedHakukohde = tallennettuHakukohde(oid).copy(valintaperusteId = Some(valintaperusteId), tila = Tallennettu)
-    val lastModified = get(oid, savedHakukohde)
-    val updatedHakukohde = savedHakukohde.copy(tila = Julkaistu)
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, "tila", notYetJulkaistu("Valintaperustetta", valintaperusteId))
-  }
-
-  it should "fail to update hakukohde if the tyyppi of valintaperuste does not match the tyyppi of toteutus" in {
-    val oid = put(hakukohde(toteutusOid, hakuOid))
-    val savedHakukohde = getIds(hakukohde(oid, toteutusOid, hakuOid))
-    val lastModified = get(oid, savedHakukohde)
-    val valintaperusteId = put(TestData.YoValintaperuste)
-    val updatedHakukohde = savedHakukohde.copy(valintaperusteId = Some(valintaperusteId))
-    update(HakukohdePath, updatedHakukohde, lastModified, 400, "valintaperusteId", tyyppiMismatch("Toteutuksen", toteutusOid, "valintaperusteen", valintaperusteId))
-  }
-
   it should "write hakukohde update to audit log" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val updatedHakukohde = tallennettuHakukohde(oid).copy(tila = Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00"))
     MockAuditLogger.clean()
@@ -378,7 +242,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "not update hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     MockAuditLogger.clean()
@@ -388,7 +252,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     get(oid, thisHakukohde)
     post(HakukohdePath, bytes(thisHakukohde), Seq(defaultSessionHeader)) {
@@ -398,7 +262,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "fail update if modified in between get and update" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     Thread.sleep(1500)
@@ -409,7 +273,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "return 401 if a valid session is not found" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettuHakukohde(oid))
     post(HakukohdePath, bytes(thisHakukohde), List((KoutaServlet.IfUnmodifiedSinceHeader, lastModified))) {
@@ -418,61 +282,62 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "allow a user of the hakukohde organization to update the hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, expectUpdate = false, crudSessions(hakukohde.organisaatioOid))
   }
 
   it should "allow a user of toteutuksen tarjoaja organization to update the hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, expectUpdate = false, crudSessions(AmmOid))
   }
 
   it should "deny a user without access to the hakukohde organization" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, 403, crudSessions(LonelyOid))
   }
 
   it should "allow a user of an ancestor organization to create the hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, 403, crudSessions(GrandChildOid))
   }
 
   it should "deny a user with the wrong role" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, 403, readSessions(hakukohde.organisaatioOid))
   }
 
   it should "deny indexer access" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified = get(oid, thisHakukohde)
     update(thisHakukohde, lastModified, 403, indexerSession)
   }
 
   it should "update hakukohteen tekstit ja hakuajat" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       hakulomaketyyppi = Some(Ataru),
-      hakulomakeKuvaus = Map(Fi -> "http://ataru/kivahakulomake", Sv -> "http://ataru/kivahakulomake/sv", En -> "http://ataru/kivahakulomake/en"),
+      hakulomakeAtaruId = Some(UUID.randomUUID()),
+      hakulomakeKuvaus = Map(),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))),
       _enrichedData = Some(
       HakukohdeEnrichedData(
@@ -485,7 +350,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "delete all hakuajat and read last modified from history" in {
-    val oid = put(uusiHakukohde.copy(tila = Tallennettu))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Tallennettu)))
     val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
     Thread.sleep(1500)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List(), tila = Tallennettu)
@@ -510,7 +375,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "validate updated hakukohde" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val invalidHakuajat = TestData.getInvalidHakuajat
     post(HakukohdePath, bytes(tallennettuHakukohde(oid).copy(hakuajat = invalidHakuajat)), headersIfUnmodifiedSince(lastModified)) {
@@ -522,7 +387,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "update hakukohteen liitteet ja valintakokeet" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val tallennettu = tallennettuHakukohde(oid)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
@@ -533,9 +398,9 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "put, update and delete valintakokeet correctly" in {
-    val hakukohdeWithValintakokeet = uusiHakukohde.copy(
+    val hakukohdeWithValintakokeet = withValintaperusteenValintakokeet(uusiHakukohde.copy(
       valintakokeet = Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
-    )
+    ))
     val oid = put(hakukohdeWithValintakokeet)
     val lastModified = get(oid, getIds(
       hakukohdeWithValintakokeet.copy(
@@ -546,13 +411,13 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
     val updateValintakoe = getIds(tallennettuHakukohde(oid)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
     update(tallennettuHakukohde(oid).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)), lastModified)
-    get(oid, getIds(tallennettuHakukohde(oid).copy(
+    get(oid, withValintaperusteenValintakokeet(getIds(tallennettuHakukohde(oid).copy(
       valintakokeet = Seq(newValintakoe, updateValintakoe),
-      liitteet = List(Liite1, Liite2))))
+      liitteet = List(Liite1, Liite2)))))
   }
 
   it should "delete all hakuajat, liitteet ja valintakokeet nicely" in {
-    val oid = put(uusiHakukohde.copy(tila = Tallennettu))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Tallennettu)))
     val tallennettu = tallennettuHakukohde(oid).copy(tila = Tallennettu)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(liitteet = List(), hakuajat = List(), valintakokeet = List(), tila = Tallennettu)
@@ -560,92 +425,23 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
     get(oid, muokattuHakukohde)
   }
 
-  it should "fail to post julkaistu hakukohde as an oppilaitos user if hakukohteen liittamisen takaraja has expired" in {
-    val pastDate = TestData.inPast(100)
-    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenLiittamisenTakaraja = Some(pastDate), hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
-    val newHakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)
-    val session = addTestSession(Seq(Role.Hakukohde.Crud.asInstanceOf[Role]), newHakukohde.organisaatioOid)
-    put(HakukohdePath, newHakukohde, session, 400)
-  }
-
-  it should "fail to update julkaistu hakukohde as an oppilaitos user if hakukohteen muokkaamisen takaraja has expired" in {
-    val pastDate = TestData.inPast(100)
-    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenLiittamisenTakaraja = Some(pastDate), hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
-    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
-    var tallennettuHk = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
-    tallennettuHk = tallennettuHk.copy(metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
-    val muokattu = tallennettuHk.copy(muokkaaja = TestUserOid)
-    val lastModified = get(oid, tallennettuHk)
-    update(HakukohdePath, muokattu, lastModified, 400, "hakukohteenMuokkaamisenTakaraja", pastDateMsg(pastDate))
-  }
-
-  it should "change hakukohteen tila from julkaistu to tallennettu as an Oph-virkailija when hakukohteen muokkaamisen takaraja has expired" in {
-    val pastDate = TestData.inPast(100)
-    val hakuOid = put(haku.copy(tila = Julkaistu, hakukohteenMuokkaamisenTakaraja = Some(pastDate)))
-    val oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId), ophSession)
-    var tallennettuHk = tallennettuHakukohde(oid).copy(hakuOid = HakuOid(hakuOid), muokkaaja = OphUserOid)
-    tallennettuHk = tallennettuHk.copy(metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
-    val muokattu = tallennettuHk.copy(tila = Tallennettu)
-    val lastModified = get(oid, tallennettuHk)
-    update(muokattu, lastModified, expectUpdate = true, ophSession)
-  }
-
   it should "allow oph user to update from julkaistu to tallennettu" in {
-    val oid = put(uusiHakukohde)
-    val lastModified = get(oid, tallennettuHakukohde(oid))
-    update(tallennettuHakukohde(oid).copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
-    get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(hakukohde.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
+    val hk = withValintaperusteenValintakokeet(tallennettuHakukohde(oid))
+    val lastModified = get(oid, hk)
+    update(hk.copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
+    get(oid, hk.copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(hk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
   }
 
   it should "not allow non oph user to update from julkaistu to tallennettu" in {
-    val oid = put(uusiHakukohde)
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val lastModified = get(oid, tallennettuHakukohde(oid))
     update(tallennettuHakukohde(oid).copy(tila = Tallennettu), lastModified, 403, crudSessions(hakukohde.organisaatioOid))
   }
 
-  it should "pass legal state changes" in {
-    val id = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
-    val tallennettuHk = tallennettuHakukohde(id)
-    val theHakukohde = tallennettuHk.copy(muokkaaja = OphUserOid, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
-    var lastModified = get(id, theHakukohde.copy(tila = Tallennettu))
-    val updatedHakukohde = theHakukohde.copy(tila = Julkaistu)
-    update(updatedHakukohde, lastModified, expectUpdate = true, ophSession)
-    lastModified = get(id, updatedHakukohde)
-    update(updatedHakukohde.copy(tila = Arkistoitu), lastModified, expectUpdate = true, ophSession)
-    lastModified = get(id, updatedHakukohde.copy(tila = Arkistoitu))
-    update(updatedHakukohde.copy(tila = Julkaistu), lastModified, expectUpdate = true, ophSession)
-    lastModified = get(id, updatedHakukohde.copy(tila = Julkaistu))
-    update(updatedHakukohde.copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
-    lastModified = get(id, updatedHakukohde.copy(tila = Tallennettu))
-    update(updatedHakukohde.copy(tila = Poistettu), lastModified, expectUpdate = true, ophSession)
-
-    val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
-    val tallennettu = tallennettuHakukohde(arkistoituId).copy(muokkaaja = OphUserOid)
-    lastModified = get(arkistoituId, tallennettu.copy(tila = Arkistoitu, metadata = Some(tallennettuHk.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
-    update(tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))), lastModified, expectUpdate = true, ophSession)
-    get(arkistoituId, tallennettu.copy(tila = Julkaistu, metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
-  }
-
-  it should "fail illegal state changes" in {
-    val tallennettuId = put(uusiHakukohde.copy(tila = Tallennettu), ophSession)
-    val tallennettu = tallennettuHakukohde(tallennettuId).copy(tila = Tallennettu, muokkaaja = OphUserOid)
-    val julkaistuId = put(uusiHakukohde.copy(tila = Julkaistu), ophSession)
-    val julkaistu = tallennettuHakukohde(julkaistuId).copy(tila = Julkaistu, muokkaaja = OphUserOid)
-    val arkistoituId = put(uusiHakukohde.copy(tila = Arkistoitu), ophSession)
-    val arkistoitu = tallennettuHakukohde(arkistoituId).copy(tila = Arkistoitu, muokkaaja = OphUserOid)
-
-    var lastModified = get(tallennettuId, tallennettu.copy(metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
-    update(HakukohdePath, tallennettu.copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Tallennettu, Arkistoitu))))
-    lastModified = get(julkaistuId, julkaistu.copy(metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
-    update(HakukohdePath, julkaistu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Julkaistu, Poistettu))))
-    lastModified = get(arkistoituId, arkistoitu.copy(metadata = Some(tallennettu.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
-    update(HakukohdePath, arkistoitu.copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Tallennettu))))
-    update(HakukohdePath, arkistoitu.copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("hakukohteelle", Arkistoitu, Poistettu))))
-  }
-
   "Copy hakukohteet" should "make copies of two julkaistu hakukohde and related toteutus and store them as tallennettu" in {
-    val julkaistuHakukohde1Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
-    val julkaistuHakukohde2Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val julkaistuHakukohde1Oid = put(withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)))
+    val julkaistuHakukohde2Oid = put(withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)))
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
     val copyResponse = put(hakukohteet, hakuOid)
     val hakukohde1CopyOid = copyResponse.head.created.hakukohdeOid
@@ -674,7 +470,7 @@ class HakukohdeSpec extends UnitSpec with KoutaIntegrationSpec with AccessContro
   }
 
   it should "fail to copy non-existing hakukohde" in {
-    val julkaistuHakukohde1Oid = put(hakukohde(toteutusOid, hakuOid, valintaperusteId))
+    val julkaistuHakukohde1Oid = put(withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)))
     val unknownHakukohdeOid = julkaistuHakukohde1Oid + 1
     val hakukohteet = List(julkaistuHakukohde1Oid, unknownHakukohdeOid)
     val copyResponse = put(hakukohteet, hakuOid)

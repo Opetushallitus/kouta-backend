@@ -33,7 +33,6 @@ Funktio tallentaa vanhan arvon history tauluun (esim. koulutukset_history), joll
 
 | Tietolähde                                                   | Haettavat tiedot |
 |--------------------------------------------------------------|------------------|
-| [kouta-index](https://github.com/Opetushallitus/kouta-index) | Haetaan kouta-ui:n etusivun listauksiin rikastettua tietoa (tämä palvelu pyritään poistamaan tulevaisuudessa) |
 | käyttöoikeuspalvelu                                          | Tarkastetaan käyttäjän käyttöoikeudet |
 | ohjausparametritpalvelu                                      | Asetetaan hakujen ohjausparametrit |
 | organisaatiopalvelu                                          | Koulutustoimijoiden, oppilaitosten ja toimipisteiden organisaatiohierarkia |

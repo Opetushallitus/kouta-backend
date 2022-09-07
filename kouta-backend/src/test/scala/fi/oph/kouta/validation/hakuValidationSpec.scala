@@ -1,13 +1,13 @@
 package fi.oph.kouta.validation
 
-import java.time.LocalDate
-import java.util.UUID
-
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.validation.Validations._
+
+import java.time.LocalDate
+import java.util.UUID
 
 class HakuValidationSpec extends BaseValidationSpec[Haku] {
 
@@ -47,7 +47,7 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
     failsValidation(max.copy(kohdejoukkoKoodiUri = Some("kerttu")), "kohdejoukkoKoodiUri", validationMsg("kerttu"))
     failsValidation(max.copy(kohdejoukonTarkenneKoodiUri = Some("tonttu")), "kohdejoukonTarkenneKoodiUri", validationMsg("tonttu"))
-    failsValidation(max.copy(hakulomaketyyppi = None), "hakulomaketyyppi", missingMsg)
+    failsValidation(max.copy(hakulomaketyyppi = None, hakulomakeLinkki = Map()), "hakulomaketyyppi", missingMsg)
 
     val invalidAjanjakso = Ajanjakso(alkaa = TestData.inFuture(90000), paattyy = Some(TestData.inFuture(9000)))
     failsValidation(max.copy(hakuajat = List(invalidAjanjakso)), "hakuajat[0]", invalidAjanjaksoMsg(invalidAjanjakso))
@@ -65,17 +65,17 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail if hakulomake is invalid" in {
-    failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None), "hakulomakeAtaruId", missingMsg)
+    failsValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = None, hakulomakeLinkki = Map()), "hakulomakeAtaruId", missingMsg)
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi")), "hakulomakeLinkki", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map()), "hakulomakeLinkki", invalidKielistetty(Seq(Fi, Sv)))
     failsValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi", Sv -> "virhe")), "hakulomakeLinkki", invalidUrl("virhe"))
-    failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "kuvaus")), "hakulomakeKuvaus", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map(Fi -> "vain suomeksi"), hakulomakeLinkki = Map()), "hakulomakeKuvaus", invalidKielistetty(Seq(Sv)))
   }
 
   it should "pass valid hakulomake" in {
-    passesValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = Some(UUID.randomUUID())))
+    passesValidation(max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeAtaruId = Some(UUID.randomUUID()), hakulomakeLinkki = Map()))
     passesValidation(max.copy(hakulomaketyyppi = Some(MuuHakulomake), hakulomakeLinkki = Map(Fi -> "http://url.fi", Sv -> "http://url.se")))
-    passesValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeKuvaus = Map()))
+    passesValidation(max.copy(hakulomaketyyppi = Some(EiSähköistä), hakulomakeLinkki = Map(), hakulomakeKuvaus = Map()))
   }
 
   it should "pass valid julkaistu haku" in {
@@ -98,6 +98,28 @@ class HakuValidationSpec extends BaseValidationSpec[Haku] {
     passesValidation(max.copy(tila = Julkaistu, metadata = Some(metadata)))
     failsOnJulkaisuValidation(max.copy(metadata = Some(metadata)), "metadata.tulevaisuudenAikataulu[0].paattyy", pastDateMsg(pastAjanjakso.paattyy.get))
   }
+
+  it should "fail if ajastettu arkistointi is in the past." in {
+    val haku = max.copy(tila = Julkaistu, hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(now().plusMonths(1)))), ajastettuHaunJaHakukohteidenArkistointi = Some(now().plusMinutes(5)))
+    failsValidation(haku, "ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(3))
+  }
+
+  it should "fail if ajastettu arkistointi is in the past with multiple hakuajat." in {
+    val haku = max.copy(tila = Julkaistu, hakuajat = List(Ajanjakso(alkaa = now().minusYears(1), paattyy = Some(now().minusMonths(11))), Ajanjakso(alkaa = now(), paattyy = Some(now().plusMonths(1)))), ajastettuHaunJaHakukohteidenArkistointi = Some(now().plusMinutes(5)))
+    failsValidation(haku, "ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(3))
+  }
+
+  it should "pass if no hakuaika päättyy" in {
+    val haku = max.copy(tila = Julkaistu, hakuajat = List(onlyAlkaaAjanjakso), ajastettuHaunJaHakukohteidenArkistointi = Some(now().minusDays(1)))
+    passesValidation(haku)
+  }
+
+  it should "pass if no automaattinen arkistointi value" in {
+    val haku = max.copy(tila = Julkaistu, ajastettuHaunJaHakukohteidenArkistointi = None)
+    passesValidation(haku)
+  }
+
+
 }
 
 class HakuMetadataValidatorSpec extends SubEntityValidationSpec[HakuMetadata] {

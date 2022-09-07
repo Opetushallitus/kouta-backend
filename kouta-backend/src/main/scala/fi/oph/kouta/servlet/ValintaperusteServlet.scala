@@ -4,7 +4,7 @@ import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.{Koulutustyyppi, TilaFilter, Valintaperuste}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.service.ValintaperusteService
-import org.scalatra.{NotFound, Ok}
+import org.scalatra.{BadRequest, NotFound, Ok}
 
 import java.util.UUID
 
@@ -138,14 +138,14 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       |          name: hakuOid
       |          schema:
       |            type: string
-      |          required: true
+      |          required: false
       |          description: Haku-oid
       |          example: 1.2.246.562.29.00000000000000000009
       |        - in: query
       |          name: koulutustyyppi
       |          schema:
       |            type: string
-      |          required: true
+      |          required: false
       |          description: Koulutustyyppi
       |          example: amm
       |        - in: query
@@ -176,6 +176,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
       case (Some(oid), Some(hakuOid), Some(koulutustyyppi), myosArkistoidut) =>
         Ok(valintaperusteService.listByHakuAndKoulutustyyppi(OrganisaatioOid(oid), HakuOid(hakuOid), Koulutustyyppi.withName(koulutustyyppi),
           TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
+      case _ => BadRequest()
     }
   }
 }
