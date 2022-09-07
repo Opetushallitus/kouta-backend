@@ -133,10 +133,9 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     koodiUriExistsInKoodisto("moduulikoodistolops2021", koodiUri)
 
   private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
-    val queryRespone = getAndUpdateFromKoodiUriCache(koodisto, commonKoodiUriCache)
-    queryRespone.success match {
-      case true =>
-        fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, queryRespone.koodiUritInKoodisto))
+    getAndUpdateFromKoodiUriCache(koodisto, commonKoodiUriCache) match {
+      case resp if resp.success =>
+        fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, resp.koodiUritInKoodisto))
       case _ => queryFailed
     }
   }

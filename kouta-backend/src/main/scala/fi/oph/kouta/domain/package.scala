@@ -611,7 +611,7 @@ package object domain {
           validateExcludingTilaisuudet(vCtx.tila, vCtx.kielivalinta, path)
         ),
         validateIfDefined[String](
-          entityWithNewValues.map(_.tyyppiKoodiUri).getOrElse(None),
+          entityWithNewValues.flatMap(_.tyyppiKoodiUri),
           koodiUri =>
             assertKoodistoQueryResult(
               koodiUri,
@@ -690,7 +690,7 @@ package object domain {
         osoite,
         _.validate(
           s"$path.osoite",
-          entityWithNewValues.map(_.osoite).getOrElse(None),
+          entityWithNewValues.flatMap(_.osoite),
           vCtx,
           osoiteKoodistoCheckFunc
         )
@@ -775,7 +775,7 @@ package object domain {
       validateIfSuccessful(
         validate(vCtx.tila, vCtx.kielivalinta, path),
         validateIfDefined[String](
-          entityWithNewValues.map(_.postinumeroKoodiUri).getOrElse(None),
+          entityWithNewValues.flatMap(_.postinumeroKoodiUri),
           koodiUri =>
             assertKoodistoQueryResult(
               koodiUri,
@@ -819,7 +819,7 @@ package object domain {
       validateIfSuccessful(
         validate(vCtx.tila, vCtx.kielivalinta, path),
         validateIfDefined[String](
-          entityWithNewValues.map(_.koulutuksenAlkamiskausiKoodiUri).getOrElse(None),
+          entityWithNewValues.flatMap(_.koulutuksenAlkamiskausiKoodiUri),
           koodiUri =>
             assertKoodistoQueryResult(
               koodiUri,

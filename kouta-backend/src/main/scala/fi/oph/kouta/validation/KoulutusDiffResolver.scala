@@ -3,7 +3,7 @@ package fi.oph.kouta.validation
 import fi.oph.kouta.domain.{AikuistenPerusopetusKoulutusMetadata, AmmOpeErityisopeJaOpoKoulutusMetadata, AmmatillinenMuuKoulutusMetadata, AmmatillinenTutkinnonOsaKoulutusMetadata, ErikoislaakariKoulutusMetadata, KkOpintojaksoKoulutusMetadata, KorkeakoulutusKoulutusMetadata, Koulutus, KoulutusMetadata, Lisatieto, LukioKoulutusMetadata, TelmaKoulutusMetadata, TutkinnonOsa, TuvaKoulutusMetadata, VapaaSivistystyoKoulutusMetadata, VapaaSivistystyoMuuKoulutusMetadata, VapaaSivistystyoOpistovuosiKoulutusMetadata}
 
 case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus]) {
-  private def oldMetadata(): Option[KoulutusMetadata] = oldKoulutus.map(_.metadata).getOrElse(None)
+  private def oldMetadata(): Option[KoulutusMetadata] = oldKoulutus.flatMap(_.metadata)
 
   def newKoulutusKoodiUrit(): Seq[String] =
     if (oldKoulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq()).toSet != koulutus.koulutuksetKoodiUri.toSet)
@@ -11,7 +11,7 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     else Seq()
 
   def newEPerusteId(): Option[Long] =
-    if (oldKoulutus.map(_.ePerusteId).getOrElse(None) != koulutus.ePerusteId) koulutus.ePerusteId else None
+    if (oldKoulutus.flatMap(_.ePerusteId) != koulutus.ePerusteId) koulutus.ePerusteId else None
 
   def newLisatiedot(): Seq[Lisatieto] = {
     val lisatiedot = koulutus.metadata.map(_.lisatiedot).getOrElse(Seq())

@@ -4,14 +4,13 @@ import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInLis
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.Validations.{ePerusteServiceFailureMsg, error, _}
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.{
   IsValid,
   KoulutusDiffResolver,
   NoErrors,
   ValidationContext,
-  Validations,
   amkKoulutustyypit,
   ammOpeErityisopeJaOpoKoulutusKoodiUrit,
   ammatillisetKoulutustyypit,
@@ -431,26 +430,17 @@ class KoulutusServiceValidation(
             osa.validate(tila, kielivalinta, path),
             validateIfAnyDefinedOrElse(
               Seq(osa.tutkinnonosaId, osa.tutkinnonosaViite, osa.koulutusKoodiUri), {
-                val ePerusteId               = osa.ePerusteId
-                var ePerusteValidationStatus = NoErrors
+                val ePerusteId = osa.ePerusteId
                 validateIfSuccessful(
-                  {
-                    ePerusteValidationStatus = validateEPeruste(
-                      ePerusteId,
-                      s"$path.ePerusteId",
-                      Seq(osa.koulutusKoodiUri.getOrElse("")).filter(_.nonEmpty)
-                    )
-                    ePerusteValidationStatus
-                  },
+                  validateEPeruste(
+                    ePerusteId,
+                    s"$path.ePerusteId",
+                    Seq(osa.koulutusKoodiUri.getOrElse("")).filter(_.nonEmpty)
+                  ),
                   validateIfTrue(
                     ePerusteId.isDefined && (osa.tutkinnonosaId.isDefined || osa.tutkinnonosaViite.isDefined), {
-                      val (tutkinnonosaViitteetAndIdt, ePerusteServiceOk) = {
-                        if (Validations.ePerusteServiceOk(ePerusteValidationStatus))
-                          ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId.get)
-                        else (Seq(), false)
-                      }
-                      validateIfTrueOrElse(
-                        ePerusteServiceOk, {
+                      ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId.get) match {
+                        case Right(tutkinnonosaViitteetAndIdt) =>
                           (osa.tutkinnonosaViite, osa.tutkinnonosaId) match {
                             case (Some(viite), Some(id)) =>
                               val viiteJaId = tutkinnonosaViitteetAndIdt.find(_._1 == viite)
@@ -480,9 +470,9 @@ class KoulutusServiceValidation(
                               )
                             case (_, _) => NoErrors
                           }
-                        },
-                        error(s"$path.ePerusteId", ePerusteServiceFailureMsg)
-                      )
+
+                        case _ => error(s"$path.ePerusteId", ePerusteServiceFailureMsg)
+                      }
                     }
                   )
                 )
@@ -515,17 +505,16 @@ class KoulutusServiceValidation(
               ePerusteId =>
                 validateIfTrue(
                   ePerusteId > 0, {
-                    val (osaamisalaKoodiuritForEPeruste, ePerusteServiceOk) = ePerusteKoodiClient
-                      .getOsaamisalaKoodiuritForEPeruste(ePerusteId)
-                    validateIfTrueOrElse(
-                      ePerusteServiceOk,
-                      assertTrue(
-                        koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, osaamisalaKoodiuritForEPeruste),
-                        "metadata.osaamisalaKoodiUri",
-                        invalidOsaamisalaForEPeruste(ePerusteId, koodiUri)
-                      ),
-                      error("ePerusteId", ePerusteServiceFailureMsg)
-                    )
+                    ePerusteKoodiClient
+                      .getOsaamisalaKoodiuritForEPeruste(ePerusteId) match {
+                      case Right(osaamisalaKoodiuritForEPeruste) =>
+                        assertTrue(
+                          koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, osaamisalaKoodiuritForEPeruste),
+                          "metadata.osaamisalaKoodiUri",
+                          invalidOsaamisalaForEPeruste(ePerusteId, koodiUri)
+                        )
+                      case _ => error("ePerusteId", ePerusteServiceFailureMsg)
+                    }
                   }
                 )
             )
@@ -697,11 +686,9 @@ class KoulutusServiceValidation(
         ePerusteId,
         ePerusteId =>
           validateIfSuccessful(
-            assertNotNegative(ePerusteId, path), {
-              val (koodiUritForEperuste, ePerusteServiceOk) =
-                ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(ePerusteId)
-              validateIfTrueOrElse(
-                ePerusteServiceOk,
+            assertNotNegative(ePerusteId, path),
+            ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(ePerusteId) match {
+              case Right(koodiUritForEperuste) =>
                 validateIfSuccessful(
                   // ePeruste oletetaan tuntemattomaksi, ellei sille löydy yhtään koulutusKoodiUria
                   assertTrue(koodiUritForEperuste.nonEmpty, path, invalidEPerusteId(ePerusteId)),
@@ -715,9 +702,8 @@ class KoulutusServiceValidation(
                         invalidEPerusteIdForKoulutusKoodiUri(ePerusteId, koulutusKoodiUri)
                       )
                   )
-                ),
-                error(path, ePerusteServiceFailureMsg)
-              )
+                )
+              case _ => error(path, ePerusteServiceFailureMsg)
             }
           )
       )

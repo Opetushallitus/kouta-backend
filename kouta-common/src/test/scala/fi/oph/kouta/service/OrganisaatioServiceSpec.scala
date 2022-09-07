@@ -74,6 +74,6 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
   }
 
   "findUnknownOrganisaatioOidsFromHierarkia" should "return correct organisaatioOids" in {
-    organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(ChildOid, OrganisaatioOid("1.2.246.562.10.121212121212"))) should equal(Set(OrganisaatioOid("1.2.246.562.10.121212121212")), true)
+    organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(ChildOid, OrganisaatioOid("1.2.246.562.10.121212121212"))) should equal(Right(Set(OrganisaatioOid("1.2.246.562.10.121212121212"))))
   }
 }

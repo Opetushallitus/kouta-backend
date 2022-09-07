@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoulutusKoodiClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoodistoQueryException, KoulutusKoodiClient}
 import fi.oph.kouta.domain.oid.{HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
@@ -187,11 +187,11 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     // yleiset
     when(
       organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(GrandChildOid, EvilGrandChildOid, EvilCousin))
-    ).thenAnswer(Set[OrganisaatioOid](), true)
+    ).thenAnswer(Right(Set[OrganisaatioOid]()))
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(GrandChildOid, UnknownOid, LonelyOid)))
-      .thenAnswer(Set(UnknownOid, LonelyOid), true)
+      .thenAnswer(Right(Set(UnknownOid, LonelyOid)))
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(LonelyOid, UnknownOid)))
-      .thenAnswer(Set[OrganisaatioOid](), false)
+      .thenAnswer(Left(new RuntimeException()))
     when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_04#1")).thenAnswer(itemNotFound)
 
@@ -230,21 +230,22 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
     acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#12")
     acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#12")
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(11L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_371101")), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_371101"))))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(123L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_371101")), true)
-    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(111L)).thenAnswer(Seq[KoodiUri](), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_371101"))))
+    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(111L)).thenAnswer(Right(Seq[KoodiUri]()))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(200L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_371101")), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_371101"))))
     when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPeruste(11L))
-      .thenAnswer(Seq(koodiUriFromString("osaamisala_01")), true)
-    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPeruste(123L)).thenAnswer(Seq[KoodiUri](), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("osaamisala_01"))))
+    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPeruste(123L)).thenAnswer(Right(Seq[KoodiUri]()))
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(123L))
-      .thenAnswer(Seq((122L, 1234L), (123L, 1235L)), true)
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(200L)).thenAnswer(Seq[(Long, Long)](), true)
-    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(66L)).thenAnswer(Seq[KoodiUri](), false)
-    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPeruste(66L)).thenAnswer(Seq(), false)
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(66L)).thenAnswer(Seq[(Long, Long)](), false)
+      .thenAnswer(Right(Seq((122L, 1234L), (123L, 1235L))))
+    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(200L)).thenAnswer(Right(Seq[(Long, Long)]()))
+    val ePerusteFailure = KoodistoQueryException("url", 500, "ePerusteServiceFailed")
+    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
 
     // korkeakoulu
     acceptKoulutusKoodiUri(yoKoulutustyypit, "koulutus_371101#1")
@@ -291,34 +292,34 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "succeed when new valid AmmTutkinnonOsa without koulutusKoodiUri" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(124L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_000000")), true)
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(124L)).thenAnswer(Seq((134L, 1345L)), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
+    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(124L)).thenAnswer(Right(Seq((134L, 1345L))))
     passValidation(ammTkWithTutkinnonOsaParams(Some(124L), None, Some(1345L), Some(134L)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with koulutusKoodiUri only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(125L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_123456")), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_123456"))))
     passValidation(ammTkWithTutkinnonOsaParams(Some(125L), Some("koulutus_123456#1"), None, None))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with tutkinnonosaId only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(126L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_000000")), true)
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(126L)).thenAnswer(Seq((11111L, 1346L)), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
+    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(126L)).thenAnswer(Right(Seq((11111L, 1346L))))
     passValidation(ammTkWithTutkinnonOsaParams(Some(126L), None, Some(1346L), None))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with tutkinnonosaViite only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(127L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_000000")), true)
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(127L)).thenAnswer(Seq((135L, 111111L)), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
+    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(127L)).thenAnswer(Right(Seq((135L, 111111L))))
     passValidation(ammTkWithTutkinnonOsaParams(Some(127L), None, None, Some(135L)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with ePerusteId only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(128L))
-      .thenAnswer(Seq(koodiUriFromString("koulutus_000000")), true)
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
     passValidation(ammTkWithTutkinnonOsaParams(Some(128L), None, None, None))
   }
 

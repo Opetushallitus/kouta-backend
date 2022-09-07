@@ -15,15 +15,15 @@ import java.util.UUID
 
 case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Hakukohde]) {
   private def oldMetadata(): Option[HakukohdeMetadata] =
-    oldHakukohde.map(_.metadata).getOrElse(None)
+    oldHakukohde.flatMap(_.metadata)
 
   private def koulutuksenAlkamiskausiKoodiUri(metadata: Option[HakukohdeMetadata]): Option[String] =
-    metadata.map(_.koulutuksenAlkamiskausi).getOrElse(None).map(_.koulutuksenAlkamiskausiKoodiUri).getOrElse(None)
+    metadata.flatMap(_.koulutuksenAlkamiskausi).flatMap(_.koulutuksenAlkamiskausiKoodiUri)
   private def painotetutArvosanat(metadata: Option[HakukohdeMetadata]): Seq[PainotettuOppiaine] =
-    metadata.map(_.hakukohteenLinja).getOrElse(None).map(_.painotetutArvosanat).getOrElse(Seq())
+    metadata.flatMap(_.hakukohteenLinja).map(_.painotetutArvosanat).getOrElse(Seq())
 
   def newHakukohdeKoodiUri(): Option[String] =
-    if (oldHakukohde.map(_.hakukohdeKoodiUri).getOrElse(None) != hakukohde.hakukohdeKoodiUri)
+    if (oldHakukohde.flatMap(_.hakukohdeKoodiUri) != hakukohde.hakukohdeKoodiUri)
       hakukohde.hakukohdeKoodiUri
     else None
 
@@ -38,13 +38,11 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
 
   def liitteidenToimitusosoiteWithNewValues(): Option[Osoite] = {
     val postinumeroKoodiUri =
-      hakukohde.liitteidenToimitusosoite.map(_.osoite).map(_.postinumeroKoodiUri).getOrElse(None)
+      hakukohde.liitteidenToimitusosoite.map(_.osoite).flatMap(_.postinumeroKoodiUri)
     val oldPostinumeroKoodiUri = oldHakukohde
-      .map(_.liitteidenToimitusosoite)
-      .getOrElse(None)
+      .flatMap(_.liitteidenToimitusosoite)
       .map(_.osoite)
-      .map(_.postinumeroKoodiUri)
-      .getOrElse(None)
+      .flatMap(_.postinumeroKoodiUri)
     if (postinumeroKoodiUri != oldPostinumeroKoodiUri) Some(Osoite(postinumeroKoodiUri = postinumeroKoodiUri))
     else None
   }
@@ -58,7 +56,7 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
     else Seq()
 
   def newAtaruId(): Option[UUID] =
-    if (oldHakukohde.map(_.hakulomakeAtaruId).getOrElse(None) != hakukohde.hakulomakeAtaruId)
+    if (oldHakukohde.flatMap(_.hakulomakeAtaruId) != hakukohde.hakulomakeAtaruId)
       hakukohde.hakulomakeAtaruId
     else None
 
@@ -87,14 +85,14 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
   }
 
   def toinenAsteOnkoKaksoistutkintoNewlyActivated(): Boolean = {
-    val oldValue = oldHakukohde.map(_.toinenAsteOnkoKaksoistutkinto).getOrElse(None).getOrElse(false)
+    val oldValue = oldHakukohde.flatMap(_.toinenAsteOnkoKaksoistutkinto).getOrElse(false)
     val newValue = hakukohde.toinenAsteOnkoKaksoistutkinto.getOrElse(false)
     if (oldValue == false && newValue == true) true else false
   }
 
   def liitteenOsoiteWithNewValues(liite: Option[Liite]): Option[Osoite] = {
     val postinumeroKoodiUri =
-      liite.map(_.toimitusosoite).getOrElse(None).map(_.osoite).map(_.postinumeroKoodiUri).getOrElse(None)
+      liite.flatMap(_.toimitusosoite).map(_.osoite).flatMap(_.postinumeroKoodiUri)
     if (postinumeroKoodiUri.isDefined) Some(Osoite(postinumeroKoodiUri = postinumeroKoodiUri)) else None
   }
 }

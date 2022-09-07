@@ -55,9 +55,13 @@ trait ValidatingService[E <: Validatable] {
   def validateTarjoajat(tarjoajat: List[OrganisaatioOid], oldTarjojat: List[OrganisaatioOid]): IsValid = {
     val newTarjoajat = if (tarjoajat.toSet != oldTarjojat.toSet) tarjoajat else List()
     val validTarjoajat = newTarjoajat.filter(_.isValid)
-    val (unknownOrgs: Set[OrganisaatioOid], organisaatioServiceOk: Boolean) =
-      if (validTarjoajat.nonEmpty) organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(validTarjoajat.toSet)
-      else (Set[OrganisaatioOid](), true)
+    var unknownTarjoajat = Set[OrganisaatioOid]()
+    var organisaatioServiceOk = true
+    if (validTarjoajat.nonEmpty)
+      organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(validTarjoajat.toSet) match {
+        case Right(unknownOrganisationOids) => unknownTarjoajat = unknownOrganisationOids
+        case _ => organisaatioServiceOk = false
+      }
     validateIfTrueOrElse(
       organisaatioServiceOk,
       validateIfNonEmpty[OrganisaatioOid](
@@ -66,7 +70,7 @@ trait ValidatingService[E <: Validatable] {
         (oid, path) =>
           validateIfSuccessful(
             assertTrue(oid.isValid, path, validationMsg(oid.s)),
-            assertFalse(unknownOrgs.contains(oid), path, unknownTarjoajaOid(oid))
+            assertFalse(unknownTarjoajat.contains(oid), path, unknownTarjoajaOid(oid))
           )
       ),
       error("tarjoajat", organisaatioServiceFailureMsg)

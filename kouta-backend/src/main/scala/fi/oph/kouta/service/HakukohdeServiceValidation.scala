@@ -250,7 +250,7 @@ class HakukohdeServiceValidation(
         )
       ),
       validateIfDefined[String](
-        newLiite.map(_.tyyppiKoodiUri).getOrElse(None),
+        newLiite.flatMap(_.tyyppiKoodiUri),
         koodiUri =>
           validateIfSuccessful(
             assertMatch(koodiUri, LiiteTyyppiKoodiPattern, s"$path.tyyppiKoodiUri"),
@@ -350,7 +350,7 @@ class HakukohdeServiceValidation(
                           and(
                             assertNotOptional(uri.oppiaine, s"$path.oppiaine"),
                             validateIfDefined[String](
-                              newOppiaine.map(_.koodiUrit).getOrElse(None).map(_.oppiaine).getOrElse(None),
+                              newOppiaine.flatMap(_.koodiUrit).flatMap(_.oppiaine),
                               oppiaineKoodiUri =>
                                 validateIfSuccessful(
                                   assertMatch(oppiaineKoodiUri, OppiaineKoodiPattern, s"$path.oppiaine"),
@@ -364,7 +364,7 @@ class HakukohdeServiceValidation(
                                 )
                             ),
                             validateIfDefined[String](
-                              newOppiaine.map(_.koodiUrit).getOrElse(None).map(_.kieli).getOrElse(None),
+                              newOppiaine.flatMap(_.koodiUrit).flatMap(_.kieli),
                               kieliKoodiUri =>
                                 validateIfSuccessful(
                                   assertMatch(kieliKoodiUri, KieliKoodiPattern, s"$path.kieli"),

@@ -51,5 +51,4 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
       case _ => queryFailed
     }
   }
-  }
 }

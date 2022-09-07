@@ -484,7 +484,7 @@ object Validations {
       path: String,
       errorMessage: ErrorMessage,
       externalServiceFailureMessage: ErrorMessage
-  ): IsValid = {
+  ): IsValid =
     externalQueryResult match {
       case e if e == itemFound => NoErrors
       case e if e == queryFailed => error(path, externalServiceFailureMessage)

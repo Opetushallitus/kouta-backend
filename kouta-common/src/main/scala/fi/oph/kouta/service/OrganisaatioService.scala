@@ -48,7 +48,7 @@ trait OrganisaatioService {
     }
 
 
-  def findUnknownOrganisaatioOidsFromHierarkia(checkedOrganisaatiot: Set[OrganisaatioOid]): (Set[OrganisaatioOid], Boolean) = {
+  def findUnknownOrganisaatioOidsFromHierarkia(checkedOrganisaatiot: Set[OrganisaatioOid]): Either[Throwable, Set[OrganisaatioOid]] = {
     def findChildren(item: OidAndChildren): Seq[OrganisaatioOid] = {
       item.children.flatMap(c => {
         if (checkedOrganisaatiot.contains(c.oid)) c.oid +: findChildren(c)
@@ -56,18 +56,17 @@ trait OrganisaatioService {
       })
     }
 
-    var organisaatioServiceOk = true
+    var returnValue: Either[Throwable, Set[OrganisaatioOid]] = Right(Set())
     var allChildren: Seq[OrganisaatioOid] = Seq()
     Try[OidAndChildren] {
       OidAndChildren(RootOrganisaatioOid, cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
         RootOrganisaatioOid.s, None, "AKTIIVINEN")
     } match {
       case Success(topLevelItem) => allChildren = findChildren(topLevelItem)
-      case Failure(_) =>  organisaatioServiceOk = false
+      case Failure(exp) =>  returnValue = Left(exp)
     }
 
-
-    (checkedOrganisaatiot diff allChildren.toSet, organisaatioServiceOk)
+    if (returnValue.left.toOption.isDefined) returnValue else Right(checkedOrganisaatiot diff allChildren.toSet)
   }
 
   private def children(hierarkia: Option[OidAndChildren]): Seq[OrganisaatioOid] =

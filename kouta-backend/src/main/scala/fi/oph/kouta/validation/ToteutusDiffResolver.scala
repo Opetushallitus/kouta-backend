@@ -15,13 +15,13 @@ import fi.oph.kouta.domain.{
 }
 
 case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus]) {
-  private def oldMetadata(): Option[ToteutusMetadata] = oldToteutus.map(_.metadata).getOrElse(None)
-  private def opetus(): Option[Opetus]                = toteutus.metadata.map(_.opetus).getOrElse(None)
-  private def oldOpetus(): Option[Opetus]             = oldMetadata().map(_.opetus).getOrElse(None)
+  private def oldMetadata(): Option[ToteutusMetadata] = oldToteutus.flatMap(_.metadata)
+  private def opetus(): Option[Opetus]                = toteutus.metadata.flatMap(_.opetus)
+  private def oldOpetus(): Option[Opetus]             = oldMetadata().flatMap(_.opetus)
   private def koulutuksenAlkamiskausi(): Option[KoulutuksenAlkamiskausi] =
-    opetus().map(_.koulutuksenAlkamiskausi).getOrElse(None)
+    opetus().flatMap(_.koulutuksenAlkamiskausi)
   private def oldKoulutuksenAlkamiskausi(): Option[KoulutuksenAlkamiskausi] =
-    oldOpetus().map(_.koulutuksenAlkamiskausi).getOrElse(None)
+    oldOpetus().flatMap(_.koulutuksenAlkamiskausi)
 
   def koulutustyyppiChanged(): Boolean =
     oldMetadata().isDefined && toteutus.metadata.isDefined && oldMetadata().get.tyyppi != toteutus.metadata.get.tyyppi
@@ -42,8 +42,8 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
   }
 
   def koulutuksenAlkamiskausiWithNewValues(): Option[KoulutuksenAlkamiskausi] = {
-    val alkamiskausiKoodiUri    = koulutuksenAlkamiskausi().map(_.koulutuksenAlkamiskausiKoodiUri).getOrElse(None)
-    val oldAlkamiskausiKoodiUri = oldKoulutuksenAlkamiskausi().map(_.koulutuksenAlkamiskausiKoodiUri).getOrElse(None)
+    val alkamiskausiKoodiUri    = koulutuksenAlkamiskausi().flatMap(_.koulutuksenAlkamiskausiKoodiUri)
+    val oldAlkamiskausiKoodiUri = oldKoulutuksenAlkamiskausi().flatMap(_.koulutuksenAlkamiskausiKoodiUri)
     if (alkamiskausiKoodiUri != oldAlkamiskausiKoodiUri)
       Some(KoulutuksenAlkamiskausi(koulutuksenAlkamiskausiKoodiUri = alkamiskausiKoodiUri))
     else None
