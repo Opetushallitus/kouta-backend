@@ -485,14 +485,11 @@ object Validations {
       errorMessage: ErrorMessage,
       externalServiceFailureMessage: ErrorMessage
   ): IsValid = {
-    // Pattern matching ei toimi ExternaQueryResultille
-    if (externalQueryResult == itemFound)
-      NoErrors
-    else if (externalQueryResult == queryFailed) {
-      error(path, externalServiceFailureMessage)
-    } else
-      error(path, errorMessage)
-  }
+    externalQueryResult match {
+      case e if e == itemFound => NoErrors
+      case e if e == queryFailed => error(path, externalServiceFailureMessage)
+      case _ => error(path, errorMessage)
+    }
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
