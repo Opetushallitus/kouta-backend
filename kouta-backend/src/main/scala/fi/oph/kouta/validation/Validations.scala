@@ -42,7 +42,7 @@ object Validations extends Logging {
   )
 
   def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutustyyppiKoodi: String): ErrorMessage = ErrorMessage(
-    msg = s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio koulutustyyppi_1:een että se voidaan järjestää erityisopetuksena",
+    msg = s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio tyyppiin $ammatillinenPerustutkintoKoulutustyyppiKoodiUri että se voidaan järjestää erityisopetuksena",
     id = "invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena"
   )
 

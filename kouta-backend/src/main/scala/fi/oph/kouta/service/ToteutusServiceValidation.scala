@@ -6,7 +6,7 @@ import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
 import fi.oph.kouta.util.ToteutusServiceUtil
 import fi.oph.kouta.validation
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, NoErrors}
+import fi.oph.kouta.validation.{IsValid, NoErrors, ammatillinenPerustutkintoKoulutustyyppiKoodiUri}
 
 import java.util.regex.Pattern
 
@@ -75,10 +75,7 @@ class ToteutusServiceValidation(
                 "metadata.osaamisalat",
                 validateOsaamisala(_, _, tila, kielivalinta)
               ),
-                validateIfDefined[Boolean](ammMetadata.ammatillinenPerustutkintoErityisopetuksena, ammatillinenPerustutkintoErityisopetuksena =>
-                  validateIfTrue(ammatillinenPerustutkintoErityisopetuksena, validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "metadata.ammatillinenPerustutkintoErityisopetuksena"))
-                )
-              )
+                validateIfTrue(ammMetadata.ammatillinenPerustutkintoErityisopetuksena.contains(true), validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "metadata.ammatillinenPerustutkintoErityisopetuksena")))
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
                 case m: KkOpintojaksoToteutusMetadata =>
@@ -243,7 +240,13 @@ class ToteutusServiceValidation(
   private def validateAmmatillinenPerustutkintoErityisopetuksena(toteutus: Toteutus, path: String): IsValid = {
     koulutusDAO.get(toteutus.koulutusOid) match {
       case Some(koulutus) =>
-        assertTrue(koulutusKoodiClient.isKoulutusAmmatillinenPerustutkinto(koulutus.koulutuksetKoodiUri), path, invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutus.koulutuksetKoodiUri.toString()))
+        validateIfNonEmpty[String](koulutus.koulutuksetKoodiUri, path, (koodiUri, path) =>
+            assertTrue(
+              koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(Seq(ammatillinenPerustutkintoKoulutustyyppiKoodiUri), koodiUri),
+              path,
+              invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koodiUri)
+            )
+        )
       case None =>
         error("koulutusOid", nonExistent("Koulutusta", toteutus.koulutusOid))
     }

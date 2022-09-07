@@ -33,10 +33,6 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     s"$koodiUriWithoutVersion#${versio.get}"
   }
 
-  def isKoulutusAmmatillinenPerustutkinto(koulutustyypit: Seq[String]): Boolean = {
-    koulutustyypit.exists(koulutustyyppi => koulutusKoodiUriOfKoulutustyypitExist(Seq("koulutustyyppi_1"), koulutustyyppi))
-  }
-
   def koulutusKoodiUriOfKoulutustyypitExist(koulutustyypit: Seq[String], koodiUri: String): Boolean = {
     val now = ZonedDateTime.now().toLocalDateTime
     koulutustyypit.exists(tyyppi => {
