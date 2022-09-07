@@ -112,7 +112,7 @@ class HakuServiceValidation(
           ),
           validateIfTrue(
             isYhteisHaku(haku),
-            assertNotOptional(haku.metadata.map(_.koulutuksenAlkamiskausi).getOrElse(None), "metadata.koulutuksenAlkamiskausi")
+            assertNotOptional(haku.metadata.flatMap(_.koulutuksenAlkamiskausi), "metadata.koulutuksenAlkamiskausi")
           )
         )
       )
