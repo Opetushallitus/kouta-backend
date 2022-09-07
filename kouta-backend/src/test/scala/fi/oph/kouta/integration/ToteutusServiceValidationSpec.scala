@@ -1086,8 +1086,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   it should "fail if ammatillinenPerustutkintoErityisopetuksena is true and koulutustyyppi does not have relation to koulutustyyppi_1" in {
     failValidation(
       JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid1, koulutuksetKoodiUri = Seq(invalidKoulutuksetKoodiUri), metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true)))),
-      "metadata.ammatillinenPerustutkintoErityisopetuksena",
-      invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(invalidKoulutuksetKoodiUri)
+      Seq(ValidationError("koulutuksetKoodiUri[0]",
+      invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(invalidKoulutuksetKoodiUri)))
     )
   }
 

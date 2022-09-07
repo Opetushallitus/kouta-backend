@@ -75,7 +75,7 @@ class ToteutusServiceValidation(
                 "metadata.osaamisalat",
                 validateOsaamisala(_, _, tila, kielivalinta)
               ),
-                validateIfTrue(ammMetadata.ammatillinenPerustutkintoErityisopetuksena.contains(true), validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "metadata.ammatillinenPerustutkintoErityisopetuksena")))
+                validateIfTrue(ammMetadata.ammatillinenPerustutkintoErityisopetuksena.contains(true), validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "koulutuksetKoodiUri")))
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
                 case m: KkOpintojaksoToteutusMetadata =>
