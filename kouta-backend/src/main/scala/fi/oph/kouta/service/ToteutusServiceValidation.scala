@@ -7,7 +7,6 @@ import fi.oph.kouta.util.ToteutusServiceUtil
 import fi.oph.kouta.validation
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors}
-import fi.vm.sade.utils.slf4j.Logging
 
 import java.util.regex.Pattern
 
@@ -28,7 +27,7 @@ class ToteutusServiceValidation(
     koulutusDAO: KoulutusDAO,
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO
-) extends KoulutusToteutusValidatingService[Toteutus] with Logging {
+) extends KoulutusToteutusValidatingService[Toteutus] {
   override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
     val tila         = toteutus.tila
     val kielivalinta = toteutus.kielivalinta
@@ -76,8 +75,8 @@ class ToteutusServiceValidation(
                 "metadata.osaamisalat",
                 validateOsaamisala(_, _, tila, kielivalinta)
               ),
-                validateIfTrue(ammMetadata.ammatillinenPerustutkintoErityisopetuksena,
-                  validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "metadata.ammatillinenPerustutkintoErityisopetuksena")
+                validateIfDefined[Boolean](ammMetadata.ammatillinenPerustutkintoErityisopetuksena, ammatillinenPerustutkintoErityisopetuksena =>
+                  validateIfTrue(ammatillinenPerustutkintoErityisopetuksena, validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "metadata.ammatillinenPerustutkintoErityisopetuksena"))
                 )
               )
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
@@ -242,7 +241,6 @@ class ToteutusServiceValidation(
   }
 
   private def validateAmmatillinenPerustutkintoErityisopetuksena(toteutus: Toteutus, path: String): IsValid = {
-    logger.info("validation ammatillinen perustutkinto")
     koulutusDAO.get(toteutus.koulutusOid) match {
       case Some(koulutus) =>
         assertTrue(koulutusKoodiClient.isKoulutusAmmatillinenPerustutkinto(koulutus.koulutuksetKoodiUri), path, invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutus.koulutuksetKoodiUri.toString()))

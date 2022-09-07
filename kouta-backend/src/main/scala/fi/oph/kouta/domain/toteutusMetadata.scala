@@ -4,8 +4,6 @@ import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 
-import java.util.regex.Pattern
-
 package object toteutusMetadata {
 
   val OpetusModel: String =
@@ -615,7 +613,7 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         asiasanat: List[Keyword] = List(),
                                         ammattinimikkeet: List[Keyword] = List(),
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                        ammatillinenPerustutkintoErityisopetuksena: Boolean = false,
+                                        ammatillinenPerustutkintoErityisopetuksena: Option[Boolean] = None,
                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ToteutusMetadata
 
 trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {

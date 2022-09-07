@@ -1085,7 +1085,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail if ammatillinenPerustutkintoErityisopetuksena is true and koulutustyyppi does not have relation to koulutustyyppi_1" in {
     failValidation(
-      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid1, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = true))),
+      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid1, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true)))),
       "metadata.ammatillinenPerustutkintoErityisopetuksena",
       ErrorMessage(
         msg = s"Koulutuksen koulutustyyppi List(koulutus_XXX#1) on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio koulutustyyppi_1:een että se voidaan järjestää erityisopetuksena",
@@ -1096,12 +1096,18 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "succeed if ammatillinenPerustutkintoErityisopetuksena is true and koulutustyyppi has valid relation to koulutustyyppi_1" in {
     passValidation(
-      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid2, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = true)))
+      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid2, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true))))
+    )
+  }
+
+  it should "succeed if no ammatillinenPerustutkintoErityisopetuksena defined and koulutustyyppi has valid relation to koulutustyyppi_1" in {
+    passValidation(
+      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid2, metadata = Some(AmmToteutuksenMetatieto))
     )
   }
 
   it should "fail if ammatillinenPerustutkintoErityisopetuksena is true and koulutus is not found" in {
     failValidation(JulkaistuAmmToteutus.copy(koulutusOid = invalidKoulutusOid, metadata = Some(AmmToteutuksenMetatieto)), "koulutusOid", nonExistent("Koulutusta", invalidKoulutusOid))
-    failValidation(JulkaistuAmmToteutus.copy(koulutusOid = invalidKoulutusOid, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = true))), "koulutusOid", nonExistent("Koulutusta", invalidKoulutusOid))
+    failValidation(JulkaistuAmmToteutus.copy(koulutusOid = invalidKoulutusOid, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true)))), "koulutusOid", nonExistent("Koulutusta", invalidKoulutusOid))
   }
 }
