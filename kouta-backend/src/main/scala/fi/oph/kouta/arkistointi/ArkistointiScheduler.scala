@@ -14,6 +14,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.ietf.jgss.Oid
 
 import java.net.InetAddress
+import java.time.ZoneId
 
 object ArkistointiScheduler extends ArkistointiScheduler(HakuService, AuditLog)
 
@@ -21,7 +22,7 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
 
   def this() = this(HakuService, AuditLog)
 
-  private val cronSchedule: Schedule = new CronSchedule("5 0 * * * ?")
+  private val cronSchedule: Schedule = new CronSchedule("0 5 0 * * ?", ZoneId.of("Europe/Helsinki"))
   private val numberOfThreads: Int   = 1
   private val user: User =
     new User(new Oid(RootOrganisaatioOid.toString), InetAddress.getLocalHost, "scheduler", "scheduler")

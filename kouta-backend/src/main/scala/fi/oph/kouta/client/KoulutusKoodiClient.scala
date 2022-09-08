@@ -1,9 +1,6 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.client.KoodistoUtils.{
-  koodiUriWithEqualOrHigherVersioNbrInList,
-  koodiUriFromString
-}
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriWithEqualOrHigherVersioNbrInList, koodiUriFromString}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
@@ -13,11 +10,9 @@ import scalacache.modes.sync.mode
 import java.time.ZonedDateTime
 import scala.concurrent.duration.DurationInt
 
-object KoulutusKoodiClient
-    extends KoulutusKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
+object KoulutusKoodiClient extends KoulutusKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
-class KoulutusKoodiClient(urlProperties: OphProperties)
-    extends KoodistoClient(urlProperties) {
+class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
   implicit val commonKoodiUriCache   = CaffeineCache[Seq[KoodiUri]]
   implicit val koodiuriVersionCache  = CaffeineCache[Int]
   implicit val koulutusKoodiUriCache = CaffeineCache[Seq[KoodiUri]]
