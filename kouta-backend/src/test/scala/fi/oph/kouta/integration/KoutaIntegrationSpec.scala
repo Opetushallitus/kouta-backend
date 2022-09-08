@@ -95,6 +95,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     addDefaultKoodistoMockResponsesForToteutus()
     addDefaultKoodistoMockResponsesForHakukohde()
     addDefaultKoodistoMockResponsesForHaku()
+    addDefaultKoodistoMockResponsesForValintaperuste()
   }
 
   override def afterAll(): Unit = {
@@ -193,9 +194,13 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
   }
 
   def addDefaultKoodistoMockResponsesForHaku(): Unit = {
-    mockKoodistoResponse("hakutapa", Seq(("hakutapa_03", 1, None)))
-    mockKoodistoResponse("haunkohdejoukko", Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_05", 3, None)))
+    mockKoodistoResponse("hakutapa", Seq(("hakutapa_02", 1, None), ("hakutapa_03", 1, None)))
+    mockKoodistoResponse("haunkohdejoukko", Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_15", 1, None), ("haunkohdejoukko_05", 3, None)))
     mockKoodistoResponse("haunkohdejoukontarkenne", Seq(("haunkohdejoukontarkenne_1", 1, None)))
+  }
+
+  def addDefaultKoodistoMockResponsesForValintaperuste(): Unit = {
+    mockKoodistoResponse("valintatapajono", Seq(("valintatapajono_av", 1, None), ("valintatapajono_tv", 1, None)))
   }
 }
 

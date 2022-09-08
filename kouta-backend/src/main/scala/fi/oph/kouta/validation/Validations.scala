@@ -145,10 +145,6 @@ object Validations {
     msg = s"Diplomi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidLukioDiplomiKoodiUri"
   )
-  def invalidOpetusLisatietoOtsikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg = s"Opetuksen lisätiedon otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
-    id = "invalidOpetusLisatietoOtsikkoKoodiuri"
-  )
   def invalidKausiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Opetuksen koulutuksenAlkamiskausi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKausiKoodiuri"
@@ -195,12 +191,16 @@ object Validations {
     id = "invalidHakutapaKoodiUri"
   )
   def invalidHaunKohdejoukkoKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg = s"Haun kohdejoukko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
-    id = "invalidHaunKohdejoukkoKoodiUri"
+    msg = s"Kohdejoukko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidKohdejoukkoKoodiUri"
   )
   def invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Haun kohdejoukon tarkenne-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidHaunKohdejoukonTarkenneKoodiUri"
+  )
+  def invalidValintatapaKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Valintatapa-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidValintatapaKoodiUri"
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
@@ -314,11 +314,6 @@ object Validations {
       msg =
         s"Organisaatioiden voimassaoloa ei voitu tarkistaa, Organisaatiopalvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
       id = "organisaatioServiceFailure"
-    )
-
-  def ePerusteServiceOk(ePerusteValidationStatus: IsValid): Boolean =
-    !ePerusteValidationStatus.exists(
-      _.errorType == ePerusteServiceFailureMsg.id
     )
 
   def uuidToString(uuid: Option[UUID]): String = uuid.map(_.toString).getOrElse("")

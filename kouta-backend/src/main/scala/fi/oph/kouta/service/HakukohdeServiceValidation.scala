@@ -70,15 +70,12 @@ class HakukohdeServiceValidation(
       validateIfDefined[String](
         hakukohdeDiffResolver.newHakukohdeKoodiUri(),
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, HakukohdeKoodiPattern, "hakukohdeKoodiUri"),
-            assertKoodistoQueryResult(
-              koodiUri,
-              hakuKoodiClient.hakukohdeKoodiUriExists,
-              "hakukohdeKoodiUri",
-              vCtx,
-              invalidHakukohdeKooriuri(koodiUri)
-            )
+          assertKoodistoQueryResult(
+            koodiUri,
+            hakuKoodiClient.hakukohdeKoodiUriExists,
+            "hakukohdeKoodiUri",
+            vCtx,
+            invalidHakukohdeKooriuri(koodiUri)
           )
       ),
       validateIfTrue(
@@ -95,15 +92,12 @@ class HakukohdeServiceValidation(
         hakukohdeDiffResolver.newPohjakoulutusvaatimusKoodiUrit(),
         "pohjakoulutusvaatimusKoodiUrit",
         (koodiUri, path) =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, PohjakoulutusvaatimusKoodiPattern, path),
-            assertKoodistoQueryResult(
-              koodiUri,
-              hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists,
-              path,
-              vCtx,
-              invalidPohjakoulutusVaatimusKooriuri(koodiUri)
-            )
+          assertKoodistoQueryResult(
+            koodiUri,
+            hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists,
+            path,
+            vCtx,
+            invalidPohjakoulutusVaatimusKooriuri(koodiUri)
           )
       ),
       assertFalse(
@@ -239,7 +233,13 @@ class HakukohdeServiceValidation(
       hakukohdeDiffResolver: HakukohdeDiffResolver
   ): IsValid =
     and(
-      validateSubEntityId(liite.id, s"$path.id", vCtx.crudOperation, existingIds, unknownLiiteId(uuidToString(liite.id))),
+      validateSubEntityId(
+        liite.id,
+        s"$path.id",
+        vCtx.crudOperation,
+        existingIds,
+        unknownLiiteId(uuidToString(liite.id))
+      ),
       validateIfDefined[LiitteenToimitusosoite](
         liite.toimitusosoite,
         validateLiitteenToimitusosoite(
@@ -252,15 +252,12 @@ class HakukohdeServiceValidation(
       validateIfDefined[String](
         newLiite.flatMap(_.tyyppiKoodiUri),
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, LiiteTyyppiKoodiPattern, s"$path.tyyppiKoodiUri"),
-            assertKoodistoQueryResult(
-              koodiUri,
-              hakuKoodiClient.liiteTyyppiKoodiUriExists,
-              s"$path.tyyppiKoodiUri",
-              vCtx,
-              invalidLiitetyyppiKooriuri(koodiUri)
-            )
+          assertKoodistoQueryResult(
+            koodiUri,
+            hakuKoodiClient.liiteTyyppiKoodiUriExists,
+            s"$path.tyyppiKoodiUri",
+            vCtx,
+            invalidLiitetyyppiKooriuri(koodiUri)
           )
       ),
       validateIfJulkaistu(
@@ -282,7 +279,7 @@ class HakukohdeServiceValidation(
       path: String,
       validationContext: ValidationContext
   ): IsValid = and(
-    osoite.osoite.validate(
+    osoite.osoite.deepValidate(
       path,
       osoiteWithNewValues,
       validationContext,
@@ -352,29 +349,23 @@ class HakukohdeServiceValidation(
                             validateIfDefined[String](
                               newOppiaine.flatMap(_.koodiUrit).flatMap(_.oppiaine),
                               oppiaineKoodiUri =>
-                                validateIfSuccessful(
-                                  assertMatch(oppiaineKoodiUri, OppiaineKoodiPattern, s"$path.oppiaine"),
-                                  assertKoodistoQueryResult(
-                                    oppiaineKoodiUri,
-                                    hakuKoodiClient.oppiaineKoodiUriExists,
-                                    s"$path.oppiaine",
-                                    vCtx,
-                                    invalidOppiaineKoodiuri(oppiaineKoodiUri)
-                                  )
+                                assertKoodistoQueryResult(
+                                  oppiaineKoodiUri,
+                                  hakuKoodiClient.oppiaineKoodiUriExists,
+                                  s"$path.oppiaine",
+                                  vCtx,
+                                  invalidOppiaineKoodiuri(oppiaineKoodiUri)
                                 )
                             ),
                             validateIfDefined[String](
                               newOppiaine.flatMap(_.koodiUrit).flatMap(_.kieli),
                               kieliKoodiUri =>
-                                validateIfSuccessful(
-                                  assertMatch(kieliKoodiUri, KieliKoodiPattern, s"$path.kieli"),
-                                  assertKoodistoQueryResult(
-                                    kieliKoodiUri,
-                                    hakuKoodiClient.kieliKoodiUriExists,
-                                    s"$path.kieli",
-                                    vCtx,
-                                    invalidOppiaineKieliKoodiuri(kieliKoodiUri)
-                                  )
+                                assertKoodistoQueryResult(
+                                  kieliKoodiUri,
+                                  hakuKoodiClient.kieliKoodiUriExists,
+                                  s"$path.kieli",
+                                  vCtx,
+                                  invalidOppiaineKieliKoodiuri(kieliKoodiUri)
                                 )
                             )
                           )
@@ -608,29 +599,31 @@ class HakukohdeServiceValidation(
       cannotLinkToHakukohde(toteutusOid)
     )
 
-  override def validateEntityOnJulkaisu(hk: Hakukohde): IsValid = and(
-    validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
-    validateIfDefined[LocalDateTime](hk.liitteidenToimitusaika, assertInFuture(_, "liitteidenToimitusaika")),
-    validateIfNonEmpty[Liite](
-      hk.liitteet,
-      "liitteet",
-      (liite, path) => validateIfDefined[LocalDateTime](liite.toimitusaika, assertInFuture(_, s"$path.toimitusaika"))
-    ),
-    validateIfNonEmpty[Valintakoe](hk.valintakokeet, "valintakokeet", _.validateOnJulkaisu(_)),
-    validateIfDefined[HakukohdeMetadata](
-      hk.metadata,
-      metadata =>
-        and(
-          validateIfDefined[KoulutuksenAlkamiskausi](
-            metadata.koulutuksenAlkamiskausi,
-            _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
-          ),
-          validateIfNonEmpty[ValintakokeenLisatilaisuudet](
-            metadata.valintaperusteenValintakokeidenLisatilaisuudet,
-            "metadata.valintaperusteenValintakokeidenLisatilaisuudet",
-            _.validateOnJulkaisu(_)
+  override def validateEntityOnJulkaisu(hk: Hakukohde): IsValid = {
+    and(
+      validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
+      validateIfDefined[LocalDateTime](hk.liitteidenToimitusaika, assertInFuture(_, "liitteidenToimitusaika")),
+      validateIfNonEmpty[Liite](
+        hk.liitteet,
+        "liitteet",
+        (liite, path) => validateIfDefined[LocalDateTime](liite.toimitusaika, assertInFuture(_, s"$path.toimitusaika"))
+      ),
+      validateIfNonEmpty[Valintakoe](hk.valintakokeet, "valintakokeet", _.validateOnJulkaisu(_)),
+      validateIfDefined[HakukohdeMetadata](
+        hk.metadata,
+        metadata =>
+          and(
+            validateIfDefined[KoulutuksenAlkamiskausi](
+              metadata.koulutuksenAlkamiskausi,
+              _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
+            ),
+            validateIfNonEmpty[ValintakokeenLisatilaisuudet](
+              metadata.valintaperusteenValintakokeidenLisatilaisuudet,
+              "metadata.valintaperusteenValintakokeidenLisatilaisuudet",
+              _.validateOnJulkaisu(_)
+            )
           )
-        )
+      )
     )
-  )
+  }
 }

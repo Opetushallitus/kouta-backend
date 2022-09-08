@@ -6,7 +6,7 @@ import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, ValidatableSubEntity, ValidationContext}
+import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity, ValidatableSubEntity, ValidationContext}
 
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
@@ -561,7 +561,7 @@ package object domain {
 
   // NOTE: Tätä käyttää hakukohde lisäämään tilaisuuksia valintaperusteen valintakokeelle
   case class ValintakokeenLisatilaisuudet(id: Option[UUID] = None, tilaisuudet: Seq[Valintakoetilaisuus] = Seq())
-      extends ValidatableSubEntity {
+      extends JulkaisuValidatableSubEntity {
     def validate(
         path: String,
         entityWithNewValues: Option[ValintakokeenLisatilaisuudet],
@@ -576,10 +576,6 @@ package object domain {
       )
     )
 
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _))
-    )
-
     override def validateOnJulkaisu(path: String): IsValid =
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validateOnJulkaisu(_))
   }
@@ -590,7 +586,7 @@ package object domain {
       nimi: Kielistetty = Map(),
       metadata: Option[ValintakoeMetadata] = None,
       tilaisuudet: Seq[Valintakoetilaisuus] = Seq()
-  ) extends ValidatableSubEntity {
+  ) extends JulkaisuValidatableSubEntity {
     def validate(
         path: String,
         entityWithNewValues: Option[Valintakoe],
@@ -608,7 +604,13 @@ package object domain {
             s"$path.tilaisuudet",
             (tilaisuus, newTilaisuus, path) => tilaisuus.validate(path, newTilaisuus, vCtx, osoiteKoodistoCheckFunc)
           ),
-          validateExcludingTilaisuudet(vCtx.tila, vCtx.kielivalinta, path)
+          validateIfDefined[ValintakoeMetadata](metadata, _.validate(vCtx.tila, vCtx.kielivalinta, s"$path.metadata")),
+          validateIfJulkaistu(
+            vCtx.tila,
+            and(
+              validateOptionalKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi")
+            )
+          )
         ),
         validateIfDefined[String](
           entityWithNewValues.flatMap(_.tyyppiKoodiUri),
@@ -622,25 +624,6 @@ package object domain {
             )
         )
       )
-
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validate(tila, kielivalinta, _)),
-      validateExcludingTilaisuudet(tila, kielivalinta, path)
-    )
-
-    private def validateExcludingTilaisuudet(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      validateIfDefined[String](
-        tyyppiKoodiUri,
-        assertMatch(_, ValintakokeenTyyppiKoodiPattern, s"$path.tyyppiKoodiUri")
-      ),
-      validateIfDefined[ValintakoeMetadata](metadata, _.validate(tila, kielivalinta, s"$path.metadata")),
-      validateIfJulkaistu(
-        tila,
-        and(
-          validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi")
-        )
-      )
-    )
 
     override def validateOnJulkaisu(path: String): IsValid =
       validateIfNonEmpty[Valintakoetilaisuus](tilaisuudet, s"$path.tilaisuudet", _.validateOnJulkaisu(_))
@@ -679,7 +662,7 @@ package object domain {
       aika: Option[Ajanjakso] = None,
       jarjestamispaikka: Kielistetty = Map(),
       lisatietoja: Kielistetty = Map()
-  ) extends ValidatableSubEntity {
+  ) extends JulkaisuValidatableSubEntity {
     def validate(
         path: String,
         entityWithNewValues: Option[Valintakoetilaisuus],
@@ -688,30 +671,21 @@ package object domain {
     ): IsValid = and(
       validateIfDefined[Osoite](
         osoite,
-        _.validate(
+        _.deepValidate(
           s"$path.osoite",
           entityWithNewValues.flatMap(_.osoite),
           vCtx,
           osoiteKoodistoCheckFunc
         )
       ),
-      validateExcludingOsoite(vCtx.tila, vCtx.kielivalinta, path)
-    )
-
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      validateIfDefined[Osoite](osoite, _.validate(tila, kielivalinta, s"$path.osoite")),
-      validateExcludingOsoite(tila, kielivalinta, path)
-    )
-
-    private def validateExcludingOsoite(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      validateIfDefined[Ajanjakso](aika, _.validate(tila, kielivalinta, s"$path.aika")),
+      validateIfDefined[Ajanjakso](aika, _.validate(vCtx.tila, vCtx.kielivalinta, s"$path.aika")),
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
           assertNotOptional(osoite, s"$path.osoite"),
           assertNotOptional(aika, s"$path.aika"),
-          validateOptionalKielistetty(kielivalinta, jarjestamispaikka, s"$path.jarjestamispaikka"),
-          validateOptionalKielistetty(kielivalinta, lisatietoja, s"$path.lisatietoja")
+          validateOptionalKielistetty(vCtx.kielivalinta, jarjestamispaikka, s"$path.jarjestamispaikka"),
+          validateOptionalKielistetty(vCtx.kielivalinta, lisatietoja, s"$path.lisatietoja")
         )
       )
     )
@@ -738,10 +712,27 @@ package object domain {
     val modified: Modified
   }
 
-  case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      assertMatch(otsikkoKoodiUri, KoulutuksenLisatiedotOtsikkoKoodiPattern, s"$path.otsikkoKoodiUri"),
-      validateIfJulkaistu(tila, validateKielistetty(kielivalinta, teksti, s"$path.teksti"))
+  case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) {
+    def validate(
+        path: String,
+        entityWithNewValues: Option[Lisatieto],
+        vCtx: ValidationContext,
+        koodistoCheckFunc: String => ExternalQueryResult
+    ): IsValid = and(
+      validateIfDefined[Lisatieto](
+        entityWithNewValues,
+        newValues => {
+          val koodiUri = newValues.otsikkoKoodiUri
+          assertKoodistoQueryResult(
+            koodiUri,
+            koodistoCheckFunc,
+            path = s"$path.otsikkoKoodiUri",
+            vCtx,
+            invalidLisatietoOtsikkoKoodiuri(koodiUri)
+          )
+        }
+      ),
+      validateIfJulkaistu(vCtx.tila, validateKielistetty(vCtx.kielivalinta, teksti, s"$path.teksti"))
     )
   }
 
@@ -766,14 +757,13 @@ package object domain {
   }
 
   case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String]) extends ValidatableSubEntity {
-    def validate(
+    def deepValidate(
         path: String,
         entityWithNewValues: Option[Osoite],
         vCtx: ValidationContext,
         koodistoCheckFunc: String => ExternalQueryResult
     ): IsValid =
-      validateIfSuccessful(
-        validate(vCtx.tila, vCtx.kielivalinta, path),
+      and(
         validateIfDefined[String](
           entityWithNewValues.flatMap(_.postinumeroKoodiUri),
           koodiUri =>
@@ -784,7 +774,8 @@ package object domain {
               vCtx,
               invalidPostiosoiteKoodiUri(koodiUri)
             )
-        )
+        ),
+        validateMandatoryParametersInJulkaisu(vCtx.tila, vCtx.kielivalinta, path)
       )
 
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
@@ -792,6 +783,10 @@ package object domain {
         postinumeroKoodiUri,
         assertMatch(_, PostinumeroKoodiPattern, s"$path.postinumeroKoodiUri")
       ),
+      validateMandatoryParametersInJulkaisu(tila, kielivalinta, path)
+    )
+
+    def validateMandatoryParametersInJulkaisu(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
       validateIfJulkaistu(
         tila,
         and(
@@ -799,7 +794,6 @@ package object domain {
           assertNotOptional(postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
         )
       )
-    )
   }
 
   case class KoulutuksenAlkamiskausi(
@@ -809,15 +803,19 @@ package object domain {
       koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
       koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
       koulutuksenAlkamisvuosi: Option[String] = None
-  ) extends ValidatableSubEntity {
+  ) extends JulkaisuValidatableSubEntity {
     def validate(
         path: String,
         entityWithNewValues: Option[KoulutuksenAlkamiskausi],
         vCtx: ValidationContext,
         koodistoCheckFunc: String => ExternalQueryResult
     ): IsValid =
-      validateIfSuccessful(
-        validate(vCtx.tila, vCtx.kielivalinta, path),
+      and(
+        validateKoulutusPaivamaarat(
+          koulutuksenAlkamispaivamaara,
+          koulutuksenPaattymispaivamaara,
+          s"$path.koulutuksenAlkamispaivamaara"
+        ),
         validateIfDefined[String](
           entityWithNewValues.flatMap(_.koulutuksenAlkamiskausiKoodiUri),
           koodiUri =>
@@ -828,26 +826,13 @@ package object domain {
               vCtx,
               invalidKausiKoodiuri(koodiUri)
             )
-        )
-      )
-
-    override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
-      and(
-        validateKoulutusPaivamaarat(
-          koulutuksenAlkamispaivamaara,
-          koulutuksenPaattymispaivamaara,
-          s"$path.koulutuksenAlkamispaivamaara"
-        ),
-        validateIfDefined[String](
-          koulutuksenAlkamiskausiKoodiUri,
-          assertMatch(_, KausiKoodiPattern, s"$path.koulutuksenAlkamiskausiKoodiUri")
         ),
         validateIfDefined[String](
           koulutuksenAlkamisvuosi,
           v => assertMatch(v, VuosiPattern, s"$path.koulutuksenAlkamisvuosi")
         ),
         validateIfJulkaistu(
-          tila,
+          vCtx.tila,
           and(
             assertNotOptional(alkamiskausityyppi, s"$path.alkamiskausityyppi"),
             validateIfTrue(
@@ -862,7 +847,7 @@ package object domain {
               )
             ),
             validateOptionalKielistetty(
-              kielivalinta,
+              vCtx.kielivalinta,
               henkilokohtaisenSuunnitelmanLisatiedot,
               s"$path.henkilokohtaisenSuunnitelmanLisatiedot"
             )

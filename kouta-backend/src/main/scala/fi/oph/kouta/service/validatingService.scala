@@ -25,7 +25,7 @@ trait ValidatingService[E <: Validatable] {
 
   def validate(e: E, oldE: Option[E]): IsValid = {
     var errors = if (oldE.isDefined) {
-      if (oldE.get.tila != Julkaistu && e.tila == Julkaistu) {
+      if (oldE.get.tila == Tallennettu && e.tila == Julkaistu) {
         validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
           validateEntityOnJulkaisu(e)
       } else {

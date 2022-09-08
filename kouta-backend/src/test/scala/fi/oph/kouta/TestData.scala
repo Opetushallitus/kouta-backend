@@ -1424,4 +1424,17 @@ object TestData {
       )
     )
   )
+
+  val inPastAikaleima             = inPast(1000)
+  val inPastJakso                 = Ajanjakso(inPast(2000), Some(inPastAikaleima))
+  val inPastValintakoeTilaisuudet = List(Valintakoe1.tilaisuudet.head.copy(aika = Some(inPastJakso)))
+  val inPastValintakokeet         = List(Valintakoe1.copy(tilaisuudet = inPastValintakoeTilaisuudet))
+  def inPastLisaTilaisuudet(id: Option[UUID]): List[ValintakokeenLisatilaisuudet] =
+    List(ValintakokeenLisatilaisuudet1.copy(id = id, tilaisuudet = inPastValintakoeTilaisuudet))
+  val inPastKoulutuksenAlkamiskausi = KoulutuksenAlkamiskausi(
+    alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+    koulutuksenAlkamispaivamaara = Some(inFuture(1000)),
+    koulutuksenPaattymispaivamaara = Some(inFuture(2000)),
+    koulutuksenAlkamisvuosi = Some("2020")
+  )
 }
