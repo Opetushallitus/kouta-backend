@@ -40,6 +40,12 @@ object Validations extends Logging {
     msg = s"Koulutuskoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutuskoodiuri"
   )
+
+  def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutustyyppiKoodi: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio tyyppiin $ammatillinenPerustutkintoKoulutustyyppiKoodiUri että se voidaan järjestää erityisopetuksena",
+    id = "invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena"
+  )
+
   def invalidLisatietoOtsikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lisätieto-otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidLisatietoOtsikkoKoodiuri"

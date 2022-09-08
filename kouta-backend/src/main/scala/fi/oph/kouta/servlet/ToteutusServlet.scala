@@ -96,6 +96,8 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Toteutus
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan toteutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
