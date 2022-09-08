@@ -618,7 +618,7 @@ case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                         ammatillinenPerustutkintoErityisopetuksena: Boolean = false,
                                         isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                        hasJotpaRahoitus: Option[Boolean]) extends ToteutusMetadata
+                                        hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
 trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
   def hakutermi: Option[Hakutermi]
@@ -647,7 +647,7 @@ case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = Amm
                                                     hakuaika: Option[Ajanjakso] = None,
                                                     aloituspaikat: Option[Int] = None,
                                                     isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                    hasJotpaRahoitus: Option[Boolean]) extends TutkintoonJohtamatonToteutusMetadata
+                                                    hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
                                                   kuvaus: Kielistetty = Map(),
@@ -663,7 +663,7 @@ case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOs
                                                   hakuaika: Option[Ajanjakso] = None,
                                                   aloituspaikat: Option[Int] = None,
                                                   isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                  hasJotpaRahoitus: Option[Boolean]) extends TutkintoonJohtamatonToteutusMetadata
+                                                  hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class AmmatillinenMuuToteutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
                                            kuvaus: Kielistetty = Map(),
@@ -679,7 +679,7 @@ case class AmmatillinenMuuToteutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
                                            hakuaika: Option[Ajanjakso] = None,
                                            aloituspaikat: Option[Int] = None,
                                            isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                           hasJotpaRahoitus: Option[Boolean]
+                                           hasJotpaRahoitus: Option[Boolean] = None
                                           ) extends TutkintoonJohtamatonToteutusMetadata {
   override def allowSorakuvaus: Boolean = false
 }
@@ -691,7 +691,7 @@ case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      ammattinimikkeet: List[Keyword] = List(),
                                      yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                      isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                     hasJotpaRahoitus: Option[Boolean]) extends ToteutusMetadata
+                                     hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
 case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               kuvaus: Kielistetty = Map(),
@@ -700,7 +700,7 @@ case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               ammattinimikkeet: List[Keyword] = List(),
                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                               isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                              hasJotpaRahoitus: Option[Boolean]) extends ToteutusMetadata
+                                              hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
 case class AmmOpeErityisopeJaOpoToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
                                                  kuvaus: Kielistetty = Map(),
@@ -709,7 +709,7 @@ case class AmmOpeErityisopeJaOpoToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpe
                                                  ammattinimikkeet: List[Keyword] = List(),
                                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                 hasJotpaRahoitus: Option[Boolean]) extends ToteutusMetadata
+                                                 hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
 case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          kuvaus: Kielistetty = Map(),
@@ -725,7 +725,7 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          hakuaika: Option[Ajanjakso] = None,
                                          aloituspaikat: Option[Int] = None,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                         hasJotpaRahoitus: Option[Boolean]) extends TutkintoonJohtamatonToteutusMetadata
+                                         hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
                                                kuvaus: Kielistetty = Map(),
@@ -743,7 +743,7 @@ case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                hakuaika: Option[Ajanjakso] = None,
                                                aloituspaikat: Option[Int] = None,
                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                               hasJotpaRahoitus: Option[Boolean]) extends TutkintoonJohtamatonToteutusMetadata
+                                               hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
@@ -757,7 +757,7 @@ case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq(),
                                  diplomit: Seq[LukiodiplomiTieto] = Seq(),
                                  isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                 hasJotpaRahoitus: Option[Boolean]
+                                 hasJotpaRahoitus: Option[Boolean] = None
                                 ) extends ToteutusMetadata
 
 case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
@@ -769,7 +769,7 @@ case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 aloituspaikat: Option[Int] = None,
                                 jarjestetaanErityisopetuksena: Boolean = false,
                                 isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                hasJotpaRahoitus: Option[Boolean]
+                                hasJotpaRahoitus: Option[Boolean] = None
                                ) extends ToteutusMetadata
 
 case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
@@ -780,7 +780,7 @@ case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                  aloituspaikat: Option[Int] = None,
                                  isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                 hasJotpaRahoitus: Option[Boolean]) extends ToteutusMetadata
+                                 hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
 case class AmmatillinenOsaamisala(koodiUri: String,
                                   linkki: Kielistetty = Map(),
@@ -833,7 +833,7 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadata(tyyppi: Koulutustyyppi = 
                                                        ammattinimikkeet: List[Keyword] = List(),
                                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                                        isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                       hasJotpaRahoitus: Option[Boolean]) extends ToteutusMetadata
+                                                       hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
 case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
                                                kuvaus: Kielistetty = Map(),
@@ -849,7 +849,7 @@ case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                hakuaika: Option[Ajanjakso] = None,
                                                aloituspaikat: Option[Int] = None,
                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                               hasJotpaRahoitus: Option[Boolean]) extends TutkintoonJohtamatonToteutusMetadata {
+                                               hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
 }
@@ -868,7 +868,7 @@ case class AikuistenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = Aikuist
                                                 hakuaika: Option[Ajanjakso] = None,
                                                 aloituspaikat: Option[Int] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                hasJotpaRahoitus: Option[Boolean]
+                                                hasJotpaRahoitus: Option[Boolean] = None
                                                ) extends TutkintoonJohtamatonToteutusMetadata
 
 case class ErikoislaakariToteutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
@@ -878,4 +878,4 @@ case class ErikoislaakariToteutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakar
                                           ammattinimikkeet: List[Keyword] = List(),
                                           yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                           isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                          hasJotpaRahoitus: Option[Boolean]) extends ToteutusMetadata
+                                          hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata

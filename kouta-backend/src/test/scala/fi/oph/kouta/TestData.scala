@@ -949,7 +949,8 @@ object TestData {
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     yhteyshenkilot = Seq(Yhteystieto1),
     isMuokkaajaOphVirkailija = Some(false),
-    hasJotpaRahoitus = Some(false))
+    hasJotpaRahoitus = Some(false)
+  )
 
   val LukioToteutuksenMetatieto: LukioToteutusMetadata = LukioToteutusMetadata(
     kuvaus = Map(),
