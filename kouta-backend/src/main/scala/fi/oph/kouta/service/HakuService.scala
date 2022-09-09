@@ -39,7 +39,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   private def enrichHakuMetadata(haku: Haku) : Option[HakuMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(haku.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(haku.muokkaaja)
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     haku.metadata match {
@@ -52,7 +52,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     val hakuWithTime = HakuDAO.get(oid, tilaFilter)
     val enrichedHaku = hakuWithTime match {
       case Some((h, i)) => {
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(h.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(h.copy(_enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }

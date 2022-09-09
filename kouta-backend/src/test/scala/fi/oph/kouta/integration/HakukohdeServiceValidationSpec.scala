@@ -124,7 +124,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_2#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
     when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
+    when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
     when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
     when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
@@ -137,7 +137,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       .thenAnswer(Some((haku, ZonedDateTime.now().toInstant)))
 
     when(
-      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(
+      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         Seq(ammatillinenPerustutkintoKoulutustyyppi),
         "koulutus_371101#1"
       )

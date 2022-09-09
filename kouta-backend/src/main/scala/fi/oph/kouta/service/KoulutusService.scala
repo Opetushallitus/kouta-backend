@@ -90,7 +90,7 @@ class KoulutusService(
     } else { None }
 
   private def enrichKoulutusMetadata(koulutus: Koulutus): Option[KoulutusMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(koulutus.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(koulutus.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     koulutus.metadata match {
@@ -106,12 +106,12 @@ class KoulutusService(
                 val opintojenLaajuusKoodiUri =
                   if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri
                   else
-                    Some(koodistoClient.getKoodiUriWithLatestVersion("opintojenlaajuus_60"))
+                    Some(koodistoClient.getKoodiUriWithLatestVersionFromCache("opintojenlaajuus_60"))
                 val koulutusalaKoodiUrit =
                   if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit
                   else
                     Seq(
-                      koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01")
+                      koodistoClient.getKoodiUriWithLatestVersionFromCache("kansallinenkoulutusluokitus2016koulutusalataso1_01")
                     )
                 Some(
                   m.copy(
@@ -134,7 +134,7 @@ class KoulutusService(
             val koulutusalaKoodiUrit =
               if (lukioMetadata.koulutusalaKoodiUrit.nonEmpty) lukioMetadata.koulutusalaKoodiUrit
               else
-                Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_00"))
+                Seq(koodistoClient.getKoodiUriWithLatestVersionFromCache("kansallinenkoulutusluokitus2016koulutusalataso1_00"))
             Some(
               lukioMetadata.copy(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija),
@@ -161,7 +161,7 @@ class KoulutusService(
               erikoislaakariKoulutusMetadata.copy(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija),
                 koulutusalaKoodiUrit = Seq(
-                  koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso2_091")
+                  koodistoClient.getKoodiUriWithLatestVersionFromCache("kansallinenkoulutusluokitus2016koulutusalataso2_091")
                 )
               )
             )
@@ -179,7 +179,7 @@ class KoulutusService(
         val koulutusKoodiUrit =
           if (koulutus.koulutuksetKoodiUri.nonEmpty) koulutus.koulutuksetKoodiUri
           else
-            Seq(koodistoClient.getKoodiUriWithLatestVersion("koulutus_201101"))
+            Seq(koodistoClient.getKoodiUriWithLatestVersionFromCache("koulutus_201101"))
         koulutus.copy(koulutuksetKoodiUri = koulutusKoodiUrit, metadata = enrichedMetadata)
       case _ => koulutus.copy(metadata = enrichedMetadata)
     }
@@ -192,7 +192,7 @@ class KoulutusService(
 
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) => {
-        val muokkaaja      = oppijanumerorekisteriClient.getHenkilö(k.muokkaaja)
+        val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(k.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }

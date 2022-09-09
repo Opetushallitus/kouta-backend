@@ -1,15 +1,18 @@
 package fi.oph.kouta.client
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, queryFailed}
 import fi.vm.sade.properties.OphProperties
-import scalacache.caffeine.CaffeineCache
+import scala.concurrent.duration.DurationInt
 
 object HakuKoodiClient extends HakuKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
 class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
-  implicit val koodiUriCache   = CaffeineCache[Seq[KoodiUri]]
+  implicit val koodiUriCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
+    .expireAfterWrite(15.minutes)
+    .build()
 
   def hakukohdeKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto(koodiUri.split("_").head, koodiUri)

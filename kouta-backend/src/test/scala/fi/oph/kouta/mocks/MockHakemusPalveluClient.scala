@@ -6,5 +6,5 @@ import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFo
 import java.util.UUID
 
 class MockHakemusPalveluClient extends HakemusPalveluClient {
-  override def isExistingAtaruId(ataruId: UUID): ExternalQueryResult = itemFound
+  override def isExistingAtaruIdFromCache(ataruId: UUID): ExternalQueryResult = itemFound
 }
