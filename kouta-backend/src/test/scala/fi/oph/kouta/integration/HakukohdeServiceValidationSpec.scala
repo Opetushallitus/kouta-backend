@@ -220,22 +220,15 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when saving new hakukohde with common liitteiden toimitustapa and no tapa set" in {
-    failsValidation(
-      initMockSeq(
-        max.copy(liitteetOnkoSamaToimitusosoite = Some(true))),
-      "liitteidenToimitustapa",
-      missingMsg
-    )
-  }
-
-  it should "not fail when new hakukohde with common liitteiden toimitusosoite and toimitusaika but no liittees" in {
+  it should "succeed when common liitteiden toimitusaika and toimitusosoite used and no liitteet" in {
     passesValidation(
       initMockSeq(
         max.copy(
-          liitteetOnkoSamaToimitusosoite = Some(true),
           liitteetOnkoSamaToimitusaika = Some(true),
+          liitteetOnkoSamaToimitusosoite = Some(true),
+          liitteidenToimitustapa = Some(MuuOsoite),
           liitteidenToimitusaika = None,
+          liitteidenToimitusosoite = None,
           liitteet = Seq()
         )
       )
@@ -500,7 +493,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when common liitteidenToimitusaika given but not used" in {
+  it should "fail when common liitteidenToimitusaika defined but not used" in {
     failsValidation(
       min.copy(liitteetOnkoSamaToimitusaika = Some(false), liitteidenToimitusaika = Some(inFuture())),
       "liitteidenToimitusaika",
@@ -508,7 +501,15 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when common liitteidenToimitustapa given but not used" in {
+  it should "fail when common liitteidenToimitusaika used but not defined" in {
+    failsValidation(
+      max.copy(liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None),
+      "liitteidenToimitusaika",
+      missingMsg
+    )
+  }
+
+  it should "fail when common liitteidenToimitustapa defined but not used" in {
     failsValidation(
       min.copy(liitteetOnkoSamaToimitusosoite = Some(false), liitteidenToimitustapa = Some(MuuOsoite)),
       "liitteidenToimitustapa",
@@ -516,7 +517,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when common liitteidenToimitusosoite given but not used" in {
+  it should "fail when common liitteidenToimitusosoite defined but not used" in {
     failsValidation(
       min.copy(
         liitteetOnkoSamaToimitusosoite = Some(false),
@@ -524,6 +525,22 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       ),
       "liitteidenToimitusosoite",
       notEmptyAlthoughBooleanFalseMsg("liitteetOnkoSamaToimitusosoite")
+    )
+  }
+
+  it should "fail when common liitteidenToimitusosoite used but liitteidenToimitustapa not defined" in {
+    failsValidation(
+      max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitustapa = None),
+      "liitteidenToimitustapa",
+      missingMsg
+    )
+  }
+
+  it should "fail when common liitteidenToimitusosoite used but not defined" in {
+    failsValidation(
+      max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitustapa = Some(MuuOsoite), liitteidenToimitusosoite = None),
+      "liitteidenToimitusosoite",
+      missingMsg
     )
   }
 

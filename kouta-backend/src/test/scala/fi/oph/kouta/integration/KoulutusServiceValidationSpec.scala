@@ -4,8 +4,8 @@ import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoodistoQueryException, KoulutusKoodiClient}
-import fi.oph.kouta.domain.oid.{HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
@@ -587,11 +587,11 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   it should "succeed when new valid Kk-opintokokonaisuuskoulutus" in {
-    passValidation(KkOpintokokonaisuusKoulutus)
+    passesValidation(KkOpintokokonaisuusKoulutus)
   }
 
   it should "succeed when new incomplete luonnos Kk-opintokokonaisuuskoulutus" in {
-    passValidation(
+    passesValidation(
       KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusKoulutusMetadata()))
     )
   }
@@ -1342,7 +1342,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   it should "fail if invalid metadata for luonnos Kk-opintokokonaisuus koulutus" in {
     val opintojenLaajuusNumeroMin = -5.0
     val opintojenLaajuusNumeroMax = -15.0
-    failValidation(
+    failsValidation(
       KkOpintokokonaisuusKoulutus.copy(
         tila = Tallennettu,
         metadata = Some(
@@ -1357,7 +1357,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       Seq(
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
-          validationMsg("puppu")
+          invalidKoulutusAlaKoodiuri("puppu")
         ),
         ValidationError(
           "metadata.opintojenLaajuusyksikkoKoodiUri",
@@ -1374,7 +1374,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   it should "fail if missing metadata for julkaistu Kk-opintokokonaisuus koulutus" in {
-    failValidation(
+    failsValidation(
       KkOpintokokonaisuusKoulutus.copy(metadata = Some(KkOpintokokonaisuusKoulutusMetadata())),
       Seq(
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
@@ -1401,7 +1401,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       )
     )
 
-    failModifyValidation(
+    failsModifyValidation(
       opintokokonaisuusKoulutus,
       opintokokonaisuusKoulutus,
       Seq(
@@ -1432,7 +1432,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       )
     )
 
-    failModifyValidation(
+    failsModifyValidation(
       opintokokonaisuusKoulutus,
       opintokokonaisuusKoulutus,
       Seq(
@@ -1480,7 +1480,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       )
     )
 
-    passValidation(opintokokonaisuusKoulutus, opintokokonaisuusKoulutus)
+    passesValidation(opintokokonaisuusKoulutus, opintokokonaisuusKoulutus)
   }
 
   it should "pass when julkaistu kk-opintokokonaisuus koulutus has one toteutus which has no laajuusyksikkö or laajuusNumero defined" in {
@@ -1503,7 +1503,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       )
     )
 
-    passValidation(kkOpintokokonaisuusKoulutus, kkOpintokokonaisuusKoulutus)
+    passesValidation(kkOpintokokonaisuusKoulutus, kkOpintokokonaisuusKoulutus)
   }
 
   "State change" should "succeed from tallennettu to julkaistu" in {
