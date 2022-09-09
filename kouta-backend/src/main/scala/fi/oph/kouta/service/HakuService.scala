@@ -13,6 +13,7 @@ import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
+import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
@@ -22,16 +23,17 @@ import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
+object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation)
 
 class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
                   ohjausparametritClient: OhjausparametritClient,
                   val organisaatioService: OrganisaatioService,
                   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-                  kayttooikeusClient: KayttooikeusClient
+                  kayttooikeusClient: KayttooikeusClient,
+                  hakuServiceValidation: HakuServiceValidation
                  )
-  extends ValidatingService[Haku] with RoleEntityAuthorizationService[Haku] {
+  extends RoleEntityAuthorizationService[Haku] {
 
   override val roleEntity: RoleEntity = Role.Haku
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
@@ -71,7 +73,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     authorizePut(haku, rules) { h =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
       val enrichedHaku = h.copy(metadata = enrichedMetadata)
-      withValidation(enrichedHaku, None)(haku => doPut(haku))
+      hakuServiceValidation.withValidation(enrichedHaku, None)(doPut(_))
     }.oid.get
   }
 
@@ -87,11 +89,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         h.copy(metadata = enrichedMetadata)
       }
 
-      withValidation(enrichedHaku, Some(oldHaku)) {
-        throwValidationErrors(validateStateChange("haulle", oldHaku.tila, enrichedHaku.tila))
-        validateHakukohdeIntegrityIfDeletingHaku(oldHaku.tila, enrichedHaku.tila, enrichedHaku.oid.get)
-        doUpdate(_, notModifiedSince, oldHaku)
-      }
+      hakuServiceValidation.withValidation(enrichedHaku, Some(oldHaku))(doUpdate(_, notModifiedSince, oldHaku))
     }.nonEmpty
   }
 
@@ -115,15 +113,6 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
           AuthorizationRules(roleEntity.createRoles)
         }
     }
-  }
-
-  private def validateHakukohdeIntegrityIfDeletingHaku(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, hakuOid: HakuOid): Unit = {
-    throwValidationErrors(
-      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
-        HakukohdeDAO.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat()).isEmpty,
-        "tila",
-        integrityViolationMsg("Hakua", "hakukohteita")))
-    )
   }
 
   private def getYhteishakuFilter(yhteishaut: Boolean, koulutustyypit: Seq[Koulutustyyppi]): YhteishakuFilter = {
@@ -246,9 +235,4 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       hakutoiveidenMaaraRajoitettu = Some(false)))
     ).toDBIO
   }
-
-  override def validateEntity(haku: Haku, oldHaku: Option[Haku]): IsValid = haku.validate()
-  override def validateEntityOnJulkaisu(haku: Haku): IsValid = haku.validateOnJulkaisu()
-
-  override def validateInternalDependenciesWhenDeletingEntity(haku: Haku): IsValid = NoErrors
 }

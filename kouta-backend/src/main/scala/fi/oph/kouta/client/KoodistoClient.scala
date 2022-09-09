@@ -24,6 +24,8 @@ case class KoodistoElement(
     voimassaLoppuPvm: Option[String]
 )
 
+case class KoodistoQueryResponse(success: Boolean, koodiUritInKoodisto: Seq[KoodiUri])
+
 object KoodistoUtils {
   def koodiUriFromString(koodiUriString: String): KoodiUri = {
     if (koodiUriString.contains("#")) {
@@ -75,8 +77,10 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
   protected def getAndUpdateFromKoodiUriCache(
       koodisto: String,
       koodiUriCache: CaffeineCache[Seq[KoodiUri]]
-  ): Seq[KoodiUri] = {
+  ): KoodistoQueryResponse = {
     var koodiUritFromCache = koodiUriCache.get(koodisto)
+    var querySuccess = true
+
     if (koodiUritFromCache.isEmpty) {
       Try[Seq[KoodiUri]] {
         get(
@@ -99,13 +103,12 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
           koodiUriCache.put(koodisto)(koodiUrit, Some(15.minutes))
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => koodiUritFromCache = None
         case Failure(exp: KoodistoQueryException) =>
-          throw new RuntimeException(
-            s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
-          )
-
+          querySuccess = false
+          koodiUritFromCache = None
+          logger.error(s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}")
       }
     }
-    koodiUritFromCache.getOrElse(Seq())
+    KoodistoQueryResponse(querySuccess, koodiUritFromCache.getOrElse(Seq()))
   }
   protected def isKoodiVoimassa(
       koodisto: String,

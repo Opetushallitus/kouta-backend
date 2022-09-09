@@ -1,15 +1,18 @@
 package fi.oph.kouta.validation
 
-import java.time.{LocalDate, LocalDateTime}
-import java.time.temporal.ChronoUnit
-import java.util.UUID
-import java.util.regex.Pattern
+import fi.oph.kouta.client.{HakemusPalveluClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
-object Validations extends Logging {
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime}
+import java.util.UUID
+import java.util.regex.Pattern
+
+object Validations {
   private val urlValidator   = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
 
@@ -40,6 +43,12 @@ object Validations extends Logging {
     msg = s"Koulutuskoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutuskoodiuri"
   )
+
+  def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutustyyppiKoodi: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio tyyppiin $ammatillinenPerustutkintoKoulutustyyppiKoodiUri että se voidaan järjestää erityisopetuksena",
+    id = "invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena"
+  )
+
   def invalidLisatietoOtsikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lisätieto-otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidLisatietoOtsikkoKoodiuri"
@@ -181,6 +190,18 @@ object Validations extends Logging {
     msg = s"Hakulomaketta ID:llä $ataruId ei löydy, tai se on poistettu tai lukittu",
     id = "invalidAtaruId"
   )
+  def invalidHakutapaKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Hakutapa-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidHakutapaKoodiUri"
+  )
+  def invalidHaunKohdejoukkoKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Haun kohdejoukko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidHaunKohdejoukkoKoodiUri"
+  )
+  def invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Haun kohdejoukon tarkenne-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidHaunKohdejoukonTarkenneKoodiUri"
+  )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
 
@@ -255,6 +276,52 @@ object Validations extends Logging {
 
   def invalidArkistointiDate(months: Int): ErrorMessage =
     ErrorMessage(msg = s"Arkistointipäivämäärän tulee olla vähintään $months kuukautta haun viimeisimmästä päättymispäivämäärästä.", id = "invalidArkistointiDate")
+  def unknownLiiteId(liiteId: String): ErrorMessage =
+    ErrorMessage(msg = s"Liitettä ID:llä $liiteId ei löydy", id = "unknownLiiteId")
+
+  def unknownValintakoeId(valintaKoeId: String): ErrorMessage =
+    ErrorMessage(msg = s"Valintakoetta ID:llä $valintaKoeId ei löydy", id = "unknownValintakoeId")
+
+  val koodistoServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg = s"KoodiUrin voimassaoloa ei voitu tarkistaa, Koodisto-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "koodistoServiceFailure"
+    )
+
+  val ataruServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"Hakemuslomakkeen voimassaoloa ei voitu tarkistaa, Ataru-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "ataruServiceFailure"
+    )
+
+  val kaksoistutkintoValidationFailedDuetoKoodistoFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"Kaksoistutkintoon liittyvien koulutus-koodiurien voimassaoloa ei voitu tarkistaa, Koodisto-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "kaksoistutkintoValidationFailedDuetoKoodistoFailure"
+    )
+
+  val ePerusteServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"EPerusteen oikeellisuutta ei voitu tarkistaa, ePeruste-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "ePerusteServiceFailure"
+    )
+
+  val organisaatioServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"Organisaatioiden voimassaoloa ei voitu tarkistaa, Organisaatiopalvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "organisaatioServiceFailure"
+    )
+
+  def ePerusteServiceOk(ePerusteValidationStatus: IsValid): Boolean =
+    !ePerusteValidationStatus.exists(
+      _.errorType == ePerusteServiceFailureMsg.id
+    )
+
+  def uuidToString(uuid: Option[UUID]): String = uuid.map(_.toString).getOrElse("")
 
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(
     msg = "koulutuksenAlkamispaivamaara tai koulutuksenPaattymispaivamaara on virheellinen",
@@ -262,6 +329,9 @@ object Validations extends Logging {
   )
   val InvalidMetadataTyyppi: ErrorMessage =
     ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
+
+  def notModifiableMsg(parameter: String, entityType: String): ErrorMessage =
+    ErrorMessage(msg = s"$parameter ei voi muuttaa olemassaolevalle $entityType", id = "notModifiable")
 
   val KoulutusKoodiPattern: Pattern                     = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val HakutapaKoodiPattern: Pattern                     = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
@@ -360,6 +430,93 @@ object Validations extends Logging {
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
+  def assertKoodistoQueryResult(
+      koodiUri: String,
+      queryMethod: String => ExternalQueryResult,
+      path: String,
+      validationContext: ValidationContext,
+      errorMessage: ErrorMessage
+  ): IsValid = {
+    val queryResult = if (validationContext.isKoodistoServiceOk()) queryMethod(koodiUri) else queryFailed
+    validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
+    assertExternalQueryResult(
+      queryResult,
+      path,
+      errorMessage,
+      koodistoServiceFailureMsg
+    )
+  }
+
+  def assertKoulutustyyppiQueryResult(
+      koulutusKoodiUri: String,
+      koulutusTyypit: Seq[String],
+      koulutusKoodiClient: KoulutusKoodiClient,
+      path: String,
+      validationContext: ValidationContext,
+      errorMessage: ErrorMessage,
+      koodistoServiceFailureMessage: ErrorMessage = koodistoServiceFailureMsg
+  ): IsValid = {
+    val queryResult =
+      if (validationContext.isKoodistoServiceOk())
+        koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(koulutusTyypit, koulutusKoodiUri)
+      else queryFailed
+    validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
+    assertExternalQueryResult(
+      queryResult,
+      path,
+      errorMessage,
+      koodistoServiceFailureMessage
+    )
+  }
+
+  def assertKoulutuskoodiQueryResult(
+      koulutusKoodiUri: String,
+      koulutusKoodiFilter: Seq[String],
+      koulutusKoodiClient: KoulutusKoodiClient,
+      path: String,
+      validationContext: ValidationContext,
+      errorMessage: ErrorMessage,
+      koodistoServiceFailureMessage: ErrorMessage = koodistoServiceFailureMsg
+  ): IsValid = {
+    val queryResult =
+      if (validationContext.isKoodistoServiceOk())
+        koulutusKoodiClient.koulutusKoodiUriExists(koulutusKoodiFilter, koulutusKoodiUri)
+      else queryFailed
+    validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
+    assertExternalQueryResult(
+      queryResult,
+      path,
+      errorMessage,
+      koodistoServiceFailureMessage
+    )
+  }
+
+  def assertAtaruQueryResult(
+      ataruId: UUID,
+      hakemusPalveluClient: HakemusPalveluClient,
+      path: String,
+      errorMessage: ErrorMessage
+  ): IsValid = {
+    assertExternalQueryResult(
+      hakemusPalveluClient.isExistingAtaruId(ataruId),
+      path,
+      errorMessage,
+      ataruServiceFailureMsg
+    )
+  }
+
+  def assertExternalQueryResult(
+      externalQueryResult: ExternalQueryResult,
+      path: String,
+      errorMessage: ErrorMessage,
+      externalServiceFailureMessage: ErrorMessage
+  ): IsValid =
+    externalQueryResult match {
+      case e if e == itemFound => NoErrors
+      case e if e == queryFailed => error(path, externalServiceFailureMessage)
+      case _ => error(path, errorMessage)
+    }
+
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
   def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid = (value, oldValue) match {
@@ -370,6 +527,16 @@ object Validations extends Logging {
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
+
+  def validateIfNonEmptySeq[T](
+      values: Seq[T],
+      newValues: Seq[T],
+      path: String,
+      f: (T, Option[T], String) => IsValid
+  ): IsValid =
+    values.zipWithIndex.flatMap { case (t, i) =>
+      if (values.size == newValues.size) f(t, newValues.lift(i), s"$path[$i]") else f(t, None, s"$path[$i]")
+    }
 
   def validateIfNonEmpty(k: Kielistetty, path: String, f: (String, String) => IsValid): IsValid =
     k.flatMap { case (k, v) => f(v, s"$path.$k") }.toSeq
@@ -507,4 +674,17 @@ object Validations extends Logging {
       )
     )
   }
+
+  def validateSubEntityId(
+      subEntityId: Option[UUID],
+      path: String,
+      crudOperation: CrudOperation,
+      allowedIds: Seq[UUID],
+      notAllowedMsg: ErrorMessage
+  ): IsValid =
+    validateIfTrueOrElse(
+      crudOperation == update,
+      assertTrue(!subEntityId.isDefined || allowedIds.contains(subEntityId.get), path, notAllowedMsg),
+      assertNotDefined(subEntityId, path)
+    )
 }

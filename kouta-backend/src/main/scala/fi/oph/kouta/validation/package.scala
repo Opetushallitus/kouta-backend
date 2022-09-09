@@ -48,6 +48,13 @@ package object validation {
     val create, update = Value
   }
 
+  object ExternalQueryResults extends Enumeration {
+    type ExternalQueryResult = Value
+
+    val itemFound, itemNotFound, queryFailed = Value
+    def fromBoolean(boolValue: Boolean): ExternalQueryResult =
+      if (boolValue) itemFound else itemNotFound
+  }
   val ammatillisetKoulutustyypit =
     Seq(
       "koulutustyyppi_1",
@@ -79,4 +86,5 @@ package object validation {
 
   val ammatillinenPerustutkintoKoulutustyyppi = "koulutustyyppi_26"
   val lukioKoulutusKoodiUritAllowedForKaksoistutkinto = Seq("koulutus_301101", "koulutus_309902")
+  val ammatillinenPerustutkintoKoulutustyyppiKoodiUri = "koulutustyyppi_1"
 }

@@ -156,31 +156,6 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     }
   }
 
-  it should "validate dates only when adding a new julkaistu haku" in {
-    val thisHaku = hakuWithAlkamisvuosi(haku, "2007")
-
-    put(thisHaku.copy(tila = Tallennettu))
-
-    put(HakuPath, bytes(thisHaku.copy(tila = Julkaistu)), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(pastDateMsg("2007"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
-    }
-  }
-
-  it should "validate alkamiskausi is given for yhteishaku" in {
-    put(HakuPath, yhteishakuWithoutAlkamiskausi, ophSession, 400)
-  }
-
-  it should "not validate alkamiskausi is given if not yhteishaku" in {
-    put(HakuPath, bytes(jatkuvaHakuWithoutAlkamiskausi), defaultHeaders) {
-      withClue(body) {
-        status should equal(200)
-      }
-    }
-  }
-
   "Update haku" should "update haku" in {
     val oid = put(haku)
     val thisHaku = haku(oid)
@@ -322,47 +297,6 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     }
   }
 
-  it should "validate dates when moving from other states to julkaistu" in {
-    val thisHaku = hakuWithAlkamisvuosi(haku, "2017").copy(tila = Tallennettu)
-
-    val oid = put(thisHaku)
-    val thisHakuWithOid = thisHaku.copy(oid = Some(HakuOid(oid)))
-    val lastModified = get(oid, thisHakuWithOid)
-
-    post(HakuPath, bytes(thisHakuWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(pastDateMsg("2017"), "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi"))
-    }
-
-    update(thisHakuWithOid.copy(tila = Poistettu), lastModified)
-  }
-
-  it should "not validate dates when updating a julkaistu haku" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
-
-    update(hakuWithAlkamisvuosi(haku(oid), "2017"), lastModified)
-  }
-
-
-  it should "update haun päivämäärät" in {
-    val pvmHaku = haku.copy(
-      hakukohteenLiittamisenTakaraja = Some(TestData.inFuture(50000)),
-      hakukohteenMuokkaamisenTakaraja = None)
-    val oid = put(pvmHaku)
-    val lastModified = get(oid, pvmHaku.copy(oid = Some(HakuOid(oid))))
-
-    val updatedPvmHaku = haku.copy(
-      oid = Some(HakuOid(oid)),
-      hakukohteenMuokkaamisenTakaraja = Some(TestData.inFuture(50000)),
-      hakukohteenLiittamisenTakaraja = None)
-
-    update(updatedPvmHaku, lastModified)
-    get(oid, updatedPvmHaku)
-  }
-
   it should "delete all hakuajat if none is given" in {
     val oid = put(haku)
     val thisHaku = haku(oid)
@@ -383,54 +317,4 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     val lastModified = get(id, haku(id))
     update(haku(id).copy(tila = Tallennettu), lastModified, 403, crudSessions(haku.organisaatioOid))
   }
-
-  it should "pass legal state changes" in {
-    val id = put(haku.copy(tila = Tallennettu))
-    var lastModified = get(id, haku(id).copy(tila = Tallennettu))
-    update(haku(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
-    lastModified = get(id, haku(id).copy(tila = Julkaistu))
-    update(haku(id).copy(tila = Arkistoitu), lastModified, expectUpdate = true)
-    lastModified = get(id, haku(id).copy(tila = Arkistoitu))
-    update(haku(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
-    lastModified = get(id, haku(id).copy(tila = Julkaistu))
-
-    val tallennettuId = put(haku.copy(tila = Tallennettu))
-    lastModified = get(tallennettuId, haku(tallennettuId).copy(tila = Tallennettu))
-    update(haku(tallennettuId).copy(tila = Poistettu), lastModified, expectUpdate = true)
-  }
-
-  it should "fail illegal state changes" in {
-    val tallennettuId = put(haku.copy(tila = Tallennettu))
-    val julkaistuId = put(haku.copy(tila = Julkaistu))
-    val arkistoituId = put(haku.copy(tila = Arkistoitu))
-
-    var lastModified = get(tallennettuId, haku(tallennettuId).copy(tila = Tallennettu))
-    update(HakuPath, haku(tallennettuId).copy(tila = Arkistoitu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Tallennettu, Arkistoitu))))
-    lastModified = get(julkaistuId, haku(julkaistuId).copy(tila = Julkaistu))
-    update(HakuPath, haku(julkaistuId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Julkaistu, Poistettu))))
-    lastModified = get(arkistoituId, haku(arkistoituId).copy(tila = Arkistoitu))
-    update(HakuPath, haku(arkistoituId).copy(tila = Tallennettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Arkistoitu, Tallennettu))))
-    update(HakuPath, haku(arkistoituId).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", illegalStateChange("haulle", Arkistoitu, Poistettu))))
-  }
-
-  private def createHakuWithHakukohteet(markAllHakukohteetDeleted: Boolean) = {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
-    val hakuOid = put(haku.copy(tila = Tallennettu))
-    put(hakukohde(toteutusOid, hakuOid).copy(tila = Poistettu), ophSession)
-    put(hakukohde(toteutusOid, hakuOid).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu), ophSession)
-    val lastModified = get(hakuOid, haku(hakuOid).copy(tila = Tallennettu))
-    (hakuOid, lastModified)
-  }
-
-  it should "pass deletion when related hakukohteet deleted" in {
-    val (hakuOid: String, lastModified: String) = createHakuWithHakukohteet(true)
-    update(haku(hakuOid).copy(tila = Poistettu), lastModified, expectUpdate = true)
-  }
-
-  it should "fail deletion when all related hakukohteet not deleted" in {
-    val (hakuOid: String, lastModified: String) = createHakuWithHakukohteet(false)
-    update(HakuPath, haku(hakuOid).copy(tila = Poistettu), ophSession, lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Hakua", "hakukohteita"))))
-  }
-
 }

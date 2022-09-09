@@ -11,6 +11,7 @@ import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDA
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
+import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 

@@ -1,12 +1,12 @@
 package fi.oph.kouta
 
-import java.time.temporal.ChronoUnit
-import java.time.{LocalDate, LocalDateTime, LocalTime}
-import java.util.UUID
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
+
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 object TestData {
   def now(): LocalDateTime                   = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
@@ -263,6 +263,7 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(
       ErikoislaakariKoulutusMetadata(
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_091#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         isMuokkaajaOphVirkailija = Some(true)
       )
@@ -549,13 +550,9 @@ object TestData {
     ajastettuHaunJaHakukohteidenArkistointiAjettu = None,
     kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
     kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_1#1"),
-    //hakulomaketyyppi = Some(EiSähköistä),
     hakulomaketyyppi = Some(MuuHakulomake),
-    //hakulomakeAtaruId = Some(UUID.randomUUID()),
-    //hakulomakeKuvaus = Map(
-    //  Fi -> "Hakulomake tulostetaan ja toimitetaan postitse",
-    //  Sv -> "Hakulomake tulostetaan ja toimitetaan postitse sv"
-    //),
+    hakulomakeAtaruId = None,
+    hakulomakeKuvaus = Map(),
     hakulomakeLinkki = Map(Fi -> "https://www.koulu.test.fi/hakemusinfo-fi", Sv -> "https://www.koulu.test.fi/hakemusinfo-sv"),
     metadata = Some(
       HakuMetadata(

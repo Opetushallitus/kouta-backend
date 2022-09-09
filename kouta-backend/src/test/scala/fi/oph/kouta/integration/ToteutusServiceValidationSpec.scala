@@ -1,15 +1,16 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
-import fi.oph.kouta.TestOids.{AmmOid, LonelyOid, LukioOid, OtherOid}
+import fi.oph.kouta.TestOids.{AmmOid, LonelyOid, LukioOid, OtherOid, UnknownOid}
 import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
 import fi.oph.kouta.service.{OrganisaatioService, ToteutusServiceValidation}
+import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError}
+import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError, ammatillinenPerustutkintoKoulutustyyppiKoodiUri}
 import org.scalatest.Assertion
 
 import java.time.LocalDateTime
@@ -41,6 +42,14 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   val toteutusOid  = ToteutusOid("1.2.246.562.17.00000000000000000123")
   val toteutusOid2 = ToteutusOid("1.2.246.562.17.00000000000000000124")
+
+  val existingToteutus = JulkaistuAmmToteutus.copy(oid = Some(toteutusOid))
+  val koulutusOid1 = KoulutusOid("1.2.246.562.13.00000000000000000997")
+  val koulutusOid2 = KoulutusOid("1.2.246.562.13.00000000000000000998")
+  val invalidKoulutusOid = KoulutusOid("1.2.246.562.13.00000000000000000999")
+
+  val invalidKoulutuksetKoodiUri = "koulutus_XXX#1"
+  val validKoulutuksetKoodiUri = "koulutus_371101#1"
 
   private def ammToteutusWithOpetusParameters(
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_1#1"),
@@ -159,15 +168,17 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     super.beforeEach()
     // yleiset
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(OtherOid, AmmOid)))
-      .thenAnswer(Set[OrganisaatioOid]())
+      .thenAnswer(Right(Set[OrganisaatioOid]()))
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(LonelyOid, LukioOid)))
-      .thenAnswer(Set(LonelyOid))
-    when(koulutusKoodiClient.opetusKieliKoodiUriExists("oppilaitoksenopetuskieli_1#1")).thenAnswer(true)
-    when(koulutusKoodiClient.opetusAikaKoodiUriExists("opetusaikakk_1#1")).thenAnswer(true)
-    when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_1#1")).thenAnswer(true)
-    when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_2#1")).thenAnswer(true)
-    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(true)
-    when(hakuKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(true)
+      .thenAnswer(Right(Set[OrganisaatioOid](LonelyOid)))
+    when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(LonelyOid, UnknownOid)))
+      .thenAnswer(Left(new RuntimeException()))
+    when(koulutusKoodiClient.opetusKieliKoodiUriExists("oppilaitoksenopetuskieli_1#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.opetusAikaKoodiUriExists("opetusaikakk_1#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_1#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_2#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(itemFound)
 
     // tietokantakyselyt
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.123"))).thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu)))
@@ -182,13 +193,21 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.132")))
       .thenAnswer(Some(KkOpintojaksoKoulutus.copy(tila = Julkaistu)))
     when(koulutusDao.get(kkOpintokokonaisuusKoulutus.oid.get)).thenAnswer(Some(kkOpintokokonaisuusKoulutus))
+    when(koulutusDao.get(koulutusOid1))
+      .thenAnswer(Some(AmmKoulutus.copy(oid = Some(koulutusOid1),
+        koulutuksetKoodiUri = Seq(invalidKoulutuksetKoodiUri))))
+    when(koulutusDao.get(koulutusOid2))
+      .thenAnswer(Some(AmmKoulutus.copy(oid = Some(koulutusOid2),
+        koulutuksetKoodiUri = Seq(validKoulutuksetKoodiUri))))
+    when(koulutusDao.get(invalidKoulutusOid)).thenAnswer(None)
+
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
-      .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq("koulutus_371101#1")))
+      .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq(validKoulutuksetKoodiUri)))
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId2)).thenAnswer((None, None, None))
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId3))
-      .thenAnswer((Some(Tallennettu), Some(Amm), Some(Seq("koulutus_371101#1"))))
+      .thenAnswer((Some(Tallennettu), Some(Amm), Some(Seq(validKoulutuksetKoodiUri))))
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId4))
-      .thenAnswer((Some(Poistettu), Some(Amm), Some(Seq("koulutus_371101#1"))))
+      .thenAnswer((Some(Poistettu), Some(Amm), Some(Seq(validKoulutuksetKoodiUri))))
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId5)).thenAnswer((Some(Julkaistu), Some(Yo), None))
     when(hakukohdeDao.listByToteutusOid(toteutusOid, TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Seq[HakukohdeListItem]())
@@ -196,20 +215,23 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       .thenAnswer(Seq(MinHakukohdeListItem.copy(toteutusOid = toteutusOid2)))
 
     // ammatillinen
-    when(koulutusKoodiClient.osaamisalaKoodiUriExists("osaamisala_0001#1")).thenAnswer(true)
+    when(koulutusKoodiClient.osaamisalaKoodiUriExists("osaamisala_0001#1")).thenAnswer(itemFound)
     // lukio
-    when(koulutusKoodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_1#1")).thenAnswer(true)
+    when(koulutusKoodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_1#1")).thenAnswer(itemFound)
     when(
       koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_1#1")
-    ).thenAnswer(true)
-    when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_EN#1")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_DE#1")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_SV#1")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FR#1")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_ES#1")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI#1")).thenAnswer(true)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_ET#1")).thenAnswer(true)
+    ).thenAnswer(itemFound)
+    when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(Seq(ammatillinenPerustutkintoKoulutustyyppiKoodiUri), validKoulutuksetKoodiUri)).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(Seq(ammatillinenPerustutkintoKoulutustyyppiKoodiUri), invalidKoulutuksetKoodiUri)).thenAnswer(itemNotFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_EN#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_DE#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_SV#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FR#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_ES#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_ET#1")).thenAnswer(itemFound)
   }
 
   "Validation" should "succeed when new valid toteutus" in {
@@ -240,8 +262,77 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     passValidation(kkOpintojaksoToteutus)
   }
 
+  it should "succeed when tarjoajat not changed in modify operation, eventhough unknown organisaatiot" in {
+    val toteutus = existingToteutus.copy(tarjoajat = List(LonelyOid, LukioOid))
+    passValidation(toteutus, toteutus)
+  }
+
+  it should "succeed when opetus not changed in modify operation, eventhough unknown koodiUrit" in {
+    val toteutus1 = ammToteutusWithOpetusParameters(
+      Seq("oppilaitoksenopetuskieli_9#1"),
+      Seq("opetusaikakk_9#1"),
+      Seq("opetuspaikkakk_9#1"),
+      ToteutuksenOpetus.apuraha,
+      Seq(Lisatieto1.copy(otsikkoKoodiUri = "koulutuksenlisatiedot_99#1"))
+    ).copy(oid = Some(toteutusOid))
+    passValidation(toteutus1, toteutus1)
+
+    val toteutus2 =
+      ammToteutusWithKoulutuksenAlkamiskausi(startDate = None, endDate = None, koodiUri = Some("kausi_k#99"))
+        .copy(tila = Tallennettu, oid = Some(toteutusOid))
+    passValidation(toteutus2, toteutus2)
+  }
+
+  it should "succeed when ammatilliset osaamisalat not changed in modify operation, eventhough unknown osaamisalaKoodiUri" in {
+    val toteutus = existingToteutus.copy(
+      tila = Tallennettu,
+      metadata = Some(
+        AmmToteutuksenMetatieto.copy(osaamisalat =
+          List(
+            AmmatillinenOsaamisala(
+              koodiUri = "osaamisala_0002"
+            )
+          )
+        )
+      )
+    )
+    passValidation(toteutus, toteutus)
+  }
+
+  it should "succeed when lukiototeutus not change in modify operation, eventhough unknown koodiUrit" in {
+    val unknown = Seq("kieli_XX1")
+    val toteutus1 = lukioToteutusWithKieliParameters(unknown, unknown, unknown, unknown, unknown, unknown, unknown)
+      .copy(oid = Some(toteutusOid))
+    passValidation(toteutus1, toteutus1)
+    val toteutus2 = lukioToteutusWithSpecificParameters(
+      painotukset = List(
+        LukiolinjaTieto(koodiUri = "lukiopainotukset_9#1", Map(Fi -> "painotus 1 kuvaus", Sv -> "painotus 1 kuvaus sv"))
+      ),
+      erityisetKoulutustehtavat = List(
+        LukiolinjaTieto(
+          koodiUri = "lukiolinjaterityinenkoulutustehtava_9#1",
+          Map(Fi -> "erityinen koulutustehtava 1 kuvaus", Sv -> "erityinen koulutustehtava 1 kuvaus sv")
+        )
+      ),
+      diplomit = List(
+        LukiodiplomiTieto(
+          koodiUri = "moduulikoodistolops2021_kald9#1",
+          linkki = Map(Fi -> "http://linkki.fi", Sv -> "http://link.se"),
+          linkinAltTeksti = Map(Fi -> "Suomeksi", Sv -> "På svenska")
+        )
+      )
+    ).copy(oid = Some(toteutusOid))
+    passValidation(toteutus2, toteutus2)
+  }
+
   it should "fail if perustiedot is invalid" in {
-    failValidation(lukioToteutus.copy(oid = Some(ToteutusOid("1.2.3"))), "oid", validationMsg("1.2.3"))
+    failValidation(
+      lukioToteutus.copy(oid = Some(ToteutusOid("1.2.3"))),
+      Seq(
+        ValidationError("oid", validationMsg("1.2.3")),
+        ValidationError("oid", notMissingMsg(Some(ToteutusOid("1.2.3"))))
+      )
+    )
     failsValidation(lukioToteutus.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(lukioToteutus.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(lukioToteutus.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
@@ -253,6 +344,17 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     failsValidation(lukioToteutus.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
     failValidation(lukioToteutus.copy(koulutusOid = KoulutusOid("puppu")), "koulutusOid", validationMsg("puppu"))
     failValidation(lukioToteutus.copy(teemakuva = Some("puppu")), "teemakuva", invalidUrl("puppu"))
+  }
+
+  it should "fail if koulutustyyppi changed in modify operation" in {
+    failModifyValidation(lukioToteutus.copy(oid = Some(toteutusOid), metadata = Some(lukioToteutus.metadata.get.asInstanceOf[LukioToteutusMetadata].copy(tyyppi = Amm))), lukioToteutus, Seq(
+      ValidationError("metadata.tyyppi", tyyppiMismatch("koulutuksen", "1.2.246.562.13.125")),
+      ValidationError("metadata.tyyppi", notModifiableMsg("koulutustyyppiä", "toteutukselle"))
+    ))
+  }
+
+  it should "fail if oid not given in modify operation" in {
+    failModifyValidation(lukioToteutus, lukioToteutus, Seq(ValidationError("oid", missingMsg)))
   }
 
   it should "fail if metadata missing from julkaistu totetutus" in {
@@ -270,6 +372,14 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
         ValidationError("tarjoajat[0]", validationMsg("puppu")),
         ValidationError("tarjoajat[1]", unknownTarjoajaOid(LonelyOid))
       )
+    )
+  }
+
+  it should "fail if organisaatio-service not working when checking tarjoajat" in {
+    failValidation(
+      lukioToteutus.copy(tarjoajat = List(LonelyOid, UnknownOid)),
+      "tarjoajat",
+      organisaatioServiceFailureMsg
     )
   }
 
@@ -945,32 +1055,33 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     )
   }
 
+  val ammWithId = JulkaistuAmmToteutus.copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123")))
   "State change" should "succeed from tallennettu to julkaistu" in {
-    passValidation(JulkaistuAmmToteutus, JulkaistuAmmToteutus.copy(tila = Tallennettu))
+    passValidation(ammWithId, JulkaistuAmmToteutus.copy(tila = Tallennettu))
   }
 
   it should "succeed from julkaistu to arkistoitu" in {
-    passValidation(JulkaistuAmmToteutus.copy(tila = Arkistoitu), JulkaistuAmmToteutus)
+    passValidation(ammWithId.copy(tila = Arkistoitu), JulkaistuAmmToteutus)
   }
 
   it should "succeed from arkistoitu to julkaistu" in {
-    passValidation(JulkaistuAmmToteutus, JulkaistuAmmToteutus.copy(tila = Arkistoitu))
+    passValidation(ammWithId, JulkaistuAmmToteutus.copy(tila = Arkistoitu))
   }
 
   it should "succeed from julkaistu to tallennettu" in {
-    passValidation(JulkaistuAmmToteutus.copy(tila = Tallennettu), JulkaistuAmmToteutus)
+    passValidation(ammWithId.copy(tila = Tallennettu), JulkaistuAmmToteutus)
   }
 
   it should "succeed from tallennettu to poistettu when no existing hakukohteet for toteutus" in {
     passValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu, oid = Some(toteutusOid)),
+      ammWithId.copy(tila = Poistettu, oid = Some(toteutusOid)),
       JulkaistuAmmToteutus.copy(tila = Tallennettu)
     )
   }
 
   it should "fail from tallennettu to arkistoitu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Arkistoitu),
+      ammWithId.copy(tila = Arkistoitu),
       JulkaistuAmmToteutus.copy(tila = Tallennettu),
       illegalStateChange("toteutukselle", Tallennettu, Arkistoitu)
     )
@@ -978,7 +1089,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from arkistoitu to tallennettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Tallennettu),
+      ammWithId.copy(tila = Tallennettu),
       JulkaistuAmmToteutus.copy(tila = Arkistoitu),
       illegalStateChange("toteutukselle", Arkistoitu, Tallennettu)
     )
@@ -986,7 +1097,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from julkaistu to poistettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu),
+      ammWithId.copy(tila = Poistettu),
       JulkaistuAmmToteutus,
       illegalStateChange("toteutukselle", Julkaistu, Poistettu)
     )
@@ -994,7 +1105,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from arkistoitu to poistettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu),
+      ammWithId.copy(tila = Poistettu),
       JulkaistuAmmToteutus.copy(tila = Arkistoitu),
       illegalStateChange("toteutukselle", Arkistoitu, Poistettu)
     )
@@ -1002,7 +1113,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from poistettu to tallennettu" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Tallennettu),
+      ammWithId.copy(tila = Tallennettu),
       JulkaistuAmmToteutus.copy(tila = Poistettu),
       illegalStateChange("toteutukselle", Poistettu, Tallennettu)
     )
@@ -1010,7 +1121,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "fail from tallennettu to poistettu when existing hakukohteet for toteutus" in {
     failStageChangeValidation(
-      JulkaistuAmmToteutus.copy(tila = Poistettu, oid = Some(toteutusOid2)),
+      ammWithId.copy(tila = Poistettu, oid = Some(toteutusOid2)),
       JulkaistuAmmToteutus.copy(tila = Tallennettu),
       integrityViolationMsg("Toteutusta", "hakukohteita")
     )
@@ -1021,7 +1132,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     val startDate = yearAgo.minusDays(3)
     val endDate   = yearAgo.minusDays(1)
     failStageChangeValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate)),
+      ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate))
+        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
       JulkaistuAmmToteutus.copy(tila = Tallennettu),
       Seq(
         ValidationError(
@@ -1053,7 +1165,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   it should "succeed when alkamiskausi not given" in {
     passValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(None, None, startYear = Some(LocalDateTime.now().getYear.toString)),
+      ammToteutusWithKoulutuksenAlkamiskausi(None, None, startYear = Some(LocalDateTime.now().getYear.toString))
+        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
       JulkaistuAmmToteutus.copy(tila = Tallennettu)
     )
   }
@@ -1062,6 +1175,35 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     val yearAgo   = LocalDateTime.now().minusYears(1)
     val startDate = yearAgo.minusDays(3)
     val endDate   = yearAgo.minusDays(1)
-    passValidation(ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate)), JulkaistuAmmToteutus)
+    passValidation(
+      ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate))
+        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
+      JulkaistuAmmToteutus
+    )
+  }
+
+  it should "fail if ammatillinenPerustutkintoErityisopetuksena is true and koulutustyyppi does not have relation to koulutustyyppi_1" in {
+    failValidation(
+      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid1, koulutuksetKoodiUri = Seq(invalidKoulutuksetKoodiUri), metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true)))),
+      Seq(ValidationError("koulutuksetKoodiUri[0]",
+      invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(invalidKoulutuksetKoodiUri)))
+    )
+  }
+
+  it should "succeed if ammatillinenPerustutkintoErityisopetuksena is true and koulutustyyppi has valid relation to koulutustyyppi_1" in {
+    passValidation(
+      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid2, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true))))
+    )
+  }
+
+  it should "succeed if no ammatillinenPerustutkintoErityisopetuksena defined and koulutustyyppi has valid relation to koulutustyyppi_1" in {
+    passValidation(
+      JulkaistuAmmToteutus.copy(koulutusOid = koulutusOid2, metadata = Some(AmmToteutuksenMetatieto))
+    )
+  }
+
+  it should "fail if ammatillinenPerustutkintoErityisopetuksena is true and koulutus is not found" in {
+    failValidation(JulkaistuAmmToteutus.copy(koulutusOid = invalidKoulutusOid, metadata = Some(AmmToteutuksenMetatieto)), "koulutusOid", nonExistent("Koulutusta", invalidKoulutusOid))
+    failValidation(JulkaistuAmmToteutus.copy(koulutusOid = invalidKoulutusOid, metadata = Some(AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true)))), "koulutusOid", nonExistent("Koulutusta", invalidKoulutusOid))
   }
 }

@@ -94,6 +94,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     addDefaultKoodistoMockResponsesForKoulutus()
     addDefaultKoodistoMockResponsesForToteutus()
     addDefaultKoodistoMockResponsesForHakukohde()
+    addDefaultKoodistoMockResponsesForHaku()
   }
 
   override def afterAll(): Unit = {
@@ -191,6 +192,11 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     mockKoodistoResponse("hakukohteetperusopetuksenjalkeinenyhteishaku", Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None)))
   }
 
+  def addDefaultKoodistoMockResponsesForHaku(): Unit = {
+    mockKoodistoResponse("hakutapa", Seq(("hakutapa_03", 1, None)))
+    mockKoodistoResponse("haunkohdejoukko", Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_05", 3, None)))
+    mockKoodistoResponse("haunkohdejoukontarkenne", Seq(("haunkohdejoukontarkenne_1", 1, None)))
+  }
 }
 
 sealed trait HttpSpec extends KoutaJsonFormats {

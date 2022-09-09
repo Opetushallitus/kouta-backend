@@ -15,6 +15,7 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)._1 should contain theSameElementsAs
       List(ChildOid, GrandChildOid, EvilGrandChildOid)
   }
+
   it should "return the root organization oid when called with the root organization oid" in {
     val response = organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OphOid)
     response._1 should contain theSameElementsAs List(OphOid)
@@ -70,5 +71,9 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
     organisaatioService
       .getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))
       ._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, Lk, Muu, Tuva, AikuistenPerusopetus)
+  }
+
+  "findUnknownOrganisaatioOidsFromHierarkia" should "return correct organisaatioOids" in {
+    organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(ChildOid, OrganisaatioOid("1.2.246.562.10.121212121212"))) should equal(Right(Set(OrganisaatioOid("1.2.246.562.10.121212121212"))))
   }
 }
