@@ -7,14 +7,14 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>7.1.0-SNAPSHOT</version>
+        <version>7.2.0-SNAPSHOT</version>
     </parent>
     <artifactId>kouta-backend</artifactId>
-    <version>7.1.0-SNAPSHOT</version>
+    <version>7.2.0-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.17.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.18.0-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
