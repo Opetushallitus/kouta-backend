@@ -1,26 +1,33 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{inFuture, inPast}
-import fi.oph.kouta.client.HakuKoodiClient
-import fi.oph.kouta.domain.{Ajanjakso, AlkamiskausiJaVuosi, Aloituspaikat, Fi, Julkaistu, Julkaisutila, KoulutuksenAlkamiskausi, Osoite, Sv, Tallennettu, TarkkaAlkamisajankohta, Valintakoe, ValintakoeMetadata, Valintakoetilaisuus}
-import fi.oph.kouta.service.KoutaValidationException
-import fi.oph.kouta.validation.Validations.{InvalidKoulutuspaivamaarat, invalidAjanjaksoMsg, invalidKausiKoodiuri, invalidKielistetty, invalidPostiosoiteKoodiUri, invalidValintakoeTyyppiKooriuri, missingMsg, notNegativeMsg, pastDateMsg, validationMsg}
-import fi.oph.kouta.validation.{NoErrors, ValidatableSubEntity, ValidationError}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient}
+import fi.oph.kouta.domain._
+import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
+import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation._
 import org.mockito.scalatest.MockitoSugar
-import org.scalatest.{Assertion, BeforeAndAfterEach}
 import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.must.Matchers.{contain, equal}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Assertion, BeforeAndAfterEach}
+
+import java.util.UUID
 
 class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val hakuKoodiClient = mock[HakuKoodiClient]
+  val hakuKoodiClient      = mock[HakuKoodiClient]
+  val koulutusKoodiClient  = mock[KoulutusKoodiClient]
+  val hakemusPalveluClient = mock[HakemusPalveluClient]
 
   val vainSuomeksi         = Map(Fi -> "vain suomeksi", Sv -> "")
   val kielistettyWoSvenska = invalidKielistetty(Seq(Sv))
+  val fullKielistetty      = Map(Fi -> "suomeksi", Sv -> "på svenska")
+  val kielet               = Seq(Fi, Sv)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(true)
+    when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
   }
 
   def failsValidation(
@@ -28,21 +35,36 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.validate(tila, Seq(Fi, Sv), "path", hakuKoodiClient.kausiKoodiUriExists) match {
+    e.validate("path", Some(e), ValidationContext(tila, kielet, create), hakuKoodiClient.kausiKoodiUriExists) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }
 
   def failsValidationOnJulkaisu(
-                       e: KoulutuksenAlkamiskausi,
-                       expected: Seq[ValidationError]
-                     ): Assertion =
+      e: KoulutuksenAlkamiskausi,
+      expected: Seq[ValidationError]
+  ): Assertion =
     e.validateOnJulkaisu("path") match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }
 
-  "KoulutuksenAlkamiskausi validation" should "fail if invalid AlkamiskausiKoodiUri" in {
+  "KoulutuksenAlkamiskausi validation" should "Succeed if alkamiskausiKoodiUri not changed in modify operation" in {
+    KoulutuksenAlkamiskausi(
+      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+      koulutuksenAlkamiskausiKoodiUri = Some("kausi_xx#2")
+    ).validate(
+      "path",
+      None,
+      ValidationContext(Tallennettu, kielet, update),
+      hakuKoodiClient.kausiKoodiUriExists
+    ) match {
+      case NoErrors =>
+      case errors   => fail("Expected no errors, but received: " + errors)
+    }
+  }
+
+  it should "fail if invalid AlkamiskausiKoodiUri" in {
     failsValidation(
       KoulutuksenAlkamiskausi(
         alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
@@ -117,7 +139,8 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       koulutuksenPaattymispaivamaara = Some(inPast(500)),
       koulutuksenAlkamisvuosi = Some("2020")
     )
-    failsValidationOnJulkaisu(inPastJakso,
+    failsValidationOnJulkaisu(
+      inPastJakso,
       Seq(
         ValidationError(
           "path.koulutuksenAlkamisvuosi",
@@ -140,12 +163,29 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.validate(tila, Seq(Fi, Sv), "path", hakuKoodiClient.postiosoitekoodiExists) match {
+    e.validate(
+      "path",
+      Some(e),
+      ValidationContext(tila, kielet, create),
+      hakuKoodiClient.postiosoitekoodiExists
+    ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }
 
-  "Osoite validation" should "fail if invalid postinumeroKoodiUri" in {
+  "Osoite validation" should "Succeed if postinumeroKoodiUri not changed in modify operation" in {
+    Osoite(postinumeroKoodiUri = Some("posti_99999#2")).validate(
+      "path",
+      None,
+      ValidationContext(Tallennettu, kielet, update),
+      hakuKoodiClient.postiosoitekoodiExists
+    ) match {
+      case NoErrors =>
+      case errors   => fail("Expected no errors, but received: " + errors)
+    }
+  }
+
+  it should "fail if invalid postinumeroKoodiUri" in {
     failsValidation(
       Osoite(postinumeroKoodiUri = Some("puppu")),
       Tallennettu,
@@ -169,12 +209,15 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
   def failsValidation(
       e: Valintakoe,
       tila: Julkaisutila,
+      allowedIds: Seq[UUID] = Seq(),
+      crudOperation: CrudOperation = create,
       expected: Seq[ValidationError]
   ): Assertion =
     e.validate(
-      tila,
-      Seq(Fi, Sv),
       "path",
+      Some(e),
+      ValidationContext(tila, kielet, crudOperation),
+      allowedIds,
       hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
       hakuKoodiClient.postiosoitekoodiExists
     ) match {
@@ -182,9 +225,28 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       case errors   => errors should contain theSameElementsAs expected
     }
 
+  def passValidation(
+      e: Valintakoe,
+      oldE: Option[Valintakoe],
+      tila: Julkaisutila,
+      crudOperation: CrudOperation = create,
+      allowedIds: Seq[UUID] = Seq()
+  ): Assertion =
+    e.validate(
+      "path",
+      oldE,
+      ValidationContext(tila, kielet, crudOperation),
+      allowedIds,
+      hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
+      hakuKoodiClient.postiosoitekoodiExists
+    ) match {
+      case NoErrors => succeed
+      case errors   => fail("Expected no errors, but received: " + errors)
+    }
+
   "Valintakoe validation" should "succeed when julkaistu valintakoe without ennakkovalmistelut nor erityisjärjestelyt" in {
     val validKielistetty = Map(Fi -> "suomeksi", Sv -> "på svenska")
-    Valintakoe(
+    val koe = Valintakoe(
       nimi = validKielistetty,
       metadata = Some(
         ValintakoeMetadata(
@@ -194,28 +256,51 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
           ohjeetErityisjarjestelyihin = Map()
         )
       )
-    ).validate(
+    )
+    passValidation(
+      koe,
+      Some(koe),
       Julkaistu,
-      Seq(Fi, Sv),
-      "path",
-      hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
-      hakuKoodiClient.postiosoitekoodiExists
-    ) match {
-      case NoErrors =>
-      case errors   => fail("Expected no errors, but received: " + errors)
-    }
+      create
+    )
+  }
+
+  it should "succeed if tyyppiKoodiUri not changed in modify operation" in {
+    passValidation(Valintakoe(tyyppiKoodiUri = Some("valintakokeentyyppi_99#1")), None, Tallennettu, update)
+  }
+
+  it should "succeed when correct ID in modify operation" in {
+    val id = UUID.randomUUID()
+    passValidation(Valintakoe(id = Some(id)), None, Tallennettu, update, Seq(id))
+  }
+
+  it should "fail if id given for new valintakoe" in {
+    val id = Some(UUID.randomUUID())
+    failsValidation(Valintakoe(id = id), Tallennettu, expected = Seq(ValidationError("path.id", notMissingMsg(id))))
+  }
+
+  it should "fail if unknown id in modified valintakoe" in {
+    val id = Some(UUID.randomUUID())
+    failsValidation(
+      Valintakoe(id = id),
+      Tallennettu,
+      Seq(UUID.randomUUID()),
+      update,
+      Seq(ValidationError("path.id", unknownValintakoeId(id.get.toString)))
+    )
   }
 
   it should "fail if invalid tyyppiKoodiUri" in {
     failsValidation(
       Valintakoe(tyyppiKoodiUri = Some("puppu")),
       Tallennettu,
-      Seq(ValidationError("path.tyyppiKoodiUri", validationMsg("puppu")))
+      expected = Seq(ValidationError("path.tyyppiKoodiUri", validationMsg("puppu")))
     )
     failsValidation(
       Valintakoe(tyyppiKoodiUri = Some("valintakokeentyyppi_99#1")),
       Tallennettu,
-      Seq(ValidationError("path.tyyppiKoodiUri", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_99#1")))
+      expected =
+        Seq(ValidationError("path.tyyppiKoodiUri", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_99#1")))
     )
   }
 
@@ -235,7 +320,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
         )
       ),
       Julkaistu,
-      Seq(
+      expected = Seq(
         ValidationError("path.metadata.tietoja", kielistettyWoSvenska),
         ValidationError("path.metadata.vahimmaispisteet", notNegativeMsg),
         ValidationError("path.metadata.ohjeetEnnakkovalmistautumiseen", kielistettyWoSvenska),
@@ -250,12 +335,29 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.validate(tila, Seq(Fi, Sv), "path", hakuKoodiClient.postiosoitekoodiExists) match {
+    e.validate(
+      "path",
+      Some(e),
+      ValidationContext(tila, kielet, create),
+      hakuKoodiClient.postiosoitekoodiExists
+    ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }
 
-  "Valintakoetilaisuus validation" should "fail if invalid osoite" in {
+  "Valintakoetilaisuus validation" should "Succeed if postinumeroKoodiUri not changed in modify operation" in {
+    Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("posti_99999#2")))).validate(
+      "path",
+      None,
+      ValidationContext(Tallennettu, kielet, create),
+      hakuKoodiClient.postiosoitekoodiExists
+    ) match {
+      case NoErrors =>
+      case errors   => fail("Expected no errors, but received: " + errors)
+    }
+  }
+
+  it should "fail if invalid osoite" in {
     failsValidation(
       Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("puppu")))),
       Tallennettu,
@@ -313,6 +415,211 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       Seq(
         ValidationError("path.lukumaara", missingMsg),
         ValidationError("path.kuvaus", kielistettyWoSvenska)
+      )
+    )
+  }
+
+  def failsValidation(
+      e: Yhteyshenkilo,
+      tila: Julkaisutila,
+      expected: Seq[ValidationError]
+  ): Assertion =
+    e.validate(tila, Seq(Fi, Sv), "path") match {
+      case NoErrors => fail("Expecting validation failure, but it succeeded")
+      case errors   => errors should contain theSameElementsAs expected
+    }
+
+  "Yhteyshenkilö validation" should "fail if missing or invalid values in julkaistu yhteyshenkilö" in {
+    failsValidation(Yhteyshenkilo(Map(), vainSuomeksi, vainSuomeksi, vainSuomeksi, vainSuomeksi), Julkaistu, Seq(
+      ValidationError("path.nimi", invalidKielistetty(kielet)),
+      ValidationError("path.titteli", kielistettyWoSvenska),
+      ValidationError("path.sahkoposti", kielistettyWoSvenska),
+      ValidationError("path.puhelinnumero", kielistettyWoSvenska),
+      ValidationError("path.wwwSivu", kielistettyWoSvenska),
+      ValidationError("path.wwwSivu.fi", invalidUrl("vain suomeksi")),
+      ValidationError("path.wwwSivu.sv", invalidUrl(""))
+    ))
+  }
+
+  private def doAssertKoodistoQuery(
+      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
+  ): IsValid =
+    assertKoodistoQueryResult(
+      "valintakokeentyyppi_1#1",
+      hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
+      "path",
+      validationContext,
+      invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")
+    )
+
+  "Koodisto validation" should "succeed when valid koodiUri" in {
+    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    doAssertKoodistoQuery() should equal(NoErrors)
+  }
+
+  it should "fail when invalid koodiUri" in {
+    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemNotFound)
+    doAssertKoodistoQuery() should equal(error("path", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")))
+  }
+
+  it should "fail when koodiUri query failed" in {
+    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(queryFailed)
+    val validationContext = ValidationContext(Tallennettu, kielet, create)
+    doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
+    validationContext.isKoodistoServiceOk() should equal(false)
+  }
+
+  it should "fail when koodisto-service failure has been detected already before" in {
+    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    val validationContext = ValidationContext(Tallennettu, kielet, create)
+    validationContext.setKoodistoServiceOk(false)
+    doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
+  }
+
+  private def doAssertKoulutustyyppiKoodistoQuery(
+      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
+  ): IsValid =
+    assertKoulutustyyppiQueryResult(
+      "koulutus_371101#1",
+      ammatillisetKoulutustyypit,
+      koulutusKoodiClient,
+      "path",
+      validationContext,
+      invalidKoulutuskoodiuri("koulutus_371101#1")
+    )
+
+  "Koulutustyyppi-koodisto validation" should "succeed when valid koulutusKoodiUri for koulutustyyppi-list" in {
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+      .thenAnswer(itemFound)
+    doAssertKoulutustyyppiKoodistoQuery() should equal(NoErrors)
+  }
+
+  it should "fail when invalid koulutusKoodiUri for koulutustyyppi-list" in {
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+      .thenAnswer(itemNotFound)
+    doAssertKoulutustyyppiKoodistoQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_371101#1")))
+  }
+
+  it should "fail when koodisto-query failed" in {
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+      .thenAnswer(queryFailed)
+    val validationContext = ValidationContext(Tallennettu, kielet, create)
+    doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
+    validationContext.isKoodistoServiceOk() should equal(false)
+  }
+
+  it should "fail when koodisto-service failure has been detected already before" in {
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+      .thenAnswer(itemFound)
+    val validationContext = ValidationContext(Tallennettu, kielet, create)
+    validationContext.setKoodistoServiceOk(false)
+    doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
+  }
+
+  private def doAssertKoulutusKoodiUriQuery(
+      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
+  ): IsValid =
+    assertKoulutuskoodiQueryResult(
+      "koulutus_301104#1",
+      lukioKoulutusKoodiUrit,
+      koulutusKoodiClient,
+      "path",
+      validationContext,
+      invalidKoulutuskoodiuri("koulutus_301104#1")
+    )
+
+  "KoulutusKoodiUri-validation" should "succeed when valid koulutusKoodiUri for filter-list" in {
+    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+      .thenAnswer(itemFound)
+    doAssertKoulutusKoodiUriQuery() should equal(NoErrors)
+  }
+
+  it should "fail when invalid koulutusKoodiUri for filter-list" in {
+    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+      .thenAnswer(itemNotFound)
+    doAssertKoulutusKoodiUriQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_301104#1")))
+  }
+
+  it should "fail when koodisto-query failed" in {
+    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+      .thenAnswer(queryFailed)
+    val validationContext = ValidationContext(Tallennettu, kielet, create)
+    doAssertKoulutusKoodiUriQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
+    validationContext.isKoodistoServiceOk() should equal(false)
+  }
+
+  it should "fail when koodisto-service failure has been detected already before" in {
+    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+      .thenAnswer(itemFound)
+    val validationContext = ValidationContext(Tallennettu, kielet, create)
+    validationContext.setKoodistoServiceOk(false)
+    doAssertKoulutusKoodiUriQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
+  }
+
+  private val ataruId = UUID.randomUUID()
+
+  private def doAssertAtaruQuery(): IsValid =
+    assertAtaruQueryResult(ataruId, hakemusPalveluClient, "path", unknownAtaruId(ataruId))
+
+  "AtaruId-validation" should "succeed when valid ataruId" in {
+    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
+    doAssertAtaruQuery() should equal(NoErrors)
+  }
+
+  it should "fail when invalid ataruId" in {
+    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemNotFound)
+    doAssertAtaruQuery() should equal(error("path", unknownAtaruId(ataruId)))
+  }
+
+  it should "fail when Ataru-query failed" in {
+    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(queryFailed)
+    doAssertAtaruQuery() should equal(error("path", ataruServiceFailureMsg))
+  }
+
+  "Hakulomake validation" should "fail if missing or irrelevant values for MuuHakulomake" in {
+    validateHakulomake(
+      Some(MuuHakulomake),
+      Some(ataruId),
+      fullKielistetty,
+      Map(Fi -> "", Sv -> "puppu"),
+      kielet
+    ) should equal(
+      Seq(
+        ValidationError("hakulomakeAtaruId", notMissingMsg(Some(ataruId))),
+        ValidationError("hakulomakeKuvaus", notEmptyMsg),
+        ValidationError("hakulomakeLinkki", invalidKielistetty(Seq(Fi))),
+        ValidationError("hakulomakeLinkki", invalidUrl("")),
+        ValidationError("hakulomakeLinkki", invalidUrl("puppu"))
+      )
+    )
+  }
+
+  it should "fail if missing or irrelevant values for Ataru" in {
+    validateHakulomake(Some(Ataru), None, fullKielistetty, fullKielistetty, kielet) should equal(
+      Seq(
+        ValidationError("hakulomakeAtaruId", missingMsg),
+        ValidationError("hakulomakeKuvaus", notEmptyMsg),
+        ValidationError("hakulomakeLinkki", notEmptyMsg)
+      )
+    )
+  }
+
+  it should "fail if missing or irrelevant values for EiSähköistä" in {
+    validateHakulomake(Some(EiSähköistä), Some(ataruId), vainSuomeksi, fullKielistetty, kielet) should equal(
+      Seq(
+        ValidationError("hakulomakeAtaruId", notMissingMsg(Some(ataruId))),
+        ValidationError("hakulomakeLinkki", notEmptyMsg),
+        ValidationError("hakulomakeKuvaus", kielistettyWoSvenska)
+      )
+    )
+  }
+
+  it should "fail if values given even though type not defined" in {
+    validateHakulomake(None, Some(ataruId), fullKielistetty, fullKielistetty, kielet) should equal(
+      Seq(
+        ValidationError("hakulomakeAtaruId", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
+        ValidationError("hakulomakeKuvaus", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
+        ValidationError("hakulomakeLinkki", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi"))
       )
     )
   }

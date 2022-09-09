@@ -1,8 +1,8 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Amm, AmmOsaamisala, AmmTutkinnonOsa, Julkaistu, Julkaisutila, Koulutustyyppi, Poistettu}
 import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
@@ -52,19 +52,28 @@ trait ValidatingService[E <: Validatable] {
   def throwValidationErrors(errors: IsValid): Unit =
     if (errors.nonEmpty) throw KoutaValidationException(errors)
 
-  def validateTarjoajat(tarjoajat: List[OrganisaatioOid]): IsValid = {
-    val validTarjoajat = tarjoajat.filter(_.isValid)
-    val unknownOrgs =
-      if (validTarjoajat.nonEmpty) organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(validTarjoajat.toSet)
-      else Set[OrganisaatioOid]()
-    validateIfNonEmpty[OrganisaatioOid](
-      tarjoajat,
-      "tarjoajat",
-      (oid, path) =>
-        validateIfSuccessful(
-          assertTrue(oid.isValid, path, validationMsg(oid.s)),
-          assertFalse(unknownOrgs.contains(oid), path, unknownTarjoajaOid(oid))
-        )
+  def validateTarjoajat(tarjoajat: List[OrganisaatioOid], oldTarjojat: List[OrganisaatioOid]): IsValid = {
+    val newTarjoajat = if (tarjoajat.toSet != oldTarjojat.toSet) tarjoajat else List()
+    val validTarjoajat = newTarjoajat.filter(_.isValid)
+    var unknownTarjoajat = Set[OrganisaatioOid]()
+    var organisaatioServiceOk = true
+    if (validTarjoajat.nonEmpty)
+      organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(validTarjoajat.toSet) match {
+        case Right(unknownOrganisationOids) => unknownTarjoajat = unknownOrganisationOids
+        case _ => organisaatioServiceOk = false
+      }
+    validateIfTrueOrElse(
+      organisaatioServiceOk,
+      validateIfNonEmpty[OrganisaatioOid](
+        newTarjoajat,
+        "tarjoajat",
+        (oid, path) =>
+          validateIfSuccessful(
+            assertTrue(oid.isValid, path, validationMsg(oid.s)),
+            assertFalse(unknownTarjoajat.contains(oid), path, unknownTarjoajaOid(oid))
+          )
+      ),
+      error("tarjoajat", organisaatioServiceFailureMsg)
     )
   }
 
