@@ -1,6 +1,6 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData.AmmToteutuksenMetatieto
+import fi.oph.kouta.TestData.{AmmToteutuksenMetatieto, TuvaToteutuksenMetatieto}
 
 import java.time.LocalDateTime
 import fi.oph.kouta.TestOids._
@@ -603,8 +603,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val tuvaToToteutus = TestData.TuvaToteutus.copy(koulutusOid = KoulutusOid(tuvaToKoulutusOid), tila = Tallennettu)
     val oid = put(tuvaToToteutus)
     val lastModified = get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Some(Seq())))
-    update(tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Some(Seq())))
+    val modifiedTuvaToteutuksenMetatieto = Some(TuvaToteutuksenMetatieto.copy(hasJotpaRahoitus = Some(true)))
+    update(tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, metadata = modifiedTuvaToteutuksenMetatieto), lastModified)
+    get(oid, tuvaToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, metadata = Some(TuvaToteutuksenMetatieto.copy(hasJotpaRahoitus = Some(true))), koulutuksetKoodiUri = Some(Seq())))
   }
 
   it should "create, get and update kk-opintojakson toteutus" in {
