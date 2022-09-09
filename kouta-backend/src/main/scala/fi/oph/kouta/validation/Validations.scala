@@ -2,7 +2,7 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.client.{HakemusPalveluClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
@@ -43,6 +43,12 @@ object Validations {
     msg = s"Koulutuskoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutuskoodiuri"
   )
+
+  def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutustyyppiKoodi: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio tyyppiin $ammatillinenPerustutkintoKoulutustyyppiKoodiUri että se voidaan järjestää erityisopetuksena",
+    id = "invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena"
+  )
+
   def invalidLisatietoOtsikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lisätieto-otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidLisatietoOtsikkoKoodiuri"
@@ -55,6 +61,26 @@ object Validations {
     msg = s"Koulutukselle valittua opintojenlaajuusyksikko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
   )
+
+  def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
+    msg = s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
+    id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
+    meta = Some(Map("toteutukset" -> toteutukset))
+  )
+
+  def invalidKoulutusOpintojenLaajuusNumeroIntegrity(laajuusMin: Double, laajuusMax: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
+    msg = s"Ainakin yhdellä koulutukseen liitetyllä julkaistulla toteutuksella opintojen laajuus ei ole koulutuksella määritellyllä välillä ($laajuusMin - $laajuusMax)",
+    id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
+    meta = Some(Map("toteutukset" -> toteutukset))
+  )
+
+  def invalidToteutusOpintojenLaajuusyksikkoIntegrity(koulutusLaajuusyksikkoKoodiUri: Option[String], toteutusLaajuusyksikkoKoodiUri: Option[String]) = {
+    ErrorMessage(
+      msg = s"Toteutuksella on eri opintojen laajuusyksikkö (${toteutusLaajuusyksikkoKoodiUri.getOrElse("-")}) kuin koulutuksella (${koulutusLaajuusyksikkoKoodiUri.getOrElse("-")})",
+      id = "invalidToteutusOpintojenLaajuusyksikkoIntegrity"
+    )
+  }
+
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidKieliKoodiUri"
@@ -178,6 +204,10 @@ object Validations {
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
+
+  def notInTheRangeMsg(min: Option[Double], max: Option[Double], givenValue: Option[Double]): ErrorMessage =
+    ErrorMessage(msg = s"$givenValue ei ole välillä min $min - max $max", id = "notInTheRangeMsg")
+
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
     msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]",
     id = "invalidKielistetty"
@@ -465,14 +495,10 @@ object Validations {
       ataruId: UUID,
       hakemusPalveluClient: HakemusPalveluClient,
       path: String,
-      validationContext: ValidationContext,
       errorMessage: ErrorMessage
   ): IsValid = {
-    val queryResult =
-      if (validationContext.isAtaruServiceOk()) hakemusPalveluClient.isExistingAtaruId(ataruId) else queryFailed
-    validationContext.updateAtaruServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(
-      queryResult,
+      hakemusPalveluClient.isExistingAtaruId(ataruId),
       path,
       errorMessage,
       ataruServiceFailureMsg

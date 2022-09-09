@@ -558,10 +558,8 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
 
   private val ataruId = UUID.randomUUID()
 
-  private def doAssertAtaruQuery(
-      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
-  ): IsValid =
-    assertAtaruQueryResult(ataruId, hakemusPalveluClient, "path", validationContext, unknownAtaruId(ataruId))
+  private def doAssertAtaruQuery(): IsValid =
+    assertAtaruQueryResult(ataruId, hakemusPalveluClient, "path", unknownAtaruId(ataruId))
 
   "AtaruId-validation" should "succeed when valid ataruId" in {
     when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
@@ -575,16 +573,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
 
   it should "fail when Ataru-query failed" in {
     when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(queryFailed)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    doAssertAtaruQuery(validationContext) should equal(error("path", ataruServiceFailureMsg))
-    validationContext.isAtaruServiceOk() should equal(false)
-  }
-
-  it should "fail when koodisto-service failure has been detected already before" in {
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    validationContext.setAtaruServiceOk(false)
-    doAssertAtaruQuery(validationContext) should equal(error("path", ataruServiceFailureMsg))
+    doAssertAtaruQuery() should equal(error("path", ataruServiceFailureMsg))
   }
 
   "Hakulomake validation" should "fail if missing or irrelevant values for MuuHakulomake" in {

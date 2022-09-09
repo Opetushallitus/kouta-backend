@@ -2,6 +2,7 @@ package fi.oph.kouta
 
 import fi.vm.sade.utils.slf4j.Logging
 import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
+import fi.oph.kouta.util.CommandLine.runBlocking
 
 object TempDockerDb extends Logging {
 
@@ -12,7 +13,6 @@ object TempDockerDb extends Logging {
   import java.io.File
 
   import TempDbUtils.tryTimes
-  import CommandLine._
 
   val dataDirectoryName = s"kouta-temp-db/$port"
   val dataDirectoryFile = new File(dataDirectoryName)

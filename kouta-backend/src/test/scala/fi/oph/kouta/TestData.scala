@@ -1,12 +1,12 @@
 package fi.oph.kouta
 
-import java.time.temporal.ChronoUnit
-import java.time.{LocalDate, LocalDateTime, LocalTime}
-import java.util.UUID
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
+
+import java.time.temporal.ChronoUnit
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 
 object TestData {
   def now(): LocalDateTime                   = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
@@ -273,6 +273,35 @@ object TestData {
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/erikoislaakari-kuva"),
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
+
+  val KkOpintokokonaisuusKoulutuksenMetatieto: KkOpintokokonaisuusKoulutusMetadata = KkOpintokokonaisuusKoulutusMetadata(
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+    opintojenLaajuusNumeroMin = Some(5),
+    opintojenLaajuusNumeroMax = Some(15),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+    isMuokkaajaOphVirkailija = Some(false)
+  )
+
+  val KkOpintokokonaisuusKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = KkOpintokokonaisuus,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/amm-kuva"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -977,8 +1006,23 @@ object TestData {
     hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = None,
-    isMuokkaajaOphVirkailija = Some(false)
-  )
+    isMuokkaajaOphVirkailija = Some(false))
+
+  val KkOpintokokonaisuusToteutuksenMetatieto: KkOpintokokonaisuusToteutusMetadata = KkOpintokokonaisuusToteutusMetadata(
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opintojenLaajuusNumero = Some(10),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = None,
+    isMuokkaajaOphVirkailija = Some(false))
 
   val JulkaistuAmmToteutus: Toteutus = Toteutus(
     oid = None,
@@ -1005,6 +1049,8 @@ object TestData {
 
   val JulkaistuKkOpintojaksoToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto))
+  val JulkaistuKkOpintokokonaisuusToteutus: Toteutus =
+    JulkaistuAmmToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto))
   val JulkaistuAmkToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)))
 

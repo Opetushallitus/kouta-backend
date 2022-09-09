@@ -183,7 +183,6 @@ class HakukohdeServiceValidation(
               ataruId,
               hakemusPalveluClient.isExistingAtaruId,
               "hakulomakeAtaruId",
-              vCtx,
               unknownAtaruId(ataruId)
             )
         )

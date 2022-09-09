@@ -5,12 +5,13 @@ import fi.oph.kouta.client._
 import fi.oph.kouta.domain.Koulutustyyppi.{isKorkeakoulu, isToisenAsteenYhteishakuKoulutustyyppi}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.searchResults.HakuSearchResultFromIndex
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHaku}
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.{IsValid, NoErrors}
@@ -143,7 +144,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
   def listToteutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByHakuOid(hakuOid))
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit authenticated: Authenticated): HakuSearchResult = {
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated): HakuSearchResult = {
     def getCount(t: HakuSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
       organisaatioOids match {
         case Seq(RootOrganisaatioOid) => t.hakukohteet.length
@@ -168,7 +169,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
                   modified = h.modified,
                   tila = h.tila,
                   hakutapa = h.hakutapa,
-                  koulutuksenAlkamiskausi = h.koulutuksenAlkamiskausi,
+                  koulutuksenAlkamiskausi = h.metadata.koulutuksenAlkamiskausi,
                   hakukohdeCount = getCount(h, organisaatioOids))
             }
           )
@@ -177,11 +178,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
 
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true), true).map(_.oid) match {
       case Nil      => HakuSearchResult()
-      case hakuOids => assocHakukohdeCounts(KoutaIndexClient.searchHaut(hakuOids, params))
+      case hakuOids => assocHakukohdeCounts(KoutaSearchClient.searchHaut(hakuOids, params))
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, params: Map[String, String])(implicit authenticated: Authenticated): Option[HakuSearchItemFromIndex] = {
+  def search(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, params: SearchParams)(implicit authenticated: Authenticated): Option[HakuSearchItemFromIndex] = {
     def filterHakukohteet(haku: Option[HakuSearchItemFromIndex]): Option[HakuSearchItemFromIndex] =
       withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
         case Seq(RootOrganisaatioOid) => haku
@@ -192,7 +193,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
           })
       }
 
-    filterHakukohteet(KoutaIndexClient.searchHaut(Seq(hakuOid), params).result.headOption)
+    filterHakukohteet(KoutaSearchClient.searchHaut(Seq(hakuOid), params).result.headOption)
   }
 
   private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =

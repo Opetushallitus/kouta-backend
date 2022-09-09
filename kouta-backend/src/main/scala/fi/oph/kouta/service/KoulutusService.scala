@@ -1,16 +1,17 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoodistoClient, KoulutusKoodiClient, KoutaIndexClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoulutusKoodiClient, KoutaSearchClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.searchResults.{KoulutusSearchResult, KoulutusSearchResultFromIndex}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.vm.sade.utils.slf4j.Logging
 import slick.dbio.DBIO
@@ -21,17 +22,48 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class ExternalModifyAuthorizationFailedException(message: String) extends RuntimeException(message)
 
 object KoulutusService
-    extends KoulutusService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, KoulutusKoodiClient, KoulutusServiceValidation)
+    extends KoulutusService(
+      SqsInTransactionService,
+      S3ImageService,
+      AuditLog,
+      OrganisaatioServiceImpl,
+      OppijanumerorekisteriClient,
+      KayttooikeusClient,
+      KoulutusKoodiClient,
+      KoulutusServiceValidation,
+      KoutaSearchClient
+    ) {
+  def apply(sqsInTransactionService: SqsInTransactionService,
+    s3ImageService: S3ImageService, auditLog: AuditLog,
+    organisaatioService: OrganisaatioService,
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+    kayttooikeusClient: KayttooikeusClient,
+    koodistoClient: KoulutusKoodiClient,
+    koulutusServiceValidation: KoulutusServiceValidation): KoulutusService = {
+    new KoulutusService(
+      sqsInTransactionService,
+      s3ImageService,
+      auditLog,
+      organisaatioService,
+      oppijanumerorekisteriClient,
+      kayttooikeusClient,
+      koodistoClient,
+      koulutusServiceValidation,
+      KoutaSearchClient
+    )
+  }
+}
 
 class KoulutusService(
-                       sqsInTransactionService: SqsInTransactionService,
-                       val s3ImageService: S3ImageService,
-                       auditLog: AuditLog,
-                       val organisaatioService: OrganisaatioService,
-                       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-                       kayttooikeusClient: KayttooikeusClient,
-                       koodistoClient: KoulutusKoodiClient,
-                       koulutusServiceValidation: KoulutusServiceValidation
+    sqsInTransactionService: SqsInTransactionService,
+    val s3ImageService: S3ImageService,
+    auditLog: AuditLog,
+    val organisaatioService: OrganisaatioService,
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+    kayttooikeusClient: KayttooikeusClient,
+    koodistoClient: KoulutusKoodiClient,
+    koulutusServiceValidation: KoulutusServiceValidation,
+    koutaSearchClient: KoutaSearchClient
 ) extends RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
     with Logging {
@@ -57,54 +89,84 @@ class KoulutusService(
       )
     } else { None }
 
-
-  private def enrichKoulutusMetadata(koulutus: Koulutus) : Option[KoulutusMetadata] = {
+  private def enrichKoulutusMetadata(koulutus: Koulutus): Option[KoulutusMetadata] = {
     val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(koulutus.muokkaaja)
-    val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
+    val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     koulutus.metadata match {
       case Some(metadata) =>
         metadata match {
           case korkeakoulutusKoulutusMetadata: KorkeakoulutusKoulutusMetadata =>
             korkeakoulutusKoulutusMetadata match {
-              case yoMetadata: YliopistoKoulutusMetadata => Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-              case amkMetadata: AmmattikorkeakouluKoulutusMetadata => Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case yoMetadata: YliopistoKoulutusMetadata =>
+                Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case amkMetadata: AmmattikorkeakouluKoulutusMetadata =>
+                Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
-                val opintojenLaajuusKoodiUri = if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri else
-                  Some(koodistoClient.getKoodiUriWithLatestVersion("opintojenlaajuus_60"))
-                val koulutusalaKoodiUrit = if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit else
-                  Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
-                Some(m.copy(
-                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-                  opintojenLaajuusKoodiUri = opintojenLaajuusKoodiUri,
-                  koulutusalaKoodiUrit = koulutusalaKoodiUrit))
+                val opintojenLaajuusKoodiUri =
+                  if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri
+                  else
+                    Some(koodistoClient.getKoodiUriWithLatestVersion("opintojenlaajuus_60"))
+                val koulutusalaKoodiUrit =
+                  if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit
+                  else
+                    Seq(
+                      koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01")
+                    )
+                Some(
+                  m.copy(
+                    isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                    opintojenLaajuusKoodiUri = opintojenLaajuusKoodiUri,
+                    koulutusalaKoodiUrit = koulutusalaKoodiUrit
+                  )
+                )
 
             }
-          case ammMetadata: AmmatillinenKoulutusMetadata => Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaKoulutusMetadata => Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case ammOsaamisalaMetadata: AmmatillinenOsaamisalaKoulutusMetadata => Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case ammatillinenMuuKoulutusMetadata: AmmatillinenMuuKoulutusMetadata => Some(ammatillinenMuuKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammMetadata: AmmatillinenKoulutusMetadata =>
+            Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaKoulutusMetadata =>
+            Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammOsaamisalaMetadata: AmmatillinenOsaamisalaKoulutusMetadata =>
+            Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case ammatillinenMuuKoulutusMetadata: AmmatillinenMuuKoulutusMetadata =>
+            Some(ammatillinenMuuKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case lukioMetadata: LukioKoulutusMetadata =>
-            val koulutusalaKoodiUrit = if (lukioMetadata.koulutusalaKoodiUrit.nonEmpty) lukioMetadata.koulutusalaKoodiUrit else
-              Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_00"))
-            Some(lukioMetadata.copy(
-              isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-              koulutusalaKoodiUrit = koulutusalaKoodiUrit
-          ))
-          case tuvaMetadata: TuvaKoulutusMetadata => Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case telmaMetadata: TelmaKoulutusMetadata => Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            val koulutusalaKoodiUrit =
+              if (lukioMetadata.koulutusalaKoodiUrit.nonEmpty) lukioMetadata.koulutusalaKoodiUrit
+              else
+                Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_00"))
+            Some(
+              lukioMetadata.copy(
+                isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                koulutusalaKoodiUrit = koulutusalaKoodiUrit
+              )
+            )
+          case tuvaMetadata: TuvaKoulutusMetadata =>
+            Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case telmaMetadata: TelmaKoulutusMetadata =>
+            Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case vapaaSivistystyoKoulutusMetadata: VapaaSivistystyoKoulutusMetadata =>
             vapaaSivistystyoKoulutusMetadata match {
-              case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata => Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-              case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata => Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata =>
+                Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
+                Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
-          case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata => Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata => Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case erikoislaakariKoulutusMetadata: ErikoislaakariKoulutusMetadata => Some(
-            erikoislaakariKoulutusMetadata.copy(
-              isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-              koulutusalaKoodiUrit = Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso2_091")))
-          )
+          case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata =>
+            Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata =>
+            Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case erikoislaakariKoulutusMetadata: ErikoislaakariKoulutusMetadata =>
+            Some(
+              erikoislaakariKoulutusMetadata.copy(
+                isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                koulutusalaKoodiUrit = Seq(
+                  koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso2_091")
+                )
+              )
+            )
+          case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusKoulutusMetadata => 
+            Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }
@@ -114,19 +176,23 @@ class KoulutusService(
     val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
     koulutus.koulutustyyppi match {
       case AikuistenPerusopetus =>
-        val koulutusKoodiUrit = if (koulutus.koulutuksetKoodiUri.nonEmpty) koulutus.koulutuksetKoodiUri else
-          Seq(koodistoClient.getKoodiUriWithLatestVersion("koulutus_201101"))
+        val koulutusKoodiUrit =
+          if (koulutus.koulutuksetKoodiUri.nonEmpty) koulutus.koulutuksetKoodiUri
+          else
+            Seq(koodistoClient.getKoodiUriWithLatestVersion("koulutus_201101"))
         koulutus.copy(koulutuksetKoodiUri = koulutusKoodiUrit, metadata = enrichedMetadata)
       case _ => koulutus.copy(metadata = enrichedMetadata)
     }
   }
 
-  def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Koulutus, Instant)] = {
+  def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
+  ): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
 
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) => {
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(k.muokkaaja)
+        val muokkaaja      = oppijanumerorekisteriClient.getHenkilö(k.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }
@@ -159,12 +225,16 @@ class KoulutusService(
     }.oid.get
   }
 
-  def update(newKoulutus: Koulutus, notModifiedSince: Instant, fromExternal: Boolean = false)(implicit authenticated: Authenticated): Boolean = {
-    val oldKoulutusWithInstant: Option[(Koulutus, Instant)] = KoulutusDAO.get(newKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())
+  def update(newKoulutus: Koulutus, notModifiedSince: Instant, fromExternal: Boolean = false)(implicit
+      authenticated: Authenticated
+  ): Boolean = {
+    val oldKoulutusWithInstant: Option[(Koulutus, Instant)] =
+      KoulutusDAO.get(newKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())
     oldKoulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
         if (fromExternal) {
-          authorizeAddedTarjoajatFromExternal(newKoulutus.organisaatioOid,
+          authorizeAddedTarjoajatFromExternal(
+            newKoulutus.organisaatioOid,
             newKoulutus.tarjoajat.toSet diff oldKoulutus.tarjoajat.toSet
           )
         }
@@ -182,23 +252,25 @@ class KoulutusService(
   private def getAuthorizationRulesForUpdate(newKoulutus: Koulutus, oldKoulutus: Koulutus) = {
     if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldKoulutus.tila, newKoulutus.tila)) {
       List(AuthorizationRules(Seq(Role.Paakayttaja)))
-    }
-    else {
+    } else {
       oldKoulutus.koulutustyyppi match {
         case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
           List(AuthorizationRules(Seq(Role.Paakayttaja)))
         case _ =>
           val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
-          val newTarjoajat = newKoulutus.tarjoajat.toSet
-          val oldTarjoajat = oldKoulutus.tarjoajat.toSet
-          val rulesForAddedTarjoajat = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+          val newTarjoajat             = newKoulutus.tarjoajat.toSet
+          val oldTarjoajat             = oldKoulutus.tarjoajat.toSet
+          val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
           val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
           (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
       }
     }
   }
 
-  def authorizeAddedTarjoajatFromExternal(organisaatioOid: OrganisaatioOid, addedTarjoajat: Set[OrganisaatioOid]): Unit = {
+  def authorizeAddedTarjoajatFromExternal(
+      organisaatioOid: OrganisaatioOid,
+      addedTarjoajat: Set[OrganisaatioOid]
+  ): Unit = {
     if (addedTarjoajat.nonEmpty) {
       val allowedOrganisaatioOids = organisaatioService.findOrganisaatioOidsFlatByMemberOid(organisaatioOid).toSet
       if (!addedTarjoajat.subsetOf(allowedOrganisaatioOids)) {
@@ -232,8 +304,7 @@ class KoulutusService(
       )
     }
 
-  def toteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)
-                 (implicit authenticated: Authenticated): Seq[Toteutus] =
+  def toteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[Toteutus] =
     withRootAccess(indexerRoles) {
       ToteutusDAO.getByKoulutusOid(oid, tilaFilter)
     }
@@ -243,7 +314,9 @@ class KoulutusService(
       HakutietoDAO.getByKoulutusOid(oid)
     }
 
-  def listToteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+  def listToteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
+  ): Seq[ToteutusListItem] =
     withRootAccess(indexerRoles)(ToteutusDAO.listByKoulutusOid(oid, tilaFilter))
 
   def listToteutukset(oid: KoulutusOid, organisaatioOid: OrganisaatioOid)(implicit
@@ -257,7 +330,7 @@ class KoulutusService(
       case x                        => ToteutusDAO.listByKoulutusOidAndAllowedOrganisaatiot(oid, x)
     }
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
       authenticated: Authenticated
   ): KoulutusSearchResult = {
     def getCount(k: KoulutusSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {
@@ -265,7 +338,9 @@ class KoulutusService(
         case Seq(RootOrganisaatioOid) => k.toteutukset.length
         case _ =>
           val oidStrings = organisaatioOids.map(_.toString())
-          k.toteutukset.count(t => t.tila != Arkistoitu && t.tila != Poistettu && t.organisaatiot.exists(o => oidStrings.contains(o)))
+          k.toteutukset.count(t =>
+            t.tila != Arkistoitu && t.tila != Poistettu && t.organisaatiot.exists(o => oidStrings.contains(o))
+          )
       }
     }
 
@@ -274,7 +349,7 @@ class KoulutusService(
         organisaatioOid,
         AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
       )(organisaatioOids => {
-        KoulutusSearchResult(
+        SearchResult[KoulutusSearchItem](
           totalCount = r.totalCount,
           result = r.result.map { k =>
             KoulutusSearchItem(
@@ -294,12 +369,12 @@ class KoulutusService(
       })
 
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.oid) match {
-      case Nil          => KoulutusSearchResult()
-      case koulutusOids => assocToteutusCounts(KoutaIndexClient.searchKoulutukset(koulutusOids, params))
+      case Nil          => SearchResult[KoulutusSearchItem]()
+      case koulutusOids => assocToteutusCounts(koutaSearchClient.searchKoulutukset(koulutusOids, params))
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, koulutusOid: KoulutusOid, params: Map[String, String])(implicit
+  def search(organisaatioOid: OrganisaatioOid, koulutusOid: KoulutusOid, params: SearchParams)(implicit
       authenticated: Authenticated
   ): Option[KoulutusSearchItemFromIndex] = {
     def filterToteutukset(koulutus: Option[KoulutusSearchItemFromIndex]): Option[KoulutusSearchItemFromIndex] =
@@ -320,12 +395,16 @@ class KoulutusService(
         }
       }
 
-    filterToteutukset(KoutaIndexClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption)
+    filterToteutukset(
+      koutaSearchClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption
+    )
   }
 
-  def getUpdateTarjoajatActions(koulutusOid: KoulutusOid, newTarjoajatInToteutus: Set[OrganisaatioOid],
-                                tarjoajatSafeToDelete: Set[OrganisaatioOid])
-                               (implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
+  def getUpdateTarjoajatActions(
+      koulutusOid: KoulutusOid,
+      newTarjoajatInToteutus: Set[OrganisaatioOid],
+      tarjoajatSafeToDelete: Set[OrganisaatioOid]
+  )(implicit authenticated: Authenticated): DBIO[(Koulutus, Option[Koulutus])] = {
     val koulutusWithLastModified = get(koulutusOid, TilaFilter.onlyOlemassaolevat())
 
     if (koulutusWithLastModified.isEmpty) {
@@ -334,8 +413,8 @@ class KoulutusService(
 
     val Some((koulutus, lastModified)) = koulutusWithLastModified
 
-    val tarjoajatAddedToKoulutus = newTarjoajatInToteutus diff koulutus.tarjoajat.toSet
-    val newTarjoajatForKoulutus = (koulutus.tarjoajat.toSet diff tarjoajatSafeToDelete) ++ tarjoajatAddedToKoulutus
+    val tarjoajatAddedToKoulutus     = newTarjoajatInToteutus diff koulutus.tarjoajat.toSet
+    val newTarjoajatForKoulutus      = (koulutus.tarjoajat.toSet diff tarjoajatSafeToDelete) ++ tarjoajatAddedToKoulutus
     val tarjoajatRemovedFromKoulutus = koulutus.tarjoajat.toSet diff newTarjoajatForKoulutus
 
     if (tarjoajatAddedToKoulutus.isEmpty && tarjoajatRemovedFromKoulutus.isEmpty) {
@@ -345,7 +424,9 @@ class KoulutusService(
       authorizeUpdate(
         koulutusWithLastModified,
         newKoulutus,
-        List(authorizedForTarjoajaOids(tarjoajatAddedToKoulutus ++ tarjoajatRemovedFromKoulutus, roleEntity.readRoles).get)
+        List(
+          authorizedForTarjoajaOids(tarjoajatAddedToKoulutus ++ tarjoajatRemovedFromKoulutus, roleEntity.readRoles).get
+        )
       ) { (_, k) =>
         koulutusServiceValidation.withValidation(newKoulutus, Some(k)) {
           DBIO.successful(koulutus) zip getUpdateTarjoajatActions(_, lastModified)
@@ -404,12 +485,15 @@ class KoulutusService(
       authenticated: Authenticated
   ): KoulutustyyppiToOppilaitostyyppiResult = {
     val koulutustyyppi2oppilaitostyyppi: Seq[KoulutustyyppiToOppilaitostyypit] =
-      oppilaitostyyppi2koulutustyyppi.foldLeft(Map[Koulutustyyppi, Seq[String]]().withDefaultValue(Seq())) {
-        case (initialMap, (oppilaitostyyppi, koulutustyypit)) =>
-          koulutustyypit.foldLeft(initialMap)(
-            (subMap, koulutustyyppi) =>
-              subMap.updated(koulutustyyppi, initialMap(koulutustyyppi) :+ oppilaitostyyppi))
-      }.map(entry => KoulutustyyppiToOppilaitostyypit(entry._1, entry._2)).toSeq
+      oppilaitostyyppi2koulutustyyppi
+        .foldLeft(Map[Koulutustyyppi, Seq[String]]().withDefaultValue(Seq())) {
+          case (initialMap, (oppilaitostyyppi, koulutustyypit)) =>
+            koulutustyypit.foldLeft(initialMap)((subMap, koulutustyyppi) =>
+              subMap.updated(koulutustyyppi, initialMap(koulutustyyppi) :+ oppilaitostyyppi)
+            )
+        }
+        .map(entry => KoulutustyyppiToOppilaitostyypit(entry._1, entry._2))
+        .toSeq
 
     KoulutustyyppiToOppilaitostyyppiResult(koulutustyyppi2oppilaitostyyppi)
   }

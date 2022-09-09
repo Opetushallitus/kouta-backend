@@ -1,15 +1,16 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndexClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem, HakukohdeSearchResult}
+import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
+import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.oph.kouta.validation.{IsValid, NoErrors}
 import fi.oph.kouta.validation.Validations.validateStateChange
@@ -191,12 +192,12 @@ class HakukohdeService(
   def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)
 
-  def search(organisaatioOid: OrganisaatioOid, params: Map[String, String])(implicit
-      authenticated: Authenticated
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
+                                                                     authenticated: Authenticated
   ): HakukohdeSearchResult =
     listOlemassaolevat(organisaatioOid).map(_.oid) match {
-      case Nil           => HakukohdeSearchResult()
-      case hakukohdeOids => KoutaIndexClient.searchHakukohteet(hakukohdeOids, params)
+      case Nil           => SearchResult[HakukohdeSearchItem]()
+      case hakukohdeOids => KoutaSearchClient.searchHakukohteet(hakukohdeOids, params)
     }
 
   def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =

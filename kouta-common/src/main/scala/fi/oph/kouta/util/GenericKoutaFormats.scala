@@ -4,12 +4,11 @@ import java.net.InetAddress
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.JString
 import org.json4s.jackson.Serialization.write
-import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats}
+import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, Serialization}
 
 trait GenericKoutaJsonFormats extends GenericKoutaFormats {
   implicit def jsonFormats: Formats = genericKoutaFormats

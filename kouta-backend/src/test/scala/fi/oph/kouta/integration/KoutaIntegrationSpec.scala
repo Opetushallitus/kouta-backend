@@ -3,6 +3,7 @@ package fi.oph.kouta.integration
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
@@ -14,6 +15,7 @@ import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.validation.{ErrorMessage, ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
+import org.mockito.scalatest.MockitoSugar
 import org.scalactic.Equality
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
@@ -30,7 +32,7 @@ trait DefaultTestImplicits {
   implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = (a: OrganisaatioOid, b: OrganisaatioOid) => a.s compare b.s
 }
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits {
+trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits with MockitoSugar {
 
   val serviceIdentifier: String = KoutaIntegrationSpec.serviceIdentifier
   val defaultAuthorities: Set[Authority] = KoutaIntegrationSpec.defaultAuthorities
@@ -43,6 +45,7 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
   val mockKayttooikeusClient: MockKayttooikeusClient = new MockKayttooikeusClient(securityContext, defaultAuthorities)
   val mockOrganisaatioClient: MockOrganisaatioServiceClient = new MockOrganisaatioServiceClient(securityContext, defaultAuthorities)
+  val mockKoutaSearchClient = mock[KoutaSearchClient]
 
   val mockHakemusPalveluClient = new MockHakemusPalveluClient()
 

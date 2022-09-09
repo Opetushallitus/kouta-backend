@@ -35,7 +35,7 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
     val koulutusServiceValidation =
       new KoulutusServiceValidation(koodistoClient, ePerusteKoodiClient, organisaatioService, ToteutusDAO, SorakuvausDAO)
 
-    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoClient, koulutusServiceValidation)
+    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoClient, koulutusServiceValidation, mockKoutaSearchClient)
   }
 }
 

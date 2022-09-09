@@ -93,7 +93,6 @@ class HakuServiceValidation(
               ataruId,
               hakemusPalveluClient.isExistingAtaruId,
               "hakulomakeAtaruId",
-              vCtx,
               unknownAtaruId(ataruId)
             )
         )
