@@ -99,7 +99,7 @@ class KoulutusService(
     if (definedValue.nonEmpty) definedValue else Seq(koodistoClient.getKoodiUriWithLatestVersion(koodiUriBase))
 
   private def enrichKoulutusMetadata(koulutus: Koulutus): Option[KoulutusMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(koulutus.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(koulutus.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     koulutus.metadata match {
@@ -215,7 +215,7 @@ class KoulutusService(
 
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) => {
-        val muokkaaja      = oppijanumerorekisteriClient.getHenkilö(k.muokkaaja)
+        val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(k.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }

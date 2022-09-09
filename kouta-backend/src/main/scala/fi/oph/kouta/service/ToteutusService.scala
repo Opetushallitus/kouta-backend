@@ -79,14 +79,14 @@ class ToteutusService(
           (toteutusMetadata, koulutusMetadata) match {
             case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
               val kaannokset = Map(
-                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
-                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
+                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.opintopistetta"),
+                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKeyFromCache(
                   "toteutuslomake.lukionYleislinjaNimiOsa"
                 )
               )
-              val painotuksetKaannokset = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
+              val painotuksetKaannokset = koodistoClient.getKoodistoKaannoksetFromCache("lukiopainotukset")
               val koulutustehtavatKaannokset =
-                koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
+                koodistoClient.getKoodistoKaannoksetFromCache("lukiolinjaterityinenkoulutustehtava")
               val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
               NameHelper.generateLukioToteutusDisplayName(
                 lukioToteutusMetadata,
@@ -103,7 +103,7 @@ class ToteutusService(
   }
 
   private def enrichToteutusMetadata(toteutus: Toteutus): Option[ToteutusMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(toteutus.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(toteutus.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     toteutus.metadata match {
@@ -158,7 +158,7 @@ class ToteutusService(
     val enrichedToteutus = toteutusWithTime match {
       case Some((t, i)) =>
         val esitysnimi     = generateToteutusEsitysnimi(t)
-        val muokkaaja      = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
+        val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(t.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData(), i)
       case None => None

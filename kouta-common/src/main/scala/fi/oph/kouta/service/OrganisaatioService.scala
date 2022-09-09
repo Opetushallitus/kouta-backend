@@ -1,11 +1,9 @@
 package fi.oph.kouta.service
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, OidAndChildren}
 import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
-import scalacache.caffeine.CaffeineCache
-import scalacache.modes.sync._
-import scalacache.sync
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
@@ -127,7 +125,9 @@ trait OrganisaatioService {
       .map(pickChildrenRecursively(_, oid))
       .collectFirst { case Some(child) => child }
 
-  implicit val HierarkiaCache = CaffeineCache[Option[OidAndChildren]]
+  implicit val HierarkiaCache: Cache[OrganisaatioOid, Option[OidAndChildren]] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
 
   private def removeLakkautetutRecursively(current: OidAndChildren): Option[OidAndChildren] = {
     if (current.isPassiivinen) {
@@ -141,9 +141,8 @@ trait OrganisaatioService {
     find(_.oid == oid, getHierarkia(oid, lakkautetut).toSet)
 
   private def getHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] = {
-    val hierarkia: Option[OidAndChildren] = sync.caching(oid)(Some(45.minutes)) {
-      findHierarkia(oid)
-    }
+    val hierarkia: Option[OidAndChildren] = HierarkiaCache.get(oid, oid => findHierarkia(oid))
+
     if (lakkautetut) {
       hierarkia
     } else {

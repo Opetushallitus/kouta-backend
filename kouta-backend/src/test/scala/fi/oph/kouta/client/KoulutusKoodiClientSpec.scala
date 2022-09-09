@@ -8,7 +8,6 @@ import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, qu
 import fi.oph.kouta.validation.{ammatillisetKoulutustyypit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
 import org.scalatest.Assertion
 import org.scalatra.test.scalatest.ScalatraFlatSpec
-import scalacache.modes.sync.mode
 
 import java.time.format.DateTimeFormatter
 import java.time.LocalDate
@@ -68,11 +67,11 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
 
   "Getting latest version of koodiUri" should "return version from cache" in {
     mockLatestKoodiUriResponse("koulutus_201101", 12)
-    koodiClient.getKoodiUriWithLatestVersion("koulutus_201101") should equal("koulutus_201101#12")
+    koodiClient.getKoodiUriWithLatestVersionFromCache("koulutus_201101") should equal("koulutus_201101#12")
     clearServiceMocks()
     mockLatestKoodiUriResponse("koulutus_201101", 10)
     // Should still use value from cache
-    koodiClient.getKoodiUriWithLatestVersion("koulutus_201101") should equal("koulutus_201101#12")
+    koodiClient.getKoodiUriWithLatestVersionFromCache("koulutus_201101") should equal("koulutus_201101#12")
   }
 
   "Finding koulutuskoodiUri by koulutustyyppi" should "returns true when koodiuri exists for any of koulutustyypit" in {
@@ -81,19 +80,19 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
       Seq(("koulutus_371101", 12, None), ("koulutus_371102", 10, None), ("koulutus_371103", 1, Some(dayInPast))),
       ammatillisetKoulutustyypit.init
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#12") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#12") should equal(
       itemFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371102#9") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371102#9") should equal(
       itemFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371103") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371103") should equal(
       itemNotFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371102#11") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371102#11") should equal(
       itemNotFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371104#1") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371104#1") should equal(
       itemNotFound
     )
     clearServiceMocks()
@@ -103,19 +102,19 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
       ammatillisetKoulutustyypit.tail
     )
     // Should still use values from cache
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#12") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#12") should equal(
       itemFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371102#9") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371102#9") should equal(
       itemFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371103") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371103") should equal(
       itemNotFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371102#11") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371102#11") should equal(
       itemNotFound
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371104#1") should equal(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371104#1") should equal(
       itemNotFound
     )
   }
@@ -325,30 +324,30 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
       )
     )
 
-    koodiClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
+    koodiClient.getKoodiUriWithLatestVersionFromCache("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
       "kansallinenkoulutusluokitus2016koulutusalataso1_01#2"
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(yoKoulutustyypit, "koulutus_201000#12") should equal(itemFound)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(yoKoulutustyypit, "koulutus_111111#1") should equal(itemNotFound)
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(yoKoulutustyypit, "koulutus_201000#12") should equal(itemFound)
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(yoKoulutustyypit, "koulutus_111111#1") should equal(itemNotFound)
     koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110") should equal(itemFound)
     koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_111#2") should equal(itemFound)
     koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_112") should equal(itemNotFound)
     koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_111#4") should equal(itemNotFound)
     koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_120") should equal(itemNotFound)
 
-    koodiClient.koodiuriVersionCache.removeAll()
-    koodiClient.koulutusKoodiUriCache.removeAll()
-    koodiClient.commonKoodiUriCache.removeAll()
+    koodiClient.koodiuriVersionCache.invalidateAll()
+    koodiClient.koulutusKoodiUriCache.invalidateAll()
+    koodiClient.commonKoodiUriCache.invalidateAll()
     clearServiceMocks()
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10)
     mockKoulutustyyppiResponse(yoKoulutustyypit.last, Seq(("koulutus_111111", 12, None)), yoKoulutustyypit.init)
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_120", 1, None)))
 
-    koodiClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
+    koodiClient.getKoodiUriWithLatestVersionFromCache("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
       "kansallinenkoulutusluokitus2016koulutusalataso1_01#10"
     )
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(yoKoulutustyypit, "koulutus_201000#12") should equal(itemNotFound)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(yoKoulutustyypit, "koulutus_111111#1") should equal(itemFound)
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(yoKoulutustyypit, "koulutus_201000#12") should equal(itemNotFound)
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(yoKoulutustyypit, "koulutus_111111#1") should equal(itemFound)
     koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110") should equal(itemNotFound)
     koodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_120") should equal(itemFound)
   }
