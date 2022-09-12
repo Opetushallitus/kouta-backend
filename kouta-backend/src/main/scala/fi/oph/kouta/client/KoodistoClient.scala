@@ -40,6 +40,9 @@ object KoodistoUtils {
     }
   }
 
+  def koodiUriToString(koodiUri: KoodiUri): String =
+    s"${koodiUri.koodiUri}#${koodiUri.latestVersio}"
+
   def koodiUriStringsMatch(a: String, b: String): Boolean =
     koodiUriFromString(a).koodiUri.equals(koodiUriFromString(b).koodiUri)
 
@@ -98,10 +101,14 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
                                                koodisto: String,
                                                koodiUriCache: Cache[String, Seq[KoodiUri]]
                                              ): KoodistoQueryResponse = {
-    var koodiUritFromCache = koodiUriCache.get(koodisto)
-    var querySuccess = true
-    koodiUriCache.get(koodisto, koodisto => getAndUpdateFromKoodiUri(koodisto))
-    KoodistoQueryResponse(querySuccess, koodiUritFromCache.getOrElse(Seq()))
+    try {
+      val koodiUritFromCache = koodiUriCache.get(koodisto, koodisto => getAndUpdateFromKoodiUri(koodisto))
+      KoodistoQueryResponse(true, koodiUritFromCache)
+    } catch {
+      case _ => KoodistoQueryResponse(false, Seq())
+    }
+
+
   }
   protected def isKoodiVoimassa(
       koodisto: String,

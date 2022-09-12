@@ -91,7 +91,7 @@ class HakuServiceValidation(
           ataruId =>
             assertAtaruQueryResult(
               ataruId,
-              hakemusPalveluClient.isExistingAtaruId,
+              hakemusPalveluClient.isExistingAtaruIdFromCache,
               "hakulomakeAtaruId",
               unknownAtaruId(ataruId)
             )

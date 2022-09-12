@@ -489,19 +489,19 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     )
 
   "Koulutustyyppi-koodisto validation" should "succeed when valid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
       .thenAnswer(itemNotFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_371101#1")))
   }
 
   it should "fail when koodisto-query failed" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
       .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -509,7 +509,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)
@@ -562,17 +562,17 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     assertAtaruQueryResult(ataruId, hakemusPalveluClient, "path", unknownAtaruId(ataruId))
 
   "AtaruId-validation" should "succeed when valid ataruId" in {
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
+    when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
     doAssertAtaruQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid ataruId" in {
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemNotFound)
+    when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemNotFound)
     doAssertAtaruQuery() should equal(error("path", unknownAtaruId(ataruId)))
   }
 
   it should "fail when Ataru-query failed" in {
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(queryFailed)
+    when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(queryFailed)
     doAssertAtaruQuery() should equal(error("path", ataruServiceFailureMsg))
   }
 

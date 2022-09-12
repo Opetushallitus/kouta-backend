@@ -4,8 +4,8 @@ import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoodistoQueryException, KoulutusKoodiClient}
-import fi.oph.kouta.domain.oid.{HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
@@ -246,9 +246,9 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       .thenAnswer(Right(Seq((122L, 1234L), (123L, 1235L))))
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(200L)).thenAnswer(Right(Seq[(Long, Long)]()))
     val ePerusteFailure = KoodistoQueryException("url", 500, "ePerusteServiceFailed")
-    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
-    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
     // korkeakoulu
     acceptKoulutusKoodiUri(yoKoulutustyypit, "koulutus_371101#1")
     acceptKoulutusKoodiUri(yoKoulutustyypit, "koulutus_201000#1")
