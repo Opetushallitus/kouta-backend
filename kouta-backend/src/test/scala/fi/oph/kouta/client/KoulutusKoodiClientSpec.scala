@@ -375,7 +375,7 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
 
   "When koodisto-query failed in koulutuskoodiUri by koulutustyyppi " should "return error status" in {
     mockKoulutustyyppiFailure(ammatillisetKoulutustyypit.last)
-    koodiClient.koulutusKoodiUriOfKoulutustyypitExist(
+    koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
       Seq(ammatillisetKoulutustyypit.last),
       "koulutus_371101#12"
     ) should equal(queryFailed)

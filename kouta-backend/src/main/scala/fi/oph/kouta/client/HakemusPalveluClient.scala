@@ -15,6 +15,7 @@ import scalaz.concurrent.Task
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
+import scala.util.{Success, Try}
 
 case class AtaruFormProperties(allowOnlyYhteisHaut: Option[Boolean]) {
   def allowsOnlyYhteisHaut: Boolean = allowOnlyYhteisHaut.getOrElse(false);
@@ -89,7 +90,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
   }
 
   override def isFormAllowedForHakutapa(ataruId: UUID, hakutapaKoodiUri: Option[String]): ExternalQueryResult = {
-    val existingQuery = isExistingAtaruId(ataruId);
+    val existingQuery = isExistingAtaruIdFromCache(ataruId);
     if (existingQuery != itemFound) {
       return existingQuery
     }

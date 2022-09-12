@@ -8,7 +8,7 @@ import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods.parse
 
 import scala.concurrent.duration.DurationInt
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Right, Success, Try}
 
 object EPerusteKoodiClient extends EPerusteKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
@@ -51,9 +51,12 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
   }
 
   def getKoulutusKoodiUritForEPerusteFromCache(ePerusteId: Long): Either[Throwable, Seq[KoodiUri]] = {
-    var returnValue: Either[Throwable, Seq[KoodiUri]] = Right(Seq())
-    ePerusteToKoodiuritCache.get(ePerusteId, ePerusteId => getKoulutusKoodiUritForEPeruste(ePerusteId))
-    if (returnValue.left.toOption.isDefined) returnValue else Right(koodiUritForEPeruste.getOrElse(Seq()))
+    try {
+      val koodiUrit = ePerusteToKoodiuritCache.get(ePerusteId, ePerusteId => getKoulutusKoodiUritForEPeruste(ePerusteId))
+      Right(koodiUrit)
+    } catch {
+      case error: RuntimeException => Left(error)
+    }
   }
 
   private def getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId: Long): Seq[(Long, Long)] = {
@@ -73,9 +76,12 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
   }
 
   def getTutkinnonosaViitteetAndIdtForEPerusteFromCache(ePerusteId: Long): Either[Throwable, Seq[(Long, Long)]] = {
-    var returnValue: Either[Throwable, Seq[(Long, Long)]] = Right(Seq())
-    ePerusteToTutkinnonosaCache.get(ePerusteId, ePerusteId => getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId))
-    if (returnValue.left.toOption.isDefined) returnValue else Right(viitteetAndIdtForEPeruste.getOrElse(Seq()))
+    try {
+      val viitteetAndIdtForEPeruste = ePerusteToTutkinnonosaCache.get(ePerusteId, ePerusteId => getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId))
+      Right(viitteetAndIdtForEPeruste)
+    } catch {
+      case error: RuntimeException => Left(error)
+    }
   }
 
   private def getOsaamisalaKoodiuritForEPeruste(ePerusteId: Long): Seq[KoodiUri] = {
@@ -93,16 +99,18 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         case Success(koodiUrit) => koodiUrit
         case Failure(exp: KoodistoQueryException) if exp.status == 404 => Seq()
         case Failure(exp: KoodistoQueryException) =>
-          returnValue = Left(exp)
-          logger.error(
+          throw new RuntimeException(
             s"Failed to get osaamisalat for ePeruste with id $ePerusteId, got response ${exp.status} ${exp.message}"
           )
       }
   }
 
   def getOsaamisalaKoodiuritForEPerusteFromCache(ePerusteId: Long): Either[Throwable, Seq[KoodiUri]] = {
-    var returnValue: Either[Throwable, Seq[KoodiUri]] = Right(Seq())
-    ePerusteToOsaamisalaCache.get(ePerusteId, ePerusteId => getOsaamisalaKoodiuritForEPeruste(ePerusteId))
-    if (returnValue.left.toOption.isDefined) returnValue else Right(osaamisalaKoodiUritForEPeruste.getOrElse(Seq()))
+     try {
+      val osaamisalaKoodiUritForEPeruste = ePerusteToOsaamisalaCache.get(ePerusteId, ePerusteId => getOsaamisalaKoodiuritForEPeruste(ePerusteId))
+        Right(osaamisalaKoodiUritForEPeruste)
+     } catch {
+      case error: RuntimeException => Left(error)
+    }
   }
 }

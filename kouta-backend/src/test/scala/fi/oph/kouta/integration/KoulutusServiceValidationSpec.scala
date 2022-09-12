@@ -246,9 +246,9 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       .thenAnswer(Right(Seq((122L, 1234L), (123L, 1235L))))
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(200L)).thenAnswer(Right(Seq[(Long, Long)]()))
     val ePerusteFailure = KoodistoQueryException("url", 500, "ePerusteServiceFailed")
-    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
-    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
 
     // korkeakoulu
     acceptKoulutusKoodiUri(yoKoulutustyypit, "koulutus_371101#1")

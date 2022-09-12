@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, queryFailed, itemFound, itemNotFound, fromBoolean}
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
 
@@ -33,8 +33,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       }
     } match {
       case Success(version) =>
-        versio = Some(version)
-        koodiuriVersionCache.put(koodiUriWithoutVersion)(versio.get, Some(15.minutes))
+        version
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.status} ${exp.message}")
       case Failure(exp: Throwable) =>
@@ -43,13 +42,12 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
   }
 
   def getKoodiUriWithLatestVersionFromCache(koodiUriWithoutVersion: String): String = {
-    var versio = koodiuriVersionCache.get(koodiUriWithoutVersion, koodiUriWithoutVersion => getKoodiUriWithLatestVersion(koodiUriWithoutVersion))
+    val versio = koodiuriVersionCache.get(koodiUriWithoutVersion, koodiUriWithoutVersion => getKoodiUriWithLatestVersion(koodiUriWithoutVersion))
     s"$koodiUriWithoutVersion#${versio}"
   }
 
-  def koulutuskoodiUriOfKoulutusTyypit(tyyppi: String): List[KoodiUri] = {
+  def koulutuskoodiUriOfKoulutusTyypitExist(tyyppi: String): Seq[KoodiUri] = {
     val now = ZonedDateTime.now().toLocalDateTime
-    var querySuccess = true
     Try[Seq[KoodiUri]] {
       get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", tyyppi), errorHandler, followRedirects = true) {
         response => {
@@ -64,27 +62,27 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       }
     } match {
       case Success(koulutukset) =>
-        koodiUritOfKoulutustyyppi = Some(koulutukset)
-        koulutusKoodiUriCache.put(tyyppi)(koulutukset, Some(15.minutes))
+        koulutukset
       case Failure(exp: KoodistoQueryException) =>
-        querySuccess = false
-        koodiUritOfKoulutustyyppi = None
         logger.error(s"Failed to get koulutusKoodiUris for koulutustyypit from koodisto, got response ${exp.status} ${exp.message}")
+        Seq()
       case Failure(exp: Throwable) =>
-        querySuccess = false
-        koodiUritOfKoulutustyyppi = None
-        logger.error(s"Failed to get koulutusKoodiUris for koulutustyypit from koodisto, got response ${exp.getMessage()}")
+        logger.error(s"Failed to get koulutusKoodiUris for koulutustyypit from koodisto, got response ${exp.getMessage}")
+        Seq()
     }
   }
 
   def koulutusKoodiUriOfKoulutustyypitExistFromCache(koulutustyypit: Seq[String], koodiUri: String): ExternalQueryResult = {
-    val exists = koulutustyypit.exists(tyyppi => {
-      val koodiUritOfKoulutustyyppi = koulutusKoodiUriCache.get(tyyppi, tyyppi => koulutuskoodiUriOfKoulutusTyypit(tyyppi))
-      koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritOfKoulutustyyppi)
-    })
-    if (querySuccess)
-      if (exists) itemFound else itemNotFound
-    else queryFailed
+    Try[Boolean]{
+       koulutustyypit.exists(tyyppi => {
+        val koodiUritOfKoulutustyyppi = koulutusKoodiUriCache.get(tyyppi, tyyppi => koulutuskoodiUriOfKoulutusTyypitExist(tyyppi))
+        koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritOfKoulutustyyppi)
+      })
+    } match {
+      case Success(true) => itemFound
+      case Success(false) => itemNotFound
+      case Failure(_) => queryFailed
+    }
   }
 
   // Oletus: koodiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä

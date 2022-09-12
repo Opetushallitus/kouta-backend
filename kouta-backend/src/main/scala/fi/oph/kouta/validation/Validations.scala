@@ -433,7 +433,7 @@ object Validations {
   ): IsValid = {
     val queryResult =
       if (validationContext.isKoodistoServiceOk())
-        koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(koulutusTyypit, koulutusKoodiUri)
+        koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(koulutusTyypit, koulutusKoodiUri)
       else queryFailed
     validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(
@@ -473,7 +473,7 @@ object Validations {
       errorMessage: ErrorMessage
   ): IsValid = {
     assertExternalQueryResult(
-      hakemusPalveluClient.isExistingAtaruId(ataruId),
+      hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId),
       path,
       errorMessage,
       ataruServiceFailureMsg
