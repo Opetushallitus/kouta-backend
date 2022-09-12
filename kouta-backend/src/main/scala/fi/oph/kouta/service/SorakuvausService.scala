@@ -19,15 +19,16 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
+object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, SorakuvausServiceValidation)
 
 class SorakuvausService(
   sqsInTransactionService: SqsInTransactionService,
   auditLog: AuditLog,
   val organisaatioService: OrganisaatioService,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-  kayttooikeusClient: KayttooikeusClient
-) extends ValidatingService[Sorakuvaus] with RoleEntityAuthorizationService[Sorakuvaus] {
+  kayttooikeusClient: KayttooikeusClient,
+  sorakuvausServiceValidation: SorakuvausServiceValidation
+) extends RoleEntityAuthorizationService[Sorakuvaus] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
@@ -65,7 +66,7 @@ class SorakuvausService(
     authorizePut(sorakuvaus, createRules) { s =>
       val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(s)
       val enrichedSorakuvaus = s.copy(metadata = enrichedMetadata)
-      withValidation(enrichedSorakuvaus, None)(doPut)
+      sorakuvausServiceValidation.withValidation(enrichedSorakuvaus, None)(doPut)
     }.id.get
   }
 
@@ -76,9 +77,7 @@ class SorakuvausService(
     authorizeUpdate(oldSorakuvausWithTime, sorakuvaus, rules) { (oldSorakuvaus, s) =>
       val enrichedMetadata: Option[SorakuvausMetadata] = enrichSorakuvausMetadata(s)
       val enrichedSorakuvaus = s.copy(metadata = enrichedMetadata)
-      withValidation(enrichedSorakuvaus, Some(oldSorakuvaus)) {
-        throwValidationErrors(validateStateChange("sorakuvaukselle", oldSorakuvaus.tila, enrichedSorakuvaus.tila))
-        validateKoulutusIntegrityIfDeletingSorakuvaus(oldSorakuvaus.tila, enrichedSorakuvaus.tila, enrichedSorakuvaus.id.get)
+      sorakuvausServiceValidation.withValidation(enrichedSorakuvaus, Some(oldSorakuvaus)) {
         doUpdate(_, notModifiedSince, oldSorakuvaus)
       }
     }.nonEmpty
@@ -96,14 +95,6 @@ class SorakuvausService(
         }
     }
   }
-
-  private def validateKoulutusIntegrityIfDeletingSorakuvaus(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, sorakuvausId: UUID) =
-    throwValidationErrors(
-      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
-        KoulutusDAO.listBySorakuvausId(sorakuvausId, TilaFilter.onlyOlemassaolevat()).isEmpty,
-        "tila",
-        integrityViolationMsg("Sorakuvausta", "koulutuksia")))
-    )
 
   def listKoulutusOids(sorakuvausId: UUID, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {
@@ -136,8 +127,4 @@ class SorakuvausService(
 
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
-
-  override def validateEntity(sorakuvaus: Sorakuvaus, oldSorakuvaus: Option[Sorakuvaus]): IsValid = sorakuvaus.validate()
-
-  override def validateInternalDependenciesWhenDeletingEntity(sorakuvaus: Sorakuvaus): IsValid = NoErrors
 }

@@ -124,23 +124,22 @@ package object sorakuvaus {
   def models = List(SorakuvausModel, SorakuvausListItemModel)
 }
 
-case class Sorakuvaus(id: Option[UUID] = None,
-                      externalId: Option[String] = None,
-                      tila: Julkaisutila = Tallennettu,
-                      nimi: Kielistetty = Map(),
-                      koulutustyyppi: Koulutustyyppi,
-                      kielivalinta: Seq[Kieli] = Seq(),
-                      metadata: Option[SorakuvausMetadata] = None,
-                      organisaatioOid: OrganisaatioOid,
-                      muokkaaja: UserOid,
-                      modified: Option[Modified],
-                     _enrichedData: Option[SorakuvausEnrichedData] = None
-                     ) extends PerustiedotWithId[Sorakuvaus] with AuthorizableByKoulutustyyppi[Sorakuvaus] {
-  override def validate(): IsValid = and(
-    super.validate(),
-    validateIfDefined[SorakuvausMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
-    validateIfJulkaistu(tila, assertNotOptional(metadata, "metadata"))
-  )
+case class Sorakuvaus(
+    id: Option[UUID] = None,
+    externalId: Option[String] = None,
+    tila: Julkaisutila = Tallennettu,
+    nimi: Kielistetty = Map(),
+    koulutustyyppi: Koulutustyyppi,
+    kielivalinta: Seq[Kieli] = Seq(),
+    metadata: Option[SorakuvausMetadata] = None,
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Option[Modified],
+    _enrichedData: Option[SorakuvausEnrichedData] = None
+) extends PerustiedotWithId[Sorakuvaus]
+    with AuthorizableByKoulutustyyppi[Sorakuvaus] {
+  override def validate(): IsValid =
+    super.validate()
 
   override def withModified(modified: Modified): Sorakuvaus = copy(modified = Some(modified))
 
@@ -151,24 +150,21 @@ case class Sorakuvaus(id: Option[UUID] = None,
   def getEntityDescriptionAllative(): String = "sorakuvaukselle"
 }
 
-case class SorakuvausMetadata(kuvaus: Kielistetty = Map(),
-                              koulutusalaKoodiUri: Option[String] = None,
-                              koulutusKoodiUrit: Seq[String] = Seq(),
-                              isMuokkaajaOphVirkailija: Option[Boolean] = None) extends ValidatableSubEntity {
-  override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfJulkaistu(tila, and(
-      validateKielistetty(kielivalinta, kuvaus, s"$path.kuvaus"),
-    )),
-    validateIfNonEmpty[String](koulutusKoodiUrit, s"$path.koulutusKoodiUrit", assertMatch(_, KoulutusKoodiPattern, _)),
-    validateIfDefined[String](koulutusalaKoodiUri, assertMatch(_, KoulutusalaKoodiPattern, s"$path.koulutusalaKoodiUri")))
-}
+case class SorakuvausMetadata(
+    kuvaus: Kielistetty = Map(),
+    koulutusalaKoodiUri: Option[String] = None,
+    koulutusKoodiUrit: Seq[String] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+)
 
-case class SorakuvausListItem(id: UUID,
-                              nimi: Kielistetty,
-                              tila: Julkaisutila,
-                              organisaatioOid: OrganisaatioOid,
-                              muokkaaja: UserOid,
-                              modified: Modified) extends IdListItem
+case class SorakuvausListItem(
+    id: UUID,
+    nimi: Kielistetty,
+    tila: Julkaisutila,
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified
+) extends IdListItem
 
 case class SorakuvausEnrichedData(muokkaajanNimi: Option[String] = None)
 

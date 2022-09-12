@@ -24,6 +24,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
   val kielistettyWoSvenska = invalidKielistetty(Seq(Sv))
   val fullKielistetty      = Map(Fi -> "suomeksi", Sv -> "på svenska")
   val kielet               = Seq(Fi, Sv)
+  val ataruId = UUID.randomUUID()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -472,141 +473,6 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
         ValidationError("path.wwwSivu.sv", invalidUrl(""))
       )
     )
-  }
-
-  private def doAssertKoodistoQuery(
-      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
-  ): IsValid =
-    assertKoodistoQueryResult(
-      "valintakokeentyyppi_1#1",
-      hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
-      "path",
-      validationContext,
-      invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")
-    )
-
-  "Koodisto validation" should "succeed when valid koodiUri" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
-    doAssertKoodistoQuery() should equal(NoErrors)
-  }
-
-  it should "fail when invalid koodiUri" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemNotFound)
-    doAssertKoodistoQuery() should equal(error("path", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")))
-  }
-
-  it should "fail when koodiUri query failed" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(queryFailed)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
-    validationContext.isKoodistoServiceOk() should equal(false)
-  }
-
-  it should "fail when koodisto-service failure has been detected already before" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    validationContext.setKoodistoServiceOk(false)
-    doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
-  }
-
-  private def doAssertKoulutustyyppiKoodistoQuery(
-      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
-  ): IsValid =
-    assertKoulutustyyppiQueryResult(
-      "koulutus_371101#1",
-      ammatillisetKoulutustyypit,
-      koulutusKoodiClient,
-      "path",
-      validationContext,
-      invalidKoulutuskoodiuri("koulutus_371101#1")
-    )
-
-  "Koulutustyyppi-koodisto validation" should "succeed when valid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
-      .thenAnswer(itemFound)
-    doAssertKoulutustyyppiKoodistoQuery() should equal(NoErrors)
-  }
-
-  it should "fail when invalid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
-      .thenAnswer(itemNotFound)
-    doAssertKoulutustyyppiKoodistoQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_371101#1")))
-  }
-
-  it should "fail when koodisto-query failed" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
-      .thenAnswer(queryFailed)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
-    validationContext.isKoodistoServiceOk() should equal(false)
-  }
-
-  it should "fail when koodisto-service failure has been detected already before" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(ammatillisetKoulutustyypit, "koulutus_371101#1"))
-      .thenAnswer(itemFound)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    validationContext.setKoodistoServiceOk(false)
-    doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
-  }
-
-  private def doAssertKoulutusKoodiUriQuery(
-      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
-  ): IsValid =
-    assertKoulutuskoodiQueryResult(
-      "koulutus_301104#1",
-      lukioKoulutusKoodiUrit,
-      koulutusKoodiClient,
-      "path",
-      validationContext,
-      invalidKoulutuskoodiuri("koulutus_301104#1")
-    )
-
-  "KoulutusKoodiUri-validation" should "succeed when valid koulutusKoodiUri for filter-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
-      .thenAnswer(itemFound)
-    doAssertKoulutusKoodiUriQuery() should equal(NoErrors)
-  }
-
-  it should "fail when invalid koulutusKoodiUri for filter-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
-      .thenAnswer(itemNotFound)
-    doAssertKoulutusKoodiUriQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_301104#1")))
-  }
-
-  it should "fail when koodisto-query failed" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
-      .thenAnswer(queryFailed)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    doAssertKoulutusKoodiUriQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
-    validationContext.isKoodistoServiceOk() should equal(false)
-  }
-
-  it should "fail when koodisto-service failure has been detected already before" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
-      .thenAnswer(itemFound)
-    val validationContext = ValidationContext(Tallennettu, kielet, create)
-    validationContext.setKoodistoServiceOk(false)
-    doAssertKoulutusKoodiUriQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
-  }
-
-  private val ataruId = UUID.randomUUID()
-
-  private def doAssertAtaruQuery(): IsValid =
-    assertAtaruQueryResult(ataruId, hakemusPalveluClient, "path", unknownAtaruId(ataruId))
-
-  "AtaruId-validation" should "succeed when valid ataruId" in {
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
-    doAssertAtaruQuery() should equal(NoErrors)
-  }
-
-  it should "fail when invalid ataruId" in {
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemNotFound)
-    doAssertAtaruQuery() should equal(error("path", unknownAtaruId(ataruId)))
-  }
-
-  it should "fail when Ataru-query failed" in {
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(queryFailed)
-    doAssertAtaruQuery() should equal(error("path", ataruServiceFailureMsg))
   }
 
   "Hakulomake validation" should "fail if missing or irrelevant values for MuuHakulomake" in {
