@@ -165,7 +165,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
           if (organisaatioOids.contains(RootOrganisaatioOid.toString)) {
             //sos :D. Palautetaanko kaikki vai ei mitään jos ei ole rajaimia? Joku rajain kantsii ehkä pakottaa oph-oidille.
             logger.warn("Searching with ophOid! " + params + ", orgs " + organisaatioOids)
-            r.query(should(filterQueries))
+            r.query(must(filterQueries))
           } else {
             r.query(must(orgQuery).filter(filterQueries))
           }
