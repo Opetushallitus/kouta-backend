@@ -220,6 +220,28 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
+  it should "fail when saving new hakukohde with common liitteiden toimitustapa and no tapa set" in {
+    failsValidation(
+      initMockSeq(
+        max.copy(liitteetOnkoSamaToimitusosoite = Some(true))),
+      "liitteidenToimitustapa",
+      missingMsg
+    )
+  }
+
+  it should "not fail when new hakukohde with common liitteiden toimitusosoite and toimitusaika but no liittees" in {
+    passesValidation(
+      initMockSeq(
+        max.copy(
+          liitteetOnkoSamaToimitusosoite = Some(true),
+          liitteetOnkoSamaToimitusaika = Some(true),
+          liitteidenToimitusaika = None,
+          liitteet = Seq()
+        )
+      )
+    )
+  }
+
   it should "succeed when kaytetaanHaunAlkamiskautta used" in {
     passesValidation(
       initMockSeq(

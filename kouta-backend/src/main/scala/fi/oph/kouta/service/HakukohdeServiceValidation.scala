@@ -192,15 +192,16 @@ class HakukohdeServiceValidation(
         and(
           assertNotOptional(hk.jarjestyspaikkaOid, "jarjestyspaikkaOid"),
           validateIfTrue(
-            hk.liitteetOnkoSamaToimitusaika.contains(true),
+            hk.liitteetOnkoSamaToimitusaika.contains(true) && hk.liitteet.nonEmpty,
             assertNotOptional(hk.liitteidenToimitusaika, "liitteidenToimitusaika")
           ),
           validateIfTrue(
-            hk.liitteetOnkoSamaToimitusosoite.contains(true),
+            hk.liitteetOnkoSamaToimitusosoite.contains(true) && hk.liitteet.nonEmpty,
             assertNotOptional(hk.liitteidenToimitustapa, "liitteidenToimitustapa")
           ),
           validateIfTrue(
-            hk.liitteetOnkoSamaToimitusosoite.contains(true) && hk.liitteidenToimitustapa.contains(MuuOsoite),
+            hk.liitteetOnkoSamaToimitusosoite.contains(true) && hk.liitteet.nonEmpty
+              && hk.liitteidenToimitustapa.contains(MuuOsoite),
             assertNotOptional(hk.liitteidenToimitusosoite, "liitteidenToimitusosoite")
           ),
           validateHakulomake(
