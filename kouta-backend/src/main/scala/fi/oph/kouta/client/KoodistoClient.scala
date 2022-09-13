@@ -13,6 +13,7 @@ import scala.util.{Failure, Success, Try}
 case class KoodiUri(koodiUri: String, latestVersio: Int)
 
 case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
+case class KoodistoNotFoundException(message: String) extends RuntimeException(message)
 
 case class KoodistoSubElement(koodistoUri: String)
 case class KoodistoElement(
@@ -89,7 +90,9 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
       }
     } match {
       case Success(koodiUrit) => koodiUrit
-      case Failure(exp: KoodistoQueryException) if exp.status == 404 => Seq()
+      case Failure(exp: KoodistoQueryException) if exp.status == 404 => throw new KoodistoNotFoundException(
+        s"Failed to find koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
+      )
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(
           s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
@@ -103,9 +106,10 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
                                              ): KoodistoQueryResponse = {
     try {
       val koodiUritFromCache = koodiUriCache.get(koodisto, koodisto => getAndUpdateFromKoodiUri(koodisto))
-      KoodistoQueryResponse(true, koodiUritFromCache)
+      KoodistoQueryResponse(success = true, koodiUritFromCache)
     } catch {
-      case _ => KoodistoQueryResponse(false, Seq())
+      case _: KoodistoNotFoundException => KoodistoQueryResponse(success = true, Seq())
+      case _:Throwable => KoodistoQueryResponse(success = false, Seq())
     }
 
 
