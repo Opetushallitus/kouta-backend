@@ -192,13 +192,10 @@ class HakukohdeService(
   def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)
 
-  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
-                                                                     authenticated: Authenticated
-  ): HakukohdeSearchResult =
-    listOlemassaolevat(organisaatioOid).map(_.oid) match {
-      case Nil           => SearchResult[HakukohdeSearchItem]()
-      case hakukohdeOids => KoutaSearchClient.searchHakukohteet(hakukohdeOids, params)
-    }
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated
+  ): HakukohdeSearchResult = {
+    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(orgOids => KoutaSearchClient.searchHakukohteetDirect(orgOids, params))
+  }
 
   def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =
     withRootAccess(indexerRoles) {

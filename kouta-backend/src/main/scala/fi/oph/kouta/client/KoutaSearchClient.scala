@@ -141,6 +141,41 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
     ).flatten
   }
 
+  //Korvaa vanhan toteutuksen, jossa tehtiin ensin kysely postgresiin jotta saatiin haluttujen entiteettien oidit.
+  def searchEntitiesDirect[TSearchItem: HitReader: ClassTag](
+                                                        index: String,
+                                                        organisaatioOids: Seq[String],
+                                                        params: SearchParams,
+                                                      ): SearchResult[TSearchItem] = {
+    val from: Int = getQueryFrom(params.page, params.size)
+    val filterQueries = getFilterQueries(params)
+
+    //fixme ehkä - nämä kentät toimivat nyt hakukohteille, mutteivät välttämättä muille eniteeteille ilman muutoksia
+    val orgQuery = should(
+      organisaatioOids.map(oid =>
+        should(
+          termsQuery("toteutus.organisaatiot.keyword", oid),
+          termsQuery("organisaatio.oid.keyword", oid)
+        ).minimumShouldMatch(1)
+      ))
+
+    val req =
+      Some(search(index).from(from).size(params.size))
+        .map(r => {
+          if (organisaatioOids.contains(RootOrganisaatioOid.toString)) {
+            //sos :D. Palautetaanko kaikki vai ei mitään jos ei ole rajaimia? Joku rajain kantsii ehkä pakottaa oph-oidille.
+            logger.warn("Searching with ophOid! " + params + ", orgs " + organisaatioOids)
+            r.query(should(filterQueries))
+          } else {
+            r.query(must(orgQuery).filter(filterQueries))
+          }
+        })
+        .map(withSorts(_, params))
+        .get
+
+    searchElastic[TSearchItem](req)
+  }
+
   def searchEntities[TSearchItem: HitReader: ClassTag](
       index: String,
       oids: Seq[String],
@@ -176,6 +211,9 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
 
   def searchHaut(hakuOids: Seq[HakuOid], params: SearchParams) =
     searchEntities[HakuSearchItemFromIndex]("haku-kouta", hakuOids.map(_.toString), params)
+
+  def searchHakukohteetDirect(organisaatioOids: Seq[OrganisaatioOid], params: SearchParams) =
+    searchEntitiesDirect[HakukohdeSearchItem]("hakukohde-kouta", organisaatioOids.map(_.toString), params)
 
   def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: SearchParams) =
     searchEntities[HakukohdeSearchItem]("hakukohde-kouta", hakukohdeOids.map(_.toString), params)
