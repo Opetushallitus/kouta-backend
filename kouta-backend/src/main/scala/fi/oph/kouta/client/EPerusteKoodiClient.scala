@@ -44,9 +44,10 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       }
     } match {
       case Success(koodiUris) => koodiUris
-      case Failure(exp: KoodistoQueryException) if exp.status == 404 => Seq()
+      case Failure(exp: KoodistoQueryException) if exp.status == 404 =>
+        throw KoodistoNotFoundException(s"Failed to find ePerusteet with id $ePerusteId, got response ${exp.status}, ${exp.message}")
       case Failure(exp: KoodistoQueryException) =>
-        throw new RuntimeException(s"Failed to get ePerusteet with id $ePerusteId, got response ${exp.status} ${exp.message}")
+        throw new RuntimeException(s"Failed to get ePerusteet with id $ePerusteId, got response ${exp.status}, ${exp.message}")
     }
   }
 
@@ -55,7 +56,8 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       val koodiUrit = ePerusteToKoodiuritCache.get(ePerusteId, ePerusteId => getKoulutusKoodiUritForEPeruste(ePerusteId))
       Right(koodiUrit)
     } catch {
-      case error: RuntimeException => Left(error)
+      case _: KoodistoNotFoundException => Right(Seq())
+      case error: Throwable => Left(error)
     }
   }
 
@@ -69,9 +71,10 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       }
     } match {
       case Success(viiteAndIdt) => viiteAndIdt
-      case Failure(exp: KoodistoQueryException) if exp.status == 404 => Seq()
+      case Failure(exp: KoodistoQueryException) if exp.status == 404 =>
+        throw KoodistoNotFoundException(s"Failed to find tutkinnonosat with id $ePerusteId, got response ${exp.status}, ${exp.message}")
       case Failure(exp: KoodistoQueryException) =>
-        throw new RuntimeException(s"Failed to get tutkinnonosat for ePeruste with id $ePerusteId, got response ${exp.status} ${exp.message}")
+        throw new RuntimeException(s"Failed to get tutkinnonosat for ePeruste with id $ePerusteId, got response ${exp.status}, ${exp.message}")
     }
   }
 
@@ -80,36 +83,38 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       val viitteetAndIdtForEPeruste = ePerusteToTutkinnonosaCache.get(ePerusteId, ePerusteId => getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId))
       Right(viitteetAndIdtForEPeruste)
     } catch {
-      case error: RuntimeException => Left(error)
+      case _: KoodistoNotFoundException => Right(Seq())
+      case error: Throwable => Left(error)
     }
   }
 
   private def getOsaamisalaKoodiuritForEPeruste(ePerusteId: Long): Seq[KoodiUri] = {
-      Try[Seq[KoodiUri]] {
-        get(
-          urlProperties.url("eperusteet-service.osaamisalat-by-eperuste", ePerusteId.toString),
-          errorHandler,
-          followRedirects = true
-        ) { response =>
-          {
-            (parse(response) \\ "reformi").extract[JObject].values.keySet.map(uri => koodiUriFromString(uri)).toSeq
-          }
-        }
-      } match {
-        case Success(koodiUrit) => koodiUrit
-        case Failure(exp: KoodistoQueryException) if exp.status == 404 => Seq()
-        case Failure(exp: KoodistoQueryException) =>
-          throw new RuntimeException(
-            s"Failed to get osaamisalat for ePeruste with id $ePerusteId, got response ${exp.status} ${exp.message}"
-          )
+    Try[Seq[KoodiUri]] {
+      get(
+        urlProperties.url("eperusteet-service.osaamisalat-by-eperuste", ePerusteId.toString),
+        errorHandler,
+        followRedirects = true
+      ) { response => {
+        (parse(response) \\ "reformi").extract[JObject].values.keySet.map(uri => koodiUriFromString(uri)).toSeq
       }
+      }
+    } match {
+      case Success(koodiUrit) => koodiUrit
+      case Failure(exp: KoodistoQueryException) if exp.status == 404 =>
+        throw KoodistoNotFoundException(s"Failed to find osaamisalat with id $ePerusteId, got response ${exp.status}, ${exp.message}")
+      case Failure(exp: KoodistoQueryException) =>
+        throw new RuntimeException(
+          s"Failed to get osaamisalat for ePeruste with id $ePerusteId, got response ${exp.status}, ${exp.message}"
+        )
+    }
   }
 
   def getOsaamisalaKoodiuritForEPerusteFromCache(ePerusteId: Long): Either[Throwable, Seq[KoodiUri]] = {
-     try {
+    try {
       val osaamisalaKoodiUritForEPeruste = ePerusteToOsaamisalaCache.get(ePerusteId, ePerusteId => getOsaamisalaKoodiuritForEPeruste(ePerusteId))
-        Right(osaamisalaKoodiUritForEPeruste)
-     } catch {
+      Right(osaamisalaKoodiUritForEPeruste)
+    } catch {
+      case _: KoodistoNotFoundException => Right(Seq())
       case error: RuntimeException => Left(error)
     }
   }

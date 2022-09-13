@@ -15,7 +15,6 @@ import scalaz.concurrent.Task
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
-import scala.util.{Success, Try}
 
 case class AtaruFormProperties(allowOnlyYhteisHaut: Option[Boolean]) {
   def allowsOnlyYhteisHaut: Boolean = allowOnlyYhteisHaut.getOrElse(false);
@@ -80,12 +79,12 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
   }
 
   override def isExistingAtaruIdFromCache(ataruId: UUID): ExternalQueryResult = {
-    var querySuccess = true
-    ataruFormCacheCache.get("ALL", _ => getExistingAtaruIds()).contains(ataruId.toString)
-    querySuccess match {
-      case true =>
-        fromBoolean(existingFormsInCache.getOrElse(Seq()).exists((form: AtaruForm) => form.key.equals(ataruId.toString)))
-      case _ => queryFailed
+    try {
+    val existingFormsInCache = ataruFormCache.get("ALL", _ => getExistingAtaruIds())
+      fromBoolean(existingFormsInCache.getOrElse(Seq()).exists((form: AtaruForm) => form.key.equals(ataruId.toString)))
+  } catch {
+
+      case _: Throwable => queryFailed
     }
   }
 
