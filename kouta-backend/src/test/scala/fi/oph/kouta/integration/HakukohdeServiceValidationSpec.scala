@@ -1119,7 +1119,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail if liitteiden toimitusaika not in future" in {
+  it should "fail if liitteiden yhteinen toimitusaika not in future" in {
     failsValidation(
       initMockSeq(max.copy(liitteidenToimitusaika = Some(inPastAikaleima))),
       "liitteidenToimitusaika",
@@ -1127,7 +1127,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail if toimitusaika for a liite not in future" in {
+  it should "fail if toimitusaika for an individual liite not in future" in {
     failsValidation(
       initMockSeq(max.copy(liitteet = List(Liite1.copy(toimitusaika = Some(inPastAikaleima))))),
       "liitteet[0].toimitusaika",
