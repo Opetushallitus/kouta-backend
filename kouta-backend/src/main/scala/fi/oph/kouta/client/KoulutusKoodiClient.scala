@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, queryFailed, itemFound, itemNotFound, fromBoolean}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
 
@@ -64,24 +64,22 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
       case Success(koulutukset) =>
         koulutukset
       case Failure(exp: KoodistoQueryException) =>
-        logger.error(s"Failed to get koulutusKoodiUris for koulutustyypit from koodisto, got response ${exp.status} ${exp.message}")
-        Seq()
+        throw new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyypit from koodisto, got response ${exp.status} ${exp.message}")
       case Failure(exp: Throwable) =>
-        logger.error(s"Failed to get koulutusKoodiUris for koulutustyypit from koodisto, got response ${exp.getMessage}")
-        Seq()
+        throw new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyypit from koodisto, got response ${exp.getMessage}")
     }
   }
 
-  def koulutusKoodiUriOfKoulutustyypitExistFromCache(koulutustyypit: Seq[String], koodiUri: String): ExternalQueryResult = {
-    Try[Boolean]{
-       koulutustyypit.exists(tyyppi => {
+  def koulutusKoodiUriOfKoulutustyypitExistFromCache(koulutustyypit: Seq[String], koodiUri: String) = {
+    try {
+       val exits = koulutustyypit.exists(tyyppi => {
         val koodiUritOfKoulutustyyppi = koulutusKoodiUriCache.get(tyyppi, tyyppi => koulutuskoodiUriOfKoulutusTyypitExist(tyyppi))
         koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritOfKoulutustyyppi)
       })
-    } match {
-      case Success(true) => itemFound
-      case Success(false) => itemNotFound
-      case Failure(_) => queryFailed
+      if (exits) itemFound
+      else itemNotFound
+    } catch {
+      case _: Throwable => queryFailed
     }
   }
 
