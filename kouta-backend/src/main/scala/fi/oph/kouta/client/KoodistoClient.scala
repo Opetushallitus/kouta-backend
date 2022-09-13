@@ -90,9 +90,10 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
       }
     } match {
       case Success(koodiUrit) => koodiUrit
-      case Failure(exp: KoodistoQueryException) if exp.status == 404 => throw new KoodistoNotFoundException(
-        s"Failed to find koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
-      )
+      case Failure(exp: KoodistoQueryException) if exp.status == 404 =>
+        throw KoodistoNotFoundException(
+          s"Failed to find koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
+        )
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(
           s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
@@ -109,7 +110,7 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
       KoodistoQueryResponse(success = true, koodiUritFromCache)
     } catch {
       case _: KoodistoNotFoundException => KoodistoQueryResponse(success = true, Seq())
-      case _:Throwable => KoodistoQueryResponse(success = false, Seq())
+      case _: Throwable => KoodistoQueryResponse(success = false, Seq())
     }
 
 
