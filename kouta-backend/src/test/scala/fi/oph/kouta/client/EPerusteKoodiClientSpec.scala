@@ -72,16 +72,22 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
 
   "When koulutusKoodiUri query failed" should "return error status" in {
     mockKoulutusKoodiUritForEPerusteFailure(66L)
-    koodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L).left.get.getMessage should equal("Failed to get ePerusteet with id 66, got response 500")
+    koodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L).left.get.getMessage should
+      equal("Failed to get ePerusteet with id 66, got response 500, " +
+        "Failure in eperuste-service for ePerusteId 66")
   }
 
   "When tutkinnonosa query failed" should "return error status" in {
     mockTutkinnonOsatFailure(66L)
-    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(66L).left.get.getMessage should equal("Fail[ed to get tutkinnonosat for ePeruste with id 66, got response 500")
+    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(66L).left.get.getMessage should
+      equal("Failed to get tutkinnonosat for ePeruste with id 66, got response 500, " +
+        "Failure in eperuste-service for tutkinnonosat by ePerusteId 66")
   }
 
   "When osaamisala query failed" should "return error status" in {
     mockOsaamisalaKoodiUritFailure(66L)
-    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L).left.get.getMessage should equal("Failed to get osaamisalat for ePeruste with id 66, got response 500")
+    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L).left.get.getMessage should
+      equal("Failed to get osaamisalat for ePeruste with id 66, got response 500, " +
+      "Failure in eperuste-service for osaamisalat by ePerusteId 66")
   }
 }

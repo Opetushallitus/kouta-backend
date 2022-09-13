@@ -15,7 +15,6 @@ import scalaz.concurrent.Task
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
-import scala.util.{Success, Try}
 
 case class AtaruForm(key: String, deleted: Option[Boolean]) {
   def isActive(): Boolean = !deleted.getOrElse(false)
@@ -72,12 +71,12 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
   }
 
   override def isExistingAtaruIdFromCache(ataruId: UUID): ExternalQueryResult = {
-    Try[Seq[String]] {
-    ataruIdCache.get("ALL", _ => getExistingAtaruIds())
-  } match {
-      case Success(existingIdsInCache) =>
-        fromBoolean(existingIdsInCache.contains(ataruId.toString))
-      case _ => queryFailed
+    try {
+    val existingIdsInCache = ataruIdCache.get("ALL", _ => getExistingAtaruIds())
+      fromBoolean(existingIdsInCache.contains(ataruId.toString))
+  } catch {
+
+      case _: Throwable => queryFailed
     }
   }
 
