@@ -390,12 +390,12 @@ class SearchSpec
   */
 
 
-  "Hakukohde search" should "return empty result if there are no allowed hakukohteet" in {
+/*  "Hakukohde search" should "return empty result if there are no allowed hakukohteet" in {
     get(s"$SearchPath/hakukohteet", barams(YoOid), Seq(sessionHeader(readSessions(YoOid)))) {
       status should equal (200)
       read[HakukohdeSearchResult](body).result.size should be (0)
     }
-  }
+  }*/
 
   "Hakukohde search" should "return 403 if organisaatio is not allowed" in {
     get(s"$SearchPath/hakukohteet", barams(ChildOid), Seq(sessionHeader(readSessions(YoOid)))) {
