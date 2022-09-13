@@ -33,13 +33,16 @@ object KoulutusService
       KoulutusServiceValidation,
       KoutaSearchClient
     ) {
-  def apply(sqsInTransactionService: SqsInTransactionService,
-    s3ImageService: S3ImageService, auditLog: AuditLog,
-    organisaatioService: OrganisaatioService,
-    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-    kayttooikeusClient: KayttooikeusClient,
-    koodistoClient: KoulutusKoodiClient,
-    koulutusServiceValidation: KoulutusServiceValidation): KoulutusService = {
+  def apply(
+      sqsInTransactionService: SqsInTransactionService,
+      s3ImageService: S3ImageService,
+      auditLog: AuditLog,
+      organisaatioService: OrganisaatioService,
+      oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+      kayttooikeusClient: KayttooikeusClient,
+      koodistoClient: KoulutusKoodiClient,
+      koulutusServiceValidation: KoulutusServiceValidation
+  ): KoulutusService = {
     new KoulutusService(
       sqsInTransactionService,
       s3ImageService,
@@ -89,6 +92,12 @@ class KoulutusService(
       )
     } else { None }
 
+  private def fixedKoodiUriIfNotDefined(definedValue: Option[String], koodiUriBase: String): Option[String] =
+    if (definedValue.isDefined) definedValue else Some(koodistoClient.getKoodiUriWithLatestVersion(koodiUriBase))
+
+  private def fixedKoodiUrisIfNotDefined(definedValue: Seq[String], koodiUriBase: String): Seq[String] =
+    if (definedValue.nonEmpty) definedValue else Seq(koodistoClient.getKoodiUriWithLatestVersion(koodiUriBase))
+
   private def enrichKoulutusMetadata(koulutus: Koulutus): Option[KoulutusMetadata] = {
     val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(koulutus.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
@@ -103,24 +112,29 @@ class KoulutusService(
               case amkMetadata: AmmattikorkeakouluKoulutusMetadata =>
                 Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
-                val opintojenLaajuusKoodiUri =
-                  if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri
-                  else
-                    Some(koodistoClient.getKoodiUriWithLatestVersion("opintojenlaajuus_60"))
-                val koulutusalaKoodiUrit =
-                  if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit
-                  else
-                    Seq(
-                      koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_01")
-                    )
                 Some(
                   m.copy(
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-                    opintojenLaajuusKoodiUri = opintojenLaajuusKoodiUri,
-                    koulutusalaKoodiUrit = koulutusalaKoodiUrit
+                    opintojenLaajuusKoodiUri =
+                      fixedKoodiUriIfNotDefined(m.opintojenLaajuusKoodiUri, "opintojenlaajuus_60"),
+                    koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
+                      m.koulutusalaKoodiUrit,
+                      "kansallinenkoulutusluokitus2016koulutusalataso1_01"
+                    )
                   )
                 )
-
+              case m: OpePedagOpinnotKoulutusMetadata =>
+                Some(
+                  m.copy(
+                    isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                    opintojenLaajuusKoodiUri =
+                      fixedKoodiUriIfNotDefined(m.opintojenLaajuusKoodiUri, "opintojenlaajuus_60"),
+                    koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
+                      m.koulutusalaKoodiUrit,
+                      "kansallinenkoulutusluokitus2016koulutusalataso1_01"
+                    )
+                  )
+                )
             }
           case ammMetadata: AmmatillinenKoulutusMetadata =>
             Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -130,15 +144,14 @@ class KoulutusService(
             Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammatillinenMuuKoulutusMetadata: AmmatillinenMuuKoulutusMetadata =>
             Some(ammatillinenMuuKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case lukioMetadata: LukioKoulutusMetadata =>
-            val koulutusalaKoodiUrit =
-              if (lukioMetadata.koulutusalaKoodiUrit.nonEmpty) lukioMetadata.koulutusalaKoodiUrit
-              else
-                Seq(koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso1_00"))
+          case m: LukioKoulutusMetadata =>
             Some(
-              lukioMetadata.copy(
+              m.copy(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-                koulutusalaKoodiUrit = koulutusalaKoodiUrit
+                koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
+                  m.koulutusalaKoodiUrit,
+                  "kansallinenkoulutusluokitus2016koulutusalataso1_00"
+                )
               )
             )
           case tuvaMetadata: TuvaKoulutusMetadata =>
@@ -156,16 +169,17 @@ class KoulutusService(
             Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata =>
             Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case erikoislaakariKoulutusMetadata: ErikoislaakariKoulutusMetadata =>
+          case em: ErikoislaakariKoulutusMetadata =>
             Some(
-              erikoislaakariKoulutusMetadata.copy(
+              em.copy(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-                koulutusalaKoodiUrit = Seq(
-                  koodistoClient.getKoodiUriWithLatestVersion("kansallinenkoulutusluokitus2016koulutusalataso2_091")
+                koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
+                  em.koulutusalaKoodiUrit,
+                  "kansallinenkoulutusluokitus2016koulutusalataso2_091"
                 )
               )
             )
-          case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusKoulutusMetadata => 
+          case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusKoulutusMetadata =>
             Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
@@ -173,15 +187,18 @@ class KoulutusService(
   }
 
   def enrichAndPopulateFixedDefaultValues(koulutus: Koulutus): Koulutus = {
-    val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
     koulutus.koulutustyyppi match {
       case AikuistenPerusopetus =>
-        val koulutusKoodiUrit =
-          if (koulutus.koulutuksetKoodiUri.nonEmpty) koulutus.koulutuksetKoodiUri
-          else
-            Seq(koodistoClient.getKoodiUriWithLatestVersion("koulutus_201101"))
-        koulutus.copy(koulutuksetKoodiUri = koulutusKoodiUrit, metadata = enrichedMetadata)
-      case _ => koulutus.copy(metadata = enrichedMetadata)
+        koulutus.copy(
+          koulutuksetKoodiUri = fixedKoodiUrisIfNotDefined(koulutus.koulutuksetKoodiUri, "koulutus_201101"),
+          metadata = enrichKoulutusMetadata(koulutus)
+        )
+      case OpePedagOpinnot =>
+        koulutus.copy(
+          koulutuksetKoodiUri = fixedKoodiUrisIfNotDefined(koulutus.koulutuksetKoodiUri, "koulutus_919999"),
+          metadata = enrichKoulutusMetadata(koulutus)
+        )
+      case _ => koulutus.copy(metadata = enrichKoulutusMetadata(koulutus))
     }
   }
 

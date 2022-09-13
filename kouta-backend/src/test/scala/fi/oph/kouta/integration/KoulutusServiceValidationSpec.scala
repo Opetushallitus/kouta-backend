@@ -384,6 +384,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     passesValidation(AmmOpettajaKoulutus)
   }
 
+  it should "succeed when new valid Opettajan Pedagogiset Opinnot -koulutus" in {
+    passValidation(YoOpettajaKoulutus)
+  }
+
   it should "succeed when new valid lukiokoulutus" in {
     passesValidation(LukioKoulutus)
   }
@@ -1084,6 +1088,25 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         )
       )
     )
+  }
+
+  it should "fail if invalid Opettajien Pedagogiset Opinnot -koulutus" in {
+    failValidation(YoOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1"), metadata = Some(OpePedagOpinnotKoulutusMetadata(
+      tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalatasoXX_01"),
+      opintojenLaajuusKoodiUri = Some("puppu")
+    ))), Seq(
+      ValidationError("koulutuksetKoodiUri", illegalValueForFixedValueSeqMsg(koodiUriTipText("koulutus_919999"))),
+      ValidationError("metadata.tutkintonimikeKoodiUrit", notEmptyMsg),
+      ValidationError(
+        "metadata.opintojenLaajuusKoodiUri",
+        illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuus_60"))
+      ),
+      ValidationError(
+        "metadata.koulutusalaKoodiUrit",
+        illegalValueForFixedValueSeqMsg(koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
+      )
+    ))
   }
 
   it should "fail if invalid koulutusKoodiUri for Lukio koulutus" in {

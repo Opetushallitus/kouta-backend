@@ -227,6 +227,37 @@ object TestData {
     )
   )
 
+  val YoOpettajaKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = OpePedagOpinnot,
+    koulutuksetKoodiUri = Seq("koulutus_919999#12"),
+    esikatselu = true,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(
+      OpePedagOpinnotKoulutusMetadata(
+        tutkintonimikeKoodiUrit = Seq(),
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01"),
+        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60"),
+        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        lisatiedot = Seq(Lisatieto1),
+        isMuokkaajaOphVirkailija = Some(true)
+      )
+    ),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/yokuva"),
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
+
   val KkOpintojaksoKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = false,
