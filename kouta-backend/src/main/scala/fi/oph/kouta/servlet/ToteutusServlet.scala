@@ -253,4 +253,39 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
       Ok(copyResult)
     }
   }
+
+  registerPath( "/toteutus/opintojaksot/list",
+    """    get:
+      |      summary: Listaa organisaation käytettävissä olevat opintojaksot
+      |      operationId: Listaa opintojaksot
+      |      description: Listaa organisaation käytettävissä olevat opintojaksot
+      |        uutta opintokokonaisuustoteutusta luotaessa
+      |      tags:
+      |        - Toteutus
+      |      parameters:
+      |        - in: query
+      |          name: organisaatioOid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Organisaatio-oid
+      |          example: 1.2.246.562.10.00101010101
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/ToteutusListItem'
+      |""".stripMargin)
+  get("/opintojaksot/list") {
+    implicit val authenticated: Authenticated = authenticate()
+
+    params.get("organisaatioOid").map(OrganisaatioOid) match {
+      case None => NotFound()
+      case Some(organisaatioOid) => Ok(toteutusService.listOpintojaksot(organisaatioOid))
+    }
+  }
 }
