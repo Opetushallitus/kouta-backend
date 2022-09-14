@@ -104,6 +104,8 @@ class ToteutusServiceValidation(
                   validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "koulutuksetKoodiUri", vCtx)
                 )
               )
+            case m: AmmOpeErityisopeJaOpoToteutusMetadata =>
+              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
                 case m: KkOpintojaksoToteutusMetadata =>

@@ -1059,8 +1059,19 @@ object TestData {
   val JulkaistuAmkToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)))
 
-  val AmmOpettajaToteutus: Toteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = AmmOpeErityisopeJaOpo)))
+  val AmmOpettajaToteutuksenMetatieto = AmmOpeErityisopeJaOpoToteutusMetadata(
+    tyyppi = AmmOpeErityisopeJaOpo,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = Some(23),
+    isMuokkaajaOphVirkailija = Some(false),
+    hasJotpaRahoitus = Some(false)
+  )
+
+  val JulkaistuAmmOpettajaToteutus =
+    JulkaistuAmmToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto))
 
   val TuvaToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
     tyyppi = Tuva,
