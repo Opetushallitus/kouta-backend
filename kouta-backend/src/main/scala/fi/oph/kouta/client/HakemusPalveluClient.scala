@@ -3,6 +3,7 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, queryFailed}
 import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
 import fi.vm.sade.utils.slf4j.Logging
@@ -20,11 +21,14 @@ case class AtaruForm(key: String, deleted: Option[Boolean]) {
   def isActive(): Boolean = !deleted.getOrElse(false)
 }
 
+case class AtaruQueryException(message: String, status: Int) extends RuntimeException(message)
+
 trait HakemusPalveluClient extends KoutaJsonFormats {
   def isExistingAtaruIdFromCache(ataruId: UUID): ExternalQueryResult
 }
 object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
+
   private lazy val config = KoutaConfigurationFactory.configuration.hakemuspalveluClientConfiguration
   private lazy val params = CasParams(
     urlProperties.url("hakemuspalvelu-service"),
@@ -45,37 +49,49 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     .expireAfterWrite(15.minutes)
     .build()
 
-  private def getExistingAtaruIds(): Seq[String] = {
+  private def getExistingAtaruIdsFromAtaruService: Seq[String] = {
+    Uri.fromString(urlProperties.url("hakemuspalvelu-service.forms"))
+      .fold(Task.fail, url => {
+        client.fetch(Request(method = GET, uri = url)) {
+          case r if r.status.code == 200 =>
+            r.bodyAsText
+              .runLog
+              .map(_.mkString)
+              .map(responseBody => {
+                val ids = parseIds(responseBody)
+                ids
+              })
+          case r =>
+            r.bodyAsText
+              .runLog
+              .map(_.mkString)
+              .flatMap(_ => Task.fail(AtaruQueryException(s"Failed to fetch forms from Hakemuspalvelu", r.status.code)))
+        }
+      }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
+  }
+
+  private def getExistingAtaruIds: Seq[String] = {
     try {
-      Uri.fromString(urlProperties.url("hakemuspalvelu-service.forms"))
-        .fold(Task.fail, url => {
-          client.fetch(Request(method = GET, uri = url)) {
-            case r if r.status.code == 200 =>
-              r.bodyAsText
-                .runLog
-                .map(_.mkString)
-                .map(responseBody => {
-                  val ids = parseIds(responseBody)
-                  ids
-                })
-            case r =>
-              r.bodyAsText
-                .runLog
-                .map(_.mkString)
-                .flatMap(_ => Task.fail(new RuntimeException(s"Failed to fetch forms from Hakemuspalvelu, statusCode: ${r.status.code}")))
-          }
-        }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
+      getExistingAtaruIdsFromAtaruService
     } catch {
+      case error: AtaruQueryException if retryStatusCodes.contains(error.status) =>
+        logger.warn(s"Failed to fetch forms from Hakemuspalvelu, retrying once...")
+        try {
+          getExistingAtaruIdsFromAtaruService
+        } catch {
+          case error: AtaruQueryException => throw error
+          case error: CasClientException => throw new RuntimeException(s"Authentication to CAS failed: $error")
+        }
+      case error: AtaruQueryException => throw error
       case error: CasClientException => throw new RuntimeException(s"Authentication to CAS failed: $error")
     }
   }
 
   override def isExistingAtaruIdFromCache(ataruId: UUID): ExternalQueryResult = {
     try {
-    val existingIdsInCache = ataruIdCache.get("ALL", _ => getExistingAtaruIds())
+    val existingIdsInCache = ataruIdCache.get("ALL", _ => getExistingAtaruIds)
       fromBoolean(existingIdsInCache.contains(ataruId.toString))
   } catch {
-
       case _: Throwable => queryFailed
     }
   }

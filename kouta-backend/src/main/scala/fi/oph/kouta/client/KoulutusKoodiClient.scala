@@ -46,18 +46,18 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
           case Failure(exp: KoodistoQueryException) =>
             throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.status} ${exp.message}")
           case Failure(exp: Throwable) =>
-            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.getMessage()}")
+            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.getMessage}")
         }
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.status} ${exp.message}")
       case Failure(exp: Throwable) =>
-        throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.getMessage()}")
+        throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.getMessage}")
     }
   }
 
   def getKoodiUriWithLatestVersionFromCache(koodiUriWithoutVersion: String): String = {
     val versio = koodiuriVersionCache.get(koodiUriWithoutVersion, koodiUriWithoutVersion => getKoodiUriWithLatestVersion(koodiUriWithoutVersion))
-    s"$koodiUriWithoutVersion#${versio}"
+    s"$koodiUriWithoutVersion#$versio"
   }
 
   private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodiUri] = {
@@ -116,15 +116,15 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
   // Oletus: koodiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
   // mahdollisesti annettuihin versioihin.
   def koulutusKoodiUriExists(koodiUriFilter: Seq[String], koodiUri: String): ExternalQueryResult = {
-    val filterSeq = koodiUriFilter.map(koodiUriFromString(_))
+    val filterSeq = koodiUriFilter.map(koodiUriFromString)
 
     val queryResponse = getAndUpdateFromKoodiUriCache("koulutus", commonKoodiUriCache)
-    queryResponse.success match {
-      case true =>
-        val koulutusKoodiUrit = queryResponse.koodiUritInKoodisto.filter(fromCache =>
-          filterSeq.exists(filterItem => fromCache.koodiUri == filterItem.koodiUri))
-        fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koulutusKoodiUrit))
-      case _ => queryFailed
+    if (queryResponse.success) {
+      val koulutusKoodiUrit = queryResponse.koodiUritInKoodisto.filter(fromCache =>
+        filterSeq.exists(filterItem => fromCache.koodiUri == filterItem.koodiUri))
+      fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koulutusKoodiUrit))
+    } else {
+      queryFailed
     }
   }
 
