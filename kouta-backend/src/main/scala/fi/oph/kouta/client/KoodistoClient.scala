@@ -107,7 +107,7 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
           case Success(koodiUrit) => koodiUrit
           case Failure(exp: KoodistoQueryException) =>
             throw new RuntimeException(
-              s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
+              s"Failed to get koodiuris from koodisto $koodisto after retry, got response ${exp.status} ${exp.message}"
             )
         }
       case Failure(exp: KoodistoQueryException) =>
