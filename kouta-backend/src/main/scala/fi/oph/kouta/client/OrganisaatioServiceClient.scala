@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 object OrganisaatioServiceClient extends OrganisaatioServiceClient
 
 class OrganisaatioServiceClient extends HttpClient with CallerId with Logging with KoutaJsonFormats {
-  implicit val OrganisaatioHierarkiaCache: Cache[List[OrganisaatioOid], OrganisaatioHierarkia] = Scaffeine()
+  implicit val organisaatioHierarkiaCache: Cache[List[OrganisaatioOid], OrganisaatioHierarkia] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
@@ -36,7 +36,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   }
 
   def getOrganisaatioHierarkiaWithOidsFromCache(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
-    OrganisaatioHierarkiaCache.get(oids, oids => getOrganisaatioHierarkiaWithOids(oids))
+    organisaatioHierarkiaCache.get(oids, oids => getOrganisaatioHierarkiaWithOids(oids))
   }
 }
 

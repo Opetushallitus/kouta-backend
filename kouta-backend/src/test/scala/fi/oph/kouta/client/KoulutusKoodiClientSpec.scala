@@ -366,7 +366,7 @@ class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
   "When getting latest version of koodiUri" should "throw error" in {
     mockLatestKoodiUriFailure("koulutus_201101")
     Try[Assertion] {
-      koodiClient.getKoodiUriWithLatestVersion("koulutus_201101") should equal("koulutus_201101#12")
+      koodiClient.getKoodiUriWithLatestVersionFromCache("koulutus_201101") should equal("koulutus_201101#12")
     } match {
       case Success(_) => fail("Expecting error, but it succeeded")
       case Failure(exception) =>

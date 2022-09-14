@@ -76,11 +76,17 @@ object OppijanumerorekisteriClient
     } catch {
       case error: CasClientException =>
         logger.error(s"Authentication to CAS failed: ${error}")
-        Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+        throw error
+
     }
   }
 
   override def getHenkilöFromCache(oid: UserOid): Henkilo = {
-    OppijanumeroCache.get(oid, oid => getHenkilö(oid))
+    try {
+      OppijanumeroCache.get(oid, oid => getHenkilö(oid))
+    } catch {
+      case _: CasClientException => Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+      case error: Throwable => throw error
+    }
   }
 }
