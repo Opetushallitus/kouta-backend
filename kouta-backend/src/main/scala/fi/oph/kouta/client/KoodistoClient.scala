@@ -1,6 +1,7 @@
 package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.Cache
+import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
@@ -73,27 +74,42 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
 
   val emptyKoodistoSubElement = KoodistoSubElement("")
 
+  protected def getKoodiFromKoodistoService(koodisto: String): Seq[KoodiUri] = {
+    get(
+      urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
+      errorHandler,
+      followRedirects = true
+    ) { response => {
+      parse(response)
+        .extract[List[KoodistoElement]]
+        .filter(koodiUri =>
+          isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm)
+        )
+        .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
+    }
+    }
+  }
+
   protected def getAndUpdateFromKoodiUri(koodisto: String): Seq[KoodiUri] = {
     Try[Seq[KoodiUri]] {
-      get(
-        urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
-        errorHandler,
-        followRedirects = true
-      ) { response => {
-        parse(response)
-          .extract[List[KoodistoElement]]
-          .filter(koodiUri =>
-            isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm)
-          )
-          .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
-      }
-      }
+      getKoodiFromKoodistoService(koodisto)
     } match {
       case Success(koodiUrit) => koodiUrit
       case Failure(exp: KoodistoQueryException) if exp.status == 404 =>
         throw KoodistoNotFoundException(
           s"Failed to find koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
         )
+      case Failure(exp: KoodistoQueryException) if retryStatusCodes.contains(exp.status) =>
+        logger.warn(s"Failed to get koodiuris from koodisto $koodisto, retrying once...")
+        Try[Seq[KoodiUri]] {
+          getKoodiFromKoodistoService(koodisto)
+        } match {
+          case Success(koodiUrit) => koodiUrit
+          case Failure(exp: KoodistoQueryException) =>
+            throw new RuntimeException(
+              s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
+            )
+        }
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(
           s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
@@ -112,9 +128,8 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
       case _: KoodistoNotFoundException => KoodistoQueryResponse(success = true, Seq())
       case _: Throwable => KoodistoQueryResponse(success = false, Seq())
     }
-
-
   }
+
   protected def isKoodiVoimassa(
       koodisto: String,
       koodiUri: String,
