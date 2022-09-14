@@ -143,33 +143,21 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
 
   //Korvaa vanhan toteutuksen, jossa tehtiin ensin kysely postgresiin jotta saatiin haluttujen entiteettien oidit.
   def searchEntitiesDirect[TSearchItem: HitReader: ClassTag](
-                                                        index: String,
-                                                        organisaatioOids: Seq[String],
-                                                        params: SearchParams,
+                                                              index: String,
+                                                              organisaatioOids: Seq[String],
+                                                              params: SearchParams,
+                                                              orgOidFields: Seq[String]
                                                       ): SearchResult[TSearchItem] = {
     val from: Int = getQueryFrom(params.page, params.size)
     val filterQueries = getFilterQueries(params)
 
-    //fixme ehkä - nämä kentät toimivat nyt hakukohteille, mutteivät välttämättä muille eniteeteille ilman muutoksia
-    val orgQuery = should(
-      organisaatioOids.map(oid =>
-        should(
-          termsQuery("toteutus.organisaatiot.keyword", oid),
-          termsQuery("organisaatio.oid.keyword", oid)
-        ).minimumShouldMatch(1)
-      ))
+    val orgQuery = should(orgOidFields.map(field => should(termsQuery(field, organisaatioOids)))).minimumShouldMatch(1)
+
+    val combinedQuery = if (organisaatioOids.contains(RootOrganisaatioOid.toString) || organisaatioOids.isEmpty) must(filterQueries) else must(orgQuery).filter(filterQueries)
 
     val req =
       Some(search(index).from(from).size(params.size))
-        .map(r => {
-          if (organisaatioOids.contains(RootOrganisaatioOid.toString)) {
-            //sos :D. Palautetaanko kaikki vai ei mitään jos ei ole rajaimia? Joku rajain kantsii ehkä pakottaa oph-oidille.
-            logger.warn("Searching with ophOid! " + params + ", orgs " + organisaatioOids)
-            r.query(must(filterQueries))
-          } else {
-            r.query(must(orgQuery).filter(filterQueries))
-          }
-        })
+        .map(r => r.query(combinedQuery))
         .map(withSorts(_, params))
         .get
 
@@ -213,7 +201,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
     searchEntities[HakuSearchItemFromIndex]("haku-kouta", hakuOids.map(_.toString), params)
 
   def searchHakukohteetDirect(organisaatioOids: Seq[OrganisaatioOid], params: SearchParams) =
-    searchEntitiesDirect[HakukohdeSearchItem]("hakukohde-kouta", organisaatioOids.map(_.toString), params)
+    searchEntitiesDirect[HakukohdeSearchItem]("hakukohde-kouta", organisaatioOids.map(_.toString), params, Seq("toteutus.organisaatiot.keyword", "organisaatio.oid.keyword"))
 
   def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: SearchParams) =
     searchEntities[HakukohdeSearchItem]("hakukohde-kouta", hakukohdeOids.map(_.toString), params)
