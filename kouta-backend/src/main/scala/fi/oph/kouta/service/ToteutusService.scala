@@ -205,6 +205,11 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
+  def listOpintojaksot(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid,
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(
+      ToteutusDAO.listOpintojaksotByAllowedOrganisaatiot(_, TilaFilter.onlyOlemassaolevatAndArkistoimattomat()))
+
   def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated): ToteutusSearchResult = {
 
     def getCount(t: ToteutusSearchItemFromIndex, organisaatioOids: Seq[OrganisaatioOid]): Integer = {

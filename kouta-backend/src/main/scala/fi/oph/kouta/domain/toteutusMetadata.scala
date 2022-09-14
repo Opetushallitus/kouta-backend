@@ -1,6 +1,7 @@
 package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.keyword.Keyword
+import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 
@@ -741,7 +742,8 @@ case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                hakuaika: Option[Ajanjakso] = None,
                                                aloituspaikat: Option[Int] = None,
                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                               hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                               hasJotpaRahoitus: Option[Boolean] = None,
+                                               liitetytOpintojaksot: Seq[ToteutusOid] = Seq()) extends TutkintoonJohtamatonToteutusMetadata
 
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),

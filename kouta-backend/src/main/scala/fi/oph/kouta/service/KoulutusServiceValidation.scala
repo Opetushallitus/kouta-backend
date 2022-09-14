@@ -446,7 +446,7 @@ class KoulutusServiceValidation(
             .foreach(t => {
               t.metadata match {
                 case Some(toteutusMetadata: KkOpintokokonaisuusToteutusMetadata) => {
-                  toteutusMetadata.opintojenLaajuusNumero.foreach((toteutusLaajuusNumero) => {
+                  toteutusMetadata.opintojenLaajuusNumero.foreach(toteutusLaajuusNumero => {
                     if (toteutusLaajuusNumero < laajuusMin) {
                       addErrorOid("metadata.opintojenLaajuusNumeroMin", t.oid)
                     }

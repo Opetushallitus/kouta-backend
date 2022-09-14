@@ -23,6 +23,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def listByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[ToteutusListItem]
   def listByKoulutusOidAndAllowedOrganisaatiot(koulutusOid: KoulutusOid, organisaatioOids: Seq[OrganisaatioOid]): Seq[ToteutusListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem]
+  def listOpintojaksotByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[ToteutusListItem]
 }
 
 object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
@@ -120,6 +121,9 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def listByHakuOid(hakuOid: HakuOid): Seq[ToteutusListItem] =
     listWithTarjoajat(() => selectByHakuOid(hakuOid))
+
+  override def listOpintojaksotByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[ToteutusListItem] =
+    KoutaDatabase.runBlocking(selectOpintojaksot(organisaatioOids, tilaFilter))
 
   def getToteutuksetByOids(toteutusOids: List[ToteutusOid]): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
@@ -372,5 +376,14 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           from toteutusten_tarjoajat tt
           inner join hakukohteet h on tt.toteutus_oid = h.toteutus_oid
           where h.oid = $hakukohdeOid""".as[OrganisaatioOid]
+  }
+
+  def selectOpintojaksot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[ToteutusListItem]] = {
+    sql"""#$selectToteutusListSql
+          left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
+          where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+             or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
+             and t.metadata->>'tyyppi' = 'kk-opintojakso'
+              #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }
 }
