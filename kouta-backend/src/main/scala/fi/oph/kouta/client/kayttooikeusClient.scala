@@ -88,13 +88,18 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
         }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
     } catch {
       case error: CasClientException =>
-        logger.error(s"Authentication to CAS failed: ${error}")
-        List()
+        logger.error(s"Authentication to CAS failed: $error")
+        throw error
     }
   }
 
   def getOrganisaatiotFromCache(oid: UserOid): List[OrganisaatioHenkilo] = {
-    kayttooikeusCache.get(oid, oid => getOrganisaatiot(oid))
+    try {
+      kayttooikeusCache.get(oid, oid => getOrganisaatiot(oid))
+    } catch {
+      case _: CasClientException => List()
+      case error: Throwable => throw error
+    }
   }
 }
 

@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJsonFormats {
   val organisaatioUrl: String
 
-  implicit val WholeHierarkiaCache: Cache[String, OrganisaatioResponse] = Scaffeine()
+  implicit val wholeHierarkiaCache: Cache[String, OrganisaatioResponse] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
 
@@ -22,7 +22,7 @@ trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJson
   }
 
   def getWholeOrganisaatioHierarkiaCached(): OrganisaatioResponse = {
-    WholeHierarkiaCache.get("ALL", _ => getWholeOrganisaatioHierarkia())
+    wholeHierarkiaCache.get("ALL", _ => getWholeOrganisaatioHierarkia())
   }
 }
 

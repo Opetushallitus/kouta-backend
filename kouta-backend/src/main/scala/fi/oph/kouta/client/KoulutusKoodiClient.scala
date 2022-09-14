@@ -26,7 +26,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
 
   case class CodeElementWithVersion(koodiUri: String, versio: Int)
 
-  def getKoodiUriWithLatestVersion(koodiUriWithoutVersion: String): Int = {
+  private def getKoodiUriWithLatestVersion(koodiUriWithoutVersion: String): Int = {
     Try[Int] {
       get(urlProperties.url("koodisto-service.latest-koodiuri", koodiUriWithoutVersion), errorHandler, followRedirects = true) {
         response => parse(response).extract[CodeElementWithVersion].versio
@@ -46,7 +46,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     s"$koodiUriWithoutVersion#${versio}"
   }
 
-  def koulutuskoodiUriOfKoulutusTyypitExist(tyyppi: String): Seq[KoodiUri] = {
+  private def koulutuskoodiUriOfKoulutusTyypitExist(tyyppi: String): Seq[KoodiUri] = {
     val now = ZonedDateTime.now().toLocalDateTime
     Try[Seq[KoodiUri]] {
       get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", tyyppi), errorHandler, followRedirects = true) {
