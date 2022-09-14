@@ -12,7 +12,7 @@ trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJson
   val organisaatioUrl: String
 
   implicit val wholeHierarkiaCache: Cache[String, OrganisaatioResponse] = Scaffeine()
-    .expireAfterWrite(45.minutes)
+    .expireAfterWrite(2.hours)
     .build()
 
   private def getWholeOrganisaatioHierarkia(): OrganisaatioResponse = {
@@ -21,6 +21,7 @@ trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJson
     }
   }
 
+  //TODO: organisaatiohierarkiakutsu, ladataanko heti kun palvelu käynnistetään. Tutkittava!
   def getWholeOrganisaatioHierarkiaCached(): OrganisaatioResponse = {
     wholeHierarkiaCache.get("ALL", _ => getWholeOrganisaatioHierarkia())
   }
