@@ -1101,6 +1101,8 @@ object TestData {
 
   val JulkaistuAmmOpettajaToteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto))
+  val JulkaistuYoOpettajaToteutus =
+    JulkaistuAmmOpettajaToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto.copy(tyyppi = OpePedagOpinnot)))
 
   val TuvaToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
     tyyppi = Tuva,

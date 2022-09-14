@@ -730,6 +730,7 @@ case class OpePedagOpinnotToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityi
                                            asiasanat: List[Keyword] = List(),
                                            ammattinimikkeet: List[Keyword] = List(),
                                            yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                           aloituspaikat: Option[Int] = None,
                                            isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                            hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
