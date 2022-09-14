@@ -58,7 +58,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         } match {
           case Success(koodiUris) => koodiUris
           case Failure(exp: KoodistoQueryException) =>
-            throw new RuntimeException(s"Failed to get ePerusteet with id $ePerusteId, got response ${exp.status}, ${exp.message}")
+            throw new RuntimeException(s"Failed to get ePerusteet with id $ePerusteId after retry, got response ${exp.status}, ${exp.message}")
         }
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(s"Failed to get ePerusteet with id $ePerusteId, got response ${exp.status}, ${exp.message}")
@@ -98,7 +98,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         } match {
           case Success(viiteAndIdt) => viiteAndIdt
           case Failure(exp: KoodistoQueryException) =>
-            throw new RuntimeException(s"Failed to get tutkinnonosat for ePeruste with id $ePerusteId, got response ${exp.status}, ${exp.message}")
+            throw new RuntimeException(s"Failed to get tutkinnonosat for ePeruste with id $ePerusteId after retry, got response ${exp.status}, ${exp.message}")
         }
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(s"Failed to get tutkinnonosat for ePeruste with id $ePerusteId, got response ${exp.status}, ${exp.message}")
@@ -142,7 +142,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
           case Success(koodiUrit) => koodiUrit
           case Failure(exp: KoodistoQueryException) =>
             throw new RuntimeException(
-              s"Failed to get osaamisalat for ePeruste with id $ePerusteId, got response ${exp.status}, ${exp.message}"
+              s"Failed to get osaamisalat for ePeruste with id $ePerusteId after retry, got response ${exp.status}, ${exp.message}"
             )
         }
       case Failure(exp: KoodistoQueryException) =>

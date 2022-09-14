@@ -86,7 +86,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
         try {
           getExistingAtaruIdsFromAtaruService
         } catch {
-          case error: AtaruQueryException => throw error
+          case error: AtaruQueryException => throw new AtaruQueryException(s"Failed to fetch forms from Hakemuspalvelu after retry, ${error.message}", error.status)
           case error: CasClientException => throw new RuntimeException(s"Authentication to CAS failed: $error")
         }
       case error: AtaruQueryException => throw error

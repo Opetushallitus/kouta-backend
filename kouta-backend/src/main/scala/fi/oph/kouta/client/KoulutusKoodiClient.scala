@@ -44,9 +44,9 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
           getKoodiUriWithLatestVersionFromKoodistoService(koodiUriWithoutVersion)
         } match {
           case Failure(exp: KoodistoQueryException) =>
-            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.status} ${exp.message}")
+            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion after retry, got response ${exp.status} ${exp.message}")
           case Failure(exp: Throwable) =>
-            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.getMessage}")
+            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion after retry, got response ${exp.getMessage}")
         }
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.status} ${exp.message}")
@@ -89,9 +89,9 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         } match {
           case Success(koulutukset) => koulutukset
           case Failure(exp: KoodistoQueryException) =>
-            throw new RuntimeException(s" got response ${exp.status} ${exp.message}")
+            throw new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyypi $tyyppi from koodisto after retry, got response ${exp.status} ${exp.message}")
           case Failure(exp: Throwable) =>
-            throw new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyypi $tyyppi from koodisto, got response ${exp.getMessage}")
+            throw new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyypi $tyyppi from koodisto after retry, got response ${exp.getMessage}")
         }
       case Failure(exp: KoodistoQueryException) =>
         throw new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyypi $tyyppi from koodisto, got response ${exp.status} ${exp.message}")
