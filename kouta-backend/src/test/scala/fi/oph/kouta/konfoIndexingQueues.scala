@@ -2,7 +2,7 @@ package fi.oph.kouta
 
 import scala.collection.JavaConverters._
 import scala.util.Try
-import cloud.localstack.docker.LocalstackDocker.{INSTANCE => localstack}
+import cloud.localstack.Localstack.{INSTANCE => localstack}
 import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
 import com.amazonaws.services.sqs.AmazonSQSClient
 import com.amazonaws.services.sqs.model.{Message, PurgeQueueRequest, ReceiveMessageRequest}
@@ -25,7 +25,7 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
       .randomizePorts(false)
       .pullNewImage(false)
       .environmentVariables(mapAsJavaMap(Map("SERVICES" -> "sqs")))
-      .imageTag("0.10.2")
+      .imageTag("1.0.4")
       .build()
   }
 
