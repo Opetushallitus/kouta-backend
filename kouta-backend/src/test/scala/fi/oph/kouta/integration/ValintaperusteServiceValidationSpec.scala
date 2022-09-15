@@ -241,11 +241,10 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
   it should "fail when data missing from julkaistu valintaperuste" in {
     failsValidation(
       maxWithValintatapa(
-        Valintatapa1.copy(valintatapaKoodiUri = None, kuvaus = vainSuomeksi, kynnysehto = vainSuomeksi)
+        Valintatapa1.copy(valintatapaKoodiUri = None, kynnysehto = vainSuomeksi)
       ),
       Seq(
         ValidationError("metadata.valintatavat[0].valintatapaKoodiUri", missingMsg),
-        ValidationError("metadata.valintatavat[0].kuvaus", kielistettyWoSvenskaError),
         ValidationError("metadata.valintatavat[0].kynnysehto", kielistettyWoSvenskaError)
       )
     )
