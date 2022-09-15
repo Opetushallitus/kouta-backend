@@ -40,7 +40,7 @@ create_queues () {
 
 start_container() {
     echo "Starting Localstack container"
-    docker run -d -e "EDGE_PORT=4576" -p 4566:4566 localstack/localstack:${localstack_version}  > ${id_file}
+    docker run -d -p 4566:4566 localstack/localstack:${localstack_version} > ${id_file}
     echo "Container started"
 }
 
