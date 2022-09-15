@@ -3,17 +3,23 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.util.GenericKoutaJsonFormats
+import fi.vm.sade.utils.slf4j.Logging
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
 import scala.concurrent.duration._
 
-trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJsonFormats {
+trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJsonFormats with Logging {
   val organisaatioUrl: String
 
   implicit val wholeHierarkiaCache: Cache[String, OrganisaatioResponse] = Scaffeine()
     .expireAfterWrite(2.hours)
     .build()
+
+  logger.info("Filling up Organisaatiohierarkiacache...")
+  getWholeOrganisaatioHierarkiaCached()
+  logger.info("Organisaatiohierarkiacache full")
+
 
   private def getWholeOrganisaatioHierarkia(): OrganisaatioResponse = {
     get(organisaatioUrl, followRedirects = true) { response =>
