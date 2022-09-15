@@ -104,6 +104,8 @@ class ToteutusServiceValidation(
                   validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "koulutuksetKoodiUri", vCtx)
                 )
               )
+            case m: AmmOpeErityisopeJaOpoToteutusMetadata =>
+              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
                 case m: KkOpintojaksoToteutusMetadata =>
@@ -137,7 +139,6 @@ class ToteutusServiceValidation(
 
   private def validateOpetusKoodiUriListItem(
       koodiUrit: Seq[String],
-      koodiUriPattern: Pattern,
       relativePath: String,
       validationContext: ValidationContext,
       koodistoFunc: String => ExternalQueryResult,
@@ -147,10 +148,7 @@ class ToteutusServiceValidation(
       koodiUrit,
       s"metadata.opetus.$relativePath",
       (koodiUri, path) =>
-        validateIfSuccessful(
-          assertMatch(koodiUri, koodiUriPattern, path),
-          assertKoodistoQueryResult(koodiUri, koodistoFunc, path, validationContext, errorFunc(koodiUri))
-        )
+        assertKoodistoQueryResult(koodiUri, koodistoFunc, path, validationContext, errorFunc(koodiUri))
     )
 
   private def validateOpetus(
@@ -162,7 +160,6 @@ class ToteutusServiceValidation(
     and(
       validateOpetusKoodiUriListItem(
         toteutusDiffResolver.newOpetuskieliKoodiUrit(),
-        OpetuskieliKoodiPattern,
         "opetuskieliKoodiUrit",
         vCtx,
         koulutusKoodiClient.opetusKieliKoodiUriExists,
@@ -170,7 +167,6 @@ class ToteutusServiceValidation(
       ),
       validateOpetusKoodiUriListItem(
         toteutusDiffResolver.newOpetusaikaKoodiUrit(),
-        OpetusaikaKoodiPattern,
         "opetusaikaKoodiUrit",
         vCtx,
         koulutusKoodiClient.opetusAikaKoodiUriExists,
@@ -178,7 +174,6 @@ class ToteutusServiceValidation(
       ),
       validateOpetusKoodiUriListItem(
         toteutusDiffResolver.newOpetustapaKoodiUrit(),
-        OpetustapaKoodiPattern,
         "opetustapaKoodiUrit",
         vCtx,
         koulutusKoodiClient.opetusTapaKoodiUriExists,
@@ -194,20 +189,12 @@ class ToteutusServiceValidation(
         )
       ),
       validateIfDefined[Apuraha](opetus.apuraha, apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha)),
-      validateIfNonEmpty[Lisatieto](
+      validateIfNonEmptySeq[Lisatieto](
+        opetus.lisatiedot,
         toteutusDiffResolver.newLisatiedot(),
         s"$path.lisatiedot",
-        (lisatieto, path) =>
-          validateIfSuccessful(
-            lisatieto.validate(vCtx.tila, vCtx.kielivalinta, path),
-            assertKoodistoQueryResult(
-              lisatieto.otsikkoKoodiUri,
-              koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists,
-              path = s"$path.otsikkoKoodiUri",
-              vCtx,
-              invalidOpetusLisatietoOtsikkoKoodiuri(lisatieto.otsikkoKoodiUri)
-            )
-          )
+        (lisatieto, newLisatieto, path) =>
+          lisatieto.validate(path, newLisatieto, vCtx, koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists)
       ),
       validateIfDefined[Double](opetus.maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
       validateIfDefined[Int](opetus.suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),
@@ -278,15 +265,12 @@ class ToteutusServiceValidation(
       validateIfDefined[String](
         newOsaamisala.map(_.koodiUri),
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, OsaamisalaKoodiPattern, s"$path.koodiUri"),
-            assertKoodistoQueryResult(
-              koodiUri,
-              koulutusKoodiClient.osaamisalaKoodiUriExists,
-              s"$path.koodiUri",
-              vCtx,
-              invalidOsaamisalaKoodiUri(koodiUri)
-            )
+          assertKoodistoQueryResult(
+            koodiUri,
+            koulutusKoodiClient.osaamisalaKoodiUriExists,
+            s"$path.koodiUri",
+            vCtx,
+            invalidOsaamisalaKoodiUri(koodiUri)
           )
       )
     )
@@ -361,15 +345,12 @@ class ToteutusServiceValidation(
       koodiUrit,
       s"metadata.kielivalikoima.$relativePath",
       (koodiUri, path) =>
-        validateIfSuccessful(
-          assertMatch(koodiUri, KieliKoodiPattern, path),
-          assertKoodistoQueryResult(
-            koodiUri,
-            hakuKoodiClient.kieliKoodiUriExists,
-            path,
-            validationContext,
-            invalidKieliKoodiUri(relativePath, koodiUri)
-          )
+        assertKoodistoQueryResult(
+          koodiUri,
+          hakuKoodiClient.kieliKoodiUriExists,
+          path,
+          validationContext,
+          invalidKieliKoodiUri(relativePath, koodiUri)
         )
     )
 
@@ -377,7 +358,6 @@ class ToteutusServiceValidation(
       linjat: Seq[LukiolinjaTieto],
       newLinjat: Seq[LukiolinjaTieto],
       relativePath: String,
-      koodiUriPattern: Pattern,
       koodistoFunc: String => ExternalQueryResult,
       vCtx: ValidationContext
   ): IsValid =
@@ -387,12 +367,9 @@ class ToteutusServiceValidation(
       s"metadata.$relativePath",
       (linja, newLinjaOption, path) =>
         validateIfSuccessful(
-          and(
-            validateIfJulkaistu(
-              vCtx.tila,
-              validateOptionalKielistetty(vCtx.kielivalinta, linja.kuvaus, s"$path.kuvaus")
-            ),
-            assertMatch(linja.koodiUri, koodiUriPattern, s"$path.koodiUri")
+          validateIfJulkaistu(
+            vCtx.tila,
+            validateOptionalKielistetty(vCtx.kielivalinta, linja.kuvaus, s"$path.kuvaus")
           ),
           validateIfDefined[LukiolinjaTieto](
             newLinjaOption,
@@ -436,7 +413,6 @@ class ToteutusServiceValidation(
         lkMetadata.painotukset,
         toteutusDiffResolver.newLukioPainotukset(),
         "painotukset",
-        LukioPainotusKoodiPattern,
         koulutusKoodiClient.lukioPainotusKoodiUriExists,
         vCtx
       ),
@@ -444,7 +420,6 @@ class ToteutusServiceValidation(
         lkMetadata.erityisetKoulutustehtavat,
         toteutusDiffResolver.newLukioErityisetKoulutustehtavat(),
         "erityisetKoulutustehtavat",
-        LukioErityinenKoulutustehtavaKoodiPattern,
         koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUriExists,
         vCtx
       ),
@@ -455,7 +430,6 @@ class ToteutusServiceValidation(
         (diplomi, newDiplomiOpt, path) =>
           validateIfSuccessful(
             and(
-              assertMatch(diplomi.koodiUri, LukioDiplomiKoodiPattern, s"$path.koodiUri"),
               validateIfNonEmpty(diplomi.linkki, s"$path.linkki", assertValidUrl _),
               validateIfJulkaistu(
                 vCtx.tila,
@@ -560,22 +534,12 @@ class ToteutusServiceValidation(
       )
     )
   }
-
-  override def validateEntityOnJulkaisu(toteutus: Toteutus): IsValid = {
-    toteutus.metadata match {
-      case Some(metadata) =>
-        metadata.opetus match {
-          case Some(opetus) =>
-            opetus.koulutuksenAlkamiskausi match {
-              case Some(koulutuksenAlkamiskausi) =>
-                koulutuksenAlkamiskausi.validateOnJulkaisu("metadata.opetus.koulutuksenAlkamiskausi")
-              case _ => NoErrors
-            }
-          case _ => NoErrors
-        }
-      case _ => NoErrors
-    }
-  }
+  override def validateEntityOnJulkaisu(toteutus: Toteutus): IsValid =
+    toteutus.metadata
+      .flatMap(_.opetus)
+      .flatMap(_.koulutuksenAlkamiskausi)
+      .map(_.validateOnJulkaisu("metadata.opetus.koulutuksenAlkamiskausi"))
+      .getOrElse(NoErrors)
 
   override def validateInternalDependenciesWhenDeletingEntity(toteutus: Toteutus): IsValid = assertTrue(
     hakukohdeDAO.listByToteutusOid(toteutus.oid.get, TilaFilter.onlyOlemassaolevat()).isEmpty,

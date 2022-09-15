@@ -19,15 +19,16 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
+object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, ValintaperusteServiceValidation)
 
 class ValintaperusteService(
   sqsInTransactionService: SqsInTransactionService,
   auditLog: AuditLog,
   val organisaatioService: OrganisaatioService,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-  kayttooikeusClient: KayttooikeusClient
-) extends ValidatingService[Valintaperuste] with RoleEntityAuthorizationService[Valintaperuste] {
+  kayttooikeusClient: KayttooikeusClient,
+  valintaperusteServiceValidation: ValintaperusteServiceValidation
+) extends RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
   protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
@@ -64,7 +65,7 @@ class ValintaperusteService(
     authorizePut(valintaperuste) { v =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
-      withValidation(enrichedValintaperuste, None) { valpe =>
+      valintaperusteServiceValidation.withValidation(enrichedValintaperuste, None) { valpe =>
         doPut(valpe)
       }
     }.id.get
@@ -78,9 +79,7 @@ class ValintaperusteService(
     authorizeUpdate(oldValintaPerusteWithTime, valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
-      withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
-        throwValidationErrors(validateStateChange("valintaperusteelle", oldValintaperuste.tila, v.tila))
-        validateHakukohdeIntegrityIfDeletingValintaperuste(oldValintaperuste.tila, v.tila, v.id.get)
+      valintaperusteServiceValidation.withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
     }.nonEmpty
@@ -98,14 +97,6 @@ class ValintaperusteService(
         }
     }
   }
-
-  private def validateHakukohdeIntegrityIfDeletingValintaperuste(aiempiTila: Julkaisutila, tulevaTila: Julkaisutila, valintaperusteId: UUID): Unit =
-    throwValidationErrors(
-      validateIfTrue(tulevaTila == Poistettu && tulevaTila != aiempiTila, assertTrue(
-        HakukohdeDAO.listByValintaperusteId(valintaperusteId, TilaFilter.onlyOlemassaolevat()).isEmpty,
-        "tila",
-        integrityViolationMsg("Valintaperustetta", "hakukohteita")))
-    )
 
   def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
@@ -149,9 +140,4 @@ class ValintaperusteService(
 
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
-
-  override def validateEntity(valintaperuste: Valintaperuste, oldValintaperuste: Option[Valintaperuste]): IsValid = valintaperuste.validate()
-  override def validateEntityOnJulkaisu(valintaperuste: Valintaperuste): IsValid = valintaperuste.validateOnJulkaisu()
-
-  override def validateInternalDependenciesWhenDeletingEntity(valintaperuste: Valintaperuste): IsValid = NoErrors
 }

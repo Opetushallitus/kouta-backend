@@ -184,28 +184,7 @@ case class Valintaperuste(
 ) extends PerustiedotWithId[Valintaperuste]
     with AuthorizableMaybeJulkinen[Valintaperuste] {
 
-  override def validate(): IsValid = and(
-    super.validate(),
-    assertValid(organisaatioOid, "organisaatioOid"),
-    validateIfDefined[String](hakutapaKoodiUri, assertMatch(_, HakutapaKoodiPattern, "hakutapaKoodiUri")),
-    validateIfDefined[String](kohdejoukkoKoodiUri, assertMatch(_, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri")),
-    validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validate(tila, kielivalinta, _)),
-    validateIfDefined[ValintaperusteMetadata](metadata, _.validate(tila, kielivalinta, "metadata")),
-    validateIfDefined[ValintaperusteMetadata](
-      metadata,
-      m => assertTrue(m.tyyppi == koulutustyyppi, "koulutustyyppi", InvalidMetadataTyyppi)
-    ),
-    validateIfJulkaistu(
-      tila,
-      and(
-        assertNotOptional(hakutapaKoodiUri, "hakutapaKoodiUri"),
-        assertNotOptional(kohdejoukkoKoodiUri, "kohdejoukkoKoodiUri")
-      )
-    )
-  )
-
-  override def validateOnJulkaisu(): IsValid =
-    validateIfNonEmpty[Valintakoe](valintakokeet, "valintakokeet", _.validateOnJulkaisu(_))
+  override def validate(): IsValid = super.validate()
 
   override def withId(id: UUID): Valintaperuste = copy(id = Some(id))
 

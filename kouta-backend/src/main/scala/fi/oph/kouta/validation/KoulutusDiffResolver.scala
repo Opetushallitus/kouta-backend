@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{AikuistenPerusopetusKoulutusMetadata, AmmOpeErityisopeJaOpoKoulutusMetadata, AmmatillinenMuuKoulutusMetadata, AmmatillinenTutkinnonOsaKoulutusMetadata, ErikoislaakariKoulutusMetadata, KkOpintojaksoKoulutusMetadata, KkOpintokokonaisuusKoulutusMetadata, KorkeakoulutusKoulutusMetadata, Koulutus, KoulutusMetadata, Lisatieto, LukioKoulutusMetadata, TelmaKoulutusMetadata, TutkinnonOsa, TuvaKoulutusMetadata, VapaaSivistystyoKoulutusMetadata, VapaaSivistystyoMuuKoulutusMetadata, VapaaSivistystyoOpistovuosiKoulutusMetadata}
+import fi.oph.kouta.domain._
 
 case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus]) {
   private def oldMetadata(): Option[KoulutusMetadata] = oldKoulutus.flatMap(_.metadata)

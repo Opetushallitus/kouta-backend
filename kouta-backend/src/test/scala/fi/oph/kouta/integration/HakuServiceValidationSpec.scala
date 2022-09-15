@@ -8,7 +8,7 @@ import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.service.{HakuServiceValidation, KoutaValidationException, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError}
+import fi.oph.kouta.validation.{BaseServiceValidationSpec, BaseValidationSpec, ValidationError}
 import org.scalatest.Assertion
 import org.scalatest.matchers.must.Matchers.contain
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -16,7 +16,7 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import java.util.UUID
 import scala.util.{Failure, Try}
 
-class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
+class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
   val organisaatioService  = mock[OrganisaatioService]
   val hakuKoodiClient      = mock[HakuKoodiClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
@@ -31,7 +31,8 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   val maxMetadata        = max.metadata.get
   val maxWithOidMetadata = maxWithOid.metadata.get
 
-  override val validator   = new HakuServiceValidation(organisaatioService, hakuKoodiClient, hakemusPalveluClient, hakukohdeDao)
+  override val validator =
+    new HakuServiceValidation(organisaatioService, hakuKoodiClient, hakemusPalveluClient, hakukohdeDao)
   val vainSuomeksi         = Map(Fi -> "vain suomeksi", Sv -> "")
   val fullKielistetty      = Map(Fi -> "suomeksi", Sv -> "på svenska")
   val kielistettyWoSvenska = invalidKielistetty(Seq(Sv))
@@ -50,42 +51,35 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
     when(hakukohdeDao.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(Seq[HakukohdeListItem]())
   }
 
-  def failsModifyValidation(haku: Haku, oldHaku: Haku, expected: Seq[ValidationError]): Assertion =
-    Try(validator.withValidation(haku, Some(oldHaku))(hk => hk)) match {
-      case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
-      case _                                      => fail("Expecting validation failure, but it succeeded")
-    }
-
   "Haku validation" should "succeed when new valid haku" in {
-    passValidation(max)
+    passesValidation(max)
   }
 
   it should "succeed when new incomplete luonnos" in {
-    passValidation(min)
+    passesValidation(min)
   }
 
   it should "succeed when modifying existing haku" in {
-    passValidation(maxWithOid, max)
+    passesValidation(maxWithOid, max)
   }
 
   it should "fail when invalid perustiedot" in {
-    failValidation(
+    failsValidation(
       max.copy(oid = Some(HakuOid("1.2.3"))),
       Seq(
         ValidationError("oid", validationMsg("1.2.3")),
         ValidationError("oid", notMissingMsg(Some(HakuOid("1.2.3"))))
       )
     )
-    failValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
-    failValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
-    failValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
-    failValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
-    failValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
+    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
+    failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
   }
   it should "fail when missing or invalid hakutapaKoodiUri" in {
-    failValidation(max.copy(hakutapaKoodiUri = None), "hakutapaKoodiUri", missingMsg)
-    failValidation(max.copy(hakutapaKoodiUri = Some("puppu")), "hakutapaKoodiUri", validationMsg("puppu"))
-    failValidation(
+    failsValidation(max.copy(hakutapaKoodiUri = None), "hakutapaKoodiUri", missingMsg)
+    failsValidation(
       max.copy(hakutapaKoodiUri = Some("hakutapa_99#1")),
       "hakutapaKoodiUri",
       invalidHakutapaKoodiUri("hakutapa_99#1")
@@ -93,9 +87,8 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail when missing or invalid kohdejoukkoKoodiUri" in {
-    failValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
-    failValidation(max.copy(kohdejoukkoKoodiUri = Some("puppu")), "kohdejoukkoKoodiUri", validationMsg("puppu"))
-    failValidation(
+    failsValidation(max.copy(kohdejoukkoKoodiUri = None), "kohdejoukkoKoodiUri", missingMsg)
+    failsValidation(
       max.copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_99#1")),
       "kohdejoukkoKoodiUri",
       invalidHaunKohdejoukkoKoodiUri("haunkohdejoukko_99#1")
@@ -103,12 +96,7 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail when invalid kohdejoukonTarkenneKoodiUri" in {
-    failValidation(
-      max.copy(kohdejoukonTarkenneKoodiUri = Some("puppu")),
-      "kohdejoukonTarkenneKoodiUri",
-      validationMsg("puppu")
-    )
-    failValidation(
+    failsValidation(
       max.copy(kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_99#1")),
       "kohdejoukonTarkenneKoodiUri",
       invalidHaunKohdejoukonTarkenneKoodiUri("haunkohdejoukontarkenne_99#1")
@@ -117,15 +105,15 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
 
   it should "fail when invalid hakuajat" in {
     val ajanJakso = Ajanjakso(inFuture(1000), Some(inFuture(800)))
-    failValidation(max.copy(hakuajat = List(ajanJakso)), "hakuajat[0]", invalidAjanjaksoMsg(ajanJakso))
+    failsValidation(max.copy(hakuajat = List(ajanJakso)), "hakuajat[0]", invalidAjanjaksoMsg(ajanJakso))
   }
 
   it should "fail if metadata missing from julkaistu haku" in {
-    failValidation(max.copy(metadata = None), "metadata", missingMsg)
+    failsValidation(max.copy(metadata = None), "metadata", missingMsg)
   }
 
   "Metadata validation" should "fail if invalid yhteyshenkilö" in {
-    failValidation(
+    failsValidation(
       max.copy(metadata = Some(maxMetadata.copy(yhteyshenkilot = List(Yhteystieto1.copy(nimi = Map()))))),
       "metadata.yhteyshenkilot[0].nimi",
       invalidKielistetty(Seq(Fi, Sv))
@@ -134,7 +122,7 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
 
   it should "fail if invalid tulevaisuudenAikataulu" in {
     val ajanJakso = Ajanjakso(inFuture(1000), Some(inFuture(800)))
-    failValidation(
+    failsValidation(
       max.copy(metadata = Some(maxMetadata.copy(tulevaisuudenAikataulu = Seq(ajanJakso)))),
       "metadata.tulevaisuudenAikataulu[0]",
       invalidAjanjaksoMsg(ajanJakso)
@@ -142,7 +130,7 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail if invalid koulutuksenAlkamiskausi" in {
-    failValidation(
+    failsValidation(
       max.copy(metadata =
         Some(
           maxMetadata.copy(koulutuksenAlkamiskausi =
@@ -156,16 +144,18 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail if koulutuksenAlkamiskausi not given in julkaistu yhteishaku" in {
-    failValidation(
+    failsValidation(
       max.copy(
         hakutapaKoodiUri = Some("hakutapa_01#1"),
         metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = None))
-      ), "metadata.koulutuksenAlkamiskausi", missingMsg
+      ),
+      "metadata.koulutuksenAlkamiskausi",
+      missingMsg
     )
   }
 
   it should "fail if hakulomaketyyppi missing from julkaistu haku while other hakulomake values given" in {
-    failValidation(
+    failsValidation(
       max.copy(hakulomaketyyppi = None),
       Seq(
         ValidationError("hakulomakeLinkki", notEmptyAlthoughOtherEmptyMsg("hakulomaketyyppi")),
@@ -185,7 +175,7 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
         )
       )
     )
-    passValidation(haku, haku)
+    passesValidation(haku, haku)
   }
 
   it should "succeed when ataruId not changed, eventhough unknown id" in {
@@ -194,15 +184,15 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
       hakulomakeLinkki = Map(),
       hakulomakeAtaruId = Some(UUID.randomUUID())
     )
-    passValidation(hakuWithUnknownId, hakuWithUnknownId)
+    passesValidation(hakuWithUnknownId, hakuWithUnknownId)
   }
 
   "Validate on julkaisu" should "succeed when jatkuva haku" in {
-    passValidation(
+    passesValidation(
       maxWithOid.copy(hakutapaKoodiUri = Some("hakutapa_03#1"), hakuajat = List(Ajanjakso(inFuture()))),
       max.copy(tila = Tallennettu)
     )
-    passValidation(
+    passesValidation(
       maxWithOid
         .copy(hakutapaKoodiUri = Some("hakutapa_03#1"), hakuajat = List(Ajanjakso(inFuture(), Some(inFuture(1000))))),
       max.copy(tila = Tallennettu)
@@ -210,11 +200,11 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "succeed when joustava haku" in {
-    passValidation(
+    passesValidation(
       maxWithOid.copy(hakutapaKoodiUri = Some("hakutapa_04#1"), hakuajat = List(Ajanjakso(inFuture()))),
       max.copy(tila = Tallennettu)
     )
-    passValidation(
+    passesValidation(
       maxWithOid
         .copy(hakutapaKoodiUri = Some("hakutapa_04#1"), hakuajat = List(Ajanjakso(inFuture(), Some(inFuture(1000))))),
       max.copy(tila = Tallennettu)
@@ -222,7 +212,7 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "succeed when other than jatkuva haku" in {
-    passValidation(
+    passesValidation(
       maxWithOid
         .copy(hakutapaKoodiUri = Some("hakutapa_02#1"), hakuajat = List(Ajanjakso(inFuture(), Some(inFuture(1000))))),
       max.copy(tila = Tallennettu)
@@ -231,7 +221,7 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
 
   it should "fail when end of hakuaika not given and hakutapa not jatkuva nor joustava" in {
     val ajanjakso = Ajanjakso(inFuture())
-    failValidation(
+    failsValidation(
       max.copy(hakutapaKoodiUri = Some("hakutapa_02#1"), hakuajat = List(ajanjakso)),
       "hakuajat[0].paattyy",
       missingMsg
@@ -239,30 +229,28 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
   }
 
   it should "fail when end of hakuaika not in future" in {
-    val paattyy = inPast(500)
-    failValidation(
-      max.copy(hakutapaKoodiUri = Some("hakutapa_02#1"), hakuajat = List(Ajanjakso(inPast(1000), Some(paattyy)))),
+    failsValidation(
+      max.copy(hakutapaKoodiUri = Some("hakutapa_02#1"), hakuajat = List(inPastJakso)),
       "hakuajat[0].paattyy",
-      pastDateMsg(paattyy)
+      pastDateMsg(inPastAikaleima)
     )
-    failValidation(
-      max.copy(hakutapaKoodiUri = Some("hakutapa_03#1"), hakuajat = List(Ajanjakso(inPast(1000), Some(paattyy)))),
+    failsValidation(
+      max.copy(hakutapaKoodiUri = Some("hakutapa_03#1"), hakuajat = List(inPastJakso)),
       "hakuajat[0].paattyy",
-      pastDateMsg(paattyy)
+      pastDateMsg(inPastAikaleima)
     )
   }
 
   it should "fail when end of tulevaisuudenAikataulu missing or not in future" in {
-    failValidation(
+    failsValidation(
       max.copy(metadata = Some(maxMetadata.copy(tulevaisuudenAikataulu = Seq(Ajanjakso(inFuture()))))),
       "metadata.tulevaisuudenAikataulu[0].paattyy",
       missingMsg
     )
-    val paattyy = inPast(500)
-    failValidation(
-      max.copy(metadata = Some(maxMetadata.copy(tulevaisuudenAikataulu = Seq(Ajanjakso(inPast(1000), Some(paattyy)))))),
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(tulevaisuudenAikataulu = Seq(inPastJakso)))),
       "metadata.tulevaisuudenAikataulu[0].paattyy",
-      pastDateMsg(paattyy)
+      pastDateMsg(inPastAikaleima)
     )
   }
 
@@ -278,7 +266,7 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
       )
     )
 
-    failValidation(
+    failsValidation(
       max.copy(metadata =
         Some(
           maxMetadata.copy(
@@ -294,36 +282,47 @@ class HakuServiceValidationSpec extends BaseValidationSpec[Haku] {
     )
   }
 
+  it should "succeed when state changes from arkistoitu to julkaistu, eventhough timestamps not in future" in {
+    passesValidation(
+      maxWithOid.copy(
+        hakuajat = List(inPastJakso),
+        metadata = Some(
+          maxMetadata.copy(
+            tulevaisuudenAikataulu = Seq(inPastJakso),
+            koulutuksenAlkamiskausi = Some(inPastKoulutuksenAlkamiskausi)
+          )
+        )
+      ),
+      maxWithOid.copy(tila = Arkistoitu)
+    )
+  }
+
   "State change" should "succeed from tallennettu to julkaistu" in {
-    passValidation(maxWithOid, maxWithOid.copy(tila = Tallennettu))
+    passesValidation(maxWithOid, maxWithOid.copy(tila = Tallennettu))
   }
 
   it should "succeed from julkaistu to arkistoitu" in {
-    passValidation(maxWithOid.copy(tila = Arkistoitu), maxWithOid)
+    passesValidation(maxWithOid.copy(tila = Arkistoitu), maxWithOid)
   }
 
   it should "succeed from arkistoitu to julkaistu" in {
-    passValidation(maxWithOid, maxWithOid.copy(tila = Arkistoitu))
+    passesValidation(maxWithOid, maxWithOid.copy(tila = Arkistoitu))
   }
 
   it should "succeed from julkaistu to tallennettu" in {
-    passValidation(maxWithOid.copy(tila = Tallennettu), maxWithOid)
+    passesValidation(maxWithOid.copy(tila = Tallennettu), maxWithOid)
   }
 
   it should "succeed from tallennettu to poistettu" in {
-    passValidation(maxWithOid.copy(tila = Poistettu), maxWithOid.copy(tila = Tallennettu))
+    passesValidation(maxWithOid.copy(tila = Poistettu), maxWithOid.copy(tila = Tallennettu))
   }
 
   def failStageChangeValidation(newTila: Julkaisutila, oldTila: Julkaisutila): Assertion =
-    Try(
-      validator.withValidation(maxWithOid.copy(tila = newTila), Some(maxWithOid.copy(tila = oldTila)))(e => e)
-    ) match {
-      case Failure(exp: KoutaValidationException) =>
-        exp.errorMessages should contain theSameElementsAs Seq(
-          ValidationError("tila", illegalStateChange("haulle", oldTila, newTila))
-        )
-      case _ => fail("Expecting illegalStateChange, but it succeeded")
-    }
+    failsStageChangeValidation(
+      maxWithOid.copy(tila = newTila),
+      maxWithOid.copy(tila = oldTila),
+      illegalStateChange("haulle", oldTila, newTila)
+    )
 
   it should "fail from tallennettu to arkistoitu" in {
     failStageChangeValidation(Arkistoitu, Tallennettu)

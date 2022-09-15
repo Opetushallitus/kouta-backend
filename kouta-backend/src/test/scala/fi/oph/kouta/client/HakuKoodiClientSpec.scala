@@ -167,4 +167,16 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
     koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_6") should equal(itemNotFound)
     koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_9") should equal(itemNotFound)
   }
+
+  "Finding valintatapaKoodiUri" should "return true when koodiUri exists" in {
+    mockKoodistoResponse("valintatapajono", Seq(
+      ("valintatapajono_av", 1, None),
+      ("valintatapajono_tv", 3, None),
+      ("valintatapajono_km", 2, Some(dayInPast))
+    ))
+    koodiClient.valintatapaKoodiUriExists("valintatapajono_av") should equal(itemFound)
+    koodiClient.valintatapaKoodiUriExists("valintatapajono_tv#2") should equal(itemFound)
+    koodiClient.valintatapaKoodiUriExists("valintatapajono_km") should equal(itemNotFound)
+    koodiClient.valintatapaKoodiUriExists("valintatapajono_xx") should equal(itemNotFound)
+  }
 }

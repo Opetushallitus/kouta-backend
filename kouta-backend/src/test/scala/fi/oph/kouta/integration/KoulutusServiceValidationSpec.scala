@@ -4,8 +4,8 @@ import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoodistoQueryException, KoulutusKoodiClient}
-import fi.oph.kouta.domain.oid.{HakukohdeOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
@@ -15,7 +15,7 @@ import org.scalatest.Assertion
 
 import java.util.UUID
 
-class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
+class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] {
   val koulutusKoodiClient = mock[KoulutusKoodiClient]
   val ePerusteKoodiClient = mock[EPerusteKoodiClient]
   var organisaatioService = mock[OrganisaatioService]
@@ -274,66 +274,66 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   "Validation" should "succeed when new valid koulutus" in {
-    passValidation(amm.copy(sorakuvausId = Some(sorakuvausId)))
+    passesValidation(amm.copy(sorakuvausId = Some(sorakuvausId)))
   }
 
   it should "succeed when incomplete luonnos" in {
-    passValidation(min)
+    passesValidation(min)
   }
 
   it should "succeed when koulutuskoodiUri has higher version than the matching koodiUri in ePeruste" in {
-    passValidation(amm.copy(koulutuksetKoodiUri = Seq("koulutus_371101#12")))
+    passesValidation(amm.copy(koulutuksetKoodiUri = Seq("koulutus_371101#12")))
   }
 
   it should "succeed when new valid AmmOsaamisala koulutus" in {
-    passValidation(ammOa.copy(sorakuvausId = Some(sorakuvausId)))
+    passesValidation(ammOa.copy(sorakuvausId = Some(sorakuvausId)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa koulutus" in {
-    passValidation(ammTk.copy(sorakuvausId = Some(sorakuvausId7)))
+    passesValidation(ammTk.copy(sorakuvausId = Some(sorakuvausId7)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa without koulutusKoodiUri" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(124L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(124L)).thenAnswer(Right(Seq((134L, 1345L))))
-    passValidation(ammTkWithTutkinnonOsaParams(Some(124L), None, Some(1345L), Some(134L)))
+    passesValidation(ammTkWithTutkinnonOsaParams(Some(124L), None, Some(1345L), Some(134L)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with koulutusKoodiUri only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(125L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_123456"))))
-    passValidation(ammTkWithTutkinnonOsaParams(Some(125L), Some("koulutus_123456#1"), None, None))
+    passesValidation(ammTkWithTutkinnonOsaParams(Some(125L), Some("koulutus_123456#1"), None, None))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with tutkinnonosaId only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(126L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(126L)).thenAnswer(Right(Seq((11111L, 1346L))))
-    passValidation(ammTkWithTutkinnonOsaParams(Some(126L), None, Some(1346L), None))
+    passesValidation(ammTkWithTutkinnonOsaParams(Some(126L), None, Some(1346L), None))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with tutkinnonosaViite only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(127L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
     when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(127L)).thenAnswer(Right(Seq((135L, 111111L))))
-    passValidation(ammTkWithTutkinnonOsaParams(Some(127L), None, None, Some(135L)))
+    passesValidation(ammTkWithTutkinnonOsaParams(Some(127L), None, None, Some(135L)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with ePerusteId only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(128L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
-    passValidation(ammTkWithTutkinnonOsaParams(Some(128L), None, None, None))
+    passesValidation(ammTkWithTutkinnonOsaParams(Some(128L), None, None, None))
   }
 
   it should "succeed when new incomplete luonnos AmmTutkinnonOsa" in {
-    passValidation(
+    passesValidation(
       ammTk.copy(
         tila = Tallennettu,
         metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata())
       )
     )
-    passValidation(
+    passesValidation(
       ammTkWithTutkinnonOsaParams(None, Some("koulutus_371101#1"), Some(5L), Some(6L)).copy(
         tila = Tallennettu
       )
@@ -341,13 +341,13 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "succeed when new incomplete luonnos AmmOsaamisala" in {
-    passValidation(
+    passesValidation(
       ammOa.copy(
         tila = Tallennettu,
         metadata = Some(AmmatillinenOsaamisalaKoulutusMetadata())
       )
     )
-    passValidation(
+    passesValidation(
       ammOa.copy(
         ePerusteId = None,
         tila = Tallennettu,
@@ -361,152 +361,152 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "succeed when new incomplete luonnos AmmMuu koulutus" in {
-    passValidation(AmmMuuKoulutus.copy(tila = Tallennettu, metadata = Some(AmmatillinenMuuKoulutusMetadata())))
+    passesValidation(AmmMuuKoulutus.copy(tila = Tallennettu, metadata = Some(AmmatillinenMuuKoulutusMetadata())))
   }
 
   it should "succeed when new valid Yo koulutus" in {
-    passValidation(yoKoulutusWithParameters())
+    passesValidation(yoKoulutusWithParameters())
   }
 
   it should "succeed when new incomplete luonnos Yo koulutus" in {
-    passValidation(yo.copy(tila = Tallennettu, metadata = Some(YliopistoKoulutusMetadata())))
+    passesValidation(yo.copy(tila = Tallennettu, metadata = Some(YliopistoKoulutusMetadata())))
   }
 
   it should "succeed when new valid Yo koulutus and just one common koulutusKoodiUri with sorakuvaus" in {
-    passValidation(yoKoulutusWithParameters().copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201111#1")))
+    passesValidation(yoKoulutusWithParameters().copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201111#1")))
   }
 
   it should "succeed when new valid Amk koulutus" in {
-    passValidation(amk)
+    passesValidation(amk)
   }
 
   it should "succeed when new valid AmmOpeErityisopeJaOpo koulutus" in {
-    passValidation(AmmOpettajaKoulutus)
+    passesValidation(AmmOpettajaKoulutus)
   }
 
   it should "succeed when new valid lukiokoulutus" in {
-    passValidation(LukioKoulutus)
+    passesValidation(LukioKoulutus)
   }
 
   it should "succeed when new valid Tuva koulutus" in {
-    passValidation(TuvaKoulutus)
+    passesValidation(TuvaKoulutus)
   }
 
   it should "succeed when new incomplete luonnos Tuva koulutus" in {
-    passValidation(TuvaKoulutus.copy(tila = Tallennettu, metadata = Some(TuvaKoulutusMetadata())))
+    passesValidation(TuvaKoulutus.copy(tila = Tallennettu, metadata = Some(TuvaKoulutusMetadata())))
   }
 
   it should "succeed when new valid Telma koulutus" in {
-    passValidation(TelmaKoulutus)
+    passesValidation(TelmaKoulutus)
   }
 
   it should "succeed when new valid Vapaa sivistystyö opistovuosi koulutus" in {
-    passValidation(VapaaSivistystyoOpistovuosiKoulutus)
+    passesValidation(VapaaSivistystyoOpistovuosiKoulutus)
   }
 
   it should "succeed when new valid Vapaa sivistystyö muu koulutus" in {
-    passValidation(VapaaSivistystyoMuuKoulutus)
+    passesValidation(VapaaSivistystyoMuuKoulutus)
   }
 
   it should "succeed when new incomplete luonnos Vapaa sivistystyö muu koulutus" in {
-    passValidation(
+    passesValidation(
       VapaaSivistystyoMuuKoulutus.copy(tila = Tallennettu, metadata = Some(VapaaSivistystyoMuuKoulutusMetadata()))
     )
   }
 
   it should "succeed when new valid Aikuisten perusopetus koulutus" in {
-    passValidation(AikuistenPerusopetusKoulutus)
+    passesValidation(AikuistenPerusopetusKoulutus)
   }
 
   it should "succeed when new incomplete luonnos Aikuisten perusopetus koulutus" in {
-    passValidation(
+    passesValidation(
       AikuistenPerusopetusKoulutus.copy(tila = Tallennettu, metadata = Some(AikuistenPerusopetusKoulutusMetadata()))
     )
   }
 
   it should "succeed when new valid Kk-opintojakso koulutus" in {
-    passValidation(KkOpintojaksoKoulutus)
+    passesValidation(KkOpintojaksoKoulutus)
   }
 
   it should "succeed when new incomplete luonnos Kk-opintojakso koulutus" in {
-    passValidation(KkOpintojaksoKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintojaksoKoulutusMetadata())))
+    passesValidation(KkOpintojaksoKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintojaksoKoulutusMetadata())))
   }
 
   it should "Succeed when new valid Erikoislääkäri koulutus" in {
-    passValidation(ErikoislaakariKoulutus)
+    passesValidation(ErikoislaakariKoulutus)
   }
 
   it should "succeed when tarjoajat not changed in modify operation, even though unknown tarjoajat" in {
     val koulutus =
       amm.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), tarjoajat = List(GrandChildOid, UnknownOid, LonelyOid))
-    passValidation(koulutus, koulutus)
+    passesValidation(koulutus, koulutus)
   }
 
   it should "succeed when koulutuksetKoodiUri not changed in modify operation, even though unknown Uris" in {
     val ammKoulutus =
       amm.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), koulutuksetKoodiUri = Seq("koulutus_000000#1"))
-    passValidation(ammKoulutus, ammKoulutus)
+    passesValidation(ammKoulutus, ammKoulutus)
     val yoKoulutus =
       yo.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), koulutuksetKoodiUri = Seq("koulutus_000000#1"))
-    passValidation(yoKoulutus, yoKoulutus)
+    passesValidation(yoKoulutus, yoKoulutus)
     val amkKoulutus =
       amk.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), koulutuksetKoodiUri = Seq("koulutus_000000#1"))
-    passValidation(amkKoulutus, amkKoulutus)
+    passesValidation(amkKoulutus, amkKoulutus)
     val ammOpeErityisopeJaOpo = AmmOpettajaKoulutus.copy(
       oid = Some(KoulutusOid("1.2.246.562.13.125")),
       koulutuksetKoodiUri = Seq("koulutus_000000#1")
     )
-    passValidation(ammOpeErityisopeJaOpo, ammOpeErityisopeJaOpo)
+    passesValidation(ammOpeErityisopeJaOpo, ammOpeErityisopeJaOpo)
     val lkKoulutus =
       LukioKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), koulutuksetKoodiUri = Seq("koulutus_000000#1"))
-    passValidation(lkKoulutus, lkKoulutus)
+    passesValidation(lkKoulutus, lkKoulutus)
     val elKoulutus = ErikoislaakariKoulutus.copy(
       oid = Some(KoulutusOid("1.2.246.562.13.125")),
       koulutuksetKoodiUri = Seq("koulutus_000000#1")
     )
-    passValidation(elKoulutus, elKoulutus)
+    passesValidation(elKoulutus, elKoulutus)
   }
 
   it should "succeed when lisatiedot not changed in modify operation, even though unknown otsikkoKoodiUri" in {
     val koulutus = ammWithLisatietoParams(koodiUri = "koulutuksenlisatiedot_XX#1")
       .copy(oid = Some(KoulutusOid("1.2.246.562.13.125")))
-    passValidation(koulutus, koulutus)
+    passesValidation(koulutus, koulutus)
   }
 
   it should "Succeed when ePerusteId not changed in modify operation, even though ePerusteId unknown" in {
     val nonChangedAmm = amm.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), ePerusteId = Some(111L))
-    passValidation(nonChangedAmm, nonChangedAmm)
+    passesValidation(nonChangedAmm, nonChangedAmm)
     val nonChangedAmmOa = ammOa.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), ePerusteId = Some(111L))
-    passValidation(nonChangedAmmOa, nonChangedAmmOa)
+    passesValidation(nonChangedAmmOa, nonChangedAmmOa)
   }
 
   it should "Succeed when ammTutkinnonosa not changed in modify operation, even though invalid parameters" in {
     val nonChangedAmmTk = ammTkWithTutkinnonOsaParams(Some(111L), Some("koulutus_12345#1"), Some(66L), Some(66L))
       .copy(oid = Some(KoulutusOid("1.2.246.562.13.125")))
-    passValidation(nonChangedAmmTk, nonChangedAmmTk)
+    passesValidation(nonChangedAmmTk, nonChangedAmmTk)
   }
 
   it should "Succeed when koulutusalaKoodiUrit not changed in modify operation, even though invalid koodiUrit" in {
     val nonChangedAmmMuu = ammMuuKoulutusWithParameters("kansallinenkoulutusluokitus2016koulutusalataso1_66").copy(oid =
       Some(KoulutusOid("1.2.246.562.13.125"))
     )
-    passValidation(nonChangedAmmMuu, nonChangedAmmMuu)
+    passesValidation(nonChangedAmmMuu, nonChangedAmmMuu)
     val nonChangedYo = yoKoulutusWithParameters("kansallinenkoulutusluokitus2016koulutusalataso1_66").copy(oid =
       Some(KoulutusOid("1.2.246.562.13.125"))
     )
-    passValidation(nonChangedYo, nonChangedYo)
+    passesValidation(nonChangedYo, nonChangedYo)
     val nonChangedVst =
       vstMuuWithParams(koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_66"))
-    passValidation(nonChangedVst, nonChangedVst)
+    passesValidation(nonChangedVst, nonChangedVst)
     val nonChangedKkOj =
       kkOpintoJaksoWithParams(koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_66"))
-    passValidation(nonChangedKkOj, nonChangedKkOj)
+    passesValidation(nonChangedKkOj, nonChangedKkOj)
   }
 
   it should "Succeed when laajuusKoodiUri not changed in modify operation, even though invalid koodiUrit" in {
     val nonChangedYo = yoKoulutusWithParameters(opintojenlaajuusKoodiUri = "opintojenlaajuus_99#1")
       .copy(oid = Some(KoulutusOid("1.2.246.562.13.125")))
-    passValidation(nonChangedYo, nonChangedYo)
+    passesValidation(nonChangedYo, nonChangedYo)
     val nonChangedLk = LukioKoulutus.copy(
       metadata = Some(
         LukioKoulutusMetadata(
@@ -516,7 +516,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       ),
       oid = Some(KoulutusOid("1.2.246.562.13.125"))
     )
-    passValidation(nonChangedLk, nonChangedLk)
+    passesValidation(nonChangedLk, nonChangedLk)
     val nonChangedTuva = TuvaKoulutus.copy(
       metadata = Some(
         TuvaKoulutusMetadata(
@@ -526,7 +526,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       oid = Some(KoulutusOid("1.2.246.562.13.125")),
       tila = Tallennettu
     )
-    passValidation(nonChangedTuva, nonChangedTuva)
+    passesValidation(nonChangedTuva, nonChangedTuva)
     val nonChangedVst = VapaaSivistystyoOpistovuosiKoulutus.copy(
       metadata = Some(
         VapaaSivistystyoOpistovuosiKoulutusMetadata(
@@ -536,27 +536,27 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       ),
       oid = Some(KoulutusOid("1.2.246.562.13.125"))
     )
-    passValidation(nonChangedVst, nonChangedVst)
+    passesValidation(nonChangedVst, nonChangedVst)
   }
 
   it should "Succeed when laajuusYksikkoKoodiUri not changed in modify operation, even though invalid koodiUrit" in {
     val nonChangedAmmMuu = ammMuuKoulutusWithParameters(opintojenlaajusyksikkoKoodiUri = "opintojenlaajuusyksikko_9#1")
       .copy(oid = Some(KoulutusOid("1.2.246.562.13.125")))
-    passValidation(nonChangedAmmMuu, nonChangedAmmMuu)
+    passesValidation(nonChangedAmmMuu, nonChangedAmmMuu)
     val nonChangedVst = vstMuuWithParams(opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_9#1"))
-    passValidation(nonChangedVst, nonChangedVst)
+    passesValidation(nonChangedVst, nonChangedVst)
     val nonChangedAikPer =
       aikuistenPerusopetusWithParams(opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_9#1"))
-    passValidation(nonChangedAikPer, nonChangedAikPer)
+    passesValidation(nonChangedAikPer, nonChangedAikPer)
     val nonChangedKkOj =
       kkOpintoJaksoWithParams(opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_9#1"))
-    passValidation(nonChangedKkOj, nonChangedKkOj)
+    passesValidation(nonChangedKkOj, nonChangedKkOj)
   }
 
   it should "Succeed when tutkintonimikeKoodiUrit not changed in modify operation, even though invalid koodiUrit" in {
     val nonChangedYo = yoKoulutusWithParameters(tutkintonimikeKoodiUri = "tutkintonimikekk_99#2")
       .copy(oid = Some(KoulutusOid("1.2.246.562.13.125")))
-    passValidation(nonChangedYo, nonChangedYo)
+    passesValidation(nonChangedYo, nonChangedYo)
     val nonChangedEl = ErikoislaakariKoulutus.copy(
       metadata = Some(
         ErikoislaakariKoulutusMetadata(
@@ -567,11 +567,11 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       oid = Some(KoulutusOid("1.2.246.562.13.125")),
       tila = Tallennettu
     )
-    passValidation(nonChangedEl, nonChangedEl)
+    passesValidation(nonChangedEl, nonChangedEl)
   }
 
   it should "Fail with more than 1 koulutuksetKoodiUri" in {
-    failValidation(
+    failsValidation(
       ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_775101#1", "koulutus_775201#1")),
       "koulutuksetKoodiUri",
       tooManyKoodiUris
@@ -579,7 +579,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "Fail if unknown koulutusKoodiUri for Erikoislääkäri koulutus" in {
-    failValidation(
+    failsValidation(
       ErikoislaakariKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
       "koulutuksetKoodiUri[0]",
       invalidKoulutuskoodiuri("koulutus_111111#1")
@@ -587,17 +587,17 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "succeed when new valid Kk-opintokokonaisuuskoulutus" in {
-    passValidation(KkOpintokokonaisuusKoulutus)
+    passesValidation(KkOpintokokonaisuusKoulutus)
   }
 
   it should "succeed when new incomplete luonnos Kk-opintokokonaisuuskoulutus" in {
-    passValidation(
+    passesValidation(
       KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusKoulutusMetadata()))
     )
   }
 
   it should "fail if perustiedot is invalid" in {
-    failValidation(
+    failsValidation(
       amm.copy(oid = Some(KoulutusOid("1.2.3"))),
       Seq(
         ValidationError("oid", validationMsg("1.2.3")),
@@ -617,18 +617,18 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if koulutustyyppi changed in modify operation" in {
-    failModifyValidation(amm.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")), johtaaTutkintoon = false, koulutustyyppi = AmmOsaamisala), amm, Seq(
+    failsModifyValidation(amm.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")), johtaaTutkintoon = false, koulutustyyppi = AmmOsaamisala), amm, Seq(
       ValidationError("koulutustyyppi", notModifiableMsg("koulutustyyppiä", "koulutukselle")),
       ValidationError("metadata.tyyppi", InvalidMetadataTyyppi)
     ))
   }
 
   it should "fail if oid not given in modify operation" in {
-    failModifyValidation(amm, amm, Seq(ValidationError("oid", missingMsg)))
+    failsModifyValidation(amm, amm, Seq(ValidationError("oid", missingMsg)))
   }
 
   it should "fail if invalid tarjoaja OIDs" in {
-    failValidation(
+    failsValidation(
       amm.copy(tarjoajat = List(OrganisaatioOid("1.2.3"), OrganisaatioOid("4.5.6"))),
       Seq(
         ValidationError("tarjoajat[0]", validationMsg("1.2.3")),
@@ -638,7 +638,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown tarjoaja OIDs" in {
-    failValidation(
+    failsValidation(
       amm.copy(tarjoajat = List(GrandChildOid, UnknownOid, LonelyOid)),
       Seq(
         ValidationError("tarjoajat[1]", unknownTarjoajaOid(UnknownOid)),
@@ -648,21 +648,11 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if organisaatio-service not working when checking tarjoajat" in {
-    failValidation(amm.copy(tarjoajat = List(LonelyOid, UnknownOid)), "tarjoajat", organisaatioServiceFailureMsg)
-  }
-
-  it should "fail if invalid koulutuksetKoodiUri" in {
-    failValidation(
-      yo.copy(tila = Tallennettu, koulutuksetKoodiUri = Seq("puppua", "höttöä")),
-      Seq(
-        ValidationError("koulutuksetKoodiUri[0]", validationMsg("puppua")),
-        ValidationError("koulutuksetKoodiUri[1]", validationMsg("höttöä"))
-      )
-    )
+    failsValidation(amm.copy(tarjoajat = List(LonelyOid, UnknownOid)), "tarjoajat", organisaatioServiceFailureMsg)
   }
 
   private def failSorakuvausValidation(koulutus: Koulutus): Assertion =
-    failValidation(koulutus.copy(sorakuvausId = Some(sorakuvausId)), "sorakuvausId", notMissingMsg(Some(sorakuvausId)))
+    failsValidation(koulutus.copy(sorakuvausId = Some(sorakuvausId)), "sorakuvausId", notMissingMsg(Some(sorakuvausId)))
 
   it should "fail if sorakuvausId given for koulutustyyppi not accepting sorakuvaus" in {
     failSorakuvausValidation(AikuistenPerusopetusKoulutus)
@@ -674,7 +664,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if sorakuvaus doesn't exist" in {
-    failValidation(
+    failsValidation(
       amm.copy(sorakuvausId = Some(sorakuvausId2)),
       "sorakuvausId",
       nonExistent("Sorakuvausta", sorakuvausId2)
@@ -682,7 +672,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail to store julkaistu koulutus if sorakuvaus is not yet julkaistu" in {
-    failValidation(
+    failsValidation(
       amm.copy(sorakuvausId = Some(sorakuvausId3)),
       "tila",
       notYetJulkaistu("Sorakuvausta", sorakuvausId3)
@@ -690,7 +680,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail to store julkaistu koulutus if sorakuvaus poistettu" in {
-    failValidation(
+    failsValidation(
       amm.copy(sorakuvausId = Some(sorakuvausId4)),
       "sorakuvausId",
       nonExistent("Sorakuvausta", sorakuvausId4)
@@ -698,7 +688,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail to store koulutus if koulutustyyppi doesn't match sorakuvaus koulutustyyppi" in {
-    failValidation(
+    failsValidation(
       amm.copy(sorakuvausId = Some(sorakuvausId5)),
       "koulutustyyppi",
       tyyppiMismatch("sorakuvauksen", sorakuvausId5)
@@ -706,7 +696,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail to store koulutus if koulutusKoodit doesn't match sorakuvaus koulutuskoodit" in {
-    failValidation(
+    failsValidation(
       amm.copy(sorakuvausId = Some(sorakuvausId6)),
       "koulutuksetKoodiUri",
       valuesDontMatch("Sorakuvauksen", "koulutusKoodiUrit")
@@ -714,7 +704,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   def failTutkintoonjohtavuusValidation(koulutus: Koulutus, johtaaTutkintoon: Boolean): Unit =
-    failValidation(
+    failsValidation(
       koulutus.copy(johtaaTutkintoon = johtaaTutkintoon),
       "johtaaTutkintoon",
       invalidTutkintoonjohtavuus(koulutus.koulutustyyppi.toString)
@@ -728,21 +718,11 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid teemakuva" in {
-    failValidation(amm.copy(teemakuva = Some("puppu")), "teemakuva", invalidUrl("puppu"))
+    failsValidation(amm.copy(teemakuva = Some("puppu")), "teemakuva", invalidUrl("puppu"))
   }
 
   it should "fail if invalid lisätieto" in {
-    failValidation(
-      ammWithLisatietoParams(koodiUri = "puppu"),
-      "metadata.lisatiedot[0].otsikkoKoodiUri",
-      validationMsg("puppu")
-    )
-    failValidation(
-      ammWithLisatietoParams(sv = ""),
-      "metadata.lisatiedot[0].teksti",
-      invalidKielistetty(Seq(Sv))
-    )
-    failValidation(
+    failsValidation(
       ammWithLisatietoParams(koodiUri = "koulutuksenlisatiedot_04#1"),
       "metadata.lisatiedot[0].otsikkoKoodiUri",
       invalidLisatietoOtsikkoKoodiuri("koulutuksenlisatiedot_04#1")
@@ -750,7 +730,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if lisätieto given for koulutustyyppi not accepting lisätiedot" in {
-    failValidation(
+    failsValidation(
       AmmMuuKoulutus.copy(metadata =
         Some(
           AmmMuuKoulutus.metadata.get
@@ -766,11 +746,11 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if metadata missing from julkaistu koulutus" in {
-    failValidation(amm.copy(metadata = None), "metadata", missingMsg)
+    failsValidation(amm.copy(metadata = None), "metadata", missingMsg)
   }
 
   it should "fail if the tyyppi of the metadata differs from the tyyppi of the koulutus" in {
-    failValidation(
+    failsValidation(
       amm.copy(metadata = Some(AmmatillinenKoulutusMetadata(tyyppi = Yo))),
       "metadata.tyyppi",
       InvalidMetadataTyyppi
@@ -779,8 +759,8 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail if invalid metadata kuvaus for koulutustyyppi with optional kuvaus" in {
     val invalidKuvaus = Map(Fi -> "kuvaus vain suomeksi", Sv -> "")
-    passValidation(amm.copy(metadata = Some(AmmatillinenKoulutusMetadata())))
-    failValidation(
+    passesValidation(amm.copy(metadata = Some(AmmatillinenKoulutusMetadata())))
+    failsValidation(
       amm.copy(metadata = Some(AmmatillinenKoulutusMetadata(kuvaus = invalidKuvaus))),
       "metadata.kuvaus",
       invalidKielistetty(Seq(Sv))
@@ -789,14 +769,14 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail if invalid metadata kuvaus for koulutustyyppi with mandatory kuvaus" in {
     val invalidKuvaus = Map(Fi -> "kuvaus vain suomeksi", Sv -> "")
-    failValidation(
+    failsValidation(
       TuvaKoulutus.copy(metadata =
         Some(TuvaKoulutusMetadata(opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1")))
       ),
       "metadata.kuvaus",
       invalidKielistetty(Seq(Fi, Sv))
     )
-    failValidation(
+    failsValidation(
       TuvaKoulutus.copy(metadata =
         Some(TuvaKoulutusMetadata(opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"), kuvaus = invalidKuvaus))
       ),
@@ -807,7 +787,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   private def failValidationWithKoulutuksetKoodiUri(koulutus: Koulutus): Assertion = {
     val urit = Seq("koulutus_371101#1")
-    failValidation(koulutus.copy(koulutuksetKoodiUri = urit), "koulutuksetKoodiUri", notEmptyMsg)
+    failsValidation(koulutus.copy(koulutuksetKoodiUri = urit), "koulutuksetKoodiUri", notEmptyMsg)
   }
 
   it should "fail if koulutuksetKoodiUri given for koulutustyyppi not using koulutusKoodit" in {
@@ -821,7 +801,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   private def failValidationWithePerusteId(koulutus: Koulutus): Assertion = {
-    failValidation(koulutus.copy(ePerusteId = Some(11L)), "ePerusteId", notMissingMsg(Some(11L)))
+    failsValidation(koulutus.copy(ePerusteId = Some(11L)), "ePerusteId", notMissingMsg(Some(11L)))
   }
 
   it should "fail if ePerusteId given for koulutustyyppi not using ePeruste" in {
@@ -841,13 +821,13 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid koulutusKoodiUris for ammatillinen koulutus" in {
-    failValidation(amm.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
-    failValidation(
+    failsValidation(amm.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
+    failsValidation(
       ammOa.copy(koulutuksetKoodiUri = Seq("koulutus_000000#1", "koulutus_000001#1")),
       "koulutuksetKoodiUri",
       tooManyKoodiUris
     )
-    failValidation(
+    failsValidation(
       amm.copy(koulutuksetKoodiUri = Seq("koulutus_000000#1")),
       Seq(
         ValidationError("koulutuksetKoodiUri[0]", invalidKoulutuskoodiuri("koulutus_000000#1")),
@@ -857,28 +837,28 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid ePeruste for ammatillinen koulutus" in {
-    failValidation(ammOa.copy(ePerusteId = None), "ePerusteId", missingMsg)
-    failValidation(ammOa.copy(ePerusteId = Some(-11L)), "ePerusteId", notNegativeMsg)
-    failValidation(amm.copy(ePerusteId = Some(111L)), "ePerusteId", invalidEPerusteId(111L))
+    failsValidation(ammOa.copy(ePerusteId = None), "ePerusteId", missingMsg)
+    failsValidation(ammOa.copy(ePerusteId = Some(-11L)), "ePerusteId", notNegativeMsg)
+    failsValidation(amm.copy(ePerusteId = Some(111L)), "ePerusteId", invalidEPerusteId(111L))
   }
 
   it should "fail if ePeruste-service query failed for ammatillinen koulutus" in {
-    failValidation(amm.copy(ePerusteId = Some(66L)), "ePerusteId", ePerusteServiceFailureMsg)
-    failValidation(ammOa.copy(ePerusteId = Some(66L)), "ePerusteId", ePerusteServiceFailureMsg)
+    failsValidation(amm.copy(ePerusteId = Some(66L)), "ePerusteId", ePerusteServiceFailureMsg)
+    failsValidation(ammOa.copy(ePerusteId = Some(66L)), "ePerusteId", ePerusteServiceFailureMsg)
   }
 
   it should "fail if invalid tutkinnonosat for AmmTutkinnonosa koulutus" in {
-    failValidation(
+    failsValidation(
       ammTk.copy(metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata())),
       "metadata.tutkinnonOsat",
       missingMsg
     )
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(koulutusKoodiUri = Some("puppu")),
       "metadata.tutkinnonOsat[0].koulutusKoodiUri",
       validationMsg("puppu")
     )
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams().copy(tila = Julkaistu),
       Seq(
         ValidationError("metadata.tutkinnonOsat[0].ePerusteId", missingMsg),
@@ -890,17 +870,17 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid ePeruste for AmmTutkinnonosa koulutus" in {
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(ePerusteId = Some(-1L)),
       "metadata.tutkinnonOsat[0].ePerusteId",
       notNegativeMsg
     )
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(ePerusteId = Some(-1L), tutkinnonOsaId = Some(1L)),
       "metadata.tutkinnonOsat[0].ePerusteId",
       notNegativeMsg
     )
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(ePerusteId = Some(111L)),
       "metadata.tutkinnonOsat[0].ePerusteId",
       invalidEPerusteId(111L)
@@ -908,7 +888,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if ePeruste-service query failed for AmmTutkinnonosa koulutus" in {
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(ePerusteId = Some(66L)),
       "metadata.tutkinnonOsat[0].ePerusteId",
       ePerusteServiceFailureMsg
@@ -916,7 +896,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown tutkinnonOsa viite- and ID for AmmTutkinnonosa koulutus" in {
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(Some(200L), None, Some(1234L), Some(2345L)),
       Seq(
         ValidationError(
@@ -929,7 +909,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if tutkinnonosaID did not match to tutkinnonosa found by ePeruste and viite for AmmTutkinnonosa koulutus" in {
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(Some(123L), None, Some(1235L), Some(122L)),
       "metadata.tutkinnonOsat[0].tutkinnonosaId",
       invalidTutkinnonOsaIdForEPeruste(123L, 1235L)
@@ -937,7 +917,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown tutkinnonosaViite for AmmTutkinnonosa koulutus" in {
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(Some(123L), None, None, Some(130L)),
       "metadata.tutkinnonOsat[0].tutkinnonosaViite",
       invalidTutkinnonOsaViiteForEPeruste(123L, 130L)
@@ -945,7 +925,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown tutkinnonosaID for AmmTutkinnonosa koulutus" in {
-    failValidation(
+    failsValidation(
       ammTkWithTutkinnonOsaParams(Some(123L), None, Some(1236L), None),
       "metadata.tutkinnonOsat[0].tutkinnonosaId",
       invalidTutkinnonOsaIdForEPeruste(123L, 1236L)
@@ -953,17 +933,17 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid osaamisalat for AmmOsaamisala koulutus" in {
-    failValidation(
+    failsValidation(
       ammOa.copy(metadata = Some(AmmatillinenOsaamisalaKoulutusMetadata())),
       "metadata.osaamisalaKoodiUri",
       missingMsg
     )
-    failValidation(
+    failsValidation(
       ammOa.copy(metadata = Some(AmmatillinenOsaamisalaKoulutusMetadata(osaamisalaKoodiUri = Some("puppu")))),
       "metadata.osaamisalaKoodiUri",
       validationMsg("puppu")
     )
-    failValidation(
+    failsValidation(
       ammOa.copy(ePerusteId = Some(123L)),
       "metadata.osaamisalaKoodiUri",
       invalidOsaamisalaForEPeruste(123L, "osaamisala_01")
@@ -971,12 +951,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid koulutusalaKoodiUri for AmmMuu koulutus" in {
-    failValidation(
-      ammMuuKoulutusWithParameters("puppu"),
-      "metadata.koulutusalaKoodiUrit[0]",
-      validationMsg("puppu")
-    )
-    failValidation(
+    failsValidation(
       ammMuuKoulutusWithParameters("kansallinenkoulutusluokitus2016koulutusalataso1_70"),
       "metadata.koulutusalaKoodiUrit[0]",
       invalidKoulutusAlaKoodiuri("kansallinenkoulutusluokitus2016koulutusalataso1_70")
@@ -985,24 +960,19 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
 
   it should "fail if invalid opintojenlaajuus for AmmMuu koulutus" in {
     val kuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv")
-    failValidation(
+    failsValidation(
       AmmMuuKoulutus.copy(metadata = Some(AmmatillinenMuuKoulutusMetadata(kuvaus = kuvaus))),
       Seq(
         ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", missingMsg),
         ValidationError("metadata.opintojenLaajuusNumero", missingMsg)
       )
     )
-    failValidation(
-      ammMuuKoulutusWithParameters(opintojenlaajusyksikkoKoodiUri = "puppu"),
-      "metadata.opintojenLaajuusyksikkoKoodiUri",
-      validationMsg("puppu")
-    )
-    failValidation(
+    failsValidation(
       ammMuuKoulutusWithParameters(opintojenlaajusyksikkoKoodiUri = "opintojenlaajuusyksikko_66#1"),
       "metadata.opintojenLaajuusyksikkoKoodiUri",
       invalidOpintojenLaajuusyksikkoKoodiuri("opintojenlaajuusyksikko_66#1")
     )
-    failValidation(
+    failsValidation(
       ammMuuKoulutusWithParameters(opintojenLaajuusNumero = Some(-1)),
       "metadata.opintojenLaajuusNumero",
       notNegativeMsg
@@ -1010,8 +980,8 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid koulutusKoodiUri for Yo koulutus" in {
-    failValidation(yo.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
-    failValidation(
+    failsValidation(yo.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
+    failsValidation(
       yo.copy(sorakuvausId = None, koulutuksetKoodiUri = Seq("koulutus_000000#1")),
       "koulutuksetKoodiUri[0]",
       invalidKoulutuskoodiuri("koulutus_000000#1")
@@ -1019,7 +989,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown koulutusalaKoodiUri for Yo koulutus" in {
-    failValidation(
+    failsValidation(
       yoKoulutusWithParameters("kansallinenkoulutusluokitus2016koulutusalataso1_70"),
       "metadata.koulutusalaKoodiUrit[0]",
       invalidKoulutusAlaKoodiuri("kansallinenkoulutusluokitus2016koulutusalataso1_70")
@@ -1027,12 +997,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid tutkintonimikeKoodiUri for Yo koulutus" in {
-    failValidation(
-      yoKoulutusWithParameters(tutkintonimikeKoodiUri = "puppu"),
-      "metadata.tutkintonimikeKoodiUrit[0]",
-      validationMsg("puppu")
-    )
-    failValidation(
+    failsValidation(
       yoKoulutusWithParameters(tutkintonimikeKoodiUri = "tutkintonimikekk_110#70"),
       "metadata.tutkintonimikeKoodiUrit[0]",
       invalidTutkintoNimikeKoodiuri("tutkintonimikekk_110#70")
@@ -1040,12 +1005,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid opintojenlaajuusKoodiUri for Yo koulutus" in {
-    failValidation(
-      yoKoulutusWithParameters(opintojenlaajuusKoodiUri = "puppu"),
-      "metadata.opintojenLaajuusKoodiUri",
-      validationMsg("puppu")
-    )
-    failValidation(
+    failsValidation(
       yoKoulutusWithParameters(opintojenlaajuusKoodiUri = "opintojenlaajuus_40#70"),
       "metadata.opintojenLaajuusKoodiUri",
       invalidOpintojenLaajuusKoodiuri("opintojenlaajuus_40#70")
@@ -1053,8 +1013,8 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid koulutusKoodiUri for Amk koulutus" in {
-    failValidation(amk.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
-    failValidation(
+    failsValidation(amk.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
+    failsValidation(
       amk.copy(koulutuksetKoodiUri = Seq("koulutus_000000#1")),
       "koulutuksetKoodiUri[0]",
       invalidKoulutuskoodiuri("koulutus_000000#1")
@@ -1062,7 +1022,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown koulutusalaKoodiUri for Amk koulutus" in {
-    failValidation(
+    failsValidation(
       amkKoulutusWithParameters("kansallinenkoulutusluokitus2016koulutusalataso1_70"),
       "metadata.koulutusalaKoodiUrit[0]",
       invalidKoulutusAlaKoodiuri("kansallinenkoulutusluokitus2016koulutusalataso1_70")
@@ -1070,7 +1030,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown tutkintonimikeKoodiUri for Amk koulutus" in {
-    failValidation(
+    failsValidation(
       amkKoulutusWithParameters(tutkintonimikeKoodiUri = "tutkintonimikekk_110#70"),
       "metadata.tutkintonimikeKoodiUrit[0]",
       invalidTutkintoNimikeKoodiuri("tutkintonimikekk_110#70")
@@ -1078,7 +1038,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if unknown opintojenlaajuusKoodiUri for Amk koulutus" in {
-    failValidation(
+    failsValidation(
       amkKoulutusWithParameters(opintojenlaajuusKoodiUri = "opintojenlaajuus_40#70"),
       "metadata.opintojenLaajuusKoodiUri",
       invalidOpintojenLaajuusKoodiuri("opintojenlaajuus_40#70")
@@ -1086,13 +1046,13 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid koulutuksetKoodiUri for AmmOpeErityisopeJaOpo koulutus" in {
-    failValidation(AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
-    failValidation(
+    failsValidation(AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
+    failsValidation(
       AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1", "koulutus_222222#2")),
       "koulutuksetKoodiUri",
       tooManyKoodiUris
     )
-    failValidation(
+    failsValidation(
       AmmOpettajaKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
       "koulutuksetKoodiUri[0]",
       invalidKoulutuskoodiuri("koulutus_111111#1")
@@ -1100,7 +1060,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for AmmOpeErityisopeJaOpo koulutus" in {
-    failValidation(
+    failsValidation(
       AmmOpettajaKoulutus.copy(metadata =
         Some(
           AmmOpeErityisopeJaOpoKoulutusMetadata(
@@ -1127,8 +1087,8 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid koulutusKoodiUri for Lukio koulutus" in {
-    failValidation(LukioKoulutus.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
-    failValidation(
+    failsValidation(LukioKoulutus.copy(koulutuksetKoodiUri = Seq()), "koulutuksetKoodiUri", missingMsg)
+    failsValidation(
       LukioKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
       "koulutuksetKoodiUri[0]",
       invalidKoulutuskoodiuri("koulutus_111111#1")
@@ -1136,7 +1096,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for Lukio koulutus" in {
-    failValidation(
+    failsValidation(
       LukioKoulutus.copy(metadata =
         Some(
           LukioKoulutusMetadata(
@@ -1158,7 +1118,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for luonnos Tuva koulutus" in {
-    failValidation(
+    failsValidation(
       TuvaKoulutus.copy(
         tila = Tallennettu,
         metadata = Some(
@@ -1179,7 +1139,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for julkaistu Tuva koulutus" in {
-    failValidation(
+    failsValidation(
       TuvaKoulutus.copy(metadata =
         Some(TuvaKoulutusMetadata(linkkiEPerusteisiin = Map(Fi -> "http://www.vain.suomeksi.fi")))
       ),
@@ -1192,7 +1152,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for Telma koulutus" in {
-    failValidation(
+    failsValidation(
       TelmaKoulutus.copy(metadata =
         Some(
           TelmaKoulutusMetadata(
@@ -1205,7 +1165,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       Seq(
         ValidationError("metadata.lisatiedot", notEmptyMsg),
         ValidationError("metadata.linkkiEPerusteisiin.fi", invalidUrl("puppu")),
-        ValidationError("metadata.opintojenLaajuusKoodiUri", validationMsg("puppu")),
+        ValidationError("metadata.opintojenLaajuusKoodiUri", invalidOpintojenLaajuusKoodiuri("puppu")),
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
         ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
       )
@@ -1213,7 +1173,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for luonnos vapaa sivistystyo opistovuosi koulutus" in {
-    failValidation(
+    failsValidation(
       VapaaSivistystyoOpistovuosiKoulutus.copy(
         tila = Tallennettu,
         metadata = Some(
@@ -1229,7 +1189,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
           "metadata.koulutusalaKoodiUrit[0]",
           invalidKoulutusAlaKoodiuri("kansallinenkoulutusluokitus2016koulutusalataso1_70")
         ),
-        ValidationError("metadata.opintojenLaajuusKoodiUri", validationMsg("puppu")),
+        ValidationError("metadata.opintojenLaajuusKoodiUri", invalidOpintojenLaajuusKoodiuri("puppu")),
         ValidationError("metadata.linkkiEPerusteisiin.fi", invalidUrl("puppu")),
         ValidationError("metadata.linkkiEPerusteisiin.sv", invalidUrl("puppu sv"))
       )
@@ -1237,7 +1197,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for julkaistu vapaa sivistystyo opistovuosi koulutus" in {
-    failValidation(
+    failsValidation(
       VapaaSivistystyoOpistovuosiKoulutus.copy(
         metadata = Some(
           VapaaSivistystyoOpistovuosiKoulutusMetadata(
@@ -1251,7 +1211,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
-          validationMsg("puppu")
+          invalidKoulutusAlaKoodiuri("puppu")
         ),
         ValidationError("metadata.opintojenLaajuusKoodiUri", invalidOpintojenLaajuusKoodiuri("opintojenlaajuus_40#70")),
         ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
@@ -1260,7 +1220,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for luonnos vapaa sivistystyo muu koulutus" in {
-    failValidation(
+    failsValidation(
       vstMuuWithParams(
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_70"),
         linkkiEPerusteisiin = Map(Fi -> "puppu", Sv -> "puppu sv"),
@@ -1284,7 +1244,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for julkaistu vapaa sivistystyo muu koulutus" in {
-    failValidation(
+    failsValidation(
       vstMuuWithParams(
         koulutusalaKoodiUrit = Seq("puppu"),
         linkkiEPerusteisiin = Map(Fi -> "http://www.vain.suomeksi.fi"),
@@ -1295,7 +1255,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
-          validationMsg("puppu")
+          invalidKoulutusAlaKoodiuri("puppu")
         ),
         ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", missingMsg),
         ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
@@ -1305,7 +1265,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid koulutusKoodiUri for Aikuisten perusopetus -koulutus" in {
-    failValidation(
+    failsValidation(
       AikuistenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_111111#1")),
       "koulutuksetKoodiUri",
       illegalValueForFixedValueSeqMsg("koulutus_201101#<versionumero>, esim. koulutus_201101#1")
@@ -1313,7 +1273,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for luonnos Aikuisten perusopetus -koulutus" in {
-    failValidation(
+    failsValidation(
       aikuistenPerusopetusWithParams(
         lisatiedot = Seq(Lisatieto1),
         linkkiEPerusteisiin = Map(Fi -> "puppu"),
@@ -1333,7 +1293,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for julkaistu Aikuisten perusopetus -koulutus" in {
-    failValidation(
+    failsValidation(
       aikuistenPerusopetusWithParams(
         linkkiEPerusteisiin = Map(Fi -> "http://vain.suomeksi.fi"),
         opintojenLaajuusyksikkoKoodiUri = None,
@@ -1349,7 +1309,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if invalid metadata for luonnos Kk-opintojakso koulutus" in {
-    failValidation(
+    failsValidation(
       kkOpintoJaksoWithParams(
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_66#1"),
         opintojenLaajuusNumero = Some(-1),
@@ -1358,7 +1318,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       Seq(
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
-          validationMsg("puppu")
+          invalidKoulutusAlaKoodiuri("puppu")
         ),
         ValidationError(
           "metadata.opintojenLaajuusyksikkoKoodiUri",
@@ -1370,7 +1330,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if missing metadata for julkaistu Kk-opintojakso koulutus" in {
-    failValidation(
+    failsValidation(
       KkOpintojaksoKoulutus.copy(metadata = Some(KkOpintojaksoKoulutusMetadata())),
       Seq(
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
@@ -1382,7 +1342,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   it should "fail if invalid metadata for luonnos Kk-opintokokonaisuus koulutus" in {
     val opintojenLaajuusNumeroMin = -5.0
     val opintojenLaajuusNumeroMax = -15.0
-    failValidation(
+    failsValidation(
       KkOpintokokonaisuusKoulutus.copy(
         tila = Tallennettu,
         metadata = Some(
@@ -1397,7 +1357,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       Seq(
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
-          validationMsg("puppu")
+          invalidKoulutusAlaKoodiuri("puppu")
         ),
         ValidationError(
           "metadata.opintojenLaajuusyksikkoKoodiUri",
@@ -1414,7 +1374,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail if missing metadata for julkaistu Kk-opintokokonaisuus koulutus" in {
-    failValidation(
+    failsValidation(
       KkOpintokokonaisuusKoulutus.copy(metadata = Some(KkOpintokokonaisuusKoulutusMetadata())),
       Seq(
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
@@ -1441,7 +1401,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       )
     )
 
-    failModifyValidation(
+    failsModifyValidation(
       opintokokonaisuusKoulutus,
       opintokokonaisuusKoulutus,
       Seq(
@@ -1472,7 +1432,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       )
     )
 
-    failModifyValidation(
+    failsModifyValidation(
       opintokokonaisuusKoulutus,
       opintokokonaisuusKoulutus,
       Seq(
@@ -1520,7 +1480,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       )
     )
 
-    passValidation(opintokokonaisuusKoulutus, opintokokonaisuusKoulutus)
+    passesValidation(opintokokonaisuusKoulutus, opintokokonaisuusKoulutus)
   }
 
   it should "pass when julkaistu kk-opintokokonaisuus koulutus has one toteutus which has no laajuusyksikkö or laajuusNumero defined" in {
@@ -1543,34 +1503,34 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
       )
     )
 
-    passValidation(kkOpintokokonaisuusKoulutus, kkOpintokokonaisuusKoulutus)
+    passesValidation(kkOpintokokonaisuusKoulutus, kkOpintokokonaisuusKoulutus)
   }
 
   "State change" should "succeed from tallennettu to julkaistu" in {
-    passValidation(ammWithOid, AmmKoulutus.copy(tila = Tallennettu))
+    passesValidation(ammWithOid, AmmKoulutus.copy(tila = Tallennettu))
   }
 
   it should "succeed from julkaistu to arkistoitu" in {
-    passValidation(ammWithOid.copy(tila = Arkistoitu), AmmKoulutus)
+    passesValidation(ammWithOid.copy(tila = Arkistoitu), AmmKoulutus)
   }
 
   it should "succeed from arkistoitu to julkaistu" in {
-    passValidation(ammWithOid, AmmKoulutus.copy(tila = Arkistoitu))
+    passesValidation(ammWithOid, AmmKoulutus.copy(tila = Arkistoitu))
   }
 
   it should "succeed from julkaistu to tallennettu" in {
-    passValidation(ammWithOid.copy(tila = Tallennettu), AmmKoulutus)
+    passesValidation(ammWithOid.copy(tila = Tallennettu), AmmKoulutus)
   }
 
   it should "succeed from tallennettu to poistettu when no existing toteutukset for koulutus" in {
-    passValidation(
+    passesValidation(
       AmmKoulutus.copy(oid = Some(koulutusOid2), tila = Poistettu),
       AmmKoulutus.copy(tila = Tallennettu)
     )
   }
 
   it should "fail from tallennettu to arkistoitu" in {
-    failStageChangeValidation(
+    failsStageChangeValidation(
       ammWithOid.copy(tila = Arkistoitu),
       AmmKoulutus.copy(tila = Tallennettu),
       illegalStateChange("koulutukselle", Tallennettu, Arkistoitu)
@@ -1578,7 +1538,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail from arkistoitu to tallennettu" in {
-    failStageChangeValidation(
+    failsStageChangeValidation(
       ammWithOid.copy(tila = Tallennettu),
       AmmKoulutus.copy(tila = Arkistoitu),
       illegalStateChange("koulutukselle", Arkistoitu, Tallennettu)
@@ -1586,7 +1546,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail from julkaistu to poistettu" in {
-    failStageChangeValidation(
+    failsStageChangeValidation(
       ammWithOid.copy(tila = Poistettu),
       AmmKoulutus.copy(tila = Julkaistu),
       illegalStateChange("koulutukselle", Julkaistu, Poistettu)
@@ -1594,7 +1554,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail from arkistoitu to poistettu" in {
-    failStageChangeValidation(
+    failsStageChangeValidation(
       ammWithOid.copy(tila = Poistettu),
       AmmKoulutus.copy(tila = Arkistoitu),
       illegalStateChange("koulutukselle", Arkistoitu, Poistettu)
@@ -1602,7 +1562,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail from poistettu to tallennettu" in {
-    failStageChangeValidation(
+    failsStageChangeValidation(
       ammWithOid.copy(tila = Tallennettu),
       AmmKoulutus.copy(tila = Poistettu),
       illegalStateChange("koulutukselle", Poistettu, Tallennettu)
@@ -1610,7 +1570,7 @@ class KoulutusServiceValidationSpec extends BaseValidationSpec[Koulutus] {
   }
 
   it should "fail from tallennettu to poistettu when existing toteutukset for koulutus" in {
-    failStageChangeValidation(
+    failsStageChangeValidation(
       ammWithOid.copy(oid = Some(koulutusOid), tila = Poistettu),
       AmmKoulutus.copy(tila = Tallennettu),
       integrityViolationMsg("Koulutusta", "toteutuksia")

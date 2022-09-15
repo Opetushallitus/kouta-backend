@@ -220,22 +220,15 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when saving new hakukohde with common liitteiden toimitustapa and no tapa set" in {
-    failsValidation(
-      initMockSeq(
-        max.copy(liitteetOnkoSamaToimitusosoite = Some(true))),
-      "liitteidenToimitustapa",
-      missingMsg
-    )
-  }
-
-  it should "not fail when new hakukohde with common liitteiden toimitusosoite and toimitusaika but no liittees" in {
+  it should "succeed when common liitteiden toimitusaika and toimitusosoite used and no liitteet" in {
     passesValidation(
       initMockSeq(
         max.copy(
-          liitteetOnkoSamaToimitusosoite = Some(true),
           liitteetOnkoSamaToimitusaika = Some(true),
+          liitteetOnkoSamaToimitusosoite = Some(true),
+          liitteidenToimitustapa = Some(MuuOsoite),
           liitteidenToimitusaika = None,
+          liitteidenToimitusosoite = None,
           liitteet = Seq()
         )
       )
@@ -465,11 +458,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "fail when invalid hakukohdeKoodiUri" in {
     failsValidation(
-      min.copy(nimi = Map(), hakukohdeKoodiUri = Some("puppu")),
-      "hakukohdeKoodiUri",
-      validationMsg("puppu")
-    )
-    failsValidation(
       min.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1")),
       "hakukohdeKoodiUri",
       invalidHakukohdeKooriuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1")
@@ -496,7 +484,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       min.copy(pohjakoulutusvaatimusKoodiUrit = Seq("puppu", "pohjakoulutusvaatimuskouta_XX#1")),
       Seq(
-        ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", validationMsg("puppu")),
+        ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", invalidPohjakoulutusVaatimusKooriuri("puppu")),
         ValidationError(
           "pohjakoulutusvaatimusKoodiUrit[1]",
           invalidPohjakoulutusVaatimusKooriuri("pohjakoulutusvaatimuskouta_XX#1")
@@ -505,7 +493,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when common liitteidenToimitusaika given but not used" in {
+  it should "fail when common liitteidenToimitusaika defined but not used" in {
     failsValidation(
       min.copy(liitteetOnkoSamaToimitusaika = Some(false), liitteidenToimitusaika = Some(inFuture())),
       "liitteidenToimitusaika",
@@ -513,7 +501,15 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when common liitteidenToimitustapa given but not used" in {
+  it should "fail when common liitteidenToimitusaika used but not defined" in {
+    failsValidation(
+      max.copy(liitteetOnkoSamaToimitusaika = Some(true), liitteidenToimitusaika = None),
+      "liitteidenToimitusaika",
+      missingMsg
+    )
+  }
+
+  it should "fail when common liitteidenToimitustapa defined but not used" in {
     failsValidation(
       min.copy(liitteetOnkoSamaToimitusosoite = Some(false), liitteidenToimitustapa = Some(MuuOsoite)),
       "liitteidenToimitustapa",
@@ -521,7 +517,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when common liitteidenToimitusosoite given but not used" in {
+  it should "fail when common liitteidenToimitusosoite defined but not used" in {
     failsValidation(
       min.copy(
         liitteetOnkoSamaToimitusosoite = Some(false),
@@ -529,6 +525,22 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       ),
       "liitteidenToimitusosoite",
       notEmptyAlthoughBooleanFalseMsg("liitteetOnkoSamaToimitusosoite")
+    )
+  }
+
+  it should "fail when common liitteidenToimitusosoite used but liitteidenToimitustapa not defined" in {
+    failsValidation(
+      max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitustapa = None),
+      "liitteidenToimitustapa",
+      missingMsg
+    )
+  }
+
+  it should "fail when common liitteidenToimitusosoite used but not defined" in {
+    failsValidation(
+      max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitustapa = Some(MuuOsoite), liitteidenToimitusosoite = None),
+      "liitteidenToimitusosoite",
+      missingMsg
     )
   }
 
@@ -679,7 +691,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         List(Liite1.copy(tyyppiKoodiUri = Some("puppu")), Liite2.copy(tyyppiKoodiUri = Some("liitetyypitamm_99#1")))
       ),
       Seq(
-        ValidationError("liitteet[0].tyyppiKoodiUri", validationMsg("puppu")),
+        ValidationError("liitteet[0].tyyppiKoodiUri", invalidLiitetyyppiKooriuri("puppu")),
         ValidationError("liitteet[1].tyyppiKoodiUri", invalidLiitetyyppiKooriuri("liitetyypitamm_99#1"))
       )
     )
@@ -702,11 +714,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   "Valintakoe validation" should "fail if invalid tyyppiKoodiUri" in {
-    failsValidation(
-      max.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("puppu")))),
-      "valintakokeet[0].tyyppiKoodiUri",
-      validationMsg("puppu")
-    )
     failsValidation(
       max.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_99#1")))),
       "valintakokeet[0].tyyppiKoodiUri",
@@ -789,8 +796,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[0].painokerroin", missingMsg),
         ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[1].oppiaine", missingMsg),
         ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[1].painokerroin", notNegativeMsg),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[2].oppiaine", validationMsg("puppu")),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[2].kieli", validationMsg("huttu")),
+        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[2].oppiaine", invalidOppiaineKoodiuri("puppu")),
+        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[2].kieli", invalidOppiaineKieliKoodiuri("huttu")),
         ValidationError(
           "metadata.hakukohteenLinja.painotetutArvosanat[3].oppiaine",
           invalidOppiaineKoodiuri("painotettavatoppiaineetlukiossa_XX")
@@ -1103,75 +1110,74 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   "Validate on julkaisu" should "fail if hakuajat not in future" in {
-    val inPastJakso = Ajanjakso(inPast(1000), Some(inPast(500)))
     failsValidation(
       initMockSeq(max.copy(hakuajat = Seq(Ajanjakso(inFuture(1000), None), inPastJakso))),
       Seq(
         ValidationError("hakuajat[0].paattyy", missingMsg),
-        ValidationError("hakuajat[1].paattyy", pastDateMsg(inPastJakso.paattyy.get))
+        ValidationError("hakuajat[1].paattyy", pastDateMsg(inPastAikaleima))
       )
     )
   }
 
-  it should "fail if liitteiden toimitusaika not in future" in {
-    val aikaInPast = inPast()
+  it should "fail if liitteiden yhteinen toimitusaika not in future" in {
     failsValidation(
-      initMockSeq(max.copy(liitteidenToimitusaika = Some(aikaInPast))),
+      initMockSeq(max.copy(liitteidenToimitusaika = Some(inPastAikaleima))),
       "liitteidenToimitusaika",
-      pastDateMsg(aikaInPast)
+      pastDateMsg(inPastAikaleima)
     )
   }
 
-  it should "fail if toimitusaika for a liite not in future" in {
-    val aikaInPast = inPast()
+  it should "fail if toimitusaika for an individual liite not in future" in {
     failsValidation(
-      initMockSeq(max.copy(liitteet = List(Liite1.copy(toimitusaika = Some(aikaInPast))))),
+      initMockSeq(max.copy(liitteet = List(Liite1.copy(toimitusaika = Some(inPastAikaleima))))),
       "liitteet[0].toimitusaika",
-      pastDateMsg(aikaInPast)
+      pastDateMsg(inPastAikaleima)
     )
   }
 
   it should "fail if ajanjakso for valintakoetilaisuus not in future" in {
-    val inPastJakso = Ajanjakso(inPast(1000), Some(inPast(500)))
     failsValidation(
       initMockSeq(
-        max.copy(valintakokeet =
-          List(Valintakoe1.copy(tilaisuudet = List(Valintakoe1.tilaisuudet.head.copy(aika = Some(inPastJakso)))))
-        )
+        max.copy(valintakokeet = inPastValintakokeet)
       ),
       "valintakokeet[0].tilaisuudet[0].aika.paattyy",
-      pastDateMsg(inPastJakso.paattyy.get)
+      pastDateMsg(inPastAikaleima)
     )
   }
 
   it should "fail if koulutuksenAlkamiskausi not in future" in {
-    val inPastJakso = KoulutuksenAlkamiskausi(
-      alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
-      koulutuksenAlkamispaivamaara = Some(inFuture(1000)),
-      koulutuksenPaattymispaivamaara = Some(inFuture(2000)),
-      koulutuksenAlkamisvuosi = Some("2020")
-    )
-    val metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = Some(inPastJakso)))
+    val metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = Some(inPastKoulutuksenAlkamiskausi)))
     failsValidation(
       initMockSeq(max.copy(metadata = metadata)),
       "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi",
-      pastDateMsg(inPastJakso.koulutuksenAlkamisvuosi.get)
+      pastDateMsg(inPastKoulutuksenAlkamiskausi.koulutuksenAlkamisvuosi.get)
     )
   }
 
   it should "fail if valintakokeen lisatilaisuus not in future" in {
-    val inPastJakso     = Ajanjakso(inPast(1000), Some(inPast(500)))
-    val inPastTilaisuus = ValintakokeenLisatilaisuudet1.tilaisuudet.head.copy(aika = Some(inPastJakso))
     val metadata = Some(
-      maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet =
-        List(maxMetadata.valintaperusteenValintakokeidenLisatilaisuudet.head.copy(tilaisuudet = List(inPastTilaisuus)))
-      )
+      maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet = inPastLisaTilaisuudet(None))
     )
     failsValidation(
       initMockSeq(max.copy(metadata = metadata)),
       "metadata.valintaperusteenValintakokeidenLisatilaisuudet[0].tilaisuudet[0].aika.paattyy",
-      pastDateMsg(inPastJakso.paattyy.get)
+      pastDateMsg(inPastAikaleima)
     )
+  }
+
+  it should "succeed when state changes from arkistoitu to julkaistu, eventhough timestamps not in future" in {
+    val hakukohde = maxWithIds.copy(
+      hakuajat = Seq(Ajanjakso(inFuture(1000), None), inPastJakso),
+      liitteidenToimitusaika = Some(inPast()),
+      valintakokeet = inPastValintakokeet,
+      metadata = Some(
+        maxMetadata.copy(
+          koulutuksenAlkamiskausi = Some(inPastKoulutuksenAlkamiskausi),
+          valintaperusteenValintakokeidenLisatilaisuudet = inPastLisaTilaisuudet(Some(valintaperusteenValintakoeId1))
+        )
+      )
+    )
+    passesValidation(initMockSeq(hakukohde), Some(maxWithIds.copy(tila = Arkistoitu)))
   }
 
   "State change" should "succeed from tallennettu to julkaistu" in {

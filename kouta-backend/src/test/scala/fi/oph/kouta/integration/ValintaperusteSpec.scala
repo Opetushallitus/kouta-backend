@@ -148,22 +148,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     }
   }
 
-  it should "validate dates only when adding a new julkaistu valintaperuste" in {
-    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
-    val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
-    val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
-    val thisValintaperuste = valintaperuste.copy(valintakokeet = List(koe))
-
-    put(thisValintaperuste.copy(tila = Tallennettu))
-
-    put(ValintaperustePath, bytes(thisValintaperuste.copy(tila = Julkaistu)), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy.get), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
-    }
-  }
-
   "Update valintaperuste" should "update valintaperuste" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
@@ -310,38 +294,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     }
   }
 
-  it should "validate dates when moving from other states to julkaistu" in {
-    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
-    val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
-    val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
-    val thisValintaperuste = valintaperuste.copy(valintakokeet = List(koe), tila = Tallennettu)
-
-    val id = put(thisValintaperuste)
-    val thisValintaperusteWithOid = thisValintaperuste.copy(id = Some(id))
-    val lastModified = get(id, thisValintaperusteWithOid)
-
-    post(ValintaperustePath, bytes(thisValintaperusteWithOid.copy(tila = Julkaistu)), headersIfUnmodifiedSince(lastModified)) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal(validationErrorBody(pastDateMsg(ajanjakso.paattyy.get), "valintakokeet[0].tilaisuudet[0].aika.paattyy"))
-    }
-
-    update(getIds(thisValintaperusteWithOid.copy(tila = Poistettu)), lastModified)
-  }
-
-  it should "not validate dates when update a julkaistu valintaperuste" in {
-    val id = put(valintaperuste)
-    val lastModified = get(id, valintaperuste(id))
-
-    val ajanjakso = Ajanjakso(alkaa = TestData.inPast(4000), paattyy = Some(TestData.inPast(2000)))
-    val tilaisuus = TestData.Valintakoe1.tilaisuudet.head.copy(aika = Some(ajanjakso))
-    val koe = TestData.Valintakoe1.copy(tilaisuudet = List(tilaisuus))
-    val thisValintaperuste = valintaperuste(id).copy(valintakokeet = List(koe), tila = Julkaistu)
-
-    update(thisValintaperuste, lastModified)
-  }
-
   it should "allow oph user to update from julkaistu to tallennettu" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
@@ -353,55 +305,5 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
     update(valintaperuste(id).copy(tila = Tallennettu), lastModified, 403, crudSessions(valintaperuste.organisaatioOid))
-  }
-
-  it should "pass legal state changes" in {
-    val id = put(valintaperuste.copy(tila = Tallennettu))
-    var lastModified = get(id, valintaperuste(id).copy(tila = Tallennettu))
-    update(valintaperuste(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
-    lastModified = get(id, valintaperuste(id).copy(tila = Julkaistu))
-    update(valintaperuste(id).copy(tila = Arkistoitu), lastModified, expectUpdate = true)
-    lastModified = get(id, valintaperuste(id).copy(tila = Arkistoitu))
-    update(valintaperuste(id).copy(tila = Julkaistu), lastModified, expectUpdate = true)
-    lastModified = get(id, valintaperuste(id).copy(tila = Julkaistu))
-
-    val tallennettuId = put(valintaperuste.copy(tila = Tallennettu))
-    lastModified = get(tallennettuId, valintaperuste(tallennettuId).copy(tila = Tallennettu))
-    update(valintaperuste(tallennettuId).copy(tila = Poistettu), lastModified, expectUpdate = true)
-  }
-
-  it should "fail illegal state changes" in {
-    val tallennettuId = put(valintaperuste.copy(tila = Tallennettu))
-    val julkaistuId = put(valintaperuste.copy(tila = Julkaistu))
-    val arkistoituId = put(valintaperuste.copy(tila = Arkistoitu))
-
-    var lastModified = get(tallennettuId, valintaperuste(tallennettuId).copy(tila = Tallennettu))
-    update(ValintaperustePath, valintaperuste(tallennettuId).copy(tila = Arkistoitu), lastModified, 400, List(ValidationError("tila", illegalStateChange("valintaperusteelle", Tallennettu, Arkistoitu))))
-    lastModified = get(julkaistuId, valintaperuste(julkaistuId).copy(tila = Julkaistu))
-    update(ValintaperustePath, valintaperuste(julkaistuId).copy(tila = Poistettu), lastModified, 400, List(ValidationError("tila", illegalStateChange("valintaperusteelle", Julkaistu, Poistettu))))
-    lastModified = get(arkistoituId, valintaperuste(arkistoituId).copy(tila = Arkistoitu))
-    update(ValintaperustePath, valintaperuste(arkistoituId).copy(tila = Tallennettu), lastModified, 400, List(ValidationError("tila", illegalStateChange("valintaperusteelle", Arkistoitu, Tallennettu))))
-    update(ValintaperustePath, valintaperuste(arkistoituId).copy(tila = Poistettu), lastModified, 400, List(ValidationError("tila", illegalStateChange("valintaperusteelle", Arkistoitu, Poistettu))))
-  }
-
-  private def createValintaperusteWithHakukohteet(markAllHakukohteetDeleted: Boolean) = {
-    val koulutusOid = put(koulutus.copy(tila = Tallennettu), ophSession)
-    val toteutusOid = put(toteutus(koulutusOid).copy(tila = Tallennettu), ophSession)
-    val hakuOid = put(haku.copy(tila = Tallennettu))
-    val valintaperusteId = put(valintaperuste.copy(tila = Tallennettu))
-    put(withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = Poistettu)))
-    put(withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(tila = if (markAllHakukohteetDeleted) Poistettu else Tallennettu)))
-    val lastModified = get(valintaperusteId, valintaperuste(valintaperusteId).copy(tila = Tallennettu))
-    (valintaperusteId, lastModified)
-  }
-
-  it should "pass deletion when related hakukohteet deleted" in {
-    val (valintaperusteId: UUID, lastModified: String) = createValintaperusteWithHakukohteet(true)
-    update(valintaperuste(valintaperusteId).copy(tila = Poistettu), lastModified, expectUpdate = true)
-  }
-
-  it should "fail deletion when all related hakukohteet not deleted" in {
-    val (valintaperusteId: UUID, lastModified: String) = createValintaperusteWithHakukohteet(false)
-    update(ValintaperustePath, valintaperuste(valintaperusteId).copy(tila = Poistettu), lastModified, 400, List(ValidationError("tila", integrityViolationMsg("Valintaperustetta", "hakukohteita"))))
   }
 }
