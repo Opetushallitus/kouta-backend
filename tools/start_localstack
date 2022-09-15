@@ -46,7 +46,7 @@ start_container() {
 
 if [[ -f ${id_file} ]]; then
     echo "Localstack environment is already running. '${id_file}' file found."
-    exit -1
+    exit 0
 else
     start_container
     wait_for_ready
@@ -57,6 +57,6 @@ else
     else
         echo "Failed to start services. Shutting down container"
         ./tools/stop_localstack
-        exit -1
+        exit 1
     fi
 fi

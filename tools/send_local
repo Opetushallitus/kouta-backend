@@ -24,7 +24,7 @@ done
 if [[ -z ${queue} ]]
 then
     print_help
-    exit -1
+    exit 1
 fi
 
 if [[ -n ${file} ]]
@@ -33,7 +33,7 @@ then
     then
         print_help
         echo "Can't have both ´--file´ and ´--message´"
-        exit -1
+        exit 1
     fi
 
     message=$(jq -arM < ${file})
@@ -42,7 +42,7 @@ fi
 if [[ -z ${message} ]]
 then
     print_help
-    exit -1
+    exit 1
 fi
 
 aws sqs send-message --endpoint-url ${ENDPOINT} --region foobar --queue-url ${queue} --message-body "${message}"
