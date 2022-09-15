@@ -742,8 +742,7 @@ package object domain {
       tutkinnonosaId: Option[Long] = None,
       tutkinnonosaViite: Option[Long] = None
   ) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      validateIfDefined(koulutusKoodiUri, assertMatch(_, KoulutusKoodiPattern, s"$path.koulutusKoodiUri")),
+    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
       validateIfJulkaistu(
         tila,
         and(
@@ -753,7 +752,6 @@ package object domain {
           assertNotOptional(tutkinnonosaViite, s"$path.tutkinnonosaViite")
         )
       )
-    )
   }
 
   case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String]) extends ValidatableSubEntity {
