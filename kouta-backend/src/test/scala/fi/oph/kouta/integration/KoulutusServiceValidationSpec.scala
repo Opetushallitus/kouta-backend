@@ -854,9 +854,9 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       missingMsg
     )
     failsValidation(
-      ammTkWithTutkinnonOsaParams(koulutusKoodiUri = Some("puppu")),
-      "metadata.tutkinnonOsat[0].koulutusKoodiUri",
-      validationMsg("puppu")
+      ammTkWithTutkinnonOsaParams(koulutusKoodiUri = Some("puppu"), ePerusteId = Some(123L), tutkinnonOsaId = Some(122L), tutkinnonOsaViite = Some(1234L)),
+      "metadata.tutkinnonOsat[0].ePerusteId",
+      invalidEPerusteIdForKoulutusKoodiUri(123L, "puppu")
     )
     failsValidation(
       ammTkWithTutkinnonOsaParams().copy(tila = Julkaistu),
@@ -941,7 +941,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       ammOa.copy(metadata = Some(AmmatillinenOsaamisalaKoulutusMetadata(osaamisalaKoodiUri = Some("puppu")))),
       "metadata.osaamisalaKoodiUri",
-      validationMsg("puppu")
+      invalidOsaamisalaForEPeruste(11L, "puppu")
     )
     failsValidation(
       ammOa.copy(ePerusteId = Some(123L)),
