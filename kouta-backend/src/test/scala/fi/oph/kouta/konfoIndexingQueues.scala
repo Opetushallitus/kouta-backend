@@ -11,7 +11,7 @@ import org.scalactic.source
 import org.scalactic.source.Position
 import org.scalatest.concurrent.{Eventually, PatienceConfiguration}
 import org.scalatest.enablers.Retrying
-import org.scalatest.time.{Nanoseconds, Span}
+import org.scalatest.time.{Millis, Nanoseconds, Seconds, Span}
 import org.scalatest.time.SpanSugar._
 import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
@@ -24,7 +24,6 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
     LocalstackDockerConfiguration.builder()
       .randomizePorts(false)
       .pullNewImage(false)
-      .environmentVariables(mapAsJavaMap(Map("SERVICES" -> "sqs")))
       .imageTag("1.0.4")
       .build()
   }
@@ -40,6 +39,7 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
   }
 
   override def beforeEach(): Unit = {
+    deleteAndPurgeQueues()
     super.beforeEach()
     createAndVerifyQueues()
   }
@@ -67,6 +67,10 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
   }
 
   override def afterEach(): Unit = {
+    super.afterEach()
+  }
+
+  def deleteAndPurgeQueues(): Unit = {
     queueNames.foreach(q =>
       Try(sqs.getQueueUrl(q))
         .map(_.getQueueUrl)
@@ -75,9 +79,9 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
           sqs.deleteQueue(url)
         }
     )
-    waitUntil("All queues are deleted") { sqs.listQueues.getQueueUrls.size == 0 }
-
-    super.afterEach()
+    waitUntil("All queues are deleted") {
+      sqs.listQueues.getQueueUrls.size == 0
+    }
   }
 
   def waitUntil(message: String)(condition: => Boolean)(implicit patience: PatienceConfig): Unit = {
