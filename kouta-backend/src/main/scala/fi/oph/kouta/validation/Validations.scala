@@ -186,6 +186,10 @@ object Validations {
     msg = s"Hakulomaketta ID:llä $ataruId ei löydy, tai se on poistettu tai lukittu",
     id = "invalidAtaruId"
   )
+  def invalidAtaruFormAllowsOnlyYhteishaku(ataruId: UUID): ErrorMessage = ErrorMessage(
+    msg = s"Hakulokame ID:llä $ataruId sallii vain yhteishaut",
+    id = "invalidAtaruFormAllowsOnlyYhteishaku"
+  )
   def invalidHakutapaKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Hakutapa-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidHakutapaKoodiUri"
@@ -468,6 +472,21 @@ object Validations {
   ): IsValid = {
     assertExternalQueryResult(
       hakemusPalveluClient.isExistingAtaruId(ataruId),
+      path,
+      errorMessage,
+      ataruServiceFailureMsg
+    )
+  }
+
+  def assertAtaruFormAllowsOnlyYhteisHakuResult(
+    ataruId: UUID,
+    hakutapa: Option[String],
+    hakemusPalveluClient: HakemusPalveluClient,
+    path: String,
+    errorMessage: ErrorMessage
+  ): IsValid = {
+    assertExternalQueryResult(
+      hakemusPalveluClient.isFormAllowedForHakutapa(ataruId, hakutapa),
       path,
       errorMessage,
       ataruServiceFailureMsg

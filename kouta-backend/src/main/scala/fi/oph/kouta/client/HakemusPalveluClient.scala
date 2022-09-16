@@ -1,14 +1,13 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, queryFailed}
+import fi.oph.kouta.util.{KoutaJsonFormats, MiscUtils}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
 import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
 import fi.vm.sade.utils.slf4j.Logging
 import org.http4s.Method.GET
 import org.http4s.{Request, Uri}
 import org.http4s.client.blaze.defaultClient
-import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 import scalacache.caffeine.CaffeineCache
 import scalacache.modes.sync.mode
@@ -18,13 +17,21 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, DurationInt}
 
-case class AtaruForm(key: String, deleted: Option[Boolean]) {
-  def isActive(): Boolean = !deleted.getOrElse(false)
+case class AtaruFormProperties(allowOnlyYhteisHaut: Option[Boolean]) {
+  def allowsOnlyYhteisHaut: Boolean = allowOnlyYhteisHaut.getOrElse(false);
+}
+
+case class AtaruForm(key: String, deleted: Option[Boolean], properties: Option[AtaruFormProperties]) {
+  def isActive: Boolean = !deleted.getOrElse(false)
+
+  def formAllowsOnlyYhteisHaut: Boolean = properties.exists(_.allowsOnlyYhteisHaut);
 }
 
 trait HakemusPalveluClient extends KoutaJsonFormats {
   def isExistingAtaruId(ataruId: UUID): ExternalQueryResult
+  def isFormAllowedForHakutapa(ataruId: UUID, hakutapaKoodiUri: Option[String]): ExternalQueryResult
 }
+
 object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
@@ -44,12 +51,12 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     sessionCookieName = "ring-session"
   )
 
-  implicit val ataruIdCache = CaffeineCache[Seq[String]]
+  implicit val ataruFormCache = CaffeineCache[Seq[AtaruForm]]
 
   override def isExistingAtaruId(ataruId: UUID): ExternalQueryResult = {
-    var existingIdsInCache = ataruIdCache.get("")
+    var existingFormsInCache = ataruFormCache.get("")
     var querySuccess = true
-    if (existingIdsInCache.isEmpty) {
+    if (existingFormsInCache.isEmpty) {
       val url = urlProperties.url("hakemuspalvelu-service.forms")
       try {
         Uri.fromString(url)
@@ -60,9 +67,9 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
                   .runLog
                   .map(_.mkString)
                   .map(responseBody => {
-                    val ids = parseIds(responseBody)
-                    existingIdsInCache = Some(ids)
-                    ataruIdCache.put("")(ids, Some(15.minutes))
+                    val forms = parseForms(responseBody)
+                    existingFormsInCache = Some(forms)
+                    ataruFormCache.put("")(forms, Some(15.minutes))
                   })
               case r =>
                 r.bodyAsText
@@ -82,11 +89,22 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     }
     querySuccess match {
       case true =>
-        fromBoolean(existingIdsInCache.getOrElse(Seq()).contains(ataruId.toString))
+        fromBoolean(existingFormsInCache.getOrElse(Seq()).exists((form: AtaruForm) => form.key.equals(ataruId.toString)))
       case _ => queryFailed
     }
   }
 
-  def parseIds(responseAsString: String): List[String] =
-    (parse(responseAsString) \\ "forms").extract[List[AtaruForm]].filter(_.isActive()).map(_.key)
+  override def isFormAllowedForHakutapa(ataruId: UUID, hakutapaKoodiUri: Option[String]): ExternalQueryResult = {
+    val existingQuery = isExistingAtaruId(ataruId);
+    if (existingQuery != itemFound) {
+      return existingQuery
+    }
+    fromBoolean(ataruFormCache.get().get
+      .find((form: AtaruForm) => form.key.equals(ataruId.toString))
+      .map((form: AtaruForm) => !form.formAllowsOnlyYhteisHaut || MiscUtils.isYhteishakuHakutapa(hakutapaKoodiUri))
+      .getOrElse(false))
+  }
+
+  def parseForms(responseAsString: String): Seq[AtaruForm] =
+    (parse(responseAsString) \\ "forms").extract[List[AtaruForm]].filter(_.isActive)
 }

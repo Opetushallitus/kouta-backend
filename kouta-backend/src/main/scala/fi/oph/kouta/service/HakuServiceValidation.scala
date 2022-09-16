@@ -82,9 +82,23 @@ class HakuServiceValidation(
           ataruId =>
             assertAtaruQueryResult(
               ataruId,
-              hakemusPalveluClient.isExistingAtaruId,
+              hakemusPalveluClient,
               "hakulomakeAtaruId",
               unknownAtaruId(ataruId)
+            )
+        )
+      ),
+      validateIfTrue(
+        haku.hakulomaketyyppi.contains(Ataru),
+        validateIfDefined[UUID](
+          hakuDiffResolver.newAtaruId(),
+          ataruId =>
+            assertAtaruFormAllowsOnlyYhteisHakuResult(
+              ataruId,
+              haku.hakutapaKoodiUri,
+              hakemusPalveluClient,
+              "hakulomakeAtaruId",
+              invalidAtaruFormAllowsOnlyYhteishaku(ataruId)
             )
         )
       ),

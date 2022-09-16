@@ -108,6 +108,20 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
     failsValidation(max.copy(hakuajat = List(ajanJakso)), "hakuajat[0]", invalidAjanjaksoMsg(ajanJakso))
   }
 
+  it should "fail when given ataruid not found" in {
+    val randomUUID = UUID.randomUUID()
+    failsValidation(
+      max.copy(
+        hakulomaketyyppi = Some(Ataru),
+        hakulomakeLinkki = Map(),
+        hakulomakeAtaruId = Some(randomUUID)),
+      Seq(
+        ValidationError("hakulomakeAtaruId", unknownAtaruId(randomUUID)),
+        ValidationError("hakulomakeAtaruId", invalidAtaruFormAllowsOnlyYhteishaku(randomUUID))
+      )
+    )
+  }
+
   it should "fail if metadata missing from julkaistu haku" in {
     failsValidation(max.copy(metadata = None), "metadata", missingMsg)
   }
