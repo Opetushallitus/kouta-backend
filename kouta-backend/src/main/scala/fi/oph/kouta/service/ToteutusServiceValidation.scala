@@ -2,7 +2,8 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
+import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.util.ToteutusServiceUtil
 import fi.oph.kouta.validation
 import fi.oph.kouta.validation.CrudOperations.{create, update}
@@ -13,6 +14,7 @@ import fi.oph.kouta.validation.{
   NoErrors,
   ToteutusDiffResolver,
   ValidationContext,
+  ValidationError,
   ammatillinenPerustutkintoKoulutustyyppiKoodiUri
 }
 
@@ -25,7 +27,8 @@ object ToteutusServiceValidation
       HakuKoodiClient,
       KoulutusDAO,
       HakukohdeDAO,
-      SorakuvausDAO
+      SorakuvausDAO,
+      ToteutusDAO
     )
 
 class ToteutusServiceValidation(
@@ -34,7 +37,8 @@ class ToteutusServiceValidation(
     hakuKoodiClient: HakuKoodiClient,
     koulutusDAO: KoulutusDAO,
     hakukohdeDAO: HakukohdeDAO,
-    val sorakuvausDAO: SorakuvausDAO
+    val sorakuvausDAO: SorakuvausDAO,
+    toteutusDAO: ToteutusDAO
 ) extends KoulutusToteutusValidatingService[Toteutus] {
   override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
     val commonErrors = and(
@@ -116,7 +120,13 @@ class ToteutusServiceValidation(
                   and(
                     validateTutkintoonJohtamatonMetadata(vCtx.tila, vCtx.kielivalinta, m),
                     // Opintokokonaisuudella ei ole ammattinimikkeitä
-                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
+                    validateIfNonEmpty[ToteutusOid](
+                      m.liitetytOpintojaksot,
+                      "metadata.liitetytOpintojaksot",
+                      (oid, path) =>
+                        validateOpintojaksotIntegrity(vCtx, m)
+                    )
                   )
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
@@ -351,6 +361,40 @@ class ToteutusServiceValidation(
         )
       )
     )
+
+  def validateOpintojaksotIntegrity(context: ValidationContext, metadata: KkOpintokokonaisuusToteutusMetadata): IsValid = {
+    var errors: List[ValidationError] = List()
+    var errorMap: Map[String, List[Option[ToteutusOid]]] = Map()
+
+    val addErrorOid = (errorKey: String, toteutusOid: Option[ToteutusOid]) => {
+      errorMap += (errorKey -> (errorMap.getOrElse(errorKey, List()) ++ List(toteutusOid)))
+    }
+
+    val liitetytOpintojaksot = metadata.liitetytOpintojaksot
+    val toteutukset = toteutusDAO.get(liitetytOpintojaksot.toList)
+
+    toteutukset.foreach(toteutus => {
+      val liitettavanToteutuksenTyyppi = toteutus.metadata.get.tyyppi
+
+      if (liitettavanToteutuksenTyyppi != KkOpintojakso) {
+        addErrorOid("metadata.liitetytOpintojaksot", toteutus.oid)
+      }
+    })
+
+    errors = errorMap.toList.map(value => {
+      val errorKey    = value._1
+      val toteutukset = value._2.flatten
+      ValidationError(
+        errorKey,
+        errorKey match {
+          case "metadata.liitetytOpintojaksot" =>
+            invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset)
+        }
+      )
+    })
+
+    if (errors.isEmpty) NoErrors else errors
+  }
 
   private def validateKieliKoodit(
       koodiUrit: Seq[String],

@@ -6,7 +6,7 @@ import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{OrganisaatioService, ToteutusServiceValidation}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
@@ -23,6 +23,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   val koulutusDao         = mock[KoulutusDAO]
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
+  val toteutusDao         = mock[ToteutusDAO]
 
   val lukioToteutus           = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"))
   val ammTutkinnonOsaToteutus = AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.124"))
@@ -161,7 +162,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       hakuKoodiClient,
       koulutusDao,
       hakukohdeDao,
-      sorakuvausDao
+      sorakuvausDao,
+      toteutusDao
     )
 
   override def beforeEach(): Unit = {
@@ -897,7 +899,33 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       )
 
     passValidation(kkOpintokokonaisuusToteutus.copy(koulutusOid = opintokokonaisuusKoulutusOid))
+  }
 
+  it should "pass if attached toteutus is opintojakso-koulutustyyppi" in {
+    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid2))
+    when(toteutusDao.get(List(toteutusOid2)))
+      .thenAnswer(
+        Seq(opintojaksoToteutusWithOid)
+      )
+
+    passValidation(
+      kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2)))),
+    )
+  }
+
+  it should "fail if one of the attached toteutus is not opintojakso" in {
+    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
+    val lukioToteutusWithOid = lukioToteutus.copy(oid = Some(toteutusOid2))
+    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+      .thenAnswer(
+        Seq(lukioToteutusWithOid, opintojaksoToteutusWithOid)
+      )
+
+    failValidation(
+      kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
+      "metadata.liitetytOpintojaksot",
+      invalidKoulutustyyppiForLiitettyOpintojakso(Seq(toteutusOid2))
+    )
   }
 
   "Lukiototeutus validation" should "fail if invalid painotukset" in {

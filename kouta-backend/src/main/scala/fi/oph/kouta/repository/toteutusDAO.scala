@@ -16,6 +16,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
   def get(oid: ToteutusOid, tilaFilter: TilaFilter): Option[(Toteutus, Instant)]
+  def get(oids: List[ToteutusOid]): Seq[Toteutus]
   def getByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[Toteutus]
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
@@ -57,6 +58,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case (Some(t), tt, Some(l)) => Some((t.copy(modified = Some(instantToModified(l)), tarjoajat = tt.map(_.tarjoajaOid).toList), l))
       case _ => None
     }
+  }
+
+  override def get(oids: List[ToteutusOid]) = {
+    KoutaDatabase.runBlocking(selectToteutuksetByOids(oids).as[Toteutus])
   }
 
   private def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
@@ -216,6 +221,11 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def selectToteutus(oid: ToteutusOid, tilaFilter: TilaFilter) =
     sql"""#$selectToteutusSql
           where t.oid = $oid #${tilaConditions(tilaFilter, "t.tila")}"""
+
+  def selectToteutukset(oids: Seq[ToteutusOid]) =
+    sql"""#$selectToteutusSql
+          where oid in (#${createOidInParams(oids)})
+       """
 
   def selectToteutuksetByKoulutusOid(oid: KoulutusOid, tilaFilter: TilaFilter) =
     sql"""#$selectToteutusSql
