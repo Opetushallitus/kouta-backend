@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Julkaisutila, Modified, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
@@ -13,12 +13,12 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids
 
 import java.util.UUID
 
-trait OppilaitoksenOsaFixture extends KoulutusFixture with KoutaIntegrationSpec  with AccessControlSpec {
+trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec  with AccessControlSpec with OrganisaatioFixture {
 
   val OppilaitoksenOsaPath = "/oppilaitoksen-osa"
 
   def oppilaitoksenOsaService: OppilaitoksenOsaService = {
-//    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    organisaatioService = OrganisaatioServiceImpl(s"http://localhost:$mockPort/organisaatio-service/rest/organisaatio/v4/$RootOrganisaatioOid/jalkelaiset")
     new OppilaitoksenOsaService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 

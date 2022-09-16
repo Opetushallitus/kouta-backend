@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Julkaisutila, Modified, Oppilaitos}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
@@ -18,7 +18,7 @@ trait OppilaitosFixture extends KoulutusFixture with KoutaIntegrationSpec with A
   val OppilaitosPath = "/oppilaitos"
 
   def oppilaitosService: OppilaitosService = {
-    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, mockOrganisaatioClient)
+    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), new OrganisaatioServiceImpl(s"http://localhost:$mockPort/organisaatio-service/rest/organisaatio/v4/$RootOrganisaatioOid/jalkelaiset"), mockOppijanumerorekisteriClient, mockKayttooikeusClient, mockOrganisaatioClient)
   }
 
   override def beforeAll(): Unit = {
