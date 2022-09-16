@@ -5,11 +5,8 @@ import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausMetadata, TilaFilter}
 import fi.oph.kouta.repository.KoulutusDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations.{
-  KoulutusKoodiPattern,
-  KoulutusalaKoodiPattern,
   and,
   assertKoodistoQueryResult,
-  assertMatch,
   assertNotDefined,
   assertNotOptional,
   assertTrue,
@@ -20,7 +17,6 @@ import fi.oph.kouta.validation.Validations.{
   validateIfDefined,
   validateIfJulkaistu,
   validateIfNonEmpty,
-  validateIfTrue,
   validateIfTrueOrElse,
   validateKielistetty
 }

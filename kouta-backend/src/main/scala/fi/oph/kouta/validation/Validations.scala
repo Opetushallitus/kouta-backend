@@ -329,34 +329,8 @@ object Validations {
     ErrorMessage(msg = s"$parameter ei voi muuttaa olemassaolevalle $entityType", id = "notModifiable")
 
   val KoulutusKoodiPattern: Pattern                     = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
-  val HakutapaKoodiPattern: Pattern                     = Pattern.compile("""hakutapa_\d{1,3}#\d{1,2}""")
-  val KausiKoodiPattern: Pattern                        = Pattern.compile("""kausi_\w+#\d{1,2}""")
-  val KohdejoukkoKoodiPattern: Pattern                  = Pattern.compile("""haunkohdejoukko_\d+#\d{1,2}""")
-  val KohdejoukonTarkenneKoodiPattern: Pattern          = Pattern.compile("""haunkohdejoukontarkenne_\d+#\d{1,2}""")
-  val PohjakoulutusvaatimusKoodiPattern: Pattern        = Pattern.compile("""pohjakoulutusvaatimuskouta_\w+#\d{1,2}""")
-  val ValintatapajonoKoodiPattern: Pattern              = Pattern.compile("""valintatapajono_\w{1,2}#\d{1,2}""")
-  val KoulutuksenLisatiedotOtsikkoKoodiPattern: Pattern = Pattern.compile("""koulutuksenlisatiedot_\d+#\d{1,2}""")
   val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern     = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
-  val KoulutusalaKoodiPattern: Pattern =
-    Pattern.compile("""kansallinenkoulutusluokitus2016koulutusalataso[12]_\d+(#\d{1,2})?""")
-  val TutkintonimikeKoodiPattern: Pattern          = Pattern.compile("""tutkintonimikekk_[\w*-]+#\d{1,2}""")
-  val OpintojenLaajuusKoodiPattern: Pattern        = Pattern.compile("""opintojenlaajuus_v?\d+(#\d{1,2})?""")
-  val OpintojenLaajuusyksikkoKoodiPattern: Pattern = Pattern.compile("""opintojenlaajuusyksikko_\d+#\d{1,2}""")
-  val OpetuskieliKoodiPattern: Pattern             = Pattern.compile("""oppilaitoksenopetuskieli_\d+#\d{1,2}""")
-  val OpetusaikaKoodiPattern: Pattern              = Pattern.compile("""opetusaikakk_\d+#\d{1,2}""")
-  val OpetustapaKoodiPattern: Pattern              = Pattern.compile("""opetuspaikkakk_\d+#\d{1,2}""")
-  val OsaamisalaKoodiPattern: Pattern              = Pattern.compile("""osaamisala_\d+(#\d{1,2})?""")
   val PostinumeroKoodiPattern: Pattern             = Pattern.compile("""posti_\d{5}(#\d{1,2})?""")
-  val LiiteTyyppiKoodiPattern: Pattern             = Pattern.compile("""liitetyypitamm_\d+(#\d{1,2})?""")
-  val ValintakokeenTyyppiKoodiPattern: Pattern     = Pattern.compile("""valintakokeentyyppi_\d+(#\d{1,2})?""")
-  val KieliKoodiPattern: Pattern                   = Pattern.compile("""kieli_\w+(#\d{1,2})?""")
-  val LukioPainotusKoodiPattern: Pattern           = Pattern.compile("""lukiopainotukset_\d+(#\d{1,2})?""")
-  val LukioErityinenKoulutustehtavaKoodiPattern: Pattern =
-    Pattern.compile("""lukiolinjaterityinenkoulutustehtava_\d+(#\d{1,2})?""")
-  val LukioDiplomiKoodiPattern: Pattern = Pattern.compile("""moduulikoodistolops2021_\w+(#\d{1,2})?""")
-  val OppiaineKoodiPattern: Pattern     = Pattern.compile("""painotettavatoppiaineetlukiossa_\w+(#\d{1,2})?""")
-  val HakukohdeKoodiPattern: Pattern =
-    Pattern.compile("""hakukohteet(perusopetuksenjalkeinenyhteishaku|erammatillinenerityisopetus)_\w+(#\d{1,2})?$""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 

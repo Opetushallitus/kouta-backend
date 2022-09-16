@@ -583,26 +583,23 @@ class KoulutusServiceValidation(
       validateIfDefined[String](
         osaamisalaMetadata.osaamisalaKoodiUri,
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, OsaamisalaKoodiPattern, "metadata.osaamisalaKoodiUri"),
-            validateIfDefined[Long](
-              ePerusteId,
-              ePerusteId =>
-                validateIfTrue(
-                  ePerusteId > 0, {
-                    ePerusteKoodiClient
-                      .getOsaamisalaKoodiuritForEPeruste(ePerusteId) match {
-                      case Right(osaamisalaKoodiuritForEPeruste) =>
-                        assertTrue(
-                          koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, osaamisalaKoodiuritForEPeruste),
-                          "metadata.osaamisalaKoodiUri",
-                          invalidOsaamisalaForEPeruste(ePerusteId, koodiUri)
-                        )
-                      case _ => error("ePerusteId", ePerusteServiceFailureMsg)
-                    }
+          validateIfDefined[Long](
+            ePerusteId,
+            ePerusteId =>
+              validateIfTrue(
+                ePerusteId > 0, {
+                  ePerusteKoodiClient
+                    .getOsaamisalaKoodiuritForEPeruste(ePerusteId) match {
+                    case Right(osaamisalaKoodiuritForEPeruste) =>
+                      assertTrue(
+                        koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, osaamisalaKoodiuritForEPeruste),
+                        "metadata.osaamisalaKoodiUri",
+                        invalidOsaamisalaForEPeruste(ePerusteId, koodiUri)
+                      )
+                    case _ => error("ePerusteId", ePerusteServiceFailureMsg)
                   }
-                )
-            )
+                }
+              )
           )
       )
     )
@@ -845,15 +842,12 @@ class KoulutusServiceValidation(
     validateIfDefined[String](
       koodiUri,
       uri =>
-        validateIfSuccessful(
-          assertMatch(uri, OpintojenLaajuusyksikkoKoodiPattern, "metadata.opintojenLaajuusyksikkoKoodiUri"),
-          assertKoodistoQueryResult(
-            uri,
-            koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
-            "metadata.opintojenLaajuusyksikkoKoodiUri",
-            validationContext,
-            invalidOpintojenLaajuusyksikkoKoodiuri(uri)
-          )
+        assertKoodistoQueryResult(
+          uri,
+          koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          validationContext,
+          invalidOpintojenLaajuusyksikkoKoodiuri(uri)
         )
     )
 
