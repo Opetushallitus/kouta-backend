@@ -288,10 +288,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(yoToteutus)
   }
 
-  it should "succeed when new valid AmmOpettaja-toteutus" in {
-    passesValidation(ammOpettajaToteutus)
-  }
-
   it should "succeed when new valid lukio-toteutus" in {
     passesValidation(lukioToteutus)
   }
