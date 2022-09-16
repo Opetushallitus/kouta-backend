@@ -150,7 +150,7 @@ object TestDataGenerator extends KoutaJsonFormats {
   def haku(i: Int): Haku = JulkaistuHaku.copy(
     nimi = Map(Fi -> s"Haku $i", Sv -> s"Haku $i sv"),
     tila = shuffle(Julkaisutila.values).head,
-    hakuajat = List(Ajanjakso(alkaa = inPast(), paattyy = Some(inFuture()))),
+    hakuajat = List(Ajanjakso(alkaa = inPast(), paattyy = Some(inFuture().plusYears(200)))),
     organisaatioOid = organisaatioOid(i)
   )
 

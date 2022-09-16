@@ -200,7 +200,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(
       initMockSeq(
         max.copy(
-          hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+          hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
           kaytetaanHaunAikataulua = Some(false)
         )
       )
@@ -467,7 +467,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   it should "fail when hakuajat taken from haku, but still defined in hakukohde as well" in {
     failsValidation(
       max.copy(
-        hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+        hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         kaytetaanHaunAikataulua = Some(true)
       ),
       "hakuajat",
