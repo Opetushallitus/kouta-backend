@@ -1,13 +1,14 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
-import fi.oph.kouta.TestOids.{AmmOid, LonelyOid, LukioOid, OtherOid, UnknownOid}
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.integration.fixture.{KoulutusFixture, ToteutusFixture}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO}
-import fi.oph.kouta.service.{OrganisaatioService, ToteutusServiceValidation}
+import fi.oph.kouta.service.{OrganisaatioFixture, ToteutusServiceValidation}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError, ammatillinenPerustutkintoKoulutustyyppiKoodiUri}
@@ -15,17 +16,18 @@ import org.scalatest.Assertion
 
 import java.time.LocalDateTime
 import java.util.UUID
+import scala.reflect.ClassTag.Any
 
-class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
+class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] with ToteutusFixture {
   val koulutusKoodiClient = mock[KoulutusKoodiClient]
-  val organisaatioService = mock[OrganisaatioService]
+//  val organisaatioService = mock[OrganisaatioService]
   val hakuKoodiClient     = mock[HakuKoodiClient]
   val koulutusDao         = mock[KoulutusDAO]
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
 
   val lukioToteutus           = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"))
-  val ammTutkinnonOsaToteutus = AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.124"))
+  override val ammTutkinnonOsaToteutus = AmmTutkinnonOsaToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.124"))
   val ammMuuToteutus          = AmmMuuToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.130"))
   val yoToteutus              = JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.131"))
   val kkOpintojaksoToteutus   = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.132"))
@@ -167,6 +169,8 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   override def beforeEach(): Unit = {
     super.beforeEach()
     // yleiset
+//    when(organisaatioService.get)
+    mockOrganisaatioResponse()
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(OtherOid, AmmOid)))
       .thenAnswer(Right(Set[OrganisaatioOid]()))
     when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(LonelyOid, LukioOid)))

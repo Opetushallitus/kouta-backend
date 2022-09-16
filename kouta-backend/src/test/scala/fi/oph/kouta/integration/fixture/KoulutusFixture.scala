@@ -1,28 +1,43 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, KoulutusKoodiClient, KoutaSearchClient}
+import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, EPerusteKoodiClient, KoulutusKoodiClient, OrganisaatioResponse}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
-import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{KoulutusService, KoulutusServiceValidation, OrganisaatioServiceImpl}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService, OrganisaatioServiceMock}
+import fi.oph.kouta.repository._
+import fi.oph.kouta.service.{KoulutusService, KoulutusServiceValidation, OrganisaatioService}
 import fi.oph.kouta.servlet.KoulutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
+import org.json4s.jackson.JsonMethods.parse
 import org.scalactic.Equality
 
 import java.util.UUID
 import scala.util.Try
 
-trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with AccessControlSpec {
+trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with AccessControlSpec with OrganisaatioServiceMock {
 
   val KoulutusPath = "/koulutus"
 
+  var organisaatioService: OrganisaatioService = _
+
+  case class OrganisaatioServiceImpl(organisaatioUrl: String) extends OrganisaatioService {
+    case class CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl: String) extends CachedOrganisaatioHierarkiaClient {
+      val callerId = "kouta-common"
+
+      override def getWholeOrganisaatioHierarkiaCached(): OrganisaatioResponse = {
+        parse(responseFromResource("organisaatio")).extract[OrganisaatioResponse]
+      }
+    }
+
+    val cachedOrganisaatioHierarkiaClient = new CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl)
+  }
+
   def koulutusService: KoulutusService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    organisaatioService = OrganisaatioServiceImpl(s"http://localhost:$mockPort/organisaatio-service/rest/organisaatio/v4/$RootOrganisaatioOid/jalkelaiset")
     val koodistoClient = new KoulutusKoodiClient(urlProperties.get)
     val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
     val koulutusServiceValidation =

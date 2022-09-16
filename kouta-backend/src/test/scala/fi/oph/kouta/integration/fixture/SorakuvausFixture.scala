@@ -1,24 +1,24 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Modified, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.SorakuvausDAO
-import fi.oph.kouta.service.{OrganisaatioServiceImpl, SorakuvausService}
+import fi.oph.kouta.service.SorakuvausService
 import fi.oph.kouta.servlet.SorakuvausServlet
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
+import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 
-trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
+import java.util.UUID
+
+trait SorakuvausFixture extends KoulutusFixture with KoutaIntegrationSpec with AccessControlSpec {
 
   val SorakuvausPath = "/sorakuvaus"
 
   def sorakuvausService: SorakuvausService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+//    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     new SorakuvausService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
   }
 

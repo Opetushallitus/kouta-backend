@@ -9,20 +9,20 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, SQLHelpers}
-import fi.oph.kouta.service.{HakuService, HakuServiceValidation, OrganisaatioServiceImpl}
+import fi.oph.kouta.service.{HakuService, HakuServiceValidation}
 import fi.oph.kouta.servlet.HakuServlet
 import fi.oph.kouta.util.TimeUtils
 
 import java.util.UUID
 
-trait HakuFixture extends SQLHelpers with KoutaIntegrationSpec with AccessControlSpec {
+trait HakuFixture extends SQLHelpers with KoulutusFixture with KoutaIntegrationSpec with AccessControlSpec {
 
   val HakuPath = "/haku"
 
   val ohjausparametritClient: MockOhjausparametritClient.type = MockOhjausparametritClient
 
   def hakuService: HakuService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+//    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
     val hakuServiceValidation = new HakuServiceValidation(organisaatioService, hakuKoodiClient, mockHakemusPalveluClient, HakukohdeDAO)
     new HakuService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), ohjausparametritClient, organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, hakuServiceValidation)

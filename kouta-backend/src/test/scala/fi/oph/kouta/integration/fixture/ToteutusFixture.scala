@@ -2,13 +2,13 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{HakuKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakuKoodiClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation}
+import fi.oph.kouta.service.{KeywordService, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -16,7 +16,7 @@ import org.scalactic.Equality
 
 import java.util.UUID
 
-trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
+trait ToteutusFixture extends KoulutusFixture with KoutaIntegrationSpec with AccessControlSpec {
   this: KoulutusFixture =>
 
   val ToteutusPath = "/toteutus"
@@ -25,7 +25,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
   def toteutusService: ToteutusService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+//    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
