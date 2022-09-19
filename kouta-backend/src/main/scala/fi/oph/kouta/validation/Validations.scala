@@ -89,6 +89,14 @@ object Validations {
     )
   }
 
+  def invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset: Seq[ToteutusOid]) = {
+    ErrorMessage(
+      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
+      id = "invalidTilaForLiitettyOpintojaksoOnJulkaisu",
+      meta = Some(Map("toteutukset" -> toteutukset))
+    )
+  }
+
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidKieliKoodiUri"

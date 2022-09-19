@@ -923,8 +923,23 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
     failValidation(
       kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
-      "metadata.liitetytOpintojaksot",
+      "metadata.liitetytOpintojaksot.koulutustyyppi",
       invalidKoulutustyyppiForLiitettyOpintojakso(Seq(toteutusOid2))
+    )
+  }
+
+  it should "fail if one of the attached toteutus is not julkaistu when opintokokonaisuus is julkaistu" in {
+    val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
+    val opintojaksoToteutus2 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid2), tila = Tallennettu)
+    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+      .thenAnswer(
+        Seq(opintojaksoToteutus1, opintojaksoToteutus2)
+      )
+
+    failValidation(
+      kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
+      "metadata.liitetytOpintojaksot.julkaisutila",
+      invalidTilaForLiitettyOpintojaksoOnJulkaisu(Seq(toteutusOid2))
     )
   }
 

@@ -377,9 +377,18 @@ class ToteutusServiceValidation(
       val liitettavanToteutuksenTyyppi = toteutus.metadata.get.tyyppi
 
       if (liitettavanToteutuksenTyyppi != KkOpintojakso) {
-        addErrorOid("metadata.liitetytOpintojaksot", toteutus.oid)
+        addErrorOid("metadata.liitetytOpintojaksot.koulutustyyppi", toteutus.oid)
       }
     })
+
+    // Jos opintokokonaisuus on julkaistu, täytyy siihen liitettyjen opintojaksojen olla myös julkaistuja
+    if (context.tila == Julkaistu) {
+      toteutukset.foreach(toteutus => {
+        if (toteutus.tila != Julkaistu) {
+          addErrorOid("metadata.liitetytOpintojaksot.julkaisutila", toteutus.oid)
+        }
+      })
+    }
 
     errors = errorMap.toList.map(value => {
       val errorKey    = value._1
@@ -387,8 +396,10 @@ class ToteutusServiceValidation(
       ValidationError(
         errorKey,
         errorKey match {
-          case "metadata.liitetytOpintojaksot" =>
+          case "metadata.liitetytOpintojaksot.koulutustyyppi" =>
             invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset)
+          case "metadata.liitetytOpintojaksot.julkaisutila" =>
+            invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset)
         }
       )
     })
