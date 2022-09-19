@@ -43,6 +43,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   val toteutusOid  = ToteutusOid("1.2.246.562.17.00000000000000000123")
   val toteutusOid2 = ToteutusOid("1.2.246.562.17.00000000000000000124")
+  val toteutusOid3 = ToteutusOid("1.2.246.562.17.00000000000000000125")
 
   val existingToteutus = JulkaistuAmmToteutus.copy(oid = Some(toteutusOid))
   val koulutusOid1 = KoulutusOid("1.2.246.562.13.00000000000000000997")
@@ -940,6 +941,35 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
       "metadata.liitetytOpintojaksot.julkaisutila",
       invalidTilaForLiitettyOpintojaksoOnJulkaisu(Seq(toteutusOid2))
+    )
+  }
+
+  it should "fail if attached toteutus is Arkistoitu or Poistettu" in {
+    val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
+    val opintojaksoToteutus2 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid2), tila = Arkistoitu)
+    val opintojaksoToteutus3 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid3), tila = Poistettu)
+    when(toteutusDao.get(List(toteutusOid2, toteutusOid, toteutusOid3)))
+      .thenAnswer(
+        Seq(opintojaksoToteutus1, opintojaksoToteutus2, opintojaksoToteutus3)
+      )
+
+    failValidation(
+      kkOpintokokonaisuusToteutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid, toteutusOid3)))),
+      "metadata.liitetytOpintojaksot.tila",
+      invalidTilaForLiitettyOpintojakso(Seq(toteutusOid2, toteutusOid3))
+    )
+  }
+
+  it should "pass if attached toteutus is Tallennettu or Julkaistu when opintokokonaisuus is Tallennettu" in {
+    val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
+    val opintojaksoToteutus2 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid2), tila = Tallennettu)
+    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+      .thenAnswer(
+        Seq(opintojaksoToteutus1, opintojaksoToteutus2)
+      )
+
+    passValidation(
+      kkOpintokokonaisuusToteutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
     )
   }
 

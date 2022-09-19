@@ -375,9 +375,14 @@ class ToteutusServiceValidation(
 
     toteutukset.foreach(toteutus => {
       val liitettavanToteutuksenTyyppi = toteutus.metadata.get.tyyppi
+      val liitettavanToteutuksenTila = toteutus.tila
 
       if (liitettavanToteutuksenTyyppi != KkOpintojakso) {
         addErrorOid("metadata.liitetytOpintojaksot.koulutustyyppi", toteutus.oid)
+      }
+
+      if (!TilaFilter.onlyOlemassaolevatAndArkistoimattomat().contains(liitettavanToteutuksenTila)) {
+        addErrorOid("metadata.liitetytOpintojaksot.tila", toteutus.oid)
       }
     })
 
@@ -400,6 +405,8 @@ class ToteutusServiceValidation(
             invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset)
           case "metadata.liitetytOpintojaksot.julkaisutila" =>
             invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset)
+          case "metadata.liitetytOpintojaksot.tila" =>
+            invalidTilaForLiitettyOpintojakso(toteutukset)
         }
       )
     })
