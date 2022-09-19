@@ -386,6 +386,12 @@ class ToteutusServiceValidation(
       }
     })
 
+    liitetytOpintojaksot.foreach(oid => {
+      if (!toteutukset.exists(toteutus => toteutus.oid.get == oid)) {
+        addErrorOid("metadata.liitetytOpintojaksot.notFound", Some(oid))
+      }
+    })
+
     // Jos opintokokonaisuus on julkaistu, täytyy siihen liitettyjen opintojaksojen olla myös julkaistuja
     if (context.tila == Julkaistu) {
       toteutukset.foreach(toteutus => {
@@ -407,6 +413,8 @@ class ToteutusServiceValidation(
             invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset)
           case "metadata.liitetytOpintojaksot.tila" =>
             invalidTilaForLiitettyOpintojakso(toteutukset)
+          case "metadata.liitetytOpintojaksot.notFound" =>
+            unknownOpintojakso(toteutukset)
         }
       )
     })

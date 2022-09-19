@@ -973,6 +973,20 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     )
   }
 
+  it should "fail if one of the attached toteutus does not exist" in {
+    val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
+    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+      .thenAnswer(
+        Seq(opintojaksoToteutus1)
+      )
+
+    failValidation(
+      kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
+      "metadata.liitetytOpintojaksot.notFound",
+      unknownOpintojakso(Seq(toteutusOid2))
+    )
+  }
+
   "Lukiototeutus validation" should "fail if invalid painotukset" in {
     val kuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv")
     failValidation(
