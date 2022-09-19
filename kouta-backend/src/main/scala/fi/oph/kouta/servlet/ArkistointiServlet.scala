@@ -1,12 +1,12 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.scheduler.ArkistointiScheduler
+import fi.oph.kouta.scheduler.ArkistointiTask
 import org.scalatra.Ok
 
-class ArkistointiServlet(arkistointiScheduler: ArkistointiScheduler) extends KoutaServlet {
+class ArkistointiServlet(arkistointiScheduler: ArkistointiTask) extends KoutaServlet {
 
-  def this() = this(ArkistointiScheduler)
+  def this() = this(ArkistointiTask)
   registerPath(
     "/archiver/start",
     """    post:

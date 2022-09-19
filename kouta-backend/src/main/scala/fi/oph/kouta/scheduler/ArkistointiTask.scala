@@ -1,12 +1,11 @@
 package fi.oph.kouta.scheduler
 
-import com.github.kagkarlsson.scheduler.Scheduler
 import com.github.kagkarlsson.scheduler.task.helper.Tasks
 import com.github.kagkarlsson.scheduler.task.schedule.{CronSchedule, Schedule}
 import com.github.kagkarlsson.scheduler.task.{ExecutionContext, TaskInstance, VoidExecutionHandler}
 import fi.oph.kouta.auditlog.{AuditLog, AuditResource}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, RootOrganisaatioOid}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
@@ -16,18 +15,18 @@ import org.ietf.jgss.Oid
 import java.net.InetAddress
 import java.time.ZoneId
 
-object ArkistointiScheduler extends ArkistointiScheduler(HakuService, AuditLog)
+object ArkistointiTask extends ArkistointiTask(HakuService, AuditLog)
 
-class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends Logging {
+class ArkistointiTask(hakuService: HakuService, auditLog: AuditLog) extends Logging {
 
   def this() = this(HakuService, AuditLog)
 
   private val cronSchedule: Schedule = new CronSchedule("0 5 0 * * ?", ZoneId.of("Europe/Helsinki"))
-  private val numberOfThreads: Int   = 1
+
   private val user: User =
     new User(new Oid(RootOrganisaatioOid.toString), InetAddress.getLocalHost, "scheduler", "scheduler")
 
-  private val executionHandler: VoidExecutionHandler[Void] = new VoidExecutionHandler[Void] {
+  private val arkistointiExecutionHandler: VoidExecutionHandler[Void] = new VoidExecutionHandler[Void] {
     override def execute(taskInstance: TaskInstance[Void], executionContext: ExecutionContext): Unit = {
       logger.info(s"Aloitetaan ajastettu hakujen ja hakukohteiden arkistointi.")
 
@@ -46,22 +45,9 @@ class ArkistointiScheduler(hakuService: HakuService, auditLog: AuditLog) extends
     }
   }
 
-  private val cronTask = Tasks
+  val arkistointiTask = Tasks
     .recurring("cron-archive-hakus-and-hakukohdes-task", cronSchedule)
-    .execute(executionHandler)
-
-  private final val scheduler: Scheduler =
-    Scheduler
-      .create(KoutaDatabase.dataSource)
-      .startTasks(cronTask)
-      .threads(numberOfThreads)
-      .registerShutdownHook()
-      .build
-
-  def startScheduler(): Unit = {
-    logger.info(s"Käynnistetään haun ja hakukohteiden arkistointi-scheduler.")
-    scheduler.start()
-  }
+    .execute(arkistointiExecutionHandler)
 
   def runScheduler()(implicit authenticated: Authenticated): Unit = {
     logger.info(s"Käynnistetään käsin haun ja hakukohteiden arkistointi-scheduler.")
