@@ -31,7 +31,11 @@ class OrganisaatioHierarkiaCacheTask() extends Logging {
     }
   }
 
-  val cacheTask = Tasks
+  val startupCacheTask = Tasks
+    .oneTime("cron-startup-update-organisaatiohierarkia-cache-task")
+    .execute(organisaatioHierarkiaCacheExecutionHandler)
+
+  val hourlyCacheTask = Tasks
     .recurring("cron-update-organisaatiohierarkia-cache-task", FixedDelay.ofHours(1))
     .execute(organisaatioHierarkiaCacheExecutionHandler)
 }
