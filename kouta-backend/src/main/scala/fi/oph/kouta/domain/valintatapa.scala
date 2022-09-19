@@ -107,7 +107,6 @@ package object valintatapa {
 case class Valintatapa(
     nimi: Kielistetty = Map(),
     valintatapaKoodiUri: Option[String] = None,
-    kuvaus: Kielistetty = Map(),
     sisalto: Seq[Sisalto],
     kaytaMuuntotaulukkoa: Boolean = false,
     kynnysehto: Kielistetty = Map(),
@@ -139,7 +138,6 @@ case class Valintatapa(
       vCtx.tila,
       and(
         assertNotOptional(valintatapaKoodiUri, s"$path.valintatapaKoodiUri"),
-        validateOptionalKielistetty(vCtx.kielivalinta, kuvaus, s"$path.kuvaus"),
         validateOptionalKielistetty(vCtx.kielivalinta, kynnysehto, s"$path.kynnysehto"),
         validateMinMax(vahimmaispisteet, enimmaispisteet, s"$path.vahimmaispisteet")
       )
