@@ -174,19 +174,19 @@ class HakukohdeServiceValidation(
         "hakulomaketyyppi",
         noneOrOneNotBoth("kaytetaanHaunHakulomaketta", "hakulomaketyyppi")
       ),
-      validateIfTrue(
-        hk.hakulomaketyyppi.contains(Ataru),
-        validateIfDefined[UUID](
-          hakukohdeDiffResolver.newAtaruId(),
-          ataruId =>
-            assertAtaruQueryResult(
-              ataruId,
-              hakemusPalveluClient.isExistingAtaruId,
-              "hakulomakeAtaruId",
-              unknownAtaruId(ataruId)
-            )
-        )
-      ),
+//      validateIfTrue(
+//        hk.hakulomaketyyppi.contains(Ataru),
+//        validateIfDefined[UUID](
+//          hakukohdeDiffResolver.newAtaruId(),
+//          ataruId =>
+//            assertAtaruQueryResult(
+//              ataruId,
+//              hakemusPalveluClient.isExistingAtaruId,
+//              "hakulomakeAtaruId",
+//              unknownAtaruId(ataruId)
+//            )
+//        )
+//      ),
       validateIfJulkaistu(
         vCtx.tila,
         and(

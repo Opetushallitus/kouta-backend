@@ -84,19 +84,19 @@ class HakuServiceValidation(
         haku.metadata,
         validateMetadata(_, hakuDiffResolver, vCtx)
       ),
-      validateIfTrue(
-        haku.hakulomaketyyppi.contains(Ataru),
-        validateIfDefined[UUID](
-          hakuDiffResolver.newAtaruId(),
-          ataruId =>
-            assertAtaruQueryResult(
-              ataruId,
-              hakemusPalveluClient.isExistingAtaruId,
-              "hakulomakeAtaruId",
-              unknownAtaruId(ataruId)
-            )
-        )
-      ),
+//      validateIfTrue(
+//        haku.hakulomaketyyppi.contains(Ataru),
+//        validateIfDefined[UUID](
+//          hakuDiffResolver.newAtaruId(),
+//          ataruId =>
+//            assertAtaruQueryResult(
+//              ataruId,
+//              hakemusPalveluClient.isExistingAtaruId,
+//              "hakulomakeAtaruId",
+//              unknownAtaruId(ataruId)
+//            )
+//        )
+//      ),
       validateIfJulkaistu(
         vCtx.tila,
         and(

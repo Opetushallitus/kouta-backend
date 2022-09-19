@@ -577,20 +577,20 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when unknown ataruId" in {
-    val unknownId = UUID.randomUUID()
-    failsValidation(max.copy(hakulomakeAtaruId = Some(unknownId)), "hakulomakeAtaruId", unknownAtaruId(unknownId))
-  }
-
-  it should "fail when ataruId modified to unknown value" in {
-    val originalId = UUID.randomUUID()
-    val unknownId  = UUID.randomUUID()
-    failsModifyValidation(
-      maxWithIds.copy(hakulomakeAtaruId = Some(unknownId)),
-      maxWithIds.copy(hakulomakeAtaruId = Some(originalId)),
-      Seq(ValidationError("hakulomakeAtaruId", unknownAtaruId(unknownId)))
-    )
-  }
+//  it should "fail when unknown ataruId" in {
+//    val unknownId = UUID.randomUUID()
+//    failsValidation(max.copy(hakulomakeAtaruId = Some(unknownId)), "hakulomakeAtaruId", unknownAtaruId(unknownId))
+//  }
+//
+//  it should "fail when ataruId modified to unknown value" in {
+//    val originalId = UUID.randomUUID()
+//    val unknownId  = UUID.randomUUID()
+//    failsModifyValidation(
+//      maxWithIds.copy(hakulomakeAtaruId = Some(unknownId)),
+//      maxWithIds.copy(hakulomakeAtaruId = Some(originalId)),
+//      Seq(ValidationError("hakulomakeAtaruId", unknownAtaruId(unknownId)))
+//    )
+//  }
 
   it should "fail when values missing from julkaistu hakukohde" in {
     failsValidation(
