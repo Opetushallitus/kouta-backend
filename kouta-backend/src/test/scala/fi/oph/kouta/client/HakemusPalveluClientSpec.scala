@@ -38,4 +38,19 @@ class HakemusPalveluClientSpec extends ScalatraFlatSpec {
   "Parsing empty response" should "return empty list" in {
     HakemusPalveluClient.parseForms("{\"forms\": []}") should equal(Seq())
   }
+
+  "Form with no properties" should "allow any hakutapa" in {
+    val form = AtaruForm("51666769-c664-40a8-893c-7bbe82399eea", None, None);
+    HakemusPalveluClient.formAllowsHakuTapa(form, Some("hakutapakoodiuri")) should equal(true);
+  }
+
+  "Form with property allowOnlyYhteishaku" should "not allow any hakutapa" in {
+    val form = AtaruForm("51666769-c664-40a8-893c-7bbe82399eea", None, Some(AtaruFormProperties(Some(true))));
+    HakemusPalveluClient.formAllowsHakuTapa(form, Some("hakutapakoodiuri")) should equal(false);
+  }
+
+  "Form with property allowOnlyYhteishaku" should "allow yhteishaku hakutapa" in {
+    val form = AtaruForm("51666769-c664-40a8-893c-7bbe82399eea", None, Some(AtaruFormProperties(Some(true))));
+    HakemusPalveluClient.formAllowsHakuTapa(form, Some("hakutapa_01")) should equal(true);
+  }
 }

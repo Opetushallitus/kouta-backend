@@ -101,9 +101,12 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     }
     fromBoolean(ataruFormCache.get().get
       .find((form: AtaruForm) => form.key.equals(ataruId.toString))
-      .map((form: AtaruForm) => !form.formAllowsOnlyYhteisHaut || MiscUtils.isYhteishakuHakutapa(hakutapaKoodiUri))
+      .map((form: AtaruForm) => formAllowsHakuTapa(form, hakutapaKoodiUri))
       .getOrElse(false))
   }
+
+  def formAllowsHakuTapa(form: AtaruForm, hakutapaKoodiUri: Option[String]): Boolean =
+    !form.formAllowsOnlyYhteisHaut || MiscUtils.isYhteishakuHakutapa(hakutapaKoodiUri)
 
   def parseForms(responseAsString: String): Seq[AtaruForm] =
     (parse(responseAsString) \\ "forms").extract[List[AtaruForm]].filter(_.isActive)
