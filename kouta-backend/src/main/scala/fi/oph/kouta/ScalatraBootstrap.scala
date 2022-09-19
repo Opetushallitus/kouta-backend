@@ -1,5 +1,5 @@
 import fi.oph.kouta.SwaggerServlet
-import fi.oph.kouta.arkistointi.ArkistointiScheduler
+import fi.oph.kouta.scheduler.{ArkistointiScheduler, OrganisaatioHierarkiaCacheScheduler}
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.KoutaDatabase
@@ -40,6 +40,8 @@ class ScalatraBootstrap extends LifeCycle with Logging {
 
     val arkistointiScheduler = new ArkistointiScheduler
     arkistointiScheduler.startScheduler()
+    val organisaatioHierarkiaCacheScheduler = new OrganisaatioHierarkiaCacheScheduler
+    organisaatioHierarkiaCacheScheduler.startScheduler()
     //context.mount(new MigrationServlet(), "/migration", "migration")
   }
 

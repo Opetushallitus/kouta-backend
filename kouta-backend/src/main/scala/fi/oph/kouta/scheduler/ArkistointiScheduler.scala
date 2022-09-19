@@ -1,4 +1,4 @@
-package fi.oph.kouta.arkistointi
+package fi.oph.kouta.scheduler
 
 import com.github.kagkarlsson.scheduler.Scheduler
 import com.github.kagkarlsson.scheduler.task.helper.Tasks

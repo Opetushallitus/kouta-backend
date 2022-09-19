@@ -43,6 +43,7 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         Try[Int] {
           getKoodiUriWithLatestVersionFromKoodistoService(koodiUriWithoutVersion)
         } match {
+          case Success(version) => version
           case Failure(exp: KoodistoQueryException) =>
             throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion after retry, got response ${exp.status} ${exp.message}")
           case Failure(exp: Throwable) =>

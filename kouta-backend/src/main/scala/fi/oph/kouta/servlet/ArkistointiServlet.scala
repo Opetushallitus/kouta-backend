@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.arkistointi.ArkistointiScheduler
+import fi.oph.kouta.scheduler.ArkistointiScheduler
 import org.scalatra.Ok
 
 class ArkistointiServlet(arkistointiScheduler: ArkistointiScheduler) extends KoutaServlet {
