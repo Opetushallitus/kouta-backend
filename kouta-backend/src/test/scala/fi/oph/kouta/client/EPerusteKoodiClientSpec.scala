@@ -3,11 +3,13 @@ package fi.oph.kouta.client
 import fi.oph.kouta.Templates
 import fi.oph.kouta.TestSetups.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.{En, Fi, Kielistetty, Sv}
 import fi.oph.kouta.mocks.KoodistoServiceMock
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   var koodiClient: EPerusteKoodiClient = _
+  val defaultNimi: Kielistetty = Map(Fi -> "nimi", Sv -> "nimi sv", En -> "nimi en")
 
   override def beforeAll() = {
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
@@ -29,14 +31,20 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("koulutus_371101", 1), KoodiUri("koulutus_371102", 1))))
   }
 
-  "Querying tutkinnonosa viitteet and id:t for ePeruste" should "return viitteet and id:t if ePeruste was existing" in {
-    mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
-    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(123L) should equal(Right(Seq((122L, 1234L))))
-    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(11L) should equal(Right(Seq[(Long, Long)]()))
+  "Querying tutkinnonosa viitteet, id:t and nimi for ePerusteet" should "return viitteet, id:t and nimi if ePeruste was existing" in {
+    mockTutkinnonOsatByEPeruste(200, Seq((100, 1000)))
+    mockTutkinnonOsatByEPeruste(201, Seq((101, 1001), (102, 1002)))
+    mockTutkinnonOsatByEPeruste(202, Seq((103, 1003)))
+
+    def item(id: Long, viiteId: Long): TutkinnonOsaServiceItem = TutkinnonOsaServiceItem(id, viiteId, defaultNimi)
+
+    val expectedVal = Map(200 -> Seq(item(1000, 100)), 201 -> Seq(item(1001, 101), item(1002, 102)), 202 -> Seq(item(1003, 103)), 203 -> Seq())
+    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(200, 201, 201, 202, 203)) should equal(Right(expectedVal))
+    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(11)) should equal(Right(Map(11 -> Seq())))
     clearServiceMocks()
-    mockTutkinnonOsatByEPeruste(123L, Seq((125L, 1235L)))
+    mockTutkinnonOsatByEPeruste(200, Seq((125L, 1235L)))
     // Should still use values from cache
-    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(123L) should equal(Right(Seq((122L, 1234L))))
+    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(200)) should equal(Right(Map(200 -> Seq(item(1000, 100)))))
   }
 
   "Querying osaamisalaKoodiurit for ePeruste" should "return koodiurit if ePeruste was existing" in {
@@ -54,7 +62,7 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("koulutus_371101", 1), KoodiUri("koulutus_371102", 1))))
-    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(123L) should equal(Right(Seq((122L, 1234L))))
+    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123)) should equal(Right(Map(123 -> Seq(TutkinnonOsaServiceItem(1234, 122, defaultNimi)))))
     koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1), KoodiUri("osaamisala_02", 1))))
 
     koodiClient.ePerusteToOsaamisalaCache.invalidateAll()
@@ -62,24 +70,25 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     koodiClient.ePerusteToTutkinnonosaCache.invalidateAll()
 
     clearServiceMocks()
-    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371107", "koulutus_371108"))
-    mockTutkinnonOsatByEPeruste(123L, Seq((125L, 1235L)))
-    mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_03", "osaamisala_04"))
-    koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("koulutus_371107", 1), KoodiUri("koulutus_371108", 1))))
-    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(123L) should equal(Right(Seq((125L, 1235L))))
-    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_03", 1), KoodiUri("osaamisala_04", 1))))
+    mockKoulutusKoodiUritForEPerusteResponse(11, None, Seq("koulutus_371107", "koulutus_371108"))
+    mockTutkinnonOsatByEPeruste(123, Seq((125, 1235)))
+    mockOsaamisalaKoodiUritByEPeruste(11, Seq("osaamisala_03", "osaamisala_04"))
+    koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11) should equal(Right(Seq(KoodiUri("koulutus_371107", 1), KoodiUri("koulutus_371108", 1))))
+    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123)) should equal(Right(Map(123 -> Seq(TutkinnonOsaServiceItem(1235, 125, defaultNimi)))))
+    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11) should equal(Right(Seq(KoodiUri("osaamisala_03", 1), KoodiUri("osaamisala_04", 1))))
   }
 
   "When koulutusKoodiUri query failed" should "return error status" in {
-    mockKoulutusKoodiUritForEPerusteFailure(66L)
+    mockKoulutusKoodiUritForEPerusteFailure(66)
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L).left.get.getMessage should
       equal("Failed to get ePerusteet with id 66 after retry, got response 500, " +
         "Failure in eperuste-service for ePerusteId 66")
   }
 
   "When tutkinnonosa query failed" should "return error status" in {
-    mockTutkinnonOsatFailure(66L)
-    koodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(66L).left.get.getMessage should
+    mockTutkinnonOsatByEPeruste(123, Seq((125, 1235)))
+    mockTutkinnonOsatFailure(66)
+    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123, 66)).left.get.getMessage should
       equal("Failed to get tutkinnonosat for ePeruste with id 66 after retry, got response 500, " +
         "Failure in eperuste-service for tutkinnonosat by ePerusteId 66")
   }

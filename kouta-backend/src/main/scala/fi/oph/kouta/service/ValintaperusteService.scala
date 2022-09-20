@@ -19,21 +19,32 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object ValintaperusteService extends ValintaperusteService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, ValintaperusteServiceValidation)
+object ValintaperusteService
+    extends ValintaperusteService(
+      SqsInTransactionService,
+      AuditLog,
+      OrganisaatioServiceImpl,
+      OppijanumerorekisteriClient,
+      KayttooikeusClient,
+      ValintaperusteServiceValidation
+    )
 
 class ValintaperusteService(
-  sqsInTransactionService: SqsInTransactionService,
-  auditLog: AuditLog,
-  val organisaatioService: OrganisaatioService,
-  oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-  kayttooikeusClient: KayttooikeusClient,
-  valintaperusteServiceValidation: ValintaperusteServiceValidation
+    sqsInTransactionService: SqsInTransactionService,
+    auditLog: AuditLog,
+    val organisaatioService: OrganisaatioService,
+    oppijanumerorekisteriClient: OppijanumerorekisteriClient,
+    kayttooikeusClient: KayttooikeusClient,
+    valintaperusteServiceValidation: ValintaperusteServiceValidation
 ) extends RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
-  protected val readRules: AuthorizationRules = AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
+  protected val readRules: AuthorizationRules =
+    AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
-  def get(id: UUID, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Valintaperuste, Instant)] = {
+  def get(id: UUID, tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
+  ): Option[(Valintaperuste, Instant)] = {
     val valintaperusteWithTime = ValintaperusteDAO.get(id, tilaFilter)
 
     val enrichedValintaperuste = valintaperusteWithTime match {
@@ -46,7 +57,12 @@ class ValintaperusteService(
 
     authorizeGet(
       enrichedValintaperuste,
-      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(AuthorizationRuleForJulkinen)))
+      AuthorizationRules(
+        roleEntity.readRoles,
+        allowAccessToParentOrganizations = true,
+        Some(AuthorizationRuleForReadJulkinen)
+      )
+    )
   }
 
   private def enrichValintaperusteMetadata(valintaperuste: Valintaperuste) : Option[ValintaperusteMetadata] = {
@@ -54,66 +70,88 @@ class ValintaperusteService(
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     valintaperuste.metadata match {
-      case Some(metadata) => metadata match {
-        case valintaperusteMetadata: GenericValintaperusteMetadata => Some(valintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-      }
+      case Some(metadata) =>
+        metadata match {
+          case valintaperusteMetadata: GenericValintaperusteMetadata =>
+            Some(valintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+        }
       case None => None
     }
   }
 
   def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID = {
-    authorizePut(valintaperuste) { v =>
+    authorizePut(
+      valintaperuste,
+      AuthorizationRules(
+        roleEntity.createRoles,
+        overridingAuthorizationRule = Some(AuthorizationRuleByOrganizationAndKoulutustyyppi)
+      )
+    ) { v =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
-      val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
+      val enrichedValintaperuste                           = v.copy(metadata = enrichedMetadata)
       valintaperusteServiceValidation.withValidation(enrichedValintaperuste, None) { valpe =>
         doPut(valpe)
       }
     }.id.get
   }
 
-  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)
-            (implicit authenticated: Authenticated): Boolean = {
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)(implicit
+      authenticated: Authenticated
+  ): Boolean = {
     val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
     val rules: AuthorizationRules = getAuthorizationRulesForUpdate(oldValintaPerusteWithTime, valintaperuste)
 
     authorizeUpdate(oldValintaPerusteWithTime, valintaperuste, rules) { (oldValintaperuste, v) =>
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
-      val enrichedValintaperuste = v.copy(metadata = enrichedMetadata)
+      val enrichedValintaperuste                           = v.copy(metadata = enrichedMetadata)
       valintaperusteServiceValidation.withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
     }.nonEmpty
   }
 
-  private def getAuthorizationRulesForUpdate(oldValintaperusteWithTime: Option[(Valintaperuste, Instant)], newValintaperuste: Valintaperuste) = {
+  private def getAuthorizationRulesForUpdate(
+      oldValintaperusteWithTime: Option[(Valintaperuste, Instant)],
+      newValintaperuste: Valintaperuste
+  ) = {
     oldValintaperusteWithTime match {
       case None => throw EntityNotFoundException(s"Päivitettävää valintaperustetta ei löytynyt")
       case Some((oldValintaperuste, _)) =>
         if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldValintaperuste.tila, newValintaperuste.tila)) {
           AuthorizationRules(Seq(Role.Paakayttaja))
-        }
-        else {
+        } else {
           AuthorizationRules(roleEntity.updateRoles)
         }
     }
   }
 
-  def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+  def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
+  ): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOidsAndOppilaitostyypit(organisaatioOid, readRules) { case (oids, koulutustyypit) =>
       ValintaperusteDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, tilaFilter)
     }
 
-  def listByHakuAndKoulutustyyppi(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
+  def listByHakuAndKoulutustyyppi(
+      organisaatioOid: OrganisaatioOid,
+      hakuOid: HakuOid,
+      koulutustyyppi: Koulutustyyppi,
+      tilaFilter: TilaFilter
+  )(implicit authenticated: Authenticated): Seq[ValintaperusteListItem] =
     withAuthorizedOrganizationOids(organisaatioOid, readRules) { oids =>
       ValintaperusteDAO.listAllowedByOrganisaatiotAndHakuAndKoulutustyyppi(oids, hakuOid, koulutustyyppi, tilaFilter)
     }
 
-  def listHakukohteet(valintaperusteId: UUID, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+  def listHakukohteet(valintaperusteId: UUID, tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
+  ): Seq[HakukohdeListItem] =
     withRootAccess(Role.Hakukohde.readRoles) {
       HakukohdeDAO.listByValintaperusteId(valintaperusteId, tilaFilter)
     }
 
-  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated): ValintaperusteSearchResult =
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
+      authenticated: Authenticated
+  ): ValintaperusteSearchResult =
     list(organisaatioOid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(true)).map(_.id) match {
       case Nil               => SearchResult[ValintaperusteSearchItem]()
       case valintaperusteIds => KoutaSearchClient.searchValintaperusteet(valintaperusteIds, params)
@@ -128,7 +166,9 @@ class ValintaperusteService(
       } yield v
     }.get
 
-  private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit authenticated: Authenticated): Option[Valintaperuste] =
+  private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit
+      authenticated: Authenticated
+  ): Option[Valintaperuste] =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)

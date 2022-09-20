@@ -17,7 +17,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Valintaperuste)
 
-  def ophValintaperuste: Valintaperuste = valintaperuste.copy(julkinen = true, organisaatioOid = OphOid)
+  def ophValintaperuste: Valintaperuste = valintaperuste.copy(organisaatioOid = OphOid)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -61,13 +61,13 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     get(s"$ValintaperustePath/$id", otherRoleSession, 403)
   }
 
-  it should "allow the user of proper koulutustyyppi to read julkinen valintaperuste created by oph" in {
-    val id = put(ophValintaperuste)
-    get(id, readSessions(AmmOid), ophValintaperuste.copy(id = Some(id)))
+  it should "allow the user of proper koulutustyyppi to read julkinen valintaperuste" in {
+    val id = put(valintaperuste.copy(julkinen = true))
+    get(id, readSessions(AmmOid), valintaperuste.copy(julkinen = true, id = Some(id)))
   }
 
-  it should "deny the user of wrong koulutustyyppi to read julkinen valintaperuste created by oph" in {
-    val id = put(ophValintaperuste)
+  it should "deny the user of wrong koulutustyyppi to read julkinen valintaperuste" in {
+    val id = put(valintaperuste.copy(julkinen = true))
     get(s"$ValintaperustePath/$id", readSessions(YoOid), 403)
   }
 
@@ -115,7 +115,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     }
   }
 
-  it should "allow a user of the valintaperuste organization to create the valintaperuste" in {
+  it should "allow a user of the valintaperuste organization and koulutustyyppi to create valintaperuste" in {
     put(valintaperuste, crudSessions(valintaperuste.organisaatioOid))
   }
 
@@ -123,7 +123,11 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     put(ValintaperustePath, valintaperuste, crudSessions(LonelyOid), 403)
   }
 
-  it should "allow a user of an ancestor organization to create the valintaperuste" in {
+  it should "deny a user with wrong koulutustyyppi" in {
+    put(ValintaperustePath, valintaperuste.copy(organisaatioOid = YoOid), crudSessions(YoOid), 403)
+  }
+
+  it should "allow a user of an ancestor organization to create valintaperuste" in {
     put(valintaperuste, crudSessions(ParentOid))
   }
 
@@ -201,7 +205,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     update(tallennettuValintaperuste(id), lastModified, 403, crudSessions(LonelyOid))
   }
 
-  it should "allow a user of an ancestor organization to create the valintaperuste" in {
+  it should "allow a user of an ancestor organization to update valintaperuste" in {
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
     update(tallennettuValintaperuste(id), lastModified, expectUpdate = false, crudSessions(ParentOid))
@@ -306,4 +310,17 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with AccessControlSpec wit
     val lastModified = get(id, valintaperuste(id))
     update(valintaperuste(id).copy(tila = Tallennettu), lastModified, 403, crudSessions(valintaperuste.organisaatioOid))
   }
+
+  it should "allow organisaatioOid change if user had rights to new organisaatio" in {
+    val id = put(valintaperuste.copy(organisaatioOid = HkiYoOid))
+    val lastModified = get(id, valintaperuste(id).copy(organisaatioOid = HkiYoOid))
+    update(valintaperuste(id).copy(organisaatioOid = YoOid), lastModified, expectUpdate = true, yliopistotSession)
+  }
+
+  it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(valintaperuste(id).copy(organisaatioOid = YoOid), lastModified, 403, crudSessions(YoOid))
+  }
+
 }

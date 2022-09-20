@@ -1,22 +1,39 @@
 package fi.oph.kouta.client
 
-import com.github.blemale.scaffeine.{Cache, Scaffeine}
+import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
 import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.PainotetutArvoSanatLukioKaikki
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
 import fi.vm.sade.properties.OphProperties
+
 import scala.concurrent.duration.DurationInt
 
 object HakuKoodiClient extends HakuKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
+
+package object HakukoodiConstants {
+  val hakukohdeKoodistoAmmErityisopetus = "hakukohteeterammatillinenerityisopetus"
+  val hakukohdeKoodistoPoJalkYhteishaku = "hakukohteetperusopetuksenjalkeinenyhteishaku"
+}
 
 class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
   implicit val koodiUriCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
     .expireAfterWrite(15.minutes)
     .build()
+  implicit val koodiuriVersionCache: Cache[String, KoodiUri] = Scaffeine()
+    .expireAfterWrite(15.minutes)
+    .build()
 
-  def hakukohdeKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto(koodiUri.split("_").head, koodiUri)
+  def getKoodiUriVersionOrLatest(koodiUriAsString: String): Either[Throwable, Option[KoodiUri]] = {
+    //getAndUpdateKoodiUriVersionOrLatestFromCache(koodiUriAsString, koodiuriVersionCache)
+    Right(None)
+  }
+
+  def hakukohdeKoodiUriAmmErityisopetusExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto(hakukohdeKoodistoAmmErityisopetus, koodiUri)
+
+  def hakukohdeKoodiUriPoJalkYhteishakuExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto(hakukohdeKoodistoPoJalkYhteishaku, koodiUri)
 
   def pohjakoulutusVaatimusKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("pohjakoulutusvaatimuskouta", koodiUri)
@@ -54,6 +71,9 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
 
   def valintatapaKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("valintatapajono", koodiUri)
+
+  def tietoaOpiskelustaOtsikkoKoodiUriExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto("organisaationkuvaustiedot", koodiUri)
 
   private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
     getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache) match {

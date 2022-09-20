@@ -1,23 +1,7 @@
 package fi.oph.kouta.util
 import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
-import fi.oph.kouta.TestData.{
-  JulkaistuHakukohde,
-  LukioToteutuksenMetatieto,
-  TelmaToteutuksenMetatieto,
-  TuvaToteutuksenMetatieto,
-  TuvaToteutus
-}
-import fi.oph.kouta.domain.{
-  En,
-  Fi,
-  Hakukohde,
-  Kielistetty,
-  LukioKoulutusMetadata,
-  Sv,
-  TelmaToteutusMetadata,
-  Toteutus,
-  TuvaToteutusMetadata
-}
+import fi.oph.kouta.TestData.{JulkaistuHakukohde, LukioToteutuksenMetatieto, TelmaToteutuksenMetatieto, TuvaToteutuksenMetatieto, TuvaToteutus}
+import fi.oph.kouta.domain.{En, Fi, Hakukohde, Kieli, Kielistetty, LukioKoulutusMetadata, Sv, TelmaToteutusMetadata, Toteutus, TuvaToteutusMetadata}
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.generic.auto._
 import fi.oph.kouta.client.Henkilo
@@ -171,5 +155,30 @@ class NameHelperSpec extends UnitSpec {
   it should "return empty string if kutsumanimi, etunimet and sukunimi are all unspecified" in {
     val henkilo = Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
     assert(NameHelper.generateMuokkaajanNimi(henkilo) === "")
+  }
+
+  "mergeNames" should "merge names from kielistetty to another" in {
+    val from = Map(Fi -> "suomi", Sv -> "ruotsi", En -> "englanti")
+    assert(NameHelper.mergeNames(from, Map(), Seq(Fi, Sv, En)) === from)
+  }
+
+  it should "merge only selected languauges" in {
+    val from = Map(Fi -> "suomi", Sv -> "ruotsi", En -> "englanti")
+    val expected = Map(Fi -> "suomi", Sv -> "ruotsi")
+    assert(NameHelper.mergeNames(from, Map(), Seq(Fi, Sv)) === expected)
+  }
+
+  it should "preserve existing language versions" in {
+    val from = Map(Fi -> "suomi", Sv -> "ruotsi")
+    val target = Map(Fi -> "suomeksi", Sv -> "", En -> "englanti")
+    val expected = Map(Fi -> "suomeksi", Sv -> "ruotsi")
+    assert(NameHelper.mergeNames(from, target, Seq(Fi, Sv)) === expected)
+    assert(NameHelper.mergeNames(from, target - Sv, Seq(Fi, Sv)) === expected)
+  }
+
+  "notFullyPopulated" should "find missing language versions" in {
+    assert(NameHelper.notFullyPopulated(Map[Kieli, String](), Seq(Fi, Sv)))
+    assert(NameHelper.notFullyPopulated(Map(Fi -> "suomeksi"), Seq(Fi, Sv)))
+    assert(!NameHelper.notFullyPopulated(Map(Fi -> "suomeksi", Sv -> "Ruåtsiksi"), Seq(Fi, Sv)))
   }
 }

@@ -23,7 +23,7 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
-    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(organisaatioService, hakuKoodiClient, HakukohdeDAO)
+    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(hakuKoodiClient, HakukohdeDAO)
     new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation)
   }
 

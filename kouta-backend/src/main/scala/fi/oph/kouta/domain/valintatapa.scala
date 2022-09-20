@@ -131,7 +131,7 @@ case class Valintatapa(
           invalidValintatapaKoodiUri(koodiUri)
         )
     ),
-    validateIfNonEmpty[Sisalto](sisalto, s"$path.sisalto", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+    validateIfNonEmpty[Sisalto](sisalto, s"$path.sisalto", _.validate(vCtx, _)),
     validateIfDefined[Double](enimmaispisteet, assertNotNegative(_, s"$path.enimmaispisteet")),
     validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, s"$path.vahimmaispisteet")),
     validateIfJulkaistu(
@@ -148,27 +148,27 @@ case class Valintatapa(
 sealed trait Sisalto extends ValidatableSubEntity
 
 case class SisaltoTeksti(teksti: Kielistetty) extends Sisalto {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
-    validateIfJulkaistu(tila, validateKielistetty(kielivalinta, teksti, s"$path.teksti"))
+  def validate(vCtx: ValidationContext, path: String): IsValid =
+    validateIfJulkaistu(vCtx.tila, validateKielistetty(vCtx.kielivalinta, teksti, s"$path.teksti"))
 }
 
 case class Taulukko(id: Option[UUID], nimi: Kielistetty = Map(), rows: Seq[Row] = Seq()) extends Sisalto {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-    validateIfJulkaistu(tila, validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi")),
-    validateIfNonEmpty[Row](rows, s"$path.rows", _.validate(tila, kielivalinta, _))
+  def validate(vCtx: ValidationContext, path: String): IsValid = and(
+    validateIfJulkaistu(vCtx.tila, validateOptionalKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi")),
+    validateIfNonEmpty[Row](rows, s"$path.rows", _.validate(vCtx, _))
   )
 }
 
 case class Row(index: Int, isHeader: Boolean = false, columns: Seq[Column] = Seq()) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+  def validate(vCtx: ValidationContext, path: String): IsValid = and(
     assertNotNegative(index, s"$path.index"),
-    validateIfNonEmpty[Column](columns, s"$path.columns", _.validate(tila, kielivalinta, _))
+    validateIfNonEmpty[Column](columns, s"$path.columns", _.validate(vCtx, _))
   )
 }
 
 case class Column(index: Int, text: Kielistetty = Map()) {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+  def validate(vCtx: ValidationContext, path: String): IsValid = and(
     assertNotNegative(index, s"$path.index"),
-    validateOptionalKielistetty(kielivalinta, text, s"$path.text")
+    validateOptionalKielistetty(vCtx.kielivalinta, text, s"$path.text")
   )
 }

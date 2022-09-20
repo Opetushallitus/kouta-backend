@@ -1,10 +1,9 @@
 package fi.oph.kouta.client
 
-import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
+import fi.oph.kouta.validation.ExternalQueryResults._
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
 
@@ -56,9 +55,15 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     }
   }
 
-  def getKoodiUriWithLatestVersionFromCache(koodiUriWithoutVersion: String): String = {
-    val versio = koodiuriVersionCache.get(koodiUriWithoutVersion, koodiUriWithoutVersion => getKoodiUriWithLatestVersion(koodiUriWithoutVersion))
-    s"$koodiUriWithoutVersion#$versio"
+  def getKoodiUriVersionOrLatestFromCache(koodiUriAsString: String): Either[Throwable, Option[KoodiUri]] = {
+    // OPHJOD-68
+    //getAndUpdateKoodiUriVersionOrLatestFromCache(koodiUriAsString, koodiuriVersionCache)
+
+    // main
+    //val versio = koodiuriVersionCache.get(koodiUriWithoutVersion, koodiUriWithoutVersion => getKoodiUriWithLatestVersion(koodiUriWithoutVersion))
+    //s"$koodiUriWithoutVersion#$versio"
+
+    Right(None)
   }
 
   private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodiUri] = {
@@ -75,8 +80,8 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
           .map(koulutus => KoodiUri(koulutus.koodiUri, koulutus.versio))
       }
     }
-
   }
+
 
   private def koulutuskoodiUriOfKoulutusTyypit(tyyppi: String): Seq[KoodiUri] = {
     Try[Seq[KoodiUri]] {

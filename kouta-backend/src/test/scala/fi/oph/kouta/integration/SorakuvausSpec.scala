@@ -286,4 +286,18 @@ class SorakuvausSpec extends KoutaIntegrationSpec with AccessControlSpec with So
     val lastModified = get(oid, sorakuvaus(oid))
     update(sorakuvaus(oid).copy(tila = Tallennettu), lastModified, 403, crudSessions(ChildOid))
   }
+
+  it should "allow organisaatioOid change if user had rights to new organisaatio" in {
+    var sorakuva = sorakuvaus.copy(organisaatioOid = YoOid, tila = Tallennettu)
+    val id = put(sorakuva)
+    sorakuva = sorakuva.copy(id = Some(id))
+    val lastModified = get(id, sorakuva)
+    update(sorakuva.copy(organisaatioOid = ChildOid), lastModified, expectUpdate = true, ophSession)
+  }
+
+  it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
+    val id = put(sorakuvaus.copy(organisaatioOid = YoOid))
+    val lastModified = get(id, sorakuvaus(id).copy(organisaatioOid = YoOid))
+    update(sorakuvaus(id).copy(organisaatioOid = ChildOid), lastModified, 403, crudSessions(ChildOid))
+  }
 }

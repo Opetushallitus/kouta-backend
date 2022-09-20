@@ -3,6 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.Templates
 import fi.oph.kouta.TestSetups.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.{Fi, Kielistetty, Sv}
 import fi.oph.kouta.mocks.KoodistoServiceMock
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import org.scalatra.test.scalatest.ScalatraFlatSpec
@@ -12,6 +13,7 @@ import java.time.format.DateTimeFormatter
 
 class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   var koodiClient: HakuKoodiClient = _
+  val defaultNimi: Kielistetty         = Map(Fi -> "nimi", Sv -> "nimi sv")
 
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
@@ -34,11 +36,24 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("hakukohteetperusopetuksenjalkeinenyhteishaku_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01") should equal(itemFound)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_02#2") should equal(itemFound)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_XX") should equal(itemNotFound)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_YY") should equal(itemNotFound)
-    koodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenerillishaku_01") should equal(itemNotFound)
+    mockKoodistoResponse(
+      "hakukohteeterammatillinenerityisopetus",
+      Seq(
+        ("hakukohteeterammatillinenerityisopetus_01", 1, None),
+        ("hakukohteeterammatillinenerityisopetus_02", 3, None),
+        ("hakukohteeterammatillinenerityisopetus_XX", 2, Some(dayInPast))
+      )
+    )
+    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01") should equal(itemFound)
+    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_02#2") should equal(itemFound)
+    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_XX") should equal(itemNotFound)
+    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_YY") should equal(itemNotFound)
+    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenerillishaku_01") should equal(itemNotFound)
+
+    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_01") should equal(itemFound)
+    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_02#2") should equal(itemFound)
+    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_XX") should equal(itemNotFound)
+    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_YY") should equal(itemNotFound)
   }
 
   "Finding pohjakoulutusVaatimusKoodiUri" should "return true when koodiUri exists" in {
@@ -194,4 +209,25 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
     koodiClient.valintatapaKoodiUriExists("valintatapajono_km") should equal(itemNotFound)
     koodiClient.valintatapaKoodiUriExists("valintatapajono_xx") should equal(itemNotFound)
   }
+
+  "Getting latest version of koodiUri" should "return version from cache" in {
+    mockLatestKoodiUriResponse("hakukohteeterammatillinenerityisopetus_1753", 2)
+    koodiClient.getKoodiUriVersionOrLatest("hakukohteeterammatillinenerityisopetus_1753") should equal(
+      Right(Some(KoodiUri("hakukohteeterammatillinenerityisopetus_1753", 2, defaultNimi)))
+    )
+    clearServiceMocks()
+    mockLatestKoodiUriResponse("hakukohteeterammatillinenerityisopetus_1753", 1)
+    // Should still use value from cache
+    koodiClient.getKoodiUriVersionOrLatest("hakukohteeterammatillinenerityisopetus_1753") should equal(
+      Right(Some(KoodiUri("hakukohteeterammatillinenerityisopetus_1753", 2, defaultNimi)))
+    )
+  }
+
+  "Getting certain version of koodiUri" should "return version from cache" in {
+    mockKoodiUriVersionResponse("hakukohteetperusopetuksenjalkeinenyhteishaku_122", 3)
+    koodiClient.getKoodiUriVersionOrLatest("hakukohteetperusopetuksenjalkeinenyhteishaku_122#3") should equal(
+      Right(Some(KoodiUri("hakukohteetperusopetuksenjalkeinenyhteishaku_122", 3, defaultNimi)))
+    )
+  }
+
 }

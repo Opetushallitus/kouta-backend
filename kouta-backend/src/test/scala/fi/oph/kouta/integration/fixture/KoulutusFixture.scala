@@ -37,7 +37,8 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
       mockKayttooikeusClient,
       koodistoClient,
       koulutusServiceValidation,
-      mockKoutaSearchClient
+      mockKoutaSearchClient,
+      ePerusteKoodiClient
     )
   }
 
@@ -54,7 +55,7 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
   val tuvaKoulutus: Koulutus                = TestData.TuvaKoulutus
 
   def koulutus(oid: String): Koulutus                     = koulutus.copy(oid = Some(KoulutusOid(oid)))
-  def muokkaus(k: Koulutus): Koulutus                     = k.copy(nimi = k.nimi.map { case (k, v) => k -> (v + v) })
+  def muokkaus(k: Koulutus): Koulutus                     = k.copy(esikatselu = if (k.esikatselu == true) false else true)
   def koulutus(oid: String, tila: Julkaisutila): Koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = tila)
   def koulutus(
       julkinen: Boolean,

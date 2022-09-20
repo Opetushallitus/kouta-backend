@@ -1,8 +1,9 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
-import fi.oph.kouta.TestOids.{ChildOid, OphOid}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient}
+import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
+import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoodiUri, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -11,12 +12,7 @@ import fi.oph.kouta.service.{HakukohdeServiceValidation, KoutaValidationExceptio
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{
-  ErrorMessage,
-  ValidationError,
-  ammatillinenPerustutkintoKoulutustyyppi,
-  lukioKoulutusKoodiUritAllowedForKaksoistutkinto
-}
+import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
 import org.mockito.scalatest.MockitoSugar
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.contain
@@ -26,13 +22,14 @@ import org.scalatest.{Assertion, BeforeAndAfterEach}
 import java.net.InetAddress
 import java.time.ZonedDateTime
 import java.util.UUID
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 
 class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val organisaatioService  = mock[OrganisaatioService]
   val hakuKoodiClient      = mock[HakuKoodiClient]
   val koulutusKoodiClient  = mock[KoulutusKoodiClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
+  val organisaatioService  = mock[OrganisaatioService]
+  val lokalisointiClient   = mock[LokalisointiClient]
   val hakukohdeDao         = mock[HakukohdeDAO]
   val hakuDao              = mock[HakuDAO]
 
@@ -84,31 +81,129 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     valintakokeet = max.valintakokeet.map(_.copy(id = Some(UUID.randomUUID()))),
     liitteet = max.liitteet.map(_.copy(id = Some(UUID.randomUUID())))
   )
+  val yhteisHakuHakuOid = HakuOid("1.2.246.562.29.321")
 
   val validator = new HakukohdeServiceValidation(
-    organisaatioService,
     hakuKoodiClient,
     koulutusKoodiClient,
     hakemusPalveluClient,
+    organisaatioService,
+    lokalisointiClient,
     hakukohdeDao,
     hakuDao
   )
 
-  val dependencies = Map(
-    "1.2.246.562.17.123" -> (Julkaistu, Some(Amm), Some(AmmToteutuksenMetatieto), Some(Seq("koulutus_371101#1")), None),
-    valintaperusteId.toString -> (Julkaistu, Some(Amm), None, None, Some(
-      Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
-    ))
+  val dependencies = HakukohdeDependencyInformation(
+    HakukohdeToteutusDependencyInfo(
+      ToteutusOid("1.2.246.562.17.123"),
+      Julkaistu,
+      Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"),
+      Amm,
+      Some(AmmToteutuksenMetatieto),
+      Seq("koulutus_371101#1"),
+      Seq(OtherOid, ParentOid)
+    ),
+    Some(
+      HakukohdeValintaperusteDependencyInfo(
+        valintaperusteId,
+        Julkaistu,
+        Amm,
+        Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
+      )
+    )
   )
 
-  val lukioDependencies = Map(
-    "1.2.246.562.17.123" -> (Julkaistu, Some(Lk), Some(LukioToteutuksenMetatieto), Some(
-      Seq("koulutus_301101#1")
-    ), None),
-    valintaperusteId.toString -> (Julkaistu, Some(Lk), None, None, Some(
-      Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
-    ))
+  val lukioDependencies = HakukohdeDependencyInformation(
+    HakukohdeToteutusDependencyInfo(
+      ToteutusOid("1.2.246.562.17.123"),
+      Julkaistu,
+      Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"),
+      Lk,
+      Some(LukioToteutuksenMetatieto),
+      Seq("koulutus_301101#1"),
+      Seq(OtherOid, ParentOid)
+    ),
+    Some(
+      HakukohdeValintaperusteDependencyInfo(
+        valintaperusteId,
+        Julkaistu,
+        Lk,
+        Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
+      )
+    )
   )
+
+  def initMockSeq(hakukohde: Hakukohde): Hakukohde = {
+    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(Some(dependencies))
+    hakukohde
+  }
+
+  private def initMockDepsForKoulutustyyppi(
+      hakukohde: Hakukohde,
+      toteutusMetadata: ToteutusMetadata,
+      koulutusKoodiUrit: Seq[String] = Seq()
+  ): Unit =
+    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
+      Some(
+        HakukohdeDependencyInformation(
+          HakukohdeToteutusDependencyInfo(
+            hakukohde.toteutusOid,
+            Julkaistu,
+            Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"),
+            toteutusMetadata.tyyppi,
+            Some(toteutusMetadata),
+            koulutusKoodiUrit,
+            Seq(OtherOid, ParentOid)
+          ),
+          Some(
+            HakukohdeValintaperusteDependencyInfo(
+              valintaperusteId,
+              Julkaistu,
+              toteutusMetadata.tyyppi,
+              Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
+            )
+          )
+        )
+      )
+    )
+
+  private def initMockDepsWithToteutusOidAndTila(hakukohde: Hakukohde, toteutusOid: String, tila: Julkaisutila): Unit =
+    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
+      Some(
+        dependencies.copy(toteutus =
+          HakukohdeToteutusDependencyInfo(
+            ToteutusOid(toteutusOid),
+            tila,
+            Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"),
+            Amm,
+            Some(AmmToteutuksenMetatieto),
+            Seq("koulutus_371101#1"),
+            Seq(OtherOid, ParentOid)
+          )
+        )
+      )
+    )
+
+  private def initMockDepsWithValintaperusteParams(
+      hakukohde: Hakukohde,
+      valintaperusteId: UUID,
+      tila: Julkaisutila,
+      koulutustyyppi: Koulutustyyppi = Amm
+  ): Unit =
+    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
+      Some(
+        dependencies.copy(valintaperuste =
+          Some(
+            HakukohdeValintaperusteDependencyInfo(
+              valintaperusteId,
+              tila,
+              koulutustyyppi,
+              Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
+            )
+          )
+        )
+      )
+    )
 
   val vainSuomeksi         = Map(Fi -> "vain suomeksi", Sv -> "")
   val fullKielistetty      = Map(Fi -> "suomeksi", Sv -> "på svenska")
@@ -116,7 +211,9 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
+    when(hakuKoodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
+      .thenAnswer(itemFound)
+    when(hakuKoodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_01#1"))
       .thenAnswer(itemFound)
     when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(itemFound)
@@ -128,28 +225,43 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
     when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
     when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_fi")).thenAnswer(itemFound)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_sv")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI")).thenAnswer(itemFound)
+    when(hakuKoodiClient.kieliKoodiUriExists("kieli_SV")).thenAnswer(itemFound)
 
-    when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(dependencies)
-    when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(dependencies.filterKeys(_ == "1.2.246.562.17.123"))
+    when(lokalisointiClient.getKaannoksetWithKeyFromCache("toteutuslomake.lukionYleislinjaNimiOsa"))
+      .thenAnswer(Map(Fi -> "Lukio", Sv -> "Gymnasium", En -> "Lukio"))
+    when(hakuKoodiClient.getKoodiUriVersionOrLatest("lukiopainotukset_1#1"))
+      .thenAnswer(Right(Some(KoodiUri("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv")))))
+    when(hakuKoodiClient.getKoodiUriVersionOrLatest("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
+      Right(
+        Some(
+          KoodiUri("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
+        )
+      )
+    )
+    when(hakuKoodiClient.getKoodiUriVersionOrLatest("failure")).thenAnswer(Left(new RuntimeException()))
+
+    when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(Some(dependencies))
+    when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
     when(hakuDao.get(HakuOid("1.2.246.562.29.123"), TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Some((haku, ZonedDateTime.now().toInstant)))
+    when(hakuDao.get(yhteisHakuHakuOid, TilaFilter.onlyOlemassaolevat()))
+      .thenAnswer(Some((haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ZonedDateTime.now().toInstant)))
 
     when(
       koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
-        Seq(ammatillinenPerustutkintoKoulutustyyppi),
+        AmmatillisetKoulutuskooditAllowedForKaksoistutkinto.koulutusTyypit,
         "koulutus_371101#1"
       )
     ).thenAnswer(itemFound)
     when(
-      koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUritAllowedForKaksoistutkinto, "koulutus_301101#1")
+      koulutusKoodiClient.koulutusKoodiUriExists(
+        LukioKoulutusKooditAllowedForKaksoistutkinto.koulutusKoodiUrit,
+        "koulutus_301101#1"
+      )
     ).thenAnswer(itemFound)
-  }
-
-  def initMockSeq(hakukohde: Hakukohde): Hakukohde = {
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(dependencies)
-    hakukohde
+    when(organisaatioService.getAllChildOidsFlat(ParentOid)).thenAnswer(Seq(ParentOid, ChildOid, GrandChildOid))
+    when(organisaatioService.getAllChildOidsFlat(OtherOid)).thenAnswer(Seq(OtherOid))
   }
 
   def passesValidation(
@@ -189,10 +301,35 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(min)
   }
 
-  it should "succeed when new hakukohde with hakukohdeKoodiUri" in {
+  it should "succeed when new amm-hakukohde for yhteishaku with correct hakukohdeKoodiUri" in {
     passesValidation(
-      initMockSeq(max.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")))
+      initMockSeq(
+        max.copy(
+          hakuOid = yhteisHakuHakuOid,
+          nimi = Map(),
+          hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")
+        )
+      )
     )
+  }
+
+  it should "succeed when new amm-yhteishakukohde with ammatillinenPerustutkintoErityisopetuksena with correct hakukohdeKoodiUri" in {
+    val hk = max.copy(
+      hakuOid = yhteisHakuHakuOid,
+      nimi = Map(),
+      hakukohdeKoodiUri = Some("hakukohteeterammatillinenerityisopetus_01#1")
+    )
+    initMockDepsForKoulutustyyppi(
+      hk,
+      AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true))
+    )
+    passesValidation(hk)
+  }
+
+  it should "succeed when new tuva-hakukohde with nimi matching toteutus" in {
+    val hk = max.copy(nimi = Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"))
+    initMockDepsForKoulutustyyppi(hk, TuvaToteutuksenMetatieto)
+    passesValidation(hk)
   }
 
   it should "succeed when hakuajat taken from haku, defined in hakukohde itself, or not defined at all for luonnos" in {
@@ -245,21 +382,42 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "succeed when lukio-hakukohde with hakukohteenlinja" in {
-    val lkHakukohde = max.copy(metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja))))
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(lukioDependencies)
+  it should "succeed when lukio-hakukohde with hakukohteenlinja (yleislinja)" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "Lukio", Sv -> "Gymnasium"),
+      metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    passesValidation(lkHakukohde)
+  }
+
+  it should "succeed when lukio-hakukohde with hakukohteenLinja from painotukset" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "painotus", Sv -> "painotus sv"),
+      metadata = Some(
+        maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1"))))
+      )
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    passesValidation(lkHakukohde)
+  }
+
+  it should "succeed when lukio-hakukohde with hakukohteenLinja from erityisetKoulutustehtavat" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"),
+      metadata = Some(
+        maxMetadata.copy(hakukohteenLinja =
+          Some(LukioHakukohteenLinja.copy(linja = Some("lukiolinjaterityinenkoulutustehtava_1#1")))
+        )
+      )
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
     passesValidation(lkHakukohde)
   }
 
   it should "succeed when lukio-hakukohde of DIAKoulutus or EBKoulutus without hakukohteenlinja" in {
-    val lkHakukohde = max.copy()
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(lukioDependencies.map {
-      case ("1.2.246.562.17.123", _) =>
-        "1.2.246.562.17.123" -> (Julkaistu, Some(Lk), Some(LukioToteutuksenMetatieto), Some(
-          Seq("koulutus_301104#1")
-        ), None)
-      case x => x
-    })
+    val lkHakukohde = max.copy(nimi = Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"))
+    initMockDepsForKoulutustyyppi(lkHakukohde, LukioToteutuksenMetatieto, Seq("koulutus_301104#1"))
     passesValidation(lkHakukohde)
   }
 
@@ -289,19 +447,30 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "succeed when kaksoistutkinto for Lukio koulutus" in {
     val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "Lukio", Sv -> "Gymnasium"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja))),
       toinenAsteOnkoKaksoistutkinto = Some(true)
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(lukioDependencies)
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
     passesValidation(lkHakukohde)
   }
 
   it should "succeed when hakukohdeKoodiUri not changed in modify operation, eventhough hakukohdeKoodiUri unknown" in {
     passesValidation(
       initMockSeq(
-        maxWithIds.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX"))
+        maxWithIds.copy(
+          hakuOid = yhteisHakuHakuOid,
+          nimi = Map(),
+          hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX")
+        )
       ),
-      Some(maxWithIds.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX")))
+      Some(
+        maxWithIds.copy(
+          hakuOid = yhteisHakuHakuOid,
+          nimi = Map(),
+          hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_XX")
+        )
+      )
     )
   }
 
@@ -369,23 +538,28 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "succeed when PainotetutArvosanat not changed in modify operation, eventhough oppiaineKoodiUri and kieli unknown" in {
-    val metadata = maxMetadata.copy(hakukohteenLinja =
+    val hk = maxWithIds.copy(metadata =
       Some(
-        LukioHakukohteenLinja.copy(painotetutArvosanat =
-          Seq(
-            PainotettuOppiaine(
-              Some(
-                OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_xxxx"), kieli = Some("kieli_xx"))
-              ),
-              Some(1.0)
+        maxMetadata.copy(hakukohteenLinja =
+          Some(
+            LukioHakukohteenLinja.copy(painotetutArvosanat =
+              Seq(
+                PainotettuOppiaine(
+                  Some(
+                    OppiaineKoodiUrit(oppiaine = Some("painotettavatoppiaineetlukiossa_xxxx"), kieli = Some("kieli_xx"))
+                  ),
+                  Some(1.0)
+                )
+              )
             )
           )
         )
       )
     )
+    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto)
     passesValidation(
-      initMockSeq(maxWithIds.copy(metadata = Some(metadata))),
-      Some(maxWithIds.copy(metadata = Some(metadata)))
+      hk,
+      Some(hk)
     )
   }
 
@@ -406,11 +580,21 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "succeed when ToinenAsteOnkoKaksoistutkinto not changed in modify operation, eventhough illegal koulutus-koodiurit" in {
     val hk = maxWithIds.copy(
+      nimi = Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"),
       toteutusOid = ToteutusOid("1.2.246.562.17.456"),
       toinenAsteOnkoKaksoistutkinto = Some(true)
     )
-    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto, Some(Seq("koulutus_301104#1")))
+    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto, Seq("koulutus_301104#1"))
     passesValidation(hk, Some(hk))
+  }
+
+  it should "succeed when lukiokohde nimi not changed in modify operation, eventhough illegal name" in {
+    val lkHakukohde = maxWithIds.copy(
+      nimi = Map(Fi -> "Nimi fi", Sv -> "Nimi sv"),
+      metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    passesValidation(lkHakukohde, Some(lkHakukohde))
   }
 
   it should "fail when invalid perustiedot" in {
@@ -438,30 +622,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         exp.errorMessages should contain theSameElementsAs Seq(ValidationError("oid", missingMsg))
       case _ => fail("Expecting validation failure, but it succeeded")
     }
-  }
-
-  it should "fail when neither nimi nor hakukohdeKoodiUri given" in {
-    failsValidation(
-      min.copy(nimi = Map()),
-      "nimi",
-      oneNotBoth("nimi", "hakukohdeKoodiUri")
-    )
-  }
-
-  it should "fail when both nimi and hakukohdeKoodiUri given" in {
-    failsValidation(
-      min.copy(hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")),
-      "nimi",
-      oneNotBoth("nimi", "hakukohdeKoodiUri")
-    )
-  }
-
-  it should "fail when invalid hakukohdeKoodiUri" in {
-    failsValidation(
-      min.copy(nimi = Map(), hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1")),
-      "hakukohdeKoodiUri",
-      invalidHakukohdeKooriuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1")
-    )
   }
 
   it should "fail when hakuajat taken from haku, but still defined in hakukohde as well" in {
@@ -538,7 +698,11 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "fail when common liitteidenToimitusosoite used but not defined" in {
     failsValidation(
-      max.copy(liitteetOnkoSamaToimitusosoite = Some(true), liitteidenToimitustapa = Some(MuuOsoite), liitteidenToimitusosoite = None),
+      max.copy(
+        liitteetOnkoSamaToimitusosoite = Some(true),
+        liitteidenToimitustapa = Some(MuuOsoite),
+        liitteidenToimitusosoite = None
+      ),
       "liitteidenToimitusosoite",
       missingMsg
     )
@@ -763,53 +927,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail when invalid HakukohteenLinja" in {
-    failsValidation(
-      max.copy(metadata =
-        Some(
-          maxMetadata.copy(hakukohteenLinja =
-            Some(
-              HakukohteenLinja(
-                alinHyvaksyttyKeskiarvo = Some(-8.2),
-                lisatietoa = vainSuomeksi,
-                painotetutArvosanat = Seq(
-                  PainotettuOppiaine(None, None),
-                  PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(None, None)), Some(-2.8)),
-                  PainotettuOppiaine(
-                    Some(OppiaineKoodiUrit(Some("puppu"), Some("huttu"))),
-                    Some(2.5)
-                  ),
-                  PainotettuOppiaine(
-                    Some(OppiaineKoodiUrit(Some("painotettavatoppiaineetlukiossa_XX"), Some("kieli_XX"))),
-                    Some(2.8)
-                  )
-                )
-              )
-            )
-          )
-        )
-      ),
-      Seq(
-        ValidationError("metadata.hakukohteenLinja.alinHyvaksyttyKeskiarvo", notNegativeMsg),
-        ValidationError("metadata.hakukohteenLinja.lisatietoa", kielistettyWoSvenska),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[0].koodiUrit", missingMsg),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[0].painokerroin", missingMsg),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[1].oppiaine", missingMsg),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[1].painokerroin", notNegativeMsg),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[2].oppiaine", invalidOppiaineKoodiuri("puppu")),
-        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[2].kieli", invalidOppiaineKieliKoodiuri("huttu")),
-        ValidationError(
-          "metadata.hakukohteenLinja.painotetutArvosanat[3].oppiaine",
-          invalidOppiaineKoodiuri("painotettavatoppiaineetlukiossa_XX")
-        ),
-        ValidationError(
-          "metadata.hakukohteenLinja.painotetutArvosanat[3].kieli",
-          invalidOppiaineKieliKoodiuri("kieli_XX")
-        )
-      )
-    )
-  }
-
   it should "fail if invalid uudenOpiskelijanUrl" in {
     failsValidation(
       max.copy(metadata = Some(maxMetadata.copy(uudenOpiskelijanUrl = Map(Fi -> "puppu", Sv -> "huttu")))),
@@ -846,21 +963,19 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  "Dependency validation" should "fail when toteutus not existing" in {
-    val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
-    failsValidation(initMockSeq(hk), "toteutusOid", nonExistent("Toteutusta", hk.toteutusOid))
-  }
-
-  private def initMockDepsWithToteutusOidAndTila(hakukohde: Hakukohde, toteutusOid: String, tila: Julkaisutila): Unit =
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
-      dependencies.filterKeys(_ == valintaperusteId.toString) + (
-        toteutusOid -> (tila, Some(Amm), Some(AmmToteutuksenMetatieto), Some(Seq("koulutus_371101#1")), None)
-      )
-    )
-
   private def initMockSeqForHaku(haku: Haku, hakuOid: String): Unit = {
     when(hakuDao.get(HakuOid(hakuOid), TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Some(haku, ZonedDateTime.now().toInstant))
+  }
+
+  "Dependency validation" should "fail when toteutus not existing" in {
+    val hk = max.copy(
+      toteutusOid = ToteutusOid("1.2.246.562.17.456"),
+      valintaperusteId = None,
+      metadata = Some(maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq()))
+    )
+    when(hakukohdeDao.getDependencyInformation(hk)).thenAnswer(None)
+    failsValidation(hk, "toteutusOid", nonExistent("Toteutusta", hk.toteutusOid))
   }
 
   it should "fail when toteutus not julkaistu" in {
@@ -873,6 +988,11 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
     initMockDepsWithToteutusOidAndTila(hk, "1.2.246.562.17.456", Poistettu)
     failsValidation(hk, "toteutusOid", nonExistent("Toteutusta", hk.toteutusOid))
+  }
+
+  it should "fail when jarjestyspaikkaOID not exist in tarjoaja-list" in {
+    val hk = max.copy(jarjestyspaikkaOid = Some(UnknownOid))
+    failsValidation(initMockSeq(hk), "jarjestyspaikkaOid", invalidJarjestyspaikkaOid(UnknownOid, hk.toteutusOid))
   }
 
   it should "fail when haku not existing" in {
@@ -893,22 +1013,9 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       valintaperusteId = Some(valintaperusteId2),
       metadata = Some(maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq()))
     )
-    failsValidation(initMockSeq(hk), "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId2))
+    when(hakukohdeDao.getDependencyInformation(hk)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
+    failsValidation(hk, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId2))
   }
-
-  private def initMockDepsWithValintaperusteParams(
-      hakukohde: Hakukohde,
-      valintaperusteId: UUID,
-      tila: Julkaisutila,
-      koulutustyyppi: Koulutustyyppi = Amm
-  ): Unit =
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
-      dependencies.filterKeys(_ == "1.2.246.562.17.123") + (
-        valintaperusteId.toString -> (tila, Some(koulutustyyppi), None, None, Some(
-          Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
-        ))
-      )
-    )
 
   it should "fail when valintaperuste not julkaistu" in {
     val hk = max.copy(
@@ -951,7 +1058,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   it should "fail for oppilaitosvirkailija when hakukohteen muokkaamisen takaraja has expired" in {
     val hk       = maxWithIds.copy(hakuOid = HakuOid("1.2.246.562.29.456"))
     val takaraja = inPast(100)
-    val expected = Seq(ValidationError("hakukohteenMuokkaamisenTakaraja", pastDateMsg(takaraja)))
     initMockSeqForHaku(
       haku.copy(hakukohteenLiittamisenTakaraja = Some(inPast(200)), hakukohteenMuokkaamisenTakaraja = Some(takaraja)),
       "1.2.246.562.29.456"
@@ -963,72 +1069,148 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  private def initMockDepsForKoulutustyyppi(
-      hakukohde: Hakukohde,
-      toteutusMetadata: ToteutusMetadata,
-      koulutusKoodiUrit: Option[Seq[String]] = None
-  ): Unit =
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
-      Map(
-        hakukohde.toteutusOid.s -> (Julkaistu, Some(toteutusMetadata.tyyppi), Some(
-          toteutusMetadata
-        ), koulutusKoodiUrit, None),
-        valintaperusteId.toString -> (Julkaistu, Some(toteutusMetadata.tyyppi), None, None, Some(
-          Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
-        ))
+  it should "fail if nimi given for amm-yhteishakukohde" in {
+    failsValidation(
+      initMockSeq(
+        max.copy(
+          hakuOid = yhteisHakuHakuOid,
+          hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")
+        )
+      ),
+      "nimi",
+      notEmptyMsg
+    )
+  }
+
+  it should "fail if hakukohdeKoodiUri not given for amm-yhteishakukohde" in {
+    failsValidation(
+      initMockSeq(
+        max.copy(
+          hakuOid = yhteisHakuHakuOid,
+          nimi = Map(),
+          hakukohdeKoodiUri = None
+        )
+      ),
+      "hakukohdeKoodiUri",
+      missingMsg
+    )
+  }
+
+  it should "fail when invalid hakukohdeKoodiUri for amm-yhteishakukohde with ammatillinenPerustutkintoErityisopetuksena " in {
+    val hk = max.copy(
+      hakuOid = yhteisHakuHakuOid,
+      nimi = Map(),
+      hakukohdeKoodiUri = Some("hakukohteeterammatillinenerityisopetus_66#1")
+    )
+    initMockDepsForKoulutustyyppi(
+      hk,
+      AmmToteutuksenMetatieto.copy(ammatillinenPerustutkintoErityisopetuksena = Some(true))
+    )
+    failsValidation(
+      hk,
+      "hakukohdeKoodiUri",
+      invalidHakukohdeKooriuri("hakukohteeterammatillinenerityisopetus_66#1", hakukohdeKoodistoAmmErityisopetus)
+    )
+  }
+
+  it should "fail when invalid hakukohdeKoodiUri for amm-yhteishakukohde" in {
+    failsValidation(
+      initMockSeq(
+        max.copy(
+          hakuOid = yhteisHakuHakuOid,
+          nimi = Map(),
+          hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1")
+        )
+      ),
+      "hakukohdeKoodiUri",
+      invalidHakukohdeKooriuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1", hakukohdeKoodistoPoJalkYhteishaku)
+    )
+  }
+
+  it should "fail when new tuva-hakukohde with nimi not matching toteutus" in {
+    val hk = max.copy(nimi = Map(Fi -> "pupppu fi", Sv -> "puppu sv"))
+    initMockDepsForKoulutustyyppi(hk, TuvaToteutuksenMetatieto)
+    failsValidation(
+      hk,
+      Seq(
+        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("Toteutus fi", "toteutuksella")),
+        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("Toteutus sv", "toteutuksella"))
       )
     )
+  }
+
+  private def assertFailuresForHakukohdeKoodiUriInsteadOfNimi(
+      toteutusMetadata: ToteutusMetadata,
+      hkLinja: Option[HakukohteenLinja] = None
+  ): Assertion = {
+    val hk = max.copy(
+      nimi = Map(),
+      hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"),
+      metadata = Some(maxMetadata.copy(hakukohteenLinja = hkLinja))
+    )
+    initMockDepsForKoulutustyyppi(hk, toteutusMetadata)
+    failsValidation(
+      hk,
+      Seq(
+        ValidationError("nimi", invalidKielistetty(Seq(Fi, Sv))),
+        ValidationError("hakukohdeKoodiUri", notMissingMsg(Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")))
+      )
+    )
+  }
+
+  it should "fail when hakukohdeKoodiUri given instead of nimi" in {
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(TuvaToteutuksenMetatieto)
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(AmmTutkinnonOsaToteutusMetadataHakemuspalvelu)
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(AmmOsaamisalaToteutusMetadataHakemuspalvelu)
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(
+      VapaaSivistystyoMuuToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru))
+    )
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(AmmMuuToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(
+      AikuistenPerusopetusToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru))
+    )
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(
+      AikuistenPerusopetusToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru))
+    )
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(LukioToteutuksenMetatieto, Some(LukioHakukohteenLinja))
+    assertFailuresForHakukohdeKoodiUriInsteadOfNimi(YoToteutuksenMetatieto)
+  }
+
+  private def assertFailureForLomaketyyppiNotAtaru(toteutusMetadata: ToteutusMetadata): Assertion = {
+    val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
+    initMockDepsForKoulutustyyppi(hk, toteutusMetadata)
+    failsValidation(hk, "toteutusOid", cannotLinkToHakukohde(hk.toteutusOid.s))
+  }
 
   it should "fail when hakulomaketyyppi not Ataru for AmmatillinenTutkinnonOsa-toteutus" in {
-    val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
-    initMockDepsForKoulutustyyppi(hk, AmmTutkinnonOsaToteutus.metadata.get)
-    failsValidation(hk, "toteutusOid", cannotLinkToHakukohde(hk.toteutusOid.s))
+    assertFailureForLomaketyyppiNotAtaru(AmmTutkinnonOsaToteutus.metadata.get)
   }
 
   it should "fail when hakulomaketyyppi not Ataru for AmmatillinenOsaamisala-toteutus" in {
-    val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
-    initMockDepsForKoulutustyyppi(hk, AmmOsaamisalaToteutus.metadata.get)
-    failsValidation(hk, "toteutusOid", cannotLinkToHakukohde(hk.toteutusOid.s))
+    assertFailureForLomaketyyppiNotAtaru(AmmOsaamisalaToteutus.metadata.get)
   }
 
   it should "fail when hakulomaketyyppi not Ataru for AmmMuu-toteutus" in {
-    val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
-    initMockDepsForKoulutustyyppi(hk, AmmMuuToteutus.metadata.get)
-    failsValidation(hk, "toteutusOid", cannotLinkToHakukohde(hk.toteutusOid.s))
+    assertFailureForLomaketyyppiNotAtaru(AmmMuuToteutusMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru for VapaaSivistystyoMuu-toteutus" in {
-    val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
-    initMockDepsForKoulutustyyppi(hk, VapaaSivistystyoMuuToteutusMetatieto)
-    failsValidation(hk, "toteutusOid", cannotLinkToHakukohde(hk.toteutusOid.s))
+    assertFailureForLomaketyyppiNotAtaru(VapaaSivistystyoMuuToteutusMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru for AikuistenPerusopetus-toteutus" in {
-    val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
-    initMockDepsForKoulutustyyppi(hk, AikuistenPerusopetusToteutusMetatieto)
-    failsValidation(hk, "toteutusOid", cannotLinkToHakukohde(hk.toteutusOid.s))
-  }
-
-  it should "fail when hakukohteenLinja not defined for Lukio-toteutus" in {
-    val hk = max.copy(
-      toteutusOid = ToteutusOid("1.2.246.562.17.456"),
-      metadata = Some(maxMetadata.copy(hakukohteenLinja = None))
-    )
-    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto, Some(Seq("koulutus_301101#1")))
-    failsValidation(hk, "metadata.hakukohteenLinja", missingMsg)
+    assertFailureForLomaketyyppiNotAtaru(AikuistenPerusopetusToteutusMetatieto)
   }
 
   it should "fail when valintaperusteId not defined for toisen asteen yhteishaku" in {
     val hk = max.copy(
-      hakuOid = HakuOid("1.2.246.562.29.456"),
+      hakuOid = yhteisHakuHakuOid,
+      nimi = Map(Fi -> "Lukio", Sv -> "Gymnasium"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja))),
       valintaperusteId = None
     )
-    initMockSeqForHaku(
-      haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")),
-      "1.2.246.562.29.456"
-    )
-    failsValidation(initMockSeq(hk), "valintaperusteId", missingMsg)
+    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto)
+    failsValidation(hk, "valintaperusteId", missingMsg)
   }
 
   it should "fail when hakukohde specific hakulomake used but hakulomaketyyppi of haku not 'Muu'" in {
@@ -1045,11 +1227,196 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "fail when kaksoistutkinto selected but not allowed" in {
     val hk = max.copy(
+      nimi = Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"),
       toteutusOid = ToteutusOid("1.2.246.562.17.456"),
       toinenAsteOnkoKaksoistutkinto = Some(true)
     )
-    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto, Some(Seq("koulutus_301104#1")))
+    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto, Seq("koulutus_301104#1"))
     failsValidation(hk, "toinenAsteOnkoKaksoistutkinto", toinenAsteOnkoKaksoistutkintoNotAllowed)
+  }
+
+  "Lukio-hakukohde validation" should "fail when hakukohteenLinja not defined for Lukio-toteutus" in {
+    val hk = max.copy(
+      toteutusOid = ToteutusOid("1.2.246.562.17.456"),
+      metadata = Some(maxMetadata.copy(hakukohteenLinja = None))
+    )
+    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto, Seq("koulutus_301101#1"))
+    failsValidation(hk, "metadata.hakukohteenLinja", missingMsg)
+  }
+
+  private def assertFailuresForHkLinjaForNonLukio(
+      toteutusMetadata: ToteutusMetadata,
+      nimi: Kielistetty = Map(Fi -> "nimi", Sv -> "nimi sv"),
+      hakukohdeKoodiUri: Option[String] = None
+  ): Assertion = {
+    val hk = max.copy(
+      toteutusOid = ToteutusOid("1.2.246.562.17.456"),
+      hakuOid = yhteisHakuHakuOid,
+      nimi = nimi,
+      hakukohdeKoodiUri = hakukohdeKoodiUri,
+      metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
+    )
+    initMockDepsForKoulutustyyppi(hk, toteutusMetadata)
+    failsValidation(hk, "metadata.hakukohteenLinja", notMissingMsg(Some(LukioHakukohteenLinja)))
+  }
+
+  it should "fail when hakukohteenLinja defined for other than Lukio-toteutus" in {
+    assertFailuresForHkLinjaForNonLukio(
+      AmmToteutuksenMetatieto,
+      Map(),
+      Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")
+    )
+    assertFailuresForHkLinjaForNonLukio(
+      TuvaToteutuksenMetatieto,
+      Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv")
+    )
+    assertFailuresForHkLinjaForNonLukio(AmmTutkinnonOsaToteutusMetadataHakemuspalvelu)
+    assertFailuresForHkLinjaForNonLukio(AmmOsaamisalaToteutusMetadataHakemuspalvelu)
+    assertFailuresForHkLinjaForNonLukio(AmmMuuToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))
+    assertFailuresForHkLinjaForNonLukio(VapaaSivistystyoMuuToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))
+    assertFailuresForHkLinjaForNonLukio(AmmOsaamisalaToteutusMetadataHakemuspalvelu)
+    assertFailuresForHkLinjaForNonLukio(AikuistenPerusopetusToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))
+    assertFailuresForHkLinjaForNonLukio(YoToteutuksenMetatieto)
+  }
+
+  it should "fail when hakukohteenLinja defined for lukio DIA- or EB -koulutus" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "Toteutus fi", Sv -> "Toteutus sv"),
+      metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
+    )
+    initMockDepsForKoulutustyyppi(lkHakukohde, LukioToteutuksenMetatieto, Seq("koulutus_301104#1"))
+    failsValidation(lkHakukohde, "metadata.hakukohteenLinja", notMissingMsg(Some(LukioHakukohteenLinja)))
+  }
+
+  it should "fail when invalid name for lukio DIA- or EB -koulutus" in {
+    val lkHakukohde = max.copy(nimi = Map(Fi -> "nimi fi", Sv -> "nimi sv"))
+    initMockDepsForKoulutustyyppi(lkHakukohde, LukioToteutuksenMetatieto, Seq("koulutus_301104#1"))
+    failsValidation(
+      lkHakukohde,
+      Seq(
+        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("Toteutus fi", "toteutuksella")),
+        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("Toteutus sv", "toteutuksella"))
+      )
+    )
+  }
+
+  it should "fail when invalid name for lukio-hakukohde with yleislinja" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+      metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    failsValidation(
+      lkHakukohde,
+      Seq(
+        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("Lukio", "toteutuksen yleislinjalla")),
+        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("Gymnasium", "toteutuksen yleislinjalla"))
+      )
+    )
+  }
+
+  it should "fail when invalid name for lukio-hakukohde with lukiopainotukset" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+      metadata = Some(
+        maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1"))))
+      )
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    failsValidation(
+      lkHakukohde,
+      Seq(
+        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("painotus", "hakukohteen linjalla")),
+        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("painotus sv", "hakukohteen linjalla"))
+      )
+    )
+  }
+
+  it should "fail when invalid name for lukio-hakukohde with erityisetKoulutustehtavat" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+      metadata = Some(
+        maxMetadata.copy(hakukohteenLinja =
+          Some(LukioHakukohteenLinja.copy(linja = Some("lukiolinjaterityinenkoulutustehtava_1#1")))
+        )
+      )
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    failsValidation(
+      lkHakukohde,
+      Seq(
+        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("erityistehtävä", "hakukohteen linjalla")),
+        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("erityistehtävä sv", "hakukohteen linjalla"))
+      )
+    )
+  }
+
+  it should "fail when koodisto-service query failed when checking hakukohde name" in {
+    val lkHakukohde = max.copy(
+      metadata = Some(
+        maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("failure"))))
+      )
+    )
+    initMockDepsForKoulutustyyppi(
+      lkHakukohde,
+      LukioToteutuksenMetatieto.copy(painotukset = List(LukiolinjaTieto(koodiUri = "failure", Map())))
+    )
+    failsValidation(lkHakukohde, "metadata.hakukohteenLinja.linja", koodistoServiceFailureMsg)
+  }
+
+  it should "fail when invalid HakukohteenLinja" in {
+    val hk = max.copy(
+      metadata = Some(
+        maxMetadata.copy(hakukohteenLinja =
+          Some(
+            HakukohteenLinja(
+              linja = Some("höttö"),
+              alinHyvaksyttyKeskiarvo = Some(-8.2),
+              lisatietoa = vainSuomeksi,
+              painotetutArvosanat = Seq(
+                PainotettuOppiaine(None, None),
+                PainotettuOppiaine(koodiUrit = Some(OppiaineKoodiUrit(None, None)), Some(-2.8)),
+                PainotettuOppiaine(
+                  Some(OppiaineKoodiUrit(Some("puppu"), Some("huttu"))),
+                  Some(2.5)
+                ),
+                PainotettuOppiaine(
+                  Some(OppiaineKoodiUrit(Some("painotettavatoppiaineetlukiossa_XX"), Some("kieli_XX"))),
+                  Some(2.8)
+                )
+              )
+            )
+          )
+        )
+      ),
+      nimi = Map(Fi -> "Lukio", Sv -> "Gymnasium")
+    )
+    initMockDepsForKoulutustyyppi(hk, LukioToteutuksenMetatieto)
+    failsValidation(
+      hk,
+      Seq(
+        ValidationError("metadata.hakukohteenLinja.linja", invalidHakukohteenLinja("höttö")),
+        ValidationError("metadata.hakukohteenLinja.alinHyvaksyttyKeskiarvo", notNegativeMsg),
+        ValidationError("metadata.hakukohteenLinja.lisatietoa", kielistettyWoSvenska),
+        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[0].koodiUrit", missingMsg),
+        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[0].painokerroin", missingMsg),
+        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[1].oppiaine", missingMsg),
+        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[1].painokerroin", notNegativeMsg),
+        ValidationError("metadata.hakukohteenLinja.painotetutArvosanat[2].oppiaine", invalidOppiaineKoodiuri("puppu")),
+        ValidationError(
+          "metadata.hakukohteenLinja.painotetutArvosanat[2].kieli",
+          invalidOppiaineKieliKoodiuri("huttu")
+        ),
+        ValidationError(
+          "metadata.hakukohteenLinja.painotetutArvosanat[3].oppiaine",
+          invalidOppiaineKoodiuri("painotettavatoppiaineetlukiossa_XX")
+        ),
+        ValidationError(
+          "metadata.hakukohteenLinja.painotetutArvosanat[3].kieli",
+          invalidOppiaineKieliKoodiuri("kieli_XX")
+        )
+      )
+    )
   }
 
   "ValintaperusteenValintakokeidenLisatilaisuudet validation" should "fail when valintaperusteId not defined" in {

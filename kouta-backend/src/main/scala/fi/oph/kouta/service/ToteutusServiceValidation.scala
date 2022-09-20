@@ -6,14 +6,13 @@ import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.ToteutusServiceUtil
 import fi.oph.kouta.validation
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
-
-import java.util.regex.Pattern
 
 object ToteutusServiceValidation
     extends ToteutusServiceValidation(
@@ -57,6 +56,8 @@ class ToteutusServiceValidation(
   }
 
   override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
+    val koulutusOidValid = assertValid(toteutus.koulutusOid, "koulutusOid")
+    val koulutus = if (koulutusOidValid.isEmpty) koulutusDAO.get(toteutus.koulutusOid) else None
     val commonErrors = and(
       toteutus.validate(),
       validateIfTrueOrElse(
@@ -64,11 +65,10 @@ class ToteutusServiceValidation(
         assertNotOptional(toteutus.oid, "oid"),
         assertNotDefined(toteutus.oid, "oid")
       ),
-      validateTarjoajat(toteutus.tarjoajat, oldToteutus.map(_.tarjoajat).getOrElse(List())),
       validateIfDefined[String](toteutus.teemakuva, assertValidUrl(_, "teemakuva")),
       validateIfSuccessful(
-        assertValid(toteutus.koulutusOid, "koulutusOid"),
-        validateKoulutusIntegrity(toteutus)
+        koulutusOidValid,
+        validateKoulutusIntegrity(toteutus, koulutus)
       )
     )
 
@@ -79,8 +79,14 @@ class ToteutusServiceValidation(
       case Some(metadata) =>
         val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
           Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, KkOpintojakso)
-
+        val koulutusTyyppi = metadata.tyyppi
+        val koulutusKoodiUrit = koulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq())
         and(
+          validateIfTrueOrElse(
+            koulutusTyyppi == Lk && !isEBlukiokoulutus(koulutusKoodiUrit) && !isDIAlukiokoulutus(koulutusKoodiUrit),
+            assertEmptyKielistetty(toteutus.nimi, "nimi"),
+            validateKielistetty(toteutus.kielivalinta, toteutus.nimi, "nimi")
+          ),
           assertFalse(
             toteutusDiffResolver.koulutustyyppiChanged(),
             "metadata.tyyppi",
@@ -90,6 +96,8 @@ class ToteutusServiceValidation(
             validateIfFalse(metadata.allowSorakuvaus, assertNotDefined(toteutus.sorakuvausId, "sorakuvausId")),
             validateSorakuvausIntegrity(toteutus.sorakuvausId, toteutus.tila, metadata.tyyppi, "metadata.tyyppi")
           ),
+          validateTarjoajat(koulutusTyyppi, toteutus.tarjoajat, oldToteutus.map(_.tarjoajat).getOrElse(List())),
+          validateIfJulkaistu(vCtx.tila, assertNotEmpty(toteutus.tarjoajat, "tarjoajat")),
           validateIfDefined[Opetus](
             metadata.opetus,
             opetus => validateOpetus(vCtx, toteutusDiffResolver, opetus)
@@ -97,7 +105,7 @@ class ToteutusServiceValidation(
           validateIfNonEmpty[Yhteyshenkilo](
             metadata.yhteyshenkilot,
             "metadata.yhteyshenkilot",
-            _.validate(vCtx.tila, vCtx.kielivalinta, _)
+            _.validate(vCtx, _)
           ),
           validateIfJulkaistu(
             vCtx.tila,
@@ -136,20 +144,19 @@ class ToteutusServiceValidation(
               tutkintoonJohtamatonToteutusMetadata match {
                 case m: KkOpintojaksoToteutusMetadata =>
                   and(
-                    validateTutkintoonJohtamatonMetadata(vCtx.tila, vCtx.kielivalinta, m),
+                    validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintojaksolla ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
                   )
                 case m: KkOpintokokonaisuusToteutusMetadata =>
                   and(
-                    validateTutkintoonJohtamatonMetadata(vCtx.tila, vCtx.kielivalinta, m),
+                    validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintokokonaisuudella ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
                   )
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
-                    vCtx.tila,
-                    vCtx.kielivalinta,
+                    vCtx,
                     tutkintoonJohtamatonToteutusMetadata
                   )
               }
@@ -313,9 +320,9 @@ class ToteutusServiceValidation(
           koulutus.koulutuksetKoodiUri,
           path,
           (koodiUri, path) =>
-            assertKoulutustyyppiQueryResult(
+            assertKoulutuskoodiQueryResult(
               koodiUri,
-              Seq(ammatillinenPerustutkintoKoulutustyyppiKoodiUri),
+              AmmatillisetPerustutkintoKoodit,
               koulutusKoodiClient,
               path,
               validationContext,
@@ -328,26 +335,25 @@ class ToteutusServiceValidation(
   }
 
   private def validateTutkintoonJohtamatonMetadata(
-      tila: Julkaisutila,
-      kielivalinta: Seq[Kieli],
+      vCtx: ValidationContext,
       m: TutkintoonJohtamatonToteutusMetadata
   ) =
     and(
       validateIfNonEmpty(m.hakulomakeLinkki, "metadata.hakulomakeLinkki", assertValidUrl _),
-      validateIfDefined[Ajanjakso](m.hakuaika, _.validate(tila, kielivalinta, "metadata.hakuaika")),
+      validateIfDefined[Ajanjakso](m.hakuaika, _.validate(vCtx, "metadata.hakuaika")),
       validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
           assertNotOptional(m.hakutermi, "metadata.hakutermi"),
           assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
           validateIfTrue(
             m.hakulomaketyyppi.contains(MuuHakulomake),
             and(
-              validateKielistetty(kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta"),
-              validateKielistetty(kielivalinta, m.hakulomakeLinkki, "metadata.hakulomakeLinkki"),
+              validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta"),
+              validateKielistetty(vCtx.kielivalinta, m.hakulomakeLinkki, "metadata.hakulomakeLinkki"),
               validateOptionalKielistetty(
-                kielivalinta,
+                vCtx.kielivalinta,
                 m.lisatietoaValintaperusteista,
                 "metadata.lisatietoaValintaperusteista"
               ),
@@ -356,7 +362,7 @@ class ToteutusServiceValidation(
           ),
           validateIfTrue(
             m.hakulomaketyyppi.contains(EiSähköistä),
-            validateKielistetty(kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta")
+            validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta")
           )
         )
       )
@@ -542,8 +548,7 @@ class ToteutusServiceValidation(
     )
   }
 
-  private def validateKoulutusIntegrity(toteutus: Toteutus): IsValid = {
-    val koulutus = koulutusDAO.get(toteutus.koulutusOid)
+  private def validateKoulutusIntegrity(toteutus: Toteutus, koulutus: Option[Koulutus]): IsValid = {
     val (
       koulutusTila,
       koulutusTyyppi,
@@ -571,13 +576,19 @@ class ToteutusServiceValidation(
       case _                                                   => None
     }
 
+    val koulutustyypitRequiringToteutusAndKoulutusNamesEqual: Set[Koulutustyyppi] =
+      Set(AmmTutkinnonOsa, AmmOsaamisala, Telma, Tuva, VapaaSivistystyoOpistovuosi)
+
     and(
       validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),
       validateIfDefined[Koulutustyyppi](
         koulutusTyyppi,
         koulutusTyyppi =>
           and(
-            validateIfTrue(koulutusTyyppi != Lk, validateKielistetty(toteutus.kielivalinta, toteutus.nimi, "nimi")),
+            validateIfTrue(
+              koulutustyypitRequiringToteutusAndKoulutusNamesEqual.contains(koulutusTyyppi),
+              assertNimiMatchExternal(toteutus.nimi, koulutus.get.nimi, "nimi", "koulutuksessa")
+            ),
             validateIfDefined[ToteutusMetadata](
               toteutus.metadata,
               toteutusMetadata =>
