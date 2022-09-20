@@ -5,7 +5,8 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{HakuDiffResolver, IsValid, ValidationContext}
+import fi.oph.kouta.validation.{HakuDiffResolver, IsValid, NoErrors, ValidationContext}
+import fi.vm.sade.utils.slf4j.Logging
 
 import java.util.UUID
 
@@ -16,7 +17,8 @@ class HakuServiceValidation(
     hakuKoodiClient: HakuKoodiClient,
     hakemusPalveluClient: HakemusPalveluClient,
     hakukohdeDAO: HakukohdeDAO
-) extends ValidatingService[Haku] {
+) extends ValidatingService[Haku]
+    with Logging {
   private def isYhteisHaku(haku: Haku): Boolean =
     haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_01")
   private def isJatkuvaHaku(haku: Haku): Boolean =
@@ -83,20 +85,23 @@ class HakuServiceValidation(
       validateIfDefined[HakuMetadata](
         haku.metadata,
         validateMetadata(_, hakuDiffResolver, vCtx)
-      ),
-//      validateIfTrue(
-//        haku.hakulomaketyyppi.contains(Ataru),
-//        validateIfDefined[UUID](
-//          hakuDiffResolver.newAtaruId(),
-//          ataruId =>
-//            assertAtaruQueryResult(
-//              ataruId,
-//              hakemusPalveluClient.isExistingAtaruId,
-//              "hakulomakeAtaruId",
-//              unknownAtaruId(ataruId)
-//            )
-//        )
-//      ),
+      ), {
+        val ataruIdValid = validateIfTrue(
+          haku.hakulomaketyyppi.contains(Ataru),
+          validateIfDefined[UUID](
+            haku.hakulomakeAtaruId,
+            ataruId =>
+              assertAtaruQueryResult(
+                ataruId,
+                hakemusPalveluClient.isExistingAtaruId,
+                "hakulomakeAtaruId",
+                unknownAtaruId(ataruId)
+              )
+          )
+        )
+        logger.info("Would evaluate ataruId validation as " + ataruIdValid)
+        NoErrors
+      },
       validateIfJulkaistu(
         vCtx.tila,
         and(
@@ -124,7 +129,11 @@ class HakuServiceValidation(
       vCtx: ValidationContext
   ): IsValid = {
     and(
-      validateIfNonEmpty[Yhteyshenkilo](m.yhteyshenkilot, "metadata.yhteyshenkilot", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+      validateIfNonEmpty[Yhteyshenkilo](
+        m.yhteyshenkilot,
+        "metadata.yhteyshenkilot",
+        _.validate(vCtx.tila, vCtx.kielivalinta, _)
+      ),
       validateIfNonEmpty[Ajanjakso](
         m.tulevaisuudenAikataulu,
         "metadata.tulevaisuudenAikataulu",

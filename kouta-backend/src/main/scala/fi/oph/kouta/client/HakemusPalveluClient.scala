@@ -50,6 +50,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     var existingIdsInCache = ataruIdCache.get("")
     var querySuccess = true
     if (existingIdsInCache.isEmpty) {
+      logger.info("Reading ids from hakemuspalvelu")
       val url = urlProperties.url("hakemuspalvelu-service.forms")
       try {
         Uri.fromString(url)
@@ -82,6 +83,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     }
     querySuccess match {
       case true =>
+        logger.info("Allowed ataruIds: " + existingIdsInCache.getOrElse(Seq()))
         fromBoolean(existingIdsInCache.getOrElse(Seq()).contains(ataruId.toString))
       case _ => queryFailed
     }
