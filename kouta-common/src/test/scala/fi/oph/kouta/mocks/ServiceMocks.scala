@@ -153,9 +153,9 @@ trait ServiceMockBase extends UrlProperties {
   "refaktoroitu käyttämään edellä mainittuja.", "kouta-common")
 trait ServiceMocks extends Logging {
 
-  var mockServer: Option[ClientAndServer] = None
+  var mockServer: Option[ClientAndServer]  = None
   var urlProperties: Option[OphProperties] = None
-  var mockPort: Int = _
+  var mockPort: Int                        = _
 
   def startServiceMocking(port: Int = 12345): Unit = {
     mockServer = Some(startClientAndServer(port))
@@ -171,27 +171,41 @@ trait ServiceMocks extends Logging {
 
   protected def getMockPath(key: String, param: Option[String] = None): String = urlProperties match {
     case None => "/"
-    case Some(up) => new java.net.URL(param match {
-      case None => up.url(key)
-      case Some(p) => up.url(key, p)
-    }).getPath
+    case Some(up) =>
+      new java.net.URL(param match {
+        case None    => up.url(key)
+        case Some(p) => up.url(key, p)
+      }).getPath
   }
 
+  protected def getMockPath(key: String, params: Seq[String]): String = urlProperties match {
+    case None     => "/"
+    case Some(up) => new java.net.URL(if (params.nonEmpty) up.url(key, params: _*) else up.url(key)).getPath
+  }
   protected def responseFromResource(filename: String): String =
-    Source.fromInputStream(
-      getClass.getClassLoader.getResourceAsStream(s"data/$filename.json")
-    ).mkString
+    Source
+      .fromInputStream(
+        getClass.getClassLoader.getResourceAsStream(s"data/$filename.json")
+      )
+      .mkString
 
   private def mockRequest(request: HttpRequest, responseString: String, statusCode: Int) = {
-    mockServer.foreach(_.when(
-      request
-    ).respond(
-      response(responseString).withStatusCode(statusCode)
-    ))
+    mockServer.foreach(
+      _.when(
+        request
+      ).respond(
+        response(responseString).withStatusCode(statusCode)
+      )
+    )
     request
   }
 
-  protected def mockGet(path:String, params:Map[String,String], responseString:String, statusCode:Int = 200): HttpRequest = {
+  protected def mockGet(
+      path: String,
+      params: Map[String, String],
+      responseString: String,
+      statusCode: Int = 200
+  ): HttpRequest = {
     val req: HttpRequest = request()
       .withMethod("GET")
       //.withSecure(true) TODO: https toimimaan
@@ -200,7 +214,13 @@ trait ServiceMocks extends Logging {
     mockRequest(req, responseString, statusCode)
   }
 
-  private def postRequest[B <: AnyRef](path: String, body: B, params: Map[String, String], headers: Map[String, String], matchType: MatchType)(implicit jsonFormats: Formats): HttpRequest =
+  private def postRequest[B <: AnyRef](
+      path: String,
+      body: B,
+      params: Map[String, String],
+      headers: Map[String, String],
+      matchType: MatchType
+  )(implicit jsonFormats: Formats): HttpRequest =
     request()
       .withMethod("POST")
       .withPath(path)
@@ -208,26 +228,28 @@ trait ServiceMocks extends Logging {
       .withHeaders(headers.map(x => header(x._1, x._2)).toList.asJava)
       .withBody(JsonBody.json(write[B](body), matchType).asInstanceOf[Body[_]])
 
-  protected def mockPost[B <: AnyRef](path: String,
-                                      body: B,
-                                      params: Map[String, String] = Map.empty,
-                                      responseString: String,
-                                      statusCode: Int = 200,
-                                      headers: Map[String, String] = Map.empty,
-                                      matchType: MatchType = MatchType.STRICT
-                                     )(implicit jsonFormats: Formats): HttpRequest = {
+  protected def mockPost[B <: AnyRef](
+      path: String,
+      body: B,
+      params: Map[String, String] = Map.empty,
+      responseString: String,
+      statusCode: Int = 200,
+      headers: Map[String, String] = Map.empty,
+      matchType: MatchType = MatchType.STRICT
+  )(implicit jsonFormats: Formats): HttpRequest = {
     val req: HttpRequest = postRequest(path, body, params, headers, matchType)
     mockRequest(req, responseString, statusCode)
   }
 
-  protected def mockPut[B <: AnyRef](path: String,
-                                     body: B,
-                                     params: Map[String, String] = Map.empty,
-                                     responseString: String,
-                                     statusCode: Int = 200,
-                                     headers: Map[String, String] = Map.empty,
-                                     matchType: MatchType = MatchType.STRICT
-                                    )(implicit jsonFormats: Formats): HttpRequest = {
+  protected def mockPut[B <: AnyRef](
+      path: String,
+      body: B,
+      params: Map[String, String] = Map.empty,
+      responseString: String,
+      statusCode: Int = 200,
+      headers: Map[String, String] = Map.empty,
+      matchType: MatchType = MatchType.STRICT
+  )(implicit jsonFormats: Formats): HttpRequest = {
     val req: HttpRequest = postRequest(path, body, params, headers, matchType).withMethod("PUT")
     mockRequest(req, responseString, statusCode)
   }

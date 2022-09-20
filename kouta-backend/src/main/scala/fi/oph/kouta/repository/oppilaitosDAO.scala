@@ -14,6 +14,7 @@ trait OppilaitosDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getUpdateActions(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]]
 
   def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)]
+  def getTila(oppilaitosOid: OrganisaatioOid): Option[Julkaisutila]
 }
 
 object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {

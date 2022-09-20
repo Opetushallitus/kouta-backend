@@ -100,52 +100,83 @@ class ToteutusService(
     }
   }
 
-  private def enrichToteutusMetadata(toteutus: Toteutus): Option[ToteutusMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(toteutus.muokkaaja)
+  private def withMData(toteutus: Toteutus, toteutusMetadata: ToteutusMetadata): Toteutus =
+    toteutus.copy(metadata = Some(toteutusMetadata))
+
+  private def withMDataAndKoulutusNimi(
+      toteutus: Toteutus,
+      toteutusMetadata: ToteutusMetadata,
+      koulutus: Option[(Koulutus, Instant)]
+  ): Toteutus =
+    toteutus.copy(
+      nimi = koulutus match {
+        case Some((koulutus, _)) => NameHelper.mergeNames(koulutus.nimi, toteutus.nimi, toteutus.kielivalinta)
+        case _                   => toteutus.nimi
+      },
+      metadata = Some(toteutusMetadata)
+    )
+
+  private def enrichToteutus(t: Toteutus, koulutus: Option[(Koulutus, Instant)]): Toteutus = {
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(t.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
-    toteutus.metadata match {
+    t.metadata match {
       case Some(metadata) =>
         metadata match {
           case yoMetadata: YliopistoToteutusMetadata =>
-            Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMData(t, yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case amkMetadata: AmmattikorkeakouluToteutusMetadata =>
-            Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMData(t, amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammOpeErityisopeJaOpoToteutusMetadata: AmmOpeErityisopeJaOpoToteutusMetadata =>
-            Some(ammOpeErityisopeJaOpoToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMData(t, ammOpeErityisopeJaOpoToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case opePedagOpinnotToteutusMetadata: OpePedagOpinnotToteutusMetadata =>
-            Some(opePedagOpinnotToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMData(t, opePedagOpinnotToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case ammMetadata: AmmatillinenToteutusMetadata =>
-            Some(ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMData(t, ammMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
             tutkintoonJohtamatonToteutusMetadata match {
               case ammTutkinnonOsaMetadata: AmmatillinenTutkinnonOsaToteutusMetadata =>
-                Some(ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMDataAndKoulutusNimi(
+                  t,
+                  ammTutkinnonOsaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)),
+                  koulutus
+                )
               case ammOsaamisalaMetadata: AmmatillinenOsaamisalaToteutusMetadata =>
-                Some(ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMDataAndKoulutusNimi(
+                  t,
+                  ammOsaamisalaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)),
+                  koulutus
+                )
               case ammatillinenMuuToteutusMetadata: AmmatillinenMuuToteutusMetadata =>
-                Some(ammatillinenMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMData(t, ammatillinenMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case kkOpintojaksoMetadata: KkOpintojaksoToteutusMetadata =>
-                Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMData(t, kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata =>
-                Some(vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMData(t, vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case aikuistenPerusopetusToteutusMetadata: AikuistenPerusopetusToteutusMetadata =>
-                Some(aikuistenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMData(
+                  t,
+                  aikuistenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija))
+                )
               case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusToteutusMetadata =>
-                Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMData(t, kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
           case lukioMetadata: LukioToteutusMetadata =>
-            Some(lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMData(t, lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case tuvaMetadata: TuvaToteutusMetadata =>
-            Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMDataAndKoulutusNimi(t, tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)), koulutus)
           case telmaMetadata: TelmaToteutusMetadata =>
-            Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMDataAndKoulutusNimi(t, telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)), koulutus)
           case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiToteutusMetadata =>
-            Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMDataAndKoulutusNimi(
+              t,
+              vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)),
+              koulutus
+            )
           case erikoislaakariToteutusMetadata: ErikoislaakariToteutusMetadata =>
-            Some(erikoislaakariToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            withMData(t, erikoislaakariToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
-      case None => None
+      case None => t.copy(metadata = None)
     }
   }
 
@@ -165,20 +196,31 @@ class ToteutusService(
       enrichedToteutus,
       AuthorizationRules(
         roleEntity.readRoles,
-        allowAccessToParentOrganizations = true,
         additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)
       )
     )
   }
 
   def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
-    authorizePut(toteutus) { t =>
-      val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
-      val enrichedToteutus                           = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, None, authenticated) { t =>
+    authorizePut(
+      toteutus,
+      AuthorizationRules(
+        roleEntity.createRoles,
+        false,
+        Some(AuthorizedToAllOfGivenOrganizationsRule),
+        toteutus.tarjoajat
+      )
+    ) { t =>
+      val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
+      val enrichedToteutus         = enrichToteutus(t, koulutusWithLastModified)
+      toteutusServiceValidation.withValidation(enrichedToteutus, None) { t =>
         doPut(
           t,
-          koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), Set())
+          koulutusService.getUpdateTarjoajatActions(
+            koulutusWithLastModified.getOrElse(throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")),
+            getTarjoajienOppilaitokset(toteutus),
+            Set()
+          )
         )
       }
     }.oid.get
@@ -204,13 +246,13 @@ class ToteutusService(
   }
 
   def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
-    val toteutusWithTime          = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
-    val rules: AuthorizationRules = getAuthorizationRulesForUpdate(toteutusWithTime, toteutus)
+    val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
+    val rules            = getAuthorizationRulesForUpdate(toteutusWithTime, toteutus)
 
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
-      val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
-      val enrichedToteutus = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus), authenticated) { t =>
+      val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
+      val enrichedToteutus         = enrichToteutus(t, koulutusWithLastModified)
+      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(
@@ -218,7 +260,7 @@ class ToteutusService(
           notModifiedSince,
           oldToteutus,
           koulutusService.getUpdateTarjoajatActions(
-            t.koulutusOid,
+            koulutusWithLastModified.getOrElse(throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")),
             getTarjoajienOppilaitokset(t),
             getDeletableTarjoajienOppilaitokset(t, deletedTarjoajat)
           )
@@ -239,7 +281,7 @@ class ToteutusService(
         } else {
           AuthorizationRules(
             roleEntity.updateRoles,
-            allowAccessToParentOrganizations = true,
+            overridingAuthorizationRule = Some(AuthorizedToAllOfGivenOrganizationsRule),
             additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)
           )
         }

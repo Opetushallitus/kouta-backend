@@ -58,6 +58,7 @@ trait ToteutusFixture extends KoulutusFixture with AccessControlSpec with Defaul
   def toteutus(koulutusOid: String, tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Toteutus =
     toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = organisaatioOid, tila = tila)
   def tuvaToteutus(koulutusOid: String): Toteutus = tuvaToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
+  def lukioToteutus(koulutusOid: String): Toteutus = LukioToteutus.copy(koulutusOid = KoulutusOid(koulutusOid), nimi = Map())
   def toteutus(oid:String, koulutusOid:String, externalId: String): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), tila = Tallennettu, externalId = Some(externalId))
 
   implicit val toteutusEquality: Equality[Toteutus] = (a: Toteutus, b: Any) => b match {
