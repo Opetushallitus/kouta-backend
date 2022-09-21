@@ -488,6 +488,7 @@ case class TietoaOpiskelusta(otsikkoKoodiUri: String, teksti: Kielistetty) exten
 }
 
 case class OppilaitoksenOsaMetadata(wwwSivu: Option[NimettyLinkki] = None,
+                                    hakijapalveluidenYhteystiedot: Option[Yhteystieto] = None,
                                     opiskelijoita: Option[Int] = None,
                                     kampus: Kielistetty = Map(),
                                     esittely: Kielistetty = Map(),
