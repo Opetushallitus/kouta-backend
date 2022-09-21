@@ -118,10 +118,10 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
         ("painotettavatoppiaineetlukiossa_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_a1kaikki") should equal(itemFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3kaikki") should equal(itemFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_X1kaikki") should equal(itemNotFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetpäiväkodissa_X1kaikki") should equal(itemNotFound)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_a1") should equal(itemFound)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3") should equal(itemFound)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_X1") should equal(itemNotFound)
+    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetpäiväkodissa_X1") should equal(itemNotFound)
   }
 
   "Finding kieliKoodiUri" should "return true when koodiUri exists" in {
