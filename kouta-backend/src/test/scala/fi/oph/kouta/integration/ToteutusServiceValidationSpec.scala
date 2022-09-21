@@ -1,20 +1,26 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
-import fi.oph.kouta.TestOids.{AmmOid, LonelyOid, LukioOid, OtherOid, UnknownOid}
+import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{OrganisaatioService, ToteutusServiceValidation}
+import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
+import fi.oph.kouta.service.{KoutaValidationException, OrganisaatioService, OrganizationAuthorizationFailedException, ToteutusServiceValidation}
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{BaseValidationSpec, ValidationError, ammatillinenPerustutkintoKoulutustyyppiKoodiUri}
 import org.scalatest.Assertion
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
+import java.net.InetAddress
 import java.time.LocalDateTime
 import java.util.UUID
+import scala.util.{Failure, Try}
 
 class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   val koulutusKoodiClient = mock[KoulutusKoodiClient]
@@ -44,6 +50,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
   val toteutusOid  = ToteutusOid("1.2.246.562.17.00000000000000000123")
   val toteutusOid2 = ToteutusOid("1.2.246.562.17.00000000000000000124")
   val toteutusOid3 = ToteutusOid("1.2.246.562.17.00000000000000000125")
+  val toteutusOid4 = ToteutusOid("1.2.246.562.17.00000000000000000126")
 
   val existingToteutus = JulkaistuAmmToteutus.copy(oid = Some(toteutusOid))
   val koulutusOid1 = KoulutusOid("1.2.246.562.13.00000000000000000997")
@@ -52,6 +59,17 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
 
   val invalidKoulutuksetKoodiUri = "koulutus_XXX#1"
   val validKoulutuksetKoodiUri = "koulutus_371101#1"
+
+  val authenticatedNonPaakayttaja = Authenticated(
+    UUID.randomUUID().toString,
+    CasSession(
+      ServiceTicket("ST-123"),
+      "1.2.3.1234",
+      Set("APP_KOUTA", "APP_KOUTA_TOTEUTUS_READ", s"APP_KOUTA_TOTEUTUS_READ_${ChildOid}").map(Authority(_))
+    ),
+    "testAgent",
+    InetAddress.getByName("127.0.0.1")
+  )
 
   private def ammToteutusWithOpetusParameters(
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_1#1"),
@@ -235,6 +253,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_ES#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_ET#1")).thenAnswer(itemFound)
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)).thenAnswer((Seq(ChildOid), Seq(Amk)))
   }
 
   "Validation" should "succeed when new valid toteutus" in {
@@ -360,7 +379,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     failModifyValidation(lukioToteutus, lukioToteutus, Seq(ValidationError("oid", missingMsg)))
   }
 
-  it should "fail if metadata missing from julkaistu totetutus" in {
+  it should "fail if metadata missing from julkaistu toteutus" in {
     failValidation(
       JulkaistuAmmToteutus.copy(metadata = None),
       "metadata",
@@ -914,18 +933,28 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     )
   }
 
-  it should "fail if one of the attached toteutus is not opintojakso" in {
-    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
-    val lukioToteutusWithOid = lukioToteutus.copy(oid = Some(toteutusOid2))
-    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+  def failsOpintojaksotValidation(toteutus: Toteutus, oldToteutus: Toteutus, expected: Seq[ValidationError]): Assertion =
+    Try(validator.withValidation(toteutus, Some(oldToteutus), authenticatedNonPaakayttaja)(t => t)) match {
+      case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
+      case Failure(_)                                      => fail("Expecting validation failure, but it succeeded")
+    }
+
+  it should "fail if attached toteutus is not opintojakso" in {
+    val lukioOppilaitosOid = ChildOid
+    val lukioToteutusOid = toteutusOid2
+    val lukioToteutusWithOid = lukioToteutus.copy(oid = Some(lukioToteutusOid), organisaatioOid = lukioOppilaitosOid)
+    when(toteutusDao.get(List(lukioToteutusOid)))
       .thenAnswer(
-        Seq(lukioToteutusWithOid, opintojaksoToteutusWithOid)
+        Seq(lukioToteutusWithOid)
       )
 
-    failValidation(
-      kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
-      "metadata.liitetytOpintojaksot.koulutustyyppi",
-      invalidKoulutustyyppiForLiitettyOpintojakso(Seq(toteutusOid2))
+    val opintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(oid = Some(toteutusOid))
+    failsOpintojaksotValidation(
+      opintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(lukioToteutusOid)))),
+      opintokokonaisuusToteutus,
+      Seq(
+        ValidationError("metadata.liitetytOpintojaksot.koulutustyyppi", invalidKoulutustyyppiForLiitettyOpintojakso(Seq(lukioToteutusOid)))
+      )
     )
   }
 
@@ -937,30 +966,39 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
         Seq(opintojaksoToteutus1, opintojaksoToteutus2)
       )
 
-    failValidation(
-      kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
-      "metadata.liitetytOpintojaksot.julkaisutila",
-      invalidTilaForLiitettyOpintojaksoOnJulkaisu(Seq(toteutusOid2))
+    val opintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(oid = Some(toteutusOid3))
+    failsOpintojaksotValidation(
+      opintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
+      opintokokonaisuusToteutus,
+      Seq(
+        ValidationError("metadata.liitetytOpintojaksot.julkaisutila", invalidTilaForLiitettyOpintojaksoOnJulkaisu(Seq(toteutusOid2))
+        )
+      )
     )
   }
 
   it should "fail if attached toteutus is Arkistoitu or Poistettu" in {
-    val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
-    val opintojaksoToteutus2 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid2), tila = Arkistoitu)
-    val opintojaksoToteutus3 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid3), tila = Poistettu)
+    val organisaatioOid = ChildOid
+    val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid), organisaatioOid = organisaatioOid)
+    val opintojaksoToteutus2 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid2), organisaatioOid = organisaatioOid, tila = Arkistoitu)
+    val opintojaksoToteutus3 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid3), organisaatioOid = organisaatioOid, tila = Poistettu)
     when(toteutusDao.get(List(toteutusOid2, toteutusOid, toteutusOid3)))
       .thenAnswer(
         Seq(opintojaksoToteutus1, opintojaksoToteutus2, opintojaksoToteutus3)
       )
 
-    failValidation(
-      kkOpintokokonaisuusToteutus.copy(tila = Tallennettu, metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid, toteutusOid3)))),
-      "metadata.liitetytOpintojaksot.tila",
-      invalidTilaForLiitettyOpintojakso(Seq(toteutusOid2, toteutusOid3))
+    val opintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(oid = Some(toteutusOid4), tila = Tallennettu)
+    failsOpintojaksotValidation(
+      opintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid, toteutusOid3)))),
+      opintokokonaisuusToteutus,
+      Seq(
+        ValidationError("metadata.liitetytOpintojaksot.tila", invalidTilaForLiitettyOpintojakso(Seq(toteutusOid2, toteutusOid3))
+        )
+      )
     )
   }
 
-  it should "pass if attached toteutus is Tallennettu or Julkaistu when opintokokonaisuus is Tallennettu" in {
+  it should "pass if attached opintojakso is Tallennettu or Julkaistu when opintokokonaisuus is Tallennettu" in {
     val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
     val opintojaksoToteutus2 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid2), tila = Tallennettu)
     when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
@@ -973,18 +1011,46 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
     )
   }
 
-  it should "fail if one of the attached toteutus does not exist" in {
+  it should "fail if the attached opintojakso does not exist" in {
     val opintojaksoToteutus1 = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
-    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+    when(toteutusDao.get(List(toteutusOid, toteutusOid2)))
       .thenAnswer(
         Seq(opintojaksoToteutus1)
       )
 
-    failValidation(
-      kkOpintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
-      "metadata.liitetytOpintojaksot.notFound",
-      unknownOpintojakso(Seq(toteutusOid2))
+    val opintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(oid = Some(toteutusOid4))
+    failsOpintojaksotValidation(
+      opintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid, toteutusOid2)))),
+      opintokokonaisuusToteutus,
+      Seq(
+        ValidationError("metadata.liitetytOpintojaksot.notFound", unknownOpintojakso(Seq(toteutusOid2)))
+      )
     )
+  }
+
+  it should "fail if one of the attached opintojaksot does not belong to the same organization as opintokokonaisuus" in {
+    val opintojaksoOppilaitosOid = GrandChildOid
+    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid), organisaatioOid = opintojaksoOppilaitosOid)
+    val lukioOid = ChildOid
+    val lukioToteutusWithOid = lukioToteutus.copy(oid = Some(toteutusOid2), organisaatioOid = lukioOid)
+
+    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+      .thenAnswer(
+        Seq(lukioToteutusWithOid, opintojaksoToteutusWithOid)
+      )
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(opintojaksoOppilaitosOid))
+      .thenAnswer(
+        (Seq(opintojaksoOppilaitosOid), Seq(Amk))
+      )
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(lukioOid))
+      .thenAnswer(
+        (Seq(lukioOid), Seq(Lk))
+      )
+
+    val opintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(oid = Some(toteutusOid3))
+    assertThrows[OrganizationAuthorizationFailedException] {
+      validator.withValidation(opintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))), Some(opintokokonaisuusToteutus), authenticatedNonPaakayttaja)(t => t)
+    }
   }
 
   "Lukiototeutus validation" should "fail if invalid painotukset" in {
