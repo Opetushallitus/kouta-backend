@@ -40,43 +40,34 @@ class HakuServiceValidation(
       validateIfDefined[String](
         hakuDiffResolver.newHakutapaKoodiUri(),
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, HakutapaKoodiPattern, "hakutapaKoodiUri"),
-            assertKoodistoQueryResult(
-              koodiUri,
-              hakuKoodiClient.hakutapaKoodiUriExists,
-              "hakutapaKoodiUri",
-              vCtx,
-              invalidHakutapaKoodiUri(koodiUri)
-            )
+          assertKoodistoQueryResult(
+            koodiUri,
+            hakuKoodiClient.hakutapaKoodiUriExists,
+            "hakutapaKoodiUri",
+            vCtx,
+            invalidHakutapaKoodiUri(koodiUri)
           )
       ),
       validateIfDefined[String](
         hakuDiffResolver.newKohdejoukkoKoodiUri(),
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, KohdejoukkoKoodiPattern, "kohdejoukkoKoodiUri"),
-            assertKoodistoQueryResult(
-              koodiUri,
-              hakuKoodiClient.haunkohdejoukkoKoodiUriExists,
-              "kohdejoukkoKoodiUri",
-              vCtx,
-              invalidHaunKohdejoukkoKoodiUri(koodiUri)
-            )
+          assertKoodistoQueryResult(
+            koodiUri,
+            hakuKoodiClient.haunkohdejoukkoKoodiUriExists,
+            "kohdejoukkoKoodiUri",
+            vCtx,
+            invalidHaunKohdejoukkoKoodiUri(koodiUri)
           )
       ),
       validateIfDefined[String](
         hakuDiffResolver.newKohdejoukonTarkenneKoodiUri(),
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, KohdejoukonTarkenneKoodiPattern, "kohdejoukonTarkenneKoodiUri"),
-            assertKoodistoQueryResult(
-              koodiUri,
-              hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists,
-              "kohdejoukonTarkenneKoodiUri",
-              vCtx,
-              invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri)
-            )
+          assertKoodistoQueryResult(
+            koodiUri,
+            hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists,
+            "kohdejoukonTarkenneKoodiUri",
+            vCtx,
+            invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri)
           )
       ),
       validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
@@ -124,7 +115,11 @@ class HakuServiceValidation(
       vCtx: ValidationContext
   ): IsValid = {
     and(
-      validateIfNonEmpty[Yhteyshenkilo](m.yhteyshenkilot, "metadata.yhteyshenkilot", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+      validateIfNonEmpty[Yhteyshenkilo](
+        m.yhteyshenkilot,
+        "metadata.yhteyshenkilot",
+        _.validate(vCtx.tila, vCtx.kielivalinta, _)
+      ),
       validateIfNonEmpty[Ajanjakso](
         m.tulevaisuudenAikataulu,
         "metadata.tulevaisuudenAikataulu",

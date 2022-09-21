@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.oid._
 
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime, LocalTime}
+import java.util.UUID
 
 object TestData {
   def now(): LocalDateTime                   = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
@@ -749,7 +750,6 @@ object TestData {
   val Valintatapa1: Valintatapa = Valintatapa(
     nimi = kieliMap("Valintatapa1"),
     valintatapaKoodiUri = Some("valintatapajono_av#1"),
-    kuvaus = kieliMap("kuvaus"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko1, Taulukko2),
     kaytaMuuntotaulukkoa = false,
     kynnysehto = kieliMap("kynnysehto"),
@@ -760,7 +760,6 @@ object TestData {
   val Valintatapa2: Valintatapa = Valintatapa(
     nimi = kieliMap("Valintatapa2"),
     valintatapaKoodiUri = Some("valintatapajono_tv#1"),
-    kuvaus = kieliMap("kuvaus 2"),
     sisalto = Seq(SisaltoTeksti(kieliMap("Sisaltoteksti")), Taulukko2),
     kaytaMuuntotaulukkoa = true,
     kynnysehto = kieliMap("kynnysehto"),
@@ -1058,8 +1057,19 @@ object TestData {
   val JulkaistuAmkToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)))
 
-  val AmmOpettajaToteutus: Toteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = AmmOpeErityisopeJaOpo)))
+  val AmmOpettajaToteutuksenMetatieto = AmmOpeErityisopeJaOpoToteutusMetadata(
+    tyyppi = AmmOpeErityisopeJaOpo,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = Some(23),
+    isMuokkaajaOphVirkailija = Some(false),
+    hasJotpaRahoitus = Some(false)
+  )
+
+  val JulkaistuAmmOpettajaToteutus =
+    JulkaistuAmmToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto))
 
   val TuvaToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
     tyyppi = Tuva,
@@ -1423,5 +1433,18 @@ object TestData {
         organisaatiotyypit = List("organisaatiotyyppi_1")
       )
     )
+  )
+
+  val inPastAikaleima             = inPast(1000)
+  val inPastJakso                 = Ajanjakso(inPast(2000), Some(inPastAikaleima))
+  val inPastValintakoeTilaisuudet = List(Valintakoe1.tilaisuudet.head.copy(aika = Some(inPastJakso)))
+  val inPastValintakokeet         = List(Valintakoe1.copy(tilaisuudet = inPastValintakoeTilaisuudet))
+  def inPastLisaTilaisuudet(id: Option[UUID]): List[ValintakokeenLisatilaisuudet] =
+    List(ValintakokeenLisatilaisuudet1.copy(id = id, tilaisuudet = inPastValintakoeTilaisuudet))
+  val inPastKoulutuksenAlkamiskausi = KoulutuksenAlkamiskausi(
+    alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
+    koulutuksenAlkamispaivamaara = Some(inFuture(1000)),
+    koulutuksenPaattymispaivamaara = Some(inFuture(2000)),
+    koulutuksenAlkamisvuosi = Some("2020")
   )
 }

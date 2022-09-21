@@ -9,7 +9,7 @@ import scalacache.caffeine.CaffeineCache
 object HakuKoodiClient extends HakuKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
 class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
-  implicit val koodiUriCache   = CaffeineCache[Seq[KoodiUri]]
+  implicit val koodiUriCache = CaffeineCache[Seq[KoodiUri]]
 
   def hakukohdeKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto(koodiUri.split("_").head, koodiUri)
@@ -44,7 +44,10 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
   def haunkohdejoukonTarkenneKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("haunkohdejoukontarkenne", koodiUri)
 
-    private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
+  def valintatapaKoodiUriExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto("valintatapajono", koodiUri)
+
+  private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
     getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache) match {
       case resp if resp.success =>
         fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, resp.koodiUritInKoodisto))

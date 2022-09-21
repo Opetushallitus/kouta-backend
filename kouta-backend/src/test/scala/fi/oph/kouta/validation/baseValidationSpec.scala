@@ -10,46 +10,42 @@ import org.scalatest.{Assertion, BeforeAndAfterEach}
 
 import scala.util.{Failure, Try}
 
-abstract class BaseValidationSpec[E <: Validatable] extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-
+abstract class BaseServiceValidationSpec[E <: Validatable] extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
   def validator: ValidatingService[E] = null
 
-  override def afterEach = {
-    super.afterEach()
-    reset()
-  }
+  def passesValidation(e: E): Unit          = validator.withValidation(e, None)(e => e)
+  def passesValidation(e: E, oldE: E): Unit = validator.withValidation(e, Some(oldE))(e => e)
 
-  def passValidation(e: E): Unit          = validator.withValidation(e, None)(e => e)
-  def passValidation(e: E, oldE: E): Unit = validator.withValidation(e, Some(oldE))(e => e)
-
-  def failValidation(e: E, path: String, message: ErrorMessage): Assertion =
-    failValidation(e, Seq(ValidationError(path, message)))
-  def failStageChangeValidation(e: E, oldE: E, message: ErrorMessage): Assertion =
+  def failsValidation(e: E, path: String, message: ErrorMessage): Assertion =
+    failsValidation(e, Seq(ValidationError(path, message)))
+  def failsStageChangeValidation(e: E, oldE: E, message: ErrorMessage): Assertion =
     Try(validator.withValidation(e, Some(oldE))(e => e)) match {
       case Failure(exp: KoutaValidationException) =>
         exp.errorMessages should contain theSameElementsAs Seq(ValidationError("tila", message))
       case _ => fail("Expecting validation failure, but it succeeded")
     }
 
-  def failStageChangeValidation(e: E, oldE: E, expected: Seq[ValidationError]): Assertion =
+  def failsStageChangeValidation(e: E, oldE: E, expected: Seq[ValidationError]): Assertion =
     Try(validator.withValidation(e, Some(oldE))(e => e)) match {
       case Failure(exp: KoutaValidationException) =>
         exp.errorMessages should contain theSameElementsAs expected
       case _ => fail("Expecting validation failure, but it succeeded")
     }
 
-  def failValidation(e: E, expected: Seq[ValidationError]): Assertion =
+  def failsValidation(e: E, expected: Seq[ValidationError]): Assertion =
     Try(validator.withValidation(e, None)(e => e)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _                                      => fail("Expecting validation failure, but it succeeded")
     }
 
-  def failModifyValidation(e: E, oldE: E, expected: Seq[ValidationError]): Assertion =
+  def failsModifyValidation(e: E, oldE: E, expected: Seq[ValidationError]): Assertion =
     Try(validator.withValidation(e, Some(oldE))(e => e)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _                                      => fail("Expecting validation failure, but it succeeded")
     }
+}
 
+abstract class BaseValidationSpec[E <: Validatable] extends AnyFlatSpec {
   def passesValidation(e: E): Assertion = e.validate() should equal(NoErrors)
 
   def failsValidation(e: E, path: String, message: ErrorMessage): Assertion =

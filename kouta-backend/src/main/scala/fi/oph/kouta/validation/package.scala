@@ -16,6 +16,10 @@ package object validation {
     def getEntityDescriptionAllative(): String
   }
 
+  trait JulkaisuValidatableSubEntity {
+    def validateOnJulkaisu(path: String): IsValid
+  }
+
   trait ValidatableSubEntity {
     def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid
 

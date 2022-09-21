@@ -36,7 +36,7 @@ jobs:
         run: |
           cd kouta-backend/postgresql/docker
           docker build --tag kouta-postgres .
-          docker pull localstack/localstack:0.10.2
+          docker pull localstack/localstack:1.0.4
 
       - name: Build with Maven
         env:

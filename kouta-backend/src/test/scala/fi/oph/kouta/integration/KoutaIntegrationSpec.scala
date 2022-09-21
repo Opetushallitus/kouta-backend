@@ -95,6 +95,7 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     addDefaultKoodistoMockResponsesForToteutus()
     addDefaultKoodistoMockResponsesForHakukohde()
     addDefaultKoodistoMockResponsesForHaku()
+    addDefaultKoodistoMockResponsesForValintaperuste()
   }
 
   override def afterAll(): Unit = {
@@ -161,11 +162,12 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
     mockKoodistoResponse("opintojenlaajuus", Seq(
       ("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None)))
-    mockKoodistoResponse("koulutus", Seq(("koulutus_301101", 1, None)))
+    mockKoodistoResponse("koulutus", Seq(("koulutus_301101", 1, None), ("koulutus_371101", 1, None)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
     mockKoodistoResponse("kansallinenkoulutusluokitus2016koulutusalataso2",Seq(
       ("kansallinenkoulutusluokitus2016koulutusalataso2_080", 2, None),
+      ("kansallinenkoulutusluokitus2016koulutusalataso2_054", 2, None),
       ("kansallinenkoulutusluokitus2016koulutusalataso2_020", 2, None),
       ("kansallinenkoulutusluokitus2016koulutusalataso1_001", 2, None)))
     mockKoodistoResponse("opintojenlaajuusyksikko", Seq(("opintojenlaajuusyksikko_6", 1, None)))
@@ -193,9 +195,13 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
   }
 
   def addDefaultKoodistoMockResponsesForHaku(): Unit = {
-    mockKoodistoResponse("hakutapa", Seq(("hakutapa_03", 1, None)))
-    mockKoodistoResponse("haunkohdejoukko", Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_05", 3, None)))
+    mockKoodistoResponse("hakutapa", Seq(("hakutapa_02", 1, None), ("hakutapa_03", 1, None)))
+    mockKoodistoResponse("haunkohdejoukko", Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_15", 1, None), ("haunkohdejoukko_05", 3, None)))
     mockKoodistoResponse("haunkohdejoukontarkenne", Seq(("haunkohdejoukontarkenne_1", 1, None)))
+  }
+
+  def addDefaultKoodistoMockResponsesForValintaperuste(): Unit = {
+    mockKoodistoResponse("valintatapajono", Seq(("valintatapajono_av", 1, None), ("valintatapajono_tv", 1, None)))
   }
 }
 

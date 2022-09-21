@@ -1,12 +1,13 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
-import fi.oph.kouta.repository.ValintaperusteDAO
-import fi.oph.kouta.service.{OrganisaatioServiceImpl, ValintaperusteService}
+import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
+import fi.oph.kouta.service.{OrganisaatioServiceImpl, ValintaperusteService, ValintaperusteServiceValidation}
 import fi.oph.kouta.servlet.ValintaperusteServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -21,7 +22,9 @@ trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec 
 
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
+    val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
+    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(organisaatioService, hakuKoodiClient, HakukohdeDAO)
+    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation)
   }
 
   override def beforeAll(): Unit = {

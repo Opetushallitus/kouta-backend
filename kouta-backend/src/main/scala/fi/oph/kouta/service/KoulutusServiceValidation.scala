@@ -94,11 +94,6 @@ class KoulutusServiceValidation(
         assertNotDefined(koulutus.oid, "oid")
       ),
       validateTarjoajat(koulutus.tarjoajat, oldKoulutus.map(_.tarjoajat).getOrElse(List())),
-      validateIfNonEmpty[String](
-        koulutus.koulutuksetKoodiUri,
-        "koulutuksetKoodiUri",
-        assertMatch(_, KoulutusKoodiPattern, _)
-      ),
       validateIfJulkaistu(
         tila,
         and(
@@ -243,20 +238,13 @@ class KoulutusServiceValidation(
       validateIfTrueOrElse(
         koulutustyypitWithoutLisatiedot.contains(tyyppi),
         assertEmpty(metadata.lisatiedot, "metadata.lisatiedot"),
-        validateIfNonEmpty[Lisatieto](
+        validateIfNonEmptySeq[Lisatieto](
+          metadata.lisatiedot,
           koulutusDiffResolver.newLisatiedot(),
           "metadata.lisatiedot",
-          (lisatieto, path) =>
-            validateIfSuccessful(
-              lisatieto.validate(validationContext.tila, validationContext.kielivalinta, path),
-              assertKoodistoQueryResult(
-                lisatieto.otsikkoKoodiUri,
-                koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists,
-                path = s"$path.otsikkoKoodiUri",
-                validationContext,
-                invalidLisatietoOtsikkoKoodiuri(lisatieto.otsikkoKoodiUri)
-              )
-            )
+          (lisatieto, newLisatieto, path) =>
+            lisatieto
+              .validate(path, newLisatieto, validationContext, koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists)
         )
       ),
       validateIfJulkaistu(
@@ -595,26 +583,23 @@ class KoulutusServiceValidation(
       validateIfDefined[String](
         osaamisalaMetadata.osaamisalaKoodiUri,
         koodiUri =>
-          validateIfSuccessful(
-            assertMatch(koodiUri, OsaamisalaKoodiPattern, "metadata.osaamisalaKoodiUri"),
-            validateIfDefined[Long](
-              ePerusteId,
-              ePerusteId =>
-                validateIfTrue(
-                  ePerusteId > 0, {
-                    ePerusteKoodiClient
-                      .getOsaamisalaKoodiuritForEPeruste(ePerusteId) match {
-                      case Right(osaamisalaKoodiuritForEPeruste) =>
-                        assertTrue(
-                          koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, osaamisalaKoodiuritForEPeruste),
-                          "metadata.osaamisalaKoodiUri",
-                          invalidOsaamisalaForEPeruste(ePerusteId, koodiUri)
-                        )
-                      case _ => error("ePerusteId", ePerusteServiceFailureMsg)
-                    }
+          validateIfDefined[Long](
+            ePerusteId,
+            ePerusteId =>
+              validateIfTrue(
+                ePerusteId > 0, {
+                  ePerusteKoodiClient
+                    .getOsaamisalaKoodiuritForEPeruste(ePerusteId) match {
+                    case Right(osaamisalaKoodiuritForEPeruste) =>
+                      assertTrue(
+                        koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, osaamisalaKoodiuritForEPeruste),
+                        "metadata.osaamisalaKoodiUri",
+                        invalidOsaamisalaForEPeruste(ePerusteId, koodiUri)
+                      )
+                    case _ => error("ePerusteId", ePerusteServiceFailureMsg)
                   }
-                )
-            )
+                }
+              )
           )
       )
     )
@@ -812,15 +797,12 @@ class KoulutusServiceValidation(
       koodiUrit,
       "metadata.koulutusalaKoodiUrit",
       (koodiUri, path) =>
-        validateIfSuccessful(
-          assertMatch(koodiUri, KoulutusalaKoodiPattern, path),
-          assertKoodistoQueryResult(
-            koodiUri,
-            koulutusKoodiClient.koulutusalaKoodiUriExists,
-            path,
-            validationContext,
-            invalidKoulutusAlaKoodiuri(koodiUri)
-          )
+        assertKoodistoQueryResult(
+          koodiUri,
+          koulutusKoodiClient.koulutusalaKoodiUriExists,
+          path,
+          validationContext,
+          invalidKoulutusAlaKoodiuri(koodiUri)
         )
     )
   }
@@ -830,15 +812,12 @@ class KoulutusServiceValidation(
       koodiUrit,
       "metadata.tutkintonimikeKoodiUrit",
       (koodiUri, path) =>
-        validateIfSuccessful(
-          assertMatch(koodiUri, TutkintonimikeKoodiPattern, path),
-          assertKoodistoQueryResult(
-            koodiUri,
-            koulutusKoodiClient.tutkintoNimikeKoodiUriExists,
-            path,
-            validationContext,
-            invalidTutkintoNimikeKoodiuri(koodiUri)
-          )
+        assertKoodistoQueryResult(
+          koodiUri,
+          koulutusKoodiClient.tutkintoNimikeKoodiUriExists,
+          path,
+          validationContext,
+          invalidTutkintoNimikeKoodiuri(koodiUri)
         )
     )
   }
@@ -847,15 +826,12 @@ class KoulutusServiceValidation(
     validateIfDefined[String](
       koodiUri,
       uri =>
-        validateIfSuccessful(
-          assertMatch(uri, OpintojenLaajuusKoodiPattern, "metadata.opintojenLaajuusKoodiUri"),
-          assertKoodistoQueryResult(
-            uri,
-            koulutusKoodiClient.opintojenLaajuusKoodiUriExists,
-            "metadata.opintojenLaajuusKoodiUri",
-            validationContext,
-            invalidOpintojenLaajuusKoodiuri(uri)
-          )
+        assertKoodistoQueryResult(
+          uri,
+          koulutusKoodiClient.opintojenLaajuusKoodiUriExists,
+          "metadata.opintojenLaajuusKoodiUri",
+          validationContext,
+          invalidOpintojenLaajuusKoodiuri(uri)
         )
     )
 
@@ -866,15 +842,12 @@ class KoulutusServiceValidation(
     validateIfDefined[String](
       koodiUri,
       uri =>
-        validateIfSuccessful(
-          assertMatch(uri, OpintojenLaajuusyksikkoKoodiPattern, "metadata.opintojenLaajuusyksikkoKoodiUri"),
-          assertKoodistoQueryResult(
-            uri,
-            koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
-            "metadata.opintojenLaajuusyksikkoKoodiUri",
-            validationContext,
-            invalidOpintojenLaajuusyksikkoKoodiuri(uri)
-          )
+        assertKoodistoQueryResult(
+          uri,
+          koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          validationContext,
+          invalidOpintojenLaajuusyksikkoKoodiuri(uri)
         )
     )
 

@@ -59,7 +59,9 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
 
   override def valintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient)
+    val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
+    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(organisaatioService, hakuKoodiClient, HakukohdeDAO)
+    new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation)
   }
 }
 
