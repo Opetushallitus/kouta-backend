@@ -81,6 +81,38 @@ object Validations {
     )
   }
 
+  def invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+    ErrorMessage(
+      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä koulutustyyppi. Kaikkien toteutusten tulee olla opintojaksoja.",
+      id = "invalidKoulutustyyppiForLiitettyOpintojakso",
+      meta = Some(Map("toteutukset" -> toteutukset))
+    )
+  }
+
+  def invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset: Seq[ToteutusOid]) = {
+    ErrorMessage(
+      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
+      id = "invalidTilaForLiitettyOpintojaksoOnJulkaisu",
+      meta = Some(Map("toteutukset" -> toteutukset))
+    )
+  }
+
+  def invalidTilaForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+    ErrorMessage(
+      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Opintokokonaisuuteen liitettyjen opintojaksojen tulee olla luonnostilaisia tai julkaistuja.",
+      id = "invalidTilaForLiitettyOpintojakso",
+      meta = Some(Map("toteutukset" -> toteutukset))
+    )
+  }
+
+  def unknownOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+    ErrorMessage(
+      msg = s"Opintokokonaisuuteen liitettyä opintojaksoa ei löydy.",
+      id = "unknownOpintojakso",
+      meta = Some(Map("toteutukset" -> toteutukset))
+    )
+  }
+
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidKieliKoodiUri"
