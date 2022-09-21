@@ -970,7 +970,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   def failsOpintojaksotValidation(toteutus: Toteutus, oldToteutus: Toteutus, expected: Seq[ValidationError]): Assertion =
     Try(validator.withValidation(toteutus, Some(oldToteutus), authenticatedNonPaakayttaja)(t => t)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
-      case Failure(_)                                      => fail("Expecting validation failure, but it succeeded")
+      case _                                      => fail("Expecting validation failure, but it succeeded")
     }
 
   it should "fail if attached toteutus is not opintojakso" in {
