@@ -131,7 +131,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     authorizePut(toteutus) { t =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, None) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, None, authenticated) { t =>
         doPut(t, koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), Set()))
       }
     }.oid.get
@@ -159,7 +159,7 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus), authenticated) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(t, notModifiedSince, oldToteutus,

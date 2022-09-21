@@ -971,7 +971,7 @@ class ToteutusServiceValidationSpec extends BaseValidationSpec[Toteutus] {
       opintokokonaisuusToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))),
       opintokokonaisuusToteutus,
       Seq(
-        ValidationError("metadata.liitetytOpintojaksot.julkaisutila", invalidTilaForLiitettyOpintojaksoOnJulkaisu(Seq(toteutusOid2))
+        ValidationError("metadata.liitetytOpintojaksot[1].julkaisutila", invalidTilaForLiitettyOpintojaksoOnJulkaisu(Seq(toteutusOid2))
         )
       )
     )
