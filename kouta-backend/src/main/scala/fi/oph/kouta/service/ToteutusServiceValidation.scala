@@ -389,24 +389,22 @@ class ToteutusServiceValidation(
 
     // Jos opintokokonaisuus on julkaistu, täytyy siihen liitettyjen opintojaksojen olla myös julkaistuja
     if (tila == Julkaistu) {
-      toteutukset.zipWithIndex.foreach{
-        case (toteutus, index) => {
-          if (toteutus.tila != Julkaistu) {
-            addErrorOid(s"metadata.liitetytOpintojaksot[$index].julkaisutila", toteutus.oid)
-          }
-      }}
+      toteutukset.foreach(toteutus => {
+        if (toteutus.tila != Julkaistu) {
+          addErrorOid(s"metadata.liitetytOpintojaksot.julkaisutila", toteutus.oid)
+        }
+      })
     }
 
     errors = errorMap.toList.map(value => {
       val errorKey    = value._1
       val toteutukset = value._2.flatten
-      val julkaisutilaRegex = """metadata\.liitetytOpintojaksot\[\d+]\.julkaisutila""".r
       ValidationError(
         errorKey,
         errorKey match {
           case "metadata.liitetytOpintojaksot.koulutustyyppi" =>
             invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset)
-          case julkaisutilaRegex() =>
+          case "metadata.liitetytOpintojaksot.julkaisutila" =>
             invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset)
           case "metadata.liitetytOpintojaksot.tila" =>
             invalidTilaForLiitettyOpintojakso(toteutukset)
