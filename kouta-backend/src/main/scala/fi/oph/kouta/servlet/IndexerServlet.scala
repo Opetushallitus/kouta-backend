@@ -592,4 +592,31 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(ToteutusService.getOidsByTarjoajat(parsedBody.extract[Seq[OrganisaatioOid]],
       TilaFilter.onlyOlemassaolevat()))
   }
+
+  registerPath("/indexer/toteutukset",
+    """    post:
+      |      summary: Hakee toteutukset, joiden oidit annettu requestBodyssä
+      |      operationId: indexerToteutukset
+      |      description: Hakee toteutukset, joiden oidit annettu requestBodyssä. Tämä rajapinta on indeksointia varten
+      |      tags:
+      |        - Indexer
+      |      requestBody:
+      |        description: Lista toteutusten oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example: 1.2.246.562.17.00000000000000000009
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
+  post("/toteutukset") {
+
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(ToteutusService.getToteutukset(parsedBody.extract[List[ToteutusOid]]))
+  }
 }

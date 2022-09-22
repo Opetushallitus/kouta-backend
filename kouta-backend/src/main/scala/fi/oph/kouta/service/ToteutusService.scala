@@ -344,4 +344,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
     }
+
+  def getToteutukset(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[Toteutus] =
+    withRootAccess(indexerRoles) {
+      ToteutusDAO.get(oids)
+    }
 }
