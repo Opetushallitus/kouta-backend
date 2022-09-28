@@ -155,6 +155,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[ToteutusOid] = {
     KoutaDatabase.runBlocking(selectByCreatorOrTarjoaja(tarjoajaOids, tilaFilter)).map(toteutus => toteutus.oid)
   }
+
+  def getOpintokokonaisuusOids(oids: Seq[ToteutusOid]): Seq[ToteutusOid] = {
+    KoutaDatabase.runBlocking(selectOpintokokonaisuusOids(oids))
+  }
 }
 
 trait ToteutusModificationSQL extends SQLHelpers {
@@ -395,5 +399,15 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
              or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
              and t.metadata->>'tyyppi' = 'kk-opintojakso'
               #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
+  }
+
+  def selectOpintokokonaisuusOids(oids: Seq[ToteutusOid]): DBIO[Vector[ToteutusOid]] = {
+    val o = oids.map(oid => oid.toString())
+    println(o)
+    sql"""select oid
+          from toteutukset t
+          where metadata->>'tyyppi' = 'kk-opintokokonaisuus'
+          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $o::text[]
+          """.as[ToteutusOid]
   }
 }

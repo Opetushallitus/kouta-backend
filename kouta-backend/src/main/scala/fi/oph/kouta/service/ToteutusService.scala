@@ -349,4 +349,9 @@ class ToteutusService(sqsInTransactionService: SqsInTransactionService,
     withRootAccess(indexerRoles) {
       ToteutusDAO.get(oids)
     }
+
+  def listOpintokokonaisuusOids(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusOid] =
+    withRootAccess(indexerRoles) {
+      ToteutusDAO.getOpintokokonaisuusOids(oids)
+    }
 }
