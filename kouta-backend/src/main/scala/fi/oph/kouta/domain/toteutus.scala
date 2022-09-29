@@ -276,3 +276,5 @@ object ToteutusListItem {
 case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
 
 case class ExternalToteutusRequest(authenticated: Authenticated, toteutus: Toteutus) extends ExternalRequest
+
+case class OidAndNimi(oid: ToteutusOid, nimi: Kielistetty)

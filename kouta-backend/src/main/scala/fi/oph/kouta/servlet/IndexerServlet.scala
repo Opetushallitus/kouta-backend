@@ -620,11 +620,11 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(ToteutusService.getToteutukset(parsedBody.extract[List[ToteutusOid]]))
   }
 
-  registerPath("/indexer/list-opintokokonaisuus-oids",
+  registerPath("/indexer/list-opintokokonaisuudet",
     """    post:
-      |      summary: Hakee niiden opintokokonaisuuksien oidit, joihin requestBodyssä annetut oidit on liitetty
-      |      operationId: indexerListOpintokokonaisuusOids
-      |      description: Hakee niiden opintokokonaisuuksien oidit, joihin requestBodyssä annetut oidit on liitetty. Tämä rajapinta on indeksointia varten
+      |      summary: Hakee niille opintokokonaisuuksille, joihin requestBodyssä annetut toteutus-oidit on liitetty
+      |      operationId: indexerListOpintokokonaisuudet
+      |      description: Hakee niille opintokokonaisuuksille, joihin requestBodyssä annetut toteutus-oidit on liitetty. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      requestBody:
@@ -641,9 +641,9 @@ class IndexerServlet(koulutusService: KoulutusService,
       |        '200':
       |          description: Ok
       |""".stripMargin)
-  post("/list-opintokokonaisuus-oids") {
+  post("/list-opintokokonaisuudet") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(ToteutusService.listOpintokokonaisuusOids(parsedBody.extract[List[ToteutusOid]]))
+    Ok(ToteutusService.listOpintokokonaisuudet(parsedBody.extract[List[ToteutusOid]]))
   }
 }

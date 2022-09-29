@@ -2,7 +2,7 @@ package fi.oph.kouta.repository
 
 import java.time.Instant
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, TilaFilter, Toteutus, ToteutusEnrichedData, ToteutusListItem, VapaaSivistystyoMuu}
+import fi.oph.kouta.domain.{AmmOsaamisala, AmmTutkinnonOsa, Ataru, OidAndNimi, TilaFilter, Toteutus, ToteutusEnrichedData, ToteutusListItem, VapaaSivistystyoMuu}
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
@@ -156,8 +156,8 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     KoutaDatabase.runBlocking(selectByCreatorOrTarjoaja(tarjoajaOids, tilaFilter)).map(toteutus => toteutus.oid)
   }
 
-  def getOpintokokonaisuusOids(oids: Seq[ToteutusOid]): Seq[ToteutusOid] = {
-    KoutaDatabase.runBlocking(selectOpintokokonaisuusOids(oids))
+  def getOpintokokonaisuudet(oids: Seq[ToteutusOid]): Seq[OidAndNimi] = {
+    KoutaDatabase.runBlocking(selectOpintokokonaisuudet(oids))
   }
 }
 
@@ -401,13 +401,11 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }
 
-  def selectOpintokokonaisuusOids(oids: Seq[ToteutusOid]): DBIO[Vector[ToteutusOid]] = {
-    val o = oids.map(oid => oid.toString())
-    println(o)
-    sql"""select oid
+  def selectOpintokokonaisuudet(oids: Seq[ToteutusOid]): DBIO[Vector[OidAndNimi]] = {
+    val oidsAsStr = oids.map(oid => oid.toString())
+    sql"""select oid, nimi
           from toteutukset t
           where metadata->>'tyyppi' = 'kk-opintokokonaisuus'
-          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $o::text[]
-          """.as[ToteutusOid]
+          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $oidsAsStr::text[]""".as[OidAndNimi]
   }
 }
