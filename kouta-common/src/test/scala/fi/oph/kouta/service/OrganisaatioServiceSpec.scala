@@ -64,13 +64,13 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
   }
   it should "return correct oppilaitostyypit for koulutustoimija when requesting only children" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should
-      contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, Lk, Muu, Tuva, AikuistenPerusopetus)
+      contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, OpePedagOpinnot, Lk, Muu, Tuva, AikuistenPerusopetus)
   }
 
   it should "return correct oppilaitostyypit for koulutustoimija when requesting both parents and children" in {
     organisaatioService
       .getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))
-      ._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, Lk, Muu, Tuva, AikuistenPerusopetus)
+      ._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, OpePedagOpinnot, Lk, Muu, Tuva, AikuistenPerusopetus)
   }
 
   "findUnknownOrganisaatioOidsFromHierarkia" should "return correct organisaatioOids" in {
