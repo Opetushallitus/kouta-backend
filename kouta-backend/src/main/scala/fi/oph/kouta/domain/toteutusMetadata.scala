@@ -227,6 +227,20 @@ package object toteutusMetadata {
       |                - amm-ope-erityisope-ja-opo
       |""".stripMargin
 
+  val OpePedagOpinnotToteutusMetadataModel: String =
+    """    OpePedagOpinnotToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: ope-pedag-opinnot
+      |              enum:
+      |                - ope-pedag-opinnot
+      |""".stripMargin
+
   val KkOpintojaksoToteutusMetadataModel: String =
     """    KkOpintojaksoToteutusMetadata:
       |      allOf:
@@ -589,7 +603,7 @@ package object toteutusMetadata {
       |""".stripMargin
 
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
-    AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
+    AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, OpePedagOpinnotToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
     LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel)
 }
@@ -709,6 +723,16 @@ case class AmmOpeErityisopeJaOpoToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpe
                                                  aloituspaikat: Option[Int] = None,
                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                                  hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
+
+case class OpePedagOpinnotToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
+                                           kuvaus: Kielistetty = Map(),
+                                           opetus: Option[Opetus] = None,
+                                           asiasanat: List[Keyword] = List(),
+                                           ammattinimikkeet: List[Keyword] = List(),
+                                           yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                           aloituspaikat: Option[Int] = None,
+                                           isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                                           hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
 
 case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          kuvaus: Kielistetty = Map(),

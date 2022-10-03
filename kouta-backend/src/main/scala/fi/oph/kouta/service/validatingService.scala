@@ -76,9 +76,6 @@ trait ValidatingService[E <: Validatable] {
       error("tarjoajat", organisaatioServiceFailureMsg)
     )
   }
-
-  def koodiUriTipText(koodiUri: String): Option[String] =
-    Some(s"$koodiUri#<versionumero>, esim. $koodiUri#1")
 }
 
 trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] {

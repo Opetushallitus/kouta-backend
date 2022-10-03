@@ -38,6 +38,12 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   val kkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.133")))
   val ammOpettajaKoulutus         = AmmOpettajaKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.134")))
   val ammOpettajaToteutus         = JulkaistuAmmOpettajaToteutus.copy(koulutusOid = ammOpettajaKoulutus.oid.get)
+  val yoOpettajaKoulutus          = YoOpettajaKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.135")))
+  val yoOpettajaToteutus          = JulkaistuYoOpettajaToteutus.copy(koulutusOid = yoOpettajaKoulutus.oid.get)
+  val tuvaKoulutus = TuvaKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.136")))
+  val tuvaToteutus = TuvaToteutus.copy(koulutusOid = tuvaKoulutus.oid.get)
+  val telmaKoulutus = TelmaKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.137")))
+  val telmaToteutus = TelmaToteutus.copy(koulutusOid = telmaKoulutus.oid.get)
 
   val sorakuvausId  = UUID.randomUUID()
   val sorakuvausId2 = UUID.randomUUID()
@@ -206,6 +212,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusDao.get(koulutusOid2))
       .thenAnswer(Some(AmmKoulutus.copy(oid = Some(koulutusOid2), koulutuksetKoodiUri = Seq(validKoulutuksetKoodiUri))))
     when(koulutusDao.get(ammOpettajaKoulutus.oid.get)).thenAnswer(Some(ammOpettajaKoulutus))
+    when(koulutusDao.get(yoOpettajaKoulutus.oid.get)).thenAnswer(Some(yoOpettajaKoulutus))
+    when(koulutusDao.get(tuvaKoulutus.oid.get)).thenAnswer(Some(tuvaKoulutus))
+    when(koulutusDao.get(telmaKoulutus.oid.get)).thenAnswer(Some(telmaKoulutus))
     when(koulutusDao.get(invalidKoulutusOid)).thenAnswer(None)
 
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
@@ -263,16 +272,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(ammTutkinnonOsaToteutus.copy(sorakuvausId = Some(sorakuvausId)))
   }
 
+  it should "succeed when new valid AmmOpettaja-toteutus" in {
+    passesValidation(ammOpettajaToteutus)
+  }
+
+  it should "succeed when new valid Opettajien pedagogiset opinnot -toteutus" in {
+    passesValidation(yoOpettajaToteutus)
+  }
+
   it should "succeed when new valid tutkintoon johtamaton toteutus" in {
     passesValidation(ammMuuToteutus)
   }
 
   it should "succeed when new valid korkeakoulu toteutus" in {
     passesValidation(yoToteutus)
-  }
-
-  it should "succeed when new valid AmmOpettaja-toteutus" in {
-    passesValidation(ammOpettajaToteutus)
   }
 
   it should "succeed when new valid lukio-toteutus" in {
@@ -448,12 +461,13 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failSorakuvausValidation(AmmMuuToteutus, "1.2.246.562.13.601")
     failSorakuvausValidation(JulkaistuYoToteutus, "1.2.246.562.13.602")
     failSorakuvausValidation(JulkaistuAmkToteutus, "1.2.246.562.13.603")
-    failSorakuvausValidation(ammOpettajaToteutus, "1.2.246.562.13.604")
-    failSorakuvausValidation(LukioToteutus, "1.2.246.562.13.605")
-    failSorakuvausValidation(TuvaToteutus, "1.2.246.562.13.606")
-    failSorakuvausValidation(TelmaToteutus, "1.2.246.562.13.607")
-    failSorakuvausValidation(VapaaSivistystyoOpistovuosiToteutus, "1.2.246.562.13.608")
-    failSorakuvausValidation(VapaaSivistystyoMuuToteutus, "1.2.246.562.13.609")
+    failSorakuvausValidation(JulkaistuAmmOpettajaToteutus, "1.2.246.562.13.604")
+    failSorakuvausValidation(JulkaistuYoOpettajaToteutus, "1.2.246.562.13.605")
+    failSorakuvausValidation(LukioToteutus, "1.2.246.562.13.606")
+    failSorakuvausValidation(TuvaToteutus, "1.2.246.562.13.607")
+    failSorakuvausValidation(TelmaToteutus, "1.2.246.562.13.608")
+    failSorakuvausValidation(VapaaSivistystyoOpistovuosiToteutus, "1.2.246.562.13.609")
+    failSorakuvausValidation(VapaaSivistystyoMuuToteutus, "1.2.246.562.13.610")
   }
 
   it should "fail if sorakuvaus doesn't exist" in {
@@ -711,7 +725,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "Ammatillinen toteutus validation" should "fail if invalid osaamisala for julkaistu toteutus" in {
+  it should "fail if invalid osaamisala for julkaistu toteutus" in {
     failsValidation(
       JulkaistuAmmToteutus.copy(
         metadata = Some(
@@ -736,6 +750,32 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   "AmmOpettajaToteutus validation" should "fail if negative aloituspaikat" in {
     failsValidation(
       ammOpettajaToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
+      "metadata.aloituspaikat",
+      notNegativeMsg
+    )
+  }
+
+  "YoOpettajaToteutus validation" should "fail if negative aloituspaikat" in {
+    failsValidation(
+      yoOpettajaToteutus.copy(metadata =
+        Some(AmmOpettajaToteutuksenMetatieto.copy(tyyppi = OpePedagOpinnot, aloituspaikat = Some(-10)))
+      ),
+      "metadata.aloituspaikat",
+      notNegativeMsg
+    )
+  }
+
+  "TuvaToteutus validation" should "fail if negative aloituspaikat" in {
+    failsValidation(
+      tuvaToteutus.copy(metadata = Some(TuvaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
+      "metadata.aloituspaikat",
+      notNegativeMsg
+    )
+  }
+
+  "TelmaToteutus validation" should "fail if negative aloituspaikat" in {
+    failsValidation(
+      telmaToteutus.copy(metadata = Some(TelmaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
       "metadata.aloituspaikat",
       notNegativeMsg
     )

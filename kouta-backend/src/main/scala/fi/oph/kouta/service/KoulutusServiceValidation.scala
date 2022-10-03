@@ -20,7 +20,6 @@ import fi.oph.kouta.validation.{
   yoKoulutustyypit
 }
 import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
-import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 
 object KoulutusServiceValidation
@@ -155,6 +154,16 @@ class KoulutusServiceValidation(
           ),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
+      case OpePedagOpinnot =>
+        and(
+          validateSorakuvaus(koulutus),
+          assertOneAndOnlyCertainValueInSeq(
+            koulutus.koulutuksetKoodiUri,
+            "koulutus_919999",
+            "koulutuksetKoodiUri"
+          ),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case Lk =>
         and(
           validateSorakuvaus(koulutus),
@@ -173,8 +182,7 @@ class KoulutusServiceValidation(
           assertOneAndOnlyCertainValueInSeq(
             koulutus.koulutuksetKoodiUri,
             "koulutus_201101",
-            "koulutuksetKoodiUri",
-            koodiUriTipText("koulutus_201101")
+            "koulutuksetKoodiUri"
           ),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
@@ -295,29 +303,16 @@ class KoulutusServiceValidation(
       case _: AmmattikorkeakouluKoulutusMetadata =>
         validateKorkeaKoulutusMetadata(validationContext, koulutusDiffResolver)
       case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
-        and(
-          assertEmpty(m.tutkintonimikeKoodiUrit, "metadata.tutkintonimikeKoodiUrit"),
-          assertCertainValue(
-            m.opintojenLaajuusKoodiUri,
-            "opintojenlaajuus_60",
-            "metadata.opintojenLaajuusKoodiUri",
-            koodiUriTipText("opintojenlaajuus_60")
-          ),
-          assertOneAndOnlyCertainValueInSeq(
-            m.koulutusalaKoodiUrit,
-            "kansallinenkoulutusluokitus2016koulutusalataso1_01",
-            "metadata.koulutusalaKoodiUrit",
-            koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_01")
-          )
-        )
+        assertOpettajankoulutusMetadata(m.opintojenLaajuusKoodiUri, m.tutkintonimikeKoodiUrit, m.koulutusalaKoodiUrit)
+      case m: OpePedagOpinnotKoulutusMetadata =>
+        assertOpettajankoulutusMetadata(m.opintojenLaajuusKoodiUri, m.tutkintonimikeKoodiUrit, m.koulutusalaKoodiUrit)
 
       case m: LukioKoulutusMetadata =>
         and(
           assertOneAndOnlyCertainValueInSeq(
             m.koulutusalaKoodiUrit,
             "kansallinenkoulutusluokitus2016koulutusalataso1_00",
-            "metadata.koulutusalaKoodiUrit",
-            koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_00")
+            "metadata.koulutusalaKoodiUrit"
           ),
           assertOpintojenLaajuusKoodiUri(koulutusDiffResolver.newOpintojenLaajuusKoodiUri(), validationContext)
         )
@@ -404,14 +399,33 @@ class KoulutusServiceValidation(
           assertOneAndOnlyCertainValueInSeq(
             m.koulutusalaKoodiUrit,
             "kansallinenkoulutusluokitus2016koulutusalataso2_091",
-            "metadata.koulutusalaKoodiUrit",
-            koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso2_091")
+            "metadata.koulutusalaKoodiUrit"
           ),
           assertTutkintonimikeKoodiUrit(koulutusDiffResolver.newTutkintonimikeKoodiUrit(), validationContext)
         )
       case _ => NoErrors
     }
   }
+
+  private def assertOpettajankoulutusMetadata(
+      opintojenLaajuusKoodiUri: Option[String],
+      tutkintonimikeKoodiUrit: Seq[String],
+      koulutusalaKoodiUrit: Seq[String]
+  ): IsValid =
+    and(
+      assertEmpty(tutkintonimikeKoodiUrit, "metadata.tutkintonimikeKoodiUrit"),
+      assertCertainValue(
+        opintojenLaajuusKoodiUri,
+        "opintojenlaajuus_60",
+        "metadata.opintojenLaajuusKoodiUri"
+      ),
+      assertOneAndOnlyCertainValueInSeq(
+        koulutusalaKoodiUrit,
+        "kansallinenkoulutusluokitus2016koulutusalataso1_01",
+        "metadata.koulutusalaKoodiUrit"
+      )
+    )
+
   private def validateOpintojenLaajuusIntegrity(
       k: Koulutus
   ): IsValid = {
