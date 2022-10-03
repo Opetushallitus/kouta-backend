@@ -115,6 +115,9 @@ class KoulutusService(
                 Some(
                   m.copy(
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                    // !!!!Jatkossa opintojenlaajuus -koodistoa ei enää tule käyttää laajuuden määrittämiseen!!!!!
+                    // Sen sijaan tulee käyttää opintojenlaajuusyksikko -koodistoa yksikön määrittämiseen +
+                    // erillistä numeroarvoa varsinaisen laajuuden määritykseen
                     opintojenLaajuusKoodiUri =
                       fixedKoodiUriIfNotDefined(m.opintojenLaajuusKoodiUri, "opintojenlaajuus_60"),
                     koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
@@ -127,6 +130,9 @@ class KoulutusService(
                 Some(
                   m.copy(
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                    // !!!!Jatkossa opintojenlaajuus -koodistoa ei enää tule käyttää laajuuden määrittämiseen!!!!!
+                    // Sen sijaan tulee käyttää opintojenlaajuusyksikko -koodistoa yksikön määrittämiseen +
+                    // erillistä numeroarvoa varsinaisen laajuuden määritykseen
                     opintojenLaajuusKoodiUri =
                       fixedKoodiUriIfNotDefined(m.opintojenLaajuusKoodiUri, "opintojenlaajuus_60"),
                     koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
