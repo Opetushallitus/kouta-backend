@@ -83,10 +83,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
         bool(
           mustQueries = Seq(),
           shouldQueries = Seq(
-            should(Kieli.values.map(l => matchQuery(s"nimi.${l.toString}", searchTerm))),
-            should(
-              Kieli.values.map(l => wildcardQuery(s"nimi.${l.toString}.keyword", s"*${searchTerm}*"))
-            )
+            should(Kieli.values.map(l => wildcardQuery(s"nimi.${l.toString}.keyword", s"*${searchTerm}*")))
           ),
           notQueries = Seq()
         )
