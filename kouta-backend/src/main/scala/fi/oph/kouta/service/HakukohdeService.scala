@@ -2,18 +2,15 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
-import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
-import fi.oph.kouta.domain.{Hakukohde, HakukohdeListItem}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoutaDatabase, ToteutusDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.{IsValid, NoErrors}
-import fi.oph.kouta.validation.Validations.validateStateChange
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -47,7 +44,7 @@ class HakukohdeService(
   protected val roleEntity: RoleEntity = Role.Hakukohde
 
   private def enrichHakukohdeMetadata(hakukohde: Hakukohde) : Option[HakukohdeMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(hakukohde.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(hakukohde.muokkaaja)
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     hakukohde.metadata match {
@@ -61,7 +58,7 @@ class HakukohdeService(
 
     val enrichedHakukohde = hakukohde match {
       case Some((h, i)) =>
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(h.muokkaaja)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(h.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
         val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
@@ -89,7 +86,7 @@ class HakukohdeService(
       case Some(metadata) =>
         metadata match {
           case tuva: TuvaToteutusMetadata =>
-            val kaannokset = lokalisointiClient.getKaannoksetWithKey("yleiset.vaativanaErityisenaTukena")
+            val kaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.vaativanaErityisenaTukena")
             NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde.nimi, metadata, kaannokset)
           case _ => hakukohde.nimi
         }

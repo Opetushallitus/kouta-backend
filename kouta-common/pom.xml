@@ -57,9 +57,9 @@
         </dependency>
 
         <dependency>
-            <groupId>com.github.cb372</groupId>
-            <artifactId>scalacache-caffeine_2.12</artifactId>
-            <version>0.28.0</version>
+            <groupId>com.github.blemale</groupId>
+            <artifactId>scaffeine_2.12</artifactId>
+            <version>5.2.1</version>
         </dependency>
 
         <!-- Test dependencies -->

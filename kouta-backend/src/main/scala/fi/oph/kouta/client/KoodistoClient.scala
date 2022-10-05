@@ -1,20 +1,20 @@
 package fi.oph.kouta.client
 
+import com.github.blemale.scaffeine.Cache
+import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
-import scalacache.caffeine.CaffeineCache
-import scalacache.modes.sync.mode
 
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZonedDateTime}
-import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success, Try}
 
 case class KoodiUri(koodiUri: String, latestVersio: Int)
 
 case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
+case class KoodistoNotFoundException(message: String) extends RuntimeException(message)
 
 case class KoodistoSubElement(koodistoUri: String)
 case class KoodistoElement(
@@ -74,42 +74,62 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
 
   val emptyKoodistoSubElement = KoodistoSubElement("")
 
-  protected def getAndUpdateFromKoodiUriCache(
-      koodisto: String,
-      koodiUriCache: CaffeineCache[Seq[KoodiUri]]
-  ): KoodistoQueryResponse = {
-    var koodiUritFromCache = koodiUriCache.get(koodisto)
-    var querySuccess = true
-
-    if (koodiUritFromCache.isEmpty) {
-      Try[Seq[KoodiUri]] {
-        get(
-          urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
-          errorHandler,
-          followRedirects = true
-        ) { response =>
-          {
-            parse(response)
-              .extract[List[KoodistoElement]]
-              .filter(koodiUri =>
-                isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm)
-              )
-              .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
-          }
-        }
-      } match {
-        case Success(koodiUrit) =>
-          koodiUritFromCache = Some(koodiUrit)
-          koodiUriCache.put(koodisto)(koodiUrit, Some(15.minutes))
-        case Failure(exp: KoodistoQueryException) if exp.status == 404 => koodiUritFromCache = None
-        case Failure(exp: KoodistoQueryException) =>
-          querySuccess = false
-          koodiUritFromCache = None
-          logger.error(s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}")
-      }
+  protected def getKoodiFromKoodistoService(koodisto: String): Seq[KoodiUri] = {
+    get(
+      urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
+      errorHandler,
+      followRedirects = true
+    ) { response => {
+      parse(response)
+        .extract[List[KoodistoElement]]
+        .filter(koodiUri =>
+          isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm)
+        )
+        .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
     }
-    KoodistoQueryResponse(querySuccess, koodiUritFromCache.getOrElse(Seq()))
+    }
   }
+
+  protected def getAndUpdateFromKoodiUri(koodisto: String): Seq[KoodiUri] = {
+    Try[Seq[KoodiUri]] {
+      getKoodiFromKoodistoService(koodisto)
+    } match {
+      case Success(koodiUrit) => koodiUrit
+      case Failure(exp: KoodistoQueryException) if exp.status == 404 =>
+        throw KoodistoNotFoundException(
+          s"Failed to find koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
+        )
+      case Failure(exp: KoodistoQueryException) if retryStatusCodes.contains(exp.status) =>
+        logger.warn(s"Failed to get koodiuris from koodisto $koodisto, retrying once...")
+        Try[Seq[KoodiUri]] {
+          getKoodiFromKoodistoService(koodisto)
+        } match {
+          case Success(koodiUrit) => koodiUrit
+          case Failure(exp: KoodistoQueryException) =>
+            throw new RuntimeException(
+              s"Failed to get koodiuris from koodisto $koodisto after retry, got response ${exp.status} ${exp.message}"
+            )
+        }
+      case Failure(exp: KoodistoQueryException) =>
+        throw new RuntimeException(
+          s"Failed to get koodiuris from koodisto $koodisto, got response ${exp.status} ${exp.message}"
+        )
+    }
+  }
+
+  protected def getAndUpdateFromKoodiUriCache(
+                                               koodisto: String,
+                                               koodiUriCache: Cache[String, Seq[KoodiUri]]
+                                             ): KoodistoQueryResponse = {
+    try {
+      val koodiUritFromCache = koodiUriCache.get(koodisto, koodisto => getAndUpdateFromKoodiUri(koodisto))
+      KoodistoQueryResponse(success = true, koodiUritFromCache)
+    } catch {
+      case _: KoodistoNotFoundException => KoodistoQueryResponse(success = true, Seq())
+      case _: Throwable => KoodistoQueryResponse(success = false, Seq())
+    }
+  }
+
   protected def isKoodiVoimassa(
       koodisto: String,
       koodiUri: String,

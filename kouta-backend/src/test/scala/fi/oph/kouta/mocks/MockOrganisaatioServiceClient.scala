@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.security.{Authority, SecurityContext}
 
 class MockOrganisaatioServiceClient(securityContext: SecurityContext, defaultAuthorities: Set[Authority]) extends OrganisaatioServiceClient {
-  override def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
+  override def getOrganisaatioHierarkiaWithOidsFromCache(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
     val orgs = oids.map(oid => {
       orgServiceOrganisaatio.copy(oid = oid.toString)
     })

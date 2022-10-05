@@ -1,11 +1,9 @@
 package fi.oph.kouta.service
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, OidAndChildren}
 import fi.oph.kouta.domain.Koulutustyyppi
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
-import scalacache.caffeine.CaffeineCache
-import scalacache.modes.sync._
-import scalacache.sync
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
@@ -17,7 +15,7 @@ trait OrganisaatioService {
   protected def cachedOrganisaatioHierarkiaClient: CachedOrganisaatioHierarkiaClient
 
   def getOrganisaatio(oid: OrganisaatioOid): Option[OidAndChildren] = {
-    getHierarkia(oid) match {
+    getHierarkiaFromCache(oid) match {
       case hierarkia => find(_.oid == oid, hierarkia.toSet)
     }
 
@@ -30,19 +28,19 @@ trait OrganisaatioService {
 
   def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => (children(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkia(oid)))
+    case _ => (children(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkiaFromCache(oid)))
   }
 
   def getAllChildAndParentOidsWithOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => (parentsAndChildren(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkia(oid)))
+    case _ => (parentsAndChildren(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkiaFromCache(oid)))
   }
 
   def findOppilaitosOidFromOrganisaationHierarkia(oid: OrganisaatioOid): Option[OrganisaatioOid] =
-    find(_.isOppilaitos, getHierarkia(oid).toSet).map(_.oid)
+    find(_.isOppilaitos, getHierarkiaFromCache(oid).toSet).map(_.oid)
 
   def findOrganisaatioOidsFlatByMemberOid(oid: OrganisaatioOid): Seq[OrganisaatioOid] =
-    getHierarkia(oid) match {
+    getHierarkiaFromCache(oid) match {
       case Some(hierarkia) => childOidsFlat(hierarkia) :+ hierarkia.oid
       case _ => Seq()
     }
@@ -127,7 +125,9 @@ trait OrganisaatioService {
       .map(pickChildrenRecursively(_, oid))
       .collectFirst { case Some(child) => child }
 
-  implicit val HierarkiaCache = CaffeineCache[Option[OidAndChildren]]
+  implicit val hierarkiaCache: Cache[OrganisaatioOid, Option[OidAndChildren]] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
 
   private def removeLakkautetutRecursively(current: OidAndChildren): Option[OidAndChildren] = {
     if (current.isPassiivinen) {
@@ -138,12 +138,11 @@ trait OrganisaatioService {
   }
 
   private def getPartialHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] =
-    find(_.oid == oid, getHierarkia(oid, lakkautetut).toSet)
+    find(_.oid == oid, getHierarkiaFromCache(oid, lakkautetut).toSet)
 
-  private def getHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] = {
-    val hierarkia: Option[OidAndChildren] = sync.caching(oid)(Some(45.minutes)) {
-      findHierarkia(oid)
-    }
+  private def getHierarkiaFromCache(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] = {
+    val hierarkia: Option[OidAndChildren] = hierarkiaCache.get(oid, oid => findHierarkia(oid))
+
     if (lakkautetut) {
       hierarkia
     } else {

@@ -124,7 +124,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_2#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
     when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
+    when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
     when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
     when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
@@ -137,7 +137,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       .thenAnswer(Some((haku, ZonedDateTime.now().toInstant)))
 
     when(
-      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(
+      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         Seq(ammatillinenPerustutkintoKoulutustyyppi),
         "koulutus_371101#1"
       )
@@ -200,7 +200,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(
       initMockSeq(
         max.copy(
-          hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+          hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
           kaytetaanHaunAikataulua = Some(false)
         )
       )
@@ -467,7 +467,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   it should "fail when hakuajat taken from haku, but still defined in hakukohde as well" in {
     failsValidation(
       max.copy(
-        hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+        hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         kaytetaanHaunAikataulua = Some(true)
       ),
       "hakuajat",

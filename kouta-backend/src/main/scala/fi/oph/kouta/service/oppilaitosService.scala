@@ -40,7 +40,7 @@ class OppilaitosService(
 
     val enrichedOppilaitos = oppilaitosWithTime match {
       case Some((o, i)) => {
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(o.muokkaaja)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }
@@ -50,7 +50,7 @@ class OppilaitosService(
   }
 
   def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
-    val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
+    val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOidsFromCache(tarjoajaOids)
     val oids = OppilaitosServiceUtil.getHierarkiaOids(hierarkia)
     val oppilaitokset = OppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
 
@@ -72,7 +72,7 @@ class OppilaitosService(
   }
 
   private def enrichOppilaitosMetadata(oppilaitos: Oppilaitos) : Option[OppilaitosMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(oppilaitos.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(oppilaitos.muokkaaja)
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     oppilaitos.metadata match {
@@ -174,7 +174,7 @@ class OppilaitoksenOsaService(
 
     val enrichedOppilaitoksenOsa = oppilaitoksenOsaWithTime match {
       case Some((o, i)) => {
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(o.muokkaaja)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }
@@ -184,7 +184,7 @@ class OppilaitoksenOsaService(
   }
 
   private def enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa: OppilaitoksenOsa) : Option[OppilaitoksenOsaMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(oppilaitoksenOsa.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(oppilaitoksenOsa.muokkaaja)
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     oppilaitoksenOsa.metadata match {

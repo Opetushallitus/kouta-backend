@@ -1,5 +1,6 @@
 package fi.oph.kouta.client
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails}
@@ -9,9 +10,6 @@ import org.http4s.Method.GET
 import org.http4s.client.blaze.defaultClient
 import org.http4s.{Request, Uri}
 import org.json4s.jackson.JsonMethods.parse
-import scalacache.caffeine.CaffeineCache
-import scalacache.memoization.memoizeSync
-import scalacache.modes.sync._
 import scalaz.concurrent.Task
 
 import java.util.concurrent.TimeUnit
@@ -43,7 +41,9 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
     sessionCookieName = "JSESSIONID"
   )
 
-  implicit val KayttooikeusCache = CaffeineCache[List[OrganisaatioHenkilo]]
+  implicit val kayttooikeusCache: Cache[UserOid, List[OrganisaatioHenkilo]] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
 
   def getUserByUsername(username: String): KayttooikeusUserDetails = {
     val url = urlProperties.url(s"kayttooikeus-service.userDetails.byUsername", username)
@@ -65,7 +65,7 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
     }
   }
 
-  def getOrganisaatiot(oid: UserOid): List[OrganisaatioHenkilo] = memoizeSync[List[OrganisaatioHenkilo]](Some(60.minutes)) {
+  private def getOrganisaatiot(oid: UserOid): List[OrganisaatioHenkilo] =  {
     val url = urlProperties.url(s"kayttooikeus-service.organisaatiohenkilo", oid)
 
     try {
@@ -88,8 +88,17 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
         }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
     } catch {
       case error: CasClientException =>
-        logger.error(s"Authentication to CAS failed: ${error}")
-        List()
+        logger.error(s"Authentication to CAS failed: $error")
+        throw error
+    }
+  }
+
+  def getOrganisaatiotFromCache(oid: UserOid): List[OrganisaatioHenkilo] = {
+    try {
+      kayttooikeusCache.get(oid, oid => getOrganisaatiot(oid))
+    } catch {
+      case _: CasClientException => List()
+      case error: Throwable => throw error
     }
   }
 }
