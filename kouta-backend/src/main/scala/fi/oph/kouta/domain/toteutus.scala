@@ -67,6 +67,8 @@ package object toteutus {
       |            - $ref: '#/components/schemas/AmmatillinenTutkinnonOsaToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenOsaamisalaToteutusMetadata'
       |            - $ref: '#/components/schemas/AmmatillinenMuuToteutusMetadata'
+      |            - $ref: '#/components/schemas/AmmOpeErityisopeJaOpoToteutusMetadata'
+      |            - $ref: '#/components/schemas/OpePedagOpinnotToteutusMetadata'
       |            - $ref: '#/components/schemas/LukioToteutusMetadata'
       |            - $ref: '#/components/schemas/TuvaToteutusMetadata'
       |            - $ref: '#/components/schemas/TelmaToteutusMetadata'

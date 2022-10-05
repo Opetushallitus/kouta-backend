@@ -218,6 +218,10 @@ object Validations {
     msg = s"Hakulomaketta ID:llä $ataruId ei löydy, tai se on poistettu tai lukittu",
     id = "invalidAtaruId"
   )
+  def invalidAtaruFormAllowsOnlyYhteishaku(ataruId: UUID): ErrorMessage = ErrorMessage(
+    msg = s"Hakulokame ID:llä $ataruId sallii vain yhteishaut",
+    id = "invalidAtaruFormAllowsOnlyYhteishaku"
+  )
   def invalidHakutapaKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Hakutapa-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidHakutapaKoodiUri"
@@ -388,16 +392,18 @@ object Validations {
   def assertEmptyKielistetty(kielistetty: Kielistetty, path: String): IsValid =
     assertTrue(kielistetty.isEmpty, path, notEmptyMsg)
 
+  def koodiUriTipText(koodiUri: String): String =
+    s"$koodiUri#<versionumero>, esim. $koodiUri#1"
+
   def assertCertainValue(
       value: Option[String],
       expectedValuePrefix: String,
       path: String,
-      expectedValueDescription: Option[String] = None
   ): IsValid =
     assertTrue(
       value.isDefined && value.get.startsWith(expectedValuePrefix),
       path,
-      illegalValueForFixedValueMsg(expectedValueDescription.getOrElse(expectedValuePrefix))
+      illegalValueForFixedValueMsg(koodiUriTipText(expectedValuePrefix))
     )
 
   def assertOneAndOnlyCertainValueInSeq(
@@ -409,7 +415,7 @@ object Validations {
     if (value.size == 1 && value.head.startsWith(expectedValuePrefix)) {
       NoErrors
     } else {
-      error(path, illegalValueForFixedValueSeqMsg(expectedValueDescription.getOrElse(expectedValuePrefix)))
+      error(path, illegalValueForFixedValueSeqMsg(koodiUriTipText(expectedValuePrefix)))
     }
 
   def assertNotDefined[T](value: Option[T], path: String): IsValid =
@@ -500,6 +506,21 @@ object Validations {
   ): IsValid = {
     assertExternalQueryResult(
       hakemusPalveluClient.isExistingAtaruId(ataruId),
+      path,
+      errorMessage,
+      ataruServiceFailureMsg
+    )
+  }
+
+  def assertAtaruFormAllowsOnlyYhteisHakuResult(
+    ataruId: UUID,
+    hakutapa: Option[String],
+    hakemusPalveluClient: HakemusPalveluClient,
+    path: String,
+    errorMessage: ErrorMessage
+  ): IsValid = {
+    assertExternalQueryResult(
+      hakemusPalveluClient.isFormAllowedForHakutapa(ataruId, hakutapa),
       path,
       errorMessage,
       ataruServiceFailureMsg

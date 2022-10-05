@@ -90,6 +90,20 @@ package object koulutusMetadata {
       |                - amm-ope-erityisope-ja-opo
       |""".stripMargin
 
+  val OpePedagOpinnotKoulutusMetadataModel: String =
+    """    OpePedagOpinnotKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KorkeakouluMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: ope-pedag-opinnot
+      |              enum:
+      |                - ope-pedag-opinnot
+      |""".stripMargin
+
   val KkOpintojaksoKoulutusMetadataModel: String =
     """    KkOpintojaksoKoulutusMetadata:
       |      allOf:
@@ -376,7 +390,7 @@ package object koulutusMetadata {
       |                - tutkintonimikekk_111#2
       |""".stripMargin
 
-  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel,
+  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel, OpePedagOpinnotKoulutusMetadataModel,
     YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
     TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel, ErikoislaakariKoulutusMetadataModel, KkOpintokokonaisuusKoulutusMetadataModel)
 }
@@ -437,6 +451,14 @@ case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
+                                                 kuvaus: Kielistetty = Map(),
+                                                 lisatiedot: Seq[Lisatieto] = Seq(),
+                                                 koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                                 tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+                                                 opintojenLaajuusKoodiUri: Option[String] = None,
+                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
+
+case class OpePedagOpinnotKoulutusMetadata(tyyppi: Koulutustyyppi = OpePedagOpinnot,
                                                  kuvaus: Kielistetty = Map(),
                                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                                  koulutusalaKoodiUrit: Seq[String] = Seq(),

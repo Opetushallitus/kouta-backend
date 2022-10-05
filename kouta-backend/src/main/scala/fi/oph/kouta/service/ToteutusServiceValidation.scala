@@ -126,6 +126,12 @@ class ToteutusServiceValidation(
               )
             case m: AmmOpeErityisopeJaOpoToteutusMetadata =>
               validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+            case m: OpePedagOpinnotToteutusMetadata =>
+              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+            case m: TuvaToteutusMetadata =>
+              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+            case m: TelmaToteutusMetadata =>
+              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
                 case m: KkOpintojaksoToteutusMetadata =>
