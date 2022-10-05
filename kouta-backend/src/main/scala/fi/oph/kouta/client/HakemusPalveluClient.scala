@@ -52,11 +52,11 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     sessionCookieName = "ring-session"
   )
 
-  implicit val ataruFormCache: Cache[String, Seq[String]] = Scaffeine()
+  implicit val ataruFormCache: Cache[String, Seq[AtaruForm]] = Scaffeine()
     .expireAfterWrite(15.minutes)
     .build()
 
-  private def getExistingAtaruIdsFromAtaruService: Seq[String] = {
+  private def getExistingAtaruIdsFromAtaruService: Seq[AtaruForm] = {
     Uri.fromString(urlProperties.url("hakemuspalvelu-service.forms"))
       .fold(Task.fail, url => {
         client.fetch(Request(method = GET, uri = url)) {
@@ -65,8 +65,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
               .runLog
               .map(_.mkString)
               .map(responseBody => {
-                val ids = parseIds(responseBody)
-                ids
+                parseForms(responseBody)
               })
           case r =>
             r.bodyAsText
@@ -77,7 +76,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
       }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
   }
 
-  private def getExistingAtaruIds: Seq[String] = {
+  private def getExistingAtaruIds: Seq[AtaruForm] = {
     try {
       getExistingAtaruIdsFromAtaruService
     } catch {
@@ -96,8 +95,8 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
 
   override def isExistingAtaruIdFromCache(ataruId: UUID): ExternalQueryResult = {
     try {
-    val existingFormsInCache = ataruFormCache.get("ALL", _ => getExistingAtaruIds())
-      fromBoolean(existingFormsInCache.getOrElse(Seq()).exists((form: AtaruForm) => form.key.equals(ataruId.toString)))
+    val existingFormsInCache = ataruFormCache.get("ALL", _ => getExistingAtaruIds)
+      fromBoolean(existingFormsInCache.exists((form: AtaruForm) => form.key.equals(ataruId.toString)))
   } catch {
       case _: Throwable => queryFailed
     }
@@ -108,10 +107,8 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
     if (existingQuery != itemFound) {
       return existingQuery
     }
-    fromBoolean(ataruFormCache.get().get
-      .find((form: AtaruForm) => form.key.equals(ataruId.toString))
-      .map((form: AtaruForm) => formAllowsHakuTapa(form, hakutapaKoodiUri))
-      .getOrElse(false))
+    fromBoolean(ataruFormCache.get("ALL", _ => getExistingAtaruIds)
+      .find((form: AtaruForm) => form.key.equals(ataruId.toString)).exists((form: AtaruForm) => formAllowsHakuTapa(form, hakutapaKoodiUri)))
   }
 
   def formAllowsHakuTapa(form: AtaruForm, hakutapaKoodiUri: Option[String]): Boolean =
