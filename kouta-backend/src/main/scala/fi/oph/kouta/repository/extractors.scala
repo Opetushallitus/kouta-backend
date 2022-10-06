@@ -139,6 +139,11 @@ trait ToteutusExtractors extends ExtractorBase {
         val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
         ToteutusListItem(t.copy(nimi = esitysnimi))
       })
+
+  implicit val getOidAndNimiResult: GetResult[OidAndNimi] = GetResult(r => OidAndNimi(
+    oid = ToteutusOid(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+  ))
 }
 
 trait HakuExtractors extends ExtractorBase {
