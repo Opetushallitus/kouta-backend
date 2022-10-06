@@ -3,8 +3,8 @@ host_postgresql_kouta: localhost
 host_postgresql_kouta_port: 5432
 postgres_app_user: oph
 host_postgresql_kouta_app_password: oph
-host_virkailija: virkailija.hahtuvaopintopolku.fi
-cas_url: https://virkailija.hahtuvaopintopolku.fi/cas
+host_virkailija: virkailija.untuvaopintopolku.fi
+cas_url: https://virkailija.untuvaopintopolku.fi/cas
 kouta_backend_cas_username: kouta-backend
 kouta_backend_cas_password:
 kouta_backend_cas_service: http://localhost:8099/kouta-backend/auth/login

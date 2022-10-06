@@ -500,7 +500,9 @@ case class HakukohdeSearchItem(oid: HakukohdeOid,
                                muokkaaja: Muokkaaja,
                                modified: Modified,
                                tila: Julkaisutila,
-                               koulutustyyppi: Option[Koulutustyyppi] = None
+                               koulutustyyppi: Option[Koulutustyyppi] = None,
+                               hakuOid: HakuOid,
+                               hakuNimi: Kielistetty
                               ) extends HasTila
 
 case class ValintaperusteSearchItem(id: UUID,
