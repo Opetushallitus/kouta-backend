@@ -1,21 +1,23 @@
 package fi.oph.kouta
 
-import scala.collection.JavaConverters._
-import scala.util.Try
 import cloud.localstack.Localstack.{INSTANCE => localstack}
 import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
-import com.amazonaws.services.sqs.AmazonSQSClient
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
+import com.amazonaws.regions.Regions
 import com.amazonaws.services.sqs.model.{Message, PurgeQueueRequest, ReceiveMessageRequest}
-import io.atlassian.aws.sqs.SQSClient
+import com.amazonaws.services.sqs.{AmazonSQS, AmazonSQSClientBuilder}
 import org.scalactic.source
 import org.scalactic.source.Position
 import org.scalatest.concurrent.{Eventually, PatienceConfiguration}
 import org.scalatest.enablers.Retrying
-import org.scalatest.time.{Millis, Nanoseconds, Seconds, Span}
 import org.scalatest.time.SpanSugar._
+import org.scalatest.time.{Nanoseconds, Span}
 import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 import scala.annotation.tailrec
+import scala.collection.JavaConverters._
+import scala.util.Try
 
 trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with PatienceConfiguration {
   this: Suite =>
@@ -30,8 +32,14 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
 
   private val queueNames: Seq[String] = Seq("koutaIndeksoijaPriority")
   lazy val indexingQueue: String = getQueue("koutaIndeksoijaPriority")
-  lazy val sqs: AmazonSQSClient = SQSClient.withEndpoint(localstack.getEndpointSQS)
-  
+  val awsTestCreds = new BasicAWSCredentials("test", "test");
+  val sqs: AmazonSQS = AmazonSQSClientBuilder.standard()
+    .withEndpointConfiguration(new EndpointConfiguration(
+      "http://localhost:4566",
+      Regions.EU_WEST_1.getName()))
+    .withCredentials(new AWSStaticCredentialsProvider(awsTestCreds))
+    .build()
+
   override def beforeAll(): Unit = {
     super.beforeAll()
     localstack.startup(dockerConfig)
