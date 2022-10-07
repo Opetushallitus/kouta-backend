@@ -2,7 +2,8 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, queryFailed}
+import fi.oph.kouta.domain.PainotetutArvoSanatLukioKaikki
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
 import fi.vm.sade.properties.OphProperties
 import scalacache.caffeine.CaffeineCache
 
@@ -26,9 +27,13 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
   def kausiKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("kausi", koodiUri)
 
-  def oppiaineKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("painotettavatoppiaineetlukiossa", koodiUri)
-
+  def oppiaineKoodiUriExists(koodiUri: String): ExternalQueryResult = {
+    if (PainotetutArvoSanatLukioKaikki.koodiUrit contains koodiUri) {
+      itemFound
+    } else{
+      koodiUriExistsInKoodisto("painotettavatoppiaineetlukiossa", koodiUri)
+    }
+  }
   def kieliKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("kieli", koodiUri)
 
