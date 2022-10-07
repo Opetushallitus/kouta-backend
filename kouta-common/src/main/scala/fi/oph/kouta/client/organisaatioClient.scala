@@ -1,25 +1,28 @@
 package fi.oph.kouta.client
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.util.GenericKoutaJsonFormats
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import scalacache.caffeine._
-import scalacache.memoization.memoizeSync
-import scalacache.modes.sync._
 
 import scala.concurrent.duration._
 
 trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJsonFormats {
-
   val organisaatioUrl: String
 
-  implicit val WholeHierarkiaCache = CaffeineCache[OrganisaatioResponse]
+  implicit val wholeHierarkiaCache: Cache[String, OrganisaatioResponse] = Scaffeine()
+    .expireAfterWrite(2.hours)
+    .build()
 
-  def getWholeOrganisaatioHierarkiaCached(): OrganisaatioResponse = memoizeSync[OrganisaatioResponse](Some(45.minutes)) {
+  private def getWholeOrganisaatioHierarkia(): OrganisaatioResponse = {
     get(organisaatioUrl, followRedirects = true) { response =>
       parse(response).extract[OrganisaatioResponse]
     }
+  }
+
+  def getWholeOrganisaatioHierarkiaCached(): OrganisaatioResponse = {
+    wholeHierarkiaCache.get("ALL", _ => getWholeOrganisaatioHierarkia())
   }
 }
 
@@ -35,6 +38,4 @@ case class OidAndChildren(oid: OrganisaatioOid,
   def isPassiivinen: Boolean = status.equalsIgnoreCase("PASSIIVINEN")
 
   def isOppilaitos: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_02")
-
-  def isKoulutustoimija: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_01")
 }

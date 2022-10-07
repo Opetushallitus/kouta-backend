@@ -46,7 +46,7 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
     when(hakuKoodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_17#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_1#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(itemFound)
-    when(hakemusPalveluClient.isExistingAtaruId(ataruId)).thenAnswer(itemFound)
+    when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
     when(hakukohdeDao.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(Seq[HakukohdeListItem]())
   }

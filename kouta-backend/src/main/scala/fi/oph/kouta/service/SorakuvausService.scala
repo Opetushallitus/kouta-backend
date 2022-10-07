@@ -40,7 +40,7 @@ class SorakuvausService(
 
     val enrichedSorakuvaus = sorakuvausWithTime match {
       case Some((s, i)) => {
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(s.muokkaaja)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(s.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(s.copy(_enrichedData = Some(SorakuvausEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }
@@ -53,7 +53,7 @@ class SorakuvausService(
   }
 
   private def enrichSorakuvausMetadata(sorakuvaus: Sorakuvaus) : Option[SorakuvausMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(sorakuvaus.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(sorakuvaus.muokkaaja)
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     sorakuvaus.metadata match {

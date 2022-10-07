@@ -1,5 +1,6 @@
 package fi.oph.kouta.client
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -9,12 +10,9 @@ import org.http4s.Method.GET
 import org.http4s.client.blaze.defaultClient
 import org.http4s.{Request, Uri}
 import org.json4s.jackson.JsonMethods._
-import scalacache.caffeine.CaffeineCache
-import scalacache.memoization.memoizeSync
-import scalacache.modes.sync._
 import scalaz.concurrent.Task
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit
 
 case class Henkilo(kutsumanimi: Option[String],
@@ -22,7 +20,7 @@ case class Henkilo(kutsumanimi: Option[String],
                    etunimet: Option[String])
 
 trait OppijanumerorekisteriClient {
-  def getHenkilö(oid: UserOid): Henkilo
+  def getHenkilöFromCache(oid: UserOid): Henkilo
 }
 
 object OppijanumerorekisteriClient
@@ -46,9 +44,11 @@ object OppijanumerorekisteriClient
     sessionCookieName = "JSESSIONID"
   )
 
-  implicit val OppijanumeroCache = CaffeineCache[Henkilo]
+  implicit val OppijanumeroCache: Cache[UserOid, Henkilo] = Scaffeine()
+    .expireAfterWrite(60.minutes)
+    .build()
 
-  override def getHenkilö(oid: UserOid): Henkilo = memoizeSync[Henkilo](Some(60.minutes)) {
+  private def getHenkilö(oid: UserOid): Henkilo = {
     val oppijanumerorekisteriUrl: String =
       urlProperties.url(
         "oppijanumerorekisteri-service.henkilo",
@@ -76,7 +76,17 @@ object OppijanumerorekisteriClient
     } catch {
       case error: CasClientException =>
         logger.error(s"Authentication to CAS failed: ${error}")
-        Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+        throw error
+
+    }
+  }
+
+  override def getHenkilöFromCache(oid: UserOid): Henkilo = {
+    try {
+      OppijanumeroCache.get(oid, oid => getHenkilö(oid))
+    } catch {
+      case _: CasClientException => Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+      case error: Throwable => throw error
     }
   }
 }

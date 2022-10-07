@@ -240,13 +240,13 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
     when(
-      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(
+      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         Seq(ammatillinenPerustutkintoKoulutustyyppiKoodiUri),
         validKoulutuksetKoodiUri
       )
     ).thenAnswer(itemFound)
     when(
-      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExist(
+      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         Seq(ammatillinenPerustutkintoKoulutustyyppiKoodiUri),
         invalidKoulutuksetKoodiUri
       )

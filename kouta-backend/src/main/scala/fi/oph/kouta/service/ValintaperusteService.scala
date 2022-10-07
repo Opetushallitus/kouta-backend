@@ -38,7 +38,7 @@ class ValintaperusteService(
 
     val enrichedValintaperuste = valintaperusteWithTime match {
       case Some((v, i)) =>
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilö(v.muokkaaja)
+        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(v.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(v.copy(_enrichedData = Some(ValintaperusteEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       case None => None
@@ -50,7 +50,7 @@ class ValintaperusteService(
   }
 
   private def enrichValintaperusteMetadata(valintaperuste: Valintaperuste) : Option[ValintaperusteMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(valintaperuste.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(valintaperuste.muokkaaja)
     val isOphVirkailija = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     valintaperuste.metadata match {

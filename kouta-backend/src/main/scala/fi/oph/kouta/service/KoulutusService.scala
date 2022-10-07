@@ -93,13 +93,13 @@ class KoulutusService(
     } else { None }
 
   private def fixedKoodiUriIfNotDefined(definedValue: Option[String], koodiUriBase: String): Option[String] =
-    if (definedValue.isDefined) definedValue else Some(koodistoClient.getKoodiUriWithLatestVersion(koodiUriBase))
+    if (definedValue.isDefined) definedValue else Some(koodistoClient.getKoodiUriWithLatestVersionFromCache(koodiUriBase))
 
   private def fixedKoodiUrisIfNotDefined(definedValue: Seq[String], koodiUriBase: String): Seq[String] =
-    if (definedValue.nonEmpty) definedValue else Seq(koodistoClient.getKoodiUriWithLatestVersion(koodiUriBase))
+    if (definedValue.nonEmpty) definedValue else Seq(koodistoClient.getKoodiUriWithLatestVersionFromCache(koodiUriBase))
 
   private def enrichKoulutusMetadata(koulutus: Koulutus): Option[KoulutusMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(koulutus.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(koulutus.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     koulutus.metadata match {
@@ -215,7 +215,7 @@ class KoulutusService(
 
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) => {
-        val muokkaaja      = oppijanumerorekisteriClient.getHenkilö(k.muokkaaja)
+        val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(k.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
       }

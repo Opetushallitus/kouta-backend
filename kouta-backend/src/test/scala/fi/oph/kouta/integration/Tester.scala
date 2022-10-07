@@ -1,24 +1,10 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.Templates
-import fi.oph.kouta.TestData.JulkaistuHakukohde
 import fi.oph.kouta.TestSetups.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
-import fi.oph.kouta.client.{EPerusteKoodiClient, HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient, OidAndChildren}
-import fi.oph.kouta.domain.Hakukohde
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.repository.HakukohdeDAO
-import fi.oph.kouta.service.OrganisaatioServiceImpl
-import fi.oph.kouta.validation.ammOpeErityisopeJaOpoKoulutusKoodiUrit
-import org.json4s.{DefaultFormats, JArray}
-import org.json4s.JsonAST.{JField, JString}
 import org.json4s.jackson.JsonMethods.parse
-import scalacache.caffeine.CaffeineCache
-import scalacache.modes.sync.mode
-import scalaz.Scalaz.nil
 
 import java.util.UUID
-import scala.annotation.tailrec
-import scala.concurrent.duration.DurationInt
 
 object Tester {
   def main(args: Array[String]): Unit = {
