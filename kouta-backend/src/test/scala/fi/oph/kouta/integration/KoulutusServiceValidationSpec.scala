@@ -797,9 +797,6 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   it should "fail if koulutuksetKoodiUri given for koulutustyyppi not using koulutusKoodit" in {
     failValidationWithKoulutuksetKoodiUri(ammTk)
     failValidationWithKoulutuksetKoodiUri(AmmMuuKoulutus)
-    failValidationWithKoulutuksetKoodiUri(TuvaKoulutus)
-    failValidationWithKoulutuksetKoodiUri(TelmaKoulutus)
-    failValidationWithKoulutuksetKoodiUri(VapaaSivistystyoOpistovuosiKoulutus)
     failValidationWithKoulutuksetKoodiUri(VapaaSivistystyoMuuKoulutus)
     failValidationWithKoulutuksetKoodiUri(KkOpintojaksoKoulutus)
   }

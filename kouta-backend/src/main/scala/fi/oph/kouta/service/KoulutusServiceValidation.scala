@@ -197,10 +197,16 @@ class KoulutusServiceValidation(
           ),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
-      case AmmMuu | Tuva | Telma | VapaaSivistystyoMuu | VapaaSivistystyoOpistovuosi =>
+      case AmmMuu | VapaaSivistystyoMuu =>
         and(
           assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
+      // TODO: Lisättävä näille koulutustyypeille validointi koulutuksetKoodiUri-kentälle
+      case Tuva | Telma | VapaaSivistystyoOpistovuosi =>
+        and(
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case _ =>
