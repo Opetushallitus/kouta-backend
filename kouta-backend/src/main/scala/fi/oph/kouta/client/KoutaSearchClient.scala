@@ -35,6 +35,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
       case "julkinen"       => "julkinen"
       case "hakutapa"       => if (forSort) s"hakutapa.nimi.${lng}.keyword" else s"hakutapa.koodiUri.keyword"
       case "hakuOid"        => "hakuOid.keyword"
+      case "hakuNimi"       => s"hakuNimi.${lng}.keyword"
       case "toteutusOid"    => "toteutusOid.keyword"
       case "orgWhitelist"   => "organisaatio.oid.keyword"
       case "modified"       => "modified"
