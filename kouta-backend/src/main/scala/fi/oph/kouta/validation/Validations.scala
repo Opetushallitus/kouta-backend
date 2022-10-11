@@ -62,6 +62,11 @@ object Validations {
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
   )
 
+  def invalidOpinnonTyyppiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutukselle valittua opinnontyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidOpinnonTyyppiKoodiuri"
+  )
+
   def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
     msg = s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
     id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",

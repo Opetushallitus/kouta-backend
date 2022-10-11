@@ -751,7 +751,8 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                          hasJotpaRahoitus: Option[Boolean] = None,
                                          avoinKorkeakoulutus: Option[Boolean] = None,
-                                         tunniste: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                         tunniste: Option[String] = None,
+                                         opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
                                                kuvaus: Kielistetty = Map(),
@@ -772,7 +773,8 @@ case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                hasJotpaRahoitus: Option[Boolean] = None,
                                                liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
                                                avoinKorkeakoulutus: Option[Boolean] = None,
-                                               tunniste: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                               tunniste: Option[String] = None,
+                                               opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),

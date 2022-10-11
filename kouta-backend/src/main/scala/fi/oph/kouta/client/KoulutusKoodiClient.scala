@@ -135,6 +135,9 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
   def lukioDiplomiKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("moduulikoodistolops2021", koodiUri)
 
+  def opinnonTyyppiKoodiUriExists(koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto("opinnontyyppi", koodiUri)
+
   private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
     getAndUpdateFromKoodiUriCache(koodisto, commonKoodiUriCache) match {
       case resp if resp.success =>
