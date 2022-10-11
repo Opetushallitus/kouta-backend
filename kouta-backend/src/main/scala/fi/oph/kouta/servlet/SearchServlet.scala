@@ -17,7 +17,7 @@ case class SearchParams(
     hakutapa: Seq[String] = Seq.empty,
     koulutuksenAlkamiskausi: Seq[String] = Seq.empty,
     koulutuksenAlkamisvuosi: Seq[String] = Seq.empty,
-    hakuOid: Option[HakuOid] = None,
+    hakuOid: Seq[String] = Seq.empty,
     toteutusOid: Option[ToteutusOid] = None,
     orgWhitelist: Seq[OrganisaatioOid] = Seq.empty,
     page: Int = 1,
@@ -47,7 +47,7 @@ object SearchParams {
       hakutapa = commaSepStringValToSeq(values.get("hakutapa")),
       koulutuksenAlkamiskausi = commaSepStringValToSeq(values.get("koulutuksenAlkamiskausi")),
       koulutuksenAlkamisvuosi = commaSepStringValToSeq(values.get("koulutuksenAlkamisvuosi")),
-      hakuOid = values.get("hakuOid").map(HakuOid(_)),
+      hakuOid = commaSepStringValToSeq(values.get("hakuOid")),
       toteutusOid = values.get("toteutusOid").map(ToteutusOid(_)),
       orgWhitelist = commaSepStringValToSeq(values.get("orgWhitelist")).map(OrganisaatioOid(_)),
       page = values.get("page").map(_.toInt).getOrElse(1),
@@ -150,9 +150,11 @@ class SearchServlet(
       |        - in: query
       |          name: hakuOid
       |          schema:
-      |            type: string
+      |            type: array
+      |            items:
+      |              type: string
       |          required: false
-      |          description: Suodata haun oidilla
+      |          description: Suodata pilkulla erotetuilla haun oideilla
       |        - in: query
       |          name: toteutusOid
       |          schema:
