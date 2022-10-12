@@ -92,13 +92,17 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
     })
 
     val hakuNimiFilter = params.hakuNimi.map(searchTerm => {
-      bool(
-        mustQueries = Seq(),
-        shouldQueries = Seq(
-          should(Kieli.values.map(l => wildcardQuery(s"hakuNimi.${l.toString}.keyword", s"*${searchTerm}*")))
-        ),
-        notQueries = Seq()
-      )
+      if (isOid(searchTerm)) {
+        termQuery("hakuOid.keyword", searchTerm)
+      } else {
+        bool(
+          mustQueries = Seq(),
+          shouldQueries = Seq(
+            should(Kieli.values.map(l => wildcardQuery(s"hakuNimi.${l.toString}.keyword", s"*${searchTerm}*")))
+          ),
+          notQueries = Seq()
+        )
+      }
     })
 
     val muokkaajaFilter = params.muokkaaja.map(muokkaaja => {

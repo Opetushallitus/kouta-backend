@@ -424,7 +424,7 @@ class SearchServlet(
        |          schema:
        |            type: string
        |          required: false
-       |          description: Suodata annetulla haun nimellä
+       |          description: Suodata annetulla haun nimellä tai oidilla
        |        - in: query
        |          name: orgWhitelist
        |          style: form
