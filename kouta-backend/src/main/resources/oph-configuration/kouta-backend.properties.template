@@ -30,8 +30,9 @@ kayttooikeus-service=https://{{host_virkailija}}/kayttooikeus-service
 kayttooikeus-service.organisaatiohenkilo=https://{{host_virkailija}}/kayttooikeus-service/henkilo/$1/organisaatiohenkilo
 kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kayttooikeus-service/userDetails/$1
 
-organisaatio-service.organisaatio.oid.jalkelaiset=https://{{host_virkailija}}/organisaatio-service/rest/organisaatio/v4/$1/jalkelaiset
-organisaatio-service.organisaatio.hierarkia.with.oids=https://{{host_virkailija}}/organisaatio-service/api/hierarkia/hae
+organisaatio-service=https://{{host_virkailija}}/organisaatio-service/api
+organisaatio-service.organisaatio.oid.jalkelaiset={{organisaatio-service}}/$1/jalkelaiset
+organisaatio-service.organisaatio.hierarkia.with.oids={{organisaatio-service}}/hierarkia/hae
 
 lokalisointi-service.localisation=https://{{host_virkailija}}/lokalisointi/cxf/rest/v1/localisation?category=kouta
 koodisto-service.koodisto-koodit=https://{{host_virkailija}}/koodisto-service/rest/json/$1/koodi?onlyValidKoodis=true
