@@ -23,7 +23,7 @@ trait OrganisaatioFixture extends AnyFlatSpec with BeforeAndAfterAll with Before
   override def startServiceMocking(): Unit = {
     super.startServiceMocking()
     urlProperties = Some(KoutaCommonConfigFactory.loadTemplatedConfiguration().addOverride("host.virkailija", s"localhost:$mockPort"))
-    organisaatioService = OrganisaatioServiceImpl(s"http://localhost:$mockPort/organisaatio-service/rest/organisaatio/v4/$RootOrganisaatioOid/jalkelaiset")
+    organisaatioService = OrganisaatioServiceImpl(s"http://localhost:$mockPort/organisaatio-service/api/$RootOrganisaatioOid/jalkelaiset")
   }
 
   override def beforeAll(): Unit = {
