@@ -13,7 +13,7 @@ trait OrganisaatioFixture extends AnyFlatSpec with BeforeAndAfterAll with Before
 
   var organisaatioService: OrganisaatioService = _
 
-  case class OrganisaatioServiceImpl(organisaatioUrl: String) extends  OrganisaatioService {
+  case class OrganisaatioServiceImpl(organisaatioUrl: String) extends OrganisaatioService {
     case class CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl: String) extends CachedOrganisaatioHierarkiaClient {
       val callerId = "kouta-common"
     }
