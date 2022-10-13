@@ -8,14 +8,14 @@ jakelee muille palveluille.
 ## 2. Arkkitehtuuri
 
 Kouta-backend on Scalalla ja Scalatra frameworkilla toteutettu web api. Kouta-ui:n kautta syötetään koulutustarjonnan
-tiedot, jotka kouta-backend validoi ja tallentaa. Tallennuksen yhteydessä lähetetään sqs-viesti jonoon jota 
-[kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) kuuntelee. Viestissä on tallennetun entiteetin 
+tiedot, jotka kouta-backend validoi ja tallentaa. Tallennuksen yhteydessä lähetetään sqs-viesti jonoon jota
+[kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) kuuntelee. Viestissä on tallennetun entiteetin
 id, jonka avulla [kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) kysyy kouta-backendilta entiteetin tarkemmat
 tiedot.
 
 Kouta-backendin tarkoitus on olla uuden koulutustarjonnan tietomallin vartija. Tänne ei duplikoida muiden palvelujen dataa,
-vaan muihin palveluihin viittaavasta datasta tallennetaan ainoastaan id (esim. eperusteId). 
-[Kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) huolehtii näiden id-arvojen avulla tietojen 
+vaan muihin palveluihin viittaavasta datasta tallennetaan ainoastaan id (esim. eperusteId).
+[Kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) huolehtii näiden id-arvojen avulla tietojen
 rikastamisesta esim. oppijan käyttäliittymää ([konfo-ui](https://github.com/Opetushallitus/konfo-ui)) varten.
 
 Kuva koutan arkkitehtuurista löytyy [OPH:n wikistä.](https://wiki.eduuni.fi/display/OPHSS/Koutan+arkkitehtuuri)
@@ -53,8 +53,8 @@ Asenna haluamallasi tavalla koneellesi
 4. [Maven](https://maven.apache.org/) Jos haluat ajaa komentoriviltä Mavenia,
    mutta idean Mavenilla pärjää kyllä hyvin, joten tämä ei ole pakollinen
 
-Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Katso [.travis.yml](.travis.yml) mitä versioita sovellus käyttää.
-Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10.
+Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Katso [.github/workflows/build.yml](.github/workflows/build.yml) mitä versioita sovellus käyttää.
+Kirjoitushetkellä käytössä Amazon Corretto 11 ja scala 2.12.10.
 
 PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
 
@@ -91,13 +91,13 @@ Tähän voi tehdä korjauksen ainakin seuraavalla tavalla: lisää ko. polkuun s
 
 ### 3.3. Migraatiot
 
-Tietokantamigraatiot on toteutettu [flywaylla](https://flywaydb.org/) ja ajetaan automaattisesti testien ja asennuksen 
+Tietokantamigraatiot on toteutettu [flywaylla](https://flywaydb.org/) ja ajetaan automaattisesti testien ja asennuksen
 yhteydessä. Migraatiotiedostot löytyvät kansiosta `kouta-backend/src/main/resources/db/migration`
 
 ### 3.4. Ajaminen lokaalisti
 
 Käynnistä Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run).
-Avaa Ideassa ylhäältä Run Configurations valikko ja aseta EmbeddedJettyLauncherin Working directoryksi `$MODULE_DIR$` 
+Avaa Ideassa ylhäältä Run Configurations valikko ja aseta EmbeddedJettyLauncherin Working directoryksi `$MODULE_DIR$`
 (Jostain syystä IDEA laittaa tämän väärin ja siksi pitää käsin käydä päivittämässä). Sovellus
 käynnistyy porttiin **8099** ja se käyttää valittua postgres kantaa (host tai kontti).
 Asetuksia voi muuttaa muokkaamalla
@@ -153,7 +153,7 @@ Gitin kanssa on pyritty noudattamaan seuraavia käytänteitä:
 - Branchit on nimetty jira-tiketin perusteella
 - Jos masteriin on tullut committeja haaran tekemisen jälkeen, rebase on
   mergeä suositeltavampi tapa päivittää haara ajan tasalle
-- Tekeminen on pyritty pilkkomaan mahdollisimman pieneksi, jotta haarat olisivat lyhytikäisiä (jos mahdollista, alle 
+- Tekeminen on pyritty pilkkomaan mahdollisimman pieneksi, jotta haarat olisivat lyhytikäisiä (jos mahdollista, alle
   2 työpäivää)
 
 ## 4. Ympäristöt
@@ -174,11 +174,11 @@ Asennus hoituu samoilla työkaluilla kuin muidenkin OPH:n palvelujen.
 ### 4.3. Buildaus haarasta
 
 Travis tekee buildin jokaisesta pushista ja siirtää luodut paketit opetushallituksen [artifactoryyn](https://artifactory.opintopolku.fi/artifactory/#browse/search/maven).
-Paketti luodaan aina master-haarasta. Mikäli tulee tarve sadaa paketointi kehityshaarasta, täytyy muuttaa 
-`./.travis.yml` -tiedostoa. Tällainen tilanne voi olla esimerkiksi jos tekee muutoksia kouta-backendin tietomalliin 
+Paketti luodaan aina master-haarasta. Mikäli tulee tarve sadaa paketointi kehityshaarasta, täytyy muuttaa
+`./.travis.yml` -tiedostoa. Tällainen tilanne voi olla esimerkiksi jos tekee muutoksia kouta-backendin tietomalliin
 eikä vielä halua mergetä muutoksia masteriin, mutta tarvitsisi uutta tietomallia kuitenkin esimerkiksi kouta-indeksoijan ja
-konfo-backendin kehityshaaroissa. 
- 
+konfo-backendin kehityshaaroissa.
+
 Tarvittava muutos `travis.yml` tiedostoon on tällainen:
 
 (myös tiedoston git historiasta voi katsoa mallia)
@@ -195,7 +195,7 @@ Tarvittava muutos `travis.yml` tiedostoon on tällainen:
 
 ### 4.3. Lokit
 
-Kouta-backendin lokit löytyvät AWS:n cloudwatchista log groupista <testiympäristön nimi>-app-kouta-backend (esim. hahtuva-app-kouta-backend). 
+Kouta-backendin lokit löytyvät AWS:n cloudwatchista log groupista <testiympäristön nimi>-app-kouta-backend (esim. hahtuva-app-kouta-backend).
 Lisäohjeita näihin ylläpidolta.
 
 ### 4.4. Continuous integration
@@ -209,14 +209,14 @@ https://travis-ci.com/github/Opetushallitus/kouta-backend
 ##### Konfigurointi
 
 EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
- 
-| System property                                 |                                                                                             |   
-| ------------------------------------------------|:-------------------------------------------------------------------------------------------:|   
-| ```-Dkouta-backend.port=xxxx```                 | Määrittää Jettyn portin (default 8099)                                                      |   
-| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                          |   
-| ```-Dkouta-backend.embeddedPostgresType=xxxx``` | Käynnistetäänkö PostgreSQL host-koneella vai kontissa (`host` tai `docker`, default docker) |   
-| ```-Dkouta-backend.profile=xxxx```              | Määrittää profiilin                                                                         |   
-| ```-Dkouta-backend.template=xxxx```             | Määrittää template-tiedoston polun                                                          |   
+
+| System property                                 |                                                                                             |
+| ------------------------------------------------|:-------------------------------------------------------------------------------------------:|
+| ```-Dkouta-backend.port=xxxx```                 | Määrittää Jettyn portin (default 8099)                                                      |
+| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                          |
+| ```-Dkouta-backend.embeddedPostgresType=xxxx``` | Käynnistetäänkö PostgreSQL host-koneella vai kontissa (`host` tai `docker`, default docker) |
+| ```-Dkouta-backend.profile=xxxx```              | Määrittää profiilin                                                                         |
+| ```-Dkouta-backend.template=xxxx```             | Määrittää template-tiedoston polun                                                          |
 
 * Jos embedded Postgres ei ole käytössä, profiili voi olla joko *default* tai *template*
     * ```default```-profiilissa ```oph-configuration``` luetaan käyttäjän kotihakemistosta
