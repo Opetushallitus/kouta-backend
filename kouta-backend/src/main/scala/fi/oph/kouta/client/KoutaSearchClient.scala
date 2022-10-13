@@ -204,24 +204,24 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
   }
 
   def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: SearchParams) = {
-    searchEntities[KoulutusSearchItemFromIndex]("koulutus-kouta", koulutusOids.map(_.toString), params)
+    searchEntities[KoulutusSearchItemFromIndex]("koulutus-kouta-virkailija", koulutusOids.map(_.toString), params)
   }
 
   def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: SearchParams) =
-    searchEntities[ToteutusSearchItemFromIndex]("toteutus-kouta", toteutusOids.map(_.toString), params)
+    searchEntities[ToteutusSearchItemFromIndex]("toteutus-kouta-virkailija", toteutusOids.map(_.toString), params)
 
   def searchHaut(hakuOids: Seq[HakuOid], params: SearchParams) =
-    searchEntities[HakuSearchItemFromIndex]("haku-kouta", hakuOids.map(_.toString), params)
+    searchEntities[HakuSearchItemFromIndex]("haku-kouta-virkailija", hakuOids.map(_.toString), params)
 
   def searchHakukohteetDirect(organisaatioOids: Seq[OrganisaatioOid], params: SearchParams) =
-    searchEntitiesDirect[HakukohdeSearchItem]("hakukohde-kouta", organisaatioOids.map(_.toString), params, Seq("toteutus.organisaatiot.keyword", "organisaatio.oid.keyword"))
+    searchEntitiesDirect[HakukohdeSearchItem]("hakukohde-kouta-virkailija", organisaatioOids.map(_.toString), params, Seq("toteutus.organisaatiot.keyword", "organisaatio.oid.keyword"))
 
   def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: SearchParams) =
-    searchEntities[HakukohdeSearchItem]("hakukohde-kouta", hakukohdeOids.map(_.toString), params)
+    searchEntities[HakukohdeSearchItem]("hakukohde-kouta-virkailija", hakukohdeOids.map(_.toString), params)
 
   def searchValintaperusteet(valintaperusteIds: Seq[UUID], params: SearchParams) =
     searchEntities[ValintaperusteSearchItem](
-      "valintaperuste-kouta",
+      "valintaperuste-kouta-virkailija",
       valintaperusteIds.map(_.toString),
       params,
       idKey = "id"
