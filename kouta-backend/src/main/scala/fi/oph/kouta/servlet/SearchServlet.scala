@@ -19,6 +19,7 @@ case class SearchParams(
     koulutuksenAlkamisvuosi: Seq[String] = Seq.empty,
     hakuOid: Option[HakuOid] = None,
     toteutusOid: Option[ToteutusOid] = None,
+    koulutusOid: Option[KoulutusOid] = None,
     orgWhitelist: Seq[OrganisaatioOid] = Seq.empty,
     page: Int = 1,
     size: Int = 10,
@@ -49,6 +50,7 @@ object SearchParams {
       koulutuksenAlkamisvuosi = commaSepStringValToSeq(values.get("koulutuksenAlkamisvuosi")),
       hakuOid = values.get("hakuOid").map(HakuOid(_)),
       toteutusOid = values.get("toteutusOid").map(ToteutusOid(_)),
+      koulutusOid = values.get("koulutusOid").map(KoulutusOid(_)),
       orgWhitelist = commaSepStringValToSeq(values.get("orgWhitelist")).map(OrganisaatioOid(_)),
       page = values.get("page").map(_.toInt).getOrElse(1),
       size = values.get("size").map(_.toInt).getOrElse(10),
@@ -159,6 +161,12 @@ class SearchServlet(
       |            type: string
       |          required: false
       |          description: Suodata toteutuksen oidilla
+      |        - in: query
+      |          name: koulutusOid
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Suodata koulutuksen oidilla
       |        - in: query
       |          name: page
       |          schema:
