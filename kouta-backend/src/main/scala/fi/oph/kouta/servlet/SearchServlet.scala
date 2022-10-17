@@ -10,6 +10,7 @@ import scala.util.Try
 
 case class SearchParams(
     nimi: Option[String] = None,
+    hakuNimi: Option[String] = None,
     koulutustyyppi: Seq[Koulutustyyppi] = Seq.empty,
     muokkaaja: Option[String] = None,
     tila: Seq[Julkaisutila] = Seq.empty,
@@ -38,8 +39,10 @@ object SearchParams {
   def apply(v: Map[String, String]): SearchParams = {
     val values = v.filter(_._2.nonEmpty) // Suodatetaan pois tyhjät parametrit
     val nimi = values.get("nimi")
+    val hakuNimi = values.get("hakuNimi")
     SearchParams(
       nimi = nimi,
+      hakuNimi = hakuNimi,
       koulutustyyppi = commaSepStringValToSeq(values.get("koulutustyyppi")).flatMap(s => toEnum[Koulutustyyppi](Some(s), Koulutustyyppi)),
       muokkaaja = values.get("muokkaaja"),
       tila = commaSepStringValToSeq(values.get("tila")).flatMap(s => toEnum[Julkaisutila](Some(s), Julkaisutila)),
@@ -416,6 +419,12 @@ class SearchServlet(
        |        - Search
        |      parameters:
        |${searchParamsModel(hasKoulutustyyppi = true)}
+       |        - in: query
+       |          name: hakuNimi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata annetulla haun nimellä tai oidilla
        |        - in: query
        |          name: orgWhitelist
        |          style: form
