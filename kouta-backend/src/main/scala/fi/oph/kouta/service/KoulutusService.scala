@@ -397,32 +397,6 @@ class KoulutusService(
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, koulutusOid: KoulutusOid, params: SearchParams)(implicit
-      authenticated: Authenticated
-  ): Option[KoulutusSearchItemFromIndex] = {
-    def filterToteutukset(koulutus: Option[KoulutusSearchItemFromIndex]): Option[KoulutusSearchItemFromIndex] =
-      withAuthorizedOrganizationOids(
-        organisaatioOid,
-        AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
-      ) {
-        case Seq(RootOrganisaatioOid) => koulutus
-        case organisaatioOids => {
-          koulutus.flatMap(koulutusItem => {
-            val oidStrings = organisaatioOids.map(_.toString())
-            Some(
-              koulutusItem.copy(toteutukset =
-                koulutusItem.toteutukset.filter(toteutus => toteutus.organisaatiot.exists(o => oidStrings.contains(o)))
-              )
-            )
-          })
-        }
-      }
-
-    filterToteutukset(
-      koutaSearchClient.searchKoulutukset(Seq(koulutusOid), params).result.headOption
-    )
-  }
-
   def getUpdateTarjoajatActions(
       koulutusOid: KoulutusOid,
       newTarjoajatInToteutus: Set[OrganisaatioOid],
