@@ -182,20 +182,6 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, hakuOid: HakuOid, params: SearchParams)(implicit authenticated: Authenticated): Option[HakuSearchItemFromIndex] = {
-    def filterHakukohteet(haku: Option[HakuSearchItemFromIndex]): Option[HakuSearchItemFromIndex] =
-      withAuthorizedOrganizationOids(organisaatioOid, AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)) {
-        case Seq(RootOrganisaatioOid) => haku
-        case organisaatioOids =>
-          haku.flatMap(hakuItem => {
-            val oidStrings = organisaatioOids.map(_.toString())
-            Some(hakuItem.copy(hakukohteet = hakuItem.hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))))
-          })
-      }
-
-    filterHakukohteet(KoutaSearchClient.searchHaut(Seq(hakuOid), params).result.headOption)
-  }
-
   private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =
     KoutaDatabase.runBlockingTransactionally {
       for {

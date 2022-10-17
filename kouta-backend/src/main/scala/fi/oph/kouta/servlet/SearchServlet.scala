@@ -240,43 +240,6 @@ class SearchServlet(
   }
 
   registerPath(
-    "/search/koulutus/{oid}",
-    s"""    get:
-       |      summary: Hakee rikastetun koulutuksen annetulla oidilla
-       |      operationId: searchKoulutusByOid
-       |      description: Hakee rikastetun koulutuksen annetulla oidilla
-       |      tags:
-       |        - Search
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Koulutuksen oid
-       |${searchParamsModel(hasKoulutustyyppi = true)}
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                $$ref: '#/components/schemas/KoulutusSearchItemWithToteutukset'
-       |""".stripMargin
-  )
-  get("/koulutus/:oid") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    (KoulutusOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
-      case (koulutusOid, Some(organisaatioOid)) =>
-        Ok(koulutusService.search(organisaatioOid, koulutusOid, SearchParams(params.toMap)))
-      case _ => NotFound()
-    }
-  }
-
-  registerPath(
     "/search/toteutukset",
     s"""    get:
        |      summary: Hakee organisaation toteutuksia annetuilla parametreilla
@@ -309,43 +272,6 @@ class SearchServlet(
   }
 
   registerPath(
-    "/search/toteutus/{oid}",
-    s"""    get:
-       |      summary: Hakee rikastetun toteutuksen annetulla oidilla
-       |      operationId: searchToteutusByOid
-       |      description: Hakee rikastetun toteutuksen annetulla oidilla
-       |      tags:
-       |        - Search
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Toteutuksen oid
-       |${searchParamsModel(hasKoulutustyyppi= true)}
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                $$ref: '#/components/schemas/ToteutusSearchItemWithHakukohteet'
-       |""".stripMargin
-  )
-  get("/toteutus/:oid") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    (ToteutusOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
-      case (toteutusOid, Some(organisaatioOid)) =>
-        Ok(toteutusService.search(organisaatioOid, toteutusOid, SearchParams(params.toMap)))
-      case _ => NotFound()
-    }
-  }
-
-  registerPath(
     "/search/haut",
     s"""    get:
        |      summary: Hakee organisaation hakuja annetuilla parametreilla
@@ -374,43 +300,6 @@ class SearchServlet(
       case None => NotFound()
       case Some(organisaatioOid) =>
         Ok(hakuService.search(organisaatioOid, SearchParams(params.toMap)))
-    }
-  }
-
-  registerPath(
-    "/search/haku/{oid}",
-    s"""    get:
-       |      summary: Hakee rikastetun haun annetulla oidilla
-       |      operationId: searchHakuByOid
-       |      description: Hakee rikastetun haun annetulla oidilla
-       |      tags:
-       |        - Search
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Haun oid
-       |${searchParamsModel()}
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                $$ref: '#/components/schemas/HakuSearchItemWithHakukohteet'
-       |""".stripMargin
-  )
-  get("/haku/:oid") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    (HakuOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
-      case (hakuOid, Some(organisaatioOid)) =>
-        Ok(hakuService.search(organisaatioOid, hakuOid, SearchParams(params.toMap)))
-      case _ => NotFound()
     }
   }
 
