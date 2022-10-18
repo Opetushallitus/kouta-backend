@@ -355,6 +355,8 @@ object Validations {
   def assertValid(oid: Oid, path: String): IsValid                  = assertTrue(oid.isValid, path, validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid       = assertTrue(value.nonEmpty, path, missingMsg)
+  def assertNotEmptyString(value: String, path: String): IsValid       = assertNotEmpty(value.trim, path)
+  def assertNotEmpty(value: String, path: String): IsValid       = assertTrue(value.nonEmpty, path, missingMsg)
   def assertEmpty[T](value: Seq[T], path: String, errorMessage: ErrorMessage = notEmptyMsg): IsValid =
     assertTrue(value.isEmpty, path, errorMessage)
   def assertEmptyKielistetty(kielistetty: Kielistetty, path: String): IsValid =
@@ -414,11 +416,14 @@ object Validations {
   ): IsValid = {
     val queryResult = if (validationContext.isKoodistoServiceOk()) queryMethod(koodiUri) else queryFailed
     validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
-    assertExternalQueryResult(
-      queryResult,
-      path,
-      errorMessage,
-      koodistoServiceFailureMsg
+    and(
+      assertNotEmptyString(koodiUri, path),
+      assertExternalQueryResult(
+        queryResult,
+        path,
+        errorMessage,
+        koodistoServiceFailureMsg
+      )
     )
   }
 
