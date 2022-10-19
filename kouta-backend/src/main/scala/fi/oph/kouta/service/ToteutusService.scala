@@ -14,8 +14,6 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -177,7 +175,7 @@ class ToteutusService(
     authorizePut(toteutus) { t =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus                           = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, None) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, None, authenticated) { t =>
         doPut(
           t,
           koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), Set())
@@ -211,8 +209,8 @@ class ToteutusService(
 
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
-      val enrichedToteutus                           = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
+      val enrichedToteutus = t.copy(metadata = enrichedMetadata)
+      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus), authenticated) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(
@@ -273,6 +271,11 @@ class ToteutusService(
       case organisaatioOids         => HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, organisaatioOids)
     }
   }
+
+  def listOpintojaksot(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid,
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(
+      ToteutusDAO.listOpintojaksotByAllowedOrganisaatiot(_, TilaFilter.onlyOlemassaolevatAndArkistoimattomat()))
 
   def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
       authenticated: Authenticated
@@ -435,5 +438,15 @@ class ToteutusService(
   ): Seq[ToteutusOid] =
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
+    }
+
+  def getToteutukset(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[Toteutus] =
+    withRootAccess(indexerRoles) {
+      ToteutusDAO.get(oids)
+    }
+
+  def listOpintokokonaisuudet(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[OidAndNimi] =
+    withRootAccess(indexerRoles) {
+      ToteutusDAO.getOpintokokonaisuudet(oids)
     }
 }
