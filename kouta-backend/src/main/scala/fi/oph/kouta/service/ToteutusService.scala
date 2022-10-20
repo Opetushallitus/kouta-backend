@@ -323,37 +323,6 @@ class ToteutusService(
     }
   }
 
-  def search(organisaatioOid: OrganisaatioOid, toteutusOid: ToteutusOid, params: SearchParams)(implicit
-      authenticated: Authenticated
-  ): Option[ToteutusSearchItem] = {
-    def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItem] =
-      withAuthorizedOrganizationOids(
-        organisaatioOid,
-        AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
-      )(organisaatioOids => {
-        toteutus.map(t => {
-          val hakukohteet = t.hakutiedot.flatMap(_.hakukohteet)
-          val oidStrings  = organisaatioOids.map(_.toString)
-          ToteutusSearchItem(
-            oid = t.oid,
-            nimi = t.nimi,
-            organisaatio = t.organisaatio,
-            muokkaaja = t.muokkaaja,
-            modified = t.modified,
-            tila = t.tila,
-            organisaatiot = t.organisaatiot,
-            koulutustyyppi = t.koulutustyyppi,
-            hakukohteet = organisaatioOids match {
-              case Seq(RootOrganisaatioOid) => hakukohteet
-              case _                        => hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))
-            }
-          )
-        })
-      })
-
-    filterHakukohteet(KoutaSearchClient.searchToteutukset(Seq(toteutusOid), params).result.headOption)
-  }
-
   private def getDeletableTarjoajienOppilaitokset(
       toteutus: Toteutus,
       tarjoajatDeletedFromToteutus: Seq[OrganisaatioOid]
