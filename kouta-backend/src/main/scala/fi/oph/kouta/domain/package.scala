@@ -3,7 +3,6 @@ package fi.oph.kouta
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity, ValidatableSubEntity, ValidationContext}
@@ -929,5 +928,15 @@ package object domain {
 
   trait ExternalRequest {
     val authenticated: Authenticated
+  }
+
+  object PainotetutArvoSanatLukioKaikki {
+    val koodiUrit: Set[String] = Set(
+      "painotettavatoppiaineetlukiossa_a1",
+      "painotettavatoppiaineetlukiossa_a2",
+      "painotettavatoppiaineetlukiossa_b1",
+      "painotettavatoppiaineetlukiossa_b2",
+      "painotettavatoppiaineetlukiossa_b3"
+    )
   }
 }

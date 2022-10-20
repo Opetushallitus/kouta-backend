@@ -9,7 +9,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, KeywordService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
@@ -28,7 +28,7 @@ trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessC
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
     val hakukohdeServiceValidation = new HakukohdeServiceValidation(organisaatioService, hakuKoodiClient, koulutusKoodiClient, mockHakemusPalveluClient, HakukohdeDAO, HakuDAO)
 
     new HakukohdeService(

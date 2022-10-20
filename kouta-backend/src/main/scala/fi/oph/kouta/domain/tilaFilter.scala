@@ -7,6 +7,10 @@ case class TilaFilter (tilat: Set[Julkaisutila] = Set()) {
 
   def included() = tilat
   def excluded(): Set[Julkaisutila] = Set[Julkaisutila](Poistettu, Tallennettu, Julkaistu, Arkistoitu).diff(tilat)
+
+  def contains(tila: Julkaisutila): Boolean = {
+    tilat.contains(tila)
+  }
 }
 
 object TilaFilter {

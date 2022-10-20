@@ -14,8 +14,6 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -79,14 +77,14 @@ class ToteutusService(
           (toteutusMetadata, koulutusMetadata) match {
             case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
               val kaannokset = Map(
-                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKey("yleiset.opintopistetta"),
-                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKey(
+                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.opintopistetta"),
+                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKeyFromCache(
                   "toteutuslomake.lukionYleislinjaNimiOsa"
                 )
               )
-              val painotuksetKaannokset = koodistoClient.getKoodistoKaannokset("lukiopainotukset")
+              val painotuksetKaannokset = koodistoClient.getKoodistoKaannoksetFromCache("lukiopainotukset")
               val koulutustehtavatKaannokset =
-                koodistoClient.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
+                koodistoClient.getKoodistoKaannoksetFromCache("lukiolinjaterityinenkoulutustehtava")
               val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
               NameHelper.generateLukioToteutusDisplayName(
                 lukioToteutusMetadata,
@@ -103,7 +101,7 @@ class ToteutusService(
   }
 
   private def enrichToteutusMetadata(toteutus: Toteutus): Option[ToteutusMetadata] = {
-    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiot(toteutus.muokkaaja)
+    val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(toteutus.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     toteutus.metadata match {
@@ -158,7 +156,7 @@ class ToteutusService(
     val enrichedToteutus = toteutusWithTime match {
       case Some((t, i)) =>
         val esitysnimi     = generateToteutusEsitysnimi(t)
-        val muokkaaja      = oppijanumerorekisteriClient.getHenkilö(t.muokkaaja)
+        val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(t.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData(), i)
       case None => None
@@ -177,7 +175,7 @@ class ToteutusService(
     authorizePut(toteutus) { t =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
       val enrichedToteutus                           = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, None) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, None, authenticated) { t =>
         doPut(
           t,
           koulutusService.getUpdateTarjoajatActions(toteutus.koulutusOid, getTarjoajienOppilaitokset(toteutus), Set())
@@ -211,8 +209,8 @@ class ToteutusService(
 
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val enrichedMetadata: Option[ToteutusMetadata] = enrichToteutusMetadata(t)
-      val enrichedToteutus                           = t.copy(metadata = enrichedMetadata)
-      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
+      val enrichedToteutus = t.copy(metadata = enrichedMetadata)
+      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus), authenticated) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(
@@ -274,6 +272,11 @@ class ToteutusService(
     }
   }
 
+  def listOpintojaksot(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
+    withAuthorizedOrganizationOids(organisaatioOid,
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(
+      ToteutusDAO.listOpintojaksotByAllowedOrganisaatiot(_, TilaFilter.onlyOlemassaolevatAndArkistoimattomat()))
+
   def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
       authenticated: Authenticated
   ): ToteutusSearchResult = {
@@ -318,37 +321,6 @@ class ToteutusService(
       case Nil          => ToteutusSearchResult()
       case toteutusOids => assocHakukohdeCounts(KoutaSearchClient.searchToteutukset(toteutusOids, params))
     }
-  }
-
-  def search(organisaatioOid: OrganisaatioOid, toteutusOid: ToteutusOid, params: SearchParams)(implicit
-      authenticated: Authenticated
-  ): Option[ToteutusSearchItem] = {
-    def filterHakukohteet(toteutus: Option[ToteutusSearchItemFromIndex]): Option[ToteutusSearchItem] =
-      withAuthorizedOrganizationOids(
-        organisaatioOid,
-        AuthorizationRules(Role.Toteutus.readRoles, allowAccessToParentOrganizations = true)
-      )(organisaatioOids => {
-        toteutus.map(t => {
-          val hakukohteet = t.hakutiedot.flatMap(_.hakukohteet)
-          val oidStrings  = organisaatioOids.map(_.toString)
-          ToteutusSearchItem(
-            oid = t.oid,
-            nimi = t.nimi,
-            organisaatio = t.organisaatio,
-            muokkaaja = t.muokkaaja,
-            modified = t.modified,
-            tila = t.tila,
-            organisaatiot = t.organisaatiot,
-            koulutustyyppi = t.koulutustyyppi,
-            hakukohteet = organisaatioOids match {
-              case Seq(RootOrganisaatioOid) => hakukohteet
-              case _                        => hakukohteet.filter(hakukohde => oidStrings.contains(hakukohde.organisaatio.oid.toString()))
-            }
-          )
-        })
-      })
-
-    filterHakukohteet(KoutaSearchClient.searchToteutukset(Seq(toteutusOid), params).result.headOption)
   }
 
   private def getDeletableTarjoajienOppilaitokset(
@@ -435,5 +407,15 @@ class ToteutusService(
   ): Seq[ToteutusOid] =
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
+    }
+
+  def getToteutukset(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[Toteutus] =
+    withRootAccess(indexerRoles) {
+      ToteutusDAO.get(oids)
+    }
+
+  def listOpintokokonaisuudet(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[OidAndNimi] =
+    withRootAccess(indexerRoles) {
+      ToteutusDAO.getOpintokokonaisuudet(oids)
     }
 }

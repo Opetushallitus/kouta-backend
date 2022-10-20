@@ -35,7 +35,9 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
       case "julkinen"       => "julkinen"
       case "hakutapa"       => if (forSort) s"hakutapa.nimi.${lng}.keyword" else s"hakutapa.koodiUri.keyword"
       case "hakuOid"        => "hakuOid.keyword"
+      case "hakuNimi"       => s"hakuNimi.${lng}.keyword"
       case "toteutusOid"    => "toteutusOid.keyword"
+      case "koulutusOid"    => "koulutusOid.keyword"
       case "orgWhitelist"   => "organisaatio.oid.keyword"
       case "modified"       => "modified"
       case "muokkaaja"      => "muokkaaja.nimi.keyword"
@@ -83,10 +85,21 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
         bool(
           mustQueries = Seq(),
           shouldQueries = Seq(
-            should(Kieli.values.map(l => matchQuery(s"nimi.${l.toString}", searchTerm))),
-            should(
-              Kieli.values.map(l => wildcardQuery(s"nimi.${l.toString}.keyword", s"*${searchTerm}*"))
-            )
+            should(Kieli.values.map(l => wildcardQuery(s"nimi.${l.toString}.keyword", s"*${searchTerm}*")))
+          ),
+          notQueries = Seq()
+        )
+      }
+    })
+
+    val hakuNimiFilter = params.hakuNimi.map(searchTerm => {
+      if (isOid(searchTerm)) {
+        termQuery("hakuOid.keyword", searchTerm)
+      } else {
+        bool(
+          mustQueries = Seq(),
+          shouldQueries = Seq(
+            should(Kieli.values.map(l => wildcardQuery(s"hakuNimi.${l.toString}.keyword", s"*${searchTerm}*")))
           ),
           notQueries = Seq()
         )
@@ -113,6 +126,8 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
     val hakuOidFilter = params.hakuOid.map(h => termQuery(getSearchFieldKeyword(lng, "hakuOid"), h.toString))
     val toteutusOidFilter =
       params.toteutusOid.map(t => termQuery(getSearchFieldKeyword(lng, "toteutusOid"), t.toString))
+    val koulutusOidFilter =
+      params.koulutusOid.map(k => termQuery(getSearchFieldKeyword(lng, "koulutusOid"), k.toString))
     val orgWhitelistFilter =
       Option(params.orgWhitelist)
         .filter(_.nonEmpty)
@@ -128,6 +143,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
 
     List(
       nimiFilter,
+      hakuNimiFilter,
       koulutustyyppiFilter,
       tilaFilter,
       muokkaajaFilter,
@@ -135,6 +151,7 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
       hakutapaFilter,
       hakuOidFilter,
       toteutusOidFilter,
+      koulutusOidFilter,
       orgWhitelistFilter,
       koulutuksenAlkamiskausiFilter,
       koulutuksenAlkamisvuosiFilter
@@ -191,24 +208,24 @@ class KoutaSearchClient(val client: ElasticClient) extends KoutaJsonFormats with
   }
 
   def searchKoulutukset(koulutusOids: Seq[KoulutusOid], params: SearchParams) = {
-    searchEntities[KoulutusSearchItemFromIndex]("koulutus-kouta", koulutusOids.map(_.toString), params)
+    searchEntities[KoulutusSearchItemFromIndex]("koulutus-kouta-virkailija", koulutusOids.map(_.toString), params)
   }
 
   def searchToteutukset(toteutusOids: Seq[ToteutusOid], params: SearchParams) =
-    searchEntities[ToteutusSearchItemFromIndex]("toteutus-kouta", toteutusOids.map(_.toString), params)
+    searchEntities[ToteutusSearchItemFromIndex]("toteutus-kouta-virkailija", toteutusOids.map(_.toString), params)
 
   def searchHaut(hakuOids: Seq[HakuOid], params: SearchParams) =
-    searchEntities[HakuSearchItemFromIndex]("haku-kouta", hakuOids.map(_.toString), params)
+    searchEntities[HakuSearchItemFromIndex]("haku-kouta-virkailija", hakuOids.map(_.toString), params)
 
   def searchHakukohteetDirect(organisaatioOids: Seq[OrganisaatioOid], params: SearchParams) =
-    searchEntitiesDirect[HakukohdeSearchItem]("hakukohde-kouta", organisaatioOids.map(_.toString), params, Seq("toteutus.organisaatiot.keyword", "organisaatio.oid.keyword"))
+    searchEntitiesDirect[HakukohdeSearchItem]("hakukohde-kouta-virkailija", organisaatioOids.map(_.toString), params, Seq("toteutus.organisaatiot.keyword", "organisaatio.oid.keyword"))
 
   def searchHakukohteet(hakukohdeOids: Seq[HakukohdeOid], params: SearchParams) =
-    searchEntities[HakukohdeSearchItem]("hakukohde-kouta", hakukohdeOids.map(_.toString), params)
+    searchEntities[HakukohdeSearchItem]("hakukohde-kouta-virkailija", hakukohdeOids.map(_.toString), params)
 
   def searchValintaperusteet(valintaperusteIds: Seq[UUID], params: SearchParams) =
     searchEntities[ValintaperusteSearchItem](
-      "valintaperuste-kouta",
+      "valintaperuste-kouta-virkailija",
       valintaperusteIds.map(_.toString),
       params,
       idKey = "id"

@@ -10,6 +10,7 @@ import scala.util.Try
 
 case class SearchParams(
     nimi: Option[String] = None,
+    hakuNimi: Option[String] = None,
     koulutustyyppi: Seq[Koulutustyyppi] = Seq.empty,
     muokkaaja: Option[String] = None,
     tila: Seq[Julkaisutila] = Seq.empty,
@@ -19,6 +20,7 @@ case class SearchParams(
     koulutuksenAlkamisvuosi: Seq[String] = Seq.empty,
     hakuOid: Option[HakuOid] = None,
     toteutusOid: Option[ToteutusOid] = None,
+    koulutusOid: Option[KoulutusOid] = None,
     orgWhitelist: Seq[OrganisaatioOid] = Seq.empty,
     page: Int = 1,
     size: Int = 10,
@@ -38,8 +40,10 @@ object SearchParams {
   def apply(v: Map[String, String]): SearchParams = {
     val values = v.filter(_._2.nonEmpty) // Suodatetaan pois tyhjät parametrit
     val nimi = values.get("nimi")
+    val hakuNimi = values.get("hakuNimi")
     SearchParams(
       nimi = nimi,
+      hakuNimi = hakuNimi,
       koulutustyyppi = commaSepStringValToSeq(values.get("koulutustyyppi")).flatMap(s => toEnum[Koulutustyyppi](Some(s), Koulutustyyppi)),
       muokkaaja = values.get("muokkaaja"),
       tila = commaSepStringValToSeq(values.get("tila")).flatMap(s => toEnum[Julkaisutila](Some(s), Julkaisutila)),
@@ -49,6 +53,7 @@ object SearchParams {
       koulutuksenAlkamisvuosi = commaSepStringValToSeq(values.get("koulutuksenAlkamisvuosi")),
       hakuOid = values.get("hakuOid").map(HakuOid(_)),
       toteutusOid = values.get("toteutusOid").map(ToteutusOid(_)),
+      koulutusOid = values.get("koulutusOid").map(KoulutusOid(_)),
       orgWhitelist = commaSepStringValToSeq(values.get("orgWhitelist")).map(OrganisaatioOid(_)),
       page = values.get("page").map(_.toInt).getOrElse(1),
       size = values.get("size").map(_.toInt).getOrElse(10),
@@ -160,6 +165,12 @@ class SearchServlet(
       |          required: false
       |          description: Suodata toteutuksen oidilla
       |        - in: query
+      |          name: koulutusOid
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Suodata koulutuksen oidilla
+      |        - in: query
       |          name: page
       |          schema:
       |            type: integer
@@ -232,43 +243,6 @@ class SearchServlet(
   }
 
   registerPath(
-    "/search/koulutus/{oid}",
-    s"""    get:
-       |      summary: Hakee rikastetun koulutuksen annetulla oidilla
-       |      operationId: searchKoulutusByOid
-       |      description: Hakee rikastetun koulutuksen annetulla oidilla
-       |      tags:
-       |        - Search
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Koulutuksen oid
-       |${searchParamsModel(hasKoulutustyyppi = true)}
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                $$ref: '#/components/schemas/KoulutusSearchItemWithToteutukset'
-       |""".stripMargin
-  )
-  get("/koulutus/:oid") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    (KoulutusOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
-      case (koulutusOid, Some(organisaatioOid)) =>
-        Ok(koulutusService.search(organisaatioOid, koulutusOid, SearchParams(params.toMap)))
-      case _ => NotFound()
-    }
-  }
-
-  registerPath(
     "/search/toteutukset",
     s"""    get:
        |      summary: Hakee organisaation toteutuksia annetuilla parametreilla
@@ -297,43 +271,6 @@ class SearchServlet(
       case None => NotFound()
       case Some(organisaatioOid) =>
         Ok(toteutusService.search(organisaatioOid, SearchParams(params.toMap)))
-    }
-  }
-
-  registerPath(
-    "/search/toteutus/{oid}",
-    s"""    get:
-       |      summary: Hakee rikastetun toteutuksen annetulla oidilla
-       |      operationId: searchToteutusByOid
-       |      description: Hakee rikastetun toteutuksen annetulla oidilla
-       |      tags:
-       |        - Search
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Toteutuksen oid
-       |${searchParamsModel(hasKoulutustyyppi= true)}
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                $$ref: '#/components/schemas/ToteutusSearchItemWithHakukohteet'
-       |""".stripMargin
-  )
-  get("/toteutus/:oid") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    (ToteutusOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
-      case (toteutusOid, Some(organisaatioOid)) =>
-        Ok(toteutusService.search(organisaatioOid, toteutusOid, SearchParams(params.toMap)))
-      case _ => NotFound()
     }
   }
 
@@ -370,43 +307,6 @@ class SearchServlet(
   }
 
   registerPath(
-    "/search/haku/{oid}",
-    s"""    get:
-       |      summary: Hakee rikastetun haun annetulla oidilla
-       |      operationId: searchHakuByOid
-       |      description: Hakee rikastetun haun annetulla oidilla
-       |      tags:
-       |        - Search
-       |      parameters:
-       |        - in: path
-       |          name: oid
-       |          schema:
-       |            type: string
-       |          required: true
-       |          description: Haun oid
-       |${searchParamsModel()}
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |          content:
-       |            application/json:
-       |              schema:
-       |                type: object
-       |                $$ref: '#/components/schemas/HakuSearchItemWithHakukohteet'
-       |""".stripMargin
-  )
-  get("/haku/:oid") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    (HakuOid(params("oid")), params.get("organisaatioOid").map(OrganisaatioOid)) match {
-      case (hakuOid, Some(organisaatioOid)) =>
-        Ok(hakuService.search(organisaatioOid, hakuOid, SearchParams(params.toMap)))
-      case _ => NotFound()
-    }
-  }
-
-  registerPath(
     "/search/hakukohteet",
     s"""    get:
        |      summary: Hakee organisaation hakukohteita annetuilla parametreilla
@@ -416,6 +316,12 @@ class SearchServlet(
        |        - Search
        |      parameters:
        |${searchParamsModel(hasKoulutustyyppi = true)}
+       |        - in: query
+       |          name: hakuNimi
+       |          schema:
+       |            type: string
+       |          required: false
+       |          description: Suodata annetulla haun nimellä tai oidilla
        |        - in: query
        |          name: orgWhitelist
        |          style: form

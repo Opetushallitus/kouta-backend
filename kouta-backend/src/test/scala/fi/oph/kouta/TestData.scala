@@ -90,7 +90,7 @@ object TestData {
       Valintakoetilaisuus(
         jarjestamispaikka = Map(Fi -> "Järjestämispaikka fi", Sv -> "Järjestämispaikka sv"),
         osoite = Some(Osoite1),
-        aika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+        aika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         lisatietoja = Map(Fi -> "lisätieto fi", Sv -> "lisätieto sv")
       )
     )
@@ -591,7 +591,7 @@ object TestData {
     metadata = Some(
       HakuMetadata(
         yhteyshenkilot = Seq(Yhteystieto1),
-        tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+        tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         koulutuksenAlkamiskausi = Some(
           KoulutuksenAlkamiskausi(
             alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
@@ -605,7 +605,7 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(false)
       )
     ),
-    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     kielivalinta = Seq(Fi, Sv),
@@ -683,7 +683,7 @@ object TestData {
       )
     ),
     valintakokeet = List(Valintakoe1),
-    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    hakuajat = List(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
@@ -1037,7 +1037,7 @@ object TestData {
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = None,
     isMuokkaajaOphVirkailija = Some(false),
@@ -1056,7 +1056,7 @@ object TestData {
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = None,
     isMuokkaajaOphVirkailija = Some(false),
@@ -1157,7 +1157,7 @@ object TestData {
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
     lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
     lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = None,
     hasJotpaRahoitus = Some(false))
@@ -1187,7 +1187,7 @@ object TestData {
       hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
       lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
       aloituspaikat = Some(100),
       isMuokkaajaOphVirkailija = Some(false),
       hasJotpaRahoitus = Some(false)
@@ -1225,7 +1225,7 @@ object TestData {
         hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
         lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
         lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         aloituspaikat = Some(23),
         isMuokkaajaOphVirkailija = Some(false),
         hasJotpaRahoitus = Some(false)
@@ -1301,7 +1301,7 @@ object TestData {
         hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
         lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
         lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         aloituspaikat = Some(22),
         isMuokkaajaOphVirkailija = Some(false),
         hasJotpaRahoitus = Some(false)
@@ -1356,7 +1356,7 @@ object TestData {
         hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
         lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
         lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture()))),
+        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         yhteyshenkilot = Seq(Yhteystieto1),
         isMuokkaajaOphVirkailija = Some(false),
         hasJotpaRahoitus = Some(false)

@@ -30,7 +30,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
       koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)

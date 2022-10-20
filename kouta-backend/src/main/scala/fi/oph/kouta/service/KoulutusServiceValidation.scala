@@ -197,10 +197,16 @@ class KoulutusServiceValidation(
           ),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
-      case AmmMuu | Tuva | Telma | VapaaSivistystyoMuu | VapaaSivistystyoOpistovuosi =>
+      case AmmMuu | VapaaSivistystyoMuu =>
         and(
           assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
+      // TODO: Lisättävä näille koulutustyypeille validointi koulutuksetKoodiUri-kentälle
+      case Tuva | Telma | VapaaSivistystyoOpistovuosi =>
+        and(
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
       case _ =>
@@ -450,7 +456,7 @@ class KoulutusServiceValidation(
             .foreach(t => {
               t.metadata match {
                 case Some(toteutusMetadata: KkOpintokokonaisuusToteutusMetadata) => {
-                  toteutusMetadata.opintojenLaajuusNumero.foreach((toteutusLaajuusNumero) => {
+                  toteutusMetadata.opintojenLaajuusNumero.foreach(toteutusLaajuusNumero => {
                     if (toteutusLaajuusNumero < laajuusMin) {
                       addErrorOid("metadata.opintojenLaajuusNumeroMin", t.oid)
                     }
@@ -540,7 +546,7 @@ class KoulutusServiceValidation(
                   ),
                   validateIfTrue(
                     ePerusteId.isDefined && (osa.tutkinnonosaId.isDefined || osa.tutkinnonosaViite.isDefined), {
-                      ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPeruste(ePerusteId.get) match {
+                      ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(ePerusteId.get) match {
                         case Right(tutkinnonosaViitteetAndIdt) =>
                           (osa.tutkinnonosaViite, osa.tutkinnonosaId) match {
                             case (Some(viite), Some(id)) =>
@@ -605,7 +611,7 @@ class KoulutusServiceValidation(
               validateIfTrue(
                 ePerusteId > 0, {
                   ePerusteKoodiClient
-                    .getOsaamisalaKoodiuritForEPeruste(ePerusteId) match {
+                    .getOsaamisalaKoodiuritForEPerusteFromCache(ePerusteId) match {
                     case Right(osaamisalaKoodiuritForEPeruste) =>
                       assertTrue(
                         koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, osaamisalaKoodiuritForEPeruste),
@@ -785,7 +791,7 @@ class KoulutusServiceValidation(
         ePerusteId =>
           validateIfSuccessful(
             assertNotNegative(ePerusteId, path),
-            ePerusteKoodiClient.getKoulutusKoodiUritForEPeruste(ePerusteId) match {
+            ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(ePerusteId) match {
               case Right(koodiUritForEperuste) =>
                 validateIfSuccessful(
                   // ePeruste oletetaan tuntemattomaksi, ellei sille löydy yhtään koulutusKoodiUria

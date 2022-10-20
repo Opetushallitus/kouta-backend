@@ -1,19 +1,18 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.{AmmToteutuksenMetatieto, TuvaToteutuksenMetatieto}
-
-import java.time.LocalDateTime
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
-import fi.oph.kouta.mocks.{KoodistoServiceMock, LokalisointiServiceMock, MockAuditLogger}
+import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.{ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.{TestData, TestOids}
 import org.json4s.jackson.JsonMethods
+
+import java.time.LocalDateTime
 
 class ToteutusSpec extends KoutaIntegrationSpec
   with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture
@@ -618,9 +617,14 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "create, get and update kk-opintokokonaisuus toteutus" in {
+    val kkOpintojaksoKoulutusOid = put(TestData.KkOpintojaksoKoulutus.copy(tila = Julkaistu), ophSession)
+    val kkOpintojaksoToteutus = put(TestData.JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(kkOpintojaksoKoulutusOid)), ophSession)
     val kkOpintokokonaisuusKoulutusOid = put(TestData.KkOpintokokonaisuusKoulutus.copy(tila = Julkaistu), ophSession)
-    val kkOpintokokonaisuusToteutus = TestData.JulkaistuKkOpintokokonaisuusToteutus.copy(koulutusOid = KoulutusOid(kkOpintokokonaisuusKoulutusOid), tila = Tallennettu)
-    val oid = put(kkOpintokokonaisuusToteutus)
+    val kkOpintokokonaisuusToteutus = TestData.JulkaistuKkOpintokokonaisuusToteutus.copy(
+      koulutusOid = KoulutusOid(kkOpintokokonaisuusKoulutusOid),
+      tila = Tallennettu,
+      metadata = Some(TestData.KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(kkOpintojaksoToteutus)))))
+    val oid = put(kkOpintokokonaisuusToteutus.copy(metadata = Some(TestData.KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(kkOpintojaksoToteutus))))))
     val lastModified = get(oid, kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq()))
     update(kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, kkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq()))

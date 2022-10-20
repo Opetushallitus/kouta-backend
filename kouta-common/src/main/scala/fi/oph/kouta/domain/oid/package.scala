@@ -3,7 +3,7 @@ package fi.oph.kouta.domain.oid
 import java.util.regex.Pattern
 
 sealed trait Oid {
-  val OidPattern: Pattern = Pattern.compile("""^[\d][\d\.]+[\d]$""")
+  val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.\d+\.\d+$""")
   val s: String
 
   override def toString: String = s

@@ -1,15 +1,19 @@
 package fi.oph.kouta.client
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, queryFailed}
+import fi.oph.kouta.domain.PainotetutArvoSanatLukioKaikki
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
 import fi.vm.sade.properties.OphProperties
-import scalacache.caffeine.CaffeineCache
+import scala.concurrent.duration.DurationInt
 
 object HakuKoodiClient extends HakuKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
 class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
-  implicit val koodiUriCache = CaffeineCache[Seq[KoodiUri]]
+  implicit val koodiUriCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
+    .expireAfterWrite(15.minutes)
+    .build()
 
   def hakukohdeKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto(koodiUri.split("_").head, koodiUri)
@@ -26,9 +30,13 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
   def kausiKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("kausi", koodiUri)
 
-  def oppiaineKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("painotettavatoppiaineetlukiossa", koodiUri)
-
+  def oppiaineKoodiUriExists(koodiUri: String): ExternalQueryResult = {
+    if (PainotetutArvoSanatLukioKaikki.koodiUrit contains koodiUri) {
+      itemFound
+    } else{
+      koodiUriExistsInKoodisto("painotettavatoppiaineetlukiossa", koodiUri)
+    }
+  }
   def kieliKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("kieli", koodiUri)
 
