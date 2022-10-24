@@ -21,4 +21,8 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
   def get(organisaatioOid: OrganisaatioOid) = {
     organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
   }
+
+  def get(organisaatioOids: List[OrganisaatioOid]) = {
+    organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
+  }
 }
