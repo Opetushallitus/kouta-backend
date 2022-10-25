@@ -188,6 +188,7 @@ class KoulutusService(
               lukioMetadata.copy(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija),
                 koulutusalaKoodiUrit = koulutusalaKoodiUrit
+                opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
               )
             )
           case tuvaMetadata: TuvaKoulutusMetadata =>

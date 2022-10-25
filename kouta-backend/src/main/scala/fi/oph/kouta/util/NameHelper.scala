@@ -43,12 +43,19 @@ object NameHelper {
       case _ => None
     }
   }
+
+  //Fixme, only use laajuusnumero when the neccessary migration has been run for legacy data
   def getLukioKoulutusLaajuusNumero(lukioKoulutusMetadata: LukioKoulutusMetadata): Option[String] = {
-    lukioKoulutusMetadata.opintojenLaajuusKoodiUri match {
-      case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
-      case _             => None
+    if (lukioKoulutusMetadata.opintojenLaajuusNumero.isDefined) {
+      lukioKoulutusMetadata.opintojenLaajuusNumero.map(_.toInt.toString)
+    } else {
+      lukioKoulutusMetadata.opintojenLaajuusKoodiUri match {
+        case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
+        case _             => None
+      }
     }
   }
+
   def generateLukioToteutusDisplayName(
       toteutusMetadata: LukioToteutusMetadata,
       koulutusMetadata: LukioKoulutusMetadata,

@@ -418,6 +418,8 @@ object TestData {
   )
 
   val LukiokoulutuksenMetatieto = LukioKoulutusMetadata(
+    opintojenLaajuusNumero = Some(40),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
     opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_00#1"),
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
