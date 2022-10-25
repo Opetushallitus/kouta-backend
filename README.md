@@ -96,6 +96,9 @@ yhteydessä. Migraatiotiedostot löytyvät kansiosta `kouta-backend/src/main/res
 
 ### 3.4. Ajaminen lokaalisti
 
+Kopioi testikonfiguraatio lokaalia kehitystä varten ```'/src/test/resources/test-vars.yml'``` -> ```'/src/test/resources/dev-vars.yml'```.
+Dev-vars.yml on ignoroitu Gitissä ettei salasanat valu repoon.
+
 Käynnistä Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run).
 Avaa Ideassa ylhäältä Run Configurations valikko ja aseta EmbeddedJettyLauncherin Working directoryksi `$MODULE_DIR$` 
 (Jostain syystä IDEA laittaa tämän väärin ja siksi pitää käsin käydä päivittämässä). Sovellus

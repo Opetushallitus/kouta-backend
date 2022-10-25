@@ -1,4 +1,5 @@
 .idea
+.idea/
 .git
 *.iml
 kouta-temp-db/
@@ -8,3 +9,6 @@ embedded-jetty-vars.yml
 kouta_backend.sql
 .DS_Store
 .localstack
+
+kouta-backend/src/test/resources/dev-vars.yml
+kouta-common/src/test/resources/dev-vars.yml

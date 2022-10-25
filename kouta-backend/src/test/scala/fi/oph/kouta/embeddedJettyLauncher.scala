@@ -1,7 +1,6 @@
 package fi.oph.kouta
 
 import java.util.UUID
-
 import com.amazonaws.services.sqs.AmazonSQSClient
 import fi.oph.kouta.config.{KoutaConfigurationConstants, KoutaConfigurationFactory}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
@@ -11,6 +10,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
 import fi.oph.kouta.util.CommandLine
 
+import java.io.File
 import scala.util.Try
 
 object EmbeddedJettyLauncher extends Logging {
@@ -20,6 +20,7 @@ object EmbeddedJettyLauncher extends Logging {
   val TestDataGeneratorSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
 
   def main(args: Array[String]) {
+    System.setProperty("kouta-backend.localDev", "true")
     System.setProperty("kouta-backend.useSecureCookies", "false")
     System.getProperty("kouta-backend.embedded", "true") match {
       case x if "false".equalsIgnoreCase(x) => TestSetups.setupWithoutEmbeddedPostgres()
@@ -39,9 +40,9 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     if(new java.io.File(s"$home/.kouta_localstack").exists()) {
       logger.warn(s"Localstack is already running. Skipping ./tools/start_localstack....")
     } else {
-      logger.info(s"Running ../tools/start_localstack....")
-      CommandLine.runBlocking(s"../tools/start_localstack")
-      Runtime.getRuntime.addShutdownHook(new Thread(() => CommandLine.runBlocking(s"../tools/stop_localstack")))
+      logger.info(s"Running tools/start_localstack....")
+      CommandLine.runBlocking(s"tools/start_localstack")
+      Runtime.getRuntime.addShutdownHook(new Thread(() => CommandLine.runBlocking(s"tools/stop_localstack")))
     }
     logSqsQueues()
   }
@@ -112,10 +113,16 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
   }
 }
 
-object Templates {
+object Templates extends Logging {
 
-  val DEFAULT_TEMPLATE_FILE_PATH = "src/test/resources/dev-vars.yml"
-  val TEST_TEMPLATE_FILE_PATH = "src/test/resources/embedded-jetty-vars.yml"
+  val DEFAULT_TEMPLATE_FILE_PATH: String =
+    Option(System.getenv("TEMPLATE_FILE_PATH")).getOrElse("kouta-backend/src/test/resources/dev-vars.yml")
+
+  logger.warn(s"Kouta-Backend using TEMPLATE_FILE_PATH = $DEFAULT_TEMPLATE_FILE_PATH")
+
+  val TEST_TEMPLATE_FILE_PATH =
+    File.createTempFile("embedded-jetty-vars",".yml").toPath.toString
+    //"src/test/resources/embedded-jetty-vars.yml"
 
   import java.io.{File, PrintWriter}
   import java.nio.file.Files
@@ -123,18 +130,26 @@ object Templates {
   import scala.io.Source
   import scala.util.{Failure, Success, Try}
 
-  def createTestTemplate(port:Int, deleteAutomatically:Boolean = true): Unit = Try(new PrintWriter(new File(TEST_TEMPLATE_FILE_PATH))) match {
+  private def createIfNotExist(f: File): File = {
+    if(!f.exists()) {
+      f.createNewFile()
+    }
+    f
+  }
+
+  def createTestTemplate(port:Int, deleteAutomatically:Boolean = true): Unit =
+    Try(new PrintWriter(createIfNotExist(new File(TEST_TEMPLATE_FILE_PATH)))) match {
     case Failure(t) => throw t
     case Success(w) => try {
       Source.fromFile(DEFAULT_TEMPLATE_FILE_PATH)
         .getLines
-        .map(l => l match {
+        .map {
           case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: $port"
           case x if x.contains("postgres_app_user") => "postgres_app_user: oph"
           case x if x.contains("host_postgresql_kouta_app_password") => "host_postgresql_kouta_app_password: oph"
           case x if x.contains("host_postgresql_kouta") => "host_postgresql_kouta: localhost"
           case x => x
-        })
+        }
         .foreach(l => w.println(l))
       w.flush()
     } finally { w.close() }
