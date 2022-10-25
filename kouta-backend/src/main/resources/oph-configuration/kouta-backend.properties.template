@@ -31,7 +31,7 @@ kayttooikeus-service.organisaatiohenkilo=https://{{host_virkailija}}/kayttooikeu
 kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kayttooikeus-service/userDetails/$1
 
 organisaatio-service.organisaatio.oid.jalkelaiset=https://{{host_virkailija}}/organisaatio-service/api/$1/jalkelaiset
-organisaatio-service.organisaatio.hierarkia.with.oids=https://{{host_virkailija}}/organisaatio-service/api/hierarkia/hae
+organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/api/hierarkia/hae
 organisaatio-service.organisaatio.with.oid=https://{{host_virkailija}}/organisaatio-service/api/$1
 organisaatio-service.organisaatiot.with.oids=https://{{host_virkailija}}/organisaatio-service/api/findbyoids
 
