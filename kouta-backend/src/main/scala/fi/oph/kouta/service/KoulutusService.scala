@@ -154,6 +154,7 @@ class KoulutusService(
             Some(
               m.copy(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
                 koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
                   m.koulutusalaKoodiUrit,
                   "kansallinenkoulutusluokitus2016koulutusalataso1_00"
