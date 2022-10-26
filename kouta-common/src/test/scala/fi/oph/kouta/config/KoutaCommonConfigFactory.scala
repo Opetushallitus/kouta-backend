@@ -24,7 +24,10 @@ object KoutaCommonConfigFactory extends Logging {
       extends ApplicationSettings(config)
 
   def loadTemplatedConfiguration(): OphProperties = {
-    val templateFilePath = "src/test/resources/dev-vars.yml"
+    val templateFilePath: String =
+      Option(System.getenv("TEMPLATE_FILE_PATH")).getOrElse("src/test/resources/dev-vars.yml")
+
+    logger.warn(s"Kouta-Common using TEMPLATE_FILE_PATH = $templateFilePath")
 
     implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaAuthorizationConfiguration] {
       override def parse(c: TypesafeConfig): KoutaAuthorizationConfiguration =
