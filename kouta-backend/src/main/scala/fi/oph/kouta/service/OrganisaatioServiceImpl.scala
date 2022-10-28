@@ -19,11 +19,11 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]) =
     organisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(oids)
 
-  def get(organisaatioOid: OrganisaatioOid) = {
+  def getOrganisaatio(organisaatioOid: OrganisaatioOid) = {
     organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
   }
 
-  def get(organisaatioOids: List[OrganisaatioOid]) = {
+  def getOrganisaatiot(organisaatioOids: List[OrganisaatioOid]) = {
     organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
   }
 
