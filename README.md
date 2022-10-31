@@ -216,10 +216,6 @@ EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
   eli `AWS_ACCESS_KEY_ID` ja `AWS_SECRET_ACCESS_KEY` -ympäristömuuttujista tai `~/.aws/credentials` tiedostosta
   `AWS_PROFILE` -ymäristömuuttujan kertomasta profiilista.
 
-### Testidatan generointi
-
-Lokaaliin kouta-backendiin saa generoitua testidataa ajamalla ```TestDataGenerator```. (Tämä on vanhentunut ja ei toimi enää)
-
 ### Riippuvuuksien tarkistaminen
 
 ```mvn enforcer:enforce```

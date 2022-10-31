@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupPostgres, setupWithDefaultTestTemplateFile, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.TestSetups
 import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
@@ -24,7 +24,7 @@ import scala.collection.mutable
 import scala.reflect.Manifest
 
 case class TestUser(oid: UserOid, username: String, sessionId: UUID) {
-  val ticket: SessionCookie = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
+  val ticket: SessionCookie = MockSecurityContext.ticketFor(TestSetups.defaultServiceIdentifier, username)
 }
 
 trait DefaultTestImplicits {
@@ -33,8 +33,8 @@ trait DefaultTestImplicits {
 
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits with MockitoSugar {
 
-  val serviceIdentifier: String = KoutaIntegrationSpec.serviceIdentifier
-  val defaultAuthorities: Set[Authority] = KoutaIntegrationSpec.defaultAuthorities
+  val serviceIdentifier: String = TestSetups.defaultServiceIdentifier
+  val defaultAuthorities: Set[Authority] = TestSetups.defaultAuthorities
 
   val testUser: TestUser = TestUser(TestUserOid, "testuser", defaultSessionId)
 
@@ -55,9 +55,9 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   override def beforeAll(): Unit = {
     super.beforeAll()
     System.setProperty("kouta-backend.useSecureCookies", "false")
-    setupWithDefaultTestTemplateFile()
-    setupPostgres()
-    setupAwsKeysForSqs()
+    TestSetups.setupWithDefaultTestTemplateFile()
+    TestSetups.setupPostgres()
+    TestSetups.setupAwsKeysForSqs()
     addDefaultSession()
   }
 
@@ -65,11 +65,6 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
     super.afterAll()
     truncateDatabase()
   }
-}
-
-object KoutaIntegrationSpec {
-  val serviceIdentifier = "testService"
-  val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, OphOid)).toSet
 }
 
 trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock with KoodistoServiceMock { this: HttpSpec =>

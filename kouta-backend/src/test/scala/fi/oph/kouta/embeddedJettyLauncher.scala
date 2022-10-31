@@ -1,15 +1,11 @@
 package fi.oph.kouta
 
 import com.amazonaws.services.sqs.AmazonSQSClient
-import fi.oph.kouta.config.KoutaConfigurationConstants.{
-  SYSTEM_PROPERTY_NAME_CONFIG_PROFILE,
-  SYSTEM_PROPERTY_NAME_TEMPLATE,
-  CONFIG_PROFILE_TEMPLATE
-}
+import fi.oph.kouta.TestOids.OphOid
+import fi.oph.kouta.config.KoutaConfigurationConstants.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{CasSession, ServiceTicket}
+import fi.oph.kouta.security.{Authority, CasSession, RoleEntity, ServiceTicket}
 import fi.oph.kouta.util.CommandLine
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
@@ -21,20 +17,23 @@ object EmbeddedJettyLauncher extends Logging {
 
   val DefaultPort = "8099"
 
-  val TestDataGeneratorSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
-
   def main(args: Array[String]) {
     System.setProperty("kouta-backend.useSecureCookies", "false")
+    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEV_TEMPLATE_FILE_PATH)
     TestSetups.setupPostgres()
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
-    TestSetups.setupCasSessionIdForTestDataGenerator()
+    TestSetups.setupFixedCasSessionId()
     new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt, true).start.join()
   }
 }
 
 object TestSetups extends Logging {
+
+  private val FixedSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
+  val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, OphOid)).toSet
+  val defaultServiceIdentifier = "test-session"
 
   def setupSqsQueues(): Unit = {
     val home = System.getProperty("user.home")
@@ -100,12 +99,12 @@ object TestSetups extends Logging {
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
   }
 
-  def setupCasSessionIdForTestDataGenerator(): UUID = {
-    logger.info(s"Adding session for TestDataGenerator")
-    Try(SessionDAO.delete(UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)))
+  def setupFixedCasSessionId(): UUID = {
+    logger.info(s"Adding fixed session for Jetty")
+    Try(SessionDAO.delete(UUID.fromString(FixedSessionId)))
     SessionDAO.store(
-      CasSession(ServiceTicket(""), "1.2.246.562.24.1", KoutaIntegrationSpec.defaultAuthorities),
-      UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)
+      CasSession(ServiceTicket(""), "1.2.246.562.24.1", defaultAuthorities),
+      UUID.fromString(FixedSessionId)
     )
   }
 }
