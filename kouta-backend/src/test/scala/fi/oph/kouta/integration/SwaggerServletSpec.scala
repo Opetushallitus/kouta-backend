@@ -2,13 +2,10 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.SwaggerServlet
 import fi.oph.kouta.integration.fixture.{AuthFixture, ExternalFixture, KeywordFixture, UploadFixture}
 import fi.oph.kouta.servlet.HealthcheckServlet
-import org.scalatra.test.scalatest.ScalatraFlatSpec
 import io.swagger.v3.parser.OpenAPIV3Parser
 
 class SwaggerServletSpec
-    extends ScalatraFlatSpec
-    with EverythingFixture
-    with AuthFixture
+    extends AuthFixture
     with IndexerFixture
     with SearchFixture
     with KeywordFixture

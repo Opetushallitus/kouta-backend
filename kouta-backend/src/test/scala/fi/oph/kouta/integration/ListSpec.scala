@@ -1,5 +1,4 @@
 package fi.oph.kouta.integration
-import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -9,9 +8,8 @@ import org.json4s.jackson.Serialization.read
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.generic.auto._
 import fi.oph.kouta.repository.HakukohdeDAO
-import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 
-class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
+class ListSpec extends IndexerFixture {
 
   override val roleEntities: List[RoleEntity] = RoleEntity.all
 

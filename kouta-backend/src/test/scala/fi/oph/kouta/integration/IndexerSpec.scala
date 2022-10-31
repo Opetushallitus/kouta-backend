@@ -8,7 +8,7 @@ import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 import org.json4s.jackson.Serialization.read
 
-class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec {
+class IndexerSpec extends IndexerFixture {
 
   override val roleEntities: Seq[RoleEntity] = RoleEntity.all
 
