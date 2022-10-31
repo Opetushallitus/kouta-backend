@@ -1,6 +1,6 @@
 ---
 host_postgresql_kouta: localhost
-host_postgresql_kouta_port: 5432
+host_postgresql_kouta_port: 5433
 postgres_app_user: oph
 host_postgresql_kouta_app_password: oph
 host_virkailija: virkailija.hahtuvaopintopolku.fi
