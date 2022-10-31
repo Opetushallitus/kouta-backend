@@ -168,9 +168,6 @@
                 <version>${plugin.scalatest-maven-plugin.version}</version>
                 <configuration>
                     <stdout>T</stdout>
-                    <environmentVariables>
-                        <TEMPLATE_FILE_PATH>src/test/resources/test-vars.yml</TEMPLATE_FILE_PATH>
-                    </environmentVariables>
                 </configuration>
                 <executions>
                     <execution>

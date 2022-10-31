@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import com.softwaremill.diffx.scalatest.DiffMatcher._
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupPostgres, setupWithDefaultTestTemplateFile, setupWithEmbeddedPostgres, setupWithTemplate}
 import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
@@ -28,7 +28,6 @@ case class TestUser(oid: UserOid, username: String, sessionId: UUID) {
 }
 
 trait DefaultTestImplicits {
-
   implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = (a: OrganisaatioOid, b: OrganisaatioOid) => a.s compare b.s
 }
 
@@ -56,12 +55,9 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   override def beforeAll(): Unit = {
     super.beforeAll()
     System.setProperty("kouta-backend.useSecureCookies", "false")
-    Option(System.getProperty("kouta-backend.test-postgres-port")) match {
-      case Some(port) => setupWithTemplate(port.toInt)
-      case None => setupWithEmbeddedPostgres()
-    }
+    setupWithDefaultTestTemplateFile()
+    setupPostgres()
     setupAwsKeysForSqs()
-
     addDefaultSession()
   }
 

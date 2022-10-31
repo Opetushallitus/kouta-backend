@@ -8,9 +8,11 @@ import fi.vm.sade.utils.slf4j.Logging
 import java.io.File
 import java.net.URL
 import scala.util.Try
+import fi.oph.kouta.util.ConfigUtils.getModuleDir
 
 case class KoutaDatabaseConfiguration(
     url: String,
+    port: Int,
     username: String,
     password: String,
     numThreads: Option[Int],
@@ -60,6 +62,7 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     extends ApplicationSettings(config) {
   val databaseConfiguration: KoutaDatabaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
+    port = config.getInt("kouta-backend.db.port"),
     username = config.getString("kouta-backend.db.user"),
     password = config.getString("kouta-backend.db.password"),
     numThreads = Option(config.getInt("kouta-backend.db.numThreads")),
@@ -126,8 +129,9 @@ trait KoutaConfigurationConstants {
   val CONFIG_PROFILE_TEMPLATE = "template"
 }
 
-object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstants {
+object KoutaConfigurationConstants extends KoutaConfigurationConstants
 
+object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstants {
   val profile: String = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
   logger.info(s"Using profile '$profile'")
 
@@ -160,21 +164,21 @@ object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstant
           "system property is missing. Cannot create oph-properties!"
       )
     )
-    val isLocalDev = Option(System.getProperty("kouta-backend.localDev")).exists("true".equalsIgnoreCase)
-    val prefix = if(isLocalDev) "kouta-backend/" else ""
+    val prefix = getModuleDir("kouta-backend")
 
     implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = (c: TypesafeConfig) =>
       KoutaConfiguration(
         c,
-        new OphProperties(s"${prefix}src/test/resources/kouta-backend.properties") {
+        new OphProperties(s"${prefix}/src/test/resources/kouta-backend.properties") {
           addDefault("host.virkailija", c.getString("host.virkailija"))
         }
       )
 
-    logger.info(s"Reading template variables from '$templateFilePath'. ${if(isLocalDev) "STARTING IN DEVELOPMENT MODE!"}")
+    val absTemplateFilePath = s"$prefix/$templateFilePath"
+    logger.info(s"Reading template variables from '$absTemplateFilePath'. ")
     val templateURL: URL = new File(
-      s"${prefix}src/main/resources/oph-configuration/kouta-backend.properties.template").toURI.toURL
-    val attributesURL = new File(templateFilePath).toURI.toURL
+      s"${prefix}/src/main/resources/oph-configuration/kouta-backend.properties.template").toURI.toURL
+    val attributesURL = new File(absTemplateFilePath).toURI.toURL
     ConfigTemplateProcessor.createSettings(templateURL, attributesURL)
   }
 }

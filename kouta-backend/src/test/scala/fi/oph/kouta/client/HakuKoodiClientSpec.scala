@@ -1,7 +1,6 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.Templates
-import fi.oph.kouta.TestSetups.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
+import fi.oph.kouta.TestSetups
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.KoodistoServiceMock
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
@@ -16,8 +15,7 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
   override def beforeAll() = {
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
-    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
+    TestSetups.setupWithDefaultTestTemplateFile()
     super.startServiceMocking()
     urlProperties = Some(
       KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort")
@@ -148,11 +146,14 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   }
 
   "Finding hakutapaKoodiUri" should "return true when koodiUri exists" in {
-    mockKoodistoResponse("hakutapa", Seq(
-      ("hakutapa_01", 1, None),
-      ("hakutapa_02", 3, None),
-      ("hakutapa_66", 2, Some(dayInPast))
-    ))
+    mockKoodistoResponse(
+      "hakutapa",
+      Seq(
+        ("hakutapa_01", 1, None),
+        ("hakutapa_02", 3, None),
+        ("hakutapa_66", 2, Some(dayInPast))
+      )
+    )
     koodiClient.hakutapaKoodiUriExists("hakutapa_01") should equal(itemFound)
     koodiClient.hakutapaKoodiUriExists("hakutapa_02#2") should equal(itemFound)
     koodiClient.hakutapaKoodiUriExists("hakutapa_66") should equal(itemNotFound)
@@ -160,11 +161,14 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   }
 
   "Finding haunkohdejoukkoKoodiUri" should "return true when koodiUri exists" in {
-    mockKoodistoResponse("haunkohdejoukko", Seq(
-      ("haunkohdejoukko_17", 1, None),
-      ("haunkohdejoukko_18", 3, None),
-      ("haunkohdejoukko_66", 2, Some(dayInPast))
-    ))
+    mockKoodistoResponse(
+      "haunkohdejoukko",
+      Seq(
+        ("haunkohdejoukko_17", 1, None),
+        ("haunkohdejoukko_18", 3, None),
+        ("haunkohdejoukko_66", 2, Some(dayInPast))
+      )
+    )
     koodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_17") should equal(itemFound)
     koodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_18#2") should equal(itemFound)
     koodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_66") should equal(itemNotFound)
@@ -172,11 +176,14 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   }
 
   "Finding haunkohdejoukonTarkenneKoodiUri" should "return true when koodiUri exists" in {
-    mockKoodistoResponse("haunkohdejoukontarkenne", Seq(
-      ("haunkohdejoukontarkenne_1", 1, None),
-      ("haunkohdejoukontarkenne_2", 3, None),
-      ("haunkohdejoukontarkenne_6", 2, Some(dayInPast))
-    ))
+    mockKoodistoResponse(
+      "haunkohdejoukontarkenne",
+      Seq(
+        ("haunkohdejoukontarkenne_1", 1, None),
+        ("haunkohdejoukontarkenne_2", 3, None),
+        ("haunkohdejoukontarkenne_6", 2, Some(dayInPast))
+      )
+    )
     koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_1") should equal(itemFound)
     koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_2#2") should equal(itemFound)
     koodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_6") should equal(itemNotFound)
@@ -184,11 +191,14 @@ class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
   }
 
   "Finding valintatapaKoodiUri" should "return true when koodiUri exists" in {
-    mockKoodistoResponse("valintatapajono", Seq(
-      ("valintatapajono_av", 1, None),
-      ("valintatapajono_tv", 3, None),
-      ("valintatapajono_km", 2, Some(dayInPast))
-    ))
+    mockKoodistoResponse(
+      "valintatapajono",
+      Seq(
+        ("valintatapajono_av", 1, None),
+        ("valintatapajono_tv", 3, None),
+        ("valintatapajono_km", 2, Some(dayInPast))
+      )
+    )
     koodiClient.valintatapaKoodiUriExists("valintatapajono_av") should equal(itemFound)
     koodiClient.valintatapaKoodiUriExists("valintatapajono_tv#2") should equal(itemFound)
     koodiClient.valintatapaKoodiUriExists("valintatapajono_km") should equal(itemNotFound)
