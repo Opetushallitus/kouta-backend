@@ -50,6 +50,9 @@ class ModificationSpec extends IndexerFixture {
   }
 
   def updateTestData(): Unit = {
+    // Ilman alla olevaa sleeppiä yksi testi feilasi joissakin (nopeammissa?) ympäristöissä.
+    // Syy oli se, että timestampAfterInserts osui samalle sekunnille alla olevien update-operaatioiden kanssa.
+    Thread.sleep(1500)
     updateInKoulutusTable(0)
     updateInKoulutuksenTarjoajatTable(1)
     deleteInKoulutuksenTarjoajatTable(2)
