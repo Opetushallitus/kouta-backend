@@ -589,16 +589,15 @@
                 <version>${plugin.scalatest-maven-plugin.version}</version>
                 <configuration>
                     <stdout>T</stdout>
-                    <!--systemProperties>
-                        <property>
-                            <name>aws.accessKeyId</name>
-                            <value>testAccessKeyId</value>
-                        </property>
-                        <property>
-                            <name>aws.secretKey</name>
-                            <value>testSecretKey</value>
-                        </property>
-                    </systemProperties-->
+                    <systemProperties>
+                        <kouta-backend.config-profile>template</kouta-backend.config-profile>
+                        <kouta-backend.template-file>src/test/resources/test-vars.yml</kouta-backend.template-file>
+                        <kouta-backend.embeddedPostgresType>docker</kouta-backend.embeddedPostgresType>
+                        <kouta-backend.db.port>5432</kouta-backend.db.port>
+                    </systemProperties>
+                    <environmentVariables>
+                        <TEMPLATE_FILE_PATH>src/test/resources/test-vars.yml</TEMPLATE_FILE_PATH>
+                    </environmentVariables>
                 </configuration>
                 <executions>
                     <execution>
