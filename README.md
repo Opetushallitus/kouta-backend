@@ -99,9 +99,8 @@ Kopioi testikonfiguraatio lokaalia kehitystä varten ```'/src/test/resources/tes
 Dev-vars.yml on ignoroitu Gitissä ettei salasanat valu repoon.
 
 Käynnistä Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run). Sovellus
-käynnistyy porttiin **8099** ja se käyttää valittua postgres kantaa (host tai kontti).
-Asetuksia voi muuttaa muokkaamalla
-```'/src/test/resources/dev-vars.yml'```-tiedostoa.
+käynnistyy porttiin **8099** ja käynnistää oletuksena PostgreSQL:n docker-kontissa.
+Asetuksia voi muuttaa muokkaamalla ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
 HUOM! KayttooikeusClient ja OppijanumerorekisteriClient (joita käytetään muokkaajan nimen muodostamiseen) tarvitsevat toimiakseen testiympäristön CAS-salasanan, joka löytyy sieltä, mistä muutkin salasanat. Sovellus toimii kuitenkin ilman salasanan asettamista, mutta logeihin tulee siinä tapauksessa CasAuthenticationErroreita.
 
 EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
@@ -201,8 +200,7 @@ EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
 | System property                                 |                                                                                             |   
 | ------------------------------------------------|:-------------------------------------------------------------------------------------------:|   
 | ```-Dkouta-backend.port=xxxx```                 | Määrittää Jettyn portin (default 8099)                                                      |   
-| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                          |   
-| ```-Dkouta-backend.embeddedPostgresType=xxxx``` | Käynnistetäänkö PostgreSQL host-koneella vai kontissa (`host` tai `docker`, default docker) |   
+| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                          |
 | ```-Dkouta-backend.profile=xxxx```              | Määrittää profiilin                                                                         |   
 | ```-Dkouta-backend.template=xxxx```             | Määrittää template-tiedoston polun                                                          |   
 

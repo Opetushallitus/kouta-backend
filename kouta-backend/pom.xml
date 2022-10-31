@@ -592,7 +592,6 @@
                     <systemProperties>
                         <kouta-backend.config-profile>template</kouta-backend.config-profile>
                         <kouta-backend.template-file>src/test/resources/test-vars.yml</kouta-backend.template-file>
-                        <kouta-backend.embeddedPostgresType>docker</kouta-backend.embeddedPostgresType>
                         <kouta-backend.db.port>5432</kouta-backend.db.port>
                     </systemProperties>
                     <environmentVariables>
