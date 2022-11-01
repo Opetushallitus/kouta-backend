@@ -404,7 +404,6 @@ sealed trait KoulutusMetadata {
 
 trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
   val tutkintonimikeKoodiUrit: Seq[String]
-  val opintojenLaajuusKoodiUri: Option[String]
   val koulutusalaKoodiUrit: Seq[String]
 }
 
@@ -439,7 +438,8 @@ case class YliopistoKoulutusMetadata(tyyppi: Koulutustyyppi = Yo,
                                      lisatiedot: Seq[Lisatieto] = Seq(),
                                      koulutusalaKoodiUrit: Seq[String] = Seq(),
                                      tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                     opintojenLaajuusKoodiUri: Option[String] = None,
+                                     opintojenLaajuusNumero: Option[Double] = None,
+                                     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                      isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
@@ -447,7 +447,8 @@ case class AmmattikorkeakouluKoulutusMetadata(tyyppi: Koulutustyyppi = Amk,
                                               lisatiedot: Seq[Lisatieto] = Seq(),
                                               koulutusalaKoodiUrit: Seq[String] = Seq(),
                                               tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                              opintojenLaajuusKoodiUri: Option[String] = None,
+                                              opintojenLaajuusNumero: Option[Double] = None,
+                                              opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
@@ -455,7 +456,8 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadata(tyyppi: Koulutustyyppi = AmmOpe
                                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                                  koulutusalaKoodiUrit: Seq[String] = Seq(),
                                                  tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                                 opintojenLaajuusKoodiUri: Option[String] = None,
+                                                 opintojenLaajuusNumero: Option[Double] = None,
+                                                 opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class OpePedagOpinnotKoulutusMetadata(tyyppi: Koulutustyyppi = OpePedagOpinnot,
@@ -463,7 +465,8 @@ case class OpePedagOpinnotKoulutusMetadata(tyyppi: Koulutustyyppi = OpePedagOpin
                                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                                  koulutusalaKoodiUrit: Seq[String] = Seq(),
                                                  tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                                 opintojenLaajuusKoodiUri: Option[String] = None,
+                                                 opintojenLaajuusNumero: Option[Double] = None,
+                                                 opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KorkeakoulutusKoulutusMetadata
 
 case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
@@ -488,7 +491,6 @@ case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                  opintojenLaajuusNumero: Option[Double] = None,
                                  opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                 opintojenLaajuusKoodiUri: Option[String] = None, //fixme remove me
                                  koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
@@ -496,14 +498,16 @@ case class TuvaKoulutusMetadata(tyyppi: Koulutustyyppi = Tuva,
                                 kuvaus: Kielistetty = Map(),
                                 lisatiedot: Seq[Lisatieto] = Seq(),
                                 linkkiEPerusteisiin: Kielistetty = Map(),
-                                opintojenLaajuusKoodiUri: Option[String] = None,
+                                opintojenLaajuusNumero: Option[Double] = None,
+                                opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                 isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 case class TelmaKoulutusMetadata(tyyppi: Koulutustyyppi = Telma,
                                  kuvaus: Kielistetty = Map(),
                                  lisatiedot: Seq[Lisatieto] = Seq(),
                                  linkkiEPerusteisiin: Kielistetty = Map(),
-                                 opintojenLaajuusKoodiUri: Option[String] = None,
+                                 opintojenLaajuusNumero: Option[Double] = None,
+                                 opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                  isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
 
 trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata {
@@ -517,7 +521,8 @@ case class VapaaSivistystyoOpistovuosiKoulutusMetadata(tyyppi: Koulutustyyppi = 
                                                        kuvaus: Kielistetty = Map(),
                                                        linkkiEPerusteisiin: Kielistetty = Map(),
                                                        koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                                       opintojenLaajuusKoodiUri: Option[String] = None,
+                                                       opintojenLaajuusNumero: Option[Double] = None,
+                                                       opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                                        isMuokkaajaOphVirkailija: Option[Boolean] = None
                                                       ) extends VapaaSivistystyoKoulutusMetadata
 

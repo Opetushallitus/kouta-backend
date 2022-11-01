@@ -44,16 +44,8 @@ object NameHelper {
     }
   }
 
-  //Fixme, only use laajuusnumero when the neccessary migration has been run for legacy data
   def getLukioKoulutusLaajuusNumero(lukioKoulutusMetadata: LukioKoulutusMetadata): Option[String] = {
-    if (lukioKoulutusMetadata.opintojenLaajuusNumero.isDefined) {
-      lukioKoulutusMetadata.opintojenLaajuusNumero.map(_.toInt.toString)
-    } else {
-      lukioKoulutusMetadata.opintojenLaajuusKoodiUri match {
-        case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
-        case _             => None
-      }
-    }
+    lukioKoulutusMetadata.opintojenLaajuusNumero.map(_.toInt.toString)
   }
 
   def generateLukioToteutusDisplayName(
