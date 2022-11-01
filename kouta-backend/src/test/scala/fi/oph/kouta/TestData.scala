@@ -1452,23 +1452,32 @@ object TestData {
     muokkaaja = TestUserOid
   )
 
-  val orgServiceOrganisaatio: Organisaatio = Organisaatio(
+  val organisaationOsa: Organisaatio = Organisaatio(
+    oid = GrandChildOid.toString,
+    parentOidPath =
+      s"${GrandChildOid.toString}/${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
+    nimi = Map(Fi -> "Organisation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
+    kotipaikkaUri = Some("kunta_123"),
+    children = List(),
+    organisaatiotyypit = List("organisaatiotyyppi_1")
+  )
+
+  val organisaatio: Organisaatio = Organisaatio(
     oid = ChildOid.toString,
-    parentOidPath = s"${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
-    oppilaitostyyppi = Some("oppilaitostyyppi_21#1"),
+    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
+    oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
     kotipaikkaUri = Some("kunta_123"),
-    children = List(
-      OrganisaationOsa(
-        oid = GrandChildOid.toString,
-        parentOidPath =
-          s"${GrandChildOid.toString}/${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
-        nimi = Map(Fi -> "Organisation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
-        kotipaikkaUri = Some("kunta_123"),
-        children = List(),
-        organisaatiotyypit = List("organisaatiotyyppi_1")
-      )
-    )
+    children = List(organisaationOsa)
+  )
+
+  val parentOrganisaatio: Organisaatio = Organisaatio(
+    oid = ParentOid.toString,
+    parentOidPath = s"${ParentOid.toString}/1.2.246.562.10.00000000001",
+    oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
+    nimi = Map(Fi -> "Parent Organisaatio", Sv -> "Parent Organisation", En -> "Parent Organization"),
+    kotipaikkaUri = Some("kunta_123"),
+    children = List(organisaatio)
   )
 
   val inPastAikaleima             = inPast(1000)
