@@ -167,13 +167,11 @@ class KoulutusService(
           case tuvaMetadata: TuvaKoulutusMetadata =>
             Some(tuvaMetadata.copy(
               isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-              opintojenLaajuusNumero = Some(8),
               opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusViikko),
             ))
           case telmaMetadata: TelmaKoulutusMetadata =>
             Some(telmaMetadata.copy(
               isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-              opintojenLaajuusNumero = Some(6),
               opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOsaamispiste)
             ))
           case vapaaSivistystyoKoulutusMetadata: VapaaSivistystyoKoulutusMetadata =>
