@@ -674,14 +674,14 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   def removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Int] = {
     sqlu"""
     update hakukohteet
-    set metadata = jsonb_set(metadata, '{urheilijanAmmKoulutus}', 'false'::jsonb, false)
+    set metadata = jsonb_set(metadata, '{jarjestaaUrheilijanAmmKoulutusta}', 'false'::jsonb, false)
     where oid in (
         select hk.oid
         from hakukohteet hk
         join toteutukset t on t.oid = hk.toteutus_oid
         join koulutukset k on k.oid = t.koulutus_oid
         where hk.jarjestyspaikka_oid = $jarjestyspaikkaOid
-          and hk.metadata ->> 'urheilijanAmmKoulutus' = 'true'
+          and hk.metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' = 'true'
           and hk.tila in ('tallennettu', 'julkaistu')
           and k.tyyppi = 'amm'
     );"""
