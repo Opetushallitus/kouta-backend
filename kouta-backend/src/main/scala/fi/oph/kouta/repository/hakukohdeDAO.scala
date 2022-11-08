@@ -27,6 +27,7 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int
   def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid]
   def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Option[Seq[String]], Option[Seq[UUID]])]
+  def removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Int]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -668,5 +669,21 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): DBIO[Int] = {
     sqlu"""update hakukohteet set tila = 'arkistoitu' where oid in (#${createOidInParams(hakukohdeOids)}) and tila = 'julkaistu'"""
+  }
+
+  def removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Int] = {
+    sqlu"""
+    update hakukohteet
+    set metadata = jsonb_set(metadata, '{urheilijanAmmKoulutus}', 'false'::jsonb, false)
+    where oid in (
+        select hk.oid
+        from hakukohteet hk
+        join toteutukset t on t.oid = hk.toteutus_oid
+        join koulutukset k on k.oid = t.koulutus_oid
+        where hk.jarjestyspaikka_oid = $jarjestyspaikkaOid
+          and hk.metadata ->> 'urheilijanAmmKoulutus' = 'true'
+          and hk.tila in ('tallennettu', 'julkaistu')
+          and k.tyyppi = 'amm'
+    );"""
   }
 }

@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
-import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
@@ -119,6 +119,7 @@ class OppilaitosService(
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- maybeCopyLogo(logo, o)
         o          <- teema.orElse(logo).map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
+        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitos.oid)
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
       } yield (teema, logo, o)
@@ -135,6 +136,7 @@ class OppilaitosService(
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
         (logo, o) <- checkAndMaybeCopyLogo(o)
         o          <- OppilaitosDAO.getUpdateActions(o)
+        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitos.oid)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, logo, o)
@@ -244,6 +246,7 @@ class OppilaitoksenOsaService(
         o          <- OppilaitoksenOsaDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
+        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitoksenOsa.oid)
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
       } yield (teema, o)
@@ -258,6 +261,7 @@ class OppilaitoksenOsaService(
         _          <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
         o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
+        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitoksenOsa.oid)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, o)
