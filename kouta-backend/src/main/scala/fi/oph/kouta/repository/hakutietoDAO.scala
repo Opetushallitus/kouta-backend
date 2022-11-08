@@ -73,6 +73,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                           h.hakulomake_kuvaus,
                           h.hakulomake_linkki,
                           h.organisaatio_oid,
+                          h.kohdejoukko_koodi_uri,
                           h.muokkaaja,
                           lower(h.system_time)
           from haut h
