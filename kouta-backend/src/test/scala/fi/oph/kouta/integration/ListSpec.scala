@@ -662,7 +662,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
             hakulomakeKuvaus = TestData.JulkaistuHaku.hakulomakeKuvaus,
             hakulomakeLinkki = TestData.JulkaistuHaku.hakulomakeLinkki,
             organisaatioOid = h3.organisaatioOid,
-            kohdejoukkoKoodiUri = TestData.JulkaistuHaku.kohdejoukkoKoodiUri,
+            kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"),
             hakuajat = TestData.JulkaistuHaku.hakuajat,
             muokkaaja = h3.muokkaaja,
             modified = Some(h3.modified),
