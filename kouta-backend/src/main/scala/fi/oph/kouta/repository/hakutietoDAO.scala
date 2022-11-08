@@ -105,8 +105,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                  hk.metadata -> 'koulutuksenAlkamiskausi' as koulutuksen_alkamiskausi,
                  hk.metadata ->> 'kaytetaanHaunAlkamiskautta' as kaytetaan_haun_alkamiskautta,
                  hk.jarjestyspaikka_oid,
-                 coalesce(osat.metadata -> 'jarjestaaUrheilijanAmmKoulutusta',
-                          oppilaitokset.metadata -> 'jarjestaaUrheilijanAmmKoulutusta') as jarjestaaUrheilijanAmmKoulutusta,
+                 hk.metadata -> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta,
                  hk.hakulomaketyyppi,
                  hk.hakulomake_ataru_id,
                  hk.hakulomake_kuvaus,
@@ -134,10 +133,6 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                        k.tila != 'poistettu'::julkaisutila and k.tila != 'arkistoitu'::julkaisutila
                    left join valintaperusteet v on v.id = hk.valintaperuste_id and
                        v.tila != 'poistettu'::julkaisutila and v.tila != 'arkistoitu'::julkaisutila
-                   left join oppilaitosten_osat osat on osat.oid = hk.jarjestyspaikka_oid and
-                       osat.tila = 'julkaistu'::julkaisutila
-                   left join oppilaitokset on oppilaitokset.oid = hk.jarjestyspaikka_oid and
-                       oppilaitokset.tila = 'julkaistu'::julkaisutila
           where k.oid = ${koulutusOid.toString}
             and hk.tila != 'poistettu'::julkaisutila
             """.as[(ToteutusOid, HakuOid, HakutietoHakukohde)]
