@@ -201,10 +201,6 @@ class OppilaitoksenOsaService(
       case None => false
     }
 
-    if (jarjestaaUrheilijanAmmKoulutusta && oppilaitoksenOsa.tila == Julkaistu) {
-      updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
-    }
-
     authorizePut(enrichedOppilaitoksenOsa) { o =>
       withValidation(o, None) { o =>
         validateOppilaitosIntegrity(o)
@@ -219,21 +215,6 @@ class OppilaitoksenOsaService(
       case None => false
     }
 
-    if (oppilaitoksenOsa.tila == Julkaistu) {
-      if (jarjestaaUrheilijanAmmKoulutusta) {
-        updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta)
-      } else {
-        val osat = getJulkaistutOppilaitoksenOsat(oppilaitoksenOsa.oppilaitosOid)
-        val osatWithoutCurrentOsa = osat.filter(osa => osa.oid != oppilaitoksenOsa.oid)
-        val someOfOsatJarjestaaUrheilijanAmmKoulutusta = osatWithoutCurrentOsa.exists(osa => osa.metadata match {
-          case Some(metadata) => metadata.jarjestaaUrheilijanAmmKoulutusta
-          case None => false
-        })
-
-        updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa, someOfOsatJarjestaaUrheilijanAmmKoulutusta)
-      }
-    }
-
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), enrichedOppilaitoksenOsa) { (oldOsa, o) =>
@@ -246,26 +227,6 @@ class OppilaitoksenOsaService(
 
   def getJulkaistutOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
     OppilaitoksenOsaDAO.getJulkaistutByOppilaitosOid(oid)
-
-  private def updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa: OppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta: Boolean)(implicit authenticated: Authenticated): Unit = {
-    OppilaitosDAO.get(oppilaitoksenOsa.oppilaitosOid) match {
-      case Some(oppilaitosWithInstant) => {
-        val oppilaitos = oppilaitosWithInstant._1
-        val metadata = oppilaitos.metadata match {
-          case Some(metadata) => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
-          case None => OppilaitosMetadata(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
-        }
-
-        val oppilaitosCopy = oppilaitos.copy(metadata = Some(metadata))
-        OppilaitosService.authorizeUpdate(Some(oppilaitosWithInstant), oppilaitosCopy) { (oldOppilaitos, o) =>
-          OppilaitosService.withValidation(o, Some(oldOppilaitos)) {
-            OppilaitosService.doUpdate(_, Instant.now(), oldOppilaitos)
-          }
-        }
-      }
-      case None =>
-    }
-  }
 
   private def validateOppilaitosIntegrity(oppilaitoksenOsa: OppilaitoksenOsa): Unit = {
     val oppilaitosTila = OppilaitosDAO.getTila(oppilaitoksenOsa.oppilaitosOid)
