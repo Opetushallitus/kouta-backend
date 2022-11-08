@@ -693,7 +693,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
         from hakukohteet hk
         join toteutukset t on t.oid = hk.toteutus_oid
         join koulutukset k on k.oid = t.koulutus_oid
-        where hk.jarjestyspaikka_oid = $jarjestyspaikkaOid
+        where hk.jarjestyspaikka_oid = ${jarjestyspaikkaOid.toString}
           and hk.metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' = 'true'
           and hk.tila in ('tallennettu', 'julkaistu')
           and k.tyyppi = 'amm'
