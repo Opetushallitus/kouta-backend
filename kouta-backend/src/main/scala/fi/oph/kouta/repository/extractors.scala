@@ -553,4 +553,14 @@ trait HakutietoExtractors extends ExtractorBase {
     })
 }
 
+trait PistehistoriaExtractors extends ExtractorBase {
+
+  implicit val getPistehistoriaResult: GetResult[Pistetieto] = GetResult(r => Pistetieto(
+    tarjoaja = OrganisaatioOid(r.nextString()),
+    hakukohdekoodi = r.nextString(),
+    pisteet = r.nextDouble(),
+    vuosi = r.nextString())
+  )
+}
+
 trait KeywordExtractors extends ExtractorBase

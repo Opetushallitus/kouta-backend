@@ -1,4 +1,4 @@
-create table pistehistoria (
+create table if not exists pistehistoria (
     tarjoajaOid varchar not null,
     hakukohdekoodi varchar not null,
     vuosi varchar not null,

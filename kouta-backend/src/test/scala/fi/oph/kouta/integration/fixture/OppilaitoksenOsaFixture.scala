@@ -12,7 +12,8 @@ import fi.oph.kouta.service.{
   OppilaitoksenOsaService,
   OppilaitoksenOsaServiceValidation,
   OppilaitosServiceValidation,
-  OrganisaatioServiceImpl
+  OrganisaatioServiceImpl,
+  PistehistoriaService
 }
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.util.TimeUtils
@@ -39,6 +40,8 @@ trait OppilaitoksenOsaFixture extends AccessControlSpec {
       oppilaitoksenOsaServiceValidation
     )
   }
+
+  def pistehistoriaService: PistehistoriaService = PistehistoriaService
 
   override def beforeAll(): Unit = {
     super.beforeAll()
