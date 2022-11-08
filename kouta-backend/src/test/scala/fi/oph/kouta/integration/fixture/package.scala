@@ -27,7 +27,7 @@ trait IndexerFixture extends EverythingFixture with KoutaIntegrationSpec {
   override def beforeAll(): Unit = {
     super.beforeAll()
     addServlet(new IndexerServlet(koulutusService, toteutusService, hakuService, hakukohdeService,
-      valintaperusteService, sorakuvausService, oppilaitosService, oppilaitoksenOsaService), IndexerPath)
+      valintaperusteService, sorakuvausService, oppilaitosService, oppilaitoksenOsaService, pistehistoriaService), IndexerPath)
   }
 }
 

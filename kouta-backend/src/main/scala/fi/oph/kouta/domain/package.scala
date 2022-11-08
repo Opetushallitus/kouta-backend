@@ -491,6 +491,20 @@ package object domain {
       |            type: string
       |""".stripMargin
 
+  val PistetietoModel: String =
+    """    Pistetieto:
+      |      type: object
+      |      properties:
+      |        tarjoaja:
+      |          type: string
+      |        hakukohdekoodi:
+      |          type: string
+      |        pisteet:
+      |          type: double
+      |        vuosi:
+      |          type: string
+      |""".stripMargin
+
   val models = List(
     KoulutustyyppiModel,
     KieliModel,
@@ -516,10 +530,16 @@ package object domain {
     ValintakokeenLisatilaisuudetModel,
     AloituspaikatModel,
     HakutermiModel,
-    CopyResultModel
+    CopyResultModel,
+    PistetietoModel
   )
 
   type Kielistetty = Map[Kieli, String]
+
+  case class Pistetieto(tarjoaja: OrganisaatioOid,
+                        hakukohdekoodi: String,
+                        pisteet: Double,
+                        vuosi: String)
 
   case class Yhteyshenkilo(
       nimi: Kielistetty = Map(),

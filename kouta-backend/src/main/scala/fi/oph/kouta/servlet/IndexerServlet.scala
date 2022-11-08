@@ -3,12 +3,12 @@ package fi.oph.kouta.servlet
 import java.net.URLDecoder
 import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{TilaFilter}
+import fi.oph.kouta.domain.TilaFilter
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitoksenOsaService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
+import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitoksenOsaService, OppilaitosService, PistehistoriaService, SorakuvausService, ToteutusService, ValintaperusteService}
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
 import fi.oph.kouta.util.TimeUtils.parseHttpDate
-import org.scalatra.{NotFound, Ok}
+import org.scalatra.{BadRequest, NotFound, Ok}
 
 class IndexerServlet(koulutusService: KoulutusService,
                      toteutusService: ToteutusService,
@@ -17,9 +17,10 @@ class IndexerServlet(koulutusService: KoulutusService,
                      valintaperusteService: ValintaperusteService,
                      sorakuvausService: SorakuvausService,
                      oppilaitosService: OppilaitosService,
-                     oppilaitoksenOsaService: OppilaitoksenOsaService) extends KoutaServlet {
+                     oppilaitoksenOsaService: OppilaitoksenOsaService,
+                     pistehistoriaService: PistehistoriaService) extends KoutaServlet {
 
-  def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService, SorakuvausService, OppilaitosService, OppilaitoksenOsaService)
+  def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService, SorakuvausService, OppilaitosService, OppilaitoksenOsaService, PistehistoriaService)
 
   registerPath("/indexer/modifiedSince/{since}",
     s"""    get:
@@ -645,5 +646,48 @@ class IndexerServlet(koulutusService: KoulutusService,
 
     implicit val authenticated: Authenticated = authenticate()
     Ok(ToteutusService.listOpintokokonaisuudet(parsedBody.extract[List[ToteutusOid]]))
+  }
+
+  registerPath("/indexer/pistehistoria",
+    """    get:
+      |      summary: Palauttaa tarjoajan ja hakukohdekoodin yhdistelmään liittyvät pistetiedot
+      |      operationId: indexerListPistetiedot
+      |      description: Listaa pistetiedot
+      |      tags:
+      |        - Indexer
+      |      parameters:
+      |        - in: query
+      |          name: tarjoaja
+      |          schema:
+      |            type: String
+      |          required: true
+      |          description: organisaatioOid
+      |        - in: query
+      |          name: hakukohdekoodi
+      |          schema:
+      |            type: String
+      |          required: true
+      |          description: hakukohdekoodi
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/Pistetieto'
+      |""".stripMargin)
+  get("/pistehistoria") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    val tarjoaja = params.get("tarjoaja").map(OrganisaatioOid)
+    val hk = params.get("hakukohdekoodi").map(koodi => koodi.split("#")(0))
+    (tarjoaja, hk) match {
+      case (None, _) => BadRequest("error" -> "Pakollinen parametri puuttui: tarjoaja")
+      case (_, None) => BadRequest("error" -> "Pakollinen parametri puuttui: hakukohdekoodi")
+      case (Some(t), Some(h)) => Ok(pistehistoriaService.getPistehistoria(t, h))
+    }
   }
 }
