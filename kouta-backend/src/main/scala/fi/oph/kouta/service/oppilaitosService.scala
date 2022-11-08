@@ -63,7 +63,7 @@ class OppilaitosService(
           Some(authorizeGet(oppilaitos.copy(osat = Some(osat)), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)))
         } catch {
           case authorizationException: OrganizationAuthorizationFailedException =>
-            logger.error(s"Authorization failed: ${authorizationException}")
+            logger.warn(s"Authorization failed: ${authorizationException}")
             None
         }
     }).toList.flatten
