@@ -476,6 +476,7 @@ trait HakutietoExtractors extends ExtractorBase {
       hakulomakeKuvaus = extractKielistetty(r.nextStringOption()),
       hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
       organisaatioOid = OrganisaatioOid(r.nextString()),
+      kohdejoukkoKoodiUri = r.nextStringOption(),
       hakuajat = Seq(),
       muokkaaja = UserOid(r.nextString()),
       modified = Some(timeStampToModified(r.nextTimestamp())),
