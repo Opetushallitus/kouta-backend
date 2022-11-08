@@ -258,6 +258,9 @@ package object hakukohde {
       |          type: object
       |          description: Uuden opiskelijan ohjeita sisältävän verkkosivun URL
       |          $ref: '#/components/schemas/Linkki'
+      |        urheilijanAmmKoulutus:
+      |          type: boolean
+      |          description: Hakukohde on urheilijoille tarkoitettua ammatillista koulutusta
       |""".stripMargin
 
   val LiitteenToimitusosoiteModel: String =
@@ -469,7 +472,8 @@ case class HakukohdeMetadata(
     // hakukohteenLinja löytyy vain lukiohakukohteilta (pakollisena)
     hakukohteenLinja: Option[HakukohteenLinja] = None,
     uudenOpiskelijanUrl: Kielistetty = Map(),
-    isMuokkaajaOphVirkailija: Option[Boolean]
+    isMuokkaajaOphVirkailija: Option[Boolean],
+    urheilijanAmmKoulutus: Option[Boolean] = None
 )
 
 case class HakukohdeListItem(
