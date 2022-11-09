@@ -273,6 +273,7 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(false),
         avoinKorkeakoulutus = Some(true),
         tunniste = Some("XZY-123"),
+        orgsAllowedToReadKoulutus =  List(GrandChildOid, EvilGrandChildOid, EvilCousin),
       )
     ),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
@@ -321,7 +322,8 @@ object TestData {
     opintojenLaajuusNumeroMax = Some(15),
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
-    isMuokkaajaOphVirkailija = Some(false)
+    isMuokkaajaOphVirkailija = Some(false),
+    orgsAllowedToReadKoulutus =  List(GrandChildOid, EvilGrandChildOid, EvilCousin),
   )
 
   val KkOpintokokonaisuusKoulutus: Koulutus = Koulutus(

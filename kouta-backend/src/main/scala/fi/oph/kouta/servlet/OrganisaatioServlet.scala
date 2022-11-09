@@ -167,6 +167,6 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       |""".stripMargin)
   get("/oppilaitokset-for-opintojakso-and-opintokokonaisuus") {
     implicit val authenticated: Authenticated = authenticate()
-    Ok(organisaatioService.getOppilaitoksetForKkOpintojaksoAndOpintokokonaisuus(params))
+    Ok(organisaatioService.getOppilaitoksetForKkOpintojaksoAndOpintokokonaisuus())
   }
 }

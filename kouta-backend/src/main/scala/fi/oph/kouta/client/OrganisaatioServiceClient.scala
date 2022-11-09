@@ -75,17 +75,23 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     })
   }
 
-  def getOrganisaatioHierarkiaFromCache(params: Params, oppilaitostyypit: List[String] = List()): OrganisaatioHierarkia = {
-    val queryParams = OrganisaatioHierarkiaQueryParams(
-      searchStr = params.get("searchStr"),
-      oids = commaSepStringValToSeq(params.get("oidRestrictionList")).map(OrganisaatioOid(_)).toList,
-      oid = params.get("oid").map(OrganisaatioOid(_)),
-      aktiiviset = params.get("aktiiviset").getOrElse("true"),
-      suunnitellut = params.get("suunnitellut").getOrElse("true"),
-      lakkautetut = params.get("lakkautetut").getOrElse("false"),
-      skipParents = params.get("skipParents").getOrElse("true"),
-      oppilaitostyypit = oppilaitostyypit,
-    )
+  def getOrganisaatioHierarkiaFromCache(params: Option[Params], oppilaitostyypit: List[String] = List()): OrganisaatioHierarkia = {
+    val queryParams = params match {
+      case Some(params) =>
+        OrganisaatioHierarkiaQueryParams(
+          searchStr = params.get("searchStr"),
+          oids = commaSepStringValToSeq(params.get("oidRestrictionList")).map(OrganisaatioOid(_)).toList,
+          oid = params.get("oid").map(OrganisaatioOid(_)),
+          aktiiviset = params.get("aktiiviset").getOrElse("true"),
+          suunnitellut = params.get("suunnitellut").getOrElse("true"),
+          lakkautetut = params.get("lakkautetut").getOrElse("false"),
+          skipParents = params.get("skipParents").getOrElse("true"),
+          oppilaitostyypit = oppilaitostyypit,
+        )
+      case None => OrganisaatioHierarkiaQueryParams(
+        oppilaitostyypit = oppilaitostyypit,
+      )
+    }
 
     Try[OrganisaatioHierarkia] {
       organisaatioHierarkiaCache.get(queryParams, queryParams => {
