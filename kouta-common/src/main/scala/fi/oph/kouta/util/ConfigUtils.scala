@@ -46,7 +46,7 @@ abstract class KoutaConfigFactory[TConfig <: KoutaBaseConfig](moduleName: String
   }
 
   def setupWithDefaultTestTemplateFile(): String = {
-    logger.info(s"Using default test template ${DEFAULT_TEMPLATE_FILE_PATH}")
+    logger.debug(s"Using default test template ${DEFAULT_TEMPLATE_FILE_PATH}")
     System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, DEFAULT_TEMPLATE_FILE_PATH)
   }
