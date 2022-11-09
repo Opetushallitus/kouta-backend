@@ -1,11 +1,10 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.CachedOrganisaatioHierarkiaClient
 import fi.oph.kouta.config.KoutaCommonConfigFactory
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.mocks.{OrganisaatioServiceMock, ServiceMocker, SpecWithMocks, TestGlobals}
+import fi.oph.kouta.mocks.{SpecWithMocks, TestGlobals}
 
 class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
   KoutaCommonConfigFactory.setupWithDefaultTestTemplateFile()

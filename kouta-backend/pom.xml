@@ -335,7 +335,7 @@
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest_2.12</artifactId>
-            <version>${scala-test.version}</version>
+            <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -347,8 +347,9 @@
         </dependency>
         <dependency>
             <groupId>com.softwaremill.diffx</groupId>
-            <artifactId>diffx-scalatest_2.12</artifactId>
-            <version>0.5.6</version>
+            <artifactId>diffx-scalatest-should_2.12</artifactId>
+            <version>0.8.2</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scalacheck</groupId>
@@ -366,6 +367,12 @@
             <artifactId>mockito-scala-scalatest_2.12</artifactId>
             <version>1.17.7</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.scalactic</groupId>
+                    <artifactId>scalactic_2.12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>cloud.localstack</groupId>

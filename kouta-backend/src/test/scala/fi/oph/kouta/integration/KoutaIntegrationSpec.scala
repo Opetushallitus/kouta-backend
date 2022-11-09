@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
+import com.softwaremill.diffx.Diff
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.TestSetups
 import fi.oph.kouta.client.KoutaSearchClient
@@ -17,7 +18,6 @@ import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
 import org.mockito.scalatest.MockitoSugar
 import org.scalactic.Equality
-import org.scalatest.BeforeAndAfterAll
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import java.util.UUID
@@ -43,8 +43,9 @@ trait KoutaIntegrationSpec
     with MockitoSugar {
 
   System.setProperty("kouta-backend.useSecureCookies", "false")
-  TestSetups.setupWithDefaultTestTemplateFile()
+  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
   TestSetups.setupPostgres()
+  TestGlobals.urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties)
 
   val serviceIdentifier: String = TestSetups.defaultServiceIdentifier
   val defaultAuthorities: Set[Authority] = TestSetups.defaultAuthorities
@@ -482,16 +483,30 @@ sealed trait HttpSpec extends KoutaJsonFormats {
     list(path, params, expected, defaultSessionId)
 
   def list[R](path: String, params: Map[String, String], expected: List[R], sessionId: UUID)(implicit
-      mf: Manifest[R]
+     mf: Manifest[R]
   ): Seq[R] = {
     get(s"$path/list", params, Seq(sessionHeader(sessionId))) {
       withClue(body) {
         status should equal(200)
       }
       val result = read[List[R]](body)
-      // theSameElementsAs-matcherin diffi on todella hankalaa luettavaa vähänkään isomman tai monimutkaisia elementtejä
-      // sisältävän listan kanssa. Tällä tavalla vertailemalla saadaan huomattavasti parempi diffi.
-      result.sortBy(_.hashCode).toString should matchTo(expected.sortBy(_.hashCode).toString)
+      result should contain theSameElementsAs expected
+      result
+    }
+  }
+
+  // theSameElementsAs-matcherin diffi on todella hankalaa luettavaa vähänkään isomman tai monimutkaisia elementtejä
+  // sisältävän listan kanssa. Diffx-kirjastolla saadaan huomattavasti miellyttävämpi diffi.
+  def listDiffx[R: Diff](path: String, params: Map[String, String], expected: List[R], sessionId: UUID = defaultSessionId)(implicit
+      mf: Manifest[R]
+  ): Seq[R] = {
+
+    get(s"$path/list", params, Seq(sessionHeader(sessionId))) {
+      withClue(body) {
+        status should equal(200)
+      }
+      val result = read[List[R]](body)
+      result shouldMatchTo expected
       result
     }
   }
@@ -519,6 +534,9 @@ sealed trait DatabaseSpec {
   import fi.oph.kouta.repository.KoutaDatabase
   import slick.jdbc.PostgresProfile.api._
 
+  System.setProperty("kouta-backend.useSecureCookies", "false")
+  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  TestSetups.setupPostgres()
   lazy val db: KoutaDatabase.type = KoutaDatabase
 
   def truncateDatabase(): Int = {

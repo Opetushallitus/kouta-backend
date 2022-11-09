@@ -83,7 +83,7 @@ object TestSetups extends Logging {
     TempDockerDb.start()
   }
 
-  def setupWithoutEmbeddedPostgres(): Object =
+  def setupWithoutEmbeddedPostgres() =
     (
       Option(System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE)),
       Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))

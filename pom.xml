@@ -47,7 +47,7 @@
         <jdbc.version>42.2.5</jdbc.version>
 
         <!-- Test properties -->
-        <scala-test.version>3.2.0-M4</scala-test.version>
+        <scalatest.version>3.2.0-M4</scalatest.version>
         <scalatra-scalatest.version>2.7.0</scalatra-scalatest.version>
         <jetty.version>9.4.46.v20220331</jetty.version>
 
@@ -305,6 +305,18 @@
                 <groupId>org.spire-math</groupId>
                 <artifactId>jawn-parser_2.12</artifactId>
                 <version>0.10.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-matchers-core_2.12</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-shouldmatchers_2.12</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
