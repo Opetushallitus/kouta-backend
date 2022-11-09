@@ -76,7 +76,6 @@ object TestSetups extends Logging {
   }
 
   def setupWithEmbeddedPostgres() = {
-    logger.info("Starting embedded PostgreSQL!")
     startDockerPostgres()
   }
 
@@ -94,7 +93,7 @@ object TestSetups extends Logging {
     }
 
   def setupWithDefaultTestTemplateFile(): String = {
-    logger.info(s"Using default test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
+    logger.debug(s"Setup with test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
     System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
   }
