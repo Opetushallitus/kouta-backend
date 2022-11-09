@@ -33,6 +33,10 @@ trait DefaultTestImplicits {
 
 trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits with MockitoSugar {
 
+  System.setProperty("kouta-backend.useSecureCookies", "false")
+  TestSetups.setupWithDefaultTestTemplateFile()
+  TestSetups.setupPostgres()
+
   val serviceIdentifier: String = TestSetups.defaultServiceIdentifier
   val defaultAuthorities: Set[Authority] = TestSetups.defaultAuthorities
 
@@ -54,9 +58,6 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    System.setProperty("kouta-backend.useSecureCookies", "false")
-    TestSetups.setupWithDefaultTestTemplateFile()
-    TestSetups.setupPostgres()
     TestSetups.setupAwsKeysForSqs()
     addDefaultSession()
   }
