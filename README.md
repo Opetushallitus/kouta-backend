@@ -95,7 +95,7 @@ yhteydessä. Migraatiotiedostot löytyvät kansiosta `kouta-backend/src/main/res
 
 ### Ajaminen lokaalisti
 
-Kopioi testikonfiguraatio lokaalia kehitystä varten ```'/src/test/resources/test-vars.yml'``` -> ```'/src/test/resources/dev-vars.yml'```.
+Kopioi konfiguraatio-template lokaalia kehitystä varten ```'/src/test/resources/dev-vars.template.yml'``` -> ```'/src/test/resources/dev-vars.yml'```.
 Dev-vars.yml on ignoroitu Gitissä ettei salasanat valu repoon.
 
 Käynnistä Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run). Sovellus
@@ -127,7 +127,7 @@ Mikäli tulee tarve tutkia testiympäristön kantaa tai ajaa kouta-backendia jon
 SSH-porttiohjaus joka onnistuu seuraavilla komennoilla:
 
 - ssh -N -L 5432:kouta.db.untuvaopintopolku.fi:5432 testityy@bastion.untuvaopintopolku.fi
-- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 testityy>@bastion.hahtuvaopintopolku.fi
+- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 testityy@bastion.hahtuvaopintopolku.fi
 - ssh -N -L 5432:kouta.db.testiopintopolku.fi:5432 testityy@bastion.testiopintopolku.fi
 
 Missä bastionin edessä oleva käyttäjätunnus muodostuu AWS IAM-tunnuksesi kahdeksasta ensimmäisestä kirjaimesta.
@@ -137,12 +137,12 @@ Tämän lisäksi pitää vaihtaa `dev-vars.yml` tai `EmbeddedJettyLauncher.scala
 vastaamaan testiympäristön kannan salasanaa. Salasanat löytyvät samasta paikasta kuin muutkin OPH:n palvelujen 
 salaisuudet. Lisätietoja ylläpidolta.
 
-Lisäksi pitää vielä asettaa muutama VM parametri EmbeddedJettyLauncher.scala:n ajokonfiguraatiohin:
+Lisäksi pitää vielä asettaa muutama VM-parametri EmbeddedJettyLauncher.scala:n ajokonfiguraatiohin:
 
 Mene Run -> Edit Configurations -> Valitse EmbeddedJettyLauncher -> Modify Options -> Add VM Options
-Ja lisää `-Dkouta-backend.config-profile=template -Dkouta-backend.embedded=false -Dkouta-backend.db.port={portti}`
+Ja lisää `-Dkouta-backend.config-profile=template -Dkouta-backend.embedded=false`
 
-Korvaa {portti} ssh komennon alussa olevalla portilla, sillä oletuksena postgres-kontti käynnistyy random porttiin.
+Vaihda myös PostgreSQL-tietokannan portti, käyttjätunnus ja salasana `dev-vars.yml`-tiedostoon.
 
 ### Versiohallinta
 
