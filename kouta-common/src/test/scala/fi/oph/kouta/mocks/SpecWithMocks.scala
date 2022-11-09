@@ -10,9 +10,9 @@ object TestGlobals {
 
 trait UrlProperties {
   def urlProperties: Option[OphProperties] = TestGlobals.urlProperties match {
-    case Some(_) => TestGlobals.urlProperties
-    case _ => throw new Error("Trying to read urlProperties before it's set!")
-  }
+      case Some(_) => TestGlobals.urlProperties
+      case _ => throw new Error("Trying to read urlProperties before it's set!")
+    }
   def setUrlProperties(newUrlProperties: OphProperties) = {
     TestGlobals.urlProperties = Some(newUrlProperties)
   }
@@ -24,11 +24,10 @@ trait SpecWithMocks
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
   val mocker = ServiceMocker
-
+  
   override def beforeAll(): Unit = {
     super.beforeAll()
     mocker.startServiceMocking()
-    setUrlProperties(urlProperties.get.addOverride("host.virkailija", mocker.getMockBaseUrl(withProtocol = false)))
   }
 
   override def afterAll(): Unit = {

@@ -53,8 +53,7 @@ abstract class KoutaConfigFactory[TConfig <: KoutaBaseConfig](moduleName: String
 
   def profile: String = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
 
-  def configuration = {
-    logger.info(s"Using profile '$profile'")
+  lazy val configuration = {
     profile match {
       case CONFIG_PROFILE_DEFAULT  => loadOphConfiguration()
       case CONFIG_PROFILE_TEMPLATE => loadTemplatedConfiguration()

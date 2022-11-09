@@ -34,7 +34,7 @@ abstract class ServiceMocker extends Logging {
   }
 
   def startServiceMocking(): Unit = {
-    mockServer = Some(startClientAndServer())
+    mockServer = Some(startClientAndServer(8099))
     mockPort = mockServer.get.getLocalPort
     logger.info(s"Mocking oph services in port $mockPort")
   }

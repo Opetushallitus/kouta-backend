@@ -117,7 +117,7 @@ class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
     get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
-      result.koulutukset should contain theSameElementsAs List(koulutusOids.head, koulutusOids(1), koulutusOids(2), koulutusOids(4), koulutusOids(5)).map(KoulutusOid)
+      result.koulutukset should contain theSameElementsAs List(koulutusOids.head, koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
       result.toteutukset should contain theSameElementsAs List(toteutusOids(3), toteutusOids(4), toteutusOids(5)).map(ToteutusOid)
       result.haut should contain theSameElementsAs List(hakuOids(6), hakuOids(7)).map(HakuOid)
       result.hakukohteet should contain theSameElementsAs List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)).map(HakukohdeOid)

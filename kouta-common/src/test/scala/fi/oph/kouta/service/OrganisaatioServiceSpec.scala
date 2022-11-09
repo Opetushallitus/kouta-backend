@@ -2,13 +2,13 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.config.KoutaCommonConfigFactory
-import fi.oph.kouta.domain.oid.{OrganisaatioOid}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain._
-import fi.oph.kouta.mocks.{SpecWithMocks, TestGlobals}
+import fi.oph.kouta.mocks.{SpecWithMocks, UrlProperties}
 
-class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
+class OrganisaatioServiceSpec extends SpecWithMocks with UrlProperties with OrganisaatioFixture {
   KoutaCommonConfigFactory.setupWithDefaultTestTemplateFile()
-  TestGlobals.urlProperties = Some(KoutaCommonConfigFactory.configuration.urlProperties)
+  setUrlProperties(KoutaCommonConfigFactory.configuration.urlProperties)
 
   "getAllChildOidsAndOppilaitostyypitFlat" should "return flat list of child organisations" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)._1 should contain theSameElementsAs

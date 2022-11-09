@@ -45,7 +45,7 @@ trait KoutaIntegrationSpec
   System.setProperty("kouta-backend.useSecureCookies", "false")
   KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
   TestSetups.setupPostgres()
-  TestGlobals.urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties)
+  setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
 
   val serviceIdentifier: String = TestSetups.defaultServiceIdentifier
   val defaultAuthorities: Set[Authority] = TestSetups.defaultAuthorities
