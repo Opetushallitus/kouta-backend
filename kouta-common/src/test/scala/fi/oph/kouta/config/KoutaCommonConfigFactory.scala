@@ -1,50 +1,15 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
-import fi.oph.kouta.util.ConfigUtils.getModuleDir
+import fi.oph.kouta.util.{KoutaBaseConfig, KoutaConfigFactory}
 import fi.vm.sade.properties.OphProperties
-import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsParser, ConfigTemplateProcessor}
-import fi.vm.sade.utils.slf4j.Logging
 
-import java.io.File
+case class KoutaAuthorizationConfiguration(config: TypesafeConfig, urlProperties: OphProperties)
+    extends KoutaBaseConfig(config, urlProperties)
 
-object KoutaCommonConfigFactory extends Logging {
-
-  object Constants {
-    val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "kouta-common.config-profile"
-    val SYSTEM_PROPERTY_NAME_TEMPLATE       = "kouta-common.template-file"
-
-    val CONFIG_PROFILE_DEFAULT  = "default"
-    val CONFIG_PROFILE_TEMPLATE = "template"
-  }
-
-  import Constants._
-
-  val profile: String = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
-  logger.info(s"Using profile '${profile}'")
-
-  private case class KoutaAuthorizationConfiguration(config: TypesafeConfig, urlProperties: OphProperties)
-      extends ApplicationSettings(config)
-
-  def loadTemplatedConfiguration(): OphProperties = {
-    val moduleDir = getModuleDir("kouta-common")
-    val templateFilePath: String = moduleDir +
-      Option(System.getProperty("kouta-backend.template-file")).getOrElse(s"/src/test/resources/test-vars.yml")
-
-    logger.warn(s"Kouta-Common using TEMPLATE_FILE_PATH = $templateFilePath")
-
-    implicit val applicationSettingsParser = new ApplicationSettingsParser[KoutaAuthorizationConfiguration] {
-      override def parse(c: TypesafeConfig): KoutaAuthorizationConfiguration =
-        KoutaAuthorizationConfiguration(c, new OphProperties(s"${moduleDir}/src/test/resources/kouta-common.properties") {
-          addDefault("host.virkailija", c.getString("host.virkailija"))
-        })
-    }
-
-    logger.info(s"Reading template variables from '${templateFilePath}'")
-    val templateURL = new File(
-      s"${moduleDir}/src/main/resources/oph-configuration/kouta-common.properties.template").toURI.toURL
-    val attributesURL = new File(templateFilePath).toURI.toURL
-    ConfigTemplateProcessor.createSettings(templateURL, attributesURL).urlProperties
-  }
-
+object KoutaCommonConfigFactory extends KoutaConfigFactory[KoutaAuthorizationConfiguration]("kouta-common") {
+  def createConfigCaseClass(
+      config: TypesafeConfig,
+      urlProperties: OphProperties
+  ): KoutaAuthorizationConfiguration = KoutaAuthorizationConfiguration(config, urlProperties)
 }
