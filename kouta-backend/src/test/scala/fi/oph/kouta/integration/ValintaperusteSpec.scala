@@ -14,7 +14,7 @@ import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
-class ValintaperusteSpec extends ValintaperusteFixture {
+class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Valintaperuste)
 

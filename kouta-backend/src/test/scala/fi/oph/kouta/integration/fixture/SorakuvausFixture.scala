@@ -13,7 +13,8 @@ import fi.oph.kouta.servlet.SorakuvausServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
 
-trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
+trait SorakuvausFixture extends AccessControlSpec {
+  this: KoutaIntegrationSpec =>
 
   val SorakuvausPath = "/sorakuvaus"
 

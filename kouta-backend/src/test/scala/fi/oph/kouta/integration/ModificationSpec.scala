@@ -12,8 +12,7 @@ import fi.oph.kouta.security.Role
 import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
-
-class ModificationSpec extends IndexerFixture {
+class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   override def beforeAll(): Unit = {
     super.beforeAll()

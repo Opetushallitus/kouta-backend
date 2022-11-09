@@ -9,7 +9,7 @@ import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.generic.auto._
 import fi.oph.kouta.repository.HakukohdeDAO
 
-class ListSpec extends IndexerFixture {
+class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   override val roleEntities: List[RoleEntity] = RoleEntity.all
 

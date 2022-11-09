@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.TestSetups
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 import fi.oph.kouta.validation.{ammatillisetKoulutustyypit, lukioKoulutusKoodiUrit, yoKoulutustyypit}
 import org.scalatest.Assertion
@@ -12,17 +12,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import scala.util.{Failure, Success, Try}
 
-class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
+class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
+  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
   var koodiClient: KoulutusKoodiClient = _
 
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
   override def beforeAll() = {
-    TestSetups.setupWithDefaultTestTemplateFile()
-    super.startServiceMocking()
-    urlProperties = Some(
-      KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort")
-    )
+    super.beforeAll()
     koodiClient = new KoulutusKoodiClient(urlProperties.get)
   }
 

@@ -1,14 +1,15 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.mocks.{KoodistoServiceMock, OrganisaatioServiceMock, SpecWithMocks}
 import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 import org.json4s.jackson.Serialization.read
 
-class IndexerSpec extends IndexerFixture {
+class IndexerSpec extends KoutaIntegrationSpec with OrganisaatioServiceMock with IndexerFixture {
 
   override val roleEntities: Seq[RoleEntity] = RoleEntity.all
 

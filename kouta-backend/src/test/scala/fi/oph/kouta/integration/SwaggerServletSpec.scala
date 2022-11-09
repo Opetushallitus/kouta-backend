@@ -5,7 +5,8 @@ import fi.oph.kouta.servlet.HealthcheckServlet
 import io.swagger.v3.parser.OpenAPIV3Parser
 
 class SwaggerServletSpec
-    extends AuthFixture
+    extends KoutaIntegrationSpec
+    with AuthFixture
     with IndexerFixture
     with SearchFixture
     with KeywordFixture

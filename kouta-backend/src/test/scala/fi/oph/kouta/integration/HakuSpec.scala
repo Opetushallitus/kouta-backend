@@ -11,7 +11,7 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
 
-class HakuSpec extends HakuFixture {
+class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Haku)
 

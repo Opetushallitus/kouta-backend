@@ -1,25 +1,22 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.TestSetups
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
-import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class HakuKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
+class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
   var koodiClient: HakuKoodiClient = _
 
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
-  override def beforeAll() = {
-    TestSetups.setupWithDefaultTestTemplateFile()
-    super.startServiceMocking()
-    urlProperties = Some(
-      KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort")
-    )
+  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
+
+  override def beforeAll = {
+    super.beforeAll()
     koodiClient = new HakuKoodiClient(urlProperties.get)
   }
 

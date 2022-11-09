@@ -8,7 +8,8 @@ import fi.oph.kouta.mocks.{MockAuditLogger, MockSecurityContext}
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.AuthServlet
 
-trait AuthFixture extends KoutaIntegrationSpec {
+trait AuthFixture {
+  this: KoutaIntegrationSpec =>
 
   val authPath = "/auth"
   val loginPath = s"$authPath/login"

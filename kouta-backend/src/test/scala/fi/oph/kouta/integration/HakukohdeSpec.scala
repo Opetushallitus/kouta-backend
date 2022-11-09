@@ -9,12 +9,12 @@ import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.{TestData, TestOids}
+import fi.oph.kouta.{TestData}
 
 import java.time.LocalDateTime
 import java.util.UUID
 
-class HakukohdeSpec extends HakukohdeFixture with KoulutusFixture with HakuFixture with ValintaperusteFixture with LokalisointiServiceMock {
+class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with KoulutusFixture with HakuFixture with ValintaperusteFixture with LokalisointiServiceMock {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Hakukohde)
 
@@ -27,10 +27,6 @@ class HakukohdeSpec extends HakukohdeFixture with KoulutusFixture with HakuFixtu
     toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid)))
     hakuOid = put(haku)
     valintaperusteId = put(valintaperuste)
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
   }
 
   lazy val uusiHakukohde: Hakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)

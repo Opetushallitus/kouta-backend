@@ -3,8 +3,7 @@ package fi.oph.kouta.mocks
 import fi.oph.kouta.domain.Koulutustyyppi
 import org.mockserver.model.HttpRequest
 
-trait KoodistoServiceMock extends ServiceMocks {
-
+trait KoodistoServiceMock extends ServiceMockBase {
   def optionalVoimassaOloString(str: Option[String]): String =
     str match {
       case Some(str) => s""""voimassaLoppuPvm": "$str""""
@@ -111,6 +110,4 @@ trait KoodistoServiceMock extends ServiceMocks {
       s"Failure in eperuste-service for tutkinnonosat by ePerusteId $ePerusteId", 500)
   }
 }
-
-object KoodistoServiceMock extends KoodistoServiceMock
 

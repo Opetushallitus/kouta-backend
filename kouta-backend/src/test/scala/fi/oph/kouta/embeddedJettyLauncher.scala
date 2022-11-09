@@ -2,7 +2,7 @@ package fi.oph.kouta
 
 import com.amazonaws.services.sqs.AmazonSQSClient
 import fi.oph.kouta.TestOids.OphOid
-import fi.oph.kouta.config.KoutaConfigurationConstants.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
+import fi.oph.kouta.config.KoutaConfigurationFactory.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{Authority, CasSession, RoleEntity, ServiceTicket}
@@ -88,15 +88,9 @@ object TestSetups extends Logging {
       Option(System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE)),
       Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))
     ) match {
-      case (Some(CONFIG_PROFILE_TEMPLATE), None) => setupWithDefaultTestTemplateFile()
+      case (Some(CONFIG_PROFILE_TEMPLATE), None) => KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
       case _                                     => Unit
     }
-
-  def setupWithDefaultTestTemplateFile(): String = {
-    logger.debug(s"Setup with test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
-    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
-  }
 
   def setupFixedCasSessionId(): UUID = {
     logger.info(s"Adding fixed session for Jetty")

@@ -1,15 +1,15 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.client.CachedOrganisaatioHierarkiaClient
+import fi.oph.kouta.config.KoutaCommonConfigFactory
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.mocks.{OrganisaatioServiceMock, ServiceMocker, SpecWithMocks, TestGlobals}
 
-class OrganisaatioServiceSpec extends OrganisaatioFixture {
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    mockOrganisaatioResponse()
-  }
+class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
+  KoutaCommonConfigFactory.setupWithDefaultTestTemplateFile()
+  TestGlobals.urlProperties = Some(KoutaCommonConfigFactory.configuration.urlProperties)
 
   "getAllChildOidsAndOppilaitostyypitFlat" should "return flat list of child organisations" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)._1 should contain theSameElementsAs
@@ -21,6 +21,7 @@ class OrganisaatioServiceSpec extends OrganisaatioFixture {
     response._1 should contain theSameElementsAs List(OphOid)
     response._2 should contain theSameElementsAs Koulutustyyppi.values
   }
+
   it should "return empty list with unknown oid when requesting children" in {
     organisaatioService
       .getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.3"))

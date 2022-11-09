@@ -15,8 +15,7 @@ package object fixture {
 import fi.oph.kouta.integration.fixture._
 
 trait IndexerFixture
-    extends KoutaIntegrationSpec
-    with KoulutusFixture
+    extends KoulutusFixture
     with ToteutusFixture
     with HakuFixture
     with HakukohdeFixture
@@ -24,7 +23,7 @@ trait IndexerFixture
     with SorakuvausFixture
     with OppilaitosFixture
     with OppilaitoksenOsaFixture {
-
+  this: KoutaIntegrationSpec =>
   val IndexerPath = "/indexer"
 
   override def beforeAll(): Unit = {
@@ -46,12 +45,12 @@ trait IndexerFixture
 }
 
 trait SearchFixture
-    extends KoutaIntegrationSpec
-    with KoulutusFixture
+    extends KoulutusFixture
     with ToteutusFixture
     with HakuFixture
     with HakukohdeFixture
     with ValintaperusteFixture {
+  this: KoutaIntegrationSpec =>
 
   val SearchPath = "/search"
 

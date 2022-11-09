@@ -1,17 +1,16 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.{Templates, TestSetups}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.mocks.KoodistoServiceMock
-import org.scalatra.test.scalatest.ScalatraFlatSpec
+import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks, UrlProperties}
 
-class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
+class EPerusteKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
+
   var koodiClient: EPerusteKoodiClient = _
+  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
 
   override def beforeAll() = {
-    TestSetups.setupWithDefaultTestTemplateFile()
-    super.startServiceMocking()
-    urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort"))
+    super.beforeAll()
     koodiClient = new EPerusteKoodiClient(urlProperties.get)
   }
 
