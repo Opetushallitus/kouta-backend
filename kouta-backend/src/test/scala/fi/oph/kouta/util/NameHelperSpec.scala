@@ -116,7 +116,8 @@ class NameHelperSpec extends UnitSpec {
   )
 
   val koulutusMetadata = LukioKoulutusMetadata(
-      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+      opintojenLaajuusNumero = Some(40),
+      opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2"),
       kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
       koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
     )

@@ -146,7 +146,7 @@ object TestData {
     metadata = Some(
       YliopistoKoulutusMetadata(
         tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         lisatiedot = Seq(Lisatieto1),
         isMuokkaajaOphVirkailija = Some(true)
@@ -176,7 +176,6 @@ object TestData {
     metadata = Some(
       AmmattikorkeakouluKoulutusMetadata(
         tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         lisatiedot = Seq(Lisatieto1),
@@ -208,8 +207,9 @@ object TestData {
       AmmOpeErityisopeJaOpoKoulutusMetadata(
         tutkintonimikeKoodiUrit = Seq(),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01"),
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60"),
-        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        opintojenLaajuusNumero = None,
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         lisatiedot = Seq(Lisatieto1),
         isMuokkaajaOphVirkailija = Some(true)
       )
@@ -239,7 +239,8 @@ object TestData {
       OpePedagOpinnotKoulutusMetadata(
         tutkintonimikeKoodiUrit = Seq(),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01"),
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60"),
+        opintojenLaajuusNumero = None,
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         lisatiedot = Seq(Lisatieto1),
         isMuokkaajaOphVirkailija = Some(true)
@@ -416,7 +417,8 @@ object TestData {
   )
 
   val LukiokoulutuksenMetatieto = LukioKoulutusMetadata(
-    opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+    opintojenLaajuusNumero = Some(40),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_00#1"),
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
     lisatiedot = Seq(Lisatieto1),
@@ -454,10 +456,11 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(
       TuvaKoulutusMetadata(
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
-        isMuokkaajaOphVirkailija = Some(false)
+        isMuokkaajaOphVirkailija = Some(false),
+        opintojenLaajuusNumero = None,
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_8#1")
       )
     ),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
@@ -478,10 +481,11 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(
       TelmaKoulutusMetadata(
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
-        isMuokkaajaOphVirkailija = Some(true)
+        isMuokkaajaOphVirkailija = Some(true),
+        opintojenLaajuusNumero = None,
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
       )
     ),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
@@ -502,10 +506,11 @@ object TestData {
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(
       VapaaSivistystyoOpistovuosiKoulutusMetadata(
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_v53#1"),
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+        opintojenLaajuusNumero = None,
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
         isMuokkaajaOphVirkailija = Some(false)
       )
     ),

@@ -309,9 +309,9 @@ class KoulutusServiceValidation(
       case _: AmmattikorkeakouluKoulutusMetadata =>
         validateKorkeaKoulutusMetadata(validationContext, koulutusDiffResolver)
       case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
-        assertOpettajankoulutusMetadata(m.opintojenLaajuusKoodiUri, m.tutkintonimikeKoodiUrit, m.koulutusalaKoodiUrit)
+        assertOpettajankoulutusMetadata(m.opintojenLaajuusyksikkoKoodiUri, m.tutkintonimikeKoodiUrit, m.koulutusalaKoodiUrit, validationContext)
       case m: OpePedagOpinnotKoulutusMetadata =>
-        assertOpettajankoulutusMetadata(m.opintojenLaajuusKoodiUri, m.tutkintonimikeKoodiUrit, m.koulutusalaKoodiUrit)
+        assertOpettajankoulutusMetadata(m.opintojenLaajuusyksikkoKoodiUri, m.tutkintonimikeKoodiUrit, m.koulutusalaKoodiUrit, validationContext)
 
       case m: LukioKoulutusMetadata =>
         and(
@@ -320,23 +320,23 @@ class KoulutusServiceValidation(
             "kansallinenkoulutusluokitus2016koulutusalataso1_00",
             "metadata.koulutusalaKoodiUrit"
           ),
-          assertOpintojenLaajuusKoodiUri(koulutusDiffResolver.newOpintojenLaajuusKoodiUri(), validationContext)
+          assertOpintojenLaajuusyksikkoKoodiUri(koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(), validationContext)
         )
       case m: TuvaKoulutusMetadata =>
         validateTuvaTelma(
           validationContext,
           m.lisatiedot,
           m.linkkiEPerusteisiin,
-          m.opintojenLaajuusKoodiUri,
-          koulutusDiffResolver.newOpintojenLaajuusKoodiUri()
+          m.opintojenLaajuusyksikkoKoodiUri,
+          koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri()
         )
       case m: TelmaKoulutusMetadata =>
         validateTuvaTelma(
           validationContext,
           m.lisatiedot,
           m.linkkiEPerusteisiin,
-          m.opintojenLaajuusKoodiUri,
-          koulutusDiffResolver.newOpintojenLaajuusKoodiUri()
+          m.opintojenLaajuusyksikkoKoodiUri,
+          koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri()
         )
       case m: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
         validateVapaaSivistystyoOpistovuosiKoulutus(
@@ -414,17 +414,14 @@ class KoulutusServiceValidation(
   }
 
   private def assertOpettajankoulutusMetadata(
-      opintojenLaajuusKoodiUri: Option[String],
+      opintojenLaajuusYksikkoKoodiUri: Option[String],
       tutkintonimikeKoodiUrit: Seq[String],
-      koulutusalaKoodiUrit: Seq[String]
+      koulutusalaKoodiUrit: Seq[String],
+      context: ValidationContext
   ): IsValid =
     and(
       assertEmpty(tutkintonimikeKoodiUrit, "metadata.tutkintonimikeKoodiUrit"),
-      assertCertainValue(
-        opintojenLaajuusKoodiUri,
-        "opintojenlaajuus_60",
-        "metadata.opintojenLaajuusKoodiUri"
-      ),
+      assertOpintojenLaajuusyksikkoKoodiUri(opintojenLaajuusYksikkoKoodiUri, context),
       assertOneAndOnlyCertainValueInSeq(
         koulutusalaKoodiUrit,
         "kansallinenkoulutusluokitus2016koulutusalataso1_01",
@@ -631,24 +628,24 @@ class KoulutusServiceValidation(
     and(
       assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
       assertTutkintonimikeKoodiUrit(koulutusDiffResolver.newTutkintonimikeKoodiUrit(), validationContext),
-      assertOpintojenLaajuusKoodiUri(koulutusDiffResolver.newOpintojenLaajuusKoodiUri(), validationContext)
+      assertOpintojenLaajuusyksikkoKoodiUri(koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(), validationContext)
     )
 
   private def validateTuvaTelma(
       validationContext: ValidationContext,
       lisatiedot: Seq[Lisatieto],
       linkkiEPerusteisiin: Kielistetty,
-      opintojenLaajuusKoodiUri: Option[String],
-      newOpintojenLaajuusKoodiUri: Option[String]
+      opintojenLaajuusYksikkoKoodiUri: Option[String],
+      newOpintojenLaajuusYksikkoKoodiUri: Option[String]
   ): IsValid = {
     and(
       assertEmpty(lisatiedot, "metadata.lisatiedot"),
       validateIfNonEmpty(linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
-      assertOpintojenLaajuusKoodiUri(newOpintojenLaajuusKoodiUri, validationContext),
+      assertOpintojenLaajuusKoodiUri(newOpintojenLaajuusYksikkoKoodiUri, validationContext),
       validateIfJulkaistu(
         validationContext.tila,
         and(
-          assertNotOptional(opintojenLaajuusKoodiUri, "metadata.opintojenLaajuusKoodiUri"),
+          assertNotOptional(opintojenLaajuusYksikkoKoodiUri, "metadata.opintojenLaajuusYksikkoKoodiUri"), //fixme, check tyyppi?
           validateOptionalKielistetty(
             validationContext.kielivalinta,
             linkkiEPerusteisiin,
@@ -680,13 +677,19 @@ class KoulutusServiceValidation(
       koulutusDiffResolver: KoulutusDiffResolver,
       metadata: VapaaSivistystyoOpistovuosiKoulutusMetadata
   ): IsValid = {
-    val laajuusKoodiUri = metadata.opintojenLaajuusKoodiUri
     and(
       validateVapaaSivistystyoKoulutus(validationContext, koulutusDiffResolver, metadata),
-      assertOpintojenLaajuusKoodiUri(koulutusDiffResolver.newOpintojenLaajuusKoodiUri(), validationContext),
+      assertOpintojenLaajuusyksikkoKoodiUri(koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(), validationContext),
       validateIfJulkaistu(
         validationContext.tila,
-        assertNotOptional(laajuusKoodiUri, "metadata.opintojenLaajuusKoodiUri")
+        assertNotOptional(metadata.opintojenLaajuusyksikkoKoodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri")
+      ),
+      validateOpintojenLaajuusyksikkoAndNumero(
+        metadata.opintojenLaajuusyksikkoKoodiUri,
+        koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
+        metadata.opintojenLaajuusNumero,
+        false,
+        validationContext
       )
     )
   }

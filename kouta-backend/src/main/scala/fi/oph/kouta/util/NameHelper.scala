@@ -43,12 +43,11 @@ object NameHelper {
       case _ => None
     }
   }
+
   def getLukioKoulutusLaajuusNumero(lukioKoulutusMetadata: LukioKoulutusMetadata): Option[String] = {
-      lukioKoulutusMetadata.opintojenLaajuusKoodiUri match {
-        case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
-        case _             => None
-      }
+    lukioKoulutusMetadata.opintojenLaajuusNumero.map(_.toInt.toString)
   }
+
   def generateLukioToteutusDisplayName(
       toteutusMetadata: LukioToteutusMetadata,
       koulutusMetadata: LukioKoulutusMetadata,

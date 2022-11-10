@@ -76,6 +76,9 @@ class KoulutusService(
     AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   val teemakuvaPrefix = "koulutus-teemakuva"
+  val opintojenLaajuusOpintopiste = "opintojenlaajuusyksikko_2#1"
+  val opintojenLaajuusOsaamispiste = "opintojenlaajuusyksikko_6#1"
+  val opintojenLaajuusViikko = "opintojenlaajuusyksikko_8#1"
 
   private def authorizedForTarjoajaOids(
       oids: Set[OrganisaatioOid],
@@ -108,18 +111,21 @@ class KoulutusService(
           case korkeakoulutusKoulutusMetadata: KorkeakoulutusKoulutusMetadata =>
             korkeakoulutusKoulutusMetadata match {
               case yoMetadata: YliopistoKoulutusMetadata =>
-                Some(yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                Some(yoMetadata.copy(
+                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                  opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOpintopiste))
+                )
               case amkMetadata: AmmattikorkeakouluKoulutusMetadata =>
-                Some(amkMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                Some(amkMetadata.copy(
+                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                  opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOpintopiste)
+                ))
               case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
                 Some(
                   m.copy(
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-                    // !!!!Jatkossa opintojenlaajuus -koodistoa ei enää tule käyttää laajuuden määrittämiseen!!!!!
-                    // Sen sijaan tulee käyttää opintojenlaajuusyksikko -koodistoa yksikön määrittämiseen +
-                    // erillistä numeroarvoa varsinaisen laajuuden määritykseen
-                    opintojenLaajuusKoodiUri =
-                      fixedKoodiUriIfNotDefined(m.opintojenLaajuusKoodiUri, "opintojenlaajuus_60"),
+                    opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOpintopiste),
+                    opintojenLaajuusNumero = Some(60),
                     koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
                       m.koulutusalaKoodiUrit,
                       "kansallinenkoulutusluokitus2016koulutusalataso1_01"
@@ -130,11 +136,8 @@ class KoulutusService(
                 Some(
                   m.copy(
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-                    // !!!!Jatkossa opintojenlaajuus -koodistoa ei enää tule käyttää laajuuden määrittämiseen!!!!!
-                    // Sen sijaan tulee käyttää opintojenlaajuusyksikko -koodistoa yksikön määrittämiseen +
-                    // erillistä numeroarvoa varsinaisen laajuuden määritykseen
-                    opintojenLaajuusKoodiUri =
-                      fixedKoodiUriIfNotDefined(m.opintojenLaajuusKoodiUri, "opintojenlaajuus_60"),
+                    opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOpintopiste),
+                    opintojenLaajuusNumero = Some(60),
                     koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
                       m.koulutusalaKoodiUrit,
                       "kansallinenkoulutusluokitus2016koulutusalataso1_01"
@@ -154,6 +157,7 @@ class KoulutusService(
             Some(
               m.copy(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOpintopiste),
                 koulutusalaKoodiUrit = fixedKoodiUrisIfNotDefined(
                   m.koulutusalaKoodiUrit,
                   "kansallinenkoulutusluokitus2016koulutusalataso1_00"
@@ -161,15 +165,24 @@ class KoulutusService(
               )
             )
           case tuvaMetadata: TuvaKoulutusMetadata =>
-            Some(tuvaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            Some(tuvaMetadata.copy(
+              isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+              opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusViikko),
+            ))
           case telmaMetadata: TelmaKoulutusMetadata =>
-            Some(telmaMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            Some(telmaMetadata.copy(
+              isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+              opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOsaamispiste)
+            ))
           case vapaaSivistystyoKoulutusMetadata: VapaaSivistystyoKoulutusMetadata =>
             vapaaSivistystyoKoulutusMetadata match {
               case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata =>
                 Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case vapaaSivistystyoOpistovuosiMetadata: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
-                Some(vapaaSivistystyoOpistovuosiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                Some(vapaaSivistystyoOpistovuosiMetadata.copy(
+                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                  opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusOpintopiste)
+                ))
             }
           case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata =>
             Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
