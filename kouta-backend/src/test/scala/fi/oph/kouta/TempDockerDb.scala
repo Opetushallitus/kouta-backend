@@ -3,12 +3,10 @@ package fi.oph.kouta
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.util.CommandLine.runBlocking
 import fi.vm.sade.utils.slf4j.Logging
-import fi.vm.sade.utils.tcp.PortChecker
 
 object TempDockerDb extends Logging {
 
-  val port: Int =
-    Option(KoutaConfigurationFactory.configuration.databaseConfiguration.port).getOrElse(PortChecker.findFreeLocalPort)
+  val port: Int = KoutaConfigurationFactory.configuration.databaseConfiguration.port
   val dbName        = "kouta"
   val containerName = "kouta-database"
 
