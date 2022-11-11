@@ -344,9 +344,9 @@ class HakukohdeServiceValidation(
           hakukohdeDiffResolver.newNimi().nonEmpty,
           validateIfTrueOrElse(
             hkLinja.linja.isDefined,
-            hakuKoodiClient.getKoodiUriVersionOrLatest(hkLinja.linja.get) match {
+            hakuKoodiClient.getKoodiUriVersionOrLatestFromCache(hkLinja.linja.get) match {
               case Left(_) => error("metadata.hakukohteenLinja.linja", koodistoServiceFailureMsg)
-              case Right(Some(uri)) =>
+              case Right(uri) =>
                 assertNimiMatchExternal(
                   nimi,
                   uri.nimi,
@@ -356,7 +356,7 @@ class HakukohdeServiceValidation(
               case _ => error("metadata.hakukohteenLinja.linja", invalidHakukohteenLinja(hkLinja.linja.get))
             },
             Try[Kielistetty] {
-              lokalisointiClient.getKaannoksetWithKey("toteutuslomake.lukionYleislinjaNimiOsa")
+              lokalisointiClient.getKaannoksetWithKeyFromCache("toteutuslomake.lukionYleislinjaNimiOsa")
             } match {
               case Success(yleisLinjaKaannos) =>
                 assertNimiMatchExternal(nimi, yleisLinjaKaannos, "nimi", "toteutuksen yleislinjalla")
@@ -692,9 +692,9 @@ class HakukohdeServiceValidation(
                   assertNimiNotHakukohdeKoodiuri(hk)
                 )
             }
+          case _ => NoErrors
         }
-      case _ =>
-        assertTrue(hk.hakukohdeKoodiUri.nonEmpty != hk.nimi.nonEmpty, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri"))
+      case _ => NoErrors
     }
   }
 

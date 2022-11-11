@@ -384,6 +384,7 @@ class ToteutusServiceValidation(
       val liitettavanToteutuksenTyyppi = toteutus.metadata.get.tyyppi
       val liitettavanToteutuksenTila = toteutus.tila
 
+
       if (liitettavanToteutuksenTyyppi != KkOpintojakso) {
         addErrorOid("metadata.liitetytOpintojaksot.koulutustyyppi", toteutus.oid)
       }

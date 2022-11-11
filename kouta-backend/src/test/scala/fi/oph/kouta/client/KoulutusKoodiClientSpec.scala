@@ -65,17 +65,17 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "Getting latest version of koodiUri" should "return version from cache" in {
     mockLatestKoodiUriResponse("koulutus_201101", 12)
-    koodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_201101") should equal(Right(Some(KoodiUri("koulutus_201101", 12, defaultNimi))))
+    koodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_201101") should equal(Right(KoodiUri("koulutus_201101", 12, defaultNimi)))
     clearServiceMocks()
     mockLatestKoodiUriResponse("koulutus_201101", 10)
     // Should still use value from cache
-    koodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_201101") should equal(Right(Some(KoodiUri("koulutus_201101", 12, defaultNimi))))
+    koodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_201101") should equal(Right(KoodiUri("koulutus_201101", 12, defaultNimi)))
   }
 
   "Getting certain version of koodiUri" should "return version from cache" in {
     mockKoodiUriVersionResponse("koulutus_201102", 11)
     koodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_201102#11") should equal(
-      Right(Some(KoodiUri("koulutus_201102", 11, defaultNimi)))
+      Right(KoodiUri("koulutus_201102", 11, defaultNimi))
     )
   }
 
@@ -330,7 +330,7 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
     )
 
     koodiClient.getKoodiUriVersionOrLatestFromCache("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
-      Right(Some(KoodiUri("kansallinenkoulutusluokitus2016koulutusalataso1_01", 2, defaultNimi)))
+      Right(KoodiUri("kansallinenkoulutusluokitus2016koulutusalataso1_01", 2, defaultNimi))
     )
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_201000#12") should equal(itemFound)
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemNotFound)
@@ -353,7 +353,7 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_120", 1, None)))
 
     koodiClient.getKoodiUriVersionOrLatestFromCache("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
-      Right(Some(KoodiUri("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10, defaultNimi)))
+      Right(KoodiUri("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10, defaultNimi))
     )
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_201000#12") should equal(itemNotFound)
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemFound)
@@ -375,7 +375,7 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
   "When getting latest version of koodiUri" should "throw error" in {
     mockLatestKoodiUriFailure("koulutus_201101")
     koodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_201101").left.get.getMessage should equal(
-      "Failed to get koodiuri-version from koodisto for koulutus_201101, got response 500 Failure in koodisto-service for koodiuri-base koulutus_201101"
+      "Failed to get koodiuri-version from koodisto for koulutus_201101 after retry, got response 500, Failure in koodisto-service for koodiuri-base koulutus_201101"
     )
   }
 

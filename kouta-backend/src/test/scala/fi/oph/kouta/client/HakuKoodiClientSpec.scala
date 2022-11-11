@@ -220,21 +220,21 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "Getting latest version of koodiUri" should "return version from cache" in {
     mockLatestKoodiUriResponse("hakukohteeterammatillinenerityisopetus_1753", 2)
-    koodiClient.getKoodiUriVersionOrLatest("hakukohteeterammatillinenerityisopetus_1753") should equal(
-      Right(Some(KoodiUri("hakukohteeterammatillinenerityisopetus_1753", 2, defaultNimi)))
+    koodiClient.getKoodiUriVersionOrLatestFromCache("hakukohteeterammatillinenerityisopetus_1753") should equal(
+      Right(KoodiUri("hakukohteeterammatillinenerityisopetus_1753", 2, defaultNimi))
     )
     clearServiceMocks()
     mockLatestKoodiUriResponse("hakukohteeterammatillinenerityisopetus_1753", 1)
     // Should still use value from cache
-    koodiClient.getKoodiUriVersionOrLatest("hakukohteeterammatillinenerityisopetus_1753") should equal(
-      Right(Some(KoodiUri("hakukohteeterammatillinenerityisopetus_1753", 2, defaultNimi)))
+    koodiClient.getKoodiUriVersionOrLatestFromCache("hakukohteeterammatillinenerityisopetus_1753") should equal(
+      Right(KoodiUri("hakukohteeterammatillinenerityisopetus_1753", 2, defaultNimi))
     )
   }
 
   "Getting certain version of koodiUri" should "return version from cache" in {
     mockKoodiUriVersionResponse("hakukohteetperusopetuksenjalkeinenyhteishaku_122", 3)
-    koodiClient.getKoodiUriVersionOrLatest("hakukohteetperusopetuksenjalkeinenyhteishaku_122#3") should equal(
-      Right(Some(KoodiUri("hakukohteetperusopetuksenjalkeinenyhteishaku_122", 3, defaultNimi)))
+    koodiClient.getKoodiUriVersionOrLatestFromCache("hakukohteetperusopetuksenjalkeinenyhteishaku_122#3") should equal(
+      Right(KoodiUri("hakukohteetperusopetuksenjalkeinenyhteishaku_122", 3, defaultNimi))
     )
   }
 

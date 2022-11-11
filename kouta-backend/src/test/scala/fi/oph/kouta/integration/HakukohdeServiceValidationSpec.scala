@@ -230,16 +230,14 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
     when(lokalisointiClient.getKaannoksetWithKeyFromCache("toteutuslomake.lukionYleislinjaNimiOsa"))
       .thenAnswer(Map(Fi -> "Lukio", Sv -> "Gymnasium", En -> "Lukio"))
-    when(hakuKoodiClient.getKoodiUriVersionOrLatest("lukiopainotukset_1#1"))
-      .thenAnswer(Right(Some(KoodiUri("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv")))))
-    when(hakuKoodiClient.getKoodiUriVersionOrLatest("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
+    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiopainotukset_1#1"))
+      .thenAnswer(Right(KoodiUri("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv"))))
+    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
       Right(
-        Some(
-          KoodiUri("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
-        )
+        KoodiUri("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
       )
     )
-    when(hakuKoodiClient.getKoodiUriVersionOrLatest("failure")).thenAnswer(Left(new RuntimeException()))
+    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("failure")).thenAnswer(Left(new RuntimeException()))
 
     when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(Some(dependencies))
     when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
