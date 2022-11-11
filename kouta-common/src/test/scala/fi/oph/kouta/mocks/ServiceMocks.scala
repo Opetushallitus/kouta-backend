@@ -157,10 +157,10 @@ trait ServiceMocks extends Logging {
   var urlProperties: Option[OphProperties] = None
   var mockPort: Int = _
 
-  def startServiceMocking(): Unit = {
-    mockServer = Some(startClientAndServer())
-    mockPort = mockServer.get.getLocalPort
-    logger.info(s"Mocking oph services in port $mockPort")
+  def startServiceMocking(port: Int = 12345): Unit = {
+    mockServer = Some(startClientAndServer(port))
+    mockPort = port
+    logger.info(s"Mocking oph services in port $port")
   }
 
   def stopServiceMocking(): Unit = mockServer.foreach(_.stop())
