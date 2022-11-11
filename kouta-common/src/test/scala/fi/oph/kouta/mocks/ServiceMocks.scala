@@ -33,7 +33,7 @@ abstract class ServiceMocker extends Logging {
     }
   }
 
-  def startServiceMocking(): Unit = {
+  def startServiceMocking(port: Int): Unit = {
     mockServer = Some(startClientAndServer(8099))
     mockPort = mockServer.get.getLocalPort
     logger.info(s"Mocking oph services in port $mockPort")
@@ -75,17 +75,18 @@ abstract class ServiceMocker extends Logging {
 
 object ServiceMocker extends ServiceMocker
 
-abstract trait ServiceMockBase {
+trait ServiceMockBase extends UrlProperties {
   private val mocker = ServiceMocker
 
-  def getMockPath(key: String, param: Option[String] = None): String = TestGlobals.urlProperties match {
-    case None => "/"
-    case Some(up) =>
-      new java.net.URL(param match {
-        case None    => up.url(key)
-        case Some(p) => up.url(key, p)
-      }).getPath
-  }
+  def getMockPath(key: String, param: Option[String] = None): String = 
+    urlProperties match {
+      case None => "/"
+      case Some(up) =>
+        new java.net.URL(param match {
+          case None => up.url(key)
+          case Some(p) => up.url(key, p)
+        }).getPath
+    }
 
   def clearMock(request: HttpRequest): Unit = mocker.clearMock(request)
 

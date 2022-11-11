@@ -1,2 +1,2 @@
 ---
-host_virkailija: "invalid?"
+host_virkailija: localhost:8099 # Mock-server käynnistyy porttiin 8099

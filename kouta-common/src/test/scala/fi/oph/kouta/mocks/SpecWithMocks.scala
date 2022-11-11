@@ -24,10 +24,11 @@ trait SpecWithMocks
     with BeforeAndAfterEach
     with BeforeAndAfterAll {
   val mocker = ServiceMocker
-  
+
   override def beforeAll(): Unit = {
     super.beforeAll()
-    mocker.startServiceMocking()
+    val hostVirkailijaPort = urlProperties.get.getProperty("host.virkailija").split(":").last.toInt
+    mocker.startServiceMocking(hostVirkailijaPort)
   }
 
   override def afterAll(): Unit = {
