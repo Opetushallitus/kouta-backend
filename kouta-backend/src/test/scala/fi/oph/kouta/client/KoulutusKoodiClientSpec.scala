@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 import scala.util.{Failure, Success, Try}
 
 class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
-  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
   var koodiClient: KoulutusKoodiClient = _
 

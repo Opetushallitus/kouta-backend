@@ -51,6 +51,12 @@ abstract class KoutaConfigFactory[TConfig <: KoutaBaseConfig](moduleName: String
     System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, DEFAULT_TEMPLATE_FILE_PATH)
     configuration
   }
+
+  def setupWithDevTemplate(): TConfig = {
+    logger.debug(s"Using dev template ${DEV_TEMPLATE_FILE_PATH}")
+    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
+    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, DEV_TEMPLATE_FILE_PATH)
+    configuration
   }
 
   def profile: String = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)

@@ -6,7 +6,7 @@ import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks, UrlProperties}
 class EPerusteKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
 
   var koodiClient: EPerusteKoodiClient = _
-  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
 
   override def beforeAll() = {

@@ -43,9 +43,9 @@ trait KoutaIntegrationSpec
     with MockitoSugar {
 
   System.setProperty("kouta-backend.useSecureCookies", "false")
-  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
-  TestSetups.setupPostgres()
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
+  TestSetups.setupPostgres()
 
   val serviceIdentifier: String = TestSetups.defaultServiceIdentifier
   val defaultAuthorities: Set[Authority] = TestSetups.defaultAuthorities
@@ -535,7 +535,7 @@ sealed trait DatabaseSpec {
   import slick.jdbc.PostgresProfile.api._
 
   System.setProperty("kouta-backend.useSecureCookies", "false")
-  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   TestSetups.setupPostgres()
   lazy val db: KoutaDatabase.type = KoutaDatabase
 

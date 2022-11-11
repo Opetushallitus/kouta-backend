@@ -12,7 +12,7 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
 
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
-  KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
 
   override def beforeAll = {

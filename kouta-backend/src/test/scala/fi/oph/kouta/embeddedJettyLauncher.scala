@@ -19,8 +19,7 @@ object EmbeddedJettyLauncher extends Logging {
 
   def main(args: Array[String]) {
     System.setProperty("kouta-backend.useSecureCookies", "false")
-    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEV_TEMPLATE_FILE_PATH)
+    KoutaConfigurationFactory.setupWithDevTemplate()
     TestSetups.setupPostgres()
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
@@ -64,10 +63,6 @@ object TestSetups extends Logging {
     }
   }
 
-  def setupWithTemplate(): String = {
-    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
-  }
-
   def setupPostgres() = {
     System.getProperty("kouta-backend.embedded", "true") match {
       case x if "false".equalsIgnoreCase(x) => setupWithoutEmbeddedPostgres()
@@ -75,20 +70,14 @@ object TestSetups extends Logging {
     }
   }
 
-  def setupWithEmbeddedPostgres() = {
-    startDockerPostgres()
-  }
-
-  private def startDockerPostgres() = {
-    TempDockerDb.start()
-  }
+  def setupWithEmbeddedPostgres() = TempDockerDb.start()
 
   def setupWithoutEmbeddedPostgres() =
     (
       Option(System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE)),
       Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))
     ) match {
-      case (Some(CONFIG_PROFILE_TEMPLATE), None) => KoutaConfigurationFactory.setupWithDefaultTestTemplateFile()
+      case (Some(CONFIG_PROFILE_TEMPLATE), None) => KoutaConfigurationFactory.setupWithDefaultTemplateFile()
       case _                                     => Unit
     }
 
@@ -102,12 +91,3 @@ object TestSetups extends Logging {
   }
 }
 
-object Templates extends Logging {
-  val TEST_TEMPLATE_FILE_PATH: String = "src/test/resources/test-vars.yml"
-  val DEV_TEMPLATE_FILE_PATH: String  = "src/test/resources/dev-vars.yml"
-
-  val DEFAULT_TEMPLATE_FILE_PATH: String = Option(System.getProperty("kouta-backend.template-file")) match {
-    case Some(templateFilePath) => templateFilePath
-    case _                      => TEST_TEMPLATE_FILE_PATH
-  }
-}
