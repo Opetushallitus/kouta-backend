@@ -97,17 +97,16 @@ class KoulutusService(
       )
     } else { None }
 
-  private def getKoodiUriVersion(koodiUriAsString: String): Option[KoodiUri] =
+  private def getKoodiUriVersion(koodiUriAsString: String): KoodiUri =
     koodistoClient.getKoodiUriVersionOrLatestFromCache(koodiUriAsString) match {
       case Left(exp)  => throw exp
       case Right(uri) => uri
     }
 
-  private def getKoodiUriVersionAsStringSeq(koodiUriAsString: String): Seq[String] =
-    getKoodiUriVersion(koodiUriAsString) match {
-      case Some(uri) => Seq(s"${uri.koodiUri}#${uri.versio}")
-      case _         => Seq()
-    }
+  private def getKoodiUriVersionAsStringSeq(koodiUriAsString: String): Seq[String] = {
+    val koodiUri = getKoodiUriVersion(koodiUriAsString)
+    Seq(s"${koodiUri.koodiUri}#${koodiUri.versio}")
+  }
 
   private def enrichKoulutusMetadata(koulutus: Koulutus): Option[KoulutusMetadata] = {
     val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(koulutus.muokkaaja)
@@ -125,8 +124,10 @@ class KoulutusService(
               case m: AmmOpeErityisopeJaOpoKoulutusMetadata =>
                 val opintojenLaajuusKoodiUri =
                   if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri
-                  else
-                    getKoodiUriVersion("opintojenlaajuus_60").flatMap(uri => Some(s"${uri.koodiUri}#${uri.versio}"))
+                  else {
+                    val koodiUri = getKoodiUriVersion("opintojenlaajuus_60")
+                    Some(s"${koodiUri.koodiUri}#${koodiUri.versio}")
+                  }
                 val koulutusalaKoodiUrit =
                   if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit
                   else
@@ -144,8 +145,10 @@ class KoulutusService(
               case m: OpePedagOpinnotKoulutusMetadata =>
                 val opintojenLaajuusKoodiUri =
                   if (m.opintojenLaajuusKoodiUri.isDefined) m.opintojenLaajuusKoodiUri
-                  else
-                    getKoodiUriVersion("opintojenlaajuus_60").flatMap(uri => Some(s"${uri.koodiUri}#${uri.versio}"))
+                  else {
+                    val koodiUri = getKoodiUriVersion("opintojenlaajuus_60")
+                    Some(s"${koodiUri.koodiUri}#${koodiUri.versio}")
+                  }
                 val koulutusalaKoodiUrit =
                   if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit
                   else
@@ -217,13 +220,10 @@ class KoulutusService(
     val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
     val enrichedKoulutus = koulutus.koulutustyyppi match {
       case Amm if koulutus.nimi.isEmpty && koulutus.koulutuksetKoodiUri.nonEmpty =>
-        getKoodiUriVersion(koulutus.koulutuksetKoodiUri.head) match {
-          case Some(koodiUri) =>
-            koulutus.copy(
-              nimi = NameHelper.mergeNames(koodiUri.nimi, koulutus.nimi, koulutus.kielivalinta)
-            )
-          case _ => koulutus
-        }
+        val koodiUri = getKoodiUriVersion(koulutus.koulutuksetKoodiUri.head)
+        koulutus.copy(
+          nimi = NameHelper.mergeNames(koodiUri.nimi, koulutus.nimi, koulutus.kielivalinta)
+        )
       case AmmTutkinnonOsa if notFullyPopulated(koulutus.nimi, koulutus.kielivalinta) && koulutus.metadata.isDefined =>
         koulutus.metadata match {
           case Some(m: AmmatillinenTutkinnonOsaKoulutusMetadata)

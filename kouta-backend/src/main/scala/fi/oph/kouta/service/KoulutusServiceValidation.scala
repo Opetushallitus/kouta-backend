@@ -510,7 +510,7 @@ class KoulutusServiceValidation(
             .nonEmpty || koulutusDiffResolver.newNimi().nonEmpty),
           koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
             case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
-            case Right(Some(uri)) =>
+            case Right(uri) =>
               assertNimiMatchExternal(
                 koulutus.nimi,
                 uri.nimi,

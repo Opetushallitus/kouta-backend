@@ -1,5 +1,6 @@
 package fi.oph.kouta.client
 
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
 import fi.oph.kouta.client.KoodistoUtils.koodiUriWithEqualOrHigherVersioNbrInList
 import fi.oph.kouta.config.KoutaConfigurationFactory
@@ -8,6 +9,7 @@ import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBo
 import fi.vm.sade.properties.OphProperties
 
 import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success, Try}
 
 object HakuKoodiClient extends HakuKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
@@ -24,9 +26,13 @@ class HakuKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlPr
     .expireAfterWrite(15.minutes)
     .build()
 
-  def getKoodiUriVersionOrLatest(koodiUriAsString: String): Either[Throwable, Option[KoodiUri]] = {
-    //getAndUpdateKoodiUriVersionOrLatestFromCache(koodiUriAsString, koodiuriVersionCache)
-    Right(None)
+  def getKoodiUriVersionOrLatestFromCache(koodiUriAsString: String): Either[Throwable, KoodiUri] = {
+    Try[KoodiUri] {
+      koodiuriVersionCache.get(koodiUriAsString, koodiUriAsString => getKoodiUriVersionOrLatest(koodiUriAsString))
+    } match {
+      case Success(koodiUri) => Right(koodiUri)
+      case Failure(exp) => Left(exp)
+    }
   }
 
   def hakukohdeKoodiUriAmmErityisopetusExists(koodiUri: String): ExternalQueryResult =

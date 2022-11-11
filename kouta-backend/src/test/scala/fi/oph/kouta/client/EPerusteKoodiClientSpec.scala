@@ -49,12 +49,12 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
 
   "Querying osaamisalaKoodiurit for ePeruste" should "return koodiurit if ePeruste was existing" in {
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
-    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1), KoodiUri("osaamisala_02", 1))))
+    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1, defaultNimi), KoodiUri("osaamisala_02", 1, defaultNimi))))
     koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(123L) should equal(Right(Seq[KoodiUri]()))
     clearServiceMocks()
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_03", "osaamisala_04"))
     // Should still use values from cache
-    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1), KoodiUri("osaamisala_02", 1))))
+    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1, defaultNimi), KoodiUri("osaamisala_02", 1, defaultNimi))))
   }
 
   "When cache data is expired or removed" should "data fetched to cache again" in {
@@ -63,7 +63,7 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("koulutus_371101", 1), KoodiUri("koulutus_371102", 1))))
     koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123)) should equal(Right(Map(123 -> Seq(TutkinnonOsaServiceItem(1234, 122, defaultNimi)))))
-    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1), KoodiUri("osaamisala_02", 1))))
+    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1, defaultNimi), KoodiUri("osaamisala_02", 1, defaultNimi))))
 
     koodiClient.ePerusteToOsaamisalaCache.invalidateAll()
     koodiClient.ePerusteToKoodiuritCache.invalidateAll()
@@ -75,7 +75,7 @@ class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock 
     mockOsaamisalaKoodiUritByEPeruste(11, Seq("osaamisala_03", "osaamisala_04"))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11) should equal(Right(Seq(KoodiUri("koulutus_371107", 1), KoodiUri("koulutus_371108", 1))))
     koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123)) should equal(Right(Map(123 -> Seq(TutkinnonOsaServiceItem(1235, 125, defaultNimi)))))
-    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11) should equal(Right(Seq(KoodiUri("osaamisala_03", 1), KoodiUri("osaamisala_04", 1))))
+    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11) should equal(Right(Seq(KoodiUri("osaamisala_03", 1, defaultNimi), KoodiUri("osaamisala_04", 1, defaultNimi))))
   }
 
   "When koulutusKoodiUri query failed" should "return error status" in {

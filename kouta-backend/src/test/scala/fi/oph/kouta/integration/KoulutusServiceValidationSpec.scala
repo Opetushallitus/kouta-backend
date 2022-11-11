@@ -243,10 +243,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     // ammatilliset
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#1")
     when(koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_371101#1"))
-      .thenAnswer(Right(Some(KoodiUri("koulutus_371101", 1, defaultName))))
+      .thenAnswer(Right(KoodiUri("koulutus_371101", 1, defaultName)))
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#12")
     when(koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_371101#12"))
-      .thenAnswer(Right(Some(KoodiUri("koulutus_371101", 12, defaultName))))
+      .thenAnswer(Right(KoodiUri("koulutus_371101", 12, defaultName)))
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371666#1")
     when(koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_371666#1"))
       .thenAnswer(Left(new RuntimeException("")))
