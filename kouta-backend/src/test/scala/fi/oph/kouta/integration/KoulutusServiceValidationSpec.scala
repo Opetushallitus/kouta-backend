@@ -958,13 +958,13 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   it should "fail if unknown tutkinnonOsa viite- and ID for AmmTutkinnonosa koulutus" in {
     failsValidation(
-      ammTkWithTutkinnonOsaParams(Some(200L), None, Some(1234L), Some(2345L)),
+      ammTkWithTutkinnonOsaParams(Some(200), None, Some(1234), Some(2345)),
       Seq(
         ValidationError(
           "metadata.tutkinnonOsat[0].tutkinnonosaViite",
-          invalidTutkinnonOsaViiteForEPeruste(200L, 2345L)
+          invalidTutkinnonOsaViiteForEPeruste(200, 2345)
         ),
-        ValidationError("metadata.tutkinnonOsat[0].tutkinnonosaId", invalidTutkinnonOsaIdForEPeruste(200L, 1234L))
+        ValidationError("metadata.tutkinnonOsat[0].tutkinnonosaId", invalidTutkinnonOsaIdForEPeruste(200, 1234))
       )
     )
   }
