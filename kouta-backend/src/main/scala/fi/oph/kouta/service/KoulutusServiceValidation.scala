@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
@@ -532,8 +532,22 @@ class KoulutusServiceValidation(
       newTutkinnonOsat: Boolean
   ): IsValid = {
     val path = "metadata.tutkinnonOsat"
-    def nimiShouldBeValidated(newNimi: Kielistetty, currentTutkinnonOsat: Seq[TutkinnonOsa]): Boolean =
-      newNimi.nonEmpty && currentTutkinnonOsat.size == 1
+    def nimiShouldBeValidated(
+        newNimi: Kielistetty,
+        currentTutkinnonOsat: Seq[TutkinnonOsa],
+        tutkinnonOsatFromService: Map[Long, Seq[TutkinnonOsaServiceItem]] = Map()
+    ): Boolean = {
+      if (newNimi.nonEmpty && currentTutkinnonOsat.size == 1)
+        (currentTutkinnonOsat.head.tutkinnonosaViite, currentTutkinnonOsat.head.tutkinnonosaId) match {
+          case (Some(viiteId), Some(osaId)) =>
+            tutkinnonOsatFromService.isEmpty || tutkinnonOsatFromService.head._2.exists(osa =>
+              osa.viiteId == viiteId && osa.id == osaId
+            )
+          case _ => false
+        }
+      else
+        false
+    }
 
     and(
       validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, path)),
@@ -567,14 +581,21 @@ class KoulutusServiceValidation(
                   validateIfTrue(
                     nimiShouldBeValidated(
                       newNimi,
-                      tutkinnonOsat
-                    ) && tutkinnonOsaIdsByEPerusteId.nonEmpty && tutkinnonOsaIdsByEPerusteId.head._2.nonEmpty,
-                    assertNimiMatchExternal(
-                      newNimi,
-                      tutkinnonOsaIdsByEPerusteId.head._2.head.nimi,
-                      "nimi",
-                      "tutkinnonosassa"
-                    )
+                      tutkinnonOsat,
+                      tutkinnonOsaIdsByEPerusteId
+                    ), {
+                      val viiteId = tutkinnonOsat.head.tutkinnonosaViite.get
+                      val osaId   = tutkinnonOsat.head.tutkinnonosaId.get
+                      assertNimiMatchExternal(
+                        newNimi,
+                        tutkinnonOsaIdsByEPerusteId.head._2
+                          .find(osa => osa.viiteId == viiteId && osa.id == osaId)
+                          .map(_.nimi)
+                          .getOrElse(Map()),
+                        "nimi",
+                        "tutkinnonosassa"
+                      )
+                    }
                   )
                 )
               case _ =>
