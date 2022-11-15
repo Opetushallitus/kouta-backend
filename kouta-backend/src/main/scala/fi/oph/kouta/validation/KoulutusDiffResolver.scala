@@ -5,6 +5,9 @@ import fi.oph.kouta.domain._
 case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus]) {
   private def oldMetadata(): Option[KoulutusMetadata] = oldKoulutus.flatMap(_.metadata)
 
+  def newNimi(): Kielistetty =
+    if (oldKoulutus.map(_.nimi).getOrElse(Map()) != koulutus.nimi) koulutus.nimi else Map()
+
   def newKoulutusKoodiUrit(): Seq[String] =
     if (oldKoulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq()).toSet != koulutus.koulutuksetKoodiUri.toSet)
       koulutus.koulutuksetKoodiUri
@@ -23,6 +26,11 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     if (osat.toSet != tutkinnonosat(oldMetadata()).toSet) osat else Seq()
   }
 
+  def newOsaamisalaKoodiUri(): Option[String] = {
+    val koodiUri = osaamisalaKoodiUri(koulutus.metadata)
+    if (osaamisalaKoodiUri(oldMetadata()) != koodiUri) koodiUri else None
+  }
+
   def newKoulutusalaKoodiUrit(): Seq[String] = {
     val koodiUrit = koulutusalaKoodiUrit(koulutus.metadata)
     if (koodiUrit.toSet != koulutusalaKoodiUrit(oldMetadata()).toSet) koodiUrit else Seq()
@@ -39,47 +47,50 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
   }
 
   private def tutkinnonosat(metadata: Option[KoulutusMetadata]): Seq[TutkinnonOsa] =
-    if (!metadata.isDefined) Seq()
-    else
-        metadata.get match {
-          case m: AmmatillinenTutkinnonOsaKoulutusMetadata =>
-            m.tutkinnonOsat
-          case _ => Seq()
-        }
+    metadata match {
+      case Some(m: AmmatillinenTutkinnonOsaKoulutusMetadata) =>
+        m.tutkinnonOsat
+      case _ => Seq()
+    }
+
+  private def osaamisalaKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
+    metadata match {
+      case Some(m: AmmatillinenOsaamisalaKoulutusMetadata) => m.osaamisalaKoodiUri
+      case _                                               => None
+    }
 
   private def koulutusalaKoodiUrit(metadata: Option[KoulutusMetadata]): Seq[String] =
-    if (!metadata.isDefined) Seq()
-    else
-      metadata.get match {
-        case m: KorkeakoulutusKoulutusMetadata  => m.koulutusalaKoodiUrit
-        case m: AmmatillinenMuuKoulutusMetadata => m.koulutusalaKoodiUrit
-        case m: VapaaSivistystyoKoulutusMetadata => m.koulutusalaKoodiUrit
-        case m: KkOpintojaksoKoulutusMetadata => m.koulutusalaKoodiUrit
-        case m: KkOpintokokonaisuusKoulutusMetadata => m.koulutusalaKoodiUrit
-        case m: ErikoislaakariKoulutusMetadata => m.koulutusalaKoodiUrit
-        case m: LukioKoulutusMetadata => m.koulutusalaKoodiUrit
-        case _                                  => Seq()
-      }
+    metadata match {
+      case Some(m: KorkeakoulutusKoulutusMetadata)      => m.koulutusalaKoodiUrit
+      case Some(m: AmmatillinenMuuKoulutusMetadata)     => m.koulutusalaKoodiUrit
+      case Some(m: VapaaSivistystyoKoulutusMetadata)    => m.koulutusalaKoodiUrit
+      case Some(m: KkOpintojaksoKoulutusMetadata)       => m.koulutusalaKoodiUrit
+      case Some(m: KkOpintokokonaisuusKoulutusMetadata) => m.koulutusalaKoodiUrit
+      case Some(m: ErikoislaakariKoulutusMetadata)      => m.koulutusalaKoodiUrit
+      case Some(m: LukioKoulutusMetadata)               => m.koulutusalaKoodiUrit
+      case _                                            => Seq()
+    }
 
   private def opintojenLaajuusyksikkoKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
-    if (!metadata.isDefined) None
-    else
-      metadata.get match {
-        case m: AmmatillinenMuuKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
-        case m: VapaaSivistystyoMuuKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
-        case m: AikuistenPerusopetusKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
-        case m: KkOpintojaksoKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
-        case m: KkOpintokokonaisuusKoulutusMetadata => m.opintojenLaajuusyksikkoKoodiUri
-        case _ => None
-      }
+    metadata match {
+      case Some(m: AmmatillinenMuuKoulutusMetadata)      => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: LukioKoulutusMetadata)                => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: TelmaKoulutusMetadata)                => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: TuvaKoulutusMetadata)                 => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: VapaaSivistystyoOpistovuosiKoulutusMetadata) => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: VapaaSivistystyoMuuKoulutusMetadata)  => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: AikuistenPerusopetusKoulutusMetadata) => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: YliopistoKoulutusMetadata)            => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: AmmattikorkeakouluKoulutusMetadata)   => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: KkOpintojaksoKoulutusMetadata)        => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: KkOpintokokonaisuusKoulutusMetadata)  => m.opintojenLaajuusyksikkoKoodiUri
+      case _                                             => None
+    }
 
   private def tutkintonimikeKoodiUrit(metadata: Option[KoulutusMetadata]): Seq[String] =
-    if (!metadata.isDefined) Seq()
-    else
-      metadata.get match {
-        case m: KorkeakoulutusKoulutusMetadata  => m.tutkintonimikeKoodiUrit
-        case m: ErikoislaakariKoulutusMetadata => m.tutkintonimikeKoodiUrit
-        case _                                  => Seq()
-      }
-
+    metadata match {
+      case Some(m: KorkeakoulutusKoulutusMetadata) => m.tutkintonimikeKoodiUrit
+      case Some(m: ErikoislaakariKoulutusMetadata) => m.tutkintonimikeKoodiUrit
+      case _                                       => Seq()
+    }
 }

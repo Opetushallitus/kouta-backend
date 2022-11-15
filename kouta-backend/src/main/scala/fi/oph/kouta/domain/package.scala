@@ -1,11 +1,12 @@
 package fi.oph.kouta
 
+import fi.oph.kouta.client.TutkinnonOsaServiceItem
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity, ValidatableSubEntity, ValidationContext}
+import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity, NoErrors, ValidatableSubEntity, ValidationContext}
 
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
@@ -548,15 +549,15 @@ package object domain {
       puhelinnumero: Kielistetty = Map(),
       wwwSivu: Kielistetty = Map()
   ) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = {
+    def validate(vCtx: ValidationContext, path: String): IsValid = {
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
-          validateKielistetty(kielivalinta, nimi, s"$path.nimi"),
-          validateOptionalKielistetty(kielivalinta, titteli, s"$path.titteli"),
-          validateOptionalKielistetty(kielivalinta, sahkoposti, s"$path.sahkoposti"),
-          validateOptionalKielistetty(kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
-          validateOptionalKielistetty(kielivalinta, wwwSivu, s"$path.wwwSivu"),
+          validateKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi"),
+          validateOptionalKielistetty(vCtx.kielivalinta, titteli, s"$path.titteli"),
+          validateOptionalKielistetty(vCtx.kielivalinta, sahkoposti, s"$path.sahkoposti"),
+          validateOptionalKielistetty(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
+          validateOptionalKielistetty(vCtx.kielivalinta, wwwSivu, s"$path.wwwSivu"),
           validateIfNonEmpty(wwwSivu, s"$path.wwwSivu", assertValidUrl _)
         )
       )
@@ -564,7 +565,7 @@ package object domain {
   }
 
   case class Ajanjakso(alkaa: LocalDateTime, paattyy: Option[LocalDateTime] = None) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
+    def validate(vCtx: ValidationContext, path: String): IsValid =
       assertTrue(paattyy.forall(_.isAfter(alkaa)), path, invalidAjanjaksoMsg(this))
 
     override def validateOnJulkaisu(path: String): IsValid = {
@@ -623,7 +624,7 @@ package object domain {
             s"$path.tilaisuudet",
             (tilaisuus, newTilaisuus, path) => tilaisuus.validate(path, newTilaisuus, vCtx, osoiteKoodistoCheckFunc)
           ),
-          validateIfDefined[ValintakoeMetadata](metadata, _.validate(vCtx.tila, vCtx.kielivalinta, s"$path.metadata")),
+          validateIfDefined[ValintakoeMetadata](metadata, _.validate(vCtx, s"$path.metadata")),
           validateIfJulkaistu(
             vCtx.tila,
             and(
@@ -657,19 +658,19 @@ package object domain {
       erityisjarjestelytMahdollisia: Option[Boolean] = None,
       ohjeetErityisjarjestelyihin: Kielistetty = Map()
   ) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    def validate(vCtx: ValidationContext, path: String): IsValid = and(
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
-          validateOptionalKielistetty(kielivalinta, tietoja, s"$path.tietoja"),
+          validateOptionalKielistetty(vCtx.kielivalinta, tietoja, s"$path.tietoja"),
           validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, s"$path.vahimmaispisteet")),
           validateIfTrue(
             liittyyEnnakkovalmistautumista.contains(true),
-            validateKielistetty(kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")
+            validateKielistetty(vCtx.kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")
           ),
           validateIfTrue(
             erityisjarjestelytMahdollisia.contains(true),
-            validateKielistetty(kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin")
+            validateKielistetty(vCtx.kielivalinta, ohjeetErityisjarjestelyihin, s"$path.ohjeetErityisjarjestelyihin")
           )
         )
       )
@@ -690,14 +691,14 @@ package object domain {
     ): IsValid = and(
       validateIfDefined[Osoite](
         osoite,
-        _.deepValidate(
+        _.validate(
           s"$path.osoite",
           entityWithNewValues.flatMap(_.osoite),
           vCtx,
           osoiteKoodistoCheckFunc
         )
       ),
-      validateIfDefined[Ajanjakso](aika, _.validate(vCtx.tila, vCtx.kielivalinta, s"$path.aika")),
+      validateIfDefined[Ajanjakso](aika, _.validate(vCtx, s"$path.aika")),
       validateIfJulkaistu(
         vCtx.tila,
         and(
@@ -760,21 +761,54 @@ package object domain {
       koulutusKoodiUri: Option[String] = None,
       tutkinnonosaId: Option[Long] = None,
       tutkinnonosaViite: Option[Long] = None
-  ) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
+  ) {
+    def validate(vCtx: ValidationContext, path: String, tutkinnonOsatFromService: Map[Long, Seq[TutkinnonOsaServiceItem]]): IsValid = and(
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
           assertNotOptional(ePerusteId, s"$path.ePerusteId"),
           assertNotOptional(koulutusKoodiUri, s"$path.koulutusKoodiUri"),
           assertNotOptional(tutkinnonosaId, s"$path.tutkinnonosaId"),
           assertNotOptional(tutkinnonosaViite, s"$path.tutkinnonosaViite")
         )
-      )
+      ),
+      validateIfDefined[Long](ePerusteId, epId => {
+        val viitteetJaIdt = tutkinnonOsatFromService(epId)
+        (tutkinnonosaViite, tutkinnonosaId) match {
+          case (Some(viite), Some(id)) =>
+            val viiteJaId = viitteetJaIdt.find(_.viiteId == viite)
+            and(
+              assertTrue(
+                viiteJaId.isDefined,
+                s"$path.tutkinnonosaViite",
+                invalidTutkinnonOsaViiteForEPeruste(ePerusteId.get, viite)
+              ),
+              assertTrue(
+                viiteJaId.isDefined && viiteJaId.get.id == id,
+                s"$path.tutkinnonosaId",
+                invalidTutkinnonOsaIdForEPeruste(ePerusteId.get, id)
+              )
+            )
+          case (Some(viite), None) =>
+            assertTrue(
+              viitteetJaIdt.find(_.viiteId == viite).isDefined,
+              s"$path.tutkinnonosaViite",
+              invalidTutkinnonOsaViiteForEPeruste(ePerusteId.get, viite)
+            )
+          case (None, Some(id)) =>
+            assertTrue(
+              viitteetJaIdt.find(_.id == id).isDefined,
+              s"$path.tutkinnonosaId",
+              invalidTutkinnonOsaIdForEPeruste(ePerusteId.get, id)
+            )
+          case (_, _) => NoErrors
+        }
+      })
+    )
   }
 
-  case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String]) extends ValidatableSubEntity {
-    def deepValidate(
+  case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String]) {
+    def validate(
         path: String,
         entityWithNewValues: Option[Osoite],
         vCtx: ValidationContext,
@@ -792,23 +826,12 @@ package object domain {
               invalidPostiosoiteKoodiUri(koodiUri)
             )
         ),
-        validateMandatoryParametersInJulkaisu(vCtx.tila, vCtx.kielivalinta, path)
-      )
-
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
-      validateIfDefined[String](
-        postinumeroKoodiUri,
-        assertMatch(_, PostinumeroKoodiPattern, s"$path.postinumeroKoodiUri")
-      ),
-      validateMandatoryParametersInJulkaisu(tila, kielivalinta, path)
-    )
-
-    def validateMandatoryParametersInJulkaisu(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid =
-      validateIfJulkaistu(
-        tila,
-        and(
-          validateKielistetty(kielivalinta, osoite, s"$path.osoite"),
-          assertNotOptional(postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+        validateIfJulkaistu(
+          vCtx.tila,
+          and(
+            validateKielistetty(vCtx.kielivalinta, osoite, s"$path.osoite"),
+            assertNotOptional(postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+          )
         )
       )
   }
@@ -900,13 +923,13 @@ package object domain {
   )
 
   case class NimettyLinkki(nimi: Kielistetty = Map(), url: Kielistetty = Map()) extends ValidatableSubEntity {
-    def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    def validate(vCtx: ValidationContext, path: String): IsValid = and(
       validateIfNonEmpty(url, s"$path.url", assertValidUrl _),
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
-          validateKielistetty(kielivalinta, url, s"$path.url"),
-          validateOptionalKielistetty(kielivalinta, nimi, s"$path.nimi")
+          validateKielistetty(vCtx.kielivalinta, url, s"$path.url"),
+          validateOptionalKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi")
         )
       )
     )
@@ -914,14 +937,14 @@ package object domain {
 
   case class Aloituspaikat(lukumaara: Option[Int], ensikertalaisille: Option[Int] = None, kuvaus: Kielistetty = Map())
       extends ValidatableSubEntity {
-    override def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = and(
+    override def validate(vCtx: ValidationContext, path: String): IsValid = and(
       validateIfDefined[Int](ensikertalaisille, assertNotNegative(_, s"$path.ensikertalaisille")),
       validateIfJulkaistu(
-        tila,
+        vCtx.tila,
         and(
           assertNotOptional(lukumaara, s"$path.lukumaara"),
           validateIfDefined[Int](lukumaara, assertNotNegative(_, s"$path.lukumaara")),
-          validateOptionalKielistetty(kielivalinta, kuvaus, s"$path.kuvaus")
+          validateOptionalKielistetty(vCtx.kielivalinta, kuvaus, s"$path.kuvaus")
         )
       )
     )

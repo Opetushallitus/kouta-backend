@@ -4,7 +4,7 @@ import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
+import fi.oph.kouta.validation.ExternalQueryResults._
 import fi.vm.sade.properties.OphProperties
 import org.json4s.jackson.JsonMethods.parse
 
@@ -18,52 +18,24 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
   implicit val commonKoodiUriCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
     .expireAfterWrite(15.minutes)
     .build()
-  implicit val koodiuriVersionCache: Cache[String, Int] = Scaffeine()
+  implicit val koodiuriVersionCache: Cache[String, KoodiUri] = Scaffeine()
     .expireAfterWrite(15.minutes)
     .build()
   implicit val koulutusKoodiUriCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
     .expireAfterWrite(15.minutes)
     .build()
 
-  case class CodeElementWithVersion(koodiUri: String, versio: Int)
-
-  private def getKoodiUriWithLatestVersionFromKoodistoService(koodiUriWithoutVersion: String): Int = {
-    get(urlProperties.url("koodisto-service.latest-koodiuri", koodiUriWithoutVersion), errorHandler, followRedirects = true) {
-      response => parse(response).extract[CodeElementWithVersion].versio
-    }
-  }
-
-  private def getKoodiUriWithLatestVersion(koodiUriWithoutVersion: String): Int = {
-    Try[Int] {
-      getKoodiUriWithLatestVersionFromKoodistoService(koodiUriWithoutVersion)
+  def getKoodiUriVersionOrLatestFromCache(koodiUriAsString: String): Either[Throwable, KoodiUri] = {
+    Try[KoodiUri] {
+      koodiuriVersionCache.get(koodiUriAsString, koodiUriAsString => getKoodiUriVersionOrLatest(koodiUriAsString))
     } match {
-      case Success(version) => version
-      case Failure(exp: KoodistoQueryException) if retryStatusCodes.contains(exp.status) =>
-        logger.warn(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, retrying once...")
-        Try[Int] {
-          getKoodiUriWithLatestVersionFromKoodistoService(koodiUriWithoutVersion)
-        } match {
-          case Success(version) => version
-          case Failure(exp: KoodistoQueryException) =>
-            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion after retry, got response ${exp.status} ${exp.message}")
-          case Failure(exp: Throwable) =>
-            throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion after retry, got response ${exp.getMessage}")
-        }
-      case Failure(exp: KoodistoQueryException) =>
-        throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.status} ${exp.message}")
-      case Failure(exp: Throwable) =>
-        throw new RuntimeException(s"Failed to get koodiuri-version from koodisto for $koodiUriWithoutVersion, got response ${exp.getMessage}")
+      case Success(koodiUri) => Right(koodiUri)
+      case Failure(exp) => Left(exp)
     }
-  }
-
-  def getKoodiUriWithLatestVersionFromCache(koodiUriWithoutVersion: String): String = {
-    val versio = koodiuriVersionCache.get(koodiUriWithoutVersion, koodiUriWithoutVersion => getKoodiUriWithLatestVersion(koodiUriWithoutVersion))
-    s"$koodiUriWithoutVersion#$versio"
   }
 
   private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodiUri] = {
     val now = ZonedDateTime.now().toLocalDateTime
-
     get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", tyyppi), errorHandler, followRedirects = true) {
       response => {
         parse(response)
@@ -75,7 +47,6 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
           .map(koulutus => KoodiUri(koulutus.koodiUri, koulutus.versio))
       }
     }
-
   }
 
   private def koulutuskoodiUriOfKoulutusTyypit(tyyppi: String): Seq[KoodiUri] = {

@@ -8,10 +8,9 @@ import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, ValidationContext, ValintaperusteDiffResolver}
 
 object ValintaperusteServiceValidation
-    extends ValintaperusteServiceValidation(OrganisaatioServiceImpl, HakuKoodiClient, HakukohdeDAO)
+    extends ValintaperusteServiceValidation(HakuKoodiClient, HakukohdeDAO)
 
 class ValintaperusteServiceValidation(
-    val organisaatioService: OrganisaatioService,
     hakuKoodiClient: HakuKoodiClient,
     hakukohdeDAO: HakukohdeDAO
 ) extends ValidatingService[Valintaperuste] {
@@ -95,7 +94,7 @@ class ValintaperusteServiceValidation(
       (valintatapa, newValintatapa, path) =>
         valintatapa.validate(path, newValintatapa, vCtx, hakuKoodiClient.valintatapaKoodiUriExists)
     ),
-    validateIfNonEmpty[Sisalto](m.sisalto, "metadata.sisalto", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+    validateIfNonEmpty[Sisalto](m.sisalto, "metadata.sisalto", _.validate(vCtx, _)),
     validateIfJulkaistu(
       vCtx.tila,
       and(

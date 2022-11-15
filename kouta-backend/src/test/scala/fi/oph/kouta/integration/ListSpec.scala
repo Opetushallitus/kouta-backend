@@ -1,15 +1,13 @@
 package fi.oph.kouta.integration
-import java.util.UUID
+import com.softwaremill.diffx.generic.auto._
+import com.softwaremill.diffx.scalatest.DiffMatcher._
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
-import com.softwaremill.diffx.scalatest.DiffMatcher._
-import com.softwaremill.diffx.generic.auto._
-import fi.oph.kouta.repository.HakukohdeDAO
-import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 
 class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
 
@@ -38,15 +36,15 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     s3 = addToList(sorakuvaus(Julkaistu, OphOid))
     s4 = addToList(yoSorakuvaus.copy(tila = Julkaistu, organisaatioOid = OphOid))
     s5 = addToList(sorakuvaus.copy(tila = Poistettu))
-    k1 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ParentOid, tila = Julkaistu, sorakuvausId = Some(s1.id)))
+    k1 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ParentOid, tila = Julkaistu, sorakuvausId = Some(s1.id), tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k2 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ChildOid, tila = Arkistoitu, sorakuvausId = Some(s1.id)))
     k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
-    k4 = addToList(koulutus.copy(julkinen = false, organisaatioOid = LonelyOid, tila = Julkaistu, sorakuvausId =  Some(s3.id)))
+    k4 = addToList(koulutus.copy(julkinen = false, organisaatioOid = LonelyOid, tila = Julkaistu, sorakuvausId =  Some(s3.id), tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k5 = addToList(koulutus(julkinen = true, LonelyOid, Julkaistu))
     k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu, muokkaaja = TestUserOid))
-    k7 = addToList(ammTutkinnonOsaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
-    k8 = addToList(ammOsaamisalaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
-    k9 = addToList(vapaaSivistystyoMuuKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu))
+    k7 = addToList(ammTutkinnonOsaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k8 = addToList(ammOsaamisalaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k9 = addToList(vapaaSivistystyoMuuKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k10 = addToList(koulutus.copy(tila = Poistettu))
     t1 = addToList(toteutus(k1.oid.toString, Julkaistu, ParentOid))
     t2 = addToList(toteutus(k1.oid.toString, Arkistoitu, ChildOid))
@@ -69,13 +67,13 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), julkinen = false))
     v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(julkinen = false))
     v5 = addToList(valintaperuste(Poistettu, LonelyOid).copy(julkinen = false))
-    hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid))
-    hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid).copy(tila = Tallennettu))
-    hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Arkistoitu))
+    hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid).copy(jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
+    hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid).copy(tila = Tallennettu, jarjestyspaikkaOid = Some(t2.tarjoajat.head)))
+    hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Arkistoitu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
     hk4 = addToList(hakukohde(t4.oid, h1.oid, v1.id, LonelyOid))
-    hk5 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Tallennettu))
-    hk6 = addToList(hakukohde(t1.oid, h3.oid, v1.id, GrandChildOid).copy(tila = Tallennettu))
-    hk7 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid).copy(tila = Poistettu))
+    hk5 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Tallennettu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
+    hk6 = addToList(hakukohde(t1.oid, h3.oid, v1.id, GrandChildOid).copy(tila = Tallennettu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
+    hk7 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid).copy(tila = Poistettu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
 
     o1 = OrganisaatioOid(put(oppilaitos(Julkaistu, ParentOid)))
     o2 = OrganisaatioOid(put(oppilaitos(Julkaistu, EvilChildOid)))
@@ -84,7 +82,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     oo2 = addToList(oppilaitoksenOsa(o1, Julkaistu, GrandChildOid))
     oo3 = addToList(oppilaitoksenOsa(o2, Julkaistu, EvilGrandChildOid))
 
-    ophKoulutus = addToList(koulutus(julkinen = true, OphOid, Julkaistu))
+    ophKoulutus = addToList(koulutus(julkinen = true, OphOid, Julkaistu).copy(tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     ophT1 = addToList(toteutus(ophKoulutus.oid.toString, Julkaistu, LonelyOid))
     ophT2 = addToList(toteutus(ophKoulutus.oid.toString, Julkaistu, GrandChildOid))
     ophT3 = addToList(toteutus(ophKoulutus.oid.toString, Poistettu, GrandChildOid))

@@ -14,7 +14,6 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Valintaperuste] {
-  val organisaatioService = mock[OrganisaatioService]
   val hakuKoodiClient     = mock[HakuKoodiClient]
   val hakukohdeDao        = mock[HakukohdeDAO]
 
@@ -33,10 +32,7 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
     max.copy(valintakokeet = List(max.valintakokeet.head.copy(tilaisuudet = List(tilaisuus))))
   }
 
-  val vainSuomeksi              = Map(Fi -> "vain suomeksi", Sv -> "")
-  val kielistettyWoSvenskaError = invalidKielistetty(Seq(Sv))
-
-  override val validator = new ValintaperusteServiceValidation(organisaatioService, hakuKoodiClient, hakukohdeDao)
+  override val validator = new ValintaperusteServiceValidation(hakuKoodiClient, hakukohdeDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
