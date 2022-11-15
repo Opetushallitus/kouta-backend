@@ -60,3 +60,11 @@ kouta-backend.elasticsearch.url={{kouta_backend_elasticsearch_url}}
 kouta-backend.elasticsearch.auth-enabled={{kouta_backend_elasticsearch_auth_enabled | default('false')}}
 kouta-backend.elasticsearch.username={{kouta_backend_elasticsearch_username}}
 kouta-backend.elasticsearch.password={{kouta_backend_elasticsearch_password}}
+
+# Migration URLs
+tarjonta-service.haku.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1
+tarjonta-service.hakukohde.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/$1
+tarjonta-service.komo.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/komo/$1
+tarjonta-service.komoto.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/komoto/$1
+tarjonta-service.koulutus.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/koulutus/$1
+koodisto-service.codeelement=https://{{host_virkailija}}/koodisto-service/rest/codeelement/$1/$2
