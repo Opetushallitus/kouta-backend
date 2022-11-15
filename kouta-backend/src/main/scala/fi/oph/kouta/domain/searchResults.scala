@@ -8,8 +8,8 @@ import java.time.LocalDateTime
 
 package object searchResults {
 
-  val OrganisaatioModel =
-    """    Organisaatio:
+  val IndexedOrganisaatioModel =
+    """    IndexedOrganisaatio:
       |      type: object
       |      properties:
       |        nimi:
@@ -51,7 +51,7 @@ package object searchResults {
       |        organisaatio:
       |          type: object
       |          description: Luoja-organisaatio
-      |          $ref: '#/components/schemas/Organisaatio'
+      |          $ref: '#/components/schemas/IndexedOrganisaatio'
       |        modified:
       |          type: string
       |          format: date-time
@@ -128,7 +128,7 @@ package object searchResults {
       |                organisaatio:
       |                  type: object
       |                  description: Luoja-organisaatio
-      |                  $ref: '#/components/schemas/Organisaatio'
+      |                  $ref: '#/components/schemas/IndexedOrganisaatio'
       |                modified:
       |                  type: string
       |                  format: date-time
@@ -182,7 +182,7 @@ package object searchResults {
       |                organisaatio:
       |                  type: object
       |                  description: Luoja-organisaatio
-      |                  $ref: '#/components/schemas/Organisaatio'
+      |                  $ref: '#/components/schemas/IndexedOrganisaatio'
       |                modified:
       |                  type: string
       |                  format: date-time
@@ -236,7 +236,7 @@ package object searchResults {
       |                organisaatio:
       |                  type: object
       |                  description: Luoja-organisaatio
-      |                  $ref: '#/components/schemas/Organisaatio'
+      |                  $ref: '#/components/schemas/IndexedOrganisaatio'
       |                modified:
       |                  type: string
       |                  format: date-time
@@ -356,7 +356,7 @@ package object searchResults {
       |            $ref: '#/components/schemas/ValintaperusteSearchItem'
       |""".stripMargin
 
-  val models = Seq(OrganisaatioModel, MuokkaajaModel, SearchItemModel,
+  val models = Seq(IndexedOrganisaatioModel, MuokkaajaModel, SearchItemModel,
     KoulutusSearchItemModel, KoulutusSearchResultModel, ToteutusSearchItemModel, ToteutusSearchResultModel,
     HakukohdeSearchItemModel, HakukohdeSearchResultModel, HakuSearchItemModel, HakuSearchResultModel,
     ValintaperusteSearchItemModel, ValintaperusteSearchResultModel)
