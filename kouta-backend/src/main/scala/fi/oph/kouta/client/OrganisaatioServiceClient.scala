@@ -30,15 +30,27 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     .expireAfterWrite(45.minutes)
     .build()
 
-  private def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
+  def getOrganisaatioHierarkia(oids: List[OrganisaatioOid],
+                               oid: Option[OrganisaatioOid] = None,
+                               aktiiviset: String = "true",
+                               suunnitellut: String = "true",
+                               lakkautetut: String = "false",
+                               skipParents: String = "true",
+                              ): OrganisaatioHierarkia = {
     val oidsAsQueryParams = oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
+    val params = toQueryParams(
+      "aktiiviset" -> aktiiviset,
+      "suunnitellut" -> suunnitellut,
+      "lakkautetut" -> lakkautetut,
+      "skipParents" -> skipParents)
+
+    oid match {
+      case Some(oid) => params.put("oid", oid.toString)
+      case None =>
+    }
+
     val url = urlProperties.url(
-      s"organisaatio-service.organisaatio.hierarkia.with.oids",
-      toQueryParams(
-        "aktiiviset" -> "true",
-        "suunnitellut" -> "true",
-        "lakkautetut" -> "false",
-        "skipParents" -> "true")) + oidsAsQueryParams
+      s"organisaatio-service.organisaatio.hierarkia", params) + oidsAsQueryParams
     get(url, followRedirects = true) {
       response => {
         parse(response).extract[OrganisaatioHierarkia]
@@ -47,7 +59,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   }
 
   def getOrganisaatioHierarkiaWithOidsFromCache(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
-    organisaatioHierarkiaCache.get(oids, oids => getOrganisaatioHierarkiaWithOids(oids))
+    organisaatioHierarkiaCache.get(oids, oids => getOrganisaatioHierarkia(oids))
   }
 
   def getOrganisaatio(oid: OrganisaatioOid): OrganisaatioServiceOrganisaatio = {
