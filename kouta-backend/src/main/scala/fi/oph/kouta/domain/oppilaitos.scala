@@ -565,3 +565,6 @@ case class OrganisaationOsa(
 case class OrganisaatioHierarkia(
   organisaatiot: List[OrgServiceOrganisaatio]
 )
+
+case class OrganisaatioServiceOrganisaatio(oid: String,
+                                           nimi: Kielistetty)
