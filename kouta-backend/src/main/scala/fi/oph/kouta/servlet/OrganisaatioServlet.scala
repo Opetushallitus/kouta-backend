@@ -35,10 +35,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
 
     implicit val authenticated: Authenticated = authenticate()
 
-    organisaatioService.get(OrganisaatioOid(params("oid"))) match {
-      case None => NotFound("error" -> "Unknown organisaatio oid")
-      case Some(organisaatio) => Ok(organisaatio)
-    }
+    Ok(organisaatioService.getOrganisaatio(OrganisaatioOid(params("oid"))))
   }
 
   registerPath("/organisaatio/organisaatiot",
@@ -72,7 +69,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
 
     implicit val authenticated: Authenticated = authenticate()
 
-    organisaatioService.get(parsedBody.extract[List[OrganisaatioOid]]) match {
+    organisaatioService.getOrganisaatiot(parsedBody.extract[List[OrganisaatioOid]]) match {
       case List() => NotFound("error" -> "Unknown organisaatio oids")
       case organisaatiot => Ok(organisaatiot)
     }
