@@ -233,15 +233,13 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
-          opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}"),
-          kuvauksenNimi = opetuskielet.flatten.map(k => k -> "").toMap)
+          opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}")
         case Yo => YliopistoKoulutusMetadata(
           kuvaus = Map(),
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           tutkintonimikeKoodiUrit = tutikintonimikes,
-          opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}"),
-          kuvauksenNimi = opetuskielet.flatten.map(k => k -> "").toMap
+          opintojenLaajuusKoodiUri = opintojenLaajuusarvo.map(arvo => s"$arvo#${opintojenLaajuusarvoVersio.get}")
         )
         case _ => throw new RuntimeException(s"Tuntematon koulutustyyppi $koulutusasteUri koulutuksella $oid")
       }
@@ -283,18 +281,14 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = List(),
           ammattinimikkeet = List(),
-          yhteyshenkilot = Seq(),
-          alemmanKorkeakoulututkinnonOsaamisalat = Seq(),
-          ylemmanKorkeakoulututkinnonOsaamisalat = Seq()
+          yhteyshenkilot = Seq()
         )
         case Yo => YliopistoToteutusMetadata(
           kuvaus = kuvaus,
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = List(),
           ammattinimikkeet = List(),
-          yhteyshenkilot = Seq(),
-          alemmanKorkeakoulututkinnonOsaamisalat = Seq(),
-          ylemmanKorkeakoulututkinnonOsaamisalat = Seq()
+          yhteyshenkilot = Seq()
         )
         case _ => throw new RuntimeException(s"Tuntematon koulutustyyppi $koulutusasteUri toteutuksella $oid")
       })
