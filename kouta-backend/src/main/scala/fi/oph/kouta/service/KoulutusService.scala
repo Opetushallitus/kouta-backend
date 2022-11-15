@@ -174,7 +174,7 @@ class KoulutusService(
           case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata =>
             Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata =>
-            Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija), orgsAllowedToReadKoulutus = koulutus.tarjoajat))
           case em: ErikoislaakariKoulutusMetadata =>
             Some(
               em.copy(
@@ -186,7 +186,7 @@ class KoulutusService(
               )
             )
           case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusKoulutusMetadata =>
-            Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija), orgsAllowedToReadKoulutus = koulutus.tarjoajat))
         }
       case None => None
     }
@@ -204,6 +204,8 @@ class KoulutusService(
           koulutuksetKoodiUri = fixedKoodiUrisIfNotDefined(koulutus.koulutuksetKoodiUri, "koulutus_919999"),
           metadata = enrichKoulutusMetadata(koulutus)
         )
+      case KkOpintokokonaisuus | KkOpintojakso =>
+        koulutus.copy(metadata = enrichKoulutusMetadata(koulutus))
       case _ => koulutus.copy(metadata = enrichKoulutusMetadata(koulutus))
     }
   }
