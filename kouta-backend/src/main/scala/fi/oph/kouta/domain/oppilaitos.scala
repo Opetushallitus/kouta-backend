@@ -361,9 +361,30 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/OrganisaatioHierarkia'
       |""".stripMargin
 
+  val OrganisaatioServiceOrganisaatioModel =
+    """    OrganisaatioServiceOrganisaatio:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895871
+      |        parentOidPath:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
+      |        nimi:
+      |          type: object
+      |          $ref: '#/components/schemas/Nimi'
+      |        tyypit:
+      |          items:
+      |            type: string
+      |            example:
+      |              - organisaatiotyyppi_1
+      |              - organisaatiotyyppi_2
+      |""".stripMargin
+
   def models = Seq(OppilaitosModel, OppilaitoksenOsaModel, OppilaitosMetadataModel, OppilaitoksenOsaMetadataModel,
     OppilaitoksenOsaListItemModel, YhteystietoModel, TietoaOpiskelustaModel, OrganisaationOsaModel,
-    OrgServiceOrganisaatioModel, OrganisaatioHierarkiaModel, OppilaitoksetResponseModel)
+    OrgServiceOrganisaatioModel, OrganisaatioHierarkiaModel, OppilaitoksetResponseModel, OrganisaatioServiceOrganisaatioModel)
 }
 
 case class Oppilaitos(oid: OrganisaatioOid,
@@ -568,4 +589,5 @@ case class OrganisaatioHierarkia(
 
 case class OrganisaatioServiceOrganisaatio(oid: String,
                                            parentOidPath: String,
-                                           nimi: Kielistetty)
+                                           nimi: Kielistetty,
+                                           tyypit: List[String] = List())
