@@ -149,4 +149,24 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
     implicit val authenticated: Authenticated = authenticate()
     Ok(organisaatioService.getOrganisaatioHierarkia(params))
   }
+
+  registerPath("/organisaatio/oppilaitokset-for-opintojakso-and-opintokokonaisuus",
+    """    get:
+      |      summary: Hae organisaatiohierarkian kk-opintojaksoille ja -kokonaisuuksille organisaatiopalvelusta
+      |      operationId: getHierarkiaForOpintojaksoAndOpintokokonaisuus
+      |      description: Hakee organisaatiohierarkian kk-opintojaksoille ja -kokonaisuuksille organisaatiopalvelusta
+      |      tags:
+      |        - Organisaatio
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                  $ref: '#/components/schemas/OrganisaatioHierarkia'
+      |""".stripMargin)
+  get("/oppilaitokset-for-opintojakso-and-opintokokonaisuus") {
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(organisaatioService.getOppilaitoksetForKkOpintojaksoAndOpintokokonaisuus(params))
+  }
 }
