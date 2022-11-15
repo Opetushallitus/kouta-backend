@@ -57,8 +57,6 @@ trait KoutaIntegrationSpec
   val casUrl                                         = "testCasUrl"
   val securityContext: SecurityContext               = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
   val mockKayttooikeusClient: MockKayttooikeusClient = new MockKayttooikeusClient(securityContext, defaultAuthorities)
-  val mockOrganisaatioClient: MockOrganisaatioServiceClient =
-    new MockOrganisaatioServiceClient(securityContext, defaultAuthorities)
   val mockKoutaSearchClient = mock[KoutaSearchClient]
 
   val mockHakemusPalveluClient = new MockHakemusPalveluClient()

@@ -14,6 +14,8 @@ trait OppilaitosDAO extends EntityModificationDAO[OrganisaatioOid] {
   def getUpdateActions(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]]
 
   def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)]
+
+  def get(oids: List[OrganisaatioOid]): Vector[OppilaitosAndOsa]
 }
 
 object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
@@ -36,7 +38,7 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
     }
   }
 
-  def get(oids: List[OrganisaatioOid]): Vector[OppilaitosAndOsa] = {
+  override def get(oids: List[OrganisaatioOid]): Vector[OppilaitosAndOsa] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
         oppilaitokset <- selectOppilaitokset(oids).as[OppilaitosAndOsa]
