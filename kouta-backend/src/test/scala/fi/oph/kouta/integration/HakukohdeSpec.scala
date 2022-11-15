@@ -183,7 +183,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
   }
 
   it should "populate empty nimi as yleislinja if selected for lukio-hakukohde" in {
-    mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
+    mockLokalisointiResponse("hakukohdelomake.lukionYleislinja")
     val lkToteutusOid = put(lukioToteutus(put(LukioKoulutus, ophSession)))
     val lkHakukohde = hakukohde(lkToteutusOid, hakuOid).copy(
       nimi = Map(),
@@ -199,7 +199,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
         oid,
         lkToteutusOid,
         hakuOid,
-        Map(Fi -> "toteutuslomake.lukionYleislinjaNimiOsa fi", Sv -> "toteutuslomake.lukionYleislinjaNimiOsa sv"),
+        Map(Fi -> "hakukohdelomake.lukionYleislinja fi", Sv -> "hakukohdelomake.lukionYleislinja sv"),
         None
       )
     )
