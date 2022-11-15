@@ -18,14 +18,13 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   def organisaatioHierarkia(oid: String) = OrganisaatioHierarkia(
     List(
-      OrgServiceOrganisaatio(
+      Organisaatio(
         oid,
         s"""${oid}/1.2.246.562.10.47941294986/1.2.246.562.10.00000000001""",
         Some("oppilaitostyyppi_63#1"),
         Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
-        "kunta_837",
+        Some("kunta_837"),
         List(),
-        Some("AKTIIVINEN"),
         Some(List("organisaatiotyyppi_02")))))
 
   "Get oppilaitos by oid" should "return 404 if oppilaitos not found" in {
