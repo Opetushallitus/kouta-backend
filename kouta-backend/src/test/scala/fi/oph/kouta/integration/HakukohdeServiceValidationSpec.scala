@@ -228,8 +228,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_SV")).thenAnswer(itemFound)
 
-    when(lokalisointiClient.getKaannoksetWithKeyFromCache("toteutuslomake.lukionYleislinjaNimiOsa"))
-      .thenAnswer(Map(Fi -> "Lukio", Sv -> "Gymnasium", En -> "Lukio"))
+    when(lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja"))
+      .thenAnswer(Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje", En -> "Yleislinja"))
     when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiopainotukset_1#1"))
       .thenAnswer(Right(KoodiUri("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv"))))
     when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
@@ -382,7 +382,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "succeed when lukio-hakukohde with hakukohteenlinja (yleislinja)" in {
     val lkHakukohde = max.copy(
-      nimi = Map(Fi -> "Lukio", Sv -> "Gymnasium"),
+      nimi = Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
     )
     when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
@@ -445,7 +445,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "succeed when kaksoistutkinto for Lukio koulutus" in {
     val lkHakukohde = max.copy(
-      nimi = Map(Fi -> "Lukio", Sv -> "Gymnasium"),
+      nimi = Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja))),
       toinenAsteOnkoKaksoistutkinto = Some(true)
     )
@@ -1203,7 +1203,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   it should "fail when valintaperusteId not defined for toisen asteen yhteishaku" in {
     val hk = max.copy(
       hakuOid = yhteisHakuHakuOid,
-      nimi = Map(Fi -> "Lukio", Sv -> "Gymnasium"),
+      nimi = Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja))),
       valintaperusteId = None
     )
@@ -1307,8 +1307,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       lkHakukohde,
       Seq(
-        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("Lukio", "toteutuksen yleislinjalla")),
-        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("Gymnasium", "toteutuksen yleislinjalla"))
+        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("Lukion yleislinja", "toteutuksen yleislinjalla")),
+        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("Gymnasium allmän linje", "toteutuksen yleislinjalla"))
       )
     )
   }
