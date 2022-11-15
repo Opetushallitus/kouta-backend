@@ -131,7 +131,7 @@ class HakukohdeService(
                 } else
                   hakukohde.copy(nimi =
                     mergeNames(
-                      lokalisointiClient.getKaannoksetWithKeyFromCache("toteutuslomake.lukionYleislinjaNimiOsa"),
+                      lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja"),
                       hakukohde.nimi,
                       hakukohde.kielivalinta
                     )

@@ -356,7 +356,7 @@ class HakukohdeServiceValidation(
               case _ => error("metadata.hakukohteenLinja.linja", invalidHakukohteenLinja(hkLinja.linja.get))
             },
             Try[Kielistetty] {
-              lokalisointiClient.getKaannoksetWithKeyFromCache("toteutuslomake.lukionYleislinjaNimiOsa")
+              lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja")
             } match {
               case Success(yleisLinjaKaannos) =>
                 assertNimiMatchExternal(nimi, yleisLinjaKaannos, "nimi", "toteutuksen yleislinjalla")
