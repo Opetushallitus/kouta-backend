@@ -16,7 +16,8 @@ import slick.jdbc.GetResult
 
 import java.util.UUID
 
-trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec  {
+trait ValintaperusteFixture extends AccessControlSpec  {
+  this: KoutaIntegrationSpec =>
 
   val ValintaperustePath = "/valintaperuste"
 

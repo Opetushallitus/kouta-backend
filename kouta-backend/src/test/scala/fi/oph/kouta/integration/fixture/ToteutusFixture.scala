@@ -5,7 +5,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{HakuKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
+import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation}
@@ -16,8 +16,8 @@ import org.scalactic.Equality
 
 import java.util.UUID
 
-trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
-  this: KoulutusFixture =>
+trait ToteutusFixture extends KoulutusFixture with AccessControlSpec with DefaultMocks {
+  this: KoutaIntegrationSpec =>
 
   val ToteutusPath = "/toteutus"
   val ToteutusCopyPath = "/toteutus/copy"
@@ -34,7 +34,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
       koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)
-}
+  }
 
   override def beforeAll(): Unit = {
     super.beforeAll()

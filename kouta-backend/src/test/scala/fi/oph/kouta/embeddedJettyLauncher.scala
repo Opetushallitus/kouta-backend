@@ -1,43 +1,42 @@
 package fi.oph.kouta
 
-import java.util.UUID
 import com.amazonaws.services.sqs.AmazonSQSClient
-import fi.oph.kouta.config.{KoutaConfigurationConstants, KoutaConfigurationFactory}
-import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.TestOids.OphOid
+import fi.oph.kouta.config.KoutaConfigurationFactory.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.{CasSession, ServiceTicket}
+import fi.oph.kouta.security.{Authority, CasSession, RoleEntity, ServiceTicket}
+import fi.oph.kouta.util.CommandLine
 import fi.vm.sade.utils.slf4j.Logging
 import io.atlassian.aws.sqs.SQSClient
-import fi.oph.kouta.util.CommandLine
 
-import java.io.File
+import java.util.UUID
 import scala.util.Try
 
 object EmbeddedJettyLauncher extends Logging {
 
   val DefaultPort = "8099"
 
-  val TestDataGeneratorSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
-
   def main(args: Array[String]) {
-    System.setProperty("kouta-backend.localDev", "true")
     System.setProperty("kouta-backend.useSecureCookies", "false")
-    System.getProperty("kouta-backend.embedded", "true") match {
-      case x if "false".equalsIgnoreCase(x) => TestSetups.setupWithoutEmbeddedPostgres()
-      case _ => TestSetups.setupWithEmbeddedPostgres()
-    }
+    KoutaConfigurationFactory.setupWithDevTemplate()
+    TestSetups.setupPostgres()
     TestSetups.setupAwsKeysForSqs()
     TestSetups.setupSqsQueues()
-    TestSetups.setupCasSessionIdForTestDataGenerator()
+    TestSetups.setupFixedCasSessionId()
     new JettyLauncher(System.getProperty("kouta-backend.port", DefaultPort).toInt, true).start.join()
   }
 }
 
-object TestSetups extends Logging with KoutaConfigurationConstants {
+object TestSetups extends Logging {
+
+  private val FixedSessionId = "ea596a9c-5940-497e-b5b7-aded3a2352a7"
+  val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, OphOid)).toSet
+  val defaultServiceIdentifier = "test-session"
 
   def setupSqsQueues(): Unit = {
     val home = System.getProperty("user.home")
-    if(new java.io.File(s"$home/.kouta_localstack").exists()) {
+    if (new java.io.File(s"$home/.kouta_localstack").exists()) {
       logger.warn(s"Localstack is already running. Skipping ./tools/start_localstack....")
     } else {
       logger.info(s"Running tools/start_localstack....")
@@ -46,9 +45,8 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     }
     logSqsQueues()
   }
-
   def logSqsQueues(): Unit = {
-    val config = KoutaConfigurationFactory.configuration.indexingConfiguration
+    val config                     = KoutaConfigurationFactory.configuration.indexingConfiguration
     val sqsClient: AmazonSQSClient = config.endpoint.map(SQSClient.withEndpoint).getOrElse(SQSClient.default)
     import scala.collection.JavaConverters._
     val queues = sqsClient.listQueues().getQueueUrls.asScala
@@ -57,7 +55,7 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
   }
 
   def setupAwsKeysForSqs(): Any = {
-    if(System.getProperty("kouta-backend.awsKeys", "false") == "false") {
+    if (System.getProperty("kouta-backend.awsKeys", "false") == "false") {
       if (Option(System.getProperty("aws.accessKeyId", null)).isEmpty) {
         System.setProperty("aws.accessKeyId", "randomKeyIdForLocalstack")
         System.setProperty("aws.secretKey", "randomKeyForLocalstack")
@@ -65,100 +63,31 @@ object TestSetups extends Logging with KoutaConfigurationConstants {
     }
   }
 
-  def setupWithTemplate(port:Int): String = {
-    logger.info(s"Setting up test template with Postgres port ${port}")
-    Templates.createTestTemplate(port)
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)
-    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
-  }
-
-  def setupWithEmbeddedPostgres(): String = {
-    logger.info("Starting embedded PostgreSQL!")
-    System.getProperty("kouta-backend.embeddedPostgresType", "docker") match {
-      case x if "host".equalsIgnoreCase(x) => startHostPostgres()
-      case _ => startDockerPostgres()
+  def setupPostgres() = {
+    System.getProperty("kouta-backend.embedded", "true") match {
+      case x if "false".equalsIgnoreCase(x) => setupWithoutEmbeddedPostgres()
+      case _                                => setupWithEmbeddedPostgres()
     }
   }
 
-  private def startHostPostgres(): String = {
-    TempLocalDb.start()
-    setupWithTemplate(TempLocalDb.port)
-  }
+  def setupWithEmbeddedPostgres() = TempDockerDb.start()
 
-  private def startDockerPostgres() = {
-    TempDockerDb.start()
-    setupWithTemplate(TempDockerDb.port)
-  }
+  def setupWithoutEmbeddedPostgres() =
+    (
+      Option(System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE)),
+      Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))
+    ) match {
+      case (Some(CONFIG_PROFILE_TEMPLATE), None) => KoutaConfigurationFactory.setupWithDefaultTemplateFile()
+      case _                                     => Unit
+    }
 
-  def setupWithoutEmbeddedPostgres(): Object =
-    (Option(System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE)),
-     Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))) match {
-      case (Some(CONFIG_PROFILE_TEMPLATE), None) => setupWithDefaultTestTemplateFile()
-      case _ => Unit
-  }
-
-  def setupWithDefaultTestTemplateFile(): String = {
-    logger.info(s"Using default test template ${Templates.DEFAULT_TEMPLATE_FILE_PATH}")
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.TEST_TEMPLATE_FILE_PATH)
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
-  }
-
-  def setupCasSessionIdForTestDataGenerator(): UUID = {
-    logger.info(s"Adding session for TestDataGenerator")
-    Try(SessionDAO.delete(UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)))
+  def setupFixedCasSessionId(): UUID = {
+    logger.info(s"Adding fixed session for Jetty")
+    Try(SessionDAO.delete(UUID.fromString(FixedSessionId)))
     SessionDAO.store(
-      CasSession(ServiceTicket(""), "1.2.246.562.24.1", KoutaIntegrationSpec.defaultAuthorities),
-      UUID.fromString(EmbeddedJettyLauncher.TestDataGeneratorSessionId)
+      CasSession(ServiceTicket(""), "1.2.246.562.24.1", defaultAuthorities),
+      UUID.fromString(FixedSessionId)
     )
   }
 }
 
-object Templates extends Logging {
-
-  val DEFAULT_TEMPLATE_FILE_PATH: String =
-    Option(System.getenv("TEMPLATE_FILE_PATH")).getOrElse("kouta-backend/src/test/resources/dev-vars.yml")
-
-  logger.warn(s"Kouta-Backend using TEMPLATE_FILE_PATH = $DEFAULT_TEMPLATE_FILE_PATH")
-
-  val TEST_TEMPLATE_FILE_PATH =
-    File.createTempFile("embedded-jetty-vars",".yml").toPath.toString
-    //"src/test/resources/embedded-jetty-vars.yml"
-
-  import java.io.{File, PrintWriter}
-  import java.nio.file.Files
-
-  import scala.io.Source
-  import scala.util.{Failure, Success, Try}
-
-  private def createIfNotExist(f: File): File = {
-    if(!f.exists()) {
-      f.createNewFile()
-    }
-    f
-  }
-
-  def createTestTemplate(port:Int, deleteAutomatically:Boolean = true): Unit =
-    Try(new PrintWriter(createIfNotExist(new File(TEST_TEMPLATE_FILE_PATH)))) match {
-    case Failure(t) => throw t
-    case Success(w) => try {
-      Source.fromFile(DEFAULT_TEMPLATE_FILE_PATH)
-        .getLines
-        .map {
-          case x if x.contains("host_postgresql_kouta_port") => s"host_postgresql_kouta_port: $port"
-          case x if x.contains("postgres_app_user") => "postgres_app_user: oph"
-          case x if x.contains("host_postgresql_kouta_app_password") => "host_postgresql_kouta_app_password: oph"
-          case x if x.contains("host_postgresql_kouta") => "host_postgresql_kouta: localhost"
-          case x => x
-        }
-        .foreach(l => w.println(l))
-      w.flush()
-    } finally { w.close() }
-    if(deleteAutomatically) {
-      Runtime.getRuntime.addShutdownHook(new Thread(() => Templates.deleteTestTemplate()))
-    }
-  }
-
-  def deleteTestTemplate(): Boolean = {
-    Files.deleteIfExists(new File(TEST_TEMPLATE_FILE_PATH).toPath)
-  }
-}

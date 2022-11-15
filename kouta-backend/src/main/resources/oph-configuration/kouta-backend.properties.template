@@ -4,6 +4,7 @@ kouta-backend.cas.username={{kouta_backend_cas_username}}
 kouta-backend.cas.password={{kouta_backend_cas_password}}
 
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
+kouta-backend.db.port={{host_postgresql_kouta_port}}
 kouta-backend.db.user={{postgres_app_user}}
 kouta-backend.db.password={{host_postgresql_kouta_app_password}}
 kouta-backend.db.connectionPool=HikariCP

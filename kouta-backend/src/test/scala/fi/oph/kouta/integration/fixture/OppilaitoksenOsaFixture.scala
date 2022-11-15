@@ -13,7 +13,8 @@ import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
 
-trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec  with AccessControlSpec {
+trait OppilaitoksenOsaFixture extends AccessControlSpec {
+  this: KoutaIntegrationSpec =>
 
   val OppilaitoksenOsaPath = "/oppilaitoksen-osa"
 

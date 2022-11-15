@@ -3,12 +3,10 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.mocks.KoodistoServiceMock
 import fi.oph.kouta.security.RoleEntity
-import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 import org.json4s.jackson.Serialization.read
 
-class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with IndexerFixture with AccessControlSpec {
+class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   override val roleEntities: Seq[RoleEntity] = RoleEntity.all
 
@@ -112,7 +110,6 @@ class IndexerSpec extends KoutaIntegrationSpec with EverythingFixture with Index
 
   "List koulutukset by tarjoaja" should "list all koulutukset distinct" in {
     val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)), ophSession)
-    mockOrganisaatioResponse()
     get(s"$IndexerPath/tarjoaja/$ChildOid/koulutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[Koulutus]](body).count(_.oid.get.s == oid) should equal (1)

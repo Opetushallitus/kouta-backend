@@ -1,13 +1,14 @@
 package fi.oph.kouta.integration
 
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
+import com.softwaremill.diffx.Diff
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.TestSetups.{setupAwsKeysForSqs, setupWithEmbeddedPostgres, setupWithTemplate}
+import fi.oph.kouta.TestSetups
 import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
-import fi.oph.kouta.mocks.{KoodistoServiceMock, MockHakemusPalveluClient, MockKayttooikeusClient, MockOppijanumerorekisteriClient, MockOrganisaatioServiceClient, MockSecurityContext, OrganisaatioServiceMock}
+import fi.oph.kouta.mocks._
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
@@ -21,48 +22,56 @@ import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import java.util.UUID
 import scala.collection.mutable
-import scala.reflect.Manifest
 
 case class TestUser(oid: UserOid, username: String, sessionId: UUID) {
-  val ticket: SessionCookie = MockSecurityContext.ticketFor(KoutaIntegrationSpec.serviceIdentifier, username)
+  val ticket: SessionCookie = MockSecurityContext.ticketFor(TestSetups.defaultServiceIdentifier, username)
 }
 
 trait DefaultTestImplicits {
-
-  implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = (a: OrganisaatioOid, b: OrganisaatioOid) => a.s compare b.s
+  implicit val organisaatioOidOrdering: Ordering[OrganisaatioOid] = (a: OrganisaatioOid, b: OrganisaatioOid) =>
+    a.s compare b.s
 }
 
-trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseSpec with DefaultTestImplicits with MockitoSugar {
+trait KoutaIntegrationSpec
+    extends ScalatraFlatSpec
+    with SpecWithMocks
+    with UrlProperties
+    with HttpSpec
+    with DatabaseSpec
+    with DefaultTestImplicits
+    with DefaultMocks
+    with MockitoSugar {
 
-  val serviceIdentifier: String = KoutaIntegrationSpec.serviceIdentifier
-  val defaultAuthorities: Set[Authority] = KoutaIntegrationSpec.defaultAuthorities
+  System.setProperty("kouta-backend.useSecureCookies", "false")
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
+  setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
+  TestSetups.setupPostgres()
+
+  val serviceIdentifier: String = TestSetups.defaultServiceIdentifier
+  val defaultAuthorities: Set[Authority] = TestSetups.defaultAuthorities
 
   val testUser: TestUser = TestUser(TestUserOid, "testuser", defaultSessionId)
 
   val mockOppijanumerorekisteriClient: MockOppijanumerorekisteriClient = new MockOppijanumerorekisteriClient()
 
-  val casUrl = "testCasUrl"
-  val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
+  val casUrl                                         = "testCasUrl"
+  val securityContext: SecurityContext               = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
   val mockKayttooikeusClient: MockKayttooikeusClient = new MockKayttooikeusClient(securityContext, defaultAuthorities)
-  val mockOrganisaatioClient: MockOrganisaatioServiceClient = new MockOrganisaatioServiceClient(securityContext, defaultAuthorities)
+  val mockOrganisaatioClient: MockOrganisaatioServiceClient =
+    new MockOrganisaatioServiceClient(securityContext, defaultAuthorities)
   val mockKoutaSearchClient = mock[KoutaSearchClient]
 
   val mockHakemusPalveluClient = new MockHakemusPalveluClient()
 
-  def addDefaultSession(): Unit =  {
+  def addDefaultSession(): Unit = {
     SessionDAO.store(CasSession(ServiceTicket(testUser.ticket), testUser.oid.s, defaultAuthorities), testUser.sessionId)
   }
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    System.setProperty("kouta-backend.useSecureCookies", "false")
-    Option(System.getProperty("kouta-backend.test-postgres-port")) match {
-      case Some(port) => setupWithTemplate(port.toInt)
-      case None => setupWithEmbeddedPostgres()
-    }
-    setupAwsKeysForSqs()
-
+    TestSetups.setupAwsKeysForSqs()
     addDefaultSession()
+    addDefaultMocks()
   }
 
   override def afterAll(): Unit = {
@@ -71,50 +80,28 @@ trait KoutaIntegrationSpec extends ScalatraFlatSpec with HttpSpec with DatabaseS
   }
 }
 
-object KoutaIntegrationSpec {
-  val serviceIdentifier = "testService"
-  val defaultAuthorities: Set[Authority] = RoleEntity.all.map(re => Authority(re.Crud, OphOid)).toSet
-}
-
-trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock with KoodistoServiceMock { this: HttpSpec =>
+trait AccessControlSpec extends ScalatraFlatSpec {
+  this: HttpSpec =>
 
   protected val roleEntities: Seq[RoleEntity] = Seq.empty
 
-  override def startServiceMocking(): Unit = {
-    super.startServiceMocking()
-    urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort"))
-  }
-
-  override def beforeAll(): Unit = {
+  override def beforeAll() = {
     super.beforeAll()
-    startServiceMocking()
     addTestSessions()
-
-    mockOrganisaatioResponse()
-    addDefaultKoodistoMockResponsesForKoulutus()
-    addDefaultKoodistoMockResponsesForToteutus()
-    addDefaultKoodistoMockResponsesForHakukohde()
-    addDefaultKoodistoMockResponsesForHaku()
-    addDefaultKoodistoMockResponsesForValintaperuste()
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    stopServiceMocking()
   }
 
   val crudSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
   val readSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
 
-  var ophSession: UUID = _
-  var indexerSession: UUID = _
+  var ophSession: UUID         = _
+  var indexerSession: UUID     = _
   var fakeIndexerSession: UUID = _
-  var otherRoleSession: UUID = _
+  var otherRoleSession: UUID   = _
 
   private def storeTestSession(authorities: Set[Authority] = Set(), userOid: Option[UserOid] = None): UUID = {
     val sessionId = UUID.randomUUID()
-    val oid = userOid.getOrElse(userOidForTestSessionId(sessionId))
-    val user = TestUser(oid, s"user-$oid", sessionId)
+    val oid       = userOid.getOrElse(userOidForTestSessionId(sessionId))
+    val user      = TestUser(oid, s"user-$oid", sessionId)
     SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid.s, authorities), user.sessionId)
     sessionId
   }
@@ -150,26 +137,50 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
     otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)
   }
+}
 
+trait DefaultMocks extends OrganisaatioServiceMock with DefaultKoodistoMocks {
+  def addDefaultMocks(): Unit = {
+    mockOrganisaatioResponse()
+    addDefaultKoodistoMockResponsesForKoulutus()
+    addDefaultKoodistoMockResponsesForToteutus()
+    addDefaultKoodistoMockResponsesForHakukohde()
+    addDefaultKoodistoMockResponsesForHaku()
+    addDefaultKoodistoMockResponsesForValintaperuste()
+  }
+}
+
+trait DefaultKoodistoMocks extends KoodistoServiceMock {
   def addDefaultKoodistoMockResponsesForKoulutus(): Unit = {
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_00", 1)
     mockLatestKoodiUriResponse("koulutus_201101", 12)
     mockKoodistoResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
-    mockKoulutustyyppiResponse(ammatillisetKoulutustyypit.last, Seq(("koulutus_371101", 12, None)), ammatillisetKoulutustyypit.init)
-    mockKoulutustyyppiResponse(yoKoulutustyypit.last, Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), yoKoulutustyypit.init)
+    mockKoulutustyyppiResponse(
+      ammatillisetKoulutustyypit.last,
+      Seq(("koulutus_371101", 12, None)),
+      ammatillisetKoulutustyypit.init
+    )
+    mockKoulutustyyppiResponse(
+      yoKoulutustyypit.last,
+      Seq(("koulutus_201000", 12, None), ("koulutus_371101", 12, None)),
+      yoKoulutustyypit.init
+    )
     mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
     mockKoulutusKoodiUritForEPerusteResponse(123L, None, Seq("koulutus_371101"))
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
-    mockKoodistoResponse("opintojenlaajuus", Seq(
-      ("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None)))
+    mockKoodistoResponse("opintojenlaajuus", Seq(("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None)))
     mockKoodistoResponse("koulutus", Seq(("koulutus_301101", 1, None), ("koulutus_371101", 1, None)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
-    mockKoodistoResponse("kansallinenkoulutusluokitus2016koulutusalataso2",Seq(
-      ("kansallinenkoulutusluokitus2016koulutusalataso2_080", 2, None),
-      ("kansallinenkoulutusluokitus2016koulutusalataso2_054", 2, None),
-      ("kansallinenkoulutusluokitus2016koulutusalataso2_020", 2, None),
-      ("kansallinenkoulutusluokitus2016koulutusalataso1_001", 2, None)))
+    mockKoodistoResponse(
+      "kansallinenkoulutusluokitus2016koulutusalataso2",
+      Seq(
+        ("kansallinenkoulutusluokitus2016koulutusalataso2_080", 2, None),
+        ("kansallinenkoulutusluokitus2016koulutusalataso2_054", 2, None),
+        ("kansallinenkoulutusluokitus2016koulutusalataso2_020", 2, None),
+        ("kansallinenkoulutusluokitus2016koulutusalataso1_001", 2, None)
+      )
+    )
     mockKoodistoResponse("opintojenlaajuusyksikko", Seq(("opintojenlaajuusyksikko_6", 1, None)))
   }
 
@@ -179,24 +190,60 @@ trait AccessControlSpec extends ScalatraFlatSpec with OrganisaatioServiceMock wi
     mockKoodistoResponse("opetuspaikkakk", Seq(("opetuspaikkakk_1", 1, None), ("opetuspaikkakk_2", 1, None)))
     mockKoodistoResponse("osaamisala", Seq(("osaamisala_0001", 1, None)))
     mockKoodistoResponse("kausi", Seq(("kausi_k", 1, None)))
-    mockKoodistoResponse("kieli", Seq(("kieli_EN", 1, None), ("kieli_DE", 1, None), ("kieli_SV", 1, None),
-      ("kieli_FR", 1, None), ("kieli_ES", 1, None), ("kieli_FI", 1, None), ("kieli_ET", 1, None)))
+    mockKoodistoResponse(
+      "kieli",
+      Seq(
+        ("kieli_EN", 1, None),
+        ("kieli_DE", 1, None),
+        ("kieli_SV", 1, None),
+        ("kieli_FR", 1, None),
+        ("kieli_ES", 1, None),
+        ("kieli_FI", 1, None),
+        ("kieli_ET", 1, None)
+      )
+    )
     mockKoodistoResponse("lukiopainotukset", Seq(("lukiopainotukset_1", 1, None)))
     mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", Seq(("lukiolinjaterityinenkoulutustehtava_1", 1, None)))
     mockKoodistoResponse("moduulikoodistolops2021", Seq(("moduulikoodistolops2021_kald3", 1, None)))
   }
 
   def addDefaultKoodistoMockResponsesForHakukohde(): Unit = {
-    mockKoodistoResponse("pohjakoulutusvaatimuskouta", Seq(("pohjakoulutusvaatimuskouta_pk", 1, None), ("pohjakoulutusvaatimuskouta_yo", 1, None), ("pohjakoulutusvaatimuskouta_104", 1, None), ("pohjakoulutusvaatimuskouta_109", 1, None)))
-    mockKoodistoResponse("liitetyypitamm", Seq(("liitetyypitamm_1", 1, None), ("liitetyypitamm_2", 1, None), ("liitetyypitamm_10", 1, None)))
+    mockKoodistoResponse(
+      "pohjakoulutusvaatimuskouta",
+      Seq(
+        ("pohjakoulutusvaatimuskouta_pk", 1, None),
+        ("pohjakoulutusvaatimuskouta_yo", 1, None),
+        ("pohjakoulutusvaatimuskouta_104", 1, None),
+        ("pohjakoulutusvaatimuskouta_109", 1, None)
+      )
+    )
+    mockKoodistoResponse(
+      "liitetyypitamm",
+      Seq(("liitetyypitamm_1", 1, None), ("liitetyypitamm_2", 1, None), ("liitetyypitamm_10", 1, None))
+    )
     mockKoodistoResponse("posti", Seq(("posti_04230", 2, None)))
-    mockKoodistoResponse("valintakokeentyyppi", Seq(("valintakokeentyyppi_1", 1, None), ("valintakokeentyyppi_11", 1, None), ("valintakokeentyyppi_42", 2, None), ("valintakokeentyyppi_57", 2, None), ("valintakokeentyyppi_66", 6, None)))
-    mockKoodistoResponse("hakukohteetperusopetuksenjalkeinenyhteishaku", Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None)))
+    mockKoodistoResponse(
+      "valintakokeentyyppi",
+      Seq(
+        ("valintakokeentyyppi_1", 1, None),
+        ("valintakokeentyyppi_11", 1, None),
+        ("valintakokeentyyppi_42", 2, None),
+        ("valintakokeentyyppi_57", 2, None),
+        ("valintakokeentyyppi_66", 6, None)
+      )
+    )
+    mockKoodistoResponse(
+      "hakukohteetperusopetuksenjalkeinenyhteishaku",
+      Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None))
+    )
   }
 
   def addDefaultKoodistoMockResponsesForHaku(): Unit = {
     mockKoodistoResponse("hakutapa", Seq(("hakutapa_02", 1, None), ("hakutapa_03", 1, None)))
-    mockKoodistoResponse("haunkohdejoukko", Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_15", 1, None), ("haunkohdejoukko_05", 3, None)))
+    mockKoodistoResponse(
+      "haunkohdejoukko",
+      Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_15", 1, None), ("haunkohdejoukko_05", 3, None))
+    )
     mockKoodistoResponse("haunkohdejoukontarkenne", Seq(("haunkohdejoukontarkenne_1", 1, None)))
   }
 
@@ -229,11 +276,14 @@ sealed trait HttpSpec extends KoutaJsonFormats {
 
   def validationErrorBody(expected: List[ValidationError]): String = "[" + expected.map(_.toString).mkString(",") + "]"
 
-  def validationErrorBody(expected: ErrorMessage, path: String): String = validationErrorBody(List(ValidationError(path, expected)))
+  def validationErrorBody(expected: ErrorMessage, path: String): String = validationErrorBody(
+    List(ValidationError(path, expected))
+  )
 
   def jsonHeader: (String, String) = "Content-Type" -> "application/json; charset=utf-8"
 
-  def headersIfUnmodifiedSince(lastModified: String, sessionHeader: (String, String) = defaultSessionHeader) = List(jsonHeader, sessionHeader, KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)
+  def headersIfUnmodifiedSince(lastModified: String, sessionHeader: (String, String) = defaultSessionHeader) =
+    List(jsonHeader, sessionHeader, KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)
 
   def sessionHeader(sessionId: String): (String, String) = "Cookie" -> s"session=$sessionId"
 
@@ -280,7 +330,10 @@ sealed trait HttpSpec extends KoutaJsonFormats {
   def put[E <: AnyRef](path: String, entity: E, expectedStatus: Int, errorPath: String, errorMsg: ErrorMessage): Unit =
     put(path, entity, expectedStatus, Seq(ValidationError(errorPath, errorMsg)))
 
-  def put[E <: AnyRef, M <: AnyRef](path: String, entity: E, expectedStatus: Int, errorMessage: M)(implicit equality: Equality[M], mf: Manifest[M]): Unit =
+  def put[E <: AnyRef, M <: AnyRef](path: String, entity: E, expectedStatus: Int, errorMessage: M)(implicit
+      equality: Equality[M],
+      mf: Manifest[M]
+  ): Unit =
     put(path, bytes(entity), defaultHeaders) {
       withClue(body) {
         status should equal(expectedStatus)
@@ -288,7 +341,13 @@ sealed trait HttpSpec extends KoutaJsonFormats {
       }
     }
 
-  def put[E <: AnyRef](path: String, entity: E, sessionId: UUID, expectedStatus: Int, errors: List[ValidationError]): Unit =
+  def put[E <: AnyRef](
+      path: String,
+      entity: E,
+      sessionId: UUID,
+      expectedStatus: Int,
+      errors: List[ValidationError]
+  ): Unit =
     put(path, bytes(entity), headers = Seq(sessionHeader(sessionId))) {
       withClue(body) {
         status should equal(expectedStatus)
@@ -296,10 +355,16 @@ sealed trait HttpSpec extends KoutaJsonFormats {
       }
     }
 
-  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String =
+  def get[E <: scala.AnyRef, I](path: String, id: I, expected: E)(implicit
+      equality: Equality[E],
+      mf: Manifest[E]
+  ): String =
     get(path, id, defaultSessionId, expected)
 
-  def get[E <: scala.AnyRef, I](path: String, id: I, sessionId: UUID, expected: E)(implicit equality: Equality[E], mf: Manifest[E]): String = {
+  def get[E <: scala.AnyRef, I](path: String, id: I, sessionId: UUID, expected: E)(implicit
+      equality: Equality[E],
+      mf: Manifest[E]
+  ): String = {
     get(s"$path/${id.toString}", headers = Seq(sessionHeader(sessionId))) {
       withClue(body) {
         status should equal(200)
@@ -321,10 +386,26 @@ sealed trait HttpSpec extends KoutaJsonFormats {
   def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean): Unit =
     update(path, entity, lastModified, expectUpdate, defaultSessionId)
 
-  def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit =
-    update(path, entity, Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId)), expectUpdate)
+  def update[E <: scala.AnyRef](
+      path: String,
+      entity: E,
+      lastModified: String,
+      expectUpdate: Boolean,
+      sessionId: UUID
+  ): Unit =
+    update(
+      path,
+      entity,
+      Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId)),
+      expectUpdate
+    )
 
-  def update[E <: scala.AnyRef](path: String, entity: E, headers: Iterable[(String, String)], expectUpdate: Boolean): Unit = {
+  def update[E <: scala.AnyRef](
+      path: String,
+      entity: E,
+      headers: Iterable[(String, String)],
+      expectUpdate: Boolean
+  ): Unit = {
     post(path, bytes(entity), headers) {
       withClue(body) {
         status should equal(200)
@@ -333,27 +414,65 @@ sealed trait HttpSpec extends KoutaJsonFormats {
     }
   }
 
-  def update[E <: scala.AnyRef](path: String, entity: E, lastModified: String, sessionId: UUID, expectedStatus: Int): Unit = {
-    post(path, bytes(entity), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId))) {
+  def update[E <: scala.AnyRef](
+      path: String,
+      entity: E,
+      lastModified: String,
+      sessionId: UUID,
+      expectedStatus: Int
+  ): Unit = {
+    post(
+      path,
+      bytes(entity),
+      Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId))
+    ) {
       withClue(body) {
         status should equal(expectedStatus)
       }
     }
   }
 
-  def update[E <: AnyRef](path: String, entity: E, lastModified: String, expectedStatus: Int, errorPath: String, errorMsg: ErrorMessage): Unit =
+  def update[E <: AnyRef](
+      path: String,
+      entity: E,
+      lastModified: String,
+      expectedStatus: Int,
+      errorPath: String,
+      errorMsg: ErrorMessage
+  ): Unit =
     update(path, entity, lastModified, expectedStatus, Seq(ValidationError(errorPath, errorMsg)))
 
-  def update[E <: AnyRef, M <: AnyRef](path: String, entity: E, lastModified: String, expectedStatus: Int, errorMessage: M)(implicit equality: Equality[M], mf: Manifest[M]): Unit =
-    post(path, bytes(entity), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, defaultSessionHeader)) {
+  def update[E <: AnyRef, M <: AnyRef](
+      path: String,
+      entity: E,
+      lastModified: String,
+      expectedStatus: Int,
+      errorMessage: M
+  )(implicit equality: Equality[M], mf: Manifest[M]): Unit =
+    post(
+      path,
+      bytes(entity),
+      Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, defaultSessionHeader)
+    ) {
       withClue(body) {
         status should equal(expectedStatus)
         read[M](body) shouldEqual errorMessage
       }
     }
 
-  def update[E <: AnyRef](path: String, entity: E, sessionId: UUID, lastModified: String, expectedStatus: Int, errors: List[ValidationError]): Unit =
-    post(path, bytes(entity), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId))) {
+  def update[E <: AnyRef](
+      path: String,
+      entity: E,
+      sessionId: UUID,
+      lastModified: String,
+      expectedStatus: Int,
+      errors: List[ValidationError]
+  ): Unit =
+    post(
+      path,
+      bytes(entity),
+      Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId))
+    ) {
       withClue(body) {
         status should equal(expectedStatus)
         body shouldEqual validationErrorBody(errors)
@@ -363,15 +482,31 @@ sealed trait HttpSpec extends KoutaJsonFormats {
   def list[R](path: String, params: Map[String, String], expected: List[R])(implicit mf: Manifest[R]): Seq[R] =
     list(path, params, expected, defaultSessionId)
 
-  def list[R](path: String, params: Map[String, String], expected: List[R], sessionId: UUID)(implicit mf: Manifest[R]): Seq[R] = {
+  def list[R](path: String, params: Map[String, String], expected: List[R], sessionId: UUID)(implicit
+     mf: Manifest[R]
+  ): Seq[R] = {
     get(s"$path/list", params, Seq(sessionHeader(sessionId))) {
       withClue(body) {
         status should equal(200)
       }
       val result = read[List[R]](body)
-      // theSameElementsAs-matcherin diffi on todella hankalaa luettavaa vähänkään isomman tai monimutkaisia elementtejä
-      // sisältävän listan kanssa. Tällä tavalla vertailemalla saadaan huomattavasti parempi diffi.
-      result.sortBy(_.hashCode).toString should matchTo(expected.sortBy(_.hashCode).toString)
+      result should contain theSameElementsAs expected
+      result
+    }
+  }
+
+  // theSameElementsAs-matcherin diffi on todella hankalaa luettavaa vähänkään isomman tai monimutkaisia elementtejä
+  // sisältävän listan kanssa. Diffx-kirjastolla saadaan huomattavasti miellyttävämpi diffi.
+  def listDiffx[R: Diff](path: String, params: Map[String, String], expected: List[R], sessionId: UUID = defaultSessionId)(implicit
+      mf: Manifest[R]
+  ): Seq[R] = {
+
+    get(s"$path/list", params, Seq(sessionHeader(sessionId))) {
+      withClue(body) {
+        status should equal(200)
+      }
+      val result = read[List[R]](body)
+      result shouldMatchTo expected
       result
     }
   }
@@ -382,7 +517,12 @@ sealed trait HttpSpec extends KoutaJsonFormats {
   def list(path: String, params: Map[String, String], expectedStatus: Int, sessionId: UUID): Unit =
     list(path, params, expectedStatus, Seq(sessionHeader(sessionId)))
 
-  def list(path: String, params: Map[String, String], expectedStatus: Int, headers: Iterable[(String, String)]): Unit = {
+  def list(
+      path: String,
+      params: Map[String, String],
+      expectedStatus: Int,
+      headers: Iterable[(String, String)]
+  ): Unit = {
     get(s"$path/list", params, headers) {
       status should equal(expectedStatus)
     }
@@ -394,6 +534,9 @@ sealed trait DatabaseSpec {
   import fi.oph.kouta.repository.KoutaDatabase
   import slick.jdbc.PostgresProfile.api._
 
+  System.setProperty("kouta-backend.useSecureCookies", "false")
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
+  TestSetups.setupPostgres()
   lazy val db: KoutaDatabase.type = KoutaDatabase
 
   def truncateDatabase(): Int = {

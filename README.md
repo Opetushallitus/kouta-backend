@@ -1,11 +1,11 @@
-# kouta-backend
+# Kouta-backend
 
-## 1. Palvelun tehtävä
+[![Kouta-backend](https://github.com/Opetushallitus/kouta-backend/actions/workflows/build.yml/badge.svg)](https://github.com/Opetushallitus/kouta-backend/actions/workflows/build.yml)
 
 Uuden koulutustarjonnan datan hallinnoija. Sisältää koulutustarjonnan master-datan, jota kouta-indeksoija rikastaa ja
 jakelee muille palveluille.
 
-## 2. Arkkitehtuuri
+## Arkkitehtuuri
 
 Kouta-backend on Scalalla ja Scalatra frameworkilla toteutettu web api. Kouta-ui:n kautta syötetään koulutustarjonnan
 tiedot, jotka kouta-backend validoi ja tallentaa. Tallennuksen yhteydessä lähetetään sqs-viesti jonoon jota 
@@ -42,9 +42,9 @@ Funktio tallentaa vanhan arvon history tauluun (esim. koulutukset_history), joll
 Kouta-backendin external-rajapinta on tarkoitettu [kouta-external](https://github.com/Opetushallitus/kouta-external) palvelulle, jonka rajapintojen avulla koulutuksenjärjestäjät voivat 
 päivittää koulutustarjontaansa rajapinnan kautta.
 
-## 3. Kehitysympäristö
+## Kehitysympäristö
 
-### 3.1. Esivaatimukset
+### Esivaatimukset
 
 Asenna haluamallasi tavalla koneellesi
 1. [IntelliJ IDEA](https://www.jetbrains.com/idea/) + [scala plugin](https://plugins.jetbrains.com/plugin/1347-scala)
@@ -53,8 +53,7 @@ Asenna haluamallasi tavalla koneellesi
 4. [Maven](https://maven.apache.org/) Jos haluat ajaa komentoriviltä Mavenia,
    mutta idean Mavenilla pärjää kyllä hyvin, joten tämä ei ole pakollinen
 
-Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Katso [.travis.yml](.travis.yml) mitä versioita sovellus käyttää.
-Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10.
+Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10.
 
 PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
 
@@ -63,12 +62,12 @@ cd kouta-backend/postgresql/docker
 docker build --tag kouta-postgres .
 ```
 
-#### 3.1.1 Kehitysympäristön ongelmat
+### Kehitysympäristön ongelmat
 
 Jos jostain syystä esivaatimusten jälkeen projektia avatessa koodi punoittaa paljon IDEA:ssa, eikä syntaksin väritys toimi, valitse IDEA:n project-ikkunassa
 src/main-kansion alainen scala-kansio ja right click -> Mark directory as -> Sources root. Samoin src/test-kansion alainen scala-kansio, right click -> Mark directory as -> Test Sources root. Tee sama toimenpide sekä kouta-backendille että kouta-commonille.
 
-### 3.2. Testien ajaminen
+### Testien ajaminen
 
 Jos Maven on asennettuna voi testit ajaa komentoriviltä `mvn test` komennolla tai rajaamalla ajettavien testejä
 `mvn test -Dsuites="<testiluokan nimet pilkulla erotettuna>"`
@@ -81,7 +80,7 @@ Yksittäisen testisuiten tai testin voi ajaa ottamalla right-click halutun testi
 
 Testit käynnistävät PostgreSQL:n docker-kontissa satunnaiseen vapaaseen porttiin.
 
-#### 3.2.1 Testit ja Windows + docker
+#### Testit ja Windows + docker
 
 Jotkin testit (IndexerSpec) voivat epäonnistua windowsilla, koska getDockerExeLocation olettaa `docker.exe` löytyvän kovakoodatusti tietystä polusta:
 
@@ -89,20 +88,19 @@ Jotkin testit (IndexerSpec) voivat epäonnistua windowsilla, koska getDockerExeL
 
 Tähän voi tehdä korjauksen ainakin seuraavalla tavalla: lisää ko. polkuun symbolinen linkki viittaamaan oikeaan polkuun, mistä docker.exe löytyy. Tämän saa helpoiten tehtyä windowsissa pikakuvakkeella.
 
-### 3.3. Migraatiot
+### Migraatiot
 
 Tietokantamigraatiot on toteutettu [flywaylla](https://flywaydb.org/) ja ajetaan automaattisesti testien ja asennuksen 
 yhteydessä. Migraatiotiedostot löytyvät kansiosta `kouta-backend/src/main/resources/db/migration`
 
-### 3.4. Ajaminen lokaalisti
+### Ajaminen lokaalisti
 
-Kopioi testikonfiguraatio lokaalia kehitystä varten ```'/src/test/resources/test-vars.yml'``` -> ```'/src/test/resources/dev-vars.yml'```.
+Kopioi konfiguraatio-template lokaalia kehitystä varten ```'/src/test/resources/dev-vars.template.yml'``` -> ```'/src/test/resources/dev-vars.yml'```.
 Dev-vars.yml on ignoroitu Gitissä ettei salasanat valu repoon.
 
 Käynnistä Ideassa ```embeddedJettyLauncher.scala``` (right-click -> Run). Sovellus
-käynnistyy porttiin **8099** ja se käyttää valittua postgres kantaa (host tai kontti).
-Asetuksia voi muuttaa muokkaamalla
-```'/src/test/resources/dev-vars.yml'```-tiedostoa.
+käynnistyy porttiin **8099** ja käynnistää oletuksena PostgreSQL:n docker-kontissa.
+Asetuksia voi muuttaa muokkaamalla ```'/src/test/resources/dev-vars.yml'```-tiedostoa.
 HUOM! KayttooikeusClient ja OppijanumerorekisteriClient (joita käytetään muokkaajan nimen muodostamiseen) tarvitsevat toimiakseen testiympäristön CAS-salasanan, joka löytyy sieltä, mistä muutkin salasanat. Sovellus toimii kuitenkin ilman salasanan asettamista, mutta logeihin tulee siinä tapauksessa CasAuthenticationErroreita.
 
 EmbeddedJettyLauncher luo automaattisesti myös SQS-jonot localstackiin porttiin localhost:4576.
@@ -123,13 +121,13 @@ Localstackin käynnistysskripti kirjoittaa `~/.kouta_localstack` -tiedostoon kä
 Pysäytysskripti poistaa tuon tiedoston. Jos docker pysähtyy muulla tavalla, on mahdollista, että tuo tiedosto
 jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/stop_localstack`, joka poistaa "haamutiedoston".
 
-### 3.4.1 Ajo testiympäristöä vasten
+### Ajo testiympäristöä vasten
 
 Mikäli tulee tarve tutkia testiympäristön kantaa tai ajaa kouta-backendia jonkin testiympäristön kantaa vasten, yksi keino tähän on
 SSH-porttiohjaus joka onnistuu seuraavilla komennoilla:
 
 - ssh -N -L 5432:kouta.db.untuvaopintopolku.fi:5432 testityy@bastion.untuvaopintopolku.fi
-- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 testityy>@bastion.hahtuvaopintopolku.fi
+- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 testityy@bastion.hahtuvaopintopolku.fi
 - ssh -N -L 5432:kouta.db.testiopintopolku.fi:5432 testityy@bastion.testiopintopolku.fi
 
 Missä bastionin edessä oleva käyttäjätunnus muodostuu AWS IAM-tunnuksesi kahdeksasta ensimmäisestä kirjaimesta.
@@ -139,14 +137,14 @@ Tämän lisäksi pitää vaihtaa `dev-vars.yml` tai `EmbeddedJettyLauncher.scala
 vastaamaan testiympäristön kannan salasanaa. Salasanat löytyvät samasta paikasta kuin muutkin OPH:n palvelujen 
 salaisuudet. Lisätietoja ylläpidolta.
 
-Lisäksi pitää vielä asettaa muutama VM parametri EmbeddedJettyLauncher.scala:n ajokonfiguraatiohin:
+Lisäksi pitää vielä asettaa muutama VM-parametri EmbeddedJettyLauncher.scala:n ajokonfiguraatiohin:
 
 Mene Run -> Edit Configurations -> Valitse EmbeddedJettyLauncher -> Modify Options -> Add VM Options
-Ja lisää `-Dkouta-backend.config-profile=template -Dkouta-backend.embedded=false -Dkouta-backend.db.port={portti}`
+Ja lisää `-Dkouta-backend.config-profile=template -Dkouta-backend.embedded=false`
 
-Korvaa {portti} ssh komennon alussa olevalla portilla, sillä oletuksena postgres-kontti käynnistyy random porttiin.
+Vaihda myös PostgreSQL-tietokannan portti, käyttjätunnus ja salasana `dev-vars.yml`-tiedostoon.
 
-### 3.5. Versiohallinta
+### Versiohallinta
 
 Gitin kanssa on pyritty noudattamaan seuraavia käytänteitä:
 
@@ -157,9 +155,9 @@ Gitin kanssa on pyritty noudattamaan seuraavia käytänteitä:
 - Tekeminen on pyritty pilkkomaan mahdollisimman pieneksi, jotta haarat olisivat lyhytikäisiä (jos mahdollista, alle 
   2 työpäivää)
 
-## 4. Ympäristöt
+## Ympäristöt
 
-### 4.1. Testiympäristöt
+### Testiympäristöt
 
 Testiympäristöjen swaggerit löytyvät seuraavista osoitteista:
 
@@ -167,42 +165,30 @@ Testiympäristöjen swaggerit löytyvät seuraavista osoitteista:
 - [hahtuva](https://virkailija.hahtuvaopintopolku.fi/kouta-backend/swagger)
 - [QA eli pallero](https://virkailija.testiopintopolku.fi/kouta-backend/swagger)
 
-### 4.2. Asennus
+### Asennus
 
 Asennus hoituu samoilla työkaluilla kuin muidenkin OPH:n palvelujen.
 [Cloud-basen dokumentaatiosta](https://github.com/Opetushallitus/cloud-base/tree/master/docs) ja ylläpidolta löytyy apuja.
 
-### 4.3. Buildaus haarasta
+### Buildaus haarasta
 
-Travis tekee buildin jokaisesta pushista ja siirtää luodut paketit opetushallituksen [artifactoryyn](https://artifactory.opintopolku.fi/artifactory/#browse/search/maven).
+Github Actions tekee buildin jokaisesta pushista ja siirtää luodut paketit opetushallituksen [artifactoryyn](https://artifactory.opintopolku.fi/artifactory/#browse/search/maven).
 Paketti luodaan aina master-haarasta. Mikäli tulee tarve sadaa paketointi kehityshaarasta, täytyy muuttaa 
-`./.travis.yml` -tiedostoa. Tällainen tilanne voi olla esimerkiksi jos tekee muutoksia kouta-backendin tietomalliin 
-eikä vielä halua mergetä muutoksia masteriin, mutta tarvitsisi uutta tietomallia kuitenkin esimerkiksi kouta-indeksoijan ja
-konfo-backendin kehityshaaroissa. 
+`./.github/workflows/build.yml` -tiedostoa. Tällainen tilanne voi olla esimerkiksi jos tekee muutoksia kouta-backendin tietomalliin 
+eikä vielä halua mergetä muutoksia masteriin, mutta tarvitsisi uutta tietomallia kuitenkin esimerkiksi kouta-internal tai kouta-external kehityshaaroissa. 
  
-Tarvittava muutos `travis.yml` tiedostoon on tällainen:
-
+Tarvittava muutos `./.github/workflows/build.yml` tiedostoon on tällainen (`deploy_to_artifactory`-jobissa):
 (myös tiedoston git historiasta voi katsoa mallia)
 
-```
-...
-  - provider: script
-    script: lein deploy
-    skip_cleanup: true
-    on:
-      branch: <branchin-nimi>
-...
+```diff
+- if: github.ref == 'refs/heads/master'
++ if: github.ref == 'refs/heads/<haaran nimi>'
 ```
 
-### 4.3. Lokit
+### Lokit
 
 Kouta-backendin lokit löytyvät AWS:n cloudwatchista log groupista <testiympäristön nimi>-app-kouta-backend (esim. hahtuva-app-kouta-backend). 
 Lisäohjeita näihin ylläpidolta.
-
-### 4.4. Continuous integration
-
-https://travis-ci.com/github/Opetushallitus/kouta-backend
-
 
 
 -----------------------VANHAN READMEN TIEDOT-----------------------
@@ -214,8 +200,7 @@ EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
 | System property                                 |                                                                                             |   
 | ------------------------------------------------|:-------------------------------------------------------------------------------------------:|   
 | ```-Dkouta-backend.port=xxxx```                 | Määrittää Jettyn portin (default 8099)                                                      |   
-| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                          |   
-| ```-Dkouta-backend.embeddedPostgresType=xxxx``` | Käynnistetäänkö PostgreSQL host-koneella vai kontissa (`host` tai `docker`, default docker) |   
+| ```-Dkouta-backend.embedded=xxxx```             | Käynnistetäänkö embedded PostgreSQL (default true)                                          |
 | ```-Dkouta-backend.profile=xxxx```              | Määrittää profiilin                                                                         |   
 | ```-Dkouta-backend.template=xxxx```             | Määrittää template-tiedoston polun                                                          |   
 
@@ -230,10 +215,6 @@ EmbeddedJettyLauncheria voidaan konfiguroida seuraavilla VM-parametreilla:
   `kouta-backend.awsKeys` arvoksi laitetaan true, jonka jälkeen avaimet luetaan AWS SDK:n oletuskäytännöllä,
   eli `AWS_ACCESS_KEY_ID` ja `AWS_SECRET_ACCESS_KEY` -ympäristömuuttujista tai `~/.aws/credentials` tiedostosta
   `AWS_PROFILE` -ymäristömuuttujan kertomasta profiilista.
-
-### Testidatan generointi
-
-Lokaaliin kouta-backendiin saa generoitua testidataa ajamalla ```TestDataGenerator```. (Tämä on vanhentunut ja ei toimi enää)
 
 ### Riippuvuuksien tarkistaminen
 

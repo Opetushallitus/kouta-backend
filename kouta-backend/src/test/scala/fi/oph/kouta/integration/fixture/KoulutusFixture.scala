@@ -17,7 +17,8 @@ import org.scalactic.Equality
 import java.util.UUID
 import scala.util.Try
 
-trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with AccessControlSpec {
+trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
+  this: KoutaIntegrationSpec =>
 
   val KoulutusPath = "/koulutus"
 
@@ -125,7 +126,8 @@ trait KoulutusFixture extends KoulutusDbFixture with KoutaIntegrationSpec with A
     TimeUtils.instantToModifiedAt(db.runBlocking(KoulutusDAO.selectLastModified(oid)).get)
 }
 
-trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers { this: KoutaIntegrationSpec =>
+trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
+  this: KoutaIntegrationSpec =>
 
   import slick.dbio.DBIO
   import slick.jdbc.PostgresProfile.api._

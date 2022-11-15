@@ -20,16 +20,147 @@ import scala.io.Source
    change log4j.logger.org.mockserver=INFO
    in test/resources/log4j.properties */
 
+abstract class ServiceMocker extends Logging {
+
+  var mockServer: Option[ClientAndServer]  = None
+  var mockPort: Int                        = _
+
+  private def assertInitialized(): Unit = {
+    if (mockServer.isEmpty) {
+      throw new AssertionError(
+        "Mock server is uninitialized! Please call startServiceMocking() before trying to use mock server."
+      )
+    }
+  }
+
+  def startServiceMocking(port: Int): Unit = {
+    mockServer = Some(startClientAndServer(8099))
+    mockPort = mockServer.get.getLocalPort
+    logger.info(s"Mocking oph services in port $mockPort")
+  }
+
+  def getMockBaseUrl(withProtocol: Boolean): String = {
+    assertInitialized
+    val protocol = if (withProtocol) "http://" else ""
+    s"${protocol}localhost:$mockPort"
+  }
+
+  def stopServiceMocking(): Unit = {
+    assertInitialized
+    mockServer.foreach(_.stop())
+  }
+
+  def clearServiceMocks(): Unit = {
+    assertInitialized
+    mockServer.foreach(_.reset())
+  }
+
+  def clearMock(request: HttpRequest): Unit = {
+    assertInitialized
+    mockServer.foreach(_.clear(request))
+  }
+
+  def mockRequest(request: HttpRequest, responseString: String, statusCode: Int) = {
+    assertInitialized
+    mockServer.foreach(
+      _.when(
+        request
+      ).respond(
+        response(responseString).withStatusCode(statusCode)
+      )
+    )
+    request
+  }
+}
+
+object ServiceMocker extends ServiceMocker
+
+trait ServiceMockBase extends UrlProperties {
+  private val mocker = ServiceMocker
+
+  def getMockPath(key: String, param: Option[String] = None): String = 
+    urlProperties match {
+      case None => "/"
+      case Some(up) =>
+        new java.net.URL(param match {
+          case None => up.url(key)
+          case Some(p) => up.url(key, p)
+        }).getPath
+    }
+
+  def clearMock(request: HttpRequest): Unit = mocker.clearMock(request)
+
+  def clearServiceMocks(): Unit = mocker.clearServiceMocks()
+
+  def responseFromResource(filename: String): String =
+    Source
+      .fromInputStream(
+        getClass.getClassLoader.getResourceAsStream(s"data/$filename.json")
+      )
+      .mkString
+
+  def mockGet(path: String, params: Map[String, String], responseString: String, statusCode: Int = 200): HttpRequest = {
+    val req: HttpRequest = request()
+      .withMethod("GET")
+      //.withSecure(true) TODO: https toimimaan
+      .withPath(path)
+      .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
+    mocker.mockRequest(req, responseString, statusCode)
+  }
+
+  private def postRequest[B <: AnyRef](
+      path: String,
+      body: B,
+      params: Map[String, String],
+      headers: Map[String, String],
+      matchType: MatchType
+  )(implicit jsonFormats: Formats): HttpRequest =
+    request()
+      .withMethod("POST")
+      .withPath(path)
+      .withQueryStringParameters(params.map(x => param(x._1, x._2)).toList.asJava)
+      .withHeaders(headers.map(x => header(x._1, x._2)).toList.asJava)
+      .withBody(JsonBody.json(write[B](body), matchType).asInstanceOf[Body[_]])
+
+  def mockPost[B <: AnyRef](
+      path: String,
+      body: B,
+      params: Map[String, String] = Map.empty,
+      responseString: String,
+      statusCode: Int = 200,
+      headers: Map[String, String] = Map.empty,
+      matchType: MatchType = MatchType.STRICT
+  )(implicit jsonFormats: Formats): HttpRequest = {
+    val req: HttpRequest = postRequest(path, body, params, headers, matchType)
+    mocker.mockRequest(req, responseString, statusCode)
+  }
+
+  def mockPut[B <: AnyRef](
+      path: String,
+      body: B,
+      params: Map[String, String] = Map.empty,
+      responseString: String,
+      statusCode: Int = 200,
+      headers: Map[String, String] = Map.empty,
+      matchType: MatchType = MatchType.STRICT
+  )(implicit jsonFormats: Formats): HttpRequest = {
+    val req: HttpRequest = postRequest(path, body, params, headers, matchType).withMethod("PUT")
+    mocker.mockRequest(req, responseString, statusCode)
+  }
+}
+
+@deprecated("Käytä ServiceMocker-singletonia ja ServiceMockBase-traittia. Tämä poistetaan, kun kaikki testit on " +
+  "refaktoroitu käyttämään edellä mainittuja.", "kouta-common")
 trait ServiceMocks extends Logging {
 
   var mockServer: Option[ClientAndServer] = None
   var urlProperties: Option[OphProperties] = None
   var mockPort: Int = _
 
-  def startServiceMocking(): Unit = {
-    mockServer = Some(startClientAndServer())
-    mockPort = mockServer.get.getLocalPort
-    logger.info(s"Mocking oph services in port $mockPort")
+  def startServiceMocking(port: Int = 12345): Unit = {
+    mockServer = Some(startClientAndServer(port))
+    mockPort = port
+    logger.info(s"Mocking oph services in port $port")
   }
 
   def stopServiceMocking(): Unit = mockServer.foreach(_.stop())
