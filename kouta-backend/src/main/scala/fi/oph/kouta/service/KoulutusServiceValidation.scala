@@ -375,6 +375,7 @@ class KoulutusServiceValidation(
       case m: KkOpintojaksoKoulutusMetadata =>
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
+          assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
           validateOpintojenLaajuusyksikkoAndNumero(
             m.opintojenLaajuusyksikkoKoodiUri,
             koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
@@ -386,6 +387,7 @@ class KoulutusServiceValidation(
       case m: KkOpintokokonaisuusKoulutusMetadata =>
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
+          assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
           validateOpintojenLaajuusyksikko(
             m.opintojenLaajuusyksikkoKoodiUri,
             koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
@@ -823,6 +825,20 @@ class KoulutusServiceValidation(
           path,
           validationContext,
           invalidKoulutusAlaKoodiuri(koodiUri)
+        )
+    )
+  }
+
+  private def assertOpinnonTyyppiKoodiUri(koodiUri: Option[String], validationContext: ValidationContext): IsValid = {
+    validateIfDefined[String](
+      koodiUri,
+      uri =>
+        assertKoodistoQueryResult(
+          uri,
+          koulutusKoodiClient.opinnonTyyppiKoodiUriExists,
+          "metadata.opinnonTyyppiKoodiUri",
+          validationContext,
+          invalidOpinnonTyyppiKoodiuri(uri)
         )
     )
   }
