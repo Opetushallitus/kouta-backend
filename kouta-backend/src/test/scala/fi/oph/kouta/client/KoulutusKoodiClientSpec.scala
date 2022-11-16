@@ -1,33 +1,23 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.Templates
-import fi.oph.kouta.TestSetups.{
-  CONFIG_PROFILE_TEMPLATE,
-  SYSTEM_PROPERTY_NAME_CONFIG_PROFILE,
-  SYSTEM_PROPERTY_NAME_TEMPLATE
-}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, En, Fi, Kielistetty, LukioKoulutusKoodit, Sv, YoKoulutusKoodit}
-import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.domain._
+import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
-import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class KoulutusKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
+class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
+  setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
   var koodiClient: KoulutusKoodiClient = _
   val defaultNimi: Kielistetty         = Map(Fi -> "nimi", Sv -> "nimi sv")
 
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
   override def beforeAll() = {
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
-    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
-    super.startServiceMocking()
-    urlProperties = Some(
-      KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort")
-    )
+    super.beforeAll()
     koodiClient = new KoulutusKoodiClient(urlProperties.get)
   }
 

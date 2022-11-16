@@ -12,13 +12,13 @@ import java.net.InetAddress
 import java.util.UUID
 
 trait ExternalFixture
-    extends KoutaIntegrationSpec
-    with KoulutusFixture
+    extends KoulutusFixture
     with ToteutusFixture
     with HakuFixture
     with HakukohdeFixture
     with ValintaperusteFixture
     with SorakuvausFixture {
+  this: KoutaIntegrationSpec =>
 
   val ExternalKoulutusPath       = "/external/koulutus"
   val ExternalToteutusPath       = "/external/toteutus"

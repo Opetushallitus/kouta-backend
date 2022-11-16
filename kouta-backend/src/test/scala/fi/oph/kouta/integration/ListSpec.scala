@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.{ObjectMatcher, _}
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -9,7 +10,14 @@ import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
 
-class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
+class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
+
+  implicit val koulutusMatcher = ObjectMatcher.seq[KoulutusListItem].byValue(_.oid)
+  implicit val koulutusListDiff = Diff.summon[List[KoulutusListItem]]
+
+  // Koulutuksen modified ja tarjoajat kentät muuttuu kun sen toteutusten tarjoajat muuttuu. Siksi jätetään ne testeissä
+  // huomiotta, kun käytetään listDiffx-funktiota.
+  implicit val koulutusDiff = Diff.summon[KoulutusListItem].ignore(_.modified).ignore(_.tarjoajat)
 
   override val roleEntities: List[RoleEntity] = RoleEntity.all
 
@@ -89,10 +97,10 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Koulutus list" should "list all koulutukset for authorized organizations 1" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus))
   }
   it should "list all koulutukset for authorized organizations 2" in {
-    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, k7, k8, k9, ophKoulutus))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, k7, k8, k9, ophKoulutus))
   }
   it should "return forbidden if oid is unknown" in {
     list(KoulutusPath, Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -104,40 +112,40 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), 401, Map())
   }
   it should "allow access to user of the selected organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus), crudSessions(ChildOid))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus), crudSessions(ChildOid))
   }
   it should "deny access without access to the given organization" in {
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access for a user of an ancestor organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus), crudSessions(ParentOid))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus), crudSessions(ParentOid))
   }
   it should "allow access for a user of a descendant organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus), crudSessions(GrandChildOid))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus), crudSessions(GrandChildOid))
   }
   it should "deny access without an accepted role" in {
     list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), 403, otherRoleSession)
   }
   it should "allow access to any koulutus with the indexer role" in {
-    list(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, k7, k8, k9, ophKoulutus), indexerSession)
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> LonelyOid.s), List(k4, k5, k7, k8, k9, ophKoulutus), indexerSession)
   }
   it should "list public koulutus with the same koulutustyyppi" in {
-    list(KoulutusPath, Map("organisaatioOid" -> YoOid.s), List(k6), readSessions(YoOid))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> YoOid.s), List(k6), readSessions(YoOid))
   }
   it should "list only julkiset and oph koulutukset to oph organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> OphOid.s), List(k5, k6, ophKoulutus), ophSession)
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> OphOid.s), List(k5, k6, ophKoulutus), ophSession)
   }
   it should "by default list arkistoidut also" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s), List(k1, k2, k3, k5, ophKoulutus))
   }
   it should "filter out arkistoidut if instructed" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(k1, k3, k5, ophKoulutus))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(k1, k3, k5, ophKoulutus))
   }
   it should "filter with koulutustyyppi if instructed" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "koulutustyyppi" -> Amm.toString), List(k1, k2, k3, k5, ophKoulutus))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "koulutustyyppi" -> Amm.toString), List(k1, k2, k3, k5, ophKoulutus))
   }
   it should "filter all with non-existing koulutustyyppi in organization" in {
-    list(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "koulutustyyppi" -> Yo.toString), List(k6))
+    listDiffx(KoulutusPath, Map("organisaatioOid" -> ChildOid.s, "koulutustyyppi" -> Yo.toString), List(k6))
   }
 
   "Toteutus list" should "list all toteutukset for selected organization" in {
@@ -528,7 +536,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
   }
 
   "Hakuun kuuluvat koulutukset for indexer" should "list all koulutukset mapped to given haku by hakukohde for indexer" in {
-    list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String, String](), List(k1, k4), indexerSession)
+    listDiffx(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String, String](), List(k1, k4), indexerSession)
   }
   it should "deny access to root user without indexer role" in {
     list(s"$IndexerPath$HakuPath/${h1.oid}/koulutukset", Map[String,String](), 403)
@@ -692,7 +700,7 @@ class ListSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
               kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
               valintakoeIds = hk6valintakokeet))))))
 
-      read[List[Hakutieto]](body) should matchTo(expected)
+      read[List[Hakutieto]](body) shouldMatchTo(expected)
     }
   }
 }

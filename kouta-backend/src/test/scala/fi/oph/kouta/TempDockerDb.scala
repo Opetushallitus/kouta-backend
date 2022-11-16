@@ -1,32 +1,32 @@
 package fi.oph.kouta
 
-import fi.vm.sade.utils.slf4j.Logging
-import fi.vm.sade.utils.tcp.PortFromSystemPropertyOrFindFree
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.util.CommandLine.runBlocking
+import fi.vm.sade.utils.slf4j.Logging
 
 object TempDockerDb extends Logging {
 
-  val port: Int = new PortFromSystemPropertyOrFindFree("kouta-backend.db.port").chosenPort
-  val dbName = "kouta"
+  val port: Int = KoutaConfigurationFactory.configuration.databaseConfiguration.port
+  val dbName        = "kouta"
   val containerName = "kouta-database"
-
-  import java.io.File
 
   import TempDbUtils.tryTimes
 
-  val dataDirectoryName = s"kouta-temp-db/$port"
-  val dataDirectoryFile = new File(dataDirectoryName)
+  import java.io.File
+
+  val dataDirectoryName         = s"kouta-temp-db/$port"
+  val dataDirectoryFile         = new File(dataDirectoryName)
   val dataDirectoryPath: String = dataDirectoryFile.getAbsolutePath
 
-  val startStopRetries = 100
+  val startStopRetries             = 100
   val startStopRetryIntervalMillis = 100
 
   def start() {
     try {
-      if(!databaseIsRunning()){
+      if (!databaseIsRunning()) {
         startDatabaseContainer()
       }
-    }  finally {
+    } finally {
       Runtime.getRuntime.addShutdownHook(new Thread(() => stop()))
     }
   }
@@ -41,14 +41,35 @@ object TempDockerDb extends Logging {
   }
 
   private val databaseIsRunning: () => Boolean = () => {
-    runBlocking(s"docker exec $containerName pg_isready -q -t 1 -h localhost -U oph -d $dbName", failOnError = false) == 0
+    runBlocking(
+      s"docker exec $containerName pg_isready -q -t 1 -h localhost -U oph -d $dbName",
+      failOnError = false
+    ) == 0
   }
 
   def startDatabaseContainer(): Unit = {
-    logger.info("Starting PostgreSQL container:")
-    runBlocking(s"docker run --rm -d --name $containerName --env POSTGRES_PASSWORD=postgres -p $port:5432 kouta-postgres")
+    logger.info(s"Starting PostgreSQL container (localhost:$port):")
+    runBlocking(
+      s"docker run --rm -d --name $containerName --env POSTGRES_PASSWORD=postgres -p $port:5432 kouta-postgres"
+    )
     if (!tryTimes(startStopRetries, startStopRetryIntervalMillis)(databaseIsRunning)) {
-      throw new RuntimeException(s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals")
+      throw new RuntimeException(
+        s"postgres not accepting connections in port $port after $startStopRetries attempts with $startStopRetryIntervalMillis ms intervals"
+      )
     }
+  }
+}
+
+object TempDbUtils {
+  import scala.annotation.tailrec
+
+  @tailrec
+  def tryTimes(times: Int, sleep: Int)(thunk: () => Boolean): Boolean = times match {
+    case n if n < 1 => false
+    case 1          => thunk()
+    case n =>
+      thunk() || {
+        Thread.sleep(sleep); tryTimes(n - 1, sleep)(thunk)
+      }
   }
 }

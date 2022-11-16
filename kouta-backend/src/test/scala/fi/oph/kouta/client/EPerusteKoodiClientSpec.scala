@@ -1,21 +1,18 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.Templates
-import fi.oph.kouta.TestSetups.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{En, Fi, Kielistetty, Sv}
-import fi.oph.kouta.mocks.KoodistoServiceMock
-import org.scalatra.test.scalatest.ScalatraFlatSpec
+import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
 
-class EPerusteKoodiClientSpec extends ScalatraFlatSpec with KoodistoServiceMock {
+class EPerusteKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
+import fi.oph.kouta.domain.{En, Fi, Kielistetty, Sv}
+
   var koodiClient: EPerusteKoodiClient = _
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
+  setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
   val defaultNimi: Kielistetty = Map(Fi -> "nimi", Sv -> "nimi sv", En -> "nimi en")
 
   override def beforeAll() = {
-    System.setProperty(SYSTEM_PROPERTY_NAME_TEMPLATE, Templates.DEFAULT_TEMPLATE_FILE_PATH)
-    System.setProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_TEMPLATE)
-    super.startServiceMocking()
-    urlProperties = Some(KoutaConfigurationFactory.configuration.urlProperties.addOverride("host.virkailija", s"localhost:$mockPort"))
+    super.beforeAll()
     koodiClient = new EPerusteKoodiClient(urlProperties.get)
   }
 

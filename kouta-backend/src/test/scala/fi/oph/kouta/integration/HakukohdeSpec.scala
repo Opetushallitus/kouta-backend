@@ -1,34 +1,21 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestData.{
-  Liite1,
-  Liite2,
-  LukioHakukohteenLinja,
-  LukioKoulutus,
-  LukioToteutus,
-  TuvaToteutuksenMetatieto
-}
+import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.{Liite1, Liite2, LukioHakukohteenLinja, LukioKoulutus}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, KoulutusFixture, ValintaperusteFixture}
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.util.UnitSpec
-import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.{TestData, TestOids}
 import org.json4s.jackson.Serialization.read
 
 import java.time.LocalDateTime
 import java.util.UUID
 
-class HakukohdeSpec
-    extends UnitSpec
-    with KoutaIntegrationSpec
-    with AccessControlSpec
-    with EverythingFixture
-    with LokalisointiServiceMock {
+class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with KoulutusFixture with HakuFixture with ValintaperusteFixture with LokalisointiServiceMock {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Hakukohde)
 
@@ -42,10 +29,6 @@ class HakukohdeSpec
     hakuOid = put(haku)
     yhteisHakuOid = put(haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ophSession)
     valintaperusteId = put(valintaperuste)
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
   }
 
   lazy val uusiHakukohde: Hakukohde = hakukohde(toteutusOid, hakuOid, valintaperusteId)

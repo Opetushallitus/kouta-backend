@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
@@ -8,13 +9,18 @@ import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.service._
+import fi.oph.kouta.service.{
+  OppilaitoksenOsaService,
+  OppilaitoksenOsaServiceValidation,
+  OppilaitosServiceValidation,
+  OrganisaatioServiceImpl
+}
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
 
-import java.util.UUID
-
-trait OppilaitoksenOsaFixture extends KoutaIntegrationSpec with AccessControlSpec {
+trait OppilaitoksenOsaFixture extends AccessControlSpec {
+  this: KoutaIntegrationSpec =>
 
   val OppilaitoksenOsaPath = "/oppilaitoksen-osa"
 

@@ -1,39 +1,24 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, LukioHakukohteenLinja, Valintakoe1}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{
-  HakuKoodiClient,
-  KoodistoClient,
-  KoodistoKaannosClient,
-  KoulutusKoodiClient,
-  LokalisointiClient
-}
+import fi.oph.kouta.client.{HakuKoodiClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, KeywordService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO}
-import fi.oph.kouta.service.{
-  HakukohdeCopyResultObject,
-  HakukohdeService,
-  HakukohdeServiceValidation,
-  KeywordService,
-  OrganisaatioServiceImpl,
-  ToteutusService,
-  ToteutusServiceValidation
-}
+import fi.oph.kouta.repository._
+import fi.oph.kouta.service._
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
 import slick.jdbc.PostgresProfile.api._
 
-trait HakukohdeFixture extends SQLHelpers with KoutaIntegrationSpec with AccessControlSpec with ToteutusFixture {
-  this: KoulutusFixture =>
+import java.util.UUID
+
+trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFixture {
+  this: KoutaIntegrationSpec with KoulutusFixture =>
 
   val HakukohdePath     = "/hakukohde"
   val HakukohdeCopyPath = s"/hakukohde/copy/"
