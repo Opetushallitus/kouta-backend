@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import java.time.Instant
 import java.util.UUID
 import fi.oph.kouta.client.{CallerId, HttpClient, OidAndChildren}
-import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, TilaFilter, Toteutus}
+import fi.oph.kouta.domain.{En, Fi, Haku, Hakukohde, KieliModel, Kielistetty, Koulutus, Organisaatio, Sv, TilaFilter, Toteutus}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, KoulutusOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.integration.fixture.AuthFixture
 import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, OrganisaatioServiceImpl, ToteutusService}
@@ -89,16 +89,15 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
   }
   "Migrate hakukohde by oid" should "return 200" in {
 
-    val oidAndChildren = OidAndChildren(
-      oid = OrganisaatioOid("1.2.246.562.10.24790222608"),
+    val organisaatio = Organisaatio(
+      oid = "1.2.246.562.10.24790222608",
       children = List(),
       parentOidPath = "",
       oppilaitostyyppi = None,
-      status = "AKTIIVINEN",
-      organisaatiotyypit = List("organisaatiotyyppi_02")
-
+      organisaatiotyypit = List("organisaatiotyyppi_02"),
+      nimi = Map(Fi -> "", Sv -> "", En -> "")
     )
-    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(Some(oidAndChildren))
+    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(organisaatio)
 
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
     when(hakukohdeService.update(hakukohdeCaptor, any[Instant])(any[Authenticated])).thenReturn(true)
@@ -137,16 +136,15 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
 
   "Migrate hakukohde without aloituspaikat" should "return 200" in {
 
-    val oidAndChildren = OidAndChildren(
-      oid = OrganisaatioOid("1.2.246.562.10.24790222608"),
+    val organisaatio = Organisaatio(
+      oid = "1.2.246.562.10.24790222608",
       children = List(),
       parentOidPath = "",
       oppilaitostyyppi = None,
-      status = "AKTIIVINEN",
-      organisaatiotyypit = List("organisaatiotyyppi_02")
-
+      organisaatiotyypit = List("organisaatiotyyppi_02"),
+      nimi = Map(Fi -> "", Sv -> "", En -> "")
     )
-    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(Some(oidAndChildren))
+    when(organisaatioServiceImpl.getOrganisaatio(OrganisaatioOid("1.2.246.562.10.24790222608"))).thenReturn(organisaatio)
 
     reset(koulutusService, toteutusService, hakukohdeService)
     val hakukohdeCaptor = ArgCaptor[Hakukohde]
