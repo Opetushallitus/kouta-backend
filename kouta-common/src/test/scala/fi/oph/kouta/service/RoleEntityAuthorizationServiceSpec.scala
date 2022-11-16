@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.{Amm, Koulutustyyppi, Yo}
+import fi.oph.kouta.mocks.SpecWithMocks
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
 
@@ -24,7 +25,7 @@ case class TestService(organisaatioService: OrganisaatioService) extends RoleEnt
   override protected val roleEntity: RoleEntity = Role.Koulutus
 }
 
-trait ServiceSpec extends OrganisaatioFixture {
+trait ServiceSpec extends SpecWithMocks with OrganisaatioFixture {
   protected def authenticated(role: Role, organizations: Seq[OrganisaatioOid]): Authenticated = {
     val authorities = organizations.map(Authority.apply(role, _)).toSet
     Authenticated(

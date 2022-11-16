@@ -3,7 +3,6 @@ package fi.oph.kouta.client
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
 import fi.oph.kouta.domain.{Fi, Kielistetty, Sv}
-import fi.oph.kouta.mocks.KoodistoServiceMock
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 
 import java.time.LocalDate

@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
-import com.softwaremill.diffx.ObjectMatcher
+import com.softwaremill.diffx.{ObjectMatcher, _}
 import com.softwaremill.diffx.generic.auto._
-import com.softwaremill.diffx.scalatest.DiffMatcher._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -9,10 +9,6 @@ import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
 import org.json4s.jackson.Serialization.read
-import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
-import com.softwaremill.diffx.generic.auto._
-import fi.oph.kouta.repository.HakukohdeDAO
-import com.softwaremill.diffx._
 
 class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
 

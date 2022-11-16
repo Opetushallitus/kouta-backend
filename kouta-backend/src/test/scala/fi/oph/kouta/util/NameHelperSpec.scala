@@ -1,29 +1,9 @@
 package fi.oph.kouta.util
-import fi.oph.kouta.TestData.{
-  JulkaistuHakukohde,
-  LukioToteutuksenMetatieto,
-  TelmaToteutuksenMetatieto,
-  TuvaToteutuksenMetatieto,
-  TuvaToteutus
-}
-import fi.oph.kouta.domain.{
-  En,
-  Fi,
-  Hakukohde,
-  Kielistetty,
-  LukioKoulutusMetadata,
-  Sv,
-  TelmaToteutusMetadata,
-  Toteutus,
-  TuvaToteutusMetadata
-}
-import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
-import com.softwaremill.diffx.scalatest.DiffMatcher.matchTo
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, LukioToteutuksenMetatieto, TelmaToteutuksenMetatieto, TuvaToteutuksenMetatieto, TuvaToteutus}
-import fi.oph.kouta.domain.{En, Fi, Hakukohde, Kieli, Kielistetty, LukioKoulutusMetadata, Sv, TelmaToteutusMetadata, Toteutus, TuvaToteutusMetadata}
-import com.softwaremill.diffx.scalatest.DiffMatcher._
 import com.softwaremill.diffx.generic.auto._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.client.Henkilo
+import fi.oph.kouta.domain._
 
 class NameHelperSpec extends UnitSpec {
   val tuvaToteutus: Toteutus                        = TuvaToteutus

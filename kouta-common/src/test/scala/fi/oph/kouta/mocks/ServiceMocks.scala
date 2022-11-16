@@ -88,6 +88,11 @@ trait ServiceMockBase extends UrlProperties {
         }).getPath
     }
 
+  protected def getMockPath(key: String, params: Seq[String]): String = urlProperties match {
+    case None     => "/"
+    case Some(up) => new java.net.URL(if (params.nonEmpty) up.url(key, params: _*) else up.url(key)).getPath
+  }
+
   def clearMock(request: HttpRequest): Unit = mocker.clearMock(request)
 
   def clearServiceMocks(): Unit = mocker.clearServiceMocks()
