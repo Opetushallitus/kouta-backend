@@ -41,7 +41,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
 
     val schedulerConfig = new SchedulerConfig
     schedulerConfig.startScheduler()
-    //context.mount(new MigrationServlet(), "/migration", "migration")
+    context.mount(new MigrationServlet(), "/migration", "migration")
   }
 
   override def destroy(context: ServletContext): Unit = {
