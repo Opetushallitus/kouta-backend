@@ -150,11 +150,11 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
     Ok(organisaatioService.getOrganisaatioHierarkia(params))
   }
 
-  registerPath("/organisaatio/oppilaitokset-for-opintojakso-and-opintokokonaisuus",
+  registerPath("/organisaatio/oppilaitokset-for-avoin-korkeakoulutus",
     """    get:
-      |      summary: Hae organisaatiohierarkian kk-opintojaksoille ja -kokonaisuuksille organisaatiopalvelusta
-      |      operationId: getHierarkiaForOpintojaksoAndOpintokokonaisuus
-      |      description: Hakee organisaatiohierarkian kk-opintojaksoille ja -kokonaisuuksille organisaatiopalvelusta
+      |      summary: Hakee organisaatiohierarkian avoimelle korkeakoulutukselle organisaatiopalvelusta
+      |      operationId: getHierarkiaForAvoinKorkeakoulutus
+      |      description: Hakee organisaatiohierarkian avoimelle korkeakoulutukselle organisaatiopalvelusta
       |      tags:
       |        - Organisaatio
       |      responses:
@@ -167,6 +167,6 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       |""".stripMargin)
   get("/oppilaitokset-for-opintojakso-and-opintokokonaisuus") {
     implicit val authenticated: Authenticated = authenticate()
-    Ok(organisaatioService.getOppilaitoksetForKkOpintojaksoAndOpintokokonaisuus())
+    Ok(organisaatioService.getOppilaitoksetForAvoinKorkeakoulutus())
   }
 }
