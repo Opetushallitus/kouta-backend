@@ -282,7 +282,7 @@ class ToteutusService(
           AuthorizationRules(
             roleEntity.updateRoles,
             overridingAuthorizationRule = Some(AuthorizedToAllOfGivenOrganizationsRule),
-            additionalAuthorizedOrganisaatioOids = getTarjoajat(toteutusWithTime)
+            additionalAuthorizedOrganisaatioOids = newToteutus.tarjoajat
           )
         }
     }
