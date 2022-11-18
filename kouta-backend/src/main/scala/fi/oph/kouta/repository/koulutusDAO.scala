@@ -352,7 +352,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
                   (organisaatio_oid <> ${RootOrganisaatioOid} or
                    tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-              or ((array(select jsonb_array_elements_text(metadata->'orgsAllowedToReadKoulutus')) && ${organisaatioOids.map(_.toString).toArray}::text[])
+              or ((array(select jsonb_array_elements_text(metadata->'jarjestajat')) && ${organisaatioOids.map(_.toString).toArray}::text[])
                    and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
               or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
               #${tilaConditions(tilaFilter)}
