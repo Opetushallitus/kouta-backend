@@ -96,6 +96,8 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Koulutus
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan koulutuksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
