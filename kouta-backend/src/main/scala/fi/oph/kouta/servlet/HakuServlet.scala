@@ -96,6 +96,8 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Haku
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan haun kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
