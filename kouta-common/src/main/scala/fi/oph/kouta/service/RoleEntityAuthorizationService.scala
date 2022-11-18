@@ -1,11 +1,10 @@
 package fi.oph.kouta.service
 
-import java.time.Instant
-import fi.oph.kouta.client.OrganisaatioOidsAndOppilaitostyypitFlat
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.security._
-import fi.oph.kouta.service.AuthorizationRuleForUpdateTarjoajat.{isMemberOfOwnerOrganization, assertUserAuthorizedToKoulutustyyppi}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException}
+
+import java.time.Instant
 
 trait AuthorizationRuleForJulkinen extends AuthorizationRule {
   def isJulkinenAuthorized(entity: AuthorizableMaybeJulkinen[_], additionalOrganisaatioOids: Seq[OrganisaatioOid], usersOidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView, userIsMemberOfOwnerOrg: Boolean): Boolean

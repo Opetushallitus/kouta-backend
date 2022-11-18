@@ -1,15 +1,11 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.OrganisaatioOidsAndOppilaitostyypitFlat
-import fi.oph.kouta.domain.{Enum, EnumType, Koulutustyyppi}
-import fi.oph.kouta.domain.Koulutustyyppi.isKorkeakoulu
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
-import fi.oph.kouta.security.{Authorizable, AuthorizableMaybeJulkinen, Role}
-import fi.oph.kouta.service.AuthorizedToAnyOfGivenOrganizationsRule.authorizedOrganisations
+import fi.oph.kouta.domain.{Enum, EnumType}
+import fi.oph.kouta.security.{Authorizable, Role}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.utils.slf4j.Logging
-
-import scala.collection.IterableView
 
 sealed trait OrganizationsAuthorizationMode extends EnumType
 
@@ -26,8 +22,6 @@ trait AuthorizationRule {
   def organizationsAuthorizationMode(): OrganizationsAuthorizationMode
   def authorizedOrganisations(entity: Authorizable, additionalOrganisaatioOids: Seq[OrganisaatioOid]): Seq[OrganisaatioOid] =
     additionalOrganisaatioOids :+ entity.organisaatioOid
-  def isMemberOfOwnerOrganization(entity: Authorizable, usersOidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView): Boolean =
-    usersOidsAndOppilaitostyypit.exists(_._1.exists(_ == entity.organisaatioOid))
 }
 
 case object AuthorizedToAnyOfGivenOrganizationsRule extends AuthorizationRule {
@@ -76,10 +70,11 @@ trait AuthorizationService extends Logging {
 
     val authorizedOrgs = authenticated.session.getOrganizationsForRoles(requiredRoles)
 
-    def authorized(oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView): Boolean =
-      rule.isAuthorized(authorizable, additionalAuthorizedOrganisaatioOids, oidsAndOppilaitostyypit,
-        authorizedOrgs.map(org => organisaatioService.getAllChildOidsFlat(org)).flatten.contains(authorizable.organisaatioOid))
+    def userBelongsToOwnerOrganisation(): Boolean =
+      authorizedOrgs.map(org => organisaatioService.getAllChildOidsFlat(org)).flatten.contains(authorizable.organisaatioOid)
 
+    def authorized(oidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView): Boolean =
+      rule.isAuthorized(authorizable, additionalAuthorizedOrganisaatioOids, oidsAndOppilaitostyypit, userBelongsToOwnerOrganisation())
 
     def allAuthorizedOidsAndOppilaitostyypit(): OrganisaatioOidsAndOppilaitostyypitFlatView =
       if(allowAccessToParentOrganizations) lazyFlatChildrenAndParents(authorizedOrgs) else lazyFlatChildren(authorizedOrgs)
