@@ -40,10 +40,14 @@ case object AuthorizedToAnyOfGivenOrganizationsRule extends AuthorizationRule {
   override def organizationsAuthorizationMode(): OrganizationsAuthorizationMode = Any
 }
 
-case object AuthorizedToAllOfGivenOrganizationsRule extends AuthorizationRule {
+case object AuthorizedToAllOfGivenOrganizationsRule extends AuthorizationRule with Logging {
 
   override def isAuthorized(entity: Authorizable, additionalOrganisaatioOids: Seq[OrganisaatioOid], usersOidsAndOppilaitostyypit: OrganisaatioOidsAndOppilaitostyypitFlatView, userIsMemberOfOwnerOrg: Boolean): Boolean = {
     val organisaatiot = authorizedOrganisations(entity, additionalOrganisaatioOids)
+    var theList: Seq[Seq[OrganisaatioOid]] = Seq()
+    val iter = usersOidsAndOppilaitostyypit.map(_._1).iterator
+    while(iter.hasNext) theList = theList :+ iter.next()
+    logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!! all users organisations " + theList.flatten)
     organisaatiot.forall(org => usersOidsAndOppilaitostyypit.exists(_._1.exists(_ == org)))
   }
   override def organizationsAuthorizationMode(): OrganizationsAuthorizationMode = All
