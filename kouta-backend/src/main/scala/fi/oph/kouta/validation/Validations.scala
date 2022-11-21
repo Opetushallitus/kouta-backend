@@ -619,7 +619,7 @@ object Validations {
   def validateOidList(values: Seq[Oid], path: String): IsValid = validateIfNonEmpty(values, path, assertValid _)
 
   def findMissingKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] = {
-    kielivalinta.diff(k.keySet.toSeq).union(k.filter { case (_, arvo) => arvo.isEmpty }.keySet.toSeq)
+    kielivalinta.diff(k.keySet.toSeq).union(k.filter { case (_, arvo) => arvo == null || arvo.isEmpty }.keySet.toSeq)
   }
 
   def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =

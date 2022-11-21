@@ -121,13 +121,20 @@ object NameHelper {
     s"${firstname} ${lastname}".trim()
   }
 
-  def mergeNames(source: Kielistetty, target: Kielistetty, kielivalinta: Seq[Kieli]): Kielistetty =
-    source
+  def kielistettyWoNullValues(kielistetty: Kielistetty): Kielistetty =
+    kielistetty.filter({case (_, valueStr) => valueStr != null})
+
+  def mergeNames(source: Kielistetty, target: Kielistetty, kielivalinta: Seq[Kieli]): Kielistetty = {
+    val targetWoNulls = kielistettyWoNullValues(target)
+    kielistettyWoNullValues(source)
       .filterKeys(kielivalinta.contains(_))
       .map({ case (kieli, nameItem) =>
-        if (target.getOrElse(kieli, "").isEmpty) (kieli, nameItem) else (kieli, target(kieli))
+        if (targetWoNulls.getOrElse(kieli, "").isEmpty) (kieli, nameItem) else (kieli, target(kieli))
       })
+  }
 
-  def notFullyPopulated(nimi: Kielistetty, kielivalinta: Seq[Kieli]): Boolean =
-    kielivalinta.exists(nimi.getOrElse(_, "").isEmpty)
+  def notFullyPopulated(nimi: Kielistetty, kielivalinta: Seq[Kieli]): Boolean = {
+    val nimiWoNullValues = kielistettyWoNullValues(nimi)
+    kielivalinta.exists(nimiWoNullValues.getOrElse(_, "").isEmpty)
+  }
 }
