@@ -129,6 +129,8 @@ object NameHelper {
         if (target.getOrElse(kieli, "").isEmpty) (kieli, nameItem) else (kieli, target(kieli))
       })
 
-  def notFullyPopulated(nimi: Kielistetty, kielivalinta: Seq[Kieli]): Boolean =
-    kielivalinta.exists(nimi.getOrElse(_, "").isEmpty)
+  def notFullyPopulated(nimi: Kielistetty, kielivalinta: Seq[Kieli]): Boolean = {
+    val nimiWoNullValues = nimi.filter({case (_, nimiStr) => nimiStr != null})
+    kielivalinta.exists(nimiWoNullValues.getOrElse(_, "").isEmpty)
+  }
 }

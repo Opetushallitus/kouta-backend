@@ -178,6 +178,7 @@ class NameHelperSpec extends UnitSpec {
   "notFullyPopulated" should "find missing language versions" in {
     assert(NameHelper.notFullyPopulated(Map[Kieli, String](), Seq(Fi, Sv)))
     assert(NameHelper.notFullyPopulated(Map(Fi -> "suomeksi"), Seq(Fi, Sv)))
+    assert(NameHelper.notFullyPopulated(Map(Fi -> "suomeksi", Sv -> null), Seq(Fi, Sv)))
     assert(!NameHelper.notFullyPopulated(Map(Fi -> "suomeksi", Sv -> "Ruåtsiksi"), Seq(Fi, Sv)))
   }
 }
