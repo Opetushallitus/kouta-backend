@@ -23,9 +23,8 @@ import fi.oph.kouta.validation.Validations.{
 import fi.oph.kouta.validation.{IsValid, NoErrors, SorakuvausDiffResolver, ValidationContext}
 
 object SorakuvausServiceValidation
-    extends SorakuvausServiceValidation(OrganisaatioServiceImpl, KoulutusKoodiClient, KoulutusDAO)
+    extends SorakuvausServiceValidation(KoulutusKoodiClient, KoulutusDAO)
 class SorakuvausServiceValidation(
-    val organisaatioService: OrganisaatioService,
     koulutusKoodiClient: KoulutusKoodiClient,
     koulutusDAO: KoulutusDAO
 ) extends ValidatingService[Sorakuvaus] {

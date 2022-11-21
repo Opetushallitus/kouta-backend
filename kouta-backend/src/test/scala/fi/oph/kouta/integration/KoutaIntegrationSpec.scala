@@ -7,13 +7,14 @@ import fi.oph.kouta.TestSetups
 import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, YoKoulutusKoodit}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks._
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.validation.{ErrorMessage, ValidationError, ammatillisetKoulutustyypit, yoKoulutustyypit}
+import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
 import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
 import org.mockito.scalatest.MockitoSugar
@@ -96,7 +97,9 @@ trait AccessControlSpec extends ScalatraFlatSpec {
   var ophSession: UUID         = _
   var indexerSession: UUID     = _
   var fakeIndexerSession: UUID = _
-  var otherRoleSession: UUID   = _
+  var otherRoleSession: UUID = _
+  var yliopistotSession: UUID = _
+  var ammAndChildSession: UUID = _
 
   private def storeTestSession(authorities: Set[Authority] = Set(), userOid: Option[UserOid] = None): UUID = {
     val sessionId = UUID.randomUUID()
@@ -123,6 +126,11 @@ trait AccessControlSpec extends ScalatraFlatSpec {
     storeTestSession(authorities.toSet, userOid)
   }
 
+  def addTestSession(roles: Seq[Role], organisaatioOids: Seq[OrganisaatioOid]): UUID = {
+    val authorities = organisaatioOids.map(org => roles.map(Authority(_, org))).flatten
+    storeTestSession(authorities.toSet, None)
+  }
+
   def addTestSessions(): Unit = {
     Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid, YoOid, AmmOid).foreach { org =>
       crudSessions.update(org, addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), org))
@@ -132,6 +140,8 @@ trait AccessControlSpec extends ScalatraFlatSpec {
       readSessions.update(org, addTestSession(roleEntities.map(_.Read.asInstanceOf[Role]), org))
     }
 
+    yliopistotSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(YoOid, HkiYoOid, LutYoOid))
+    ammAndChildSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(AmmOid, ChildOid))
     ophSession = addTestSession(Role.Paakayttaja, OphOid, OphUserOid)
     indexerSession = addTestSession(Role.Indexer, OphOid)
     fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
@@ -147,29 +157,27 @@ trait DefaultMocks extends OrganisaatioServiceMock with DefaultKoodistoMocks {
     addDefaultKoodistoMockResponsesForHakukohde()
     addDefaultKoodistoMockResponsesForHaku()
     addDefaultKoodistoMockResponsesForValintaperuste()
+    addDefaultKoodistoMockResponsesForOppilaitos()
   }
 }
 
 trait DefaultKoodistoMocks extends KoodistoServiceMock {
   def addDefaultKoodistoMockResponsesForKoulutus(): Unit = {
+    mockKoodiUriVersionResponse("koulutus_371101", 1)
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_00", 1)
+    mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 1)
+    mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso2_091", 1)
     mockLatestKoodiUriResponse("koulutus_201101", 12)
+    mockLatestKoodiUriResponse("opintojenlaajuus_60", 1)
     mockKoodistoResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
-    mockKoulutustyyppiResponse(
-      ammatillisetKoulutustyypit.last,
-      Seq(("koulutus_371101", 12, None)),
-      ammatillisetKoulutustyypit.init
-    )
-    mockKoulutustyyppiResponse(
-      yoKoulutustyypit.last,
-      Seq(("koulutus_201000", 12, None), ("koulutus_371101", 12, None)),
-      yoKoulutustyypit.init
-    )
+    mockKoulutustyyppiResponse(AmmatillisetKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_371101", 12, None)), AmmatillisetKoulutusKoodit.koulutusTyypit.init)
+    mockKoulutustyyppiResponse(YoKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), YoKoulutusKoodit.koulutusTyypit.init)
+    mockKoodistoResponse("koulutus", Seq(("koulutus_000002", 12, None), ("koulutus_301101", 1, None), ("koulutus_371101", 1, None), ("koulutus_775101", 1, None), ("koulutus_301104", 1, None)))
     mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
     mockKoulutusKoodiUritForEPerusteResponse(123L, None, Seq("koulutus_371101"))
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
-    mockKoodistoResponse("opintojenlaajuus", Seq(("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None)))
-    mockKoodistoResponse("koulutus", Seq(("koulutus_301101", 1, None), ("koulutus_371101", 1, None)))
+    mockKoodistoResponse("opintojenlaajuus", Seq(
+      ("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None), ("opintojenlaajuus_60", 1, None)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
     mockKoodistoResponse(
@@ -221,7 +229,7 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
       "liitetyypitamm",
       Seq(("liitetyypitamm_1", 1, None), ("liitetyypitamm_2", 1, None), ("liitetyypitamm_10", 1, None))
     )
-    mockKoodistoResponse("posti", Seq(("posti_04230", 2, None)))
+    mockKoodistoResponse("posti", Seq(("posti_04230", 2, None), ("posti_61100", 2, None)))
     mockKoodistoResponse(
       "valintakokeentyyppi",
       Seq(
@@ -236,19 +244,24 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
       "hakukohteetperusopetuksenjalkeinenyhteishaku",
       Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None))
     )
+
+    mockKoodistoResponse("painotettavatoppiaineetlukiossa", Seq(("painotettavatoppiaineetlukiossa_b3pt",1,None), ("painotettavatoppiaineetlukiossa_b1lt",1,None)))
+    mockKoodistoResponse("kieli", Seq(("kieli_fi",1,None), ("kieli_sv",1,None)))
+    mockKoodiUriVersionResponse("lukiopainotukset_1", 1)
   }
 
   def addDefaultKoodistoMockResponsesForHaku(): Unit = {
-    mockKoodistoResponse("hakutapa", Seq(("hakutapa_02", 1, None), ("hakutapa_03", 1, None)))
-    mockKoodistoResponse(
-      "haunkohdejoukko",
-      Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_15", 1, None), ("haunkohdejoukko_05", 3, None))
-    )
+    mockKoodistoResponse("hakutapa", Seq(("hakutapa_01", 1, None), ("hakutapa_02", 1, None), ("hakutapa_03", 1, None)))
+    mockKoodistoResponse("haunkohdejoukko", Seq(("haunkohdejoukko_17", 1, None), ("haunkohdejoukko_15", 1, None), ("haunkohdejoukko_05", 3, None)))
     mockKoodistoResponse("haunkohdejoukontarkenne", Seq(("haunkohdejoukontarkenne_1", 1, None)))
   }
 
   def addDefaultKoodistoMockResponsesForValintaperuste(): Unit = {
     mockKoodistoResponse("valintatapajono", Seq(("valintatapajono_av", 1, None), ("valintatapajono_tv", 1, None)))
+  }
+
+  def addDefaultKoodistoMockResponsesForOppilaitos(): Unit = {
+    mockKoodistoResponse("organisaationkuvaustiedot", Seq(("organisaationkuvaustiedot_03", 1, None)))
   }
 }
 

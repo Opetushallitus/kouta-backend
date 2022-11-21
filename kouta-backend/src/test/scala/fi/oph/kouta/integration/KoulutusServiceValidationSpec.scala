@@ -3,14 +3,15 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoodistoQueryException, KoulutusKoodiClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, KoodistoQueryException, KoulutusKoodiClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation._
+import fi.oph.kouta.validation.{ValidationError, _}
 import org.scalatest.Assertion
 
 import java.util.UUID
@@ -31,6 +32,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   val sorakuvausId7 = UUID.randomUUID()
   val koulutusOid   = KoulutusOid("1.2.246.562.13.00000000000000000123")
   val koulutusOid2  = KoulutusOid("1.2.246.562.13.00000000000000000124")
+  val organisaatioOidCausingFailure = OrganisaatioOid("1.2.246.562.10.66666666666")
 
   val amm: Koulutus   = AmmKoulutus
   val yo: Koulutus    = YoKoulutus
@@ -38,6 +40,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   val min: Koulutus   = MinKoulutus
   val ammTk: Koulutus = AmmTutkinnonOsaKoulutus
   val ammOa: Koulutus = AmmOsaamisalaKoulutus
+  val defaultName     = Map(Fi -> "nimi", Sv -> "nimi sv", En -> "nimi en")
 
   val kkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.133")))
 
@@ -179,21 +182,30 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       sorakuvausDao
     )
 
-  private def acceptKoulutusKoodiUri(tyypit: Seq[String], koodiUri: String): Unit =
-    when(
-      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(tyypit, koodiUri)
-    ).thenAnswer(itemFound)
+  private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit = {
+    if (filter.filterType() == koulutusTyyppi)
+      when(
+        koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
+      ).thenAnswer(itemFound)
+    else
+      when(
+        koulutusKoodiClient.koulutusKoodiUriExists(filter.koulutusKoodiUrit, koodiUri)
+      ).thenAnswer(itemFound)
+
+  }
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     // yleiset
-    when(
-      organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(GrandChildOid, EvilGrandChildOid, EvilCousin))
-    ).thenAnswer(Right(Set[OrganisaatioOid]()))
-    when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(GrandChildOid, UnknownOid, LonelyOid)))
-      .thenAnswer(Right(Set(UnknownOid, LonelyOid)))
-    when(organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(LonelyOid, UnknownOid)))
-      .thenAnswer(Left(new RuntimeException()))
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(GrandChildOid)).thenAnswer(Seq(GrandChildOid), Koulutustyyppi.values)
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(EvilGrandChildOid)).thenAnswer(Seq(EvilGrandChildOid), Koulutustyyppi.values)
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(EvilCousin)).thenAnswer(Seq(EvilCousin), Koulutustyyppi.values)
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid)).thenAnswer(Seq(YoOid), Seq(Yo, KkOpintojakso, KkOpintokokonaisuus))
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(HkiYoOid)).thenAnswer(Seq(HkiYoOid),  Seq(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, OpePedagOpinnot))
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(AmkOid)).thenAnswer(Seq(AmkOid), Seq(Amk, AmmOpeErityisopeJaOpo))
+
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(UnknownOid)).thenAnswer(Seq(UnknownOid), Seq())
+    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
     when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_04#1")).thenAnswer(itemNotFound)
 
@@ -229,40 +241,44 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     when(koulutusKoodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110#2")).thenAnswer(itemFound)
 
     // ammatilliset
-    acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#1")
-    acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#12")
-    acceptKoulutusKoodiUri(ammatillisetKoulutustyypit, "koulutus_371101#12")
+    acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#1")
+    when(koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_371101#1"))
+      .thenAnswer(Right(KoodiUri("koulutus_371101", 1, defaultName)))
+    acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#12")
+    when(koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_371101#12"))
+      .thenAnswer(Right(KoodiUri("koulutus_371101", 12, defaultName)))
+    acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371666#1")
+    when(koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache("koulutus_371666#1"))
+      .thenAnswer(Left(new RuntimeException("")))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L))
-      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_371101"))))
+      .thenAnswer(Right(Seq(KoodiUri("koulutus_371101", 1), KoodiUri("koulutus_371666", 1))))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(123L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_371101"))))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(111L)).thenAnswer(Right(Seq[KoodiUri]()))
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(200L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_371101"))))
     when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L))
-      .thenAnswer(Right(Seq(koodiUriFromString("osaamisala_01"))))
+      .thenAnswer(Right(Seq(KoodiUri("osaamisala_01", 1, defaultName))))
     when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(123L)).thenAnswer(Right(Seq[KoodiUri]()))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(123L))
-      .thenAnswer(Right(Seq((122L, 1234L), (123L, 1235L))))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(200L)).thenAnswer(Right(Seq[(Long, Long)]()))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123)))
+      .thenAnswer(Right(Map(123L -> Seq(TutkinnonOsaServiceItem(1234L, 122L, Map()), TutkinnonOsaServiceItem(1235L, 123L, defaultName)))))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(200))).thenAnswer(Right(Map(200L -> Seq())))
     val ePerusteFailure = KoodistoQueryException("url", 500, "ePerusteServiceFailed")
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
     when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(66))).thenAnswer(Left(ePerusteFailure))
 
     // korkeakoulu
-    acceptKoulutusKoodiUri(yoKoulutustyypit, "koulutus_371101#1")
-    acceptKoulutusKoodiUri(yoKoulutustyypit, "koulutus_201000#1")
-    acceptKoulutusKoodiUri(yoKoulutustyypit, "koulutus_201111#1")
-    acceptKoulutusKoodiUri(amkKoulutustyypit, "koulutus_371101#1")
-    acceptKoulutusKoodiUri(amkKoulutustyypit, "koulutus_201000#1")
-    when(koulutusKoodiClient.koulutusKoodiUriExists(ammOpeErityisopeJaOpoKoulutusKoodiUrit, "koulutus_000002#12"))
-      .thenAnswer(itemFound)
+    acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_371101#1")
+    acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_201000#1")
+    acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_201111#1")
+    acceptKoulutusKoodiUri(AmkKoulutusKoodit, "koulutus_371101#1")
+    acceptKoulutusKoodiUri(AmkKoulutusKoodit, "koulutus_201000#1")
+    acceptKoulutusKoodiUri(AmmOpeErityisopeJaOpoKoulutusKoodit, "koulutus_000002#12")
     // lukio
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301101#1")).thenAnswer(itemFound)
+    acceptKoulutusKoodiUri(LukioKoulutusKoodit, "koulutus_301101#1")
     // erikoislaakari
-    when(koulutusKoodiClient.koulutusKoodiUriExists(erikoislaakariKoulutusKoodiUrit, "koulutus_775101#1"))
-      .thenAnswer(itemFound)
+    acceptKoulutusKoodiUri(ErikoislaakariKoulutusKoodit, "koulutus_775101#1")
     // toteutukset
     when(toteutusDao.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(
       Seq(
@@ -296,33 +312,40 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   it should "succeed when new valid AmmTutkinnonOsa without koulutusKoodiUri" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(124L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(124L)).thenAnswer(Right(Seq((134L, 1345L))))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(124)))
+      .thenAnswer(Right(Map(124L -> Seq(TutkinnonOsaServiceItem(1345L, 134L, defaultName)))))
     passesValidation(ammTkWithTutkinnonOsaParams(Some(124L), None, Some(1345L), Some(134L)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with koulutusKoodiUri only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(125L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_123456"))))
-    passesValidation(ammTkWithTutkinnonOsaParams(Some(125L), Some("koulutus_123456#1"), None, None))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(125)))
+      .thenAnswer(Right(Map(125L -> Seq(TutkinnonOsaServiceItem(111111, 11111L, Map())))))
+    passesValidation(ammTkWithTutkinnonOsaParams(Some(125L), Some("koulutus_123456#2"), None, None))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with tutkinnonosaId only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(126L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(126L)).thenAnswer(Right(Seq((11111L, 1346L))))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(126)))
+      .thenAnswer(Right(Map(126L -> Seq(TutkinnonOsaServiceItem(1346L, 11111L, Map())))))
     passesValidation(ammTkWithTutkinnonOsaParams(Some(126L), None, Some(1346L), None))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with tutkinnonosaViite only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(127L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
-    when(ePerusteKoodiClient.getTutkinnonosaViitteetAndIdtForEPerusteFromCache(127L)).thenAnswer(Right(Seq((135L, 111111L))))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(127)))
+      .thenAnswer(Right(Map(127L -> Seq(TutkinnonOsaServiceItem(111111L, 135L, Map())))))
     passesValidation(ammTkWithTutkinnonOsaParams(Some(127L), None, None, Some(135L)))
   }
 
   it should "succeed when new valid AmmTutkinnonOsa with ePerusteId only" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(128L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(128)))
+      .thenAnswer(Right(Map(128L -> Seq(TutkinnonOsaServiceItem(111111, 11111L, Map())))))
     passesValidation(ammTkWithTutkinnonOsaParams(Some(128L), None, None, None))
   }
 
@@ -373,7 +396,9 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   it should "succeed when new valid Yo koulutus and just one common koulutusKoodiUri with sorakuvaus" in {
-    passesValidation(yoKoulutusWithParameters().copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201111#1")))
+    passesValidation(
+      yoKoulutusWithParameters().copy(koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201111#1"))
+    )
   }
 
   it should "succeed when new valid Amk koulutus" in {
@@ -610,7 +635,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     )
     failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
-    failsValidation(amm.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
+    failsValidation(yo.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(amm.copy(nimi = Map()), "nimi", invalidKielistetty(Seq(Fi, Sv)))
     failsValidation(
       min.copy(organisaatioOid = OrganisaatioOid("1.2.3")),
@@ -621,10 +646,18 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   it should "fail if koulutustyyppi changed in modify operation" in {
-    failsModifyValidation(amm.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")), johtaaTutkintoon = false, koulutustyyppi = AmmOsaamisala), amm, Seq(
-      ValidationError("koulutustyyppi", notModifiableMsg("koulutustyyppiä", "koulutukselle")),
-      ValidationError("metadata.tyyppi", InvalidMetadataTyyppi)
-    ))
+    failsModifyValidation(
+      amm.copy(
+        oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")),
+        johtaaTutkintoon = false,
+        koulutustyyppi = AmmOsaamisala
+      ),
+      amm,
+      Seq(
+        ValidationError("koulutustyyppi", notModifiableMsg("koulutustyyppiä", "koulutukselle")),
+        ValidationError("metadata.tyyppi", InvalidMetadataTyyppi)
+      )
+    )
   }
 
   it should "fail if oid not given in modify operation" in {
@@ -645,14 +678,14 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       amm.copy(tarjoajat = List(GrandChildOid, UnknownOid, LonelyOid)),
       Seq(
-        ValidationError("tarjoajat[1]", unknownTarjoajaOid(UnknownOid)),
-        ValidationError("tarjoajat[2]", unknownTarjoajaOid(LonelyOid))
+        ValidationError("tarjoajat[1]", tarjoajaOidWoRequiredKoulutustyyppi(UnknownOid, Amm)),
+        ValidationError("tarjoajat[2]", tarjoajaOidWoRequiredKoulutustyyppi(LonelyOid, Amm))
       )
     )
   }
 
   it should "fail if organisaatio-service not working when checking tarjoajat" in {
-    failsValidation(amm.copy(tarjoajat = List(LonelyOid, UnknownOid)), "tarjoajat", organisaatioServiceFailureMsg)
+    failsValidation(amm.copy(tarjoajat = List(LonelyOid, organisaatioOidCausingFailure)), "tarjoajat", organisaatioServiceFailureMsg)
   }
 
   private def failSorakuvausValidation(koulutus: Koulutus): Assertion =
@@ -837,6 +870,17 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     )
   }
 
+  it should "fail if nimi not matching koulutus-koodisto name for ammatillinen koulutus" in {
+    failsValidation(amm.copy(nimi = Map(Fi -> "eri nimi", Sv -> "eri nimi sv")), Seq(
+      ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("nimi", "koulutuksessa koulutus_371101#1")),
+      ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("nimi sv", "koulutuksessa koulutus_371101#1"))
+    ))
+  }
+
+  it should "fail if koodisto query failed when validating name of a ammatillinen koulutus" in {
+    failsValidation(amm.copy(koulutuksetKoodiUri = Seq("koulutus_371666#1")), "koulutuksetKoodiUri", koodistoServiceFailureMsg)
+  }
+
   it should "fail if invalid ePeruste for ammatillinen koulutus" in {
     failsValidation(ammOa.copy(ePerusteId = None), "ePerusteId", missingMsg)
     failsValidation(ammOa.copy(ePerusteId = Some(-11L)), "ePerusteId", notNegativeMsg)
@@ -855,7 +899,12 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       missingMsg
     )
     failsValidation(
-      ammTkWithTutkinnonOsaParams(koulutusKoodiUri = Some("puppu"), ePerusteId = Some(123L), tutkinnonOsaId = Some(122L), tutkinnonOsaViite = Some(1234L)),
+      ammTkWithTutkinnonOsaParams(
+        koulutusKoodiUri = Some("puppu"),
+        ePerusteId = Some(123L),
+        tutkinnonOsaId = Some(122L),
+        tutkinnonOsaViite = Some(1234L)
+      ),
       "metadata.tutkinnonOsat[0].ePerusteId",
       invalidEPerusteIdForKoulutusKoodiUri(123L, "puppu")
     )
@@ -868,6 +917,17 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError("metadata.tutkinnonOsat[0].tutkinnonosaViite", missingMsg)
       )
     )
+  }
+
+  it should "fail if nimi not matching tutkinnonosa for AmmTutkinnonosa koulutus" in {
+    when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(124L))
+      .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
+    when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(124)))
+      .thenAnswer(Right(Map(124L -> Seq(TutkinnonOsaServiceItem(1345L, 134L, defaultName)))))
+    failsValidation(ammTkWithTutkinnonOsaParams(Some(124L), None, Some(1345L), Some(134L)).copy(nimi = Map(Fi -> "eri nimi", Sv -> "eri nimi sv")), Seq(
+      ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("nimi", "tutkinnonosassa")),
+      ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("nimi sv", "tutkinnonosassa"))
+    ))
   }
 
   it should "fail if invalid ePeruste for AmmTutkinnonosa koulutus" in {
@@ -898,13 +958,13 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   it should "fail if unknown tutkinnonOsa viite- and ID for AmmTutkinnonosa koulutus" in {
     failsValidation(
-      ammTkWithTutkinnonOsaParams(Some(200L), None, Some(1234L), Some(2345L)),
+      ammTkWithTutkinnonOsaParams(Some(200), None, Some(1234), Some(2345)),
       Seq(
         ValidationError(
           "metadata.tutkinnonOsat[0].tutkinnonosaViite",
-          invalidTutkinnonOsaViiteForEPeruste(200L, 2345L)
+          invalidTutkinnonOsaViiteForEPeruste(200, 2345)
         ),
-        ValidationError("metadata.tutkinnonOsat[0].tutkinnonosaId", invalidTutkinnonOsaIdForEPeruste(200L, 1234L))
+        ValidationError("metadata.tutkinnonOsat[0].tutkinnonosaId", invalidTutkinnonOsaIdForEPeruste(200, 1234))
       )
     )
   }
@@ -949,6 +1009,13 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       "metadata.osaamisalaKoodiUri",
       invalidOsaamisalaForEPeruste(123L, "osaamisala_01")
     )
+  }
+
+  it should "fail if nimi not matching osaamisala for AmmOsaamisala koulutus" in {
+    failsValidation(ammOa.copy(nimi = Map(Fi -> "eri nimi", Sv -> "eri nimi sv")), Seq(
+      ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("nimi", "osaamisalassa osaamisala_01")),
+      ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("nimi sv", "osaamisalassa osaamisala_01"))
+    ))
   }
 
   it should "fail if invalid koulutusalaKoodiUri for AmmMuu koulutus" in {
@@ -1397,14 +1464,14 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       KkOpintokokonaisuusKoulutus.copy(metadata = Some(KkOpintokokonaisuusKoulutusMetadata())),
       Seq(
-        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
       )
     )
   }
 
   it should "fail if julkaistu kk-opintokokonaisuus koulutus has at least one julkaistu toteutus whose opintojenlaajuusNumero is not in the range specified in koulutus" in {
 
-    val opintokokonaisuusKoulutus = kkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutus    = kkOpintokokonaisuusKoulutus
     val opintokokonaisuusToteutusOid = randomToteutusOid
 
     when(toteutusDao.getByKoulutusOid(opintokokonaisuusKoulutus.oid.get, TilaFilter.onlyJulkaistut())).thenAnswer(
@@ -1435,7 +1502,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   it should "fail if julkaistu kk-opintokokonaisuus koulutus has at least one julkaistu toteutus whose opintojenlaajuusyksikko is not the same as in koulutus" in {
 
-    val opintokokonaisuusKoulutus = kkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutus    = kkOpintokokonaisuusKoulutus
     val opintokokonaisuusToteutusOid = randomToteutusOid
 
     when(toteutusDao.getByKoulutusOid(opintokokonaisuusKoulutus.oid.get, TilaFilter.onlyJulkaistut())).thenAnswer(
@@ -1445,7 +1512,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
           koulutusOid = opintokokonaisuusKoulutus.oid.get,
           metadata = Some(
             KkOpintokokonaisuusToteutuksenMetatieto.copy(
-              opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_5#1"),
+              opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_5#1")
             )
           )
         )
@@ -1458,7 +1525,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       Seq(
         ValidationError(
           "metadata.opintojenLaajuusyksikkoKoodiUri",
-          invalidKoulutusOpintojenLaajuusyksikkoIntegrity("opintojenlaajuusyksikko_6#1", Seq(opintokokonaisuusToteutusOid)),
+          invalidKoulutusOpintojenLaajuusyksikkoIntegrity(
+            "opintojenlaajuusyksikko_6#1",
+            Seq(opintokokonaisuusToteutusOid)
+          )
         )
       )
     )
@@ -1472,7 +1542,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
           opintojenLaajuusNumeroMin = None,
           opintojenLaajuusNumeroMax = None
         )
-      ),
+      )
     )
 
     when(toteutusDao.getByKoulutusOid(opintokokonaisuusKoulutus.oid.get, TilaFilter.onlyJulkaistut())).thenAnswer(

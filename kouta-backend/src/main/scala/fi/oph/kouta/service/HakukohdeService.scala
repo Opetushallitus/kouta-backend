@@ -2,6 +2,14 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{
+  HakuKoodiClient,
+  KayttooikeusClient,
+  KoutaSearchClient,
+  LokalisointiClient,
+  OppijanumerorekisteriClient
+}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
 import fi.oph.kouta.domain._
@@ -10,6 +18,8 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
+import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import slick.dbio.DBIO
 
@@ -17,17 +27,27 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object HakukohdeService
-    extends HakukohdeService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, LokalisointiClient, OppijanumerorekisteriClient, KayttooikeusClient, ToteutusService, HakukohdeServiceValidation)
+    extends HakukohdeService(
+      SqsInTransactionService,
+      AuditLog,
+      OrganisaatioServiceImpl,
+      LokalisointiClient,
+      OppijanumerorekisteriClient,
+      KayttooikeusClient,
+      HakuKoodiClient,
+      ToteutusService,
+      HakukohdeServiceValidation
+    )
 
 case class CopyOids(
-  hakukohdeOid: Option[HakukohdeOid],
-  toteutusOid: Option[ToteutusOid]
+    hakukohdeOid: Option[HakukohdeOid],
+    toteutusOid: Option[ToteutusOid]
 )
 
 case class HakukohdeCopyResultObject(
-  oid: HakukohdeOid,
-  status: String,
-  created: CopyOids
+    oid: HakukohdeOid,
+    status: String,
+    created: CopyOids
 )
 
 class HakukohdeService(
@@ -37,6 +57,7 @@ class HakukohdeService(
     val lokalisointiClient: LokalisointiClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
+    hakuKoodiClient: HakuKoodiClient,
     toteutusService: ToteutusService,
     hakukohdeServiceValidation: HakukohdeServiceValidation
 ) extends RoleEntityAuthorizationService[Hakukohde] {
@@ -49,11 +70,13 @@ class HakukohdeService(
 
     hakukohde.metadata match {
       case Some(metadata) => Some(metadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-      case None => None
+      case None           => None
     }
   }
 
-  def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Option[(Hakukohde, Instant)] = {
+  def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
+  ): Option[(Hakukohde, Instant)] = {
     val hakukohde = HakukohdeDAO.get(oid, tilaFilter)
 
     val enrichedHakukohde = hakukohde match {
@@ -61,7 +84,7 @@ class HakukohdeService(
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(h.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
-        val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
+        val toteutus                                = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
         toteutus match {
           case Some((t, _)) =>
             val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
@@ -70,55 +93,100 @@ class HakukohdeService(
         }
 
       case None => None
-     }
+    }
 
     authorizeGet(
       enrichedHakukohde,
-      AuthorizationRules(
-        roleEntity.readRoles,
-        additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(oid)
-      )
+      AuthorizationRules(roleEntity.readRoles)
     )
   }
 
-  def generateHakukohdeEsitysnimi(hakukohde: Hakukohde, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty = {
+  def generateHakukohdeEsitysnimi(hakukohde: Hakukohde, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty =
     toteutusMetadata match {
-      case Some(metadata) =>
-        metadata match {
-          case tuva: TuvaToteutusMetadata =>
-            val kaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.vaativanaErityisenaTukena")
-            NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde.nimi, metadata, kaannokset)
-          case _ => hakukohde.nimi
-        }
-      case None => hakukohde.nimi
+      case Some(metadata) if metadata.tyyppi == Tuva =>
+        val kaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.vaativanaErityisenaTukena")
+        NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde.nimi, toteutusMetadata.get, kaannokset)
+      case _ => hakukohde.nimi
+    }
+
+  def populateNimiFromToteutusAsNeeded(hakukohde: Hakukohde): Hakukohde = {
+    if (notFullyPopulated(hakukohde.nimi, hakukohde.kielivalinta)) {
+      ToteutusDAO.get(hakukohde.toteutusOid, TilaFilter.onlyOlemassaolevat()) match {
+        case Some((toteutus, _)) if toteutus.metadata.isDefined =>
+          toteutus.metadata.get match {
+            case _: TuvaToteutusMetadata =>
+              hakukohde.copy(nimi = mergeNames(toteutus.nimi, hakukohde.nimi, hakukohde.kielivalinta))
+            case _: LukioToteutusMetadata =>
+              if (isDIAlukiokoulutus(toteutus.koulutuksetKoodiUri) || isEBlukiokoulutus(toteutus.koulutuksetKoodiUri)) {
+                hakukohde.copy(nimi = mergeNames(toteutus.nimi, hakukohde.nimi, hakukohde.kielivalinta))
+              } else {
+                val hkLinja = hakukohde.metadata.flatMap(_.hakukohteenLinja).flatMap(_.linja)
+                if (hkLinja.isDefined) {
+                  hakuKoodiClient.getKoodiUriVersionOrLatestFromCache(hkLinja.get) match {
+                    case Left(exception) => throw exception
+                    case Right(koodiUri) =>
+                      hakukohde.copy(nimi = mergeNames(koodiUri.nimi, hakukohde.nimi, hakukohde.kielivalinta))
+                    case _ => hakukohde
+                  }
+                } else
+                  hakukohde.copy(nimi =
+                    mergeNames(
+                      lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja"),
+                      hakukohde.nimi,
+                      hakukohde.kielivalinta
+                    )
+                  )
+              }
+
+            case _ => hakukohde
+
+          }
+        case _ => hakukohde
+      }
+    } else {
+      hakukohde
     }
   }
 
   def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
-    authorizePut(hakukohde) { hk =>
-      val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hk)
-      val enrichedHakukohde = hk.copy(metadata = enrichedMetadata)
+    val rules = hakukohde.jarjestyspaikkaOid match {
+      case Some(oid) =>
+        AuthorizationRules(
+          roleEntity.createRoles,
+          overridingAuthorizationRule = Some(AuthorizedToAllOfGivenOrganizationsRule),
+          additionalAuthorizedOrganisaatioOids = Seq(oid)
+        )
+      case _ => AuthorizationRules(roleEntity.createRoles)
+    }
+    authorizePut(hakukohde, rules) { hk =>
+      val hkWithNamePopulatedMaybe                    = populateNimiFromToteutusAsNeeded(hk)
+      val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hkWithNamePopulatedMaybe)
+      val enrichedHakukohde                           = hkWithNamePopulatedMaybe.copy(metadata = enrichedMetadata)
       hakukohdeServiceValidation.withValidation(enrichedHakukohde, None, authenticated) { hk =>
         doPut(hk)
       }
     }.oid.get
   }
 
-
-  def copy(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit authenticated: Authenticated): List[HakukohdeCopyResultObject] = {
+  def copy(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit
+      authenticated: Authenticated
+  ): List[HakukohdeCopyResultObject] = {
     val hakukohdeAndRelatedEntities = HakukohdeDAO.getHakukohdeAndRelatedEntities(hakukohdeOids).groupBy(_._1.oid.get)
 
     val copyResultObjects = hakukohdeAndRelatedEntities.toList.map(hakukohde => {
       val entities = hakukohde._2
-      val hk = entities.head._1
+      val hk       = entities.head._1
       try {
-        val toteutus = entities.head._2
-        val liitteet = entities.map(_._3).distinct.filter(_.id.nonEmpty)
+        val toteutus      = entities.head._2
+        val liitteet      = entities.map(_._3).distinct.filter(_.id.nonEmpty)
         val valintakokeet = hakukohde._2.map(_._4).distinct.filter(_.id.nonEmpty)
-        val hakuajat = hakukohde._2.map(_._5).distinct.filter(_.oid.nonEmpty).map(
-          hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
+        val hakuajat = hakukohde._2
+          .map(_._5)
+          .distinct
+          .filter(_.oid.nonEmpty)
+          .map(hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
 
-        val toteutusCopy = toteutus.copy(oid = None, tila = Tallennettu)
+        val toteutusCopy    = toteutus.copy(oid = None, tila = Tallennettu)
         val toteutusCopyOid = toteutusService.put(toteutusCopy)
 
         val hakukohdeCopyAsLuonnos = hk.copy(
@@ -128,18 +196,23 @@ class HakukohdeService(
           hakuOid = hakuOid,
           liitteet = liitteet.map(_.copy(id = None)),
           valintakokeet = valintakokeet.map(_.copy(id = None)),
-          hakuajat = hakuajat)
+          hakuajat = hakuajat
+        )
 
         val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
 
         HakukohdeCopyResultObject(
-          oid = hk.oid.get, status = "success", created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
+          oid = hk.oid.get,
+          status = "success",
+          created = CopyOids(Some(hakukohdeCopyOid), Some(toteutusCopyOid))
         )
       } catch {
         case error: Throwable => {
           logger.error(s"Copying hakukohde failed: $error")
           HakukohdeCopyResultObject(
-            oid = hk.oid.get, status = "error", created = CopyOids(None, None)
+            oid = hk.oid.get,
+            status = "error",
+            created = CopyOids(None, None)
           )
         }
       }
@@ -151,7 +224,8 @@ class HakukohdeService(
       } yield HakukohdeCopyResultObject(
         oid = hkOid,
         status = "error",
-        created = CopyOids(hakukohdeOid = None, toteutusOid = None))
+        created = CopyOids(hakukohdeOid = None, toteutusOid = None)
+      )
 
     copyResultObjects ++ notFound
   }
@@ -162,39 +236,54 @@ class HakukohdeService(
     val rules: AuthorizationRules = getAuthorizationRulesForUpdate(hakukohde, oldHakukohdeWithTime)
 
     authorizeUpdate(oldHakukohdeWithTime, hakukohde, rules) { (oldHakukohde, h) =>
-      val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(h)
-      val enrichedHakukohde = h.copy(metadata = enrichedMetadata)
+      val hkWithNamePopulatedMaybe                    = populateNimiFromToteutusAsNeeded(h)
+      val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hkWithNamePopulatedMaybe)
+      val enrichedHakukohde                           = hkWithNamePopulatedMaybe.copy(metadata = enrichedMetadata)
       hakukohdeServiceValidation.withValidation(enrichedHakukohde, Some(oldHakukohde), authenticated) { h =>
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
     }.nonEmpty
   }
 
-  private def getAuthorizationRulesForUpdate(newHakukohde: Hakukohde, oldHakukohdeWithTime: Option[(Hakukohde, Instant)]) = {
+  private def getAuthorizationRulesForUpdate(
+      newHakukohde: Hakukohde,
+      oldHakukohdeWithTime: Option[(Hakukohde, Instant)]
+  ) = {
     oldHakukohdeWithTime match {
       case None => throw EntityNotFoundException(s"Päivitettävää hakukohdetta ei löytynyt")
       case Some((oldHakukohde, _)) =>
         if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldHakukohde.tila, newHakukohde.tila)) {
           AuthorizationRules(Seq(Role.Paakayttaja))
-        }
-        else {
-          AuthorizationRules(
-            roleEntity.updateRoles,
-            additionalAuthorizedOrganisaatioOids = ToteutusDAO.getTarjoajatByHakukohdeOid(newHakukohde.oid.get)
-          )
+        } else {
+          newHakukohde.jarjestyspaikkaOid match {
+            case Some(oid) =>
+              AuthorizationRules(
+                roleEntity.updateRoles,
+                overridingAuthorizationRule = Some(AuthorizedToAllOfGivenOrganizationsRule),
+                additionalAuthorizedOrganisaatioOids = Seq(oid)
+              )
+            case _ => AuthorizationRules(roleEntity.updateRoles)
+          }
         }
     }
   }
 
-  def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
+  def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit
+      authenticated: Authenticated
+  ): Seq[HakukohdeListItem] =
     withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)
 
-  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit authenticated: Authenticated
+  def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
+      authenticated: Authenticated
   ): HakukohdeSearchResult = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(orgOids => KoutaSearchClient.searchHakukohteetDirect(orgOids, params))
+    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(orgOids =>
+      KoutaSearchClient.searchHakukohteetDirect(orgOids, params)
+    )
   }
 
-  def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[String] =
+  def getOidsByJarjestyspaikat(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
+  ): Seq[String] =
     withRootAccess(indexerRoles) {
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }

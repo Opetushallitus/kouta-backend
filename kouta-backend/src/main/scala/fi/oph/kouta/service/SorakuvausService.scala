@@ -49,7 +49,7 @@ class SorakuvausService(
 
     authorizeGet(
       enrichedSorakuvaus,
-      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Seq(authorizationRuleByKoulutustyyppi)))
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, Some(AuthorizationRuleByKoulutustyyppi)))
   }
 
   private def enrichSorakuvausMetadata(sorakuvaus: Sorakuvaus) : Option[SorakuvausMetadata] = {

@@ -247,6 +247,20 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     update(thisHaku, lastModified, 403, readSessions(haku.organisaatioOid))
   }
 
+  it should "allow organisaatioOid change if user had rights to new organisaatio" in {
+    val oid = put(haku.copy(organisaatioOid = HkiYoOid))
+    val thisHaku = haku(oid).copy(organisaatioOid = HkiYoOid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(organisaatioOid = YoOid), lastModified, expectUpdate = true, yliopistotSession)
+  }
+
+  it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
+    val oid = put(haku.copy(organisaatioOid = HkiYoOid))
+    val thisHaku = haku(oid).copy(organisaatioOid = HkiYoOid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(organisaatioOid = LukioOid), lastModified, 403, yliopistotSession)
+  }
+
   it should "deny indexer access" in {
     val oid = put(haku)
     val thisHaku = haku(oid)

@@ -110,7 +110,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         if (MiscUtils.isYhteishakuHakutapa(newHaku.hakutapaKoodiUri) || Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldHaku.tila, newHaku.tila)) {
           AuthorizationRules(Seq(Role.Paakayttaja))
         } else {
-          AuthorizationRules(roleEntity.createRoles)
+          AuthorizationRules(roleEntity.updateRoles)
         }
     }
   }

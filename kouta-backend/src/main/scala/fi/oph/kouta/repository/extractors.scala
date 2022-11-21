@@ -386,8 +386,23 @@ trait HakukohdeExctractors extends ExtractorBase {
     toimitusosoite = r.nextStringOption().map(read[LiitteenToimitusosoite]),
   ))
 
-  implicit val getStringSequenceResult: GetResult[Seq[String]] = GetResult(r => extractArray[String](r.nextObjectOption()))
-  implicit val getUUIDSequenceResult: GetResult[Seq[UUID]] = GetResult(r => extractArray[UUID](r.nextObjectOption()))
+  implicit val getHakukohdeToteutusDependencyInfoResult: GetResult[HakukohdeToteutusDependencyInfo] = GetResult(r => HakukohdeToteutusDependencyInfo(
+    oid = ToteutusOid(r.nextString()),
+    tila = Julkaisutila.withName(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
+    metadata = r.nextStringOption().map(read[ToteutusMetadata]),
+    koulutusKoodiUrit = extractArray[String](r.nextObjectOption()),
+    tarjoajat = extractArray[String](r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList)
+  )
+  implicit val getHakukohdeValintaperusteDependencyInfoResult: GetResult[HakukohdeValintaperusteDependencyInfo] = GetResult(r => HakukohdeValintaperusteDependencyInfo(
+    valintaperusteId = UUID.fromString(r.nextString()),
+    tila = Julkaisutila.withName(r.nextString()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
+    valintakoeIdt = extractArray[UUID](r.nextObjectOption())
+  ))
+
+  //implicit val getUUIDSequenceResult: GetResult[Seq[UUID]] = GetResult(r => extractArray[UUID](r.nextObjectOption()))
 }
 
 trait OppilaitosExtractors extends ExtractorBase {

@@ -15,7 +15,6 @@ import java.util.UUID
 
 class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuvaus] {
   val koulutusKoodiClient = mock[KoulutusKoodiClient]
-  val organisaatioService = mock[OrganisaatioService]
   val koulutusDao = mock[KoulutusDAO]
 
   val sorakuvausId = UUID.randomUUID()
@@ -26,7 +25,7 @@ class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuva
   val min: Sorakuvaus = MinSorakuvaus
   val maxMetadata = max.metadata.get
 
-  override val validator = new SorakuvausServiceValidation(organisaatioService, koulutusKoodiClient, koulutusDao)
+  override val validator = new SorakuvausServiceValidation(koulutusKoodiClient, koulutusDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

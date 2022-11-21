@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.{AikuistenPerusopetusKoulutus, AmmMuuKoulutus, AmmOpettajaKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus, ErikoislaakariKoulutus, LukioKoulutus, LukiokoulutuksenMetatieto, YoKoulutus}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -17,26 +18,36 @@ import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 import scala.util.Success
 
-class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture with ToteutusFixture with SorakuvausFixture with UploadFixture {
+class KoulutusSpec
+    extends KoutaIntegrationSpec
+    with AccessControlSpec
+    with KoulutusFixture
+    with ToteutusFixture
+    with SorakuvausFixture
+    with UploadFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Koulutus)
 
-  val ophKoulutus: Koulutus = koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
+  val ophKoulutus: Koulutus =
+    koulutus.copy(tila = Julkaistu, organisaatioOid = OphOid, tarjoajat = List(), julkinen = true)
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    mockKoodiUriVersionFailure("koulutus_111111", 11)
+    mockTutkinnonOsatFailure(111111)
+    mockOsaamisalaKoodiUritFailure(111111)
   }
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
     get(s"$KoulutusPath/123", headers = defaultHeaders) {
-      status should equal (404)
-      body should include ("Unknown koulutus oid")
+      status should equal(404)
+      body should include("Unknown koulutus oid")
     }
   }
 
   it should "return 401 without a session" in {
     get(s"$KoulutusPath/123", headers = Map.empty) {
-      status should equal (401)
+      status should equal(401)
     }
   }
 
@@ -65,15 +76,11 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, crudSessions(GrandChildOid), koulutus(oid))
   }
 
-  it should "allow the user of proper koulutustyyppi to read julkinen koulutus created by oph" in {
+  it should "allow the user of proper koulutustyyppi to read julkinen koulutus" in {
     val oid = put(ophKoulutus, ophSession)
     get(oid, readSessions(AmmOid), ophKoulutus.copy(Some(KoulutusOid(oid))))
   }
 
-  it should "deny the user of wrong koulutustyyppi to read julkinen koulutus created by oph" in {
-    val oid = put(ophKoulutus, ophSession)
-    get(s"$KoulutusPath/$oid", readSessions(YoOid), 403)
-  }
 
   it should "deny the user of a wrong role to read the koulutus" in {
     val oid = put(koulutus, ophSession)
@@ -86,8 +93,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "allow a user of other organization but similar oppilaitostyyppi to access public koulutus" in {
-    val sessionId = crudSessions(koulutus.organisaatioOid)
-    val oid = put(koulutus.copy(julkinen = true), ophSession)
+    val oid       = put(koulutus.copy(julkinen = true), ophSession)
     get(oid, readSessions(AmmOid), koulutus(oid).copy(julkinen = true, muokkaaja = OphUserOid))
   }
 
@@ -112,9 +118,12 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(koulutus.copy(muokkaaja = UserOid("random")), ophSession)
+    val oid      = put(koulutus.copy(muokkaaja = UserOid("random")), ophSession)
     val metadata = koulutus.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
-    get(oid, koulutus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(
+      oid,
+      koulutus(oid).copy(muokkaaja = OphUserOid, metadata = Some(metadata.copy(isMuokkaajaOphVirkailija = Some(true))))
+    )
   }
 
   it should "allow oph to create julkaistu koulutus without tarjoajat" in {
@@ -122,14 +131,29 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     get(oid, ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid))
   }
 
+  it should "allow non-oph user having rights for the koulutustyyppi to create koulutus" in {
+    val createdKoulutus = YoKoulutus.copy(
+      organisaatioOid = YoOid,
+      tarjoajat = List(),
+      muokkaaja = userOidForTestSessionId(crudSessions(YoOid)),
+      metadata = Some(
+        YoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(false))
+      )
+    )
+    val oid = put(createdKoulutus, crudSessions(YoOid))
+    get(oid, createdKoulutus.copy(oid = Some(KoulutusOid(oid))))
+  }
+
   it should "store korkeakoulutus koulutus" in {
-    val oid = put(TestData.YoKoulutus, ophSession)
-    get(oid, TestData.YoKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val oid = put(YoKoulutus, ophSession)
+    get(oid, YoKoulutus.copy(oid = Some(KoulutusOid(oid))))
   }
 
   it should "store lukio koulutus" in {
     val oid = put(TestData.LukioKoulutus, ophSession)
-    val metadata = TestData.LukiokoulutuksenMetatieto.copy(koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_00#1"))
+    val metadata = TestData.LukiokoulutuksenMetatieto.copy(koulutusalaKoodiUrit =
+      Seq("kansallinenkoulutusluokitus2016koulutusalataso1_00#1")
+    )
     get(oid, TestData.LukioKoulutus.copy(oid = Some(KoulutusOid(oid)), metadata = Some(metadata)))
   }
 
@@ -161,8 +185,20 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     put(KoulutusPath, koulutus.copy(tarjoajat = List.empty), crudSessions(EvilChildOid), 403)
   }
 
+  it should "deny access if the user is missing rights to tarjoaja organizations" in {
+    put(KoulutusPath, YoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(HkiYoOid)), crudSessions(YoOid), 403)
+  }
+
   it should "deny access if the user only has rights to a descendant of the koulutus organization" in {
     put(KoulutusPath, koulutus, crudSessions(EvilChildOid), 403)
+  }
+
+  it should "deny access if user has not rights for the koulutustyyppi to create koulutus" in {
+    val createdKoulutus = YoKoulutus.copy(
+      organisaatioOid = AmmOid,
+      tarjoajat = List()
+    )
+    put(KoulutusPath, createdKoulutus, crudSessions(AmmOid), 403)
   }
 
   it should "fail if the user doesn't have the right role" in {
@@ -185,134 +221,181 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "not touch an image that's not in the temporary location" in {
     val koulutusWithImage = koulutus.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
-    val oid = put(koulutusWithImage, ophSession)
+    val oid               = put(koulutusWithImage, ophSession)
     MockS3Client.storage shouldBe empty
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
   }
 
   it should "fail to store koulutus if sorakuvaus doesn't exist" in {
     val sorakuvausId = UUID.randomUUID()
-    put(KoulutusPath, koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession ,400)
+    put(KoulutusPath, koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession, 400)
   }
 
   "Update koulutus" should "update koulutus" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(koulutus(oid, Arkistoitu), lastModified, ophSession, 200)
     get(oid, koulutus(oid, Arkistoitu))
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(koulutus, ophSession)
-    val userOid = OphUserOid
+    val oid          = put(koulutus, ophSession)
+    val userOid      = OphUserOid
     val lastModified = get(oid, koulutus(oid).copy(muokkaaja = userOid))
     update(koulutus(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified, ophSession, 200)
     get(oid, koulutus(oid, Arkistoitu).copy(muokkaaja = OphUserOid))
   }
 
   it should "write koulutus update to audit log" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     MockAuditLogger.clean()
-    update(koulutus(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified, expectUpdate = true, ophSession)
+    update(
+      koulutus(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")),
+      lastModified,
+      expectUpdate = true,
+      ophSession
+    )
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "koulutus_update") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
   it should "return 401 without a session" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     post(KoulutusPath, bytes(koulutus(oid)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
-      status should equal (401)
+      status should equal(401)
     }
   }
 
-  it should "allow put and update access with oph credentials" in {
-    val oid = put(koulutus, ophSession)
+  it should "allow update access with oph credentials" in {
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(muokkaus(koulutus(oid)), lastModified, expectUpdate = true, ophSession)
   }
 
   it should "deny access if the user is missing rights to the koulutus organization" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(muokkaus(koulutus(oid)), lastModified, crudSessions(LonelyOid), 403)
   }
 
-  it should "deny the user of wrong koulutustyyppi to add tarjoaja to julkinen koulutus created by oph" in {
-    val oid = put(ophKoulutus, ophSession)
-    val koulutusWithOid = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid)
-    val lastModified = get(oid, koulutusWithOid)
+  it should "deny the user of wrong koulutustyyppi to add tarjoaja to julkinen koulutus" in {
+    val oid                     = put(ophKoulutus, ophSession)
+    val koulutusWithOid         = ophKoulutus.copy(Some(KoulutusOid(oid)), muokkaaja = OphUserOid)
+    val lastModified            = get(oid, koulutusWithOid)
     val koulutusWithNewTarjoaja = koulutusWithOid.copy(tarjoajat = List(YoOid))
     update(koulutusWithNewTarjoaja, lastModified, crudSessions(YoOid), 403)
   }
 
   it should "deny access if the user doesn't have update rights" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(muokkaus(koulutus(oid)), lastModified, readSessions(ChildOid), 403)
   }
 
   it should "deny access for the indexer" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     update(muokkaus(koulutus(oid)), lastModified, indexerSession, 403)
   }
 
   it should "allow access if the user has OPH CRUD rights when tarjoaja being removed for AmmKoulutus" in {
-    val oid = put(koulutus, ophSession)
-    val lastModified = get(oid, koulutus(oid))
+    val oid             = put(koulutus, ophSession)
+    val lastModified    = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
 
     update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
   }
 
-  it should "not allow access if the user doesn't have rights to a tarjoaja organization being removed for AmmKoulutus" in {
-    val oid = put(koulutus, ophSession)
-    val lastModified = get(oid, koulutus(oid))
+  it should "allow access if user had rights to all tarjoaja organizations being removed from own koulutus" in {
+    var theKoulutus = yoKoulutus.copy(organisaatioOid = YoOid)
+    val oid = put(theKoulutus, ophSession)
+    theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
+    val lastModified = get(oid, theKoulutus)
+    val updatedKoulutus = theKoulutus.copy(tarjoajat = theKoulutus.tarjoajat diff Seq(HkiYoOid))
+
+    update(updatedKoulutus, lastModified, expectUpdate = true, yliopistotSession)
+  }
+
+  it should "deny access if the user doesn't have rights to a tarjoaja organization being removed for AmmKoulutus" in {
+    val oid             = put(koulutus, ophSession)
+    val lastModified    = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
 
     update(updatedKoulutus, lastModified, crudSessions(ChildOid), 403)
   }
 
-  it should "not allow access if the user doesn't have rights to a tarjoaja organization being added for AmmKoulutus" in {
-    val oid = put(koulutus, ophSession)
-    val lastModified = get(oid, koulutus(oid))
+  it should "allow access if user had rights to all tarjoaja organizations being added to own koulutus" in {
+    var theKoulutus = yoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(YoOid))
+    val oid = put(theKoulutus, ophSession)
+    theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
+    val lastModified = get(oid, theKoulutus)
+    val updatedKoulutus = theKoulutus.copy(tarjoajat = HkiYoOid :: theKoulutus.tarjoajat)
+
+    update(updatedKoulutus, lastModified, expectUpdate = true, yliopistotSession)
+  }
+
+  it should "deny access if the user doesn't have rights to a tarjoaja organization being added for AmmKoulutus" in {
+    val oid             = put(koulutus, ophSession)
+    val lastModified    = get(oid, koulutus(oid))
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = EvilChildOid :: koulutus.tarjoajat)
 
     update(updatedKoulutus, lastModified, crudSessions(ChildOid), 403)
   }
 
+  it should "allow organisaatioOid change if user had rights to new organisaatio" in {
+    var koulutus = yoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(YoOid))
+    val oid          = put(koulutus, ophSession)
+    koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
+    val lastModified = get(oid, koulutus)
+    update(koulutus.copy(organisaatioOid = HkiYoOid), lastModified, expectUpdate = true, yliopistotSession)
+  }
+
+  it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
+    var koulutus = yoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(YoOid))
+    val oid          = put(koulutus, ophSession)
+    koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
+    val lastModified = get(oid, koulutus)
+    update(koulutus.copy(organisaatioOid = ChildOid), lastModified, crudSessions(YoOid), 403)
+  }
+
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
     val oid = put(koulutus, ophSession)
     post(KoulutusPath, bytes(koulutus(oid)), defaultHeaders) {
-      status should equal (400)
-      body should equal (errorBody(s"Otsake ${KoutaServlet.IfUnmodifiedSinceHeader} on pakollinen."))
+      status should equal(400)
+      body should equal(errorBody(s"Otsake ${KoutaServlet.IfUnmodifiedSinceHeader} on pakollinen."))
     }
   }
 
   it should "fail update if modified in between get and update" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
     update(koulutus(oid, Arkistoitu), lastModified, expectUpdate = true, ophSession)
     post(KoulutusPath, bytes(koulutus(oid)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
-      status should equal (409)
+      status should equal(409)
     }
   }
 
   it should "update koulutuksen tekstit ja tarjoajat" in {
-    val oid = put(koulutus, ophSession)
-    val metadata = koulutus.metadata.get.asInstanceOf[AmmatillinenKoulutusMetadata]
-    val lastModified = get(oid, koulutus(oid))
-    val uusiKoulutus = koulutus(oid).copy(
+    val oid             = put(yoKoulutus.copy(tarjoajat = List()), ophSession)
+    val createdKoulutus = yoKoulutus.copy(oid = Some(KoulutusOid(oid)), tarjoajat = List())
+    val metadata        = createdKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata]
+    val lastModified    = get(oid, createdKoulutus)
+    val uusiKoulutus = createdKoulutus.copy(
       kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      tarjoajat = List(LonelyOid, EvilChildOid, AmmOid),
-      metadata = Some(metadata.copy(
-        lisatiedot = metadata.lisatiedot.map(_.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))),
-        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
-      )))
+      tarjoajat = List(YoOid, HkiYoOid),
+      metadata = Some(
+        metadata.copy(
+          lisatiedot = metadata.lisatiedot.map(
+            _.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))
+          ),
+          kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
+        )
+      )
+    )
     update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, uusiKoulutus)
   }
@@ -321,7 +404,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val oid = put(koulutus, ophSession)
 
     setModifiedToPast(oid, "10 minutes") should be(Success(()))
-    val lastModified = get(oid, koulutus(oid))
+    val lastModified        = get(oid, koulutus(oid))
     val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
     Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
 
@@ -341,7 +424,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "delete some tarjoajat and read last modified from history" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
     Thread.sleep(1500)
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(GrandChildOid, EvilGrandChildOid))
@@ -350,22 +433,35 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "store and update unfinished koulutus" in {
-    val unfinishedKoulutus = Koulutus(koulutustyyppi = Amm, johtaaTutkintoon = true, muokkaaja = OphUserOid, organisaatioOid = ChildOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "koulutus"), _enrichedData = Some(
-      KoulutusEnrichedData(
-        muokkaajanNimi = Some("Testi Muokkaaja")
+    val unfinishedKoulutus = Koulutus(
+      koulutustyyppi = Amm,
+      johtaaTutkintoon = true,
+      muokkaaja = OphUserOid,
+      organisaatioOid = ChildOid,
+      modified = None,
+      kielivalinta = Seq(Fi),
+      nimi = Map(Fi -> "koulutus"),
+      _enrichedData = Some(
+        KoulutusEnrichedData(
+          muokkaajanNimi = Some("Testi Muokkaaja")
+        )
       )
-    ))
-    val oid = put(unfinishedKoulutus, ophSession)
-    val lastModified = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    )
+    val oid                   = put(unfinishedKoulutus, ophSession)
+    val lastModified          = get(oid, unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid))))
     val newUnfinishedKoulutus = unfinishedKoulutus.copy(oid = Some(KoulutusOid(oid)), johtaaTutkintoon = false)
     update(newUnfinishedKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, newUnfinishedKoulutus)
   }
 
   it should "validate updated koulutus" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    post(KoulutusPath, bytes(koulutus(oid).copy(koulutuksetKoodiUri = Seq())), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
+    post(
+      KoulutusPath,
+      bytes(koulutus(oid).copy(koulutuksetKoodiUri = Seq())),
+      headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))
+    ) {
       withClue(body) {
         status should equal(400)
       }
@@ -374,7 +470,7 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "copy a temporary image to a permanent location while updating the koulutus" in {
-    val oid = put(koulutus, ophSession)
+    val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
 
     saveLocalPng("temp/image.png")
@@ -387,8 +483,8 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
   }
 
   it should "not touch an image that's not in the temporary location" in {
-    val oid = put(koulutus, ophSession)
-    val lastModified = get(oid, koulutus(oid))
+    val oid               = put(koulutus, ophSession)
+    val lastModified      = get(oid, koulutus(oid))
     val koulutusWithImage = koulutus(oid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
 
     update(koulutusWithImage, lastModified, expectUpdate = true, ophSession)
@@ -399,57 +495,143 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
 
   it should "create, get and update ammatillinen osaamisala koulutus" in {
     val ammOaKoulutus = TestData.AmmOsaamisalaKoulutus.copy(tila = Tallennettu)
-    val oid = put(ammOaKoulutus)
-    val lastModified = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val oid           = put(ammOaKoulutus)
+    val lastModified  = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
     update(ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "set nimi of ammatillinen osaamisala koulutus by osaamisala if nimi not given for koulutus" in {
+    val ammOaKoulutus = AmmOsaamisalaKoulutus.copy(nimi = Map())
+    val oid           = put(ammOaKoulutus)
+    get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), nimi = Map(Fi -> "nimi", Sv -> "nimi sv")))
   }
 
   it should "create, get and update ammatillinen tutkinnon osa koulutus" in {
     val ammOaKoulutus = TestData.AmmTutkinnonOsaKoulutus.copy(tila = Tallennettu)
-    val oid = put(ammOaKoulutus)
-    val lastModified = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val oid           = put(ammOaKoulutus)
+    val lastModified  = get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid))))
     update(ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, ammOaKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
+  it should "set nimi of ammatillinen tutkinnon osa koulutus by tutkinnonosa if nimi not given for koulutus" in {
+    val ammToKoulutus = AmmTutkinnonOsaKoulutus.copy(nimi = Map())
+    val oid           = put(ammToKoulutus)
+    get(oid, ammToKoulutus.copy(oid = Some(KoulutusOid(oid)), nimi = Map(Fi -> "nimi", Sv -> "nimi sv")))
+  }
+
   it should "create, get and update muu ammatillinen koulutus" in {
-    val muuAmmKoulutus = TestData.AmmMuuKoulutus.copy(tila = Tallennettu)
-    val oid = put(muuAmmKoulutus)
-    val lastModified = get(oid, muuAmmKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val muuAmmKoulutus = AmmMuuKoulutus.copy(tila = Tallennettu)
+    val oid            = put(muuAmmKoulutus)
+    val lastModified   = get(oid, muuAmmKoulutus.copy(oid = Some(KoulutusOid(oid))))
     update(muuAmmKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, muuAmmKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
   it should "create, get and update aikuisten perusopetus -koulutus" in {
-    val aiPeKoulutus = TestData.AikuistenPerusopetusKoulutus.copy(tila = Tallennettu)
-    val oid = put(aiPeKoulutus)
-    val lastModified = get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+    val aiPeKoulutus = AikuistenPerusopetusKoulutus.copy(tila = Tallennettu)
+    val oid          = put(aiPeKoulutus)
+    val lastModified = get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid))))
     update(aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
-    get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+    get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "set koulutuksetKoodiUri of aikuisten perusopetus koulutus automatically if not given" in {
+    val aiPeKoulutus = AikuistenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
+    val oid          = put(aiPeKoulutus)
+    get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
   }
 
   it should "create, get and update kk-opintojakso -koulutus" in {
     val kkOpintojaksoKoulutus = TestData.KkOpintojaksoKoulutus.copy(tila = Tallennettu)
-    val oid = put(kkOpintojaksoKoulutus)
-    val lastModified = get(oid, kkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val oid                   = put(kkOpintojaksoKoulutus)
+    val lastModified          = get(oid, kkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid))))
     update(kkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, kkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
   it should "create, get and update kk-opintokokonaisuus-koulutus" in {
     val kkOpintokokonaisuusKoulutus = TestData.KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu)
-    val oid = put(kkOpintokokonaisuusKoulutus)
-    val lastModified = get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid))))
+    val oid                         = put(kkOpintokokonaisuusKoulutus)
+    val lastModified                = get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid))))
     update(kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "set nimi of ammatillinen koulutus nimi by koulutusKoodiUri if nimi not given for koulutus" in {
+    val ammKoulutus = koulutus.copy(nimi = Map())
+    val oid         = put(ammKoulutus, ophSession)
+    get(oid, ammKoulutus.copy(oid = Some(KoulutusOid(oid)), nimi = Map(Fi -> "nimi", Sv -> "nimi sv")))
+  }
+
+  it should "set opintojen laajuus and koulutusala of AmmOpe -koulutus automatically if not given" in {
+    val ammOpeKoulutus = AmmOpettajaKoulutus.copy(metadata = Some(AmmOpeErityisopeJaOpoKoulutusMetadata()))
+    val oid            = put(ammOpeKoulutus)
+    val expectedMetadata = Some(
+      AmmOpeErityisopeJaOpoKoulutusMetadata(
+        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60#1"),
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01#1"),
+        isMuokkaajaOphVirkailija = Some(false)
+      )
+    )
+    get(oid, ammOpeKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
+  }
+
+  it should "set koulutusala of lukio-koulutus automatically if not given" in {
+    val lkKoulutus = LukioKoulutus.copy(metadata = Some(LukiokoulutuksenMetatieto.copy(koulutusalaKoodiUrit = Seq())))
+    val oid        = put(lkKoulutus, ophSession)
+    get(oid, lkKoulutus.copy(oid = Some(KoulutusOid(oid)), metadata = Some(LukiokoulutuksenMetatieto)))
+  }
+
+  it should "set koulutusala of erikoislääkäri-koulutus automatically if not given" in {
+    val elKoulutus = ErikoislaakariKoulutus.copy(metadata =
+      Some(ErikoislaakariKoulutusMetadata(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))
+    )
+    val oid = put(elKoulutus)
+    val expectedMetadata = Some(
+      ErikoislaakariKoulutusMetadata(
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_091#1"),
+        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        isMuokkaajaOphVirkailija = Some(false)
+      )
+    )
+    get(oid, elKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
+  }
+
+  it should "fail to auto-populate parameter values if KoodistoService failure when fetching koodiuri-version" in {
+    val koulutusCausingEerror = koulutus.copy(nimi = Map(), koulutuksetKoodiUri = Seq("koulutus_111111#11"))
+    put(KoulutusPath, koulutusCausingEerror, ophSession, 500)
+  }
+
+  it should "fail to auto-populate parameter values if EPerusteService failure when fetching tutkinnonosat" in {
+    val koulutusCausingEerror = AmmTutkinnonOsaKoulutus.copy(
+      nimi = Map(),
+      metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata(tutkinnonOsat = Seq(TutkinnonOsa(Some(111111)))))
+    )
+    put(KoulutusPath, koulutusCausingEerror, ophSession, 500)
+  }
+
+  it should "fail to auto-populate parameter values if EPerusteService failure when fetching osaamisalat" in {
+    val koulutusCausingEerror = AmmOsaamisalaKoulutus.copy(
+      nimi = Map(),
+      ePerusteId= Some(111111)
+    )
+    put(KoulutusPath, koulutusCausingEerror, ophSession, 500)
   }
 
   it should "fail to update koulutus if sorakuvaus doesn't exist" in {
     val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
     val nonExistentSorakuvausId = UUID.randomUUID()
-    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(nonExistentSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId))))
+    update(
+      KoulutusPath,
+      koulutus(koulutusOid).copy(sorakuvausId = Some(nonExistentSorakuvausId)),
+      ophSession,
+      lastModified,
+      400,
+      List(ValidationError("sorakuvausId", nonExistent("Sorakuvausta", nonExistentSorakuvausId)))
+    )
   }
 
   it should "allow oph user to update from julkaistu to tallennettu" in {
@@ -459,12 +641,22 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       yoKoulutus.copy(
         oid = Some(KoulutusOid(oid)),
         muokkaaja = TestUserOid,
-        metadata = Some(yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(false)))))
+        metadata = Some(
+          yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(false))
+        )
+      )
+    )
     val updatedKoulutus = yoKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu)
     update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
-    get(oid,
-      updatedKoulutus.copy(muokkaaja = OphUserOid,
-        metadata = Some(yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(
+      oid,
+      updatedKoulutus.copy(
+        muokkaaja = OphUserOid,
+        metadata = Some(
+          yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(true))
+        )
+      )
+    )
   }
 
   it should "not allow non oph user to update from julkaistu to tallennettu" in {
@@ -474,14 +666,18 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
       yoKoulutus.copy(
         oid = Some(KoulutusOid(oid)),
         muokkaaja = TestUserOid,
-        metadata = Some(yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(false)))))
+        metadata = Some(
+          yoKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata].copy(isMuokkaajaOphVirkailija = Some(false))
+        )
+      )
+    )
     val updatedKoulutus = yoKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu)
     update(updatedKoulutus, lastModified, crudSessions(koulutus.organisaatioOid), 403)
   }
 
   private def createKoulutusWithSorakuvaus = {
-    val sorakuvausId = put(sorakuvaus)
-    val koulutusOid = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
+    val sorakuvausId         = put(sorakuvaus)
+    val koulutusOid          = put(koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession)
     val koulutusLastModified = get(koulutusOid, koulutus(koulutusOid).copy(sorakuvausId = Some(sorakuvausId)))
     (koulutusOid, koulutusLastModified)
   }
@@ -490,7 +686,14 @@ class KoulutusSpec extends KoutaIntegrationSpec with AccessControlSpec with Koul
     val (koulutusOid: String, lastModified: String) = createKoulutusWithSorakuvaus
 
     val tallennettuSorakuvausId = put(sorakuvaus.copy(tila = Tallennettu))
-    update(KoulutusPath, koulutus(koulutusOid).copy(sorakuvausId = Some(tallennettuSorakuvausId)), ophSession, lastModified, 400, List(ValidationError("tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId))))
+    update(
+      KoulutusPath,
+      koulutus(koulutusOid).copy(sorakuvausId = Some(tallennettuSorakuvausId)),
+      ophSession,
+      lastModified,
+      400,
+      List(ValidationError("tila", notYetJulkaistu("Sorakuvausta", tallennettuSorakuvausId)))
+    )
   }
 
   it should "return koulutustyyppi2opistotyyppi mappings" in {
