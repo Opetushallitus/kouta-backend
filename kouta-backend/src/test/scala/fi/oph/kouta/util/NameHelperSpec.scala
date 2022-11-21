@@ -99,11 +99,10 @@ class NameHelperSpec extends UnitSpec {
   )
 
   val koulutusMetadata = LukioKoulutusMetadata(
-      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
-      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
-    )
-
+    opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
+  )
 
   "generateToteutusDisplayName" should "generate Toteutus display name for lukio with yleislinja, painotus and erityinen koulutustehtävä" in {
     val esitysnimi = NameHelper.generateLukioToteutusDisplayName(
@@ -112,7 +111,7 @@ class NameHelperSpec extends UnitSpec {
       toteutusKaannokset,
       koodiKaannokset
     )
-    esitysnimi shouldMatchTo(
+    esitysnimi shouldMatchTo (
       Map(
         Fi -> "Lukio, 40 opintopistettä\nlukion painotus 1 fi, 40 opintopistettä\nlukio erityinen koulutustehtävä 1 fi, 40 opintopistettä",
         Sv -> "Gymnasium, 40 studiepoäng\nlukion painotus 1 sv, 40 studiepoäng\nlukio erityinen koulutustehtävä 1 sv, 40 studiepoäng"
@@ -127,7 +126,7 @@ class NameHelperSpec extends UnitSpec {
       toteutusKaannokset,
       koodiKaannokset
     )
-    esitysnimi shouldMatchTo(
+    esitysnimi shouldMatchTo (
       Map(
         Fi -> "Lukio, 40 opintopistettä",
         Sv -> "Gymnasium, 40 studiepoäng",
@@ -161,15 +160,25 @@ class NameHelperSpec extends UnitSpec {
     assert(NameHelper.mergeNames(from, Map(), Seq(Fi, Sv, En)) == from)
   }
 
+  it should "ignore null values" in {
+    val from = Map(Fi -> "suomi", Sv -> "ruotsi", En -> null)
+    assert(
+      NameHelper.mergeNames(from, Map(Fi -> "", Sv -> null, En -> null), Seq(Fi, Sv, En)) == Map(
+        Fi -> "suomi",
+        Sv -> "ruotsi"
+      )
+    )
+  }
+
   it should "merge only selected languauges" in {
-    val from = Map(Fi -> "suomi", Sv -> "ruotsi", En -> "englanti")
+    val from     = Map(Fi -> "suomi", Sv -> "ruotsi", En -> "englanti")
     val expected = Map(Fi -> "suomi", Sv -> "ruotsi")
     assert(NameHelper.mergeNames(from, Map(), Seq(Fi, Sv)) == expected)
   }
 
   it should "preserve existing language versions" in {
-    val from = Map(Fi -> "suomi", Sv -> "ruotsi")
-    val target = Map(Fi -> "suomeksi", Sv -> "", En -> "englanti")
+    val from     = Map(Fi -> "suomi", Sv -> "ruotsi")
+    val target   = Map(Fi -> "suomeksi", Sv -> "", En -> "englanti")
     val expected = Map(Fi -> "suomeksi", Sv -> "ruotsi")
     assert(NameHelper.mergeNames(from, target, Seq(Fi, Sv)) == expected)
     assert(NameHelper.mergeNames(from, target - Sv, Seq(Fi, Sv)) == expected)
