@@ -95,7 +95,7 @@ class IndexingSpec extends KoutaIntegrationSpec
 
     val lastModified = get(oid, withValintaperusteenValintakokeet(tallennettuHakukohde(oid)))
     val muokattuHakukohde = withValintaperusteenValintakokeet(tallennettuHakukohde(oid)).copy(
-      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv"),
       hakulomaketyyppi = Some(Ataru),
       hakulomakeAtaruId = Some(UUID.randomUUID()),
       hakulomakeKuvaus = Map(),

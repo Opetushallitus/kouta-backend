@@ -785,6 +785,9 @@ package object domain {
         }
       })
     )
+
+    def idValuesPopulated(): Boolean =
+      ePerusteId.isDefined && tutkinnonosaViite.isDefined && tutkinnonosaId.isDefined
   }
 
   case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String]) {

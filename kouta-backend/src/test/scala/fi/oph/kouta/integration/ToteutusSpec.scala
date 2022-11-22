@@ -443,10 +443,10 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
     val uusiToteutus = thisToteutus.copy(
-      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
-      metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "description"))),
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv"),
+      metadata = Some(ammMetatieto.copy(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"))),
       tarjoajat = List(LonelyOid, OtherOid, AmmOid),
-      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"), muokkaajanNimi = Some("Testi Muokkaaja")))
+      _enrichedData = Some(ToteutusEnrichedData(esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv"), muokkaajanNimi = Some("Testi Muokkaaja")))
     )
     update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus)
