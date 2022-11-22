@@ -32,6 +32,18 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     findMissingKielet(Seq(Fi, Sv), Map(Fi -> "text", Sv -> "")) should contain theSameElementsAs Seq(Sv)
   }
 
+  "findNonAllowedKielet" should "return all kielet in kielistetty when kielivalinta is empty" in {
+    findNonAllowedKielet(Seq(), Map(Fi -> "text", Sv -> "text sv")) should contain theSameElementsAs Seq(Fi, Sv)
+  }
+
+  it should "return non-allowed kielet when some texts empty" in {
+    findNonAllowedKielet(Seq(), Map(Fi -> "text", Sv -> "", En -> null)) should contain theSameElementsAs Seq(Fi)
+  }
+
+  it should "return nothing when only allowed kielet populated" in {
+    findNonAllowedKielet(Seq(Fi), Map(Fi -> "text", Sv -> "")) shouldEqual NoErrors
+  }
+
   "validateKielistetty" should "return all kielet when kielistetty is an empty map" in {
     validateKielistetty(Seq(Fi, Sv), Map(), "test") should contain(
       ValidationError("test", invalidKielistetty(Seq(Fi, Sv)))
@@ -47,6 +59,13 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   it should "return the missing kielet when there are some empty texts" in {
     validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> ""), "test") should contain(
       ValidationError("test", invalidKielistetty(Seq(Sv)))
+    )
+  }
+
+  it should "return both missing and non-allowed kielet" in {
+    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> "", En -> "something"), "test") should contain theSameElementsAs Seq(
+      ValidationError("test", invalidKielistetty(Seq(Sv))),
+      ValidationError("test", notAllowedKielistetty(Seq(En)))
     )
   }
 
@@ -87,10 +106,21 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     ) shouldEqual NoErrors
   }
 
-  it should "accept nimi if language not found from external" in {
+  it should "not accept nimi if language not found from external" in {
     assertNimiMatchExternal(
       Map(Fi -> "nimi", Sv -> "nimi sv"),
       Map(Fi -> "nimi", En -> "nimi en"),
+      "nimi",
+      "koulutuksessa"
+    ) should contain theSameElementsAs Seq(
+      ValidationError("nimi.sv", nameNotAllowedForFixedlyNamedEntityMsg("koulutuksessa"))
+    )
+  }
+
+  it should "ignore empty names" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv -> "", En -> null),
+      Map(Fi -> "nimi"),
       "nimi",
       "koulutuksessa"
     ) shouldEqual NoErrors
@@ -116,6 +146,18 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     ) should contain theSameElementsAs Seq(
       ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("eri nimi", "koulutuksessa")),
       ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("eri nimi sv", "koulutuksessa"))
+    )
+  }
+
+  it should "not accept nimi when both invalid and non-allowed names" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv -> "nimi sv", En -> "nimi en"),
+      Map(Fi -> "eri nimi", Sv -> "nimi sv"),
+      "nimi",
+      "koulutuksessa"
+    ) should contain theSameElementsAs Seq(
+      ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("eri nimi", "koulutuksessa")),
+      ValidationError("nimi.en", nameNotAllowedForFixedlyNamedEntityMsg("koulutuksessa"))
     )
   }
 
@@ -251,5 +293,4 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(queryFailed)
     doAssertAtaruQuery() should equal(error("path", ataruServiceFailureMsg))
   }
-
 }

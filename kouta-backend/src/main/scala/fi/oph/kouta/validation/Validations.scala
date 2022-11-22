@@ -98,7 +98,8 @@ object Validations {
 
   def invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
     ErrorMessage(
-      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä koulutustyyppi. Kaikkien toteutusten tulee olla opintojaksoja.",
+      msg =
+        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä koulutustyyppi. Kaikkien toteutusten tulee olla opintojaksoja.",
       id = "invalidKoulutustyyppiForLiitettyOpintojakso",
       meta = Some(Map("toteutukset" -> toteutukset))
     )
@@ -106,7 +107,8 @@ object Validations {
 
   def invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset: Seq[ToteutusOid]) = {
     ErrorMessage(
-      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
+      msg =
+        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
       id = "invalidTilaForLiitettyOpintojaksoOnJulkaisu",
       meta = Some(Map("toteutukset" -> toteutukset))
     )
@@ -114,7 +116,8 @@ object Validations {
 
   def invalidTilaForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
     ErrorMessage(
-      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Opintokokonaisuuteen liitettyjen opintojaksojen tulee olla luonnostilaisia tai julkaistuja.",
+      msg =
+        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Opintokokonaisuuteen liitettyjen opintojaksojen tulee olla luonnostilaisia tai julkaistuja.",
       id = "invalidTilaForLiitettyOpintojakso",
       meta = Some(Map("toteutukset" -> toteutukset))
     )
@@ -136,10 +139,11 @@ object Validations {
     msg = s"Lukiototeutukselle valittua $linjaField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidLukioLinjaKoodiUri"
   )
-  def tarjoajaOidWoRequiredKoulutustyyppi(oid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi): ErrorMessage = ErrorMessage(
-    msg = s"Tarjoaja-organisaatiolla $oid ei ole oikeuksia koulutustyyppiin $koulutustyyppi",
-    id = "tarjoajaOidWoRequiredKoulutustyyppi"
-  )
+  def tarjoajaOidWoRequiredKoulutustyyppi(oid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi): ErrorMessage =
+    ErrorMessage(
+      msg = s"Tarjoaja-organisaatiolla $oid ei ole oikeuksia koulutustyyppiin $koulutustyyppi",
+      id = "tarjoajaOidWoRequiredKoulutustyyppi"
+    )
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(
     msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa",
     id = "invalidEPerusteId"
@@ -258,11 +262,13 @@ object Validations {
     id = "invalidTietoaOpiskelustaOtsikkoKoodiUri"
   )
   def invalidJarjestyspaikkaOid(oid: OrganisaatioOid, toteutusOid: ToteutusOid): ErrorMessage = ErrorMessage(
-    msg = s"JärjestyspaikkaOID:ia ${oid.s} ei löydy toteutuksen ${toteutusOid.s} tarjoajista eikä niiden ali-organisaatioista",
+    msg =
+      s"JärjestyspaikkaOID:ia ${oid.s} ei löydy toteutuksen ${toteutusOid.s} tarjoajista eikä niiden ali-organisaatioista",
     id = "invalidJarjestyspaikkaOid"
   )
   def invalidHakukohteenLinja(linja: String): ErrorMessage = ErrorMessage(
-    msg = s"Hakukohteen linja $linja ei ole sallittu. Linjan täytyy olla tyhjä (jolloin kyseessä yleislinja), tai vastata toteutuksen lukiopainotuksia tai erityis-koulutustehtäviä",
+    msg =
+      s"Hakukohteen linja $linja ei ole sallittu. Linjan täytyy olla tyhjä (jolloin kyseessä yleislinja), tai vastata toteutuksen lukiopainotuksia tai erityis-koulutustehtäviä",
     id = "invalidHakukohteenLinja"
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
@@ -274,6 +280,10 @@ object Validations {
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
     msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]",
     id = "invalidKielistetty"
+  )
+  def notAllowedKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
+    msg = s"Kielistetyssä kentässä ei ole sallittu arvoa kielillä [${values.mkString(",")}",
+    id = "notAllowedKielistetty"
   )
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage =
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
@@ -338,6 +348,10 @@ object Validations {
     msg =
       s"Nimen täytyy olla '$expectedValue', vastaava kuin $nameSourceDesc. Nimi asetetaan automaattisesti jos kenttä on tyhjä.",
     id = "illegalNameForFixedlyNamedEntity"
+  )
+  def nameNotAllowedForFixedlyNamedEntityMsg(nameSourceDesc: String): ErrorMessage = ErrorMessage(
+    msg = s"Ei saa sisältää arvoa, vastaavaa kielistettyä arvoa ei ole asetettu $nameSourceDesc",
+    id = "nameNotAllowedForFixedlyNamedEntity"
   )
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
@@ -439,7 +453,7 @@ object Validations {
   def assertCertainValue(
       value: Option[String],
       expectedValuePrefix: String,
-      path: String,
+      path: String
   ): IsValid =
     assertTrue(
       value.isDefined && value.get.startsWith(expectedValuePrefix),
@@ -484,16 +498,20 @@ object Validations {
       path: String,
       externalSourceDesc: String
   ): IsValid = {
-    val errLngs =
+    val nameNotAllowedLngs = nimi.keySet.filter(lng => !nimiFromExternalSource.contains(lng) && nimi(lng) != null && nimi(lng).nonEmpty)
+    val nameNotMatchingLngs =
       nimi.keySet.filter(lng => nimiFromExternalSource.contains(lng) && nimi(lng) != nimiFromExternalSource(lng))
-    errLngs
-      .map(lng =>
-        ValidationError(
-          s"$path.${lng.name}",
-          illegalNameForFixedlyNamedEntityMsg(nimiFromExternalSource(lng), externalSourceDesc)
+    nameNotAllowedLngs
+      .map(lng => ValidationError(s"$path.${lng.name}", nameNotAllowedForFixedlyNamedEntityMsg(externalSourceDesc)))
+      .toList ++
+      nameNotMatchingLngs
+        .map(lng =>
+          ValidationError(
+            s"$path.${lng.name}",
+            illegalNameForFixedlyNamedEntityMsg(nimiFromExternalSource(lng), externalSourceDesc)
+          )
         )
-      )
-      .toList
+        .toList
   }
 
   def assertKoodistoQueryResult(
@@ -555,11 +573,11 @@ object Validations {
   }
 
   def assertAtaruFormAllowsOnlyYhteisHakuResult(
-    ataruId: UUID,
-    hakutapa: Option[String],
-    hakemusPalveluClient: HakemusPalveluClient,
-    path: String,
-    errorMessage: ErrorMessage
+      ataruId: UUID,
+      hakutapa: Option[String],
+      hakemusPalveluClient: HakemusPalveluClient,
+      path: String,
+      errorMessage: ErrorMessage
   ): IsValid = {
     assertExternalQueryResult(
       hakemusPalveluClient.isFormAllowedForHakutapa(ataruId, hakutapa),
@@ -622,11 +640,20 @@ object Validations {
     kielivalinta.diff(k.keySet.toSeq).union(k.filter { case (_, arvo) => arvo == null || arvo.isEmpty }.keySet.toSeq)
   }
 
-  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
-    findMissingKielet(kielivalinta, k) match {
+  def findNonAllowedKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] =
+    k.keySet.filter(lng => !kielivalinta.contains(lng) && k(lng) != null && k(lng).nonEmpty).toSeq
+
+  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid = {
+    val missing = findMissingKielet(kielivalinta, k) match {
       case x if x.isEmpty => NoErrors
       case kielet         => error(path, invalidKielistetty(kielet))
     }
+    val notAllowed = findNonAllowedKielet(kielivalinta, k) match {
+      case x if x.isEmpty => NoErrors
+      case kielet         => error(path, notAllowedKielistetty(kielet))
+    }
+    missing ++ notAllowed
+  }
 
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))

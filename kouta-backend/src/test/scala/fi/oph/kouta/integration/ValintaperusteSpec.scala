@@ -252,7 +252,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     val id = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
     val uusiValintaperuste = valintaperuste(id).copy(
-      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv"),
       valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2"))))
     update(getIds(uusiValintaperuste), lastModified, expectUpdate = true)
     get(id, uusiValintaperuste)
