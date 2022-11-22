@@ -463,14 +463,14 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val lastModified = get(oid, tallennettuHakukohde(oid))
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(
-      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv"),
       hakulomaketyyppi = Some(Ataru),
       hakulomakeAtaruId = Some(UUID.randomUUID()),
       hakulomakeKuvaus = Map(),
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000)))),
       _enrichedData = Some(
         HakukohdeEnrichedData(
-          esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+          esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv"),
           muokkaajanNimi = Some("Testi Muokkaaja")
         )
       )

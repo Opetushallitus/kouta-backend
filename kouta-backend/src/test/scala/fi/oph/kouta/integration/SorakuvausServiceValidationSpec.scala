@@ -46,7 +46,7 @@ class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuva
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(min.copy(id = Some(sorakuvausId)), "id", notMissingMsg(Some(sorakuvausId)))
-    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(nimi = Map(), kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))

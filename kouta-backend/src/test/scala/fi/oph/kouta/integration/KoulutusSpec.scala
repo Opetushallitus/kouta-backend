@@ -1,7 +1,17 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{AikuistenPerusopetusKoulutus, AmmMuuKoulutus, AmmOpettajaKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus, ErikoislaakariKoulutus, LukioKoulutus, LukiokoulutuksenMetatieto, YoKoulutus}
+import fi.oph.kouta.TestData.{
+  AikuistenPerusopetusKoulutus,
+  AmmMuuKoulutus,
+  AmmOpettajaKoulutus,
+  AmmOsaamisalaKoulutus,
+  AmmTutkinnonOsaKoulutus,
+  ErikoislaakariKoulutus,
+  LukioKoulutus,
+  LukiokoulutuksenMetatieto,
+  YoKoulutus
+}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -81,7 +91,6 @@ class KoulutusSpec
     get(oid, readSessions(AmmOid), ophKoulutus.copy(Some(KoulutusOid(oid))))
   }
 
-
   it should "deny the user of a wrong role to read the koulutus" in {
     val oid = put(koulutus, ophSession)
     get(s"$KoulutusPath/$oid", otherRoleSession, 403)
@@ -93,7 +102,7 @@ class KoulutusSpec
   }
 
   it should "allow a user of other organization but similar oppilaitostyyppi to access public koulutus" in {
-    val oid       = put(koulutus.copy(julkinen = true), ophSession)
+    val oid = put(koulutus.copy(julkinen = true), ophSession)
     get(oid, readSessions(AmmOid), koulutus(oid).copy(julkinen = true, muokkaaja = OphUserOid))
   }
 
@@ -310,9 +319,9 @@ class KoulutusSpec
 
   it should "allow access if user had rights to all tarjoaja organizations being removed from own koulutus" in {
     var theKoulutus = yoKoulutus.copy(organisaatioOid = YoOid)
-    val oid = put(theKoulutus, ophSession)
+    val oid         = put(theKoulutus, ophSession)
     theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
-    val lastModified = get(oid, theKoulutus)
+    val lastModified    = get(oid, theKoulutus)
     val updatedKoulutus = theKoulutus.copy(tarjoajat = theKoulutus.tarjoajat diff Seq(HkiYoOid))
 
     update(updatedKoulutus, lastModified, expectUpdate = true, yliopistotSession)
@@ -328,9 +337,9 @@ class KoulutusSpec
 
   it should "allow access if user had rights to all tarjoaja organizations being added to own koulutus" in {
     var theKoulutus = yoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(YoOid))
-    val oid = put(theKoulutus, ophSession)
+    val oid         = put(theKoulutus, ophSession)
     theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
-    val lastModified = get(oid, theKoulutus)
+    val lastModified    = get(oid, theKoulutus)
     val updatedKoulutus = theKoulutus.copy(tarjoajat = HkiYoOid :: theKoulutus.tarjoajat)
 
     update(updatedKoulutus, lastModified, expectUpdate = true, yliopistotSession)
@@ -346,7 +355,7 @@ class KoulutusSpec
 
   it should "allow organisaatioOid change if user had rights to new organisaatio" in {
     var koulutus = yoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(YoOid))
-    val oid          = put(koulutus, ophSession)
+    val oid      = put(koulutus, ophSession)
     koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
     val lastModified = get(oid, koulutus)
     update(koulutus.copy(organisaatioOid = HkiYoOid), lastModified, expectUpdate = true, yliopistotSession)
@@ -354,7 +363,7 @@ class KoulutusSpec
 
   it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
     var koulutus = yoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(YoOid))
-    val oid          = put(koulutus, ophSession)
+    val oid      = put(koulutus, ophSession)
     koulutus = koulutus.copy(oid = Some(KoulutusOid(oid)))
     val lastModified = get(oid, koulutus)
     update(koulutus.copy(organisaatioOid = ChildOid), lastModified, crudSessions(YoOid), 403)
@@ -606,9 +615,14 @@ class KoulutusSpec
   }
 
   it should "fail to auto-populate parameter values if EPerusteService failure when fetching tutkinnonosat" in {
+    mockTutkinnonOsatFailure(111111)
     val koulutusCausingEerror = AmmTutkinnonOsaKoulutus.copy(
       nimi = Map(),
-      metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata(tutkinnonOsat = Seq(TutkinnonOsa(Some(111111)))))
+      metadata = Some(
+        AmmatillinenTutkinnonOsaKoulutusMetadata(tutkinnonOsat =
+          Seq(TutkinnonOsa(Some(111111), None, Some(1), Some(1)))
+        )
+      )
     )
     put(KoulutusPath, koulutusCausingEerror, ophSession, 500)
   }
@@ -616,7 +630,7 @@ class KoulutusSpec
   it should "fail to auto-populate parameter values if EPerusteService failure when fetching osaamisalat" in {
     val koulutusCausingEerror = AmmOsaamisalaKoulutus.copy(
       nimi = Map(),
-      ePerusteId= Some(111111)
+      ePerusteId = Some(111111)
     )
     put(KoulutusPath, koulutusCausingEerror, ophSession, 500)
   }

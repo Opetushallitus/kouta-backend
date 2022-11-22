@@ -421,7 +421,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         ValidationError("oid", notMissingMsg(Some(ToteutusOid("1.2.3"))))
       )
     )
-    failsValidation(lukioToteutus.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(MinToteutus.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(yoToteutus.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(yoToteutus.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(

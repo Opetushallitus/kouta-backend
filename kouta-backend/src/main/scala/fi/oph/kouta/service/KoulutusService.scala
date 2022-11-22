@@ -2,7 +2,14 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KoodistoUtils.{asStringOption, asStringSeq}
-import fi.oph.kouta.client.{EPerusteKoodiClient, KayttooikeusClient, KoodiUri, KoulutusKoodiClient, KoutaSearchClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{
+  EPerusteKoodiClient,
+  KayttooikeusClient,
+  KoodiUri,
+  KoulutusKoodiClient,
+  KoutaSearchClient,
+  OppijanumerorekisteriClient
+}
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
@@ -230,18 +237,29 @@ class KoulutusService(
       case AmmTutkinnonOsa if notFullyPopulated(koulutus.nimi, koulutus.kielivalinta) && koulutus.metadata.isDefined =>
         koulutus.metadata match {
           case Some(m: AmmatillinenTutkinnonOsaKoulutusMetadata)
-              if m.tutkinnonOsat.size == 1 && m.tutkinnonOsat.head.ePerusteId.isDefined =>
-            ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(m.tutkinnonOsat.head.ePerusteId.get)) match {
+              if m.tutkinnonOsat.size == 1 && m.tutkinnonOsat.head.idValuesPopulated() =>
+            val ePerusteId = m.tutkinnonOsat.head.ePerusteId.get
+            val osaId      = m.tutkinnonOsat.head.tutkinnonosaId.get
+            val viiteId    = m.tutkinnonOsat.head.tutkinnonosaViite.get
+            ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(ePerusteId)) match {
               case Left(exp) => throw exp
-              case Right(osaMap) if osaMap.size == 1 && osaMap.head._2.size == 1 =>
+              case Right(osaMap) if osaMap(ePerusteId).exists(osa => osa.viiteId == viiteId && osa.id == osaId) =>
+                val nimiFromService = osaMap(ePerusteId)
+                  .find(osa => osa.viiteId == viiteId && osa.id == osaId)
+                  .map(_.nimi)
+                  .getOrElse(Map())
                 koulutus.copy(
-                  nimi = mergeNames(osaMap.head._2.head.nimi, koulutus.nimi, koulutus.kielivalinta)
+                  nimi = mergeNames(nimiFromService, koulutus.nimi, koulutus.kielivalinta)
                 )
               case _ => koulutus
             }
           case _ => koulutus
         }
-      case AmmOsaamisala if notFullyPopulated(koulutus.nimi, koulutus.kielivalinta) && koulutus.ePerusteId.isDefined && koulutus.metadata.isDefined =>
+      case AmmOsaamisala
+          if notFullyPopulated(
+            koulutus.nimi,
+            koulutus.kielivalinta
+          ) && koulutus.ePerusteId.isDefined && koulutus.metadata.isDefined =>
         koulutus.metadata match {
           case Some(m: AmmatillinenOsaamisalaKoulutusMetadata) if m.osaamisalaKoodiUri.isDefined =>
             ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(koulutus.ePerusteId.get) match {
