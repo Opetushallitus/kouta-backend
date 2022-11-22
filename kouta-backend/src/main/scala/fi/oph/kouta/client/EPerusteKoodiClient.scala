@@ -1,7 +1,7 @@
 package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, splitToBaseAndVersion}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
@@ -35,7 +35,9 @@ case class TutkinnonOsaServiceItem(id: Long, viiteId: Long, nimi: Kielistetty) {
 
 case class OsaamisalaItem(nimi: Map[String, String], uri: String) {
   def toKoodiUri(): KoodiUri =
-    KoodiUri(uri, 1, nimi map { case (kieli, nimiItem) => (Kieli.withName(kieli.toLowerCase), nimiItem) })
+    koodiUriFromString(uri).copy(nimi = nimi map { case (kieli, nimiItem) =>
+      (Kieli.withName(kieli.toLowerCase), nimiItem)
+    })
 }
 
 case class OsaamisalaTopItem(osaamisala: Option[OsaamisalaItem])
@@ -181,7 +183,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
         Try[Seq[KoodiUri]] {
           getOsaamisalaKoodiuritForEPerusteFromEPerusteetService(ePerusteId)
         } match {
-          case Success(koodiUrit) => koodiUrit
+          case Success(koodiUrit)    => koodiUrit
           case Failure(t: Throwable) => throw exception(t, ePerusteId, "osaamisalat for ePeruste", true)
         }
       case Failure(t: Throwable) => throw exception(t, ePerusteId, "osaamisalat for ePeruste", false)
@@ -203,11 +205,17 @@ class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     val retryDoneMsg = if (retryDone) " after retry" else ""
     throwable match {
       case exp: KoodistoQueryException if exp.status == 404 =>
-        KoodistoNotFoundException(s"Unable to find $contentDesc with id $ePerusteId, got response ${exp.status}, ${exp.message}")
+        KoodistoNotFoundException(
+          s"Unable to find $contentDesc with id $ePerusteId, got response ${exp.status}, ${exp.message}"
+        )
       case exp: KoodistoQueryException =>
-        new RuntimeException(s"Failed to get $contentDesc with id $ePerusteId$retryDoneMsg, got response ${exp.status}, ${exp.message}")
+        new RuntimeException(
+          s"Failed to get $contentDesc with id $ePerusteId$retryDoneMsg, got response ${exp.status}, ${exp.message}"
+        )
       case _ =>
-        new RuntimeException(s"Failed to get $contentDesc with id $ePerusteId$retryDoneMsg, got response ${throwable.getMessage()}")
+        new RuntimeException(
+          s"Failed to get $contentDesc with id $ePerusteId$retryDoneMsg, got response ${throwable.getMessage()}"
+        )
     }
   }
 }

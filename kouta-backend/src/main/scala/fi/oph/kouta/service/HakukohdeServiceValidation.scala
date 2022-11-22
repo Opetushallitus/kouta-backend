@@ -341,7 +341,7 @@ class HakukohdeServiceValidation(
             )
         ),
         validateIfTrue(
-          hakukohdeDiffResolver.newNimi().nonEmpty,
+          hakukohdeDiffResolver.newNimi().isDefined,
           validateIfTrueOrElse(
             hkLinja.linja.isDefined,
             hakuKoodiClient.getKoodiUriVersionOrLatestFromCache(hkLinja.linja.get) match {
