@@ -504,7 +504,7 @@ class KoulutusServiceValidation(
         validateIfTrue(
           koulutus.koulutustyyppi == Amm && koulutus.koulutuksetKoodiUri.nonEmpty && (koulutusDiffResolver
             .newKoulutusKoodiUrit()
-            .nonEmpty || koulutusDiffResolver.newNimi().nonEmpty),
+            .nonEmpty || koulutusDiffResolver.newNimi().isDefined),
           koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
             case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
             case Right(uri) =>
@@ -524,17 +524,17 @@ class KoulutusServiceValidation(
 
   private def validateAmmTutkinnonosaMetadata(
       vCtx: ValidationContext,
-      newNimi: Kielistetty,
+      newNimi: Option[Kielistetty],
       tutkinnonOsat: Seq[TutkinnonOsa],
       newTutkinnonOsat: Boolean
   ): IsValid = {
     val path = "metadata.tutkinnonOsat"
     def nimiShouldBeValidated(
-        newNimi: Kielistetty,
+        newNimi: Option[Kielistetty],
         currentTutkinnonOsat: Seq[TutkinnonOsa],
         tutkinnonOsatFromService: Map[Long, Seq[TutkinnonOsaServiceItem]] = Map()
     ): Boolean = {
-      if (newNimi.nonEmpty && currentTutkinnonOsat.size == 1)
+      if (newNimi.isDefined && currentTutkinnonOsat.size == 1)
         (currentTutkinnonOsat.head.tutkinnonosaViite, currentTutkinnonOsat.head.tutkinnonosaId) match {
           case (Some(viiteId), Some(osaId)) =>
             tutkinnonOsatFromService.isEmpty || tutkinnonOsatFromService.head._2.exists(osa =>
@@ -584,7 +584,7 @@ class KoulutusServiceValidation(
                       val viiteId = tutkinnonOsat.head.tutkinnonosaViite.get
                       val osaId   = tutkinnonOsat.head.tutkinnonosaId.get
                       assertNimiMatchExternal(
-                        newNimi,
+                        newNimi.getOrElse(Map()),
                         tutkinnonOsaIdsByEPerusteId.head._2
                           .find(osa => osa.viiteId == viiteId && osa.id == osaId)
                           .map(_.nimi)
@@ -622,7 +622,7 @@ class KoulutusServiceValidation(
       validateIfTrue(
         koulutusDiffResolver
           .newOsaamisalaKoodiUri()
-          .isDefined || koulutusDiffResolver.newEPerusteId().isDefined || koulutusDiffResolver.newNimi().nonEmpty,
+          .isDefined || koulutusDiffResolver.newEPerusteId().isDefined || koulutusDiffResolver.newNimi().isDefined,
         validateIfDefined[String](
           osaamisalaMetadata.osaamisalaKoodiUri,
           koodiUri =>
@@ -645,9 +645,9 @@ class KoulutusServiceValidation(
                           invalidOsaamisalaForEPeruste(ePerusteId, koodiUri)
                         ),
                         validateIfTrue(
-                          newNimi.nonEmpty,
+                          newNimi.isDefined,
                           assertNimiMatchExternal(
-                            newNimi,
+                            newNimi.get,
                             matchingKoodiUri.get.nimi,
                             "nimi",
                             s"osaamisalassa $koodiUri"

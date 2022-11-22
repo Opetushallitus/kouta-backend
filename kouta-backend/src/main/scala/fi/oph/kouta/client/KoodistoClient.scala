@@ -96,11 +96,9 @@ object KoodistoUtils {
     koodiUriList.exists(uri => koodiUriEqualOrNewerAsOther(uri, koodiUriObjectToSearch))
   }
 
-  def asStringOption(koodiUri: Option[KoodiUri]): Option[String] =
-    koodiUri match {
-      case Some(uri) => Some(s"${uri.koodiUri}#${uri.versio}")
-      case _         => None
-    }
+  def asStringOption(koodiUri: Option[KoodiUri]): Option[String] = {
+    koodiUri.map(uri => s"${uri.koodiUri}#${uri.versio}")
+  }
 
   def asStringSeq(koodiUri: Option[KoodiUri]): Seq[String] =
     koodiUri match {

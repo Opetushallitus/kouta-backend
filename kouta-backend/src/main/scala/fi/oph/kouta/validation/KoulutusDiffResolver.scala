@@ -5,8 +5,8 @@ import fi.oph.kouta.domain._
 case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus]) {
   private def oldMetadata(): Option[KoulutusMetadata] = oldKoulutus.flatMap(_.metadata)
 
-  def newNimi(): Kielistetty =
-    if (oldKoulutus.map(_.nimi).getOrElse(Map()) != koulutus.nimi) koulutus.nimi else Map()
+  def newNimi(): Option[Kielistetty] =
+    if (oldKoulutus.map(_.nimi).getOrElse(Map()) != koulutus.nimi) Some(koulutus.nimi) else None
 
   def newKoulutusKoodiUrit(): Seq[String] =
     if (oldKoulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq()).toSet != koulutus.koulutuksetKoodiUri.toSet)

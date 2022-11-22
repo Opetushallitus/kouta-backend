@@ -13,8 +13,8 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
   private def painotetutArvosanat(metadata: Option[HakukohdeMetadata]): Seq[PainotettuOppiaine] =
     metadata.flatMap(_.hakukohteenLinja).map(_.painotetutArvosanat).getOrElse(Seq())
 
-  def newNimi(): Kielistetty =
-    if (oldHakukohde.map(_.nimi).getOrElse(Map()) != hakukohde.nimi) hakukohde.nimi else Map()
+  def newNimi(): Option[Kielistetty] =
+    if (oldHakukohde.map(_.nimi).getOrElse(Map()) != hakukohde.nimi) Some(hakukohde.nimi) else None
 
   def newHakukohdeKoodiUri(): Option[String] =
     if (oldHakukohde.flatMap(_.hakukohdeKoodiUri) != hakukohde.hakukohdeKoodiUri)
